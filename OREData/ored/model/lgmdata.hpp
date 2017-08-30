@@ -107,7 +107,7 @@ public:
     };
 
     //! Supported calibration strategies
-    enum class CalibrationStrategy { CoterminalATM, None };
+    enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, None };
 
     //! Default constructor
     LgmData() {}

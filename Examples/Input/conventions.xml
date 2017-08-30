@@ -25,6 +25,18 @@
     <DayCounter>A365</DayCounter>
     <CompoundingFrequency>Daily</CompoundingFrequency>
   </Zero>
+  <Zero>
+    <Id>GBP-ZERO-CONVENTIONS</Id>
+    <TenorBased>false</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+  </Zero>
+  <Zero>
+    <Id>USD-ZERO-CONVENTIONS</Id>
+    <TenorBased>false</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+  </Zero>
   <!-- CDS -->
   <CDS>
     <Id>CDS-STANDARD-CONVENTIONS</Id>
@@ -256,10 +268,34 @@
     <Id>SEK-3M-FRA</Id>
     <Index>SEK-STIBOR-3M</Index>
   </FRA>
+  <FRA>
+    <Id>JPY-6M-FRA-CONVENTIONS</Id>
+    <Index>JPY-LIBOR-6M</Index>
+  </FRA>
+  <FRA>
+    <Id>JPY-3M-FRA-CONVENTIONS</Id>
+    <Index>JPY-LIBOR-3M</Index>
+  </FRA>
   <!-- Interest Rate Swaps -->
   <SwapIndex>
     <Id>EUR-CMS-1Y</Id>
     <Conventions>EUR-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-2Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-5Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-10Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>EUR-CMS-20Y</Id>
+    <Conventions>EUR-6M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
     <Id>EUR-CMS-30Y</Id>
@@ -270,12 +306,44 @@
     <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
+    <Id>USD-CMS-2Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-5Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-10Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>USD-CMS-20Y</Id>
+    <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
     <Id>USD-CMS-30Y</Id>
     <Conventions>USD-3M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
     <Id>GBP-CMS-1Y</Id>
     <Conventions>GBP-3M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-2Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-5Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-10Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
+  </SwapIndex>
+  <SwapIndex>
+    <Id>GBP-CMS-20Y</Id>
+    <Conventions>GBP-6M-SWAP-CONVENTIONS</Conventions>
   </SwapIndex>
   <SwapIndex>
     <Id>GBP-CMS-30Y</Id>
@@ -343,6 +411,22 @@
     <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>USD-LIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>USD-1M-SWAP-ANNUAL-CONVENTIONS</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>USD-LIBOR-1M</Index>
+  </Swap>
+  <Swap>
+    <Id>USD-3M-SWAP-ANNUAL-CONVENTIONS</Id>
+    <FixedCalendar>US,UK</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
     <Index>USD-LIBOR-3M</Index>
   </Swap>
   <Swap>
@@ -438,6 +522,14 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>JPY-LIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>JPY-LIBOR-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>JP,UK</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>JPY-LIBOR-3M</Index>
   </Swap>
   <Swap>
     <Id>JPY-TIBOR-3M-SWAP-CONVENTIONS</Id>
@@ -580,7 +672,7 @@
     <Id>USD-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
     <Index>USD-FedFunds</Index>
-    <FixedDayCounter>A360</FixedDayCounter>
+    <FixedDayCounter>A365</FixedDayCounter>
     <PaymentLag>2</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
@@ -624,6 +716,18 @@
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
   </OIS>
+  <OIS>
+    <Id>CAD-OIS-CONVENTIONS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>CAD-CORRA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
   <!-- Tenor Basis Swaps -->
   <TenorBasisTwoSwap>
     <Id>EURIBOR-3M-6M-BASIS-CONVENTIONS</Id>
@@ -661,9 +765,28 @@
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
+    <Id>USD-LIBOR-1M-3M-BASIS-CONVENTIONS</Id>
+    <LongIndex>USD-LIBOR-3M</LongIndex>
+    <ShortIndex>USD-LIBOR-1M</ShortIndex>
+    <ShortPayTenor>3M</ShortPayTenor>
+    <SpreadOnShort>true</SpreadOnShort>
+    <IncludeSpread>false</IncludeSpread>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
     <Id>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
     <LongIndex>GBP-LIBOR-6M</LongIndex>
     <ShortIndex>GBP-LIBOR-3M</ShortIndex>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
+    <Id>CHF-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
+    <LongIndex>CHF-LIBOR-6M</LongIndex>
+    <ShortIndex>CHF-LIBOR-3M</ShortIndex>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
+    <Id>JPY-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
+    <LongIndex>JPY-LIBOR-6M</LongIndex>
+    <ShortIndex>JPY-LIBOR-3M</ShortIndex>
   </TenorBasisSwap>
   <!-- FX Forwards -->
   <FX>
@@ -766,6 +889,26 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
+  <FX>
+    <Id>USD-JPY-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>JPY</TargetCurrency>
+    <PointsFactor>100</PointsFactor>
+    <AdvanceCalendar>US,JP</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>  
+    <Id>USD-CAD-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>CAD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US,CA</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
   <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
     <Id>EUR-USD-XCCY-BASIS-CONVENTIONS</Id>
@@ -838,6 +981,22 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>MXN-TIIE-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-JPY-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>JP,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>JPY-LIBOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-CAD-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>CA,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>CAD-CDOR-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>

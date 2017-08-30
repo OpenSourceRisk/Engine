@@ -448,7 +448,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -459,8 +459,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests
     Size samples = 10000;
@@ -592,7 +592,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -603,8 +603,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // set up model based simulation (mimicking exactly the scenario generator builder above)
     MultiPathGeneratorSobol pathGen(stateProcess, grid->timeGrid(), 42);
@@ -733,7 +733,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -744,8 +744,8 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // swaps for expsoure generation
 
@@ -875,7 +875,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -886,8 +886,8 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     Size samples = 5000;
 
@@ -1001,7 +1001,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -1012,8 +1012,8 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     Size samples = 10000;
 

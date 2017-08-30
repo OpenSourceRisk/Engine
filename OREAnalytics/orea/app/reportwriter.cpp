@@ -1,5 +1,7 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
+
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -92,6 +94,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("Type", string())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
         .addColumn("Amount", double(), 4)
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
@@ -117,6 +120,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
                         Real amount = ptrFlow->amount();
+                        string flowType = "";
                         if (payer)
                             amount *= -1.0;
                         std::string ccy = trades[k]->legCurrencies()[i];
@@ -127,9 +131,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
+                            flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
+                            flowType = "Notional";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -142,12 +148,15 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
+                            if (fixingDate > asof) flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                            flowType = "Index";
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
@@ -157,6 +166,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(trades[k]->tradeType())
                             .add(i)
                             .add(payDate)
+                            .add(flowType)
                             .add(amount)
                             .add(ccy)
                             .add(coupon)
@@ -185,8 +195,11 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
-    map<string, string> zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
-    map<string, string> defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
+    map<string, string> zeroInflationIndices, defaultCurves;
+    if(marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
+        zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
+        defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
@@ -439,5 +452,24 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     }
     report.end();
 }
+
+void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+    report.addColumn("Date", Size()).addColumn("Scenario", Size());
+    for (auto const& k : data.keys()) {
+        std::string tmp = ore::data::to_string(k.first) + k.second;
+        report.addColumn(tmp.c_str(), double(), 8);
+    }
+    for (Size d = 0; d < data.dimDates(); ++d) {
+        for (Size s = 0; s < data.dimSamples(); ++s) {
+            report.next();
+            report.add(d).add(s);
+            for (auto const& k : data.keys()) {
+                report.add(data.get(d, s, k.first, k.second));
+            }
+        }
+    }
+    report.end();
+}
+
 } // namespace analytics
 } // namespace ore

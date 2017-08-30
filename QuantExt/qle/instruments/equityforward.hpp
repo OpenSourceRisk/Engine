@@ -26,11 +26,11 @@
 #define quantext_equity_forward_hpp
 
 #include <ql/currency.hpp>
+#include <ql/money.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
-#include <ql/money.hpp>
-#include <ql/position.hpp>
 #include <ql/quote.hpp>
+#include <ql/position.hpp>
 
 using namespace QuantLib;
 
@@ -72,7 +72,6 @@ public:
     Real quantity() const { return quantity_; }
     Date maturityDate() const { return maturityDate_; }
     Real strike() const { return strike_; }
-    boost::shared_ptr<PricingEngine> engine() { return engine_; }
     //@}
 private:
     // data members
@@ -96,6 +95,6 @@ public:
 };
 
 class EquityForward::engine : public GenericEngine<EquityForward::arguments, Instrument::results> {};
-} // namespace QuantExt
+}
 
 #endif

@@ -51,14 +51,14 @@ public:
         asof_ = Date(3, Feb, 2016);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
 
         // build swaption vols
         swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.1);
 
         // build ibor index
         Handle<IborIndex> hEUR(ore::data::parseIborIndex(
-            "EUR-EURIBOR-6M", discountCurves_[make_pair(Market::defaultConfiguration, "EUR")]));
+            "EUR-EURIBOR-6M", yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]));
         iborIndices_[make_pair(Market::defaultConfiguration, "EUR-EURIBOR-6M")] = hEUR;
 
         // add swap index

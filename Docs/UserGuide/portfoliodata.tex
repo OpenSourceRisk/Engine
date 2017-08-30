@@ -546,6 +546,45 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 
 The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
 
+\subsubsection{Forward Rate Agreement}
+
+A forward rate agreement is set up using a {\tt ForwardRateAgreementData} block as shown in listing \ref{lst:ForwardRateAgreementdata}. The forward rate agreement specific elements
+are
+
+\begin{itemize}
+\item StartDate: A FRA expires/settles on the startDate . \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
+    todaysmarket.xml}
+\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit
+\item Currency: The currency of the FRA notional.  	
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+\item Index: The name of the interest rate index the FRA is benchmarked against
+\item LongShort: Specifies whether the option position is long  or
+  short.
+\item Strike: The agreed forward interest rate
+\item Notional: No accretion or amortisation, just a constant notional.
+\end{itemize}
+
+A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <ForwardRateAgreementData>
+        <StartDate>20161028</StartDate>
+        <EndDate>20351028</EndDate>
+        <Currency>EUR</Currency>
+        <Index>EUR-EURIBOR-6M</Index>
+        <LongShort>Long</LongShort>
+        <Strike>0.00001</Strike>
+        <Notional>1000000000</Notional>
+    </ForwardRateAgreementData>
+\end{minted}
+\caption{Forward Rate Agreement Data}
+\label{lst:ForwardRateAgreementdata}
+\end{listing}
+
+The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -85,9 +85,9 @@ public:
                                          0.984774, 0.980358, 0.96908,  0.95704, 0.944041, 0.93004};
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
             intDiscCurve(datesEUR, dfsEUR, Actual360(), TARGET());
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] =
             intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates());
 
         // build ibor index

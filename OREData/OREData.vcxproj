@@ -41,6 +41,7 @@
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\conventions.hpp" />
+    <ClInclude Include="ored\configuration\curveconfig.hpp" />
     <ClInclude Include="ored\configuration\curveconfigurations.hpp" />
     <ClInclude Include="ored\configuration\defaultcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\equitycurveconfig.hpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="ored\portfolio\envelope.hpp" />
     <ClInclude Include="ored\portfolio\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\equityoption.hpp" />
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" />
     <ClInclude Include="ored\portfolio\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
@@ -135,6 +137,7 @@
     <ClInclude Include="ored\report\report.hpp" />
     <ClInclude Include="ored\utilities\all.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
+    <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
     <ClInclude Include="ored\utilities\flowanalysis.hpp" />
     <ClInclude Include="ored\utilities\indexparser.hpp" />
@@ -144,6 +147,7 @@
     <ClInclude Include="ored\utilities\progressbar.hpp" />
     <ClInclude Include="ored\utilities\serializationdate.hpp" />
     <ClInclude Include="ored\utilities\strike.hpp" />
+    <ClInclude Include="ored\utilities\timeperiod.hpp" />
     <ClInclude Include="ored\utilities\to_string.hpp" />
     <ClInclude Include="ored\utilities\vectorutils.hpp" />
     <ClInclude Include="ored\utilities\xmlutils.hpp" />
@@ -211,6 +215,7 @@
     <ClCompile Include="ored\portfolio\envelope.cpp" />
     <ClCompile Include="ored\portfolio\equityforward.cpp" />
     <ClCompile Include="ored\portfolio\equityoption.cpp" />
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp" />
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
@@ -228,6 +233,7 @@
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
+    <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />
     <ClCompile Include="ored\utilities\flowanalysis.cpp" />
     <ClCompile Include="ored\utilities\indexparser.cpp" />

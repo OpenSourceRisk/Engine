@@ -2,9 +2,8 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element type="conventionsType" name="Conventions"/>
   
-  <xs:complexType name="conventionsType">
+  <xs:complexType name="conventions">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element type="zeroType" name="Zero"/>
       <xs:element type="cdsConventionsType" name="CDS"/>

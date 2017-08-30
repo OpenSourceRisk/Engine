@@ -162,6 +162,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+            if (data.shiftStrikes.size() == 0)
+                data.shiftStrikes = {0.0};
             swaptionVolShiftData_[ccy] = data;
             swaptionVolCurrencies_.push_back(ccy);
         }
@@ -178,6 +180,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
             data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+            if (data.shiftStrikes.size() == 0)
+                data.shiftStrikes = {0.0};
             data.indexName = XMLUtils::getChildValue(child, "Index", true);
             capFloorVolShiftData_[ccy] = data;
             capFloorVolCurrencies_.push_back(ccy);

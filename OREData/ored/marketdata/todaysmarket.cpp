@@ -126,20 +126,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
 
                 // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
-                for (auto& it : params.mapping(MarketObject::DiscountCurve, configuration.first)) {
-                    if (it.second == spec->name()) {
-                        LOG("Adding DiscountCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                    << configuration.first);
-                        discountCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
+                vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
+                for(auto& y : yieldCurveTypes) {
+                    MarketObject o = static_cast<MarketObject>(y);
+                    for (auto& it : params.mapping(o, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
+                                                        << configuration.first);
+                            yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
+                        }
                     }
                 }
-                for (auto& it : params.mapping(MarketObject::YieldCurve, configuration.first)) {
-                    if (it.second == spec->name()) {
-                        LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                 << configuration.first);
-                        yieldCurves_[make_pair(configuration.first, it.first)] = itr->second->handle();
-                    }
-                }
+                
                 for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
@@ -475,8 +473,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::shared_ptr<YieldTermStructure> divYield =
                             itr->second->divYieldTermStructure(asof);
                         Handle<YieldTermStructure> div_h(divYield);
-                        equityDividendCurves_[make_pair(configuration.first, it.first)] = div_h;
-                        equityForecastCurves_[make_pair(configuration.first, it.first)] = 
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] = div_h;
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] = 
                             itr->second->forecastingYieldTermStructure();
                         equitySpots_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));

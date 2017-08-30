@@ -50,6 +50,9 @@ public:
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
 
+    //! Reset sim market to initial state
+    virtual void reset() = 0;
+
     //! Get the fixing manager
     virtual const boost::shared_ptr<FixingManager>& fixingManager() const = 0;
 

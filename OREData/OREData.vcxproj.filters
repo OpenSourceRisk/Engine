@@ -357,6 +357,18 @@
     <ClInclude Include="ored\model\modelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\curveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\csvfilereader.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\timeperiod.hpp" >
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" >
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -621,6 +633,12 @@
       <Filter>portfolio</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\csvfilereader.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>

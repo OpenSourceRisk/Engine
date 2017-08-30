@@ -137,10 +137,9 @@ protected:
     buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {}) const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
-    //! build the ScenarioSimMarket that will be used by ValuationEngine
-    virtual void initializeSimMarket();
-    //! initialize the SensitivityScenarioGenerator that determines which sensitivities to compute
-    virtual void initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact = {});
+    /*! build the ScenarioSimMarket that will be used by ValuationEngine and
+     * initialize the SensitivityScenarioGenerator that determines which sensitivities to compute */
+    virtual void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
 
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
@@ -181,7 +180,7 @@ protected:
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
-    std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
+    std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

@@ -166,11 +166,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading YieldCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
-    nodeChild = XMLUtils::getChildNode(nodeChild, "Configuration");
-    yieldCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
-    // TODO read other keys
-    interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
-    extrapolate_ = XMLUtils::getChildValueAsBool(nodeChild, "Extrapolation");
+    if (nodeChild) {
+        nodeChild = XMLUtils::getChildNode(nodeChild, "Configuration");
+        yieldCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+        // TODO read other keys
+        interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
+        extrapolate_ = XMLUtils::getChildValueAsBool(nodeChild, "Extrapolate");
+    }
 
     indices_ = XMLUtils::getChildrenValues(node, "Indices", "Index");
 
@@ -202,12 +204,27 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     swapVolSimulate_ = false;
     XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-    if (swapVolSimNode)
+    if (swapVolSimNode) {
         swapVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode));
-    swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-    swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-    swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
-    swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+        swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
+        swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
+        if (cubeNode) {
+            swapVolIsCube_ = true;
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
+            if(atmOnlyNode) {
+                swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
+            } else {
+                swapVolSimulateATMOnly_ = false;
+            }
+            if(!swapVolSimulateATMOnly_) 
+                swapVolStrikeSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        } else {
+            swapVolIsCube_ = false;
+        }
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "CapFloorVolatilities");
     if (nodeChild) {
@@ -227,15 +244,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     survivalProbabilitySimulate_ = false;
     recoveryRateSimulate_ = false;
     nodeChild = XMLUtils::getChildNode(node, "DefaultCurves");
-    defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
-    defaultTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
-    // TODO read other keys
-    XMLNode* survivalProbabilitySimNode = XMLUtils::getChildNode(nodeChild, "SimulateSurvivalProbabilities");
-    if (survivalProbabilitySimNode)
-        survivalProbabilitySimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(survivalProbabilitySimNode));
-    XMLNode* recoveryRateSimNode = XMLUtils::getChildNode(nodeChild, "SimulateRecoveryRates");
-    if (recoveryRateSimNode)
-        recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));
+    if (nodeChild) {
+        defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        defaultTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
+        // TODO read other keys
+        XMLNode* survivalProbabilitySimNode = XMLUtils::getChildNode(nodeChild, "SimulateSurvivalProbabilities");
+        if (survivalProbabilitySimNode)
+            survivalProbabilitySimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(survivalProbabilitySimNode));
+        XMLNode* recoveryRateSimNode = XMLUtils::getChildNode(nodeChild, "SimulateRecoveryRates");
+        if (recoveryRateSimNode)
+            recoveryRateSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(recoveryRateSimNode));
+    }
 
     DLOG("Loading Equities Rates");
 
@@ -246,7 +265,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     } else {
-        equityNames_.clear();
         equityDividendTenors_.clear();
         equityForecastTenors_.clear();
     }
@@ -267,20 +285,23 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading FXVolatilities");
 
     nodeChild = XMLUtils::getChildNode(node, "FxVolatilities");
-    fxVolSimulate_ = false;
-    XMLNode* fxVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-    if (fxVolSimNode)
-        fxVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(fxVolSimNode));
-    fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-    fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-    fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
-    XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
-    if (fxSurfaceNode) {
-        fxVolIsSurface_ = true;
-        fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
-    } else {
-        fxVolIsSurface_ = false;
-        fxMoneyness_ = {0.0};
+    if (nodeChild) {
+        fxVolSimulate_ = false;
+        XMLNode* fxVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (fxVolSimNode)
+            fxVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(fxVolSimNode));
+        fxVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        fxVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        fxVolCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+        XMLNode* fxSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
+        if (fxSurfaceNode) {
+            fxVolIsSurface_ = true;
+            fxMoneyness_ = XMLUtils::getChildrenValuesAsDoublesCompact(fxSurfaceNode, "Moneyness", true);
+        }
+        else {
+            fxVolIsSurface_ = false;
+            fxMoneyness_ = { 0.0 };
+        }
     }
 
     DLOG("Loading EquityVolatilities");
@@ -294,9 +315,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLNode* eqSurfaceNode = XMLUtils::getChildNode(nodeChild, "Surface");
         if (eqSurfaceNode) {
             equityIsSurface_ = true;
-            XMLNode* atmOnlyNode = XMLUtils::getChildNode(nodeChild, "SimulateATMOnly");
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(eqSurfaceNode, "SimulateATMOnly");
             if(atmOnlyNode) {
-                equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(atmOnlyNode, "SimulateATMOnly", true);
+                equityVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(eqSurfaceNode, "SimulateATMOnly", true);
             } else {
                 equityVolSimulateATMOnly_ = false;
             }

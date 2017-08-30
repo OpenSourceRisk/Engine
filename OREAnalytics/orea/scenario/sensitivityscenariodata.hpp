@@ -48,6 +48,7 @@ public:
     enum class ShiftType { Absolute, Relative };
 
     struct CurveShiftData {
+        CurveShiftData() : shiftSize(0.0), parInstrumentSingleCurve(false) {}
         string shiftType;
         Real shiftSize;
         vector<Period> shiftTenors;
@@ -57,6 +58,7 @@ public:
     };
 
     struct CapFloorVolShiftData {
+        CapFloorVolShiftData() : shiftSize(0.0) {}
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -65,15 +67,17 @@ public:
     };
 
     struct SwaptionVolShiftData {
+        SwaptionVolShiftData() : shiftSize(0.0), shiftStrikes({0.0}) {}
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
         vector<Period> shiftTerms;
-        vector<Real> shiftStrikes; // FIXME: absolute or relative to ATM ?
+        vector<Real> shiftStrikes; // strikeSpreads
         string indexName;
     };
 
     struct VolShiftData {
+        VolShiftData() : shiftSize(0.0) {}
         string shiftType;
         Real shiftSize;
         vector<Period> shiftExpiries;
@@ -81,11 +85,13 @@ public:
     };
 
     struct SpotShiftData {
+        SpotShiftData() : shiftSize(0.0) {}
         string shiftType;
         Real shiftSize;
     };
 
     struct CdsVolShiftData {
+        CdsVolShiftData() : shiftSize(0.0) {}
         string ccy;
         string shiftType;
         Real shiftSize;
@@ -93,6 +99,7 @@ public:
     };
 
     struct BaseCorrelationShiftData {
+        BaseCorrelationShiftData() : shiftSize(0.0) {}
         string indexName;
         string shiftType;
         Real shiftSize;
