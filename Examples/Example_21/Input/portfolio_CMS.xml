@@ -69,7 +69,7 @@
           </Rules>
         </ScheduleData>
       </LegData>
-    </CMSSwapData>
+    </SwapData>
   </Trade>
   <Trade id="CMS_Cap">
     <TradeType>CapFloor</TradeType>

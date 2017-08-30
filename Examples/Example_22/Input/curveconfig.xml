@@ -1,37 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CurveConfiguration>
-  <SwaptionVolatilities>
-
-    <SwaptionVolatility>
-      <CurveId>EUR_SW_SMILE</CurveId>
-      <CurveDescription>EUR normal swaption volatilities</CurveDescription>
-      <Dimension>Smile</Dimension>
-      <VolatilityType>Normal</VolatilityType>
-      <Extrapolation>Flat</Extrapolation>
-      <DayCounter>Actual/365 (Fixed)</DayCounter>
-      <Calendar>TARGET</Calendar>
-      <BusinessDayConvention>Following</BusinessDayConvention>
-      <OptionTenors>
-	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </OptionTenors>
-      <SwapTenors>
-	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-      </SwapTenors>
-      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
-      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
-      <!-- Smile stuff -->
-      <SmileOptionTenors>
-      6M,1Y,10Y
-      </SmileOptionTenors>
-      <SmileSwapTenors>
-      2Y,5Y
-      </SmileSwapTenors>
-      <SmileSpreads>
-      -0.02,-0.01,0.01,0.02
-      </SmileSpreads>
-
-    </SwaptionVolatility>
-  </SwaptionVolatilities>
   <FXVolatilities>
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
@@ -74,6 +42,38 @@
       </Expiries>
     </FXVolatility>
   </FXVolatilities>
+  <SwaptionVolatilities>
+
+    <SwaptionVolatility>
+      <CurveId>EUR_SW_SMILE</CurveId>
+      <CurveDescription>EUR normal swaption volatilities</CurveDescription>
+      <Dimension>Smile</Dimension>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>
+	1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+      </OptionTenors>
+      <SwapTenors>
+	1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
+      </SwapTenors>
+      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+      <!-- Smile stuff -->
+      <SmileOptionTenors>
+      6M,1Y,10Y
+      </SmileOptionTenors>
+      <SmileSwapTenors>
+      2Y,5Y
+      </SmileSwapTenors>
+      <SmileSpreads>
+      -0.02,-0.01,0.01,0.02
+      </SmileSpreads>
+
+    </SwaptionVolatility>
+  </SwaptionVolatilities>
   <CapFloorVolatilities>
     <CapFloorVolatility>
       <CurveId>EUR_CF_N</CurveId>
@@ -135,6 +135,15 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  <CDSVolatilities>
+    <CDSVolatility>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
+      <Expiries>
+        1M,3M,6M
+      </Expiries>
+    </CDSVolatility>
+  </CDSVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
@@ -198,15 +207,6 @@
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
   </DefaultCurves>
-  <CDSVolatilities>
-    <CDSVolatility>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
-      <Expiries>
-        1M,3M,6M
-      </Expiries>
-    </CDSVolatility>
-  </CDSVolatilities>
   <YieldCurves>
     <YieldCurve>
       <CurveId>CHF6M</CurveId>
@@ -2055,8 +2055,8 @@
         <EquityCurve>
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
-            <ForecastingCurve>USD1D</ForecastingCurve>
             <Currency>USD</Currency>
+            <ForecastingCurve>USD1D</ForecastingCurve>
             <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
@@ -2089,20 +2089,20 @@
             <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
             <Currency>USD</Currency>
             <Dimension>Smile</Dimension>
-            <Strikes>1932.8,2147.56,2254.939</Strikes>
             <Expiries>
               1M,5Y,10Y
             </Expiries>
+            <Strikes>1932.8,2147.56,2254.939</Strikes>
         </EquityVolatility>
         <EquityVolatility>
             <CurveId>Lufthansa</CurveId>
             <CurveDescription/>
             <Currency>EUR</Currency>
             <Dimension>Smile</Dimension>
-            <Strikes>11.47,12.75,13.39</Strikes>
             <Expiries>
               1M,5Y,10Y
             </Expiries>
+            <Strikes>11.47,12.75,13.39</Strikes>
         </EquityVolatility>
   </EquityVolatilities>
   <SecuritySpreads>

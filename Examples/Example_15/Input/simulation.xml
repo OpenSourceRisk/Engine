@@ -38,7 +38,7 @@
       <Index>JPY-LIBOR-6M</Index>
       <Index>JPY-TONAR</Index>
     </Indices>
-
+		
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
@@ -49,7 +49,15 @@
         <DiscountingIndex>EUR-EONIA</DiscountingIndex>
       </SwapIndex>
     </SwapIndices>
-		
+
+    <DefaultCurves>
+      <Names>
+	    <Name>CPTY_C</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
+    </DefaultCurves>
+
 	<Equities>
       <Names>
         <Name>SP5</Name>
@@ -57,15 +65,7 @@
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
       <ForecastTenors>6M,1Y,2Y</ForecastTenors>
-    </Equities>   
-	
-    <DefaultCurves>
-      <Names>
-	<Name>CPTY_C</Name>
-      </Names>
-      <Tenors>6M,1Y,2Y</Tenors>
-      <SimulateSurvivalProbabilities>true</SimulateSurivalProbabilities>
-    </DefaultCurves>
+    </Equities>
 
     <!-- Even if we do not simulate them - option pricing needs vol
 	   surfaces, so we need to specify here how we propagate the
@@ -83,7 +83,6 @@
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-      <Strikes/>
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>
@@ -108,7 +107,6 @@
         <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-      <Strikes/>
     </FxVolatilities>
  	
 	<EquityVolatilities>
@@ -120,7 +118,6 @@
         <Name>Lufthansa</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-      <Strikes/>
     </EquityVolatilities>     
 	
     <BenchmarkCurves>

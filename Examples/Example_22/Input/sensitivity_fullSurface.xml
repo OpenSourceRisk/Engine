@@ -1,7 +1,5 @@
 <SensitivityAnalysis>
 
-  <BaseCorrelations></BaseCorrelations>  
-  
   <!-- Discount curve shifts -->
   <DiscountCurves>
 
@@ -126,8 +124,6 @@
     </SwaptionVolatility>
   </SwaptionVolatilities>
   
-  <CDSVolatilities>
-  </CDSVolatilities>
   <!-- Cap/Floor (Optionlet or Flat) vol surface shifts -->
   <CapFloorVolatilities>
     <CapFloorVolatility ccy="EUR">
@@ -145,6 +141,9 @@
       <Index>USD-LIBOR-3M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  
+  <CDSVolatilities>
+  </CDSVolatilities>
   
   <!-- Credit Curve shifts -->
   <CreditCurves>
@@ -183,6 +182,8 @@
       <ShiftStrikes/>
     </EquityVolatility>
   </EquityVolatilities>
+  
+  <BaseCorrelations></BaseCorrelations>  
   
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>

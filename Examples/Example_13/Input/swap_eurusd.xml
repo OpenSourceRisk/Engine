@@ -36,11 +36,11 @@
         <Payer>true</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Exchanges>
-            <NotionalInitialExchange>Y</NotionalInitialExchange>
-            <NotionalFinalExchange>Y</NotionalFinalExchange>
-          </Exchanges>
           <Notional>30000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
@@ -70,11 +70,11 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Exchanges>
-            <NotionalInitialExchange>Y</NotionalInitialExchange>
-            <NotionalFinalExchange>Y</NotionalFinalExchange>
-          </Exchanges>
           <Notional>33900000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>true</NotionalInitialExchange>
+            <NotionalFinalExchange>true</NotionalFinalExchange>
+          </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>ModifiedFollowing</PaymentConvention>

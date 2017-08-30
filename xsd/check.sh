@@ -1,75 +1,23 @@
 #!/bin/sh
 
-echo Conventions:
-/bin/echo -n "Checking ... "
-xmllint --schema conventions.xsd --path xsd --noout Examples/Input/conventions.xml
-echo -------
+function validate {
+find $1 -name $2 -print0 | \
+{ 
+fail=0
+    while read -d $'\0' file
+    do
+        OUTPUT=$(xmllint --schema $3 --path xsd --noout $file 2>&1)
+        if [ "$?" -gt "0" ] 
+        then 
+        fail=1
+        echo "${OUTPUT}"
+        fi
+    done
+return $fail
+}
+}
 
-echo CurveConfig:
-/bin/echo -n "Checking ... "
-xmllint --schema curveconfig.xsd --path xsd --noout Examples/Input/curveconfig.xml
-echo -------
+status=0
+validate Examples '*.xml' input.xsd || status=1
 
-echo Portfolio Files Examples:
-find Examples -name 'portfolio*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema instruments.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Netting Set Files Examples:
-find Examples -name 'netting*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema nettingsetdefinitions.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Simulation Files Examples:
-find Examples -name 'simulation*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema simulation.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Pricing Engine Files Examples:
-find Examples -name 'pricingeng*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema pricingengines.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Todays Market Files Examples:
-find Examples -name 'todaysmarket*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema todaysmarket.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Sensitivities Files Examples:
-find Examples -name 'sensi*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema sensitivity.xsd --path xsd --noout $file
-done
-echo -------
-
-echo Stress Files Examples:
-find Examples -name 'stress*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema stress.xsd --path xsd --noout $file
-done
-echo -------
-
-echo ORE Examples:
-find Examples -name 'ore*.xml' -print0 | while read -d $'\0' file
-do
-  /bin/echo -n "Checking ... "
-  xmllint --schema ore.xsd --path xsd --noout $file
-done
-echo -------
+exit $status
