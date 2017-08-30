@@ -2,7 +2,7 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-<xs:group name="orePlusTradeData">
+<xs:group name="oreTradeData">
   <xs:choice>
    <xs:element type="swapData" name="SwapData"/>
    <xs:element type="swaptionData" name="SwaptionData"/>
@@ -150,7 +150,15 @@
         <xs:element name="Spreads">
           <xs:complexType>
             <xs:sequence>
-              <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
+              <xs:element name="Spread" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:simpleContent>
+                        <xs:extension base="xs:float">
+                            <xs:attribute name="startDate" type="xs:string" />
+                        </xs:extension>
+                    </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>              
             </xs:sequence>
           </xs:complexType>
         </xs:element>
@@ -305,7 +313,7 @@
     </xs:choice>
   </xs:complexType>
 
-  <xs:simpleType name="tradeType">
+  <xs:simpleType name="oreTradeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Swap"/>
       <xs:enumeration value="Swaption"/>
@@ -496,8 +504,8 @@
       <xs:element type="date" name="ProtectionStart"/>
       <xs:element type="date" name="UpfrontDate"/>
       <xs:element type="xs:float" name="UpfrontFee"/>
-      <xs:element type="bool" name="SettlesAccrual"/>
-      <xs:element type="bool" name="PaysAtDefaultTime"/>
+      <xs:element type="bool" name="SettlesAccrual" maxOccurs="1" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" maxOccurs="1" minOccurs="0"/>
       <xs:element type="xs:float" name="AttachmentPoint"/>
       <xs:element type="xs:float" name="DetachmentPoint"/>
       <xs:element type="legData" name="LegData"/>
@@ -541,9 +549,9 @@
   
   <xs:complexType name="exchanges">
     <xs:sequence>
-    	<xs:element type="xs:boolean" name="NotionalInitialExchange" minOccurs="1" maxOccurs="unbounded"/>
-    	<xs:element type="xs:boolean" name="NotionalFinalExchange" minOccurs="1" maxOccurs="unbounded"/>
-    	<xs:element type="xs:boolean" name="NotionalAmortizingExchange" minOccurs="0" maxOccurs="unbounded"/>
+    	<xs:element type="bool" name="NotionalInitialExchange" minOccurs="1" maxOccurs="unbounded"/>
+    	<xs:element type="bool" name="NotionalFinalExchange" minOccurs="1" maxOccurs="unbounded"/>
+    	<xs:element type="bool" name="NotionalAmortizingExchange" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
   

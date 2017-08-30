@@ -36,10 +36,10 @@
   <xs:element name="Trade" maxOccurs="unbounded" minOccurs="0">
    <xs:complexType>
     <xs:sequence>
-     <xs:element type="tradeType" name="TradeType"/>
+     <xs:element type="oreTradeType" name="TradeType"/>
      <xs:element type="envelope" name="Envelope"/>
      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
-     <xs:group ref="orePlusTradeData"/>
+     <xs:group ref="oreTradeData"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="id" use="required"/>
    </xs:complexType>
