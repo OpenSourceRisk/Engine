@@ -15,6 +15,7 @@
         <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
         <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
         <xs:element type="securitySpreads" name="SecuritySpreads" minOccurs="0" />
+        <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
       </xs:sequence>
   </xs:complexType>
 
@@ -30,6 +31,9 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
+      <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
+      <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
+      <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
   
@@ -244,6 +248,26 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="quoteType" name="Quotes"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="baseCorrelations">
+    <xs:sequence>
+      <xs:element type="baseCorrelation" name="BaseCorrelation" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="baseCorrelation">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="Terms"/>
+      <xs:element type="xs:string" name="DetachmentPoints"/>
+      <xs:element type="xs:float" name="SettlementDays"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

@@ -4,6 +4,7 @@
 
   <xs:complexType name="sensitivityanalysis">
     <xs:sequence>
+      <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
       <xs:element type="indexcurves" name="IndexCurves"/>
       <xs:element type="yieldcurves" name="YieldCurves"/>
@@ -23,6 +24,28 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="parconversion">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Instruments" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="Conventions">
+       <xs:complexType>
+        <xs:sequence>
+         <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
+          <xs:complexType>
+           <xs:simpleContent>
+            <xs:extension base="xs:string">
+             <xs:attribute name="id" type="xs:string" />
+            </xs:extension>
+            </xs:simpleContent>
+          </xs:complexType>
+         </xs:element>
+        </xs:sequence>
+       </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  
   <xs:complexType name="discountcurves">
     <xs:sequence>
       <xs:element type="discountcurve" name="DiscountCurve" maxOccurs="unbounded" minOccurs="0"/>
@@ -109,7 +132,7 @@
 
   <xs:complexType name="dividendyields">
     <xs:sequence>
-      <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded"/>
+      <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -127,6 +150,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="currencyCode" name="ccy" use="required"/>
   </xs:complexType>
@@ -139,6 +163,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="indexNameType" name="index" use="required"/>
   </xs:complexType>
@@ -269,6 +294,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
@@ -305,6 +331,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="index" use="required"/>
   </xs:complexType>
@@ -317,6 +344,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="index" use="required"/>
   </xs:complexType>
@@ -329,7 +357,7 @@
          <xs:element type="xs:string" name="Shifts"/>
         </xs:choice>
       <xs:element type="xs:string" name="ShiftLossLevels"/>
-      <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="indexName" use="required"/>
   </xs:complexType>
@@ -343,7 +371,7 @@
         </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
     </xs:sequence>
-    <xs:attribute type="currencyCode" name="ccy" use="required"/>
+    <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
 
   <xs:simpleType name="shifttype">

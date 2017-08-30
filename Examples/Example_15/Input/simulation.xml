@@ -107,7 +107,6 @@
         <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-      <Strikes/>
     </FxVolatilities>
  	
 	<EquityVolatilities>
