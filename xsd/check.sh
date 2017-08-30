@@ -17,7 +17,4 @@ return $fail
 }
 }
 
-
-status=0
-validate || status=1
-exit $status
+validate || exit 1
