@@ -66,7 +66,8 @@ public:
         //! Simulated market object
         const boost::shared_ptr<analytics::SimMarket>& simMarket,
         //! model builders to be updated
-        const set<boost::shared_ptr<data::ModelBuilder>>& modelBuilders = set<boost::shared_ptr<data::ModelBuilder>>());
+        const set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>>& modelBuilders =
+            set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>>());
 
     //! Build NPV cube
     void buildCube(
@@ -81,7 +82,7 @@ private:
     QuantLib::Date today_;
     boost::shared_ptr<analytics::DateGrid> dg_;
     boost::shared_ptr<analytics::SimMarket> simMarket_;
-    set<boost::shared_ptr<data::ModelBuilder>> modelBuilders_;
+    set<std::pair<string, boost::shared_ptr<data::ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

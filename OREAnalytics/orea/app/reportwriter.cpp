@@ -452,5 +452,24 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     }
     report.end();
 }
+
+void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+    report.addColumn("Date", Size()).addColumn("Scenario", Size());
+    for (auto const& k : data.keys()) {
+        std::string tmp = ore::data::to_string(k.first) + k.second;
+        report.addColumn(tmp.c_str(), double(), 8);
+    }
+    for (Size d = 0; d < data.dimDates(); ++d) {
+        for (Size s = 0; s < data.dimSamples(); ++s) {
+            report.next();
+            report.add(d).add(s);
+            for (auto const& k : data.keys()) {
+                report.add(data.get(d, s, k.first, k.second));
+            }
+        }
+    }
+    report.end();
+}
+
 } // namespace analytics
 } // namespace ore

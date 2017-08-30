@@ -672,7 +672,7 @@
     <Id>USD-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
     <Index>USD-FedFunds</Index>
-    <FixedDayCounter>A360</FixedDayCounter>
+    <FixedDayCounter>A365</FixedDayCounter>
     <PaymentLag>2</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
@@ -716,6 +716,18 @@
     <FixedPaymentConvention>Following</FixedPaymentConvention>
     <Rule>Backward</Rule>
   </OIS>
+  <OIS>
+    <Id>CAD-OIS-CONVENTIONS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>CAD-CORRA</Index>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
   <!-- Tenor Basis Swaps -->
   <TenorBasisTwoSwap>
     <Id>EURIBOR-3M-6M-BASIS-CONVENTIONS</Id>
@@ -753,9 +765,28 @@
     <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
   </TenorBasisSwap>
   <TenorBasisSwap>
+    <Id>USD-LIBOR-1M-3M-BASIS-CONVENTIONS</Id>
+    <LongIndex>USD-LIBOR-3M</LongIndex>
+    <ShortIndex>USD-LIBOR-1M</ShortIndex>
+    <ShortPayTenor>3M</ShortPayTenor>
+    <SpreadOnShort>true</SpreadOnShort>
+    <IncludeSpread>false</IncludeSpread>
+    <SubPeriodsCouponType>Compounding</SubPeriodsCouponType>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
     <Id>GBP-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
     <LongIndex>GBP-LIBOR-6M</LongIndex>
     <ShortIndex>GBP-LIBOR-3M</ShortIndex>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
+    <Id>CHF-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
+    <LongIndex>CHF-LIBOR-6M</LongIndex>
+    <ShortIndex>CHF-LIBOR-3M</ShortIndex>
+  </TenorBasisSwap>
+  <TenorBasisSwap>
+    <Id>JPY-LIBOR-3M-6M-BASIS-CONVENTIONS</Id>
+    <LongIndex>JPY-LIBOR-6M</LongIndex>
+    <ShortIndex>JPY-LIBOR-3M</ShortIndex>
   </TenorBasisSwap>
   <!-- FX Forwards -->
   <FX>
