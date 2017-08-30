@@ -52,8 +52,7 @@ class MarketImpl : public Market {
 public:
     //! Default constructor
     MarketImpl() {}
-    MarketImpl(const Conventions& conventions) : MarketImpl(Date(), conventions) {}
-    MarketImpl(const Date& asof, const Conventions& conventions) : asof_(asof), conventions_(conventions) {
+    MarketImpl(const Conventions& conventions) : conventions_(conventions) {
         // if no fx spots are defined we still need an empty triangulation
         fxSpots_[Market::defaultConfiguration] = FXTriangulation();
     }

@@ -49,11 +49,6 @@ public:
                       boost::shared_ptr<ScenarioSimMarketParameters>& parameters, Conventions conventions,
                       const std::string& configuration = Market::defaultConfiguration);
 
-    //! Constructor that takes a base Scenario
-    ScenarioSimMarket(const Date& asof, const boost::shared_ptr<ScenarioGenerator>& scenarioGenerator, 
-        boost::shared_ptr<Scenario> baseScenario, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, 
-        const Conventions& conventions);
-
     //! Set aggregation data
     boost::shared_ptr<AggregationScenarioData>& aggregationScenarioData() { return asd_; }
     //! Get aggregation data
