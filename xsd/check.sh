@@ -1,12 +1,12 @@
 #!/bin/sh
 
 function validate {
-find $1 -name $2 -print0 | \
+find Examples -name '*.xml' -print0 | \
 { 
 fail=0
     while read -d $'\0' file
     do
-        OUTPUT=$(xmllint --schema $3 --path xsd --noout $file 2>&1)
+        OUTPUT=$(xmllint --schema input.xsd --path xsd --noout $file 2>&1)
         if [ "$?" -gt "0" ] 
         then 
         fail=1
@@ -17,7 +17,7 @@ return $fail
 }
 }
 
-status=0
-validate Examples '*.xml' input.xsd || status=1
 
+status=0
+validate || status=1
 exit $status
