@@ -94,7 +94,7 @@ protected:
         //! a unique (trade) id, for caching
         const string& id,
         //! is this a standard swaption
-        bool isNonStandard,
+        const bool isNonStandard,
         //! the currency
         const string& ccy,
         //! Excercise dates
