@@ -53,6 +53,12 @@ namespace data {
 */
 QuantLib::Date parseDate(const string& s);
 
+//! Convert std::string to QuantLib::Date
+/*!
+  \ingroup utilities
+*/
+QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s);
+
 //! Convert text to Real
 /*!
   \ingroup utilities
