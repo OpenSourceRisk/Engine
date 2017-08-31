@@ -2885,6 +2885,15 @@ There are two methods in ORE for equity volatility simulation:
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
 \item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
 \end{itemize}
+
+Swaption volatilities are taken to be a surface by default, to simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+There are two methods in ORE for swaption volatility cube simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+
+FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -2922,7 +2931,10 @@ There are two methods in ORE for equity volatility simulation:
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-    <Strikes/>
+    <Cube>
+     <SimulateATMOnly>false</SimulateATMOnly>
+     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
+    </Cube>
   </SwaptionVolatilities> 
   <CapFloorVolatilities>
     <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -2937,7 +2949,9 @@ There are two methods in ORE for equity volatility simulation:
       <CurrencyPair>EURUSD</CurrencyPair>
     </CurrencyPairs>
     <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-    <Strikes/>
+    <Surface>
+     <Moneyness>0.5,0.6,0.7,0.8,0.9</Moneyness>
+    </Surface>
   </FxVolatilities>
   <EquityVolatilities>
       <Simulate>true</Simulate>
