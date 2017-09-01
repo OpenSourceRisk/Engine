@@ -501,7 +501,9 @@
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\all.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
+    <ClInclude Include="qle\indexes\ibor\cdor.hpp" />
     <ClInclude Include="qle\indexes\ibor\chftois.hpp" />
+    <ClInclude Include="qle\indexes\ibor\corra.hpp" />
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
