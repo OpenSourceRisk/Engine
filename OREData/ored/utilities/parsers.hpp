@@ -53,7 +53,7 @@ namespace data {
 */
 QuantLib::Date parseDate(const string& s);
 
-//! Convert std::string to QuantLib::Date
+//! Convert std::string to QuantLib::Date, Expects: IM1, IM2,...,IM9, IMA, IMB, IMC, IMD
 /*!
   \ingroup utilities
 */

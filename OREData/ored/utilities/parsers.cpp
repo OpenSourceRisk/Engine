@@ -109,15 +109,9 @@ QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s) {
 
     string ms = s.substr(2,1);
 
-    Size m;
-    if (ms == "A") m = 10;
-    else if (ms == "B") m = 11;
-    else if (ms == "C") m = 12;
-    else if (ms == "D") m = 13;
-    else m = io::to_integer(ms);
-
+    Size m = std::stoi(ms, NULL, 16);
+    
     Date imm = asof;
-
     for (Size i=0; i<m; i++) {
         imm = IMM::nextDate(imm, true);
     }
