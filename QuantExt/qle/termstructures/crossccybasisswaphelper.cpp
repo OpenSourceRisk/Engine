@@ -84,7 +84,12 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuot
 
 void CrossCcyBasisSwapHelper::initializeDates() {
 
-    Date settlementDate = settlementCalendar_.advance(evaluationDate_, settlementDays_, Days);
+    Date refDate = evaluationDate_;
+    // if the evaluation date is not a business day
+    // then move to the next business day
+    refDate = settlementCalendar_.adjust(refDate);
+
+    Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
     Period flatLegTenor = flatIndex_->tenor();
