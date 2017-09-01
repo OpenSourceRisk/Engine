@@ -56,7 +56,7 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
     registerWith(longIndex_);
     registerWith(shortIndex_);
     registerWith(discountHandle_);
-    initializeDates();0
+    initializeDates();
 }
 
 void TenorBasisSwapHelper::initializeDates() {
