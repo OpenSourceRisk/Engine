@@ -107,8 +107,7 @@ public:
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
-                    const vector<string>& gearingDates = vector<string>(),
-                    bool isAveraged = false)
+                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false)
         : index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates) {}
@@ -441,7 +440,7 @@ private:
 //@{
 Leg makeFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
-                const boost::shared_ptr<EngineFactory>& engineFactory);
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow = true);
@@ -449,7 +448,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index);
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
-               const vector<double>& floors = vector<double>());
+               const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Real currentNotional(const Leg& leg);
 
 //@}
