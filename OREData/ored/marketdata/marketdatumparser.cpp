@@ -176,8 +176,17 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::FRA: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period fwdStart = parsePeriod(tokens[3]);
-        Period term = parsePeriod(tokens[4]);
+        Period fwdStart;
+        Period term;
+        if (tokens[3].substr(0,2) == "IM") {
+            Date d1 = parseIMMDate(asof, tokens[3]);
+            fwdStart = Period(d1 - asof, Days);
+            Date d2 = parseIMMDate(asof, tokens[4]);
+            term = Period(d2 - d1, Days);
+        } else {
+            fwdStart = parsePeriod(tokens[3]);
+            term = parsePeriod(tokens[4]);
+        }
         return boost::make_shared<FRAQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term);
     }
 

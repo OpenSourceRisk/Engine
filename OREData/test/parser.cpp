@@ -283,7 +283,62 @@ void ParseTest::testDatePeriodParsing() {
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), std::exception);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), std::exception);
 }
+void ParseTest::testIMMDateParsing() {
+    BOOST_TEST_MESSAGE("Testing IMM Date parsing...");
 
+    Date asof = Date(5,March,2018);
+
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM1"), Date(21, March, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM2"), Date(20, June, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM3"), Date(19, September, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM4"), Date(19, December, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM5"), Date(20, March, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM6"), Date(19, June, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM7"), Date(18, September, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM8"), Date(18, December, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM9"), Date(18, March, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMA"), Date(17, June, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMB"), Date(16, September, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMC"), Date(16, December, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMD"), Date(17, March, 2021));
+
+    asof = Date(20,December,2017); //last IMM date
+
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM1"), Date(21, March, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM2"), Date(20, June, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM3"), Date(19, September, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM4"), Date(19, December, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM5"), Date(20, March, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM6"), Date(19, June, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM7"), Date(18, September, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM8"), Date(18, December, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM9"), Date(18, March, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMA"), Date(17, June, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMB"), Date(16, September, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMC"), Date(16, December, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMD"), Date(17, March, 2021));
+
+    //
+    asof = Date(19,June,2018); 
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM1"), Date(20, June, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM2"), Date(19, September, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM3"), Date(19, December, 2018));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM4"), Date(20, March, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM5"), Date(19, June, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM6"), Date(18, September, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM7"), Date(18, December, 2019));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM8"), Date(18, March, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IM9"), Date(17, June, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMA"), Date(16, September, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMB"), Date(16, December, 2020));
+    BOOST_CHECK_EQUAL(ore::data::parseIMMDate(asof, "IMC"), Date(17, March, 2021));
+
+    //
+    BOOST_CHECK_THROW(ore::data::parsePeriod("IMM2"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("I5"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("IM10"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("IMF"), std::exception);
+}
 test_suite* ParseTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ParseTest");
     suite->add(BOOST_TEST_CASE(&ParseTest::testDayCounterParsing));
@@ -291,6 +346,7 @@ test_suite* ParseTest::suite() {
     suite->add(BOOST_TEST_CASE(&ParseTest::testCompoundingParsing));
     suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
     suite->add(BOOST_TEST_CASE(&ParseTest::testDatePeriodParsing));
+    suite->add(BOOST_TEST_CASE(&ParseTest::testIMMDateParsing));
     return suite;
 }
 } // namespace testsuite
