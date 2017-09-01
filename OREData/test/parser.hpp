@@ -43,6 +43,8 @@ public:
     static void testStrikeParsing();
     //! Test date, period, date or period parsing
     static void testDatePeriodParsing();
+    //! Test IMM date parsing
+    static void testIMMDateParsing();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
