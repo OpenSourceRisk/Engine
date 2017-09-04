@@ -304,8 +304,8 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
     report->addColumn("Factor", string());
     report->addColumn("ShiftSize", double(), 6);
     report->addColumn("Base NPV", double(), 2);
-    report->addColumn("Delta*Shift", double(), 2);
-    report->addColumn("Gamma*Shift^2", double(), 2);
+    report->addColumn("Delta", double(), 2);
+    report->addColumn("Gamma", double(), 2);
 
     for (auto data : delta_) {
         pair<string, string> p = data.first;
