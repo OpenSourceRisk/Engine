@@ -618,6 +618,7 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\fraratehelper.hpp" />
     <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\fxsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp" />
@@ -726,6 +727,7 @@
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="qle\termstructures\fraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
