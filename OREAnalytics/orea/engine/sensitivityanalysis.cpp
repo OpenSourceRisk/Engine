@@ -338,7 +338,7 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
     report->addColumn("Factor 2", string());
     report->addColumn("ShiftSize2", double(), 6);
     report->addColumn("Base NPV", double(), 2);
-    report->addColumn("CrossGamma*Shift^2", double(), 2);
+    report->addColumn("CrossGamma", double(), 2);
 
     for (auto data : crossGamma_) {
         string id = std::get<0>(data.first);
