@@ -76,7 +76,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (avgNode)
         isAveraged_ = XMLUtils::getChildValueAsBool(node, "IsAveraged", true);
     else
-        isAveraged_ = false; 
+        isAveraged_ = false;
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays"); // defaults to 0
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
@@ -326,11 +326,11 @@ Leg makeFixedLeg(const LegData& data) {
 }
 
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
-                const boost::shared_ptr<EngineFactory>& engineFactory) {
+                const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    
+
     FloatingLegData floatData = data.floatingLegData();
     bool hasCapsFloors = floatData.caps().size() > 0 || floatData.floors().size() > 0;
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
@@ -408,6 +408,9 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     if (floatData.floors().size() > 0)
         iborLeg.withFloors(buildScheduledVector(floatData.floors(), floatData.floorDates(), schedule));
 
+    if (!attachPricer)
+        return iborLeg;
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredIborLeg");
     QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
@@ -416,14 +419,13 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cappedFlooredIborBuilder->engine(index->currency());
 
     // Loop over the coupons in the leg and set pricer
-    Leg leg = iborLeg;
-    for (const auto& cashflow : leg) {
+    for (const auto& cashflow : (Leg)iborLeg) {
         boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
         QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
 
-    return leg;
+    return iborLeg;
 } // namespace data
 
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index) {
@@ -453,7 +455,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         QL_FAIL("AmortizationType " << data.amortizationData().type() << " not supported for OIS legs");
 
     if (floatData.isAveraged()) {
-        
+
         boost::shared_ptr<QuantExt::AverageONIndexedCouponPricer> couponPricer = boost::make_shared<QuantExt::AverageONIndexedCouponPricer>();
         QuantExt::AverageONLeg leg = QuantExt::AverageONLeg(schedule, index)
                                .withNotionals(nominals)
@@ -469,7 +471,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
         return leg;
 
     } else {
-        
+
         OvernightLeg leg = OvernightLeg(schedule, index)
                                .withNotionals(nominals)
                                .withSpreads(spreads)
@@ -565,7 +567,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps,
-               const vector<double>& floors) {
+               const vector<double>& floors, const bool attachPricer) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
@@ -602,6 +604,9 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
             cmsLeg.withFloors(buildScheduledVector(cmsData.floors(), cmsData.floorDates(), schedule));
     }
 
+    if (!attachPricer)
+        return cmsLeg;
+
     // Get a coupon pricer for the leg
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CMS");
     QL_REQUIRE(builder, "No builder found for CmsLeg");
@@ -610,20 +615,19 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
 
     // Loop over the coupons in the leg and set pricer
-    Leg leg = cmsLeg;
-    for (const auto& cashflow : leg) {
+    for (const auto& cashflow : (Leg)cmsLeg) {
         if (!couponCapFloor && !nakedCapFloor) {
             boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
             coupon->setPricer(couponPricer);
         } else {
             boost::shared_ptr<CappedFlooredCmsCoupon> coupon =
-            boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow); 
-            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon"); 
-            coupon->setPricer(couponPricer); 
+            boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow);
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon");
+            coupon->setPricer(couponPricer);
         }
     }
-    return leg;
+    return cmsLeg;
 }
 
 Real currentNotional(const Leg& leg) {
@@ -792,7 +796,7 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
             nom = (i < notionals.size() ? notionals[i] : notionals.back());
             nominals.push_back(nom);
         } else if (schedule[i] > lastAmortDate + amortPeriod - 4 * Days && schedule[i] < endDate) { // FIXME: tolerance
-            nominals.push_back(nominals.back() * (1.0 - fraction)); 
+            nominals.push_back(nominals.back() * (1.0 - fraction));
             lastAmortDate = schedule[i];
         } else
             nominals.push_back(nominals.back());
