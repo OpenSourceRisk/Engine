@@ -31,6 +31,7 @@
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/fraratehelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
@@ -799,8 +800,13 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
 
         // Create a FRA helper if we do.
         Period periodToStart = fraQuote->fwdStart();
-        boost::shared_ptr<RateHelper> fraHelper(
-            new FraRateHelper(fraQuote->quote(), periodToStart, fraConvention->index()));
+        boost::shared_ptr<RateHelper> fraHelper;
+        
+        if (periodToStart.units() == Days) {
+            fraHelper = boost::make_shared<QuantExt::FraRateHelper>(fraQuote->quote(), periodToStart, fraQuote->term(), fraConvention->index());
+        } else {
+            fraHelper = boost::make_shared<QuantExt::FraRateHelper>(fraQuote->quote(), periodToStart, fraConvention->index());
+        }
 
         instruments.push_back(fraHelper);
     }
