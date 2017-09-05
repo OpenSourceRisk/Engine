@@ -207,7 +207,7 @@ public:
     //! Constructor
     ImmFRAQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string imm1,
         string imm2)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FRA), ccy_(ccy), imm1_(imm1),
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1),
         imm2_(imm2) {}
 
     //! \name Inspectors

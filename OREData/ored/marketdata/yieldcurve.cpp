@@ -140,6 +140,7 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             h_->enableExtrapolation();
         }
     } catch (QuantLib::Error& e) {
+
         QL_FAIL("yield curve building failed :" << e.what());
     } catch (std::exception& e) {
         QL_FAIL(e.what());
@@ -804,6 +805,7 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
         
         if (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA) {
             boost::shared_ptr<ImmFRAQuote> immFraQuote;
+            immFraQuote = boost::dynamic_pointer_cast<ImmFRAQuote>(marketQuote);
             string imm1 = immFraQuote->imm1();
             string imm2 = immFraQuote->imm2();
             fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
