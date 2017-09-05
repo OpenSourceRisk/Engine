@@ -419,13 +419,14 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cappedFlooredIborBuilder->engine(index->currency());
 
     // Loop over the coupons in the leg and set pricer
-    for (const auto& cashflow : (Leg)iborLeg) {
+    Leg tmpLeg = iborLeg;
+    for (const auto& cashflow : tmpLeg) {
         boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
         QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
         coupon->setPricer(couponPricer);
     }
 
-    return iborLeg;
+    return tmpLeg;
 } // namespace data
 
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index) {
@@ -615,7 +616,8 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     boost::shared_ptr<FloatingRateCouponPricer> couponPricer = cmsSwapBuilder->engine(swapIndex->currency());
 
     // Loop over the coupons in the leg and set pricer
-    for (const auto& cashflow : (Leg)cmsLeg) {
+    Leg tmpLeg = cmsLeg;
+    for (const auto& cashflow : tmpLeg) {
         if (!couponCapFloor && !nakedCapFloor) {
             boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
             QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon");
@@ -627,7 +629,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
             coupon->setPricer(couponPricer);
         }
     }
-    return cmsLeg;
+    return tmpLeg;
 }
 
 Real currentNotional(const Leg& leg) {
