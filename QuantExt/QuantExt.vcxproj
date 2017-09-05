@@ -618,7 +618,7 @@
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
-    <ClInclude Include="qle\termstructures\fraratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\immfraratehelper.hpp" />
     <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\fxsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp" />
@@ -644,6 +644,7 @@
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\utilities\parsers.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
@@ -727,7 +728,7 @@
     <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
-    <ClCompile Include="qle\termstructures\fraratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
@@ -744,6 +745,7 @@
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
+    <ClCompile Include="qle\utilities\parsers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

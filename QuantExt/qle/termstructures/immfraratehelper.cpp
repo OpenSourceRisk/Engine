@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/fraratehelper.hpp>
+#include <qle/termstructures/immfraratehelper.hpp>
 #include <ql/utilities/null_deleter.hpp>
+#include <qle/utilities/parsers.hpp>
 
-
+using namespace std;
 namespace QuantExt {
 
-FraRateHelper::FraRateHelper(const Handle<Quote>& rate,
-    Period periodToStart,
-    Period term,
+ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate,
+    string& imm1, string& imm2,
     const boost::shared_ptr<IborIndex>& i,
     Pillar::Choice pillarChoice,
     Date customPillarDate)
-    : RelativeDateRateHelper(rate), periodToStart_(periodToStart),
-    term_(term), termFromIndex_(false),
+    : RelativeDateRateHelper(rate),
+    imm1_(imm1), imm2_(imm2),
     pillarChoice_(pillarChoice) {
     // take fixing into account
     iborIndex_ = i->clone(termStructureHandle_);
@@ -40,28 +40,12 @@ FraRateHelper::FraRateHelper(const Handle<Quote>& rate,
     initializeDates();
 }
 
-FraRateHelper::FraRateHelper(const Handle<Quote>& rate,
-    Period periodToStart,
-    const boost::shared_ptr<IborIndex>& i,
-    Pillar::Choice pillarChoice,
-    Date customPillarDate)
-    : RelativeDateRateHelper(rate), periodToStart_(periodToStart),
-    termFromIndex_(true), pillarChoice_(pillarChoice) {
-    // take fixing into account
-    iborIndex_ = i->clone(termStructureHandle_);
-    // see above
-    iborIndex_->unregisterWith(termStructureHandle_);
-    registerWith(iborIndex_);
-    pillarDate_ = customPillarDate;
-    initializeDates();
-}
-
-Real FraRateHelper::impliedQuote() const {
+Real ImmFraRateHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
     return iborIndex_->fixing(fixingDate_, true);
 }
 
-void FraRateHelper::setTermStructure(YieldTermStructure* t) {
+void ImmFraRateHelper::setTermStructure(YieldTermStructure* t) {
     // do not set the relinkable handle as an observer -
     // force recalculation when needed---the index is not lazy
     bool observer = false;
@@ -72,25 +56,17 @@ void FraRateHelper::setTermStructure(YieldTermStructure* t) {
     RelativeDateRateHelper::setTermStructure(t);
 }
 
-void FraRateHelper::initializeDates() {
+void ImmFraRateHelper::initializeDates() {
     // if the evaluation date is not a business day
     // then move to the next business day
     Date referenceDate =
         iborIndex_->fixingCalendar().adjust(evaluationDate_);
     Date spotDate = iborIndex_->fixingCalendar().advance(
         referenceDate, iborIndex_->fixingDays()*Days);
-    earliestDate_ = iborIndex_->fixingCalendar().advance(
-        spotDate,
-        periodToStart_,
-        iborIndex_->businessDayConvention(),
-        iborIndex_->endOfMonth());
-    // maturity date is calculated from spot date
-    Period term = termFromIndex_ ? iborIndex_->tenor() : term_;
-    maturityDate_ = iborIndex_->fixingCalendar().advance(
-        spotDate,
-        periodToStart_ + term,
-        iborIndex_->businessDayConvention(),
-        iborIndex_->endOfMonth());
+    
+    earliestDate_ = iborIndex_->fixingCalendar().adjust(parseIMMDate(spotDate, imm1_));
+    maturityDate_ = iborIndex_->fixingCalendar().adjust(parseIMMDate(spotDate, imm2_));
+
     // latest relevant date is calculated from earliestDate_ instead
     latestRelevantDate_ = iborIndex_->maturityDate(earliestDate_);
 
@@ -121,9 +97,9 @@ void FraRateHelper::initializeDates() {
     fixingDate_ = iborIndex_->fixingDate(earliestDate_);
 }
 
-void FraRateHelper::accept(AcyclicVisitor& v) {
-    Visitor<FraRateHelper>* v1 =
-        dynamic_cast<Visitor<FraRateHelper>*>(&v);
+void ImmFraRateHelper::accept(AcyclicVisitor& v) {
+    Visitor<ImmFraRateHelper>* v1 =
+        dynamic_cast<Visitor<ImmFraRateHelper>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else
