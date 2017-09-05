@@ -34,7 +34,6 @@ using std::vector;
 using std::string;
 using std::pair;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
@@ -224,7 +223,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
     //@}
 
     //! \name Equality Operators

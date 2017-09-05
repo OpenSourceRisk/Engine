@@ -233,6 +233,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // that appears in the XML
     npvCurrency_ = ccy_str;
     notional_ = currentNotional(legs_[0]); // match npvCurrency_
+    DLOG("Notional is " << notional_ << " " << npvCurrency_);
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
@@ -240,7 +241,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currencies, currency));
-        DLOG("Swap::build(): XCCY Swap NPV = " << swap->NPV());
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -249,7 +249,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(currency));
-        DLOG("Swap::build(): Swap NPV = " << swap->NPV());
         instrument_.reset(new VanillaInstrument(swap));
     }
 

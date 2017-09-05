@@ -30,7 +30,6 @@
 using std::vector;
 using std::string;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
