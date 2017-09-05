@@ -495,8 +495,11 @@
     <ClInclude Include="qle\indexes\ibor\corra.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\fraratehelper.hpp">
+    <ClInclude Include="qle\termstructures\immfraratehelper.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\utilities\parsers.hpp">
+      <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -832,8 +835,11 @@
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\fraratehelper.cpp">
+    <ClCompile Include="qle\termstructures\immfraratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\utilities\parsers.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

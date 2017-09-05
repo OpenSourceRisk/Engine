@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file fraratehelper.hpp
-    \brief FRA rate helper
+/*! \file immfraratehelper.hpp
+    \brief IMM FRA rate helper
 */
 
-#ifndef quantext_fraratehelper_hpp
-#define quantext_fraratehelper_hpp
+#ifndef quantext_immfraratehelper_hpp
+#define quantext_immfraratehelper_hpp
 
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
@@ -32,16 +32,10 @@ namespace QuantExt {
 typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 
 //! Rate helper for bootstrapping over %FRA rates
-class FraRateHelper : public RelativeDateRateHelper {
+class ImmFraRateHelper : public RelativeDateRateHelper {
 public:
-    FraRateHelper(const Handle<Quote>& rate,
-        Period periodToStart,
-        Period term,
-        const boost::shared_ptr<IborIndex>& iborIndex,
-        Pillar::Choice pillar = Pillar::LastRelevantDate,
-        Date customPillarDate = Date());
-    FraRateHelper(const Handle<Quote>& rate,
-        Period periodToStart,
+    ImmFraRateHelper(const Handle<Quote>& rate,
+        std::string& imm1, std::string & imm2,
         const boost::shared_ptr<IborIndex>& iborIndex,
         Pillar::Choice pillar = Pillar::LastRelevantDate,
         Date customPillarDate = Date());
@@ -59,9 +53,7 @@ public:
 private:
     void initializeDates();
     Date fixingDate_;
-    Period periodToStart_;
-    Period term_;
-    bool termFromIndex_ = true;
+    std::string imm1_, imm2_;
     Pillar::Choice pillarChoice_;
     boost::shared_ptr<IborIndex> iborIndex_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

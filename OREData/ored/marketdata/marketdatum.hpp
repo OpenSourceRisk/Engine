@@ -68,6 +68,7 @@ public:
         MM,
         MM_FUTURE,
         FRA,
+        IMM_FRA,
         IR_SWAP,
         BASIS_SWAP,
         CC_BASIS_SWAP,
@@ -187,6 +188,36 @@ private:
     string ccy_;
     Period fwdStart_;
     Period term_;
+};
+
+//! IMM FRA market data class
+/*!
+    This class holds single market points of type
+    - IMM FRA
+
+    Specific data comprise currency, IMM 1 and IMM 2
+
+    IMM 1 & 2 are strings representing the IMM dates - 1 is the next date, 
+    up to 9, and then A, B, C, D
+
+\ingroup marketdata
+*/
+class ImmFRAQuote : public MarketDatum {
+public:
+    //! Constructor
+    ImmFRAQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string imm1,
+        string imm2)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FRA), ccy_(ccy), imm1_(imm1),
+        imm2_(imm2) {}
+
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const string& imm1() const { return imm1_; }
+    const string& imm2() const { return imm2_; }
+    //@}
+private:
+    string ccy_, imm1_, imm2_;
 };
 
 //! Swap market data class

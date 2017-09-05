@@ -53,12 +53,6 @@ namespace data {
 */
 QuantLib::Date parseDate(const string& s);
 
-//! Convert std::string to QuantLib::Date, Expects: IM1, IM2,...,IM9, IMA, IMB, IMC, IMD
-/*!
-  \ingroup utilities
-*/
-QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s);
-
 //! Convert text to Real
 /*!
   \ingroup utilities

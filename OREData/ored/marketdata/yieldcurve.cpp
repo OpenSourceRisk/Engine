@@ -31,7 +31,7 @@
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
-#include <qle/termstructures/fraratehelper.hpp>
+#include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
@@ -788,24 +788,32 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fraQuoteIDs[i], asofDate_);
 
         // Check that we have a valid FRA quote
-        boost::shared_ptr<FRAQuote> fraQuote;
         if (marketQuote) {
-            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA,
+            QL_REQUIRE((marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) || 
+                (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA),
                        "Market quote not of type FRA.");
-            fraQuote = boost::dynamic_pointer_cast<FRAQuote>(marketQuote);
+            
         } else {
             QL_FAIL("Could not find quote for ID " << fraQuoteIDs[i] << " with as of date " << io::iso_date(asofDate_)
                                                    << ".");
         }
 
         // Create a FRA helper if we do.
-        Period periodToStart = fraQuote->fwdStart();
+        
         boost::shared_ptr<RateHelper> fraHelper;
         
-        if (periodToStart.units() == Days) {
-            fraHelper = boost::make_shared<QuantExt::FraRateHelper>(fraQuote->quote(), periodToStart, fraQuote->term(), fraConvention->index());
+        if (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA) {
+            boost::shared_ptr<ImmFRAQuote> immFraQuote;
+            string imm1 = immFraQuote->imm1();
+            string imm2 = immFraQuote->imm2();
+            fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
+        } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA){
+            boost::shared_ptr<FRAQuote> fraQuote;
+            fraQuote = boost::dynamic_pointer_cast<FRAQuote>(marketQuote);
+            Period periodToStart = fraQuote->fwdStart();
+            fraHelper = boost::make_shared<FraRateHelper>(fraQuote->quote(), periodToStart, fraConvention->index());
         } else {
-            fraHelper = boost::make_shared<QuantExt::FraRateHelper>(fraQuote->quote(), periodToStart, fraConvention->index());
+            QL_FAIL("Market quote not of type FRA.");
         }
 
         instruments.push_back(fraHelper);
