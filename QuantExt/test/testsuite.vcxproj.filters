@@ -68,7 +68,7 @@
     <ClCompile Include="payment.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="swaptionvolatilitycube.cpp">
+    <ClCompile Include="parser.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -156,7 +156,7 @@
     <ClInclude Include="payment.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="swaptionvolatilitycube.hpp">
+    <ClInclude Include="parser.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

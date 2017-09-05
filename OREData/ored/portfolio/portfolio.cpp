@@ -45,6 +45,19 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
     XMLDocument doc(fileName);
     LOG("Loaded XML file");
 
+    load(doc, factory);
+}
+
+void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
+    LOG("Parsing XML string");
+    XMLDocument doc;
+    doc.fromXMLString(xmlString);
+    LOG("Loaded XML string");
+
+    load(doc, factory);
+}
+
+void Portfolio::load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& factory) {
     XMLNode* node = doc.getFirstNode("Portfolio");
     if (node) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");

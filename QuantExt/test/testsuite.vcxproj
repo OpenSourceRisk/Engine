@@ -643,13 +643,13 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
+    <ClCompile Include="parser.cpp" />
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
-    <ClCompile Include="swaptionvolatilitycube.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />
     <ClCompile Include="testsuite.cpp" />
   </ItemGroup>
@@ -670,6 +670,7 @@
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
+    <ClInclude Include="parser.hpp" />
     <ClInclude Include="payment.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
@@ -677,7 +678,6 @@
     <ClInclude Include="survivalprobabilitycurve.hpp" />
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />
-    <ClInclude Include="swaptionvolatilitycube.hpp" />
     <ClInclude Include="swaptionvolconstantspread.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
   </ItemGroup>
