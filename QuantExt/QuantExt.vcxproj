@@ -644,6 +644,7 @@
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\utilities\all.h" />
     <ClInclude Include="qle\utilities\parsers.hpp" />
   </ItemGroup>
   <ItemGroup>
