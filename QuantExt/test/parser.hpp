@@ -23,26 +23,22 @@
 
 #pragma once
 
+#ifndef quantext_test_parser_hpp
+#define quantext_test_parser_hpp
+
 #include <boost/test/unit_test.hpp>
 
-namespace testsuite {
+namespace {
 
-//! Test basic parsers
-/*!
-  \ingroup tests
-*/
-class ParseTest {
-public:
-    //! Test parsing of all supported day counter representations
-    static void testDayCounterParsing();
-    //! Test parsing of all supported frequency representations
-    static void testFrequencyParsing();
-    //! Test parsing of all supported compounding representations
-    static void testCompoundingParsing();
-    //! Test parsing of all supported strike representations
-    static void testStrikeParsing();
-    //! Test date, period, date or period parsing
-    static void testDatePeriodParsing();
-    static boost::unit_test_framework::test_suite* suite();
-};
+    //! Test basic parsers
+    /*!
+    \ingroup tests
+    */
+    class ParseTest {
+    public:
+        static void testIMMDateParsing();
+        static boost::unit_test_framework::test_suite* suite();
+    };
 } // namespace testsuite
+
+#endif
