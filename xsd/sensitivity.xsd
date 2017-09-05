@@ -234,7 +234,6 @@
       <xs:element type="shifttype" name="ShiftType"/>
         <xs:choice>
          <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
          <xs:element name="Shifts">
           <xs:complexType>
            <xs:sequence>
