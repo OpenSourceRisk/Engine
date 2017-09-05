@@ -53,6 +53,9 @@ public:
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
               const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+    //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
+    void loadFromXMLString(const std::string& xmlString,
+        const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 
@@ -75,6 +78,9 @@ public:
     std::map<std::string, std::string> nettingSetMap() const;
 
 private:
+    //! Load from XMLDocument
+    void load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& tf);
+
     std::vector<boost::shared_ptr<Trade>> trades_;
 };
 } // namespace data
