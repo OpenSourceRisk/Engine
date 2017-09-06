@@ -56,6 +56,9 @@ MakeAverageOIS::operator boost::shared_ptr<AverageOIS>() const {
         effectiveDate = effectiveDate_;
     } else {
         Date valuationDate = Settings::instance().evaluationDate();
+        // if the evaluation date is not a business day
+        // then move to the next business day
+        valuationDate = spotLagCalendar_.adjust(valuationDate);
         Date spotDate = spotLagCalendar_.advance(valuationDate, spotLagTenor_);
         effectiveDate = spotDate + forwardStart_;
     }
