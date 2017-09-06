@@ -191,8 +191,8 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(imm1.size() == 1, "IMM date string must be 1 characters long, [1-9][A-F]");
         QL_REQUIRE(imm2.size() == 1, "IMM date string must be 1 characters long, [1-9][A-F]");
 
-        unsigned int m1 = std::strtol(imm1.c_str(), NULL, 16);
-        unsigned int m2 = std::strtol(imm2.c_str(), NULL, 16);
+        unsigned int m1 = std::stoi(imm1.c_str(), NULL, 16);
+        unsigned int m2 = std::stoi(imm2.c_str(), NULL, 16);
         return boost::make_shared<ImmFraQuote>(value, asof, datumName, quoteType, ccy, m1, m2);
     }
 
