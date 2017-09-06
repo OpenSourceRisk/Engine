@@ -498,12 +498,6 @@
     <ClInclude Include="qle\termstructures\immfraratehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\utilities\parsers.hpp">
-      <Filter>utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\utilities\all.h">
-      <Filter>utilities</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -843,9 +837,6 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp">
       <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\utilities\parsers.cpp">
-      <Filter>utilities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

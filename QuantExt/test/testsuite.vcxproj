@@ -643,7 +643,6 @@
     <ClCompile Include="index.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
-    <ClCompile Include="parser.cpp" />
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
@@ -670,7 +669,6 @@
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
-    <ClInclude Include="parser.hpp" />
     <ClInclude Include="payment.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
