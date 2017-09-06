@@ -166,7 +166,7 @@ public:
     //! the name "BufferLogger"
     static const string name;
     //! Constructor
-    BufferLogger() : Logger(name) {}
+    BufferLogger(unsigned minLevel = ORE_DATA) : Logger(name), minLevel_(minLevel) {}
     //! Desctructor
     virtual ~BufferLogger() {}
     //! The log callback
@@ -187,6 +187,7 @@ public:
 
 private:
     std::queue<string> buffer_;
+    unsigned minLevel_;
 };
 
 //! Global static Log class
