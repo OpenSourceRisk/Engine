@@ -31,8 +31,7 @@
 using std::string;
 using std::vector;
 using ore::data::XMLSerializable;
-;
-using ore::data::XMLDocument;
+
 using ore::data::XMLNode;
 
 namespace ore {
