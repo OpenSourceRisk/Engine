@@ -501,7 +501,7 @@
     <ClInclude Include="qle\utilities\parsers.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="qle\utilities\all.h">
+    <ClInclude Include="qle\utilities\all.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
