@@ -644,8 +644,6 @@
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
-    <ClInclude Include="qle\utilities\all.hpp" />
-    <ClInclude Include="qle\utilities\parsers.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
@@ -746,7 +744,6 @@
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
-    <ClCompile Include="qle\utilities\parsers.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

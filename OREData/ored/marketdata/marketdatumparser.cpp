@@ -187,7 +187,9 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[2];
         string imm1 = tokens[3].substr(2, 1);
         string imm2 = tokens[4].substr(2, 1);
-        return boost::make_shared<ImmFRAQuote>(value, asof, datumName, quoteType, ccy, imm1, imm2);
+        unsigned int m1 = std::strtol(imm1.c_str(), NULL, 16);
+        unsigned int m2 = std::strtol(imm2.c_str(), NULL, 16);
+        return boost::make_shared<ImmFraQuote>(value, asof, datumName, quoteType, ccy, m1, m2);
     }
 
     case MarketDatum::InstrumentType::IR_SWAP: {

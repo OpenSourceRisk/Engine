@@ -18,13 +18,13 @@
 
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <ql/utilities/null_deleter.hpp>
-#include <qle/utilities/parsers.hpp>
+#include <ql/time/imm.hpp>
 
 using namespace std;
 namespace QuantExt {
 
 ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate,
-    string& imm1, string& imm2,
+    unsigned int& imm1, unsigned int& imm2,
     const boost::shared_ptr<IborIndex>& i,
     Pillar::Choice pillarChoice,
     Date customPillarDate)
@@ -63,9 +63,9 @@ void ImmFraRateHelper::initializeDates() {
         iborIndex_->fixingCalendar().adjust(evaluationDate_);
     Date spotDate = iborIndex_->fixingCalendar().advance(
         referenceDate, iborIndex_->fixingDays()*Days);
-    
-    earliestDate_ = iborIndex_->fixingCalendar().adjust(parseIMMDate(spotDate, imm1_));
-    maturityDate_ = iborIndex_->fixingCalendar().adjust(parseIMMDate(spotDate, imm2_));
+
+    earliestDate_ = iborIndex_->fixingCalendar().adjust(getImmDate(spotDate, imm1_));
+    maturityDate_ = iborIndex_->fixingCalendar().adjust(getImmDate(spotDate, imm2_));
 
     // latest relevant date is calculated from earliestDate_ instead
     latestRelevantDate_ = iborIndex_->maturityDate(earliestDate_);
@@ -95,6 +95,14 @@ void ImmFraRateHelper::initializeDates() {
     latestDate_ = pillarDate_; // backward compatibility
 
     fixingDate_ = iborIndex_->fixingDate(earliestDate_);
+}
+
+Date ImmFraRateHelper::getImmDate(Date asof, int i) {
+    Date imm = asof;
+    for (Size j = 0; j<i; j++) {
+        imm = IMM::nextDate(imm, true);
+    }
+    return imm;
 }
 
 void ImmFraRateHelper::accept(AcyclicVisitor& v) {

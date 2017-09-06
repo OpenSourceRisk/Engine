@@ -804,10 +804,10 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
         boost::shared_ptr<RateHelper> fraHelper;
         
         if (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA) {
-            boost::shared_ptr<ImmFRAQuote> immFraQuote;
-            immFraQuote = boost::dynamic_pointer_cast<ImmFRAQuote>(marketQuote);
-            string imm1 = immFraQuote->imm1();
-            string imm2 = immFraQuote->imm2();
+            boost::shared_ptr<ImmFraQuote> immFraQuote;
+            immFraQuote = boost::dynamic_pointer_cast<ImmFraQuote>(marketQuote);
+            unsigned int imm1 = immFraQuote->imm1();
+            unsigned int imm2 = immFraQuote->imm2();
             fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
         } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA){
             boost::shared_ptr<FRAQuote> fraQuote;
