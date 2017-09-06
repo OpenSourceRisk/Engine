@@ -30,7 +30,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s) {
-    Size m = std::stoi(s, NULL, 16);
+    Size m = std::strtol(s.c_str(), NULL, 16);
 
     Date imm = asof;
     for (Size i = 0; i < m; i++) {
