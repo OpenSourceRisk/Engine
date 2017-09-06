@@ -1036,8 +1036,19 @@ void ScenarioSimMarket::update(const Date& d) {
 
     if (asd_) {
         // add additional scenario data to the given container, if required
-        for (auto i : parameters_->additionalScenarioDataIndices())
-            asd_->set(iborIndex(i)->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+        for (auto i : parameters_->additionalScenarioDataIndices()) {
+            boost::shared_ptr<QuantLib::Index> index;
+            try {
+                index = *iborIndex(i);
+            } catch (...) {
+            }
+            try {
+                index = *swapIndex(i);
+            } catch (...) {
+            }
+            QL_REQUIRE(index != nullptr, "ScenarioSimMarket::update() index " << i << " not found in sim market");
+            asd_->set(index->fixing(d), AggregationScenarioDataType::IndexFixing, i);
+        }
 
         for (auto c : parameters_->additionalScenarioDataCcys()) {
             if (c != parameters_->baseCcy())
