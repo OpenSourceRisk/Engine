@@ -32,6 +32,7 @@
 
 using std::string;
 using QuantLib::Real;
+using QuantLib::Size;
 using QuantLib::Date;
 using QuantLib::Period;
 using QuantLib::Quote;
@@ -218,7 +219,8 @@ public:
     //@}
 private:
     string ccy_;
-    Size imm1_, imm2_;
+    Size imm1_;
+    Size imm2_;
 };
 
 //! Swap market data class

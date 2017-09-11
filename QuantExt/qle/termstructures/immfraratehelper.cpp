@@ -24,7 +24,7 @@ using namespace std;
 namespace QuantExt {
 
 ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate,
-    Size& imm1, Size& imm2,
+    Size imm1, Size imm2,
     const boost::shared_ptr<IborIndex>& i,
     Pillar::Choice pillarChoice,
     Date customPillarDate)
