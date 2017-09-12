@@ -92,7 +92,8 @@ void SwaptionVolatilityConverterTest::testNormalToLognormal() {
 
     // Set up the converter (Normal -> Lognormal with no shifts)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmNormalVolMatrix, vars.yieldCurves.discountEonia,
-                                          vars.swapConventions, ShiftedLognormal);
+                                          vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years,
+                                          ShiftedLognormal);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -120,7 +121,8 @@ void SwaptionVolatilityConverterTest::testLognormalToNormal() {
 
     // Set up the converter (Lognormal with no shifts -> Normal)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmLogNormalVolMatrix,
-                                          vars.yieldCurves.discountEonia, vars.swapConventions, Normal);
+                                          vars.yieldCurves.discountEonia, vars.swapConventions, vars.swapConventions,
+                                          1 * Years, 30 * Years, Normal);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -148,7 +150,8 @@ void SwaptionVolatilityConverterTest::testNormalToShiftedLognormal() {
 
     // Set up the converter (Normal -> Shifted Lognormal with shift set 1)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmNormalVolMatrix, vars.yieldCurves.discountEonia,
-                                          vars.swapConventions, ShiftedLognormal, vars.atmVols.shifts_1);
+                                          vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years,
+                                          ShiftedLognormal, vars.atmVols.shifts_1);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -176,8 +179,8 @@ void SwaptionVolatilityConverterTest::testShiftedLognormalToShiftedLognormal() {
 
     // Set up the converter (Normal -> Shifted Lognormal with shift set 1)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_1,
-                                          vars.yieldCurves.discountEonia, vars.swapConventions, ShiftedLognormal,
-                                          vars.atmVols.shifts_2);
+                                          vars.yieldCurves.discountEonia, vars.swapConventions, vars.swapConventions,
+                                          1 * Years, 30 * Years, ShiftedLognormal, vars.atmVols.shifts_2);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -205,7 +208,8 @@ void SwaptionVolatilityConverterTest::testShiftedLognormalToNormal() {
 
     // Set up the converter (Shifted Lognormal with shift set 2 -> Normal)
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2,
-                                          vars.yieldCurves.discountEonia, vars.swapConventions, Normal);
+                                          vars.yieldCurves.discountEonia, vars.swapConventions, vars.swapConventions,
+                                          1 * Years, 30 * Years, Normal);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -243,7 +247,8 @@ void SwaptionVolatilityConverterTest::testFailureImplyingVol() {
 
     // Set up the converter (Normal -> Lognormal)
     SwaptionVolatilityConverter converter(vars.referenceDate, volMatrix, vars.yieldCurves.discountEonia,
-                                          vars.swapConventions, ShiftedLognormal);
+                                          vars.swapConventions, vars.swapConventions, 1 * Years, 30 * Years,
+                                          ShiftedLognormal);
 
     // We expect the conversion to fail
     BOOST_CHECK_THROW(converter.convert(), QuantLib::Error);
@@ -260,8 +265,8 @@ void SwaptionVolatilityConverterTest::testNormalShiftsIgnored() {
     // Set up the converter (Lognormal with no shifts -> Normal)
     // We supply target shifts but they are ignored since target type is Normal
     SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmLogNormalVolMatrix,
-                                          vars.yieldCurves.discountEonia, vars.swapConventions, Normal,
-                                          vars.atmVols.shifts_1);
+                                          vars.yieldCurves.discountEonia, vars.swapConventions, vars.swapConventions,
+                                          1 * Years, 30 * Years, Normal, vars.atmVols.shifts_1);
 
     // Get back converted volatility structure and test result on pillar points
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -292,7 +297,8 @@ void SwaptionVolatilityConverterTest::testConstructionFromSwapIndex() {
         boost::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M, vars.yieldCurves.discountEonia);
 
     // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
-    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, Normal);
+    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, swapIndex,
+                                          Normal);
 
     // Test that the results are still ok
     boost::shared_ptr<SwaptionVolatilityStructure> convertedsvs = converter.convert();
@@ -320,7 +326,8 @@ void SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount() 
         boost::make_shared<EuriborSwapIsdaFixA>(2 * Years, vars.yieldCurves.forward6M);
 
     // Set up the converter using swap index (Shifted Lognormal with shift set 2 -> Normal)
-    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, Normal);
+    SwaptionVolatilityConverter converter(vars.referenceDate, vars.atmShiftedLogNormalVolMatrix_2, swapIndex, swapIndex,
+                                          Normal);
 
     // Test that calling convert() still works
     BOOST_CHECK_NO_THROW(converter.convert());
