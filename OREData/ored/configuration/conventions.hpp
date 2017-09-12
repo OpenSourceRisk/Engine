@@ -32,7 +32,6 @@
 using std::string;
 using std::map;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 
 namespace ore {
@@ -169,7 +168,7 @@ public:
     DepositConvention(const string& id, const string& index);
     //! Detailed constructor
     DepositConvention(const string& id, const string& calendar, const string& convention, const string& eom,
-                      const string& dayCounter);
+                      const string& dayCounter, const string& settlementDays);
     //@}
 
     //! \name Inspectors
@@ -179,6 +178,7 @@ public:
     BusinessDayConvention convention() const { return convention_; }
     bool eom() { return eom_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
+    const Size settlementDays() const { return settlementDays_; }
     bool indexBased() { return indexBased_; }
     // @}
 
@@ -195,6 +195,7 @@ private:
     BusinessDayConvention convention_;
     bool eom_;
     DayCounter dayCounter_;
+    Size settlementDays_;
     bool indexBased_;
 
     // Strings to store the inputs
@@ -202,6 +203,7 @@ private:
     string strConvention_;
     string strEom_;
     string strDayCounter_;
+    string strSettlementDays_;
 };
 
 //! Container for storing Money Market Futures conventions
@@ -746,6 +748,7 @@ public:
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
     bool adjustInfObsDates() const { return adjustInfObsDates_; }

@@ -2,9 +2,12 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>

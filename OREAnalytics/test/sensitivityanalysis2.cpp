@@ -98,8 +98,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
@@ -117,14 +117,16 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
+    simMarketData->fxVolIsSurface() = false;
+    simMarketData->fxVolMoneyness() = {0};
 
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
@@ -147,11 +149,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cvsData.shiftSize = 1E-5;
     cvsData.parInstruments = {"DEP", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS", "IRS"};
 
-    SensitivityScenarioData::FxShiftData fxsData;
+    SensitivityScenarioData::SpotShiftData fxsData;
     fxsData.shiftType = "Absolute";
     fxsData.shiftSize = 1E-5;
 
-    SensitivityScenarioData::FxVolShiftData fxvsData;
+    SensitivityScenarioData::VolShiftData fxvsData;
     fxvsData.shiftType = "Absolute";
     fxvsData.shiftSize = 1E-5;
     fxvsData.shiftExpiries = {5 * Years};

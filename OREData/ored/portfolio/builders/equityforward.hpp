@@ -48,7 +48,7 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         return boost::make_shared<QuantExt::DiscountingEquityForwardEngine>(
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));

@@ -54,8 +54,17 @@ public:
         OptionletVolatility,
         FXSpot,
         FXVolatility,
-        EQSpot,
-        EQVolatility
+        EquitySpot,
+        EquityForecastCurve,
+        EquityVolatility,
+        DividendYield,
+        SurvivalProbability,
+        RecoveryRate,
+        CDSVolatility,
+        BaseCorrelation,
+        CPIIndex,
+        ZeroInflationCurve,
+        YoYInflationCurve
     };
 
     //! Constructor

@@ -58,8 +58,8 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     return builder;
 }
 
-Disposable<set<boost::shared_ptr<ModelBuilder>>> EngineFactory::modelBuilders() const {
-    set<boost::shared_ptr<ModelBuilder>> res;
+Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> EngineFactory::modelBuilders() const {
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res; 
     for (auto const& b : builders_) {
         res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
     }
@@ -84,6 +84,12 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
+
+    registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());
+    registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+
+    registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
 }
 
 } // namespace data

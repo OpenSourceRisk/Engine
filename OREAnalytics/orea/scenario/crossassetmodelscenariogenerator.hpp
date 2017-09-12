@@ -78,6 +78,7 @@ private:
     std::vector<RiskFactorKey> fxKeys_, eqKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
+    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_;
 };
 } // namespace analytics
 } // namespace ore

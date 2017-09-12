@@ -46,6 +46,8 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
         : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
+        progressBarWidth_ = 72 - std::min<Size>(tab_, 67);
+
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
@@ -109,8 +111,13 @@ public:
     void writeCube();
     //! write out scenarioData
     void writeScenarioData();
+    //! write out base scenario
+    void writeBaseScenario();
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
+
+    //! write out additional reports
+    virtual void writeAdditionalReports() {}
 
 protected:
     //! Initialize input parameters to the sensitivities analysis
@@ -122,7 +129,7 @@ protected:
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
 
-    Size tab_;
+    Size tab_, progressBarWidth_;
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
@@ -134,6 +141,7 @@ protected:
     bool writeDIMReport_;
     bool sensitivity_;
     bool stress_;
+    bool writeBaseScenario_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

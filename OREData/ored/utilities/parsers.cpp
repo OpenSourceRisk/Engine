@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <map>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
@@ -30,7 +31,9 @@
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
+#include <ql/version.hpp>
 #include <qle/currencies/all.hpp>
+#include <ql/time/imm.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -100,12 +103,33 @@ Date parseDate(const string& s) {
     QL_FAIL("Cannot convert \"" << s << "\" to Date.");
 }
 
+QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s) {
+    QL_REQUIRE(s.size() == 3, "IMM date string must be 3 characters long");
+    QL_REQUIRE(s.substr(0,2) == "IM", "IM date string must contain 'IM' ");
+
+    string ms = s.substr(2,1);
+
+    Size m = std::stoi(ms, NULL, 16);
+    
+    Date imm = asof;
+    for (Size i=0; i<m; i++) {
+        imm = IMM::nextDate(imm, true);
+    }
+    return imm;
+}
+
 Real parseReal(const string& s) {
     // TODO: review
     return atof(s.c_str());
 }
 
-Integer parseInteger(const string& s) { return io::to_integer(s); }
+Integer parseInteger(const string& s) {
+    try {
+        return io::to_integer(s);
+    } catch (std::exception& ex) {
+        QL_FAIL("Failed to parseInteger(\"" << s << "\") " << ex.what());
+    }
+}
 
 bool parseBool(const string& s) {
     static map<string, bool> b = {{"Y", true},  {"YES", true}, {"TRUE", true},   {"true", true},   {"1", true},
@@ -125,7 +149,10 @@ Calendar parseCalendar(const string& s) {
                                       {"EUR", TARGET()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
+                                      {"CHZU", Switzerland()},
+                                      {"Switzerland", Switzerland()},
                                       {"US", UnitedStates()},
+                                      {"USNY", UnitedStates()},
                                       {"USD", UnitedStates()},
                                       {"NYB", UnitedStates()},
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
@@ -141,16 +168,22 @@ Calendar parseCalendar(const string& s) {
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
                                       {"CAD", Canada()},
+                                      {"CATO", Canada()},
+                                      {"Canada", Canada()},
                                       {"SYB", Australia()},
                                       {"AU", Australia()},
                                       {"AUD", Australia()},
+                                      {"Australia", Australia()},
                                       {"TKB", Japan()},
                                       {"JP", Japan()},
+                                      {"JPTO", Japan()},
                                       {"JPY", Japan()},
+                                      {"Japan", Japan()},
                                       {"ZAR", SouthAfrica()},
                                       {"SA", SouthAfrica()},
                                       {"SS", Sweden()},
                                       {"SEK", Sweden()},
+                                      {"SEST", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
                                       {"CNY", China()},
@@ -172,8 +205,10 @@ Calendar parseCalendar(const string& s) {
                                       {"KRW", SouthKorea()},
                                       {"TWD", Taiwan()},
                                       {"TRY", Turkey()},
+                                      {"TRIS", Turkey()},
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
+                                      {"GBLO", UnitedKingdom()},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
                                       {"RON", TARGET()},
@@ -196,7 +231,12 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
-                                      {"WeekendsOnly", WeekendsOnly()}};
+                                        //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+                                      {"EUTA", TARGET()},
+                                      {"BEBR", TARGET()}, //Belgium, Brussels not in QL
+                                      {"WeekendsOnly", WeekendsOnly()},
+                                      {"UNMAPPED", WeekendsOnly()},
+                                      {"NullCalendar", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -204,9 +244,14 @@ Calendar parseCalendar(const string& s) {
     } else {
         // Try to split them up
         vector<string> calendarNames;
-        split(calendarNames, s, boost::is_any_of(","));
+        split(calendarNames, s, boost::is_any_of(",()")); // , is delimiter, the brackets may arise if joint calendar
+        // now remove any leading strings indicating a joint calendar
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinHolidays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), "JoinBusinessDays"),
+                            calendarNames.end());
+        calendarNames.erase(std::remove(calendarNames.begin(), calendarNames.end(), ""), calendarNames.end());
         QL_REQUIRE(calendarNames.size() > 1 && calendarNames.size() <= 4, "Cannot convert " << s << " to Calendar");
-
         // Populate a vector of calendars.
         vector<Calendar> calendars;
         for (Size i = 0; i < calendarNames.size(); i++) {
@@ -243,6 +288,7 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"ModifiedFollowing", ModifiedFollowing},
                                                    {"Modified Following", ModifiedFollowing},
                                                    {"MODIFIEDF", ModifiedFollowing},
+                                                   {"MODFOLLOWING", ModifiedFollowing},
                                                    {"P", Preceding},
                                                    {"Preceding", Preceding},
                                                    {"PRECEDING", Preceding},
@@ -252,7 +298,10 @@ BusinessDayConvention parseBusinessDayConvention(const string& s) {
                                                    {"MODIFIEDP", ModifiedPreceding},
                                                    {"U", Unadjusted},
                                                    {"Unadjusted", Unadjusted},
-                                                   {"INDIFF", Unadjusted}};
+                                                   {"INDIFF", Unadjusted},
+                                                   {"NEAREST", Nearest},
+                                                   {"NONE", Unadjusted},
+                                                   {"NotApplicable", Unadjusted}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -269,15 +318,19 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A365", Actual365Fixed()},
                                         {"A365F", Actual365Fixed()},
                                         {"Actual/365 (Fixed)", Actual365Fixed()},
+                                        {"ACT/365.FIXED", Actual365Fixed()},
                                         {"ACT/365", Actual365Fixed()},
+                                        {"ACT/365L", Actual365Fixed()},
                                         {"T360", Thirty360(Thirty360::USA)},
                                         {"30/360", Thirty360(Thirty360::USA)},
                                         {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
                                         {"ACT/nACT", Thirty360(Thirty360::USA)},
                                         {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
                                         {"30E/360", Thirty360(Thirty360::European)},
+                                        {"30E/360.ISDA", Thirty360(Thirty360::European)},
                                         {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
                                         {"ActActISDA", ActualActual(ActualActual::ISDA)},
+                                        {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::ISDA)},
@@ -285,6 +338,8 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
                                         {"ActActAFB", ActualActual(ActualActual::AFB)},
+                                        {"ACT/ACT.AFB", ActualActual(ActualActual::AFB)},
+                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
@@ -331,15 +386,28 @@ Currency parseCurrency(const string& s) {
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
     static map<string, DateGeneration::Rule> m = {
-        {"Backward", DateGeneration::Backward},   {"Forward", DateGeneration::Forward},
-        {"Zero", DateGeneration::Zero},           {"ThirdWednesday", DateGeneration::ThirdWednesday},
-        {"Twentieth", DateGeneration::Twentieth}, {"TwentiethIMM", DateGeneration::TwentiethIMM},
-        {"OldCDS", DateGeneration::OldCDS},       {"CDS", DateGeneration::CDS}};
+        {"Backward", DateGeneration::Backward},
+        {"Forward", DateGeneration::Forward},
+        {"Zero", DateGeneration::Zero},
+        {"ThirdWednesday", DateGeneration::ThirdWednesday},
+        {"Twentieth", DateGeneration::Twentieth},
+        {"TwentiethIMM", DateGeneration::TwentiethIMM},
+        {"OldCDS", DateGeneration::OldCDS},
+#if QL_HEX_VERSION >= 0x011000f0
+        {"CDS2015", DateGeneration::CDS2015},
+#endif
+        {"CDS", DateGeneration::CDS}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;
     } else {
+        // fall back for CDS2015
+        if (s == "CDS2015") {
+            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
+            return DateGeneration::CDS;
+        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }
@@ -442,16 +510,16 @@ Option::Type parseOptionType(const std::string& s) {
 }
 
 void parseDateOrPeriod(const string& s, Date& d, Period& p, bool& isDate) {
-    isDate = false;
-    try {
+    QL_REQUIRE(!s.empty(), "Cannot parse empty string as date or period");
+    string c(1, s.back());
+    bool isPeriod = c.find_first_of("DdWwMmYy") != string::npos;
+    if (isPeriod) {
         p = ore::data::parsePeriod(s);
-    } catch (...) {
-        try {
-            d = ore::data::parseDate(s);
-            isDate = true;
-        } catch (...) {
-            QL_FAIL("could not parse " << s << " as date or period");
-        }
+        isDate = false;
+    } else {
+        d = ore::data::parseDate(s);
+        QL_REQUIRE(d != Date(), "Cannot parse \"" << s << "\" as date");
+        isDate = true;
     }
 }
 
@@ -484,6 +552,35 @@ std::vector<string> parseListOfValues(string s) {
         vec.push_back(r);
     }
     return vec;
+}
+
+AmortizationType parseAmortizationType(const std::string& s) {
+    static map<string, AmortizationType> type = {
+        {"None", AmortizationType::None},
+        {"", AmortizationType::None},
+        {"FixedAmount", AmortizationType::FixedAmount},
+        {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
+        {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
+        {"Annuity", AmortizationType::Annuity}};
+
+    auto it = type.find(s);
+    if (it != type.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Amortitazion type \"" << s << "\" not recognized");
+    }
+}
+
+SequenceType parseSequenceType(const std::string& s) {
+    static map<string, SequenceType> seq = {{"MersenneTwister", SequenceType::MersenneTwister},
+                                            {"MersenneTwisterAntithetic", SequenceType::MersenneTwisterAntithetic},
+                                            {"Sobol", SequenceType::Sobol},
+                                            {"SobolBrownianBridge", SequenceType::SobolBrownianBridge}};
+    auto it = seq.find(s);
+    if (it != seq.end())
+        return it->second;
+    else
+        QL_FAIL("sequence type \"" << s << "\" not recognised");
 }
 
 } // namespace data

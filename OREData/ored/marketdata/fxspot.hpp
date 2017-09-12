@@ -41,7 +41,7 @@ public:
     FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader);
 
     //! Inspector
-    Handle<Quote> spot() const { return spot_; }
+    Handle<Quote> handle() const { return spot_; }
 
 private:
     Handle<Quote> spot_;

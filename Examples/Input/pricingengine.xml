@@ -40,6 +40,8 @@
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
+      <!-- shift horizon as ratio of maturity time -->
+      <Parameter name="ShiftHorizon">0.5</Parameter>
       <Parameter name="Tolerance">0.0001</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
@@ -79,7 +81,58 @@
     <ModelParameters/>
     <Engine>DiscountingRiskyBondEngine</Engine>
     <EngineParameters>
-        <Parameter name="TimestepPeriod">6M</Parameter>
+      <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="CreditDefaultSwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>MidPointCdsEngine</Engine>
+    <EngineParameters/>
+  </Product>
+<!-- CMS Linear TRS Model -->
+<!--  <Product type="CMS">
+    <Model>LinearTSR</Model>
+    <ModelParameters/>
+    <Engine>LinearTSRPricer</Engine>
+    <EngineParameters>
+      <!- RateBound, VegaRatio, PriceThreshold, BsStdDev ->
+      <Parameter name="Policy">RateBounds</Parameter>
+      <!- RateBounds for ln / sln volatility input ->
+      <Parameter name="LowerRateBoundLogNormal">0.0001</Parameter>
+      <Parameter name="UpperRateBoundLogNormal">2.0000</Parameter>
+      <!- RateBounds for normal volatility input ->
+      <Parameter name="LowerRateBoundNormal">-2.0000</Parameter>
+      <Parameter name="UpperRateBoundNormal">2.0000</Parameter>
+      <!- Only required for policy VegaRatio ->
+      <Parameter name="VegaRatio">0.01</Parameter>
+      <!- Only required for policy PriceThreshold ->
+      <Parameter name="PriceThreshold">0.0000001</Parameter>
+      <!- Only required for policy BsStdDev ->
+      <Parameter name="BsStdDev">3.0</Parameter>
+    </EngineParameters>
+  </Product> -->
+ <!-- Hagan Analytic Model -->
+  <Product type="CMS">
+    <Model>Hagan</Model>
+    <ModelParameters/>
+	<Engine>Analytic</Engine>
+	<EngineParameters>
+	  <Parameter name="YieldCurveModel">Standard</Parameter> <!-- or ExactYield, ParallelShifts, NonParallelShifts -->
+      <Parameter name="MeanReversion">0.0</Parameter>
+	</EngineParameters>
+  </Product>
+<!-- Hagan Numerical Model -->
+<!--  <Product type="CMS">
+    <Model>Hagan</Model>
+    <ModelParameters/>
+	<Engine>Numerical</Engine>
+	<EngineParameters>
+	  <Parameter name="YieldCurveModel">Standard</Parameter> <!— or ExactYield, ParallelShifts, NonParallelShifts —>
+	  <Parameter name="MeanReversion">0.0</Parameter>
+	  <Parameter name="UpperLimit">0.0</Parameter>
+	  <Parameter name="LowerLimit">1.0</Parameter>
+	  <Parameter name="Precision">0.000001</Parameter>
+	</EngineParameters>
+  </Product> -->
 </PricingEngines>

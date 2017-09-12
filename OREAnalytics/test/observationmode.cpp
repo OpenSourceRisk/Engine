@@ -158,7 +158,8 @@ void simulation(string dateGridString, bool checkFixings) {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
     parameters->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    parameters->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years};
+    parameters->setYieldCurveTenors("",
+                                    {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
@@ -267,15 +268,16 @@ void simulation(string dateGridString, bool checkFixings) {
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
 
+    // build scenario sim market
+    Conventions conv = *conventions();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conv);
+
     // build scenario generator
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new SimpleScenarioFactory);
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator = boost::make_shared<CrossAssetModelScenarioGenerator>(
         model, pathGen, scenarioFactory, parameters, today, dg, initMarket);
-
-    // build scenario sim market
-    Conventions conv = *conventions();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(scenarioGenerator, initMarket, parameters, conv);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // Build Porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();

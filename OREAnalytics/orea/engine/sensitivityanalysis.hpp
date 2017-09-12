@@ -31,6 +31,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/progressbar.hpp>
 
 #include <map>
 #include <set>
@@ -57,7 +58,7 @@ class ValuationCalculator;
   \ingroup simulation
 */
 
-class SensitivityAnalysis {
+class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor
     SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
@@ -123,9 +124,12 @@ public:
     //! A getter for Conventions
     virtual const Conventions& conventions() const { return conventions_; }
 
+    //! override shift tenors with sim market tenors
+    void overrideTenors(const bool b) { overrideTenors_ = b; }
+
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
-    void initialize(boost::shared_ptr<NPVCube>& cube);
+    virtual void initialize(boost::shared_ptr<NPVCube>& cube);
     //! initialize the cube with the appropriate dimensions
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
@@ -133,10 +137,9 @@ protected:
     buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {}) const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
-    //! build the ScenarioSimMarket that will be used by ValuationEngine
-    virtual void initializeSimMarket();
-    //! initialize the SensitivityScenarioGenerator that determines which sensitivities to compute
-    virtual void initializeSensitivityScenarioGenerator(boost::shared_ptr<ScenarioFactory> scenFact = {});
+    /*! build the ScenarioSimMarket that will be used by ValuationEngine and
+     * initialize the SensitivityScenarioGenerator that determines which sensitivities to compute */
+    virtual void initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact = {});
 
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
@@ -156,7 +159,7 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
-    bool recalibrateModels_;
+    bool recalibrateModels_, overrideTenors_;
 
     // base NPV by trade
     std::map<std::string, Real> baseNPV_;
@@ -177,7 +180,7 @@ protected:
     //! initializationFlag
     bool initialized_, computed_;
     //! model builders
-    std::set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
+    std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 } // namespace analytics
 } // namespace ore

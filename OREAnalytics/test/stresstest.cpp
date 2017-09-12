@@ -92,8 +92,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
 
     simMarketData->baseCcy() = "EUR";
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    simMarketData->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,  4 * Years,
-                                         5 * Years,  7 * Years,  10 * Years, 15 * Years, 20 * Years, 30 * Years};
+    simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->interpolation() = "LogLinear";
@@ -109,6 +109,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
     simMarketData->simulateFXVols() = true; // false;
+    simMarketData->fxVolIsSurface() = false;
+    simMarketData->fxVolMoneyness() = {0.0};
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
@@ -116,8 +118,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
-    simMarketData->capFloorVolExpiries() = {6 * Months, 1 * Years,  2 * Years,  3 * Years, 5 * Years,
-                                            7 * Years,  10 * Years, 15 * Years, 20 * Years};
+    simMarketData->setCapFloorVolExpiries(
+        "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
 
     return simMarketData;
@@ -183,31 +185,31 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     data.indexCurveShifts["JPY-LIBOR-6M"].shiftTenors = {6 * Months, 1 * Years, 2 * Years, 3 * Years,
                                                          5 * Years,  7 * Years, 10 * Years};
     data.indexCurveShifts["JPY-LIBOR-6M"].shifts = {0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007};
-    data.fxShifts["EURUSD"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURUSD"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURUSD"].shiftType = "Relative";
     data.fxShifts["EURUSD"].shiftSize = 0.01;
-    data.fxShifts["EURGBP"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURGBP"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURGBP"].shiftType = "Relative";
     data.fxShifts["EURGBP"].shiftSize = 0.01;
-    data.fxShifts["EURJPY"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURJPY"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURJPY"].shiftType = "Relative";
     data.fxShifts["EURJPY"].shiftSize = 0.01;
-    data.fxShifts["EURCHF"] = StressTestScenarioData::FxShiftData();
+    data.fxShifts["EURCHF"] = StressTestScenarioData::SpotShiftData();
     data.fxShifts["EURCHF"].shiftType = "Relative";
     data.fxShifts["EURCHF"].shiftSize = 0.01;
-    data.fxVolShifts["EURUSD"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURUSD"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURUSD"].shiftType = "Absolute";
     data.fxVolShifts["EURUSD"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURUSD"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURGBP"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURGBP"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURGBP"].shiftType = "Absolute";
     data.fxVolShifts["EURGBP"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURGBP"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURJPY"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURJPY"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURJPY"].shiftType = "Absolute";
     data.fxVolShifts["EURJPY"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURJPY"].shifts = {0.10, 0.11, 0.13, 0.14};
-    data.fxVolShifts["EURCHF"] = StressTestScenarioData::FxVolShiftData();
+    data.fxVolShifts["EURCHF"] = StressTestScenarioData::VolShiftData();
     data.fxVolShifts["EURCHF"].shiftType = "Absolute";
     data.fxVolShifts["EURCHF"].shiftExpiries = {6 * Months, 2 * Years, 3 * Years, 5 * Years};
     data.fxVolShifts["EURCHF"].shifts = {0.10, 0.11, 0.13, 0.14};
@@ -245,18 +247,19 @@ void StressTestingTest::regression() {
     // sensitivity config
     boost::shared_ptr<StressTestScenarioData> stressData = setupStressScenarioData();
 
+    // build scenario sim market
+    Conventions conventions = *stressConv();
+    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
+        boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
+
     // build scenario generator
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator(
-        new StressScenarioGenerator(stressData, simMarketData, today, initMarket));
+        new StressScenarioGenerator(stressData, simMarket, simMarketData));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
     boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-
-    // build scenario sim market
-    Conventions conventions = *stressConv();
-    boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(sgen, initMarket, simMarketData, conventions);
+    simMarket->scenarioGenerator() = sgen;
 
     // build porfolio
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();

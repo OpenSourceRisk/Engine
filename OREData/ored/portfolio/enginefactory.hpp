@@ -130,7 +130,7 @@ public:
     }
 
     //! return model builders
-    const set<boost::shared_ptr<ModelBuilder>>& modelBuilders() const { return modelBuilders_; }
+    const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
 protected:
     string model_;
@@ -140,7 +140,7 @@ protected:
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
-    set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 
 //! Pricing Engine Factory class
@@ -191,7 +191,7 @@ public:
     void clear() { builders_.clear(); }
 
     //! return model builders
-    Disposable<set<boost::shared_ptr<ModelBuilder>>> modelBuilders() const;
+    Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> modelBuilders() const;
 
 private:
     boost::shared_ptr<Market> market_;

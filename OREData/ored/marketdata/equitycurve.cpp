@@ -127,6 +127,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             }
         }
         curveType_ = config->type();
+        YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
+        boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
+                        asof, ycspec, curveConfigs, loader, conventions);
+        forecastYieldTermStructure_ = yieldCurve->handle();
     } catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());
     } catch (...) {
@@ -135,7 +139,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 }
 
 boost::shared_ptr<YieldTermStructure>
-EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStructure>& equityIrCurve) const {
+EquityCurve::divYieldTermStructure(const Date& asof) const {
 
     try {
         vector<Rate> dividendRates;
@@ -146,7 +150,7 @@ EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStruc
             for (Size i = 0; i < quotes_.size(); i++) {
                 QL_REQUIRE(quotes_[i] > 0, "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
                 Time t = dc_.yearFraction(asof, terms_[i]);
-                Rate ir_rate = equityIrCurve->zeroRate(t, Continuous);
+                Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_ / quotes_[i]) / t + ir_rate);
             }
         } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
@@ -175,8 +179,8 @@ EquityCurve::divYieldTermStructure(const Date& asof, const Handle<YieldTermStruc
             }
             dates[0] = asof;
             rates[0] = rates[1];
-            if (equityIrCurve->maxDate() > dates.back()) {
-                dates.push_back(equityIrCurve->maxDate());
+            if (forecastYieldTermStructure_->maxDate() > dates.back()) {
+                dates.push_back(forecastYieldTermStructure_->maxDate());
                 rates.push_back(rates.back());
             }
             // FIXME, interpolation should be part of config?

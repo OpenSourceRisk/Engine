@@ -23,12 +23,11 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -40,7 +39,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class EquityVolatilityCurveConfig : public XMLSerializable {
+class EquityVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
     enum class Dimension { ATM, Smile };
@@ -51,7 +50,8 @@ public:
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const Dimension& dimension, const vector<string>& expiries);
+                                const Dimension& dimension, const vector<string>& expiries,
+                                const vector<string>& strikes = vector<string>());
     //! Default destructor
     virtual ~EquityVolatilityCurveConfig() {}
     //@}
@@ -64,27 +64,25 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& ccy() const { return ccy_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
+    const vector<string>& strikes() const { return strikes_; } // Really these should be Reals, but we want to match the type of
+                                                               // The equity option market datum (which is string for "ATMF"
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& ccy() { return ccy_; }
     Dimension& dimension() { return dimension_; }
     vector<string>& expiries() { return expiries_; }
+    vector<string>& strikes() { return strikes_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     string ccy_;
     Dimension dimension_;
     vector<string> expiries_;
+    vector<string> strikes_;
 };
 } // namespace data
 } // namespace ore

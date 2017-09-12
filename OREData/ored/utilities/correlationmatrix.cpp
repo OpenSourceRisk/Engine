@@ -92,7 +92,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
     for (Size i = 0; i < n; i++)
         factors[i] = "IR:" + ccys[i];
     for (Size i = 1; i < n; i++)
-        factors[n + i - 1] = "FX:" + ccys[0] + ccys[i];
+        factors[n + i - 1] = "FX:" + ccys[i] + ccys[0];
 
     // now populate matrix
     // the lookup function takes care of FX:EURUSD / FX:USDEUR conversion

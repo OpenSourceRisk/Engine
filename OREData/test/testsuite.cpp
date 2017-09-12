@@ -51,6 +51,7 @@ using boost::unit_test::test_suite;
 #include "bond.hpp"
 #include "calendars.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cms.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
 #include "equitymarketdata.hpp"
@@ -65,6 +66,7 @@ using boost::unit_test::test_suite;
 #include "todaysmarket.hpp"
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
+#include "swaption.hpp"
 
 namespace {
 
@@ -109,6 +111,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::EquityMarketDataTest::suite());
     test->add(testsuite::EquityTradesTest::suite());
     test->add(testsuite::BondTest::suite());
+    test->add(testsuite::CmsTest::suite());
+    test->add(testsuite::SwaptionTest::suite());
 
     // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));

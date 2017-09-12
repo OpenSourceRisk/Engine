@@ -264,7 +264,8 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
     parameters->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    parameters->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years};
+    parameters->setYieldCurveTenors("",
+                                    {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
@@ -282,9 +283,9 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
     parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
 
-    parameters->eqVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->eqVolDecayMode() = "ConstantVariance";
-    parameters->simulateEQVols() = false;
+    parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
+    parameters->equityVolDecayMode() = "ConstantVariance";
+    parameters->simulateEquityVols() = false;
 
     // Config
 
@@ -379,8 +380,8 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
 
     // build scenario sim market
     Conventions conventions = *convs();
-    boost::shared_ptr<analytics::SimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(scenarioGenerator, initMarket, parameters, conventions);
+    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // Build Porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();

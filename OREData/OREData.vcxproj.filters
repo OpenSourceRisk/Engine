@@ -330,6 +330,45 @@
     <ClInclude Include="ored\marketdata\securityrecoveryrate.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cms.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\basecorrelationcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\cdsvolcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\creditdefaultswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\modelbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\curveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\csvfilereader.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\utilities\timeperiod.hpp" >
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" >
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -574,6 +613,33 @@
     </ClCompile>
     <ClCompile Include="ored\marketdata\securityrecoveryrate.cpp">
       <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\cms.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\basecorrelationcurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\basecorrelationcurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\cdsvolcurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\cdsvolcurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\creditdefaultswap.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\csvfilereader.cpp">
+      <Filter>utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\forwardrateagreement.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

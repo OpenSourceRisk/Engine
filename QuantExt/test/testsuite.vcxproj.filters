@@ -56,6 +56,18 @@
     <ClCompile Include="stabilisedglls.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="survivalprobabilitycurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaptionvolconstantspread.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="fxvolsmile.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="payment.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -127,6 +139,18 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="stabilisedglls.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="survivalprobabilitycurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaptionvolconstantspread.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="fxvolsmile.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="payment.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

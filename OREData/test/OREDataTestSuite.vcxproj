@@ -631,6 +631,7 @@
     <ClInclude Include="bond.hpp" />
     <ClInclude Include="calendars.hpp" />
     <ClInclude Include="ccyswapwithresets.hpp" />
+    <ClInclude Include="cms.hpp" />
     <ClInclude Include="cpiswap.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
     <ClInclude Include="equitymarketdata.hpp" />
@@ -642,6 +643,7 @@
     <ClInclude Include="legdata.hpp" />
     <ClInclude Include="parser.hpp" />
     <ClInclude Include="schedule.hpp" />
+    <ClInclude Include="swaption.hpp" />
     <ClInclude Include="todaysmarket.hpp" />
     <ClInclude Include="xmlmanipulation.hpp" />
     <ClInclude Include="yieldcurve.hpp" />
@@ -650,6 +652,7 @@
     <ClCompile Include="bond.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
+    <ClCompile Include="cms.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="equitymarketdata.cpp" />
@@ -661,6 +664,7 @@
     <ClCompile Include="legdata.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="schedule.cpp" />
+    <ClCompile Include="swaption.cpp" />
     <ClCompile Include="testsuite.cpp" />
     <ClCompile Include="todaysmarket.cpp" />
     <ClCompile Include="xmlmanipulation.cpp" />

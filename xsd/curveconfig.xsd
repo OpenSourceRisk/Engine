@@ -2,22 +2,22 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="CurveConfiguration">
-    <xs:complexType>
+  <xs:complexType name="curveconfiguration">
       <xs:sequence>
-        <xs:element type="fxVolatilities" name="FXVolatilities"/>
-        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities"/>
-        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities"/>
-        <xs:element type="defaultCurves" name="DefaultCurves"/>
-        <xs:element type="yieldCurves" name="YieldCurves"/>
-        <xs:element type="inflationCurves" name="InflationCurves"/>
-        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces"/>
-        <xs:element type="equityCurves" name="EquityCurves"/>
-        <xs:element type="equityVolatilities" name="EquityVolatilities"/>
-        <xs:element type="securitySpreads" name="SecuritySpreads"/>
+        <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
+        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
+        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
+        <xs:element type="cdsVolatilities" name="CDSVolatilities" minOccurs="0" />
+        <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
+        <xs:element type="yieldCurves" name="YieldCurves" minOccurs="0" />
+        <xs:element type="inflationCurves" name="InflationCurves" minOccurs="0" />
+        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
+        <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
+        <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
+        <xs:element type="securitySpreads" name="SecuritySpreads" minOccurs="0" />
+        <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
       </xs:sequence>
-    </xs:complexType>
-  </xs:element>
+  </xs:complexType>
 
   <xs:complexType name="fxVolatilities">
     <xs:sequence>
@@ -31,6 +31,9 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
+      <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
+      <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
+      <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
   
@@ -47,6 +50,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
+      <xs:element type="xs:string" name="Strikes" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -70,8 +74,26 @@
       <xs:element type="xs:string" name="SwapTenors"/>
       <xs:element type="xs:string" name="ShortSwapIndexBase"/>
       <xs:element type="xs:string" name="SwapIndexBase"/>
+      <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
+      <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:complexType name="cdsVolatilities">
+    <xs:sequence>
+      <xs:element type="cdsVolatility" name="CDSVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cdsVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="Expiries"/>
+    </xs:sequence>
+  </xs:complexType>
+
 
   <xs:complexType name="capFloorVolatilities">
     <xs:sequence>
@@ -107,6 +129,7 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:string" name="ForecastingCurve"/>
       <xs:element type="equityType" name="Type"/>
       <xs:element type="xs:string" name="SpotQuote"/>
       <xs:element type="quoteType" name="Quotes"/>
@@ -225,6 +248,26 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="quoteType" name="Quotes"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="baseCorrelations">
+    <xs:sequence>
+      <xs:element type="baseCorrelation" name="BaseCorrelation" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="baseCorrelation">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="Terms"/>
+      <xs:element type="xs:string" name="DetachmentPoints"/>
+      <xs:element type="xs:float" name="SettlementDays"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

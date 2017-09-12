@@ -57,37 +57,31 @@ protected:
 
 //! Abstract BermudanSwaptionEngineBuilder class
 /*! This defines the interface for Bermudan Swaption Builders
- *  Pricing Engines are not cached by this builder, but subclasses can employ
- *  a cache
+ *  Pricing Engines are cached by trade id
 
     \ingroup portfolio
  */
-class BermudanSwaptionEngineBuilder : public EngineBuilder {
+class BermudanSwaptionEngineBuilder
+    : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
+                                         const Date&, const Real> {
 public:
-    BermudanSwaptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
-        : EngineBuilder(model, engine, tradeTypes) {}
+    BermudanSwaptionEngineBuilder(const string& model, const string& engine)
+        : CachingEngineBuilder(model, engine, {BermudanSwaption}) {}
 
-    virtual boost::shared_ptr<PricingEngine> engine( //! a unique (trade) id, for caching
-        const string& id,
-        //! is this a standard swaption
-        bool isNonStandard,
-        //! the currency
-        const string& ccy,
-        //! Excercise dates
-        const std::vector<Date>& dates,
-        //! Final maturity (for physical this may be greater than the last exercise date)
-        const Date& maturity,
-        //! Fixed rate
-        Real fixedRate) = 0;
+protected:
+    virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,
+                           const std::vector<Date>& dates, const Date& maturity, const Real fixedRate) override {
+        return id;
+    }
 };
 
 class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
 public:
-    LGMBermudanSwaptionEngineBuilder(const string& engine)
-        : BermudanSwaptionEngineBuilder("LGM", engine, {"BermudanSwaption"}) {}
+    LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
 
+protected:
     boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
-                                           const std::vector<Date>& dates, const Date& maturity);
+                                           const std::vector<Date>& dates, const Date& maturity, const Real fixedRate);
 };
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
@@ -97,9 +91,20 @@ class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBui
 public:
     LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& id, bool isNonStandard, const string& ccy,
-                                            const std::vector<Date>& dates, const Date& maturity,
-                                            Real fixedRate) override;
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(
+        //! a unique (trade) id, for caching
+        const string& id,
+        //! is this a standard swaption
+        const bool isNonStandard,
+        //! the currency
+        const string& ccy,
+        //! Excercise dates
+        const std::vector<Date>& dates,
+        //! maturity of the underlying
+        const Date& maturity,
+        //! Fixed rate (null means ATM)
+        const Real fixedRate) override;
 };
 
 } // namespace data

@@ -403,47 +403,47 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
 
     // define three curves
     map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"}, {"USD", "Yield/USD/USD1D"}};
-    parameters->addDiscountingCurves("ois", mDiscounting);
+    parameters->addMarketObject(MarketObject::DiscountCurve, "ois", mDiscounting);
 
     // define three curves
     map<string, string> mYield = {{"EUR_LEND", "Yield/EUR/BANK_EUR_LEND"}, {"EUR_BORROW", "Yield/EUR/BANK_EUR_BORROW"}};
-    parameters->addYieldCurves("ois", mYield);
+    parameters->addMarketObject(MarketObject::YieldCurve, "ois", mYield);
 
     map<string, string> mIndex = {
         {"EUR-EONIA", "Yield/EUR/EUR1D"}, {"USD-FedFunds", "Yield/USD/USD1D"}, {"USD-LIBOR-3M", "Yield/USD/USD3M"}};
-    parameters->addIndexForwardingCurves("ois", mIndex);
+    parameters->addMarketObject(MarketObject::IndexCurve, "ois", mIndex);
 
-    parameters->addSwaptionVolatilities("ois", {{"USD", "SwaptionVolatility/USD/USD_SW_LN"}});
-    parameters->addCapFloorVolatilities("ois", {{"USD", "CapFloorVolatility/USD/USD_CF_LN"}});
+    parameters->addMarketObject(MarketObject::SwaptionVol, "ois", {{"USD", "SwaptionVolatility/USD/USD_SW_LN"}});
+    parameters->addMarketObject(MarketObject::CapFloorVol, "ois", {{"USD", "CapFloorVolatility/USD/USD_CF_LN"}});
 
     map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"}, {"USD-CMS-30Y", "USD-LIBOR-3M"}};
-    parameters->addSwapIndices("ois", swapIndexMap);
+    parameters->addMarketObject(MarketObject::SwapIndexCurve, "ois", swapIndexMap);
 
     map<string, string> equityMap = {{"SP5", "Equity/USD/SP5"}};
-    parameters->addEquityCurves("ois", equityMap);
+    parameters->addMarketObject(MarketObject::EquityCurve, "ois", equityMap);
 
     map<string, string> equityVolMap = {{"SP5", "EquityVolatility/USD/SP5"}};
-    parameters->addEquityVolatilities("ois", equityVolMap);
+    parameters->addMarketObject(MarketObject::EquityVol, "ois", equityVolMap);
 
     // all others empty so far
     map<string, string> emptyMap;
-    parameters->addFxSpots("ois", emptyMap);
-    parameters->addFxVolatilities("ois", emptyMap);
-    parameters->addDefaultCurves("ois", emptyMap);
+    parameters->addMarketObject(MarketObject::FXSpot, "ois", emptyMap);
+    parameters->addMarketObject(MarketObject::FXVol, "ois", emptyMap);
+    parameters->addMarketObject(MarketObject::DefaultCurve, "ois", emptyMap);
 
     // store this set of curves as "default" configuration
     MarketConfiguration config;
-    config.discountingCurvesId = "ois";
-    config.yieldCurvesId = "ois";
-    config.indexForwardingCurvesId = "ois";
-    config.swapIndexCurvesId = "ois";
-    config.defaultCurvesId = "ois";
-    config.swaptionVolatilitiesId = "ois";
-    config.capFloorVolatilitiesId = "ois";
-    config.fxSpotsId = "ois";
-    config.fxVolatilitiesId = "ois";
-    config.equityCurvesId = "ois";
-    config.equityVolatilitiesId = "ois";
+    config.setId(MarketObject::DiscountCurve, "ois");
+    config.setId(MarketObject::YieldCurve, "ois");
+    config.setId(MarketObject::IndexCurve, "ois");
+    config.setId(MarketObject::SwapIndexCurve, "ois");
+    config.setId(MarketObject::DefaultCurve, "ois");
+    config.setId(MarketObject::SwaptionVol, "ois");
+    config.setId(MarketObject::CapFloorVol, "ois");
+    config.setId(MarketObject::FXSpot, "ois");
+    config.setId(MarketObject::FXVol, "ois");
+    config.setId(MarketObject::EquityCurve, "ois");
+    config.setId(MarketObject::EquityVol, "ois");
 
     parameters->addConfiguration("default", config);
 
@@ -680,17 +680,17 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
         "EQUITY_FWD/PRICE/SP5/USD/1Y",
         "EQUITY_FWD/PRICE/SP5/USD/20180226"
     };
-    vector<string> eqVolExpiries{
+    vector<string> equityVolExpiries{
         "1Y",
         "2018-02-26"
     };
     // clang-format on
 
     configs->equityCurveConfig("SP5") = boost::make_shared<EquityCurveConfig>(
-        "SP5", "", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
+        "SP5", "", "USD1D", "USD", EquityCurveConfig::Type::ForwardPrice, "EQUITY/PRICE/SP5/USD", eqFwdQuotes);
 
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
-        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, eqVolExpiries);
+        "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
 
     return configs;
 }

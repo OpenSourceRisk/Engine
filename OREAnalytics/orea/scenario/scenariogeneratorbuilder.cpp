@@ -49,23 +49,9 @@ ScenarioGeneratorBuilder::build(boost::shared_ptr<QuantExt::CrossAssetModel> mod
 
     boost::shared_ptr<StochasticProcess> stateProcess = model->stateProcess(data_->discretization());
 
-    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen;
-    if (data_->sequenceType() == ScenarioGeneratorData::SequenceType::MersenneTwister)
-        pathGen = boost::make_shared<MultiPathGeneratorMersenneTwister>(stateProcess, data_->grid()->timeGrid(),
-                                                                        data_->seed(), false);
-    else if (data_->sequenceType() == ScenarioGeneratorData::SequenceType::MersenneTwisterAntithetic)
-        pathGen = boost::make_shared<MultiPathGeneratorMersenneTwister>(stateProcess, data_->grid()->timeGrid(),
-                                                                        data_->seed(), true);
-    else if (data_->sequenceType() == ScenarioGeneratorData::SequenceType::Sobol)
-        pathGen = boost::make_shared<QuantExt::MultiPathGeneratorSobol>(stateProcess, data_->grid()->timeGrid());
-    // TODO expose ordering parameter to xml configuration (we hard code Steps / JoeKuoD7 for now)
-    else if (data_->sequenceType() == ScenarioGeneratorData::SequenceType::SobolBrownianBridge)
-        pathGen = boost::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(
-            stateProcess, data_->grid()->timeGrid(), SobolBrownianGenerator::Steps, data_->seed(), SobolRsg::JoeKuoD7);
-    else
-        QL_FAIL("Sequence type " << data_->sequenceType() << " not covered");
+    boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
+        makeMultiPathGenerator(data_->sequenceType(), stateProcess, data_->grid()->timeGrid(), data_->seed());
 
-    // boost::shared_ptr<CrossAssetModelScenarioGenerator> scenGen =
     boost::shared_ptr<ScenarioGenerator> scenGen = boost::make_shared<CrossAssetModelScenarioGenerator>(
         model, pathGen, scenarioFactory, marketConfig, asof, data_->grid(), initMarket, configuration);
     LOG("ScenarioGeneratorBuilder::build() done");

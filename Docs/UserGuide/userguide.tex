@@ -49,6 +49,7 @@
 
 \usepackage{siunitx}
 
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
@@ -656,6 +657,8 @@ Example & Description \\
 17 & Inflation Swaps \\
 \hline
 18 & Bonds \\
+\hline
+19 & Forward Rate Agreement \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1487,6 +1490,20 @@ After running the example, the results of the computation can be found in the ou
   flows.csv}, respectively.
 
 %--------------------------------------------------------
+ 
+%--------------------------------------------------------
+\subsection{Sensitivity using Equity Volatility}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for equity options where the equity volatility has a smile. ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml.
+The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile. 
+This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+The portfolio used in this example consists of:
+\begin{itemize}
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+\end{itemize}
+
 
 \clearpage
 %========================================================
@@ -2500,6 +2517,7 @@ following excerpt of the Example section's {\tt pricingengine.xml} shows the sel
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
       <Parameter name="Tolerance">0.0001</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
@@ -2527,6 +2545,10 @@ pricing model, calibrate it and construct the pricing engine for it:
     Hagan}. Calibration and BermudanStrategy can be set to {\em None} in order to skip model calibration. Alternatively,
   Calibration is set to {\em Bootstrap} and BermudanStrategy to {\em CoterminalATM} in order to calibrate to
   instrument-specific co-terminal ATM Swaptions, i.e. chosen to match the instruments first expiry and final maturity.
+  If {\em CoterminalDealStrike} is chosen, the co-terminal swaptions will match the fixed rate of the deal (if the deal
+  has changing fixed rates, the first rate is matched). Finally if the ShiftHorizon parameter is given, its value times
+  the remaining maturity time of the deal is chosen as the horizon shift parameter for the LGM model. If not given, this
+  parameter defaults to $0.5$.
 
 \item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
   number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
@@ -2855,9 +2877,24 @@ yield curves that can be 'understood' by the instruments which we want to price 
 
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 
-within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small example.
+within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the following small example.
 
-\begin{listing}[H]
+It should be noted that equity volatilities are taken to be a curve by default, to simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
+There are two methods in ORE for equity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
+Swaption volatilities are taken to be a surface by default, to simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+There are two methods in ORE for swaption volatility cube simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+
+FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Market>
@@ -2894,7 +2931,10 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-    <Strikes/>
+    <Cube>
+     <SimulateATMOnly>false</SimulateATMOnly>
+     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
+    </Cube>
   </SwaptionVolatilities> 
   <CapFloorVolatilities>
     <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -2909,8 +2949,24 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
       <CurrencyPair>EURUSD</CurrencyPair>
     </CurrencyPairs>
     <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-    <Strikes/>
+    <Surface>
+     <Moneyness>0.5,0.6,0.7,0.8,0.9</Moneyness>
+    </Surface>
   </FxVolatilities>
+  <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Surface>
+        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+      </Surface>
+ </EquityVolatilities>
   <AdditionalScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
@@ -2924,7 +2980,7 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
 \end{minted}
 \caption{Simulation market configuration}
 \label{lst:simulation_market_configuration}
-\end{listing}
+\end{longlisting}
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}

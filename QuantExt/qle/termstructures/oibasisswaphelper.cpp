@@ -47,6 +47,10 @@ void OIBSHelper::initializeDates() {
     iborIndex_->unregisterWith(termStructureHandle_);
 
     Date asof = Settings::instance().evaluationDate();
+    // if the evaluation date is not a business day
+    // then move to the next business day
+    asof = iborIndex_->fixingCalendar().adjust(asof);
+    
     Date settlementDate = iborIndex_->fixingCalendar().advance(asof, settlementDays_, Days);
     Schedule oisSchedule =
         MakeSchedule().from(settlementDate).to(settlementDate + tenor_).withTenor(1 * Years).forwards();

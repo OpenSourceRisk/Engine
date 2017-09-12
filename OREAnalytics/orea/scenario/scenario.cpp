@@ -43,10 +43,28 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "FXSpot";
     case RiskFactorKey::KeyType::FXVolatility:
         return out << "FXVolatility";
-    case RiskFactorKey::KeyType::EQSpot:
-        return out << "EQSpot";
-    case RiskFactorKey::KeyType::EQVolatility:
-        return out << "EQVolatility";
+    case RiskFactorKey::KeyType::EquitySpot:
+        return out << "EquitySpot";
+    case RiskFactorKey::KeyType::EquityVolatility:
+        return out << "EquityVolatility";
+    case RiskFactorKey::KeyType::EquityForecastCurve:
+        return out << "EquityForecastCurve";
+    case RiskFactorKey::KeyType::DividendYield:
+        return out << "DividendYield";
+    case RiskFactorKey::KeyType::SurvivalProbability:
+        return out << "SurvivalProbability";
+    case RiskFactorKey::KeyType::RecoveryRate:
+        return out << "RecoveryRate";
+    case RiskFactorKey::KeyType::CDSVolatility:
+        return out << "CDSVolatility";
+    case RiskFactorKey::KeyType::BaseCorrelation:
+        return out << "BaseCorrelation";
+    case RiskFactorKey::KeyType::CPIIndex:
+        return out << "CPIIndex";
+    case RiskFactorKey::KeyType::ZeroInflationCurve:
+        return out << "ZeroInflationCurve";
+    case RiskFactorKey::KeyType::YoYInflationCurve:
+        return out << "YoYInflationCurve";
     default:
         return out << "?";
     }
@@ -65,14 +83,34 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::IndexCurve;
     else if (str == "SwaptionVolatility")
         return RiskFactorKey::KeyType::SwaptionVolatility;
+    else if (str == "OptionletVolatility")
+        return RiskFactorKey::KeyType::OptionletVolatility;
     else if (str == "FXSpot")
         return RiskFactorKey::KeyType::FXSpot;
     else if (str == "FXVolatility")
         return RiskFactorKey::KeyType::FXVolatility;
-    else if (str == "EQSpot")
-        return RiskFactorKey::KeyType::EQSpot;
-    else if (str == "EQVolatility")
-        return RiskFactorKey::KeyType::EQVolatility;
+    else if (str == "EquitySpot")
+        return RiskFactorKey::KeyType::EquitySpot;
+    else if (str == "EquityVolatility")
+        return RiskFactorKey::KeyType::EquityVolatility;
+    else if (str == "EquityForecastCurve")
+        return RiskFactorKey::KeyType::EquityForecastCurve;
+    else if (str == "DividendYield")
+        return RiskFactorKey::KeyType::DividendYield;
+    else if (str == "SurvivalProbability")
+        return RiskFactorKey::KeyType::SurvivalProbability;
+    else if (str == "RecoveryRate")
+        return RiskFactorKey::KeyType::RecoveryRate;
+    else if (str == "CDSVolatility")
+        return RiskFactorKey::KeyType::CDSVolatility;
+    else if (str == "BaseCorrelation")
+        return RiskFactorKey::KeyType::BaseCorrelation;
+    else if (str == "CPIIndex")
+        return RiskFactorKey::KeyType::CPIIndex;
+    else if (str == "ZeroInflationCurve")
+        return RiskFactorKey::KeyType::ZeroInflationCurve;
+    else if (str == "YoYInflationCurve")
+        return RiskFactorKey::KeyType::YoYInflationCurve;
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 
