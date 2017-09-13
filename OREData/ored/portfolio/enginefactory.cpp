@@ -36,7 +36,7 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
     LOG("EngineFactory regisering builder for model:" << modelName << " and engine:" << engineName);
-    builders_[make_pair(modelName, engineName)] = builder;
+    builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
