@@ -120,6 +120,7 @@ private:
     Natural maxEvaluations_;
     static const Volatility minVol_;
     static const Volatility maxVol_;
+    static const Real minVega_;
 };
 } // namespace QuantExt
 

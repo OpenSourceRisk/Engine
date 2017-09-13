@@ -33,6 +33,7 @@ namespace QuantExt {
 
 const Volatility SwaptionVolatilityConverter::minVol_ = 1.0e-7;
 const Volatility SwaptionVolatilityConverter::maxVol_ = 10.0;
+const Real SwaptionVolatilityConverter::minVega_ = 1.0e-6;
 
 SwaptionVolatilityConverter::SwaptionVolatilityConverter(
     const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
@@ -201,6 +202,7 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
     Date effectiveDate = tmpConv->fixedCalendar().advance(expiry, tmpConv->settlementDays(), Days);
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<DiscountingSwapEngine>(tmpDiscount);
     boost::shared_ptr<VanillaSwap> swap = MakeVanillaSwap(swapTenor, tmpConv->floatIndex())
+                                              .withType(strikeSpread < 0.0 ? VanillaSwap::Receiver : VanillaSwap::Payer)
                                               .withEffectiveDate(effectiveDate)
                                               .withFixedLegCalendar(tmpConv->fixedCalendar())
                                               .withFixedLegDayCount(tmpConv->fixedDayCounter())
@@ -247,6 +249,13 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
         swaptionEngine = boost::make_shared<BachelierSwaptionEngine>(discount_, inVol, volDayCounter);
     }
     swaption->setPricingEngine(swaptionEngine);
+
+    // zero might be the actual implied vol (if we e.g. convert from LN to N with a strike near zero),
+    // but the Swaption::impliedVolatility function will not find this, so we check for this case
+    // explicitly here
+    Real vega = swaption->result<Real>("vega");
+    if (vega < minVega_)
+        return 0.0;
 
     Volatility impliedVol = 0.0;
     try {
