@@ -66,7 +66,7 @@ class BermudanSwaptionEngineBuilder
                                          const Date&, const Real> {
 public:
     BermudanSwaptionEngineBuilder(const string& model, const string& engine)
-        : CachingEngineBuilder(model, engine, {BermudanSwaption}) {}
+        : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,
