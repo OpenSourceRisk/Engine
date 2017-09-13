@@ -76,6 +76,7 @@ public:
     //! Construct from SwapConventions
     SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
                                 const Handle<YieldTermStructure>& discount,
+                                const Handle<YieldTermStructure>& shortDiscount,
                                 const boost::shared_ptr<SwapConventions>& conventions,
                                 const boost::shared_ptr<SwapConventions>& shortConventions,
                                 const Period& conventionsTenor, const Period& shortConventionsTenor,
@@ -108,7 +109,7 @@ private:
 
     const Date asof_;
     const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;
-    Handle<YieldTermStructure> discount_;
+    Handle<YieldTermStructure> discount_, shortDiscount_;
     const boost::shared_ptr<SwapConventions> conventions_, shortConventions_;
     const Period conventionsTenor_, shortConventionsTenor_;
     const VolatilityType targetType_;
