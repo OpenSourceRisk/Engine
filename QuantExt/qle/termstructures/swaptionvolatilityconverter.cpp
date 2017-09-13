@@ -179,9 +179,12 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
     }
 
     // Build and return cube, note that we hardcode flat extrapolation
-    return boost::shared_ptr<QuantExt::SwaptionVolCube2>(
-        new QuantExt::SwaptionVolCube2(atmStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
-                                       shortSwapIndexBase, false, true, false));
+    boost::shared_ptr<SwaptionVolatilityCube> cubeOut = boost::shared_ptr<QuantExt::SwaptionVolCube2>(
+            new QuantExt::SwaptionVolCube2(atmStructure, optionTenors, swapTenors, strikeSpreads, volSpreads,
+                                           swapIndexBase, shortSwapIndexBase, false, true, false));
+    cubeOut->enableExtrapolation(cube->allowsExtrapolation());
+    return boost::make_shared<SwaptionVolCubeWithATM>(cubeOut);
+
 } // namespace QuantExt
 
 // Ignore "warning C4996: 'Quantlib::Swaption::impliedVolatility': was declared deprecated"
