@@ -271,10 +271,6 @@
   </FRA>
   <FRA>
     <Id>SEK-3M-FRA</Id>
-    <Index>SEK-STIIBOR-3M</Index>
-  </FRA>
-  <FRA>
-    <Id>SEK-3M-FRA</Id>
     <Index>SEK-STIBOR-3M</Index>
   </FRA>
   <FRA>
