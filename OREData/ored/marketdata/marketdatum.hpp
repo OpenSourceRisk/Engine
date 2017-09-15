@@ -32,6 +32,7 @@
 
 using std::string;
 using QuantLib::Real;
+using QuantLib::Size;
 using QuantLib::Date;
 using QuantLib::Period;
 using QuantLib::Quote;
@@ -205,20 +206,21 @@ private:
 class ImmFraQuote : public MarketDatum {
 public:
     //! Constructor
-    ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, unsigned int imm1,
-        unsigned int imm2)
+    ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1,
+        Size imm2)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1),
         imm2_(imm2) {}
 
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    const unsigned int& imm1() const { return imm1_; }
-    const unsigned int& imm2() const { return imm2_; }
+    const Size& imm1() const { return imm1_; }
+    const Size& imm2() const { return imm2_; }
     //@}
 private:
     string ccy_;
-    unsigned int imm1_, imm2_;
+    Size imm1_;
+    Size imm2_;
 };
 
 //! Swap market data class

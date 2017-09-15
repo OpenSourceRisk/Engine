@@ -40,7 +40,8 @@ namespace data {
  */
 class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
 public:
-    CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine) {}
+    CmsCouponPricerBuilder(const string& model, const string& engine)
+        : CachingEngineBuilder(model, engine, {"CMS"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
