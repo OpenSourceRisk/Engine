@@ -46,7 +46,8 @@ namespace data {
  */
 class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    EuropeanSwaptionEngineBuilder() : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine") {}
+    EuropeanSwaptionEngineBuilder()
+        : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -64,7 +65,8 @@ class BermudanSwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
                                          const Date&, const Real> {
 public:
-    BermudanSwaptionEngineBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine) {}
+    BermudanSwaptionEngineBuilder(const string& model, const string& engine)
+        : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,

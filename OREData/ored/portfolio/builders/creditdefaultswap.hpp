@@ -42,7 +42,7 @@ namespace data {
 class CreditDefaultSwapEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&> {
 protected:
     CreditDefaultSwapEngineBuilder(const std::string& model, const std::string& engine)
-        : CachingEngineBuilder(model, engine) {}
+        : CachingEngineBuilder(model, engine, {"CreditDefaultSwap"}) {}
 
     virtual string keyImpl(const Currency&, const string& creditCurveId) override { return creditCurveId; }
 };

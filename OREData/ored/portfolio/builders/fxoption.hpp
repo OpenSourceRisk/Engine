@@ -39,7 +39,7 @@ namespace data {
  */
 class FxOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
-    FxOptionEngineBuilder() : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine") {}
+    FxOptionEngineBuilder() : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxOption"}) {}
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {

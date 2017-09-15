@@ -40,7 +40,8 @@ namespace data {
 */
 class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    SwapEngineBuilderBase(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
+    SwapEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"Swap"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -87,7 +88,7 @@ class CrossCurrencySwapEngineBuilder
     : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {
 public:
     CrossCurrencySwapEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine", {"CrossCurrencySwap"}) {}
 
 protected:
     virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base) override {
