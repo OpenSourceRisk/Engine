@@ -318,18 +318,24 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
         // If swaption volatility type is not Normal, convert to Normal for the simulation
         if (wrapper->volatilityType() != Normal) {
-            // Get swap index associated with this volatility structure
-            string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
-            string shortSwapIndexName = initMarket->shortSwapIndexBase(ccy, configuration);
-            Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexName, configuration);
-            Handle<SwapIndex> shortSwapIndex = initMarket->swapIndex(shortSwapIndexName, configuration);
+            // FIXME we can not convert constant swaption vol structures yet
+            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
+                ALOG("Constant swaption volatility found in configuration " << configuration << " for currency " << ccy
+                                                                            << " will not be converted to normal");
+            } else {
+                // Get swap index associated with this volatility structure
+                string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
+                string shortSwapIndexName = initMarket->shortSwapIndexBase(ccy, configuration);
+                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexName, configuration);
+                Handle<SwapIndex> shortSwapIndex = initMarket->swapIndex(shortSwapIndexName, configuration);
 
-            // Set up swaption volatility converter
-            SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
-            wrapper.linkTo(converter.convert());
+                // Set up swaption volatility converter
+                SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
+                wrapper.linkTo(converter.convert());
 
-            LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
-                                                                     << " to normal swaption volatilities");
+                LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
+                                                                         << " to normal swaption volatilities");
+            }
         }
         Handle<SwaptionVolatilityStructure> svp;
         if (parameters->simulateSwapVols()) {
