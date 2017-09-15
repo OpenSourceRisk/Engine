@@ -38,6 +38,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"MM", MarketDatum::InstrumentType::MM},
         {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
         {"FRA", MarketDatum::InstrumentType::FRA},
+        {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA },
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
@@ -176,18 +177,20 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::FRA: {
         QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
         const string& ccy = tokens[2];
-        Period fwdStart;
-        Period term;
-        if (tokens[3].substr(0,2) == "IM") {
-            Date d1 = parseIMMDate(asof, tokens[3]);
-            fwdStart = Period(d1 - asof, Days);
-            Date d2 = parseIMMDate(asof, tokens[4]);
-            term = Period(d2 - d1, Days);
-        } else {
-            fwdStart = parsePeriod(tokens[3]);
-            term = parsePeriod(tokens[4]);
-        }
+        Period fwdStart = parsePeriod(tokens[3]);
+        Period term = parsePeriod(tokens[4]);
         return boost::make_shared<FRAQuote>(value, asof, datumName, quoteType, ccy, fwdStart, term);
+    }
+
+    case MarketDatum::InstrumentType::IMM_FRA: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        string imm1 = tokens[3];
+        string imm2 = tokens[4];
+        unsigned int m1 = parseInteger(imm1);
+        unsigned int m2 = parseInteger(imm2);
+        QL_REQUIRE(m2 > m1, "Second IMM date must be after the first in " << datumName);
+        return boost::make_shared<ImmFraQuote>(value, asof, datumName, quoteType, ccy, m1, m2);
     }
 
     case MarketDatum::InstrumentType::IR_SWAP: {
