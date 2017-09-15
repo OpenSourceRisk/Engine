@@ -9,7 +9,7 @@ SUBDIRS = \
 	pricingengines \
 	processes \
 	quotes \
-	termstructures 
+	termstructures
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
@@ -33,7 +33,7 @@ libQuantExt_la_LIBADD = \
 	pricingengines/libPricingEngines.la \
 	processes/libProcesses.la \
 	quotes/libQuotes.la \
-	termstructures/libTermStructures.la 
+	termstructures/libTermStructures.la
 
 EXTRA_DIST = \
 	auto_link.hpp
