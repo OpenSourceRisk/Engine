@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -35,7 +35,7 @@ typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 class ImmFraRateHelper : public RelativeDateRateHelper {
 public:
     ImmFraRateHelper(const Handle<Quote>& rate,
-        Size imm1, Size imm2,
+        const Size imm1, const Size imm2,
         const boost::shared_ptr<IborIndex>& iborIndex,
         Pillar::Choice pillar = Pillar::LastRelevantDate,
         Date customPillarDate = Date());
