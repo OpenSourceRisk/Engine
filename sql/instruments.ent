@@ -192,14 +192,14 @@ Table EquityForwardData
 	Field type="xs:float" name="Strike"/>
 	Field type="xs:float" name="Quantity"/>
 
-Table tradeType
+Table TypesTradeType
 	Field type="xs:string" name="value"
 
-Table legType
+Table TypesLegType
 	Field type="xs:string" name="value"
 
-Table tradeActionType
+Table TypesTradeActionType
 	Field type="xs:string" name="value"
 
-Table tradeActionOwner
+Table TypesTradeActionOwner
 	Field type="xs:string" name="value"

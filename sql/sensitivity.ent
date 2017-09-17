@@ -47,6 +47,6 @@ Table SensitivityanalysisCapFloorVolatility" maxOccurs="unbounded"/>
 Table SensitivityanalysisCrossgammafilter">
 	Field type="xs:string" name="Pair" minOccurs="0" maxOccurs="unbounded"/>
 
-Table shifttype
+Table TypesShifttype
 	Field type="xs:string" name="value"/>
 

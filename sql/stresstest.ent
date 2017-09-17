@@ -50,9 +50,6 @@ Table StresstestCapFloorVolatility
 	Field type="xs:string" name="Shifts"/>
 	Field type="currencyCode" name="ccy" use="required"/>
 
-Table Shifttype
-	Field type="xs:string" name="value"
-
 Table SwaptionShift (relates to StresstestSwaptionVolatility)
 	Field type="xs:string" name="StresstestSwaptionVolatilityid" use="required"/>
 	Field type="xs:string" name="expiry" use="optional"/>
