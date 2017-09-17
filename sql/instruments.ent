@@ -1,0 +1,205 @@
+Table Trades
+	Field type="xs:string" name="id" use="required"/>
+	Field type="tradeType" name="TradeType"/>
+	Field type="xs:string" name="CounterParty"/>
+	Field type="xs:string" name="NettingSetId" minOccurs="0"/>
+
+Table AdditionalFields
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="xs:string" name="additionalField"
+
+Table TradeActions
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="tradeActionType" name="Type"/>
+	Field type="tradeActionOwner" name="Owner"/>
+	Field type="scheduleData" name="Schedule"/>
+
+Table ScheduleData (is referred in LegData_capfloor, LegData, TradeActions)
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="ScheduleRulesid"/>
+
+Table ScheduleRules
+	Field type="xs:string" name="id" use="required"/>
+	Field type="date" name="StartDate"/>
+	Field type="date" name="EndDate"/>
+	Field type="xs:string" name="Tenor"/>
+	Field type="calendar" name="Calendar"/>
+	Field type="businessDayConvention" name="Convention"/>
+	Field type="businessDayConvention" name="TermConvention"/>
+	Field type="dateRule" name="Rule" minOccurs="0"/>
+	Field type="bool" name="EndOfMonth" minOccurs="0"/>
+	Field type="date" name="FirstDate" minOccurs="0"/>
+	Field type="date" name="LastDate" minOccurs="0"/>
+
+Table ScheduleDates
+	Field type="xs:string" name="Scheduleid" use="required"/>
+	Field type="date" name="Date" maxOccurs="unbounded"/>
+
+Table SwapData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+
+Table SwaptionData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+
+Table FxOptionData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="currencyCode" name="BoughtCurrency"/>
+	Field type="xs:float" name="BoughtAmount"/>
+	Field type="currencyCode" name="SoldCurrency"/>
+	Field type="xs:float" name="SoldAmount"/>
+
+Table EquityOptionData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="xs:string" name="Name"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="xs:float" name="Strike"/>
+	Field type="xs:float" name="Quantity"/>
+
+Table Options (relates to SwaptionData, FxOptionData and EquityOptionData)
+	Field type="xs:string" name="Dataid" use="required"/>
+	Field type="xs:string" name="LongShort"/>
+	Field type="xs:string" name="OptionType"/>
+	Field type="xs:string" name="Style"/>
+	Field type="xs:string" name="Settlement"/>
+	Field type="xs:string" name="PayOffAtExpiry"/>
+	Field type="xs:string" name="PremiumAmount" minOccurs="0"/>
+	Field type="xs:string" name="PremiumCurrency" minOccurs="0"/>
+	Field type="xs:string" name="PremiumDate" minOccurs="0"/>
+
+Table OptionExerciseDates
+	Field type="xs:string" name="Optionid" use="required"/>
+	Field type="date" name="ExerciseDate" maxOccurs="unbounded"/>
+
+Table LegData (relates to SwapData, SwaptionData, BondData)
+	Field type="xs:string" name="Dataid" use="required"/>
+	Field type="xs:boolean" name="Payer"/>
+	Field type="legType" name="LegType"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="businessDayConvention" name="PaymentConvention"/>
+	Field type="dayCounter" name="DayCounter"/>
+	Field type="scheduleData" name="ScheduleData">
+
+Table Notionals (relates to LegData and LegData_capfloor)
+	Field type="xs:string" name="LegDataid" use="required"/>
+	Field type="xs:float" name="Notional" use="required"/>
+	Field type="xs:boolean" name="NotionalInitialExchange" minOccurs="0"/>
+	Field type="xs:boolean" name="NotionalFinalExchange" minOccurs="0"/>
+	Field type="xs:boolean" name="NotionalAmortizingExchange" minOccurs="0"/>
+	Field type="currencyCode" name="FXresetForeignCurrency" minOccurs="0"/>
+	Field type="xs:double" name="FXresetForeignAmount" minOccurs="0"/>
+	Field type="xs:string" name="FXresetFXIndex" minOccurs="0"/>
+	Field type="xs:integer" name="FXresetFixingDays" minOccurs="0"/>
+
+Table BondData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="xs:string" name="IssuerId" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="CreditCurveId" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="SecurityId" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="ReferenceCurveId" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="SettlementDays" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="1"/>
+	Field type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="1"/>
+
+Table FixedLegData (refers to LegData and LegData_capfloor)
+	Field type="xs:string" name="LegDataid" use="required"/>
+	Field type="xs:float" name="Rate" maxOccurs="unbounded"/>
+
+Table FloatingLegData (refers to LegData and LegData_capfloor)
+	Field type="xs:string" name="LegDataid" use="required"/>
+	Field type="indexNameType" name="Index"/>
+	Field type="xs:boolean" name="IsInArrears"/>
+	Field type="xs:integer" name="FixingDays"/>
+	Field type="xs:boolean" name="IsNotResettingXCCY"/>
+
+Table Spreads
+	Field type="xs:string" name="FloatingLegDataid" use="required"/>
+	Field type="date" name="startDate"
+	Field type="xs:float" name="Spread" maxOccurs="unbounded"/>
+
+Table Caps
+	Field type="xs:string" name="FloatingLegDataid" use="required"/>
+	Field type="xs:double" name="Cap" minOccurs="1" maxOccurs="unbounded"/>
+
+Table Floors
+	Field type="xs:string" name="FloatingLegDataid" use="required"/>
+	Field type="xs:double" name="Floor" minOccurs="1" maxOccurs="unbounded"/>
+
+Table Gearings
+	Field type="xs:string" name="FloatingLegDataid" use="required"/>
+	Field type="xs:double" name="Gearing" minOccurs="1" maxOccurs="unbounded"/>
+
+Table CPILegData (refers to LegData and LegData_capfloor)
+	Field type="xs:string" name="LegDataid" use="required"/>
+	Field type="xs:string" name="Index"/>
+	Field type="xs:float" name="BaseCPI" maxOccurs="1"/>
+	Field type="xs:string" name="ObservationLag" maxOccurs="1"/>
+	Field type="bool" name="Interpolated" maxOccurs="1"/>
+
+Table Rates
+	Field type="xs:string" name="CPILegDataid" use="required"/>
+	Field type="xs:float" name="Rate" maxOccurs="unbounded"/>
+
+Table YYLegData (refers to LegData and LegData_capfloor)
+	Field type="xs:string" name="LegDataid" use="required"/>
+	Field type="xs:string" name="Index"/>
+	Field type="xs:integer" name="FixingDays" maxOccurs="1"/>
+	Field type="xs:string" name="ObservationLag" maxOccurs="1"/>
+	Field type="bool" name="Interpolated" maxOccurs="1"/>
+
+Table FxForwardData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="date" name="ValueDate"/>
+	Field type="currencyCode" name="BoughtCurrency"/>
+	Field type="xs:float" name="BoughtAmount"/>
+	Field type="currencyCode" name="SoldCurrency"/>
+	Field type="xs:float" name="SoldAmount"/>
+
+Table CapFloorData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="longShort" name="LongShort"/>
+	Field type="legData_capfloor" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
+
+Table CapRates
+	Field type="xs:string" name="CapFloorDataid" use="required"/>
+	Field type="xs:float" name="Rate" minOccurs="0" maxOccurs="unbounded"/>
+
+Table FloorRates
+	Field type="xs:string" name="CapFloorDataid" use="required"/>
+	Field type="xs:float" name="Rate" minOccurs="0" maxOccurs="unbounded"/>
+
+Table LegData_capfloor
+	Field type="xs:boolean" name="Payer" minOccurs="0"/>
+	Field type="legType" name="LegType"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="businessDayConvention" name="PaymentConvention"/>
+	Field type="dayCounter" name="DayCounter"/>
+	Field type="scheduleData" name="ScheduleData">
+
+Table EquityForwardData
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Tradeid" use="required"/>
+	Field type="longShort" name="LongShort"/>
+	Field type="date" name="Maturity"/>
+	Field type="xs:string" name="Name"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="xs:float" name="Strike"/>
+	Field type="xs:float" name="Quantity"/>
+
+Table tradeType
+	Field type="xs:string" name="value"
+
+Table legType
+	Field type="xs:string" name="value"
+
+Table tradeActionType
+	Field type="xs:string" name="value"
+
+Table tradeActionOwner
+	Field type="xs:string" name="value"

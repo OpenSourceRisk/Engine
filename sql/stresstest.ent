@@ -1,0 +1,61 @@
+Table Stresstest
+	Field type="xs:string" name="id" use="required"/>
+
+Table StresstestDiscountCurve
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftTenors"/>
+	Field type="xs:string" name="Shifts"/>
+	Field type="currencyCode" name="ccy" use="required"/>
+  
+Table StresstestIndexCurve
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftTenors"/>
+	Field type="xs:string" name="Shifts"/>
+	Field type="indexNameType" name="index" use="required"/>
+
+Table StresstestYieldCurve
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftTenors"/>
+	Field type="xs:string" name="Shifts"/>
+	Field type="xs:string" name="name" use="required"/>
+
+Table StresstestFxSpot
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:float" name="ShiftSize"/>
+	Field type="currencyPair" name="ccypair" use="required"/>
+	
+Table StresstestFxVolatility
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftExpiries"/>
+	Field type="xs:string" name="Shifts"/>
+	Field type="currencyPair" name="ccypair" use="required"/>
+	
+Table StresstestSwaptionVolatility
+	Field type="xs:string" name="id" use="required"/>
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftExpiries"/>
+	Field type="xs:string" name="ShiftTerms"/>
+	Field type="currencyCode" name="ccy" use="required"/>
+
+Table StresstestCapFloorVolatility
+	Field type="xs:string" name="Stresstestid" use="required"/>
+	Field type="shifttype" name="ShiftType"/>
+	Field type="xs:string" name="ShiftExpiries"/>
+	Field type="xs:string" name="Shifts"/>
+	Field type="currencyCode" name="ccy" use="required"/>
+
+Table Shifttype
+	Field type="xs:string" name="value"
+
+Table SwaptionShift (relates to StresstestSwaptionVolatility)
+	Field type="xs:string" name="StresstestSwaptionVolatilityid" use="required"/>
+	Field type="xs:string" name="expiry" use="optional"/>
+	Field type="xs:string" name="term" use="optional"/>
+	Field type="xs:double" name="value"
+

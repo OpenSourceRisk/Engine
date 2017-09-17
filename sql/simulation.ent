@@ -1,0 +1,187 @@
+Table SimulationParams
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="discretizationType" name="ParametersDiscretization"/> <!-- FIXME: Discretisation -->
+	Field type="xs:string" name="ParametersGrid"/>
+	Field type="xs:string" name="ParametersCalendar"/> <!-- can be multiple so we don't use calendar type -->
+	Field type="sequenceType" name="ParametersSequence"/>
+	Field type="xs:string" name="ParametersScenario"/> <!-- FIXME: remove this -->
+	Field type="xs:integer" name="ParametersSeed"/>
+	Field type="xs:positiveInteger" name="ParametersSamples"/>
+
+  <xs:simpleType name="discretizationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Exact"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="sequenceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="MersenneTwister"/>
+      <xs:enumeration value="MersenneTwisterAntithetic"/>
+      <xs:enumeration value="Sobol"/>
+      <xs:enumeration value="SobolBrownianBridge"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+Table SimulationCrossAssetModel
+	Field type="xs:string" name="CrossAssetModelID"
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="DomesticCcy"/> <!-- FIXME: Currency not Ccy -->
+	Field type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
+
+
+Table SimulationCrossAssetModelEquities
+	Field type="xs:string" name="CrossAssetModelID"
+	Field type="xs:string" name="Equity" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationCrossAssetModelCurrencies
+	Field type="xs:string" name="CrossAssetModelID"
+	Field type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
+
+Table SimulationCrossAssetModelInterestRateModelsLGM
+	Field type="currencyCodeWithDefault" name="ccy" use="required"/> <!-- FIXME: currency not ccy -->
+	Field type="xs:string" name="CrossAssetModelID"
+	Field type="calibrationTypeType" name="CalibrationType"/>
+	Field type="bool" name="VolatilityCalibrate"/>
+	Field type="volatilityTypeType" name="VolatilityType"/>
+	Field type="paramTypeType" name="VolatilityParamType"/>
+	Field type="xs:string" name="VolatilityTimeGrid"/> <!-- FIXME: comma delimited list -->
+	Field type="xs:string" name="VolatilityInitialValue"/> <!-- FIXME: comma delimited list -->
+	Field type="bool" name="ReversionCalibrate"/>
+	Field type="reversionTypeType" name="ReversionType"/>
+	Field type="paramTypeType" name="ReversionParamType"/>
+	Field type="xs:string" name="ReversionTimeGrid"/>
+	Field type="xs:float" name="ReversionInitialValue"/>
+	Field type="xs:string" name="CalibrationSwaptionsExpiries"/> <!-- FIXME: comma delimited list -->
+	Field type="xs:string" name="CalibrationSwaptionsTerms"/> <!-- FIXME: comma delimited list -->
+	Field type="xs:string" name="CalibrationSwaptionsStrikes"/> <!-- FIXME: comma delimited list -->
+	Field type="xs:float" name="ParameterTransformationShiftHorizon"/>
+	Field type="xs:float" name="ParameterTransformationScaling"/>
+
+Table CrossAssetModelForeignExchangeModels
+	Field type="currencyCodeWithDefault" name="foreignCcy" use="required"/>
+	Field type="currencyCode" name="DomesticCcy"/> <!-- FIXME: Currency not Ccy -->
+	Field type="xs:string" name="CalibrationType"/>
+	Field type="bool" name="SigmaCalibrate"/>
+	Field type="xs:string" name="SigmaParamType"/>
+	Field type="xs:string" name="SigmaTimeGrid"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="SigmaInitialValue"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="CalibrationOptionsExpiries"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="CalibrationOptionsStrikes"/> <!-- FIXME: comma delimited lists -->
+
+Table CrossAssetModelEquityModels
+	Field type="xs:string" name="name" use="required"/>
+	Field type="currencyCode" name="Currency"/> <!-- FIXME: Currency not Ccy -->
+	Field type="xs:string" name="CalibrationType"/>
+	Field type="bool" name="SigmaCalibrate"/>
+	Field type="xs:string" name="SigmaParamType"/>
+	Field type="xs:string" name="SigmaTimeGrid"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="SigmaInitialValue"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="CalibrationOptionsExpiries"/> <!-- FIXME: comma delimited lists -->
+	Field type="xs:string" name="CalibrationOptionsStrikes"/> <!-- FIXME: comma delimited lists -->
+
+Table CrossAssetModelInstantaneousCorrelations">
+	Field type="xs:string" name="CrossAssetModelID"
+	Field type="xs:double" name="factor1" use="required"/>
+	Field type="xs:double" name="factor2" use="required"/>
+
+Table CalibrationTypeType
+	Field type="xs:string" name="value"
+
+Table ParamTypeType
+	Field type="xs:string" name="value"
+
+Table VolatilityReversionTypeType
+	Field type="xs:string" name="value"
+
+Table SimulationMarket
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="BaseCurrency"/>
+	Field type="xs:string" name="YieldCurvesTenors"/>
+	Field type="ycInterpolation" name="YieldCurvesInterpolation"/>
+	Field type="bool" name="YieldCurvesExtrapolation"/>
+	Field type="xs:string" name="DefaultCurvesTenors"/>
+	Field type="xs:string" name="EquitiesTenors"/>
+	Field type="bool" name="SwaptionVolatilitiesSimulate" maxOccurs="1" minOccurs="0"/>
+	Field type="timeDecayType" name="SwaptionVolatilitiesReactionToTimeDecay"/>
+	Field type="xs:string" name="SwaptionVolatilitiesExpiries"/>
+	Field type="xs:string" name="SwaptionVolatilitiesTerms"/>
+	Field type="xs:string" name="SwaptionVolatilitiesStrikes"/>
+	Field type="bool" name="CapFloorVolatilitiesSimulate" maxOccurs="1" minOccurs="0"/>
+	Field type="timeDecayType" name="CapFloorVolatilitiesReactionToTimeDecay"/>
+	Field type="xs:string" name="CapFloorVolatilitiesExpiries"/>
+	Field type="xs:string" name="CapFloorVolatilitiesStrikes"/>
+	Field type="bool" name="FxVolatilitiesSimulate"  maxOccurs="1" minOccurs="0"/>
+	Field type="timeDecayType" name="FxVolatilitiesReactionToTimeDecay"/>
+	Field type="xs:string" name="FxVolatilitiesExpiries"/>
+	Field type="xs:string" name="FxVolatilitiesStrikes"/>
+	Field type="bool" name="EquityVolatilitiesSimulate"  maxOccurs="1" minOccurs="0"/>
+	Field type="timeDecayType" name="EquityVolatilitiesReactionToTimeDecay"/>
+	Field type="xs:string" name="EquityVolatilitiesExpiries"/>
+	Field type="xs:string" name="EquityVolatilitiesStrikes"/>
+
+Table SimulationMarketFxRatesCurrencyPairs
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketIndices
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketSwapIndices">
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="xs:string" name="Name"/>
+	Field type="indexNameType" name="ForwardingIndex" minOccurs="0"/>
+	Field type="indexNameType" name="DiscountingIndex"/>
+
+Table SimulationMarketDefaultCurvesNames
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketEquitiesNames">
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketSwaptionVolatilitiesCurrencies
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketCapFloorVolatilitiesCurrencies
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+			
+SimulationMarketFxVolatilitiesCurrencyPairs">
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>
+
+SimulationMarketEquityVolatilitiesEquityNames
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="xs:string" name="Name" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketBenchmarkCurves
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="Currency" maxOccurs="1"/>
+	Field type="xs:string" name="Name" maxOccurs="1"/>
+
+Table SimulationMarketSecurities
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="xs:string" name="Security" minOccurs="0" maxOccurs="unbounded" />
+
+Table SimulationMarketAggregationScenarioDataCurrencies
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+
+Table SimulationMarketCurrencies
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="currencyCode" name="Currency" maxOccurs="unbounded" minOccurs="1"/>
+
+Table SimulationMarketAggregationScenarioDataIndices
+	Field type="xs:string" name="SimulationParamsID"
+	Field type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
+
+Table YcInterpolation
+	Field type="xs:string" name="value"
+
+Table TimeDecayType
+	Field type="xs:string" name="value"
+

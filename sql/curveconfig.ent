@@ -1,0 +1,197 @@
+Table CurveConfigurationFXVolatilities
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="dimensionType" name="Dimension"/>
+	Field type="xs:string" name="Expiries"/>
+
+Table CurveConfigurationSwaptionVolatilities
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="dimensionType" name="Dimension"/>
+	Field type="volatilityType" name="VolatilityType"/>
+	Field type="extrapolationType" name="Extrapolation"/>
+	Field type="dayCounter" name="DayCounter"/>
+	Field type="calendar" name="Calendar"/>
+	Field type="businessDayConvention" name="BusinessDayConvention"/>
+	Field type="xs:string" name="OptionTenors"/>
+	Field type="xs:string" name="SwapTenors"/>
+	Field type="xs:string" name="ShortSwapIndexBase"/>
+	Field type="xs:string" name="SwapIndexBase"/>
+
+Table CurveConfigurationCapFloorVolatilities
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="volatilityType" name="VolatilityType"/>
+	Field type="bool" name="Extrapolation"/>
+	Field type="bool" name="IncludeAtm"/>
+	Field type="dayCounter" name="DayCounter"/>
+	Field type="calendar" name="Calendar"/>
+	Field type="businessDayConvention" name="BusinessDayConvention"/>
+	Field type="xs:string" name="Tenors"/>
+	Field type="xs:string" name="Strikes"/>
+	Field type="indexNameType" name="IborIndex"/>
+	Field type="xs:string" name="DiscountCurve"/>
+
+Table CurveConfigurationDefaultCurves
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="cdsType" name="Type"/>
+	Field type="xs:string" name="DiscountCurve"/>
+	Field type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:string" name="RecoveryRate"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+
+Table CurveConfigurationYieldCurves
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="xs:string" name="DiscountCurve"/>
+	Field type="segmentsType" name="Segments"/>
+	Field type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
+	Field type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
+	Field type="dayCounter" name="YieldCurveDayCounter" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+	Field type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+
+Table CurveConfigurationInflationCurves
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="xs:string" name="NominalTermStructure" minOccurs="1" maxOccurs="1"/>
+	Field type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+	Field type="calendar" name="Calendar"/>
+	Field type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:string" name="Lag" minOccurs="1" maxOccurs="1"/>
+	Field type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:decimal" name="BaseRate" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:decimal" name="Tolerance" minOccurs="0" maxOccurs="1"/>
+	Field type="seasonalityType" name="Seasonality" minOccurs="0" maxOccurs="1"/>
+
+Table Seasonality
+	Field type="xs:string" name="CurveId"/>
+	Field type="date" name="BaseDate" minOccurs="1" maxOccurs="1"/>
+	Field type="frequencyType" name="Frequency" minOccurs="1" maxOccurs="1"/>
+	Field type="factorType" name="Factors"/>
+
+Table SeasonalityToFactors
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:int" name="FactorId"/>
+	
+Table Factors
+	Field type="xs:int" name="Id"/>
+	Field type="xs:string" name="Factor" minOccurs="0" maxOccurs="unbounded"/>
+
+Table CurveConfigurationInflationCapFloorPriceSurfaces
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:decimal" name="StartRate" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="ObservationLag" minOccurs="1" maxOccurs="1"/>
+	Field type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
+	Field type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
+	Field type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="IndexCurve" minOccurs="1" maxOccurs="1"/>
+	Field type="bool" name="IndexInterpolated" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="YieldTermStructure" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
+	Field type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
+
+Table CurveConfigurationEquityCurves
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="equityType" name="Type"/>
+	Field type="xs:string" name="SpotQuote"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+
+Table CurveConfigurationEquityVolatilities
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="currencyCode" name="Currency"/>
+	Field type="dimensionType" name="Dimension"/>
+	Field type="xs:string" name="Expiries"/>
+
+Table CurveConfigurationSecuritySpreads
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="CurveDescription"/>
+	Field type="quoteType" name="Quotes"/>
+
+Table SegmentDirect (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="directSegmentTypeType" name="Type"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+
+Table SegmentSimple (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="simpleSegmentTypeType" name="Type"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
+
+Table SegmentAverageOIS (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:string" name="Type" fixed="Average OIS"/>
+	Field type="compositeQuoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="xs:string" name="ProjectionCurve" minOccurs="0" maxOccurs="1"/>
+
+Table CompositeQuote (relates to SegmentAverageOIS)
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:int" name="SpreadQuoteId"/>
+	Field type="xs:int" name="RateQuoteId"/>
+
+Table SegmentTenorBasis (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="tenorBasisSegmentTypeType" name="Type"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="xs:string" name="ProjectionCurveLong" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:string" name="ProjectionCurveShort" minOccurs="0" maxOccurs="1"/>
+
+Table SegmentCrossCurrency (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="crossCurrencySegmentTypeType" name="Type"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="xs:string" name="DiscountCurve"/>
+	Field type="xs:string" name="SpotRate"/>
+	Field type="xs:string" name="ProjectionCurveDomestic" minOccurs="0" maxOccurs="1"/>
+	Field type="xs:string" name="ProjectionCurveForeign" minOccurs="0" maxOccurs="1"/>
+
+Table SegmentZeroSpread (relates to Curves above)
+	Field type="xs:string" name="CurveId"/>
+	Field type="zeroSpreadSegmentTypeType" name="Type"/>
+	Field type="quoteType" name="Quotes"/>
+	Field type="xs:string" name="Conventions"/>
+	Field type="xs:string" name="ReferenceCurve"/>
+
+Table CurvesToQuotes (relates to Curves/Segments (are defined with their parent CurveId) above and Quotes below)
+	Field type="xs:string" name="CurveId"/>
+	Field type="xs:int" name="QuoteId"/>
+
+Table Quotes (relates to some Curves tables and to the Segment tables above, except AverageOIS)
+	Field type="xs:int" name="QuoteId"/>
+	Field type="xs:string" name="Quote" minOccurs="0" maxOccurs="unbounded"/>
+
+Table directSegmentTypeType
+	Field type="xs:string" name="value"
+
+Table simpleSegmentTypeType
+	Field type="xs:string" name="value"
+
+Table tenorBasisSegmentTypeType
+	Field type="xs:string" name="value"
+
+Table crossCurrencySegmentTypeType
+	Field type="xs:string" name="value"
+
+Table zeroSpreadSegmentTypeType
+	Field type="xs:string" name="value"

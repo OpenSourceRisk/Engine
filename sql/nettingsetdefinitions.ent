@@ -1,0 +1,30 @@
+Table NettingSet
+	Field type="xs:string" name="NettingSetId" minOccurs="1"/>
+	Field type="xs:string" name="Counterparty" minOccurs="1"/>
+	Field type="xs:boolean" name="ActiveCSAFlag" minOccurs="1"/>
+
+Table CSADetails
+	Field type="xs:string" name="NettingSetId" minOccurs="1"/>
+	Field type="csaType" name="Bilateral" minOccurs="0"/>
+	Field type="currencyCode" name="CSACurrency" minOccurs="0"/>
+	Field type="xs:string" name="Index" minOccurs="0"/>
+	Field type="non-negative-decimal" name="ThresholdPay" minOccurs="0"/>
+	Field type="non-negative-decimal" name="ThresholdReceive" minOccurs="0"/>
+	Field type="non-negative-decimal" name="MinimumTransferAmountPay" minOccurs="0"/>
+	Field type="non-negative-decimal" name="MinimumTransferAmountReceive" minOccurs="0"/>
+	Field type="xs:decimal" name="IndependentAmountHeld"/>
+	Field type="independentAmountType" name="IndependentAmountType"/>
+	Field type="xs:string" name="CallFrequency"/>
+	Field type="xs:string" name="PostFrequency"/>
+	Field type="xs:string" name="MarginPeriodOfRisk" minOccurs="0"/>
+	Field type="xs:decimal" name="CollateralCompoundingSpreadReceive" minOccurs="0"/>
+	Field type="xs:decimal" name="CollateralCompoundingSpreadPay" minOccurs="0"/>
+					
+Table EligibleCollateralsCurrencies
+	Field name="Currency" maxOccurs="unbounded" minOccurs="0"/>
+
+Table csaType
+	Field type="xs:string" name="value"
+
+Table independentAmountType
+	Field type="xs:string" name="value"
