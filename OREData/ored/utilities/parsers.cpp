@@ -33,7 +33,6 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
 #include <qle/currencies/all.hpp>
-#include <ql/time/imm.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -101,21 +100,6 @@ Date parseDate(const string& s) {
     }
 
     QL_FAIL("Cannot convert \"" << s << "\" to Date.");
-}
-
-QuantLib::Date parseIMMDate(QuantLib::Date asof, const string& s) {
-    QL_REQUIRE(s.size() == 3, "IMM date string must be 3 characters long");
-    QL_REQUIRE(s.substr(0,2) == "IM", "IM date string must contain 'IM' ");
-
-    string ms = s.substr(2,1);
-
-    Size m = std::stoi(ms, NULL, 16);
-    
-    Date imm = asof;
-    for (Size i=0; i<m; i++) {
-        imm = IMM::nextDate(imm, true);
-    }
-    return imm;
 }
 
 Real parseReal(const string& s) {

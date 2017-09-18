@@ -495,6 +495,9 @@
     <ClInclude Include="qle\indexes\ibor\corra.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\immfraratehelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -532,6 +535,9 @@
     </Filter>
     <Filter Include="methods">
       <UniqueIdentifier>{dae20b1f-586f-4e4a-994a-73bda11865fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utilities">
+      <UniqueIdentifier>{e0dfc578-ff16-4b64-a977-3cf9e8ebd310}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -828,6 +834,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\immfraratehelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
