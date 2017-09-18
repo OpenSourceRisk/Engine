@@ -48,9 +48,9 @@ public:
     TestMarket() {
         asof_ = Date(3, Feb, 2016);
         // build discount
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] = flatRateYts(0.02);
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] =
             flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(0.0);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
         //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -75,7 +75,8 @@ public:
     TestMarket(Real defaultFlatRate) {
         asof_ = Date(3, Feb, 2016);
         // build discount
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "BANK_EUR_LEND")] =
+            flatRateYts(0.02);
         defaultCurves_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] = flatRateDcs(defaultFlatRate);
         // recoveryRates_[make_pair(Market::defaultConfiguration, "CreditCurve_A")] =
         //     Handle<Quote>(boost::make_shared<SimpleQuote>(0.00));
@@ -451,6 +452,48 @@ void BondTest::testAmortizingBondWithChangingAmortisation() {
     BOOST_CHECK_THROW(bond7->build(engineFactory), QuantLib::Error);
 }
 
+void BondTest::testMultiPhaseBond() {
+    // build market
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    Date today = Date(30, Jan, 2021);
+    Settings::instance().evaluationDate() = today; // market->asofDate();
+
+    // build engine factory
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    map<string, string> engineparams;
+    engineparams["TimestepPeriod"] = "6M";
+    engineData->engineParameters("Bond") = engineparams;
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+
+    // test multi phase bond
+    CommonVars vars;
+    ScheduleData schedule1(ScheduleRules("05-02-2016", "05-02-2018", "1Y", "TARGET", "F", "F", "Forward"));
+    ScheduleData schedule2(ScheduleRules("05-02-2018", "05-02-2020", "6M", "TARGET", "F", "F", "Forward"));
+    FixedLegData fixedLegRateData(vector<double>(1, 0.01));
+    LegData legdata1(vars.isPayer, vars.ccy, fixedLegRateData, schedule1, vars.fixDC, vars.notionals);
+    LegData legdata2(vars.isPayer, vars.ccy, fixedLegRateData, schedule2, vars.fixDC, vars.notionals);
+    Envelope env("CP1");
+    boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, vars.issuerId, vars.creditCurveId, vars.securityId,
+                                                                vars.referenceCurveId, vars.settledays, vars.calStr,
+                                                                vars.issue, {legdata1, legdata2}));
+    bond->build(engineFactory);
+    printBondSchedule(bond);
+    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(bond->instrument()->qlInstrument());
+    BOOST_REQUIRE(qlInstr != nullptr);
+    // annualy
+    BOOST_REQUIRE_EQUAL(qlInstr->cashflows().size(), 7);
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[0]->date(), Date(6, Feb, 2017));
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[1]->date(), Date(5, Feb, 2018));
+    // semi annually
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[2]->date(), Date(6, Aug, 2018));
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[3]->date(), Date(5, Feb, 2019));
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[4]->date(), Date(5, Aug, 2019));
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[5]->date(), Date(5, Feb, 2020));
+    BOOST_CHECK_EQUAL(qlInstr->cashflows()[6]->date(), Date(5, Feb, 2020));
+}
+
 void BondTest::testBondZeroSpreadDefault() {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
@@ -524,6 +567,7 @@ test_suite* BondTest::suite() {
     suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBond));
     suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBondWithChangingAmortisation));
+    suite->add(BOOST_TEST_CASE(&BondTest::testMultiPhaseBond));
     return suite;
 }
 } // namespace testsuite
