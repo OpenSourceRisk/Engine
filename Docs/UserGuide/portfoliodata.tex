@@ -821,9 +821,9 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
 
 The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. When
-not being rules based (the sub-node Rules doesn't exist), the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
+\lstinline!IsRulesBased! is set to \emph{false}, the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
 where the schedule is determined directly by \lstinline!Date! child elements. The schedule can also be generated from a
-set of rules based on the entries of the sub-node Rules: StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
+set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
 elements.  Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
 \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
 
@@ -872,10 +872,10 @@ then be an ordered concatenation of individual schedules.
 The meanings and allowable values of the elements in the \lstinline!ScheduleData! node follow below.
 
 \begin{itemize}
-\item Rules: a sub-node that determines whether the schedule is set by specifying rules that
-generate the schedule. If existing, the following entries are required: StartDate, EndDate, Tenor, Calendar, 
-Convention, TermConvention, and Rule. If not existing, the Dates sub-node is required.
-
+  % \item IsRulesBased: Determines whether the schedule is set by specifying dates directly, or by specifying rules that
+  %   generate the schedule. If \emph{true}, the following entries are required: StartDate, EndDate, Tenor, Calendar,
+  %   Convention, TermConvention, and Rule.  If false the Dates sub-node is required. \\ Allowable values: \emph{true,
+  %   false}
 \item StartDate:  The schedule start date.  
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -905,12 +905,12 @@ Allowable values: See \lstinline!Roll Convention! in Table
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item Rule: Rule for the generation of the schedule using given
+\item Rules: Rules for the generation of the schedule using given
   start and end dates, tenor, calendar and business day conventions. 
 
 Allowable values and descriptions: See Table \ref{tab:rule} Rule.
 
-\item Dates: This is an alternative sub-node to Rules and contains child elements of type
+\item Dates: This is a sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
   directly by the \lstinline!Date! child elements.  At least two
   \lstinline!Date! child elements must be provided.     
