@@ -254,6 +254,10 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
     vector<Real> zeros(instruments.size() + 1, 0.0);
     vector<Real> discounts(instruments.size() + 1, 1.0);
     vector<Real> forwards(instruments.size() + 1, 0.0);
+    
+    if (extrapolation_) {
+        yieldts->enableExtrapolation();
+    }
     for (Size i = 0; i < instruments.size(); i++) {
         dates[i + 1] = instruments[i]->latestDate();
         zeros[i + 1] = yieldts->zeroRate(dates[i + 1], zeroDayCounter_, Continuous);
