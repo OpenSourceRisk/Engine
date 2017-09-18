@@ -23,55 +23,61 @@ sub simpleXML($$) {
 simpleXML("conventions","Conventions");
 
 # process the pricingengine data
-open SQLOUT, ">pricingengine.sql";
-print SQLOUT "use ORE\n\n";
-my $xmldata= XML::LibXML->load_xml(location => './pricingengine.xml', no_blanks => 1);
-print "processing PricingEngine Data\n";
-my @firstlevel = $xmldata->firstChild->childNodes;
-foreach my $record (@firstlevel) {
-	printInsert($record, "PricingEngine", "Products");
-	my $typeAtt = $record->getAttribute("type");
-	my @subrecordData = $record->findnodes('EngineParameters/Parameter');
-	foreach my $subrecord (@subrecordData) {
-		$subrecord->setAttribute("type", $typeAtt);
-		printInsert($subrecord, "PricingEngine", "EngineParameters");
-	}
-	my @subrecordData = $record->findnodes('ModelParameters/Parameter');
-	foreach my $subrecord (@subrecordData) {
-		$subrecord->setAttribute("type", $typeAtt);
-		printInsert($subrecord, "PricingEngine", "ModelParameters");
-	}
-}
-close SQLOUT;
-
-
-# process the ore_types data
-open SQLOUT, ">ore_types.sql";
-print SQLOUT "use ORE\n\n";
-my $xmldata= XML::LibXML->load_xml(location => './ore_types.xsd', no_blanks => 1);
-print "processing oretypes\n";
-#<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-#	<xs:simpleType name="bool">
-#	...
-#	<xs:simpleType name="currencyCode">
-#	..
-my @firstlevel = $xmldata->firstChild->childNodes;
-foreach my $record (@firstlevel) {
-	if (ref($record) eq "XML::LibXML::Element") {
-	my $tableName = $record->getAttribute("name");
-		#<xs:simpleType name="bool">
-		#	<xs:restriction base="xs:string">
-		#		<xs:enumeration value="Y"/>
-		my @subrecordData = $record->firstChild->childNodes;
+sub pricingengineXML {
+	open SQLOUT, ">pricingengine.sql";
+	print SQLOUT "use ORE\n\n";
+	my $xmldata= XML::LibXML->load_xml(location => './pricingengine.xml', no_blanks => 1);
+	print "processing PricingEngine Data\n";
+	my @firstlevel = $xmldata->firstChild->childNodes;
+	foreach my $record (@firstlevel) {
+		printInsert($record, "PricingEngine", "Products");
+		my $typeAtt = $record->getAttribute("type");
+		my @subrecordData = $record->findnodes('EngineParameters/Parameter');
 		foreach my $subrecord (@subrecordData) {
-			printInsert($subrecord, "Types", $tableName, 1);
+			$subrecord->setAttribute("type", $typeAtt);
+			printInsert($subrecord, "PricingEngine", "EngineParameters");
+		}
+		
+		my @subrecordData = $record->findnodes('ModelParameters/Parameter');
+		foreach my $subrecord (@subrecordData) {
+			$subrecord->setAttribute("type", $typeAtt);
+			printInsert($subrecord, "PricingEngine", "ModelParameters");
 		}
 	}
+	close SQLOUT;
 }
-close SQLOUT;
+pricingengineXML;
+
+# process the ore_types data
+sub oretypesXML {
+	open SQLOUT, ">ore_types.sql";
+	print SQLOUT "use ORE\n\n";
+	my $xmldata= XML::LibXML->load_xml(location => './ore_types.xsd', no_blanks => 1);
+	print "processing table oretypes\n";
+	#<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	#	<xs:simpleType name="bool">
+	#	...
+	#	<xs:simpleType name="currencyCode">
+	#	..
+	my @firstlevel = $xmldata->firstChild->childNodes;
+	foreach my $record (@firstlevel) {
+		if (ref($record) eq "XML::LibXML::Element") {
+		my $tableName = $record->getAttribute("name");
+			#<xs:simpleType name="bool">
+			#	<xs:restriction base="xs:string">
+			#		<xs:enumeration value="Y"/>
+			my @subrecordData = $record->firstChild->childNodes;
+			foreach my $subrecord (@subrecordData) {
+				printInsert($subrecord, "Types", $tableName, 1);
+			}
+		}
+	}
+	close SQLOUT;
+}
+
+oretypesXML;
 
 
-# helper functions
 # print the insert statement for a XML Record
 sub printInsert() {
 	my ($record, $prefix, $tableName, $numericAsChar) = @_;
@@ -104,7 +110,7 @@ sub printInsert() {
 	print SQLOUT "INSERT $prefix$tableName (".substr($colNames,0,-1).") VALUES (".substr($colValues,0,-1).")\n" if $colValues ne "";
 }
 
-# format SQL according to type (number vs. string/dates)
+# helper functions
 sub formatSQL() {
 	my ($var, $numericAsChar) = @_;
 	return $var if looks_like_number($var) && !$numericAsChar;

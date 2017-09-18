@@ -1,7 +1,7 @@
-Table TodaysMarketConfigurationTypes
+Table ConfigurationTypes
 	Field type="xs:string" name="id" use="required"/>
 
-Table TodaysMarketConfiguration (relates to TodaysMarketConfigurationTypes and TodaysMarket tables below)
+Table Configuration (relates to ConfigurationTypes and TodaysMarket tables below)
 	Field type="xs:string" name="ConfigurationTypeid" use="required"/>
 	Field type="xs:string" name="DiscountingCurvesId" minOccurs="0"/>
 	Field type="xs:string" name="YieldCurvesId" minOccurs="0"/>

@@ -181,17 +181,17 @@ Table Quotes (relates to some Curves tables and to the Segment tables above, exc
 	Field type="xs:int" name="QuoteId"/>
 	Field type="xs:string" name="Quote" minOccurs="0" maxOccurs="unbounded"/>
 
-Table TypesDirectSegmentTypeType
+Table directSegmentTypeType
 	Field type="xs:string" name="value"
 
-Table TypesSimpleSegmentTypeType
+Table simpleSegmentTypeType
 	Field type="xs:string" name="value"
 
-Table TypesTenorBasisSegmentTypeType
+Table tenorBasisSegmentTypeType
 	Field type="xs:string" name="value"
 
-Table TypesCrossCurrencySegmentTypeType
+Table crossCurrencySegmentTypeType
 	Field type="xs:string" name="value"
 
-Table TypesZeroSpreadSegmentTypeType
+Table zeroSpreadSegmentTypeType
 	Field type="xs:string" name="value"

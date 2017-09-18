@@ -8,17 +8,27 @@ Table SimulationParams
 	Field type="xs:integer" name="ParametersSeed"/>
 	Field type="xs:positiveInteger" name="ParametersSamples"/>
 
-Table TypesDiscretizationType
-	Field type="xs:string" name="value"
+  <xs:simpleType name="discretizationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Exact"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-Table TypesSequenceType
-	Field type="xs:string" name="value"
+  <xs:simpleType name="sequenceType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="MersenneTwister"/>
+      <xs:enumeration value="MersenneTwisterAntithetic"/>
+      <xs:enumeration value="Sobol"/>
+      <xs:enumeration value="SobolBrownianBridge"/>
+    </xs:restriction>
+  </xs:simpleType>
 
 Table SimulationCrossAssetModel
 	Field type="xs:string" name="CrossAssetModelID"
 	Field type="xs:string" name="SimulationParamsID"
 	Field type="currencyCode" name="DomesticCcy"/> <!-- FIXME: Currency not Ccy -->
 	Field type="xs:float" name="BootstrapTolerance" maxOccurs="1" />
+
 
 Table SimulationCrossAssetModelEquities
 	Field type="xs:string" name="CrossAssetModelID"
@@ -75,13 +85,13 @@ Table CrossAssetModelInstantaneousCorrelations">
 	Field type="xs:double" name="factor1" use="required"/>
 	Field type="xs:double" name="factor2" use="required"/>
 
-Table TypesCalibrationTypeType
+Table CalibrationTypeType
 	Field type="xs:string" name="value"
 
-Table TypesParamTypeType
+Table ParamTypeType
 	Field type="xs:string" name="value"
 
-Table TypesVolatilityReversionTypeType
+Table VolatilityReversionTypeType
 	Field type="xs:string" name="value"
 
 Table SimulationMarket
@@ -169,9 +179,9 @@ Table SimulationMarketAggregationScenarioDataIndices
 	Field type="xs:string" name="SimulationParamsID"
 	Field type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
 
-Table TypesYcInterpolation
+Table YcInterpolation
 	Field type="xs:string" name="value"
 
-Table TypesTimeDecayType
+Table TimeDecayType
 	Field type="xs:string" name="value"
 

@@ -23,8 +23,8 @@ Table CSADetails
 Table EligibleCollateralsCurrencies
 	Field name="Currency" maxOccurs="unbounded" minOccurs="0"/>
 
-Table TypesCsaType
+Table csaType
 	Field type="xs:string" name="value"
 
-Table TypesIndependentAmountType
+Table independentAmountType
 	Field type="xs:string" name="value"
