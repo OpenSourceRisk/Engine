@@ -238,7 +238,7 @@
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="businessDayConvention" name="PaymentConvention"/>
       <xs:element type="dayCounter" name="DayCounter"/>
-      <xs:element type="amortizationData" name="AmortizationData" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="amortizationData" name="AmortizationData" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element name="Notionals">
         <xs:complexType>
           <xs:sequence>

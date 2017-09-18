@@ -122,12 +122,10 @@ struct CommonVars {
     vector<Real> notionals;
     vector<Real> spread;
 
-
     // utilities
     boost::shared_ptr<ore::data::Bond> makeBond() {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
-        // build CMSSwap
         FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
         LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
 
@@ -137,14 +135,14 @@ struct CommonVars {
             env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
-    
+
     boost::shared_ptr<ore::data::Bond> makeAmortizingFixedBond(string amortType, Real value, bool underflow) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals, vector<string>(), conv, 
-                false, false, false, true, "", 0, "", 0, amortizationData);
+        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals, vector<string>(), conv,
+                             false, false, false, true, "", 0, "", 0, {amortizationData});
 
         Envelope env("CP1");
 
@@ -158,9 +156,46 @@ struct CommonVars {
 
         FloatingLegData floatingLegRateData("EUR-EURIBOR-6M", 2, false, spread);
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData floatingLegData(isPayer, ccy, floatingLegRateData, floatingSchedule, fixDC, notionals, vector<string>(), conv, 
-                false, false, false, true, "", 0, "", 0, amortizationData);
-                
+        LegData floatingLegData(isPayer, ccy, floatingLegRateData, floatingSchedule, fixDC, notionals, vector<string>(),
+                                conv, false, false, false, true, "", 0, "", 0, {amortizationData});
+
+        Envelope env("CP1");
+
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
+            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, floatingLegData));
+        return bond;
+    }
+
+    boost::shared_ptr<ore::data::Bond> makeAmortizingFixedBondWithChangingAmortisation(string amortType1, Real value1,
+                                                                                       bool underflow1, string end1,
+                                                                                       string amortType2, Real value2,
+                                                                                       bool underflow2) {
+        ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
+
+        FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
+        AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
+        AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
+        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals, vector<string>(), conv,
+                             false, false, false, true, "", 0, "", 0, {amortizationData1, amortizationData2});
+
+        Envelope env("CP1");
+
+        boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
+            env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
+        return bond;
+    }
+
+    boost::shared_ptr<ore::data::Bond>
+    makeAmortizingFloatingBondWithChangingAmortisation(string amortType1, Real value1, bool underflow1, string end1,
+                                                       string amortType2, Real value2, bool underflow2) {
+        ScheduleData floatingSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
+
+        FloatingLegData floatingLegRateData("EUR-EURIBOR-6M", 2, false, spread);
+        AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
+        AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
+        LegData floatingLegData(isPayer, ccy, floatingLegRateData, floatingSchedule, fixDC, notionals, vector<string>(),
+                                conv, false, false, false, true, "", 0, "", 0, {amortizationData1, amortizationData2});
+
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(
@@ -200,6 +235,45 @@ struct CommonVars {
         spread.push_back(0.0);
     }
 };
+
+// print details of bond cashflows
+void printBondSchedule(const boost::shared_ptr<ore::data::Bond>& b) {
+    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
+    BOOST_REQUIRE(qlInstr != nullptr);
+    BOOST_TEST_MESSAGE("Bond NPV=" << qlInstr->NPV() << ", Schedule:");
+    Leg l = qlInstr->cashflows();
+    BOOST_TEST_MESSAGE(" StartDate    EndDate     Nominal        Rate      Amount");
+    for (auto const& c : l) {
+        auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+        if (cpn != nullptr) {
+            BOOST_TEST_MESSAGE(QuantLib::io::iso_date(cpn->accrualStartDate())
+                               << " " << QuantLib::io::iso_date(cpn->accrualEndDate()) << std::setw(12)
+                               << cpn->nominal() << std::setw(12) << cpn->rate() << std::setw(12) << cpn->amount());
+        } else {
+            BOOST_TEST_MESSAGE("           " << QuantLib::io::iso_date(c->date()) << std::setw(12) << " "
+                                             << std::setw(12) << " " << std::setw(12) << c->amount());
+        }
+    }
+    BOOST_TEST_MESSAGE("");
+}
+
+// check nominal schedule of bond
+void checkNominalSchedule(const boost::shared_ptr<ore::data::Bond>& b, const std::vector<Real> notionals) {
+    auto qlInstr = boost::dynamic_pointer_cast<QuantLib::Bond>(b->instrument()->qlInstrument());
+    BOOST_REQUIRE(qlInstr != nullptr);
+    Leg l = qlInstr->cashflows();
+    std::vector<Real> bondNotionals;
+    for (auto const& c : l) {
+        auto cpn = boost::dynamic_pointer_cast<Coupon>(c);
+        if (cpn != nullptr) {
+            bondNotionals.push_back(cpn->nominal());
+        }
+    }
+    BOOST_REQUIRE_EQUAL(bondNotionals.size(), notionals.size());
+    for (Size i = 0; i < notionals.size(); ++i)
+        BOOST_CHECK_CLOSE(bondNotionals[i], notionals[i], 1E-4);
+}
+
 } // namespace
 
 namespace testsuite {
@@ -233,27 +307,23 @@ void BondTest::testZeroBond() {
     BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
 
-
 void BondTest::testAmortizingBond() {
-    BOOST_TEST_MESSAGE("Testing Zero Bond...");
+    BOOST_TEST_MESSAGE("Testing Amortising Bonds...");
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
     Date today = Date(30, Jan, 2021);
-    Settings::instance().evaluationDate() = today;//market->asofDate();
+    Settings::instance().evaluationDate() = today; // market->asofDate();
 
     CommonVars vars;
     vector<boost::shared_ptr<ore::data::Bond>> bonds;
     boost::shared_ptr<ore::data::Bond> bondFixedAmount = vars.makeAmortizingFixedBond("FixedAmount", 2500000, true);
     bonds.push_back(bondFixedAmount);
 
-    boost::shared_ptr<ore::data::Bond> bondRelativeInitial = vars.makeAmortizingFixedBond("RelativeToInitialNotional", 0.25, true);
+    boost::shared_ptr<ore::data::Bond> bondRelativeInitial =
+        vars.makeAmortizingFixedBond("RelativeToInitialNotional", 0.25, true);
     bonds.push_back(bondRelativeInitial);
 
-
-
-
-    
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Bond") = "DiscountedCashflows";
@@ -267,8 +337,11 @@ void BondTest::testAmortizingBond() {
 
     Real npvTol = 0.5;
 
-    for( auto& b: bonds) {
+    for (auto& b : bonds) {
         b->build(engineFactory);
+
+        // output schedule
+        printBondSchedule(b);
 
         Real npv = b->instrument()->NPV();
         Real expectedNpv = 0.0;
@@ -276,44 +349,107 @@ void BondTest::testAmortizingBond() {
         BOOST_CHECK(std::fabs(npv - expectedNpv) < npvTol);
     }
 
-  
-    boost::shared_ptr<ore::data::Bond> bondRelativePrevious = vars.makeAmortizingFixedBond("RelativeToPreviousNotional", 0.25, true);
+    boost::shared_ptr<ore::data::Bond> bondRelativePrevious =
+        vars.makeAmortizingFixedBond("RelativeToPreviousNotional", 0.25, true);
     bondRelativePrevious->build(engineFactory);
+    printBondSchedule(bondRelativePrevious);
 
     boost::shared_ptr<QuantLib::Instrument> inst1 = bondRelativePrevious->instrument()->qlInstrument();
     boost::shared_ptr<QuantLib::Bond> qlBond1 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst1);
     Real expectedNotional = 3164062.5;
 
-    Real notional = qlBond1->notionals()[qlBond1->notionals().size()-2];
-    
+    Real notional = qlBond1->notionals()[qlBond1->notionals().size() - 2];
+
     BOOST_CHECK_CLOSE(notional, expectedNotional, 1);
 
     boost::shared_ptr<ore::data::Bond> bondFixedAnnuity = vars.makeAmortizingFixedBond("Annuity", 2500000, true);
     bondFixedAnnuity->build(engineFactory);
+    printBondSchedule(bondFixedAnnuity);
 
     boost::shared_ptr<QuantLib::Instrument> inst2 = bondFixedAnnuity->instrument()->qlInstrument();
     boost::shared_ptr<QuantLib::Bond> qlBond2 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst2);
     expectedNotional = 1380908.447;
 
-    notional = qlBond2->notionals()[qlBond2->notionals().size()-2];
+    notional = qlBond2->notionals()[qlBond2->notionals().size() - 2];
 
     BOOST_CHECK(std::fabs(notional - expectedNotional) < npvTol);
 
     boost::shared_ptr<ore::data::Bond> bondFloatingAnnuity = vars.makeAmortizingFloatingBond("Annuity", 2500000, true);
     bondFloatingAnnuity->build(engineFactory);
+    printBondSchedule(bondFloatingAnnuity);
 
     boost::shared_ptr<QuantLib::Instrument> inst3 = bondFloatingAnnuity->instrument()->qlInstrument();
     boost::shared_ptr<QuantLib::Bond> qlBond3 = boost::dynamic_pointer_cast<QuantLib::Bond>(inst3);
     Real expectedAmount = 93.41;
 
-    Real amount = qlBond3->cashflows()[qlBond3->cashflows().size()-2]->amount();
-    
+    Real amount = qlBond3->cashflows()[qlBond3->cashflows().size() - 2]->amount();
+
     BOOST_CHECK(std::fabs(amount - expectedAmount) < npvTol);
-
-
-
 }
 
+void BondTest::testAmortizingBondWithChangingAmortisation() {
+    BOOST_TEST_MESSAGE("Testing Amortising Bonds with changing amortisation...");
+
+    // build market
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
+    Date today = Date(30, Jan, 2021);
+    Settings::instance().evaluationDate() = today; // market->asofDate();
+
+    // build engine factory
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("Bond") = "DiscountedCashflows";
+    engineData->engine("Bond") = "DiscountingRiskyBondEngine";
+    map<string, string> engineparams;
+    engineparams["TimestepPeriod"] = "6M";
+    engineData->engineParameters("Bond") = engineparams;
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+
+    // test different amortization combinations
+    CommonVars vars;
+
+    // fixed rate bond test cases
+    boost::shared_ptr<ore::data::Bond> bond1 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+        "FixedAmount", 2500000, true, "05-02-2018", "FixedAmount", 1250000, true);
+    bond1->build(engineFactory);
+    printBondSchedule(bond1);
+    checkNominalSchedule(bond1, {1.0E7, 7.5E6, 6.25E6, 5.0E6, 3.75E6});
+
+    boost::shared_ptr<ore::data::Bond> bond2 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+        "FixedAmount", 2500000, true, "05-02-2018", "RelativeToInitialNotional", 0.1, true);
+    bond2->build(engineFactory);
+    printBondSchedule(bond2);
+    checkNominalSchedule(bond2, {1.0E7, 7.5E6, 6.5E6, 5.5E6, 4.5E6});
+
+    boost::shared_ptr<ore::data::Bond> bond3 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+        "RelativeToPreviousNotional", 0.1, true, "05-02-2018", "Annuity", 1E6, true);
+    bond3->build(engineFactory);
+    printBondSchedule(bond3);
+    checkNominalSchedule(bond3, {1.0E7, 9.0E6, 8.45247E6, 7.87393E6, 7.26645E6});
+
+    boost::shared_ptr<ore::data::Bond> bond4 = vars.makeAmortizingFixedBondWithChangingAmortisation(
+        "Annuity", 1E6, true, "05-02-2018", "RelativeToPreviousNotional", 0.1, true);
+    bond4->build(engineFactory);
+    printBondSchedule(bond4);
+    checkNominalSchedule(bond4, {1.0E7, 9.50012E6, 8.55011E6, 7.6951E6, 6.92559E6});
+
+    // floating rate bond test cases
+    boost::shared_ptr<ore::data::Bond> bond5 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+        "FixedAmount", 2500000, true, "05-02-2018", "FixedAmount", 1250000, true);
+    bond5->build(engineFactory);
+    printBondSchedule(bond5);
+    checkNominalSchedule(bond5, {1.0E7, 7.5E6, 6.25E6, 5.0E6, 3.75E6});
+
+    boost::shared_ptr<ore::data::Bond> bond6 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+        "FixedAmount", 2500000, true, "05-02-2018", "RelativeToInitialNotional", 0.1, true);
+    bond6->build(engineFactory);
+    printBondSchedule(bond6);
+    checkNominalSchedule(bond6, {1.0E7, 7.5E6, 6.5E6, 5.5E6, 4.5E6});
+
+    // annuity only allowed in single block setup
+    boost::shared_ptr<ore::data::Bond> bond7 = vars.makeAmortizingFloatingBondWithChangingAmortisation(
+        "RelativeToPreviousNotional", 0.1, true, "05-02-2018", "Annuity", 1E6, true);
+    BOOST_CHECK_THROW(bond7->build(engineFactory), QuantLib::Error);
+}
 
 void BondTest::testBondZeroSpreadDefault() {
     BOOST_TEST_MESSAGE("Testing Bond price...");
@@ -387,6 +523,7 @@ test_suite* BondTest::suite() {
     suite->add(BOOST_TEST_CASE(&BondTest::testBondZeroSpreadDefault));
     suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
     suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBond));
+    suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBondWithChangingAmortisation));
     return suite;
 }
 } // namespace testsuite

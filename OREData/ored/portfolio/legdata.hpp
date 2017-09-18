@@ -305,7 +305,8 @@ public:
     LegData(bool isPayer, const string& currency, CashflowData& data,
             const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F",
             bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-            bool notionalAmortizingExchange = false, AmortizationData amortizationData = AmortizationData())
+            bool notionalAmortizingExchange = false,
+            std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("Cashflow"), cashflowData_(data),
           notionalDates_(notionalDates), paymentConvention_(paymentConvention),
           notionalInitialExchange_(notionalInitialExchange), notionalFinalExchange_(notionalFinalExchange),
@@ -318,7 +319,7 @@ public:
             bool notionalInitialExchange = false, bool notionalFinalExchange = false,
             bool notionalAmortizingExchange = false, bool isNotResetXCCY = true, const string& foreignCurrency = "",
             double foreignAmount = 0, const string& fxIndex = "", int fixingDays = 0,
-            AmortizationData amortizationData = AmortizationData())
+            std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("Floating"), floatingLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -332,7 +333,7 @@ public:
             const string& paymentConvention = "F", bool notionalInitialExchange = false,
             bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
             const string& foreignCurrency = "", double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, AmortizationData amortizationData = AmortizationData())
+            int fixingDays = 0, std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("Fixed"), fixedLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -345,7 +346,7 @@ public:
             const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
             const string& paymentConvention = "F", bool notionalInitialExchange = false,
             bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            AmortizationData amortizationData = AmortizationData())
+            std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("CPI"), cpiLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -357,7 +358,7 @@ public:
             const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
             const string& paymentConvention = "F", bool notionalInitialExchange = false,
             bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            AmortizationData amortizationData = AmortizationData())
+            std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("YY"), yoyLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
           paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
@@ -370,7 +371,7 @@ public:
             const string& paymentConvention = "F", bool notionalInitialExchange = false,
             bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
             const string& foreignCurrency = "", double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, AmortizationData amortizationData = AmortizationData())
+            int fixingDays = 0, std::vector<AmortizationData> amortizationData = std::vector<AmortizationData>())
         : isPayer_(isPayer), currency_(currency), legType_("CMS"), cmsLegData_(data), schedule_(schedule),
           dayCounter_(dayCounter), notionals_(notionals), paymentConvention_(paymentConvention),
           notionalInitialExchange_(notionalInitialExchange), notionalFinalExchange_(notionalFinalExchange),
@@ -408,7 +409,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
-    const AmortizationData& amortizationData() const { return amortizationData_; }
+    const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //@}
 private:
     bool isPayer_;
@@ -433,7 +434,7 @@ private:
     double foreignAmount_;
     string fxIndex_;
     int fixingDays_;
-    AmortizationData amortizationData_;
+    std::vector<AmortizationData> amortizationData_;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -469,18 +470,21 @@ vector<double> buildScheduledVectorNormalised(const vector<double>& values, cons
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
-                                                    const LegData& data);
+                                                    const AmortizationData& data);
 
 // notional vector with amortizations expressed as a percentage of initial notional
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
-                                                                  const Schedule& schedule, const LegData& data);
+                                                                  const Schedule& schedule,
+                                                                  const AmortizationData& data);
 
 // notional vector with amortizations expressed as a percentage of the respective previous notional
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
-                                                                   const Schedule& schedule, const LegData& data);
+                                                                   const Schedule& schedule,
+                                                                   const AmortizationData& data);
 
 // notional vector derived from a fixed annuity amount
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
-                                                     const Schedule& schedule, const LegData& data);
+                                                     const Schedule& schedule, const AmortizationData& data,
+                                                     const DayCounter& dc);
 } // namespace data
 } // namespace ore
