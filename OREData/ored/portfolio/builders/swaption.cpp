@@ -49,7 +49,8 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
 boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const string& id, bool isNonStandard,
                                                                          const string& ccy,
                                                                          const std::vector<Date>& expiries,
-                                                                         const Date& maturity, const Real strike) {
+                                                                         const Date& maturity,
+                                                                         const std::vector<Real>& strikes) {
 
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameters_.at("Calibration"));
@@ -115,11 +116,13 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
         }
         data->swaptionExpiries() = expiryDates;
         data->swaptionTerms() = termDates;
-        data->swaptionStrikes().resize(expiryDates.size(),
-                                       calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM ||
-                                               strike == Null<Real>()
-                                           ? "ATM"
-                                           : std::to_string(strike));
+        data->swaptionStrikes().resize(expiryDates.size(), "ATM");
+        if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
+            for (Size i = 0; i < expiries.size(); ++i) {
+                if (strikes[i] != Null<Real>())
+                    data->swaptionStrikes()[i] = std::to_string(strikes[i]);
+            }
+        }
         if (calibration == CalibrationType::Bootstrap) {
             DLOG("Calibrate piecewise alpha");
             data->calibrationType() = CalibrationType::Bootstrap;
@@ -147,6 +150,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     boost::shared_ptr<LgmBuilder> calib =
         boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
     DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
+    calib->recalibrate();
     modelBuilders_.insert(std::make_pair(id, calib));
     return calib->model();
 }
@@ -155,10 +159,10 @@ boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImp
                                                                                   const string& ccy,
                                                                                   const std::vector<Date>& expiries,
                                                                                   const Date& maturity,
-                                                                                  const Real fixedRate) {
+                                                                                  const std::vector<Real>& strikes) {
     DLOG("Building Bermudan Swaption engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity, fixedRate);
+    boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameters_.at("sy"));

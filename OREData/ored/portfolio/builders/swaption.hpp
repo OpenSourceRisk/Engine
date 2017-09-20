@@ -63,14 +63,15 @@ protected:
  */
 class BermudanSwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
-                                         const Date&, const Real> {
+                                         const Date&, const std::vector<Real>&> {
 public:
     BermudanSwaptionEngineBuilder(const string& model, const string& engine)
         : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,
-                           const std::vector<Date>& dates, const Date& maturity, const Real fixedRate) override {
+                           const std::vector<Date>& dates, const Date& maturity,
+                           const std::vector<Real>& strikes) override {
         return id;
     }
 };
@@ -81,7 +82,8 @@ public:
 
 protected:
     boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
-                                           const std::vector<Date>& dates, const Date& maturity, const Real fixedRate);
+                                           const std::vector<Date>& dates, const Date& maturity,
+                                           const std::vector<Real>& strikes);
 };
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
@@ -104,7 +106,7 @@ protected:
         //! maturity of the underlying
         const Date& maturity,
         //! Fixed rate (null means ATM)
-        const Real fixedRate) override;
+        const std::vector<Real>& strikes) override;
 };
 
 } // namespace data
