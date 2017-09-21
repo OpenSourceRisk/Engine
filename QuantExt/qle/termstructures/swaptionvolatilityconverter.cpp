@@ -281,7 +281,7 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
 
         // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
-                                                 outShift, outType);
+                                                 outType, outShift);
     } catch (std::exception& e) {
         // couldn't find implied volatility
         QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to convert volatility"
