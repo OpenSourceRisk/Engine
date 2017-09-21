@@ -51,7 +51,8 @@ public:
         @param model the model name
         @param engine the engine name
      */
-    CachingEngineBuilder(const string& model, const string& engine) : EngineBuilder(model, engine) {}
+    CachingEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
+        : EngineBuilder(model, engine, tradeTypes) {}
 
     //! Return a PricingEngine or a FloatingRateCouponPricer
     boost::shared_ptr<U> engine(Args... params) {

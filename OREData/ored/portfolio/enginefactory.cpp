@@ -36,7 +36,7 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
     LOG("EngineFactory regisering builder for model:" << modelName << " and engine:" << engineName);
-    builders_[make_pair(modelName, engineName)] = builder;
+    builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
@@ -45,10 +45,17 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
                                                    "model/engine for trade type "
                                                        << tradeType);
 
-    // Find a builder for the model/engine pair
-    auto key = make_pair(engineData_->model(tradeType), engineData_->engine(tradeType));
-    auto it = builders_.find(key);
-    QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << key.first << "/" << key.second);
+    // Find a builder for the model/engine/tradeType
+    const string& model = engineData_->model(tradeType);
+    const string& engine = engineData_->engine(tradeType);
+    typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
+    auto it = std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType] (const map_type &v) -> bool {
+        const set<string>& types = std::get<2>(v.first);
+        return std::get<0>(v.first) == model &&
+               std::get<1>(v.first) == engine &&
+               std::find(types.begin(), types.end(), tradeType) != types.end();
+    });
+    QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
 
