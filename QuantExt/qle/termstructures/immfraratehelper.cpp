@@ -99,7 +99,7 @@ void ImmFraRateHelper::initializeDates() {
 
 Date ImmFraRateHelper::getImmDate(Date asof, int i) {
     Date imm = asof;
-    for (Size j = 0; j<i; j++) {
+    for (int j = 0; j<i; j++) {
         imm = IMM::nextDate(imm, true);
     }
     return imm;
