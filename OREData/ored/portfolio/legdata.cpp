@@ -195,7 +195,7 @@ void LegData::fromXML(XMLNode* node) {
     legType_ = XMLUtils::getChildValue(node, "LegType", true);
     isPayer_ = XMLUtils::getChildValueAsBool(node, "Payer");
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
-    dayCounter_ = XMLUtils::getChildValue(node, "DayCounter");
+    dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ =
@@ -260,8 +260,10 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LegType", legType_);
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
-    XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
+    if (dayCounter_ != "")
+        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
+    if (paymentConvention_ != "")
+        XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
     XMLUtils::addChild(doc, node, "NotionalInitialExchange", notionalInitialExchange_);
     XMLUtils::addChild(doc, node, "NotionalFinalExchange", notionalFinalExchange_);
