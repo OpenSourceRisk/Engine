@@ -97,9 +97,9 @@ void ImmFraRateHelper::initializeDates() {
     fixingDate_ = iborIndex_->fixingDate(earliestDate_);
 }
 
-Date ImmFraRateHelper::getImmDate(Date asof, int i) {
+Date ImmFraRateHelper::getImmDate(Date asof, Size i) {
     Date imm = asof;
-    for (int j = 0; j<i; j++) {
+    for (Size j = 0; j<i; j++) {
         imm = IMM::nextDate(imm, true);
     }
     return imm;
