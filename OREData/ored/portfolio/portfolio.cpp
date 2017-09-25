@@ -160,7 +160,9 @@ void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
 }
 
 bool Portfolio::has(const string &id) {
-    return find_if(trades_.begin(), trades_.end(), [id](const boost::shared_ptr<Trade> trade) {return trade->id() == id; }) != trades_.end();
+    return find_if(trades_.begin(),
+                   trades_.end(),
+                   [id](const boost::shared_ptr<Trade> trade) {return trade->id() == id; }) != trades_.end();
 }
 
 } // namespace data
