@@ -20,6 +20,7 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
+#include <ql/version.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/instruments/swaption.hpp>
@@ -280,8 +281,14 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
         }
 
         // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
+	#if QL_HEX_VERSION < 0x011000f0
+	impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
+                                                 outShift, outType);
+	#else
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outType, outShift);
+	#endif
+
     } catch (std::exception& e) {
         // couldn't find implied volatility
         QL_FAIL("SwaptionVolatilityConverter: volatility conversion failed while trying to convert volatility"
