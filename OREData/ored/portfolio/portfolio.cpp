@@ -75,7 +75,7 @@ void Portfolio::load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& fa
                 try {
                     trade->fromXML(nodes[i]);
                     trade->id() = id;
-                    trades_.push_back(trade);
+                    add(trade);
 
                     DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                         << " class:" << tradeType);
@@ -155,6 +155,8 @@ map<string, string> Portfolio::nettingSetMap() const {
 }
 
 void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
+    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
+    std::cout << trade->id();
     trades_.push_back(trade);
 }
 
