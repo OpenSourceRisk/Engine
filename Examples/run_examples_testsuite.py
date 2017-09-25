@@ -13,7 +13,7 @@ class TestExamples(object):
         by calling 'check_example' with example.
         """
 
-        for example in examples[:1]:
+        for example in examples[:3]:
             yield self.check_example, example
 
     def check_example(self, example_subdir):
