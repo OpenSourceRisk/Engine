@@ -1,4 +1,3 @@
-import os
 import platform
 import sys
 import subprocess
@@ -16,11 +15,7 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
-
-def _produce_list_of_examples():
-    return sorted([e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_'])
-
-examples = _produce_list_of_examples()
+examples = sorted([e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_'])
 
 
 class OreExample(object):
