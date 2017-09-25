@@ -44,7 +44,7 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-void OREApp::run() {
+int OREApp::run() {
 
     boost::timer timer;
 
@@ -182,12 +182,14 @@ void OREApp::run() {
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
+        return 1;
     }
 
     out_ << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+    return 0;
 }
 
 void OREApp::readSetup() {
