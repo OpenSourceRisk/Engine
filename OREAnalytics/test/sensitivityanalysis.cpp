@@ -943,7 +943,6 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
 
     BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
 
-    ObservationMode::Mode backupMode = ObservationMode::instance().mode();
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     Date today = Date(14, April, 2016);

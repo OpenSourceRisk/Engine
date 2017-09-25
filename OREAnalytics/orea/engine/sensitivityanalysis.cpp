@@ -57,8 +57,8 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      overrideTenors_(false), initialized_(false), engineData_(engineData), portfolio_(portfolio), computed_(false) {}
+      recalibrateModels_(recalibrateModels), overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -485,8 +485,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
             vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
             Size keyIdx = key.index;
-            Size strikeIdx = keyIdx % strikes.size();
-            Real p_strikeSpread = strikes[strikeIdx];
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();

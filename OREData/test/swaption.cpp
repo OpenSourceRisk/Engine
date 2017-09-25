@@ -112,7 +112,6 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
 
     Real expectedNpvCash = 615.03;
-    Real expectedNpvPhysical = 615.03;
     Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));    
     Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
