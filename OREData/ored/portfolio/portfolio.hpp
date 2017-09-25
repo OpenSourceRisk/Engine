@@ -46,6 +46,9 @@ public:
     //! Add a trade to the portfoliio
     void add(const boost::shared_ptr<Trade>& trade);
 
+    //! Check if a trade id is already in the porfolio
+    bool has(const string &id);
+
     //! Clear the portfolio
     void clear() { trades_.clear(); }
 

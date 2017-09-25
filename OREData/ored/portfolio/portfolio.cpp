@@ -158,5 +158,10 @@ void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
     trades_.push_back(trade);
 }
 
+bool Portfolio::has(const string &id) {
+    std::vector<std::string> current_ids = ids();
+    return std::find(current_ids.begin(), current_ids.end(), id) != current_ids.end();
+}
+
 } // namespace data
 } // namespace ore
