@@ -44,7 +44,7 @@ public:
     Portfolio() {}
 
     //! Add a trade to the portfoliio
-    void add(const boost::shared_ptr<Trade>& trade) { trades_.push_back(trade); }
+    void add(const boost::shared_ptr<Trade>& trade);
 
     //! Clear the portfolio
     void clear() { trades_.clear(); }

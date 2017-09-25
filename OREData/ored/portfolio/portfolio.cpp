@@ -153,5 +153,10 @@ map<string, string> Portfolio::nettingSetMap() const {
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
 }
+
+void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
+    trades_.push_back(trade);
+}
+
 } // namespace data
 } // namespace ore
