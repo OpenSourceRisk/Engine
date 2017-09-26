@@ -54,10 +54,20 @@ void OIBSHelper::initializeDates() {
     asof = iborIndex_->fixingCalendar().adjust(asof);
 
     Date settlementDate = iborIndex_->fixingCalendar().advance(asof, settlementDays_, Days);
-    Schedule oisSchedule =
-        MakeSchedule().from(settlementDate).to(settlementDate + tenor_).withTenor(1 * Years).forwards();
-    Schedule iborSchedule =
-        MakeSchedule().from(settlementDate).to(settlementDate + tenor_).withTenor(iborIndex_->tenor()).forwards();
+    Schedule oisSchedule = MakeSchedule()
+                               .from(settlementDate)
+                               .to(settlementDate + tenor_)
+                               .withTenor(1 * Years)
+                               .withCalendar(overnightIndex_->fixingCalendar())
+                               .withConvention(overnightIndex_->businessDayConvention())
+                               .forwards();
+    Schedule iborSchedule = MakeSchedule()
+                                .from(settlementDate)
+                                .to(settlementDate + tenor_)
+                                .withTenor(iborIndex_->tenor())
+                                .withCalendar(iborIndex_->fixingCalendar())
+                                .withConvention(iborIndex_->businessDayConvention())
+                                .forwards();
     swap_ = boost::shared_ptr<OvernightIndexedBasisSwap>(new OvernightIndexedBasisSwap(OvernightIndexedBasisSwap::Payer,
                                                                                        10000.0, // arbitrary
                                                                                        oisSchedule, overnightIndex_,
