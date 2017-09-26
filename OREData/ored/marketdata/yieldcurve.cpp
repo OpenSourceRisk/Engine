@@ -1096,7 +1096,7 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
         if (boost::dynamic_pointer_cast<OvernightIndex>(shortIndex) != nullptr) {
             // is it OIS vs Libor...
             basisSwapHelper.reset(
-                new OIBSHelper(shortIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
                                boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
                                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
         } else {
