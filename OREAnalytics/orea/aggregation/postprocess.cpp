@@ -87,7 +87,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
                          Real collateralSpread, Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling)
+                         Real dimLocalRegressionBandwidth, Real dimScaling, bool perfectInitialCollateralization)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -95,7 +95,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
       dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
       dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
       dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
-      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling) {
+      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
+      perfectInitialCollateralization_(perfectInitialCollateralization) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -306,7 +307,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
      *    at the Trade Level and CVA Allocations, October 2010
      */
     LOG("Compute netting set exposure profiles");
-
     for (auto n : nettingSetValue)
         nettingSetIds_.push_back(n.first);
 
@@ -354,12 +354,19 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
-        epe[0] = std::max(npv, 0.0);
-        ene[0] = std::max(-npv, 0.0);
+        if ((perfectInitialCollateralization_) &  (netting->activeCsaFlag())) {
+            epe[0] = 0;
+            ene[0] = 0;
+            pfe[0] = 0;
+        }
+        else {
+            epe[0] = std::max(npv, 0.0);
+            ene[0] = std::max(-npv, 0.0);
+            pfe[0] = std::max(npv, 0.0);
+        }
+        eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        eab[0] = -npv;
-        pfe[0] = std::max(npv, 0.0);
         nettedCube_->setT0(nettingSetValueToday[nettingSetId], nettingSetCount);
 
         for (Size j = 0; j < dates; ++j) {
