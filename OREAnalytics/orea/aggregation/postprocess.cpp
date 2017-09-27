@@ -356,6 +356,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
         if ((fullInitialCollateralisation_) &  (netting->activeCsaFlag())) {
+            // This assumes that the collateral at t=0 is the same as the npv at t=0.
             epe[0] = 0;
             ene[0] = 0;
             pfe[0] = 0;
