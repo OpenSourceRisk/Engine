@@ -38,7 +38,8 @@ public:
     OIBSHelper(Natural settlementDays,
                const Period& tenor, // swap maturity
                const Handle<Quote>& oisSpread, const boost::shared_ptr<OvernightIndex>& overnightIndex,
-               const boost::shared_ptr<IborIndex>& iborIndex);
+               const boost::shared_ptr<IborIndex>& iborIndex,
+               const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>());
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -59,6 +60,7 @@ protected:
     Period tenor_;
     boost::shared_ptr<OvernightIndex> overnightIndex_;
     boost::shared_ptr<IborIndex> iborIndex_;
+    Handle<YieldTermStructure> discount_;
 
     boost::shared_ptr<OvernightIndexedBasisSwap> swap_;
     RelinkableHandle<YieldTermStructure> termStructureHandle_;

@@ -793,6 +793,12 @@
     <LongIndex>JPY-LIBOR-6M</LongIndex>
     <ShortIndex>JPY-LIBOR-3M</ShortIndex>
   </TenorBasisSwap>
+  <TenorBasisSwap>
+    <Id>EUR-OIS-1M-BASIS-CONVENTIONS</Id>
+    <LongIndex>EUR-EURIBOR-1M</LongIndex>
+    <ShortIndex>EUR-EONIA</ShortIndex>
+    <ShortPayTenor>1Y</ShortPayTenor>
+  </TenorBasisSwap>
   <!-- FX Forwards -->
   <FX>
     <Id>GBP-USD-FX-CONVENTIONS</Id>

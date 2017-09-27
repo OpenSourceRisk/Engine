@@ -486,6 +486,8 @@ public:
     //@{
     const boost::shared_ptr<IborIndex>& longIndex() const { return longIndex_; }
     const boost::shared_ptr<IborIndex>& shortIndex() const { return shortIndex_; }
+    const string& longIndexName() const { return strLongIndex_; }
+    const string& shortIndexName() const { return strShortIndex_; }
     const Period& shortPayTenor() const { return shortPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
