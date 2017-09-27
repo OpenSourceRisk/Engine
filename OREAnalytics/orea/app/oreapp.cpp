@@ -792,16 +792,16 @@ void OREApp::runPostProcessor() {
 
     string marketConfiguration = params_->get("markets", "simulation");
 
-    bool perfectInitialCollateralization = false;
-    if (params_->has("xva", "perfectInitialCollateralization")) {
-        perfectInitialCollateralization = parseBool(params_->get("xva", "perfectInitialCollateralization"));
+    bool fullInitialCollateralisation = false;
+    if (params_->has("xva", "fullInitialCollateralisation")) {
+        fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
     }
 
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, perfectInitialCollateralization);
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
 void OREApp::writeXVAReports() {
