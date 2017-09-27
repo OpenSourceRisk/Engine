@@ -7,7 +7,7 @@ class TestExamples(object):
 
     def test_examples(self):
         """
-        This test factory produces 1 test for each example in 'examples'
+        This test factory produces 1 test for each example in get_list_of_examples()
         by calling 'check_example' with example.
         """
 
@@ -16,7 +16,7 @@ class TestExamples(object):
 
     def check_example(self, example_subdir):
         """
-        Runs the example in 'example_subdir', retrieves the exit code of the corresponding run.px and checks
+        Runs the example in 'example_subdir', retrieves the exit code of the corresponding run.py and checks
         that it is 0.
 
         :param example_subdir: A subdirectory of an example to test, for instance 'Example_5'.
