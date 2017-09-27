@@ -2891,6 +2891,7 @@ There are two methods in ORE for swaption volatility cube simulation:
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
 \item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\end{itemize}
 
 FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
