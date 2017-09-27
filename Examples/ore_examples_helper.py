@@ -4,8 +4,8 @@ import subprocess
 import shutil
 
 import matplotlib
-import imp
 import os
+import sys
 
 matplotlib.use('Agg')
 
@@ -15,7 +15,10 @@ import pandas as pd
 from datetime import datetime
 from math import log
 
-examples = sorted([e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_'])
+
+def get_list_of_examples():
+    return sorted([e for e in os.listdir(os.getcwd())
+                   if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
 
 
 class OreExample(object):
@@ -26,7 +29,6 @@ class OreExample(object):
         self.ax = None
         self.plot_name = ""
         self._locate_ore_exe()
-        self.return_codes = []
 
     def _locate_ore_exe(self):
         if os.name == 'nt':
@@ -188,19 +190,18 @@ class OreExample(object):
 
     def run(self, xml):
         if not self.dry:
-            self.return_codes.append(subprocess.call([self.ore_exe, xml]))
+            if subprocess.call([self.ore_exe, xml]) != 0:
+                raise Exception("Return Code was not Null.")
 
 
 def run_example(example):
     current_dir = os.getcwd()
-    oreex = None
     print("Running: " + example)
     try:
         os.chdir(os.path.join(os.getcwd(), example))
         filename = "run.py"
         sys.argv = [filename, 0]
-        current_run = imp.load_source('current_run', filename)
-        oreex = current_run.run_example()
+        exit_code = subprocess.call([sys.executable, filename])
         os.chdir(os.path.dirname(os.getcwd()))
         print('-' * 50)
         print()
@@ -208,9 +209,9 @@ def run_example(example):
         print("Error running " + example)
     finally:
         os.chdir(current_dir)
-    return oreex
+    return exit_code
 
 
 if __name__ == "__main__":
-    for example in examples:
+    for example in get_list_of_examples():
         run_example(example)
