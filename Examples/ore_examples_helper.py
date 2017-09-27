@@ -1,5 +1,4 @@
 import platform
-import sys
 import subprocess
 import shutil
 
