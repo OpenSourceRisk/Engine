@@ -20,6 +20,8 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <boost/make_shared.hpp>
 #include <test/portfolio.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <iostream>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -29,14 +31,25 @@ using namespace ore::data;
 
 namespace testsuite {
 
-void PortfolioTest::testPortfolio() {
-    BOOST_TEST_MESSAGE("Testing Portfolio..."); 
+void PortfolioTest::testConstructor() {
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    //BOOST_CHECK_EQUAL(portfolio, true);
+}
+
+void PortfolioTest::testAddTrade() {
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    portfolio->add(trade);
+    BOOST_CHECK_EQUAL(portfolio->has(trade->id()), true);
+    BOOST_CHECK_EQUAL(portfolio->size(), 1);
 }
 
 test_suite* PortfolioTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Portfolio Unittests");
+    BOOST_TEST_MESSAGE("Testing Portfolio...");
 
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testPortfolio));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testConstructor));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrade));
     return suite;
 }
 } // namespace testsuite

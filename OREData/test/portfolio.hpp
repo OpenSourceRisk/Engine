@@ -33,7 +33,8 @@ namespace testsuite {
 */
 class PortfolioTest {
 public:
-    static void testPortfolio();
+    static void testConstructor();
+    static void testAddTrade();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
