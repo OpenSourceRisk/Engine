@@ -34,7 +34,7 @@ namespace testsuite {
 class PortfolioTest {
 public:
     static void testConstructor();
-    static void testAddTrade();
+    static void testAddTrades();
     static void testAddTradeWithExistingId();
     static void testClear();
     static void testSize();

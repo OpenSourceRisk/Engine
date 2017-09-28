@@ -35,12 +35,20 @@ void PortfolioTest::testConstructor() {
     //BOOST_CHECK_EQUAL(portfolio, true);
 }
 
-void PortfolioTest::testAddTrade() {
+void PortfolioTest::testAddTrades() {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
-    portfolio->add(trade);
-    BOOST_CHECK_EQUAL(portfolio->has(trade->id()), true);
+    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    trade1->id() = "1";
+    trade2->id() = "2";
+    BOOST_CHECK_EQUAL(portfolio->has(trade1->id()), false);
+    BOOST_CHECK_EQUAL(portfolio->size(), 0);
+    portfolio->add(trade1);
+    BOOST_CHECK_EQUAL(portfolio->has(trade1->id()), true);
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
+    portfolio->add(trade2);
+    BOOST_CHECK_EQUAL(portfolio->has(trade2->id()), true);
+    BOOST_CHECK_EQUAL(portfolio->size(), 2);
 }
 
 void PortfolioTest::testAddTradeWithExistingId() {
@@ -62,10 +70,15 @@ void PortfolioTest::testClear() {
 
 void PortfolioTest::testSize() {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    trade1->id() = "1";
+    trade2->id() = "2";
     BOOST_CHECK_EQUAL(portfolio->size(), 0);
-    portfolio->add(trade);
+    portfolio->add(trade1);
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
+    portfolio->add(trade2);
+    BOOST_CHECK_EQUAL(portfolio->size(), 2);
 }
 
 void PortfolioTest::testRemove() {
@@ -80,19 +93,33 @@ void PortfolioTest::testRemove() {
 
 void PortfolioTest::testTrades() {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
-    const std::vector<boost::shared_ptr<Trade>>& trade_list = { trade };
-    portfolio->add(trade);
+    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    std::vector<boost::shared_ptr<Trade>> trade_list;
+    trade1->id() = "1";
+    trade2->id() = "2";
+    BOOST_CHECK(portfolio->trades() == trade_list);
+    portfolio->add(trade1);
+    trade_list.push_back(trade1);
+    BOOST_CHECK(portfolio->trades() == trade_list);
+    portfolio->add(trade2);
+    trade_list.push_back(trade2);
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 
 void PortfolioTest::testIds() {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    trade1->id() = "1";
+    trade2->id() = "2";
     std::vector<std::string> trade_ids;
     BOOST_CHECK(portfolio->ids() == trade_ids);
-    portfolio->add(trade);
-    trade_ids.push_back(trade->id());
+    portfolio->add(trade1);
+    trade_ids.push_back("1");
+    BOOST_CHECK(portfolio->ids() == trade_ids);
+    portfolio->add(trade2);
+    trade_ids.push_back("2");
     BOOST_CHECK(portfolio->ids() == trade_ids);
 }
 
@@ -101,7 +128,7 @@ test_suite* PortfolioTest::suite() {
     BOOST_TEST_MESSAGE("Testing Portfolio...");
 
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testConstructor));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrade));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrades));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTradeWithExistingId));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testClear));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testSize));
