@@ -1870,7 +1870,8 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
     <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    <Parameter name="fullInitialCollateralisation">true</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1933,6 +1934,7 @@ through time
 sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
 date, sample) {\em after} taking collateral into account
+\item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
 \end{itemize}
 
 The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section
@@ -2891,6 +2893,7 @@ There are two methods in ORE for swaption volatility cube simulation:
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
 \item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\end{itemize}
 
 FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
