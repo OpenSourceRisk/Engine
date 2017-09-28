@@ -35,6 +35,8 @@ class PortfolioTest {
 public:
     static void testConstructor();
     static void testAddTrade();
+    static void testAddTradeWithExistingId();
+    static void testClear();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite

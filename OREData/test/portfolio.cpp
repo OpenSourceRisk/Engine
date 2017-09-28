@@ -44,12 +44,31 @@ void PortfolioTest::testAddTrade() {
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
 }
 
+void PortfolioTest::testAddTradeWithExistingId() {
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
+    boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
+    portfolio->add(trade1);
+    BOOST_CHECK_THROW(portfolio->add(trade2), exception);
+}
+
+void PortfolioTest::testClear() {
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    portfolio->add(trade);
+    BOOST_CHECK_EQUAL(portfolio->size(), 1);
+    portfolio->clear();
+    BOOST_CHECK_EQUAL(portfolio->size(), 0);
+}
+
 test_suite* PortfolioTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Portfolio Unittests");
     BOOST_TEST_MESSAGE("Testing Portfolio...");
 
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testConstructor));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrade));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTradeWithExistingId));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testClear));
     return suite;
 }
 } // namespace testsuite
