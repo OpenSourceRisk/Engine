@@ -365,6 +365,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             ene[0] = std::max(-npv, 0.0);
             pfe[0] = std::max(npv, 0.0);
         }
+        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral" column
+        // of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
