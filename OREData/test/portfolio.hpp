@@ -37,6 +37,8 @@ public:
     static void testAddTrade();
     static void testAddTradeWithExistingId();
     static void testClear();
+    static void testSize();
+    static void testRemove();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
