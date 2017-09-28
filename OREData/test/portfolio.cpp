@@ -21,7 +21,6 @@
 #include <boost/make_shared.hpp>
 #include <test/portfolio.hpp>
 #include <ored/portfolio/fxforward.hpp>
-#include <iostream>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
