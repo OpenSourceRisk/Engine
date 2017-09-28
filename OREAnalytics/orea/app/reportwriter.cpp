@@ -84,7 +84,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
-                .add(Null<Real>());
+                .add(Null<Real>())
+                .add("#NA")
+                .add("#NA");
         }
     }
     report.end();
