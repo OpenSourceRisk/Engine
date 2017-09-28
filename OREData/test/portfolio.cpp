@@ -87,6 +87,16 @@ void PortfolioTest::testTrades() {
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 
+void PortfolioTest::testIds() {
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
+    std::vector<std::string> trade_ids;
+    BOOST_CHECK(portfolio->ids() == trade_ids);
+    portfolio->add(trade);
+    trade_ids.push_back(trade->id());
+    BOOST_CHECK(portfolio->ids() == trade_ids);
+}
+
 test_suite* PortfolioTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Portfolio Unittests");
     BOOST_TEST_MESSAGE("Testing Portfolio...");
@@ -98,6 +108,7 @@ test_suite* PortfolioTest::suite() {
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testSize));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testRemove));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testTrades));
+    suite->add(BOOST_TEST_CASE(&PortfolioTest::testIds));
     return suite;
 }
 } // namespace testsuite

@@ -40,6 +40,7 @@ public:
     static void testSize();
     static void testRemove();
     static void testTrades();
+    static void testIds();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
