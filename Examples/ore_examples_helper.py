@@ -20,6 +20,11 @@ def get_list_of_examples():
                    if e[:8] == 'Example_'], key=lambda e: int(e.split('_')[1]))
 
 
+def print_on_console(line):
+    print(line)
+    sys.stdout.flush()
+
+
 class OreExample(object):
     def __init__(self, dry=False):
         self.ore_exe = ""
@@ -38,19 +43,20 @@ class OreExample(object):
         else:
             self.ore_exe = "../../App/ore"
 
+
     def print_headline(self, headline):
         self.headlinecounter += 1
-        print('')
-        print(str(self.headlinecounter) + ") " + headline)
+        print_on_console('')
+        print_on_console(str(self.headlinecounter) + ") " + headline)
 
     def get_times(self, output):
-        print("Get times from the log file:")
+        print_on_console("Get times from the log file:")
         logfile = open(output)
         for line in logfile.readlines():
             if "ValuationEngine completed" in line:
                 times = line.split(":")[-1].strip().split(",")
                 for time in times:
-                    print("\t" + time.split()[0] + ": " + time.split()[1])
+                    print_on_console("\t" + time.split()[0] + ": " + time.split()[1])
 
     def get_output_data_from_column(self, csv_name, colidx, offset=1):
         f = open(os.path.join(os.path.join(os.getcwd(), "Output"), csv_name))
@@ -184,7 +190,7 @@ class OreExample(object):
     def save_plot_to_file(self, subdir="Output"):
         file = os.path.join(subdir, self.plot_name + ".pdf")
         plt.savefig(file)
-        print("Saving plot...." + file)
+        print_on_console("Saving plot...." + file)
         plt.close()
 
     def run(self, xml):
@@ -195,17 +201,17 @@ class OreExample(object):
 
 def run_example(example):
     current_dir = os.getcwd()
-    print("Running: " + example)
+    print_on_console("Running: " + example)
     try:
         os.chdir(os.path.join(os.getcwd(), example))
         filename = "run.py"
         sys.argv = [filename, 0]
         exit_code = subprocess.call([sys.executable, filename])
         os.chdir(os.path.dirname(os.getcwd()))
-        print('-' * 50)
-        print()
+        print_on_console('-' * 50)
+        print_on_console('')
     except:
-        print("Error running " + example)
+        print_on_console("Error running " + example)
     finally:
         os.chdir(current_dir)
     return exit_code
