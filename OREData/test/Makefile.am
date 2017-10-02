@@ -5,8 +5,8 @@ OREDATA_TESTS = \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
 	ccyswapwithresets.hpp ccyswapwithresets.cpp \
-        cpiswap.hpp cpiswap.cpp \
-        cms.hpp cms.cpp \
+	cpiswap.hpp cpiswap.cpp \
+	cms.hpp cms.cpp \
 	fxtriangulation.hpp fxtriangulation.cpp \
 	indices.hpp indices.cpp \
 	parser.hpp parser.cpp \
@@ -19,7 +19,8 @@ OREDATA_TESTS = \
 	crossassetmodeldata.hpp crossassetmodeldata.cpp \
 	equitymarketdata.hpp equitymarketdata.cpp \
 	equitytrades.hpp equitytrades.cpp \
-	swaption.hpp swaption.cpp
+	swaption.hpp swaption.cpp \
+	portfolio.hpp portfolio.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
