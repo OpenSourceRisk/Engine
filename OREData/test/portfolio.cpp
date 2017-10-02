@@ -125,7 +125,6 @@ void PortfolioTest::testIds() {
 
 test_suite* PortfolioTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Portfolio Unittests");
-    BOOST_TEST_MESSAGE("Testing Portfolio...");
 
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testConstructor));
     suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrades));
