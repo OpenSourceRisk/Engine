@@ -313,7 +313,7 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
     vector<string> portfolioFiles;
-    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(";"), boost::token_compress_on);
+    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
     for (auto portfolioFile : portfolioFiles) {
         boost::trim(portfolioFile);
         portfolioFile = inputPath + "/" + portfolioFile;
