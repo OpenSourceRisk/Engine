@@ -642,6 +642,7 @@
     <ClInclude Include="indices.hpp" />
     <ClInclude Include="legdata.hpp" />
     <ClInclude Include="parser.hpp" />
+    <ClInclude Include="portfolio.hpp" />
     <ClInclude Include="schedule.hpp" />
     <ClInclude Include="swaption.hpp" />
     <ClInclude Include="todaysmarket.hpp" />
@@ -663,6 +664,7 @@
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="legdata.cpp" />
     <ClCompile Include="parser.cpp" />
+    <ClCompile Include="portfolio.cpp" />
     <ClCompile Include="schedule.cpp" />
     <ClCompile Include="swaption.cpp" />
     <ClCompile Include="testsuite.cpp" />

@@ -67,6 +67,7 @@ using boost::unit_test::test_suite;
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
 #include "swaption.hpp"
+#include "portfolio.hpp"
 
 namespace {
 
@@ -113,8 +114,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::BondTest::suite());
     test->add(testsuite::CmsTest::suite());
     test->add(testsuite::SwaptionTest::suite());
+    test->add(testsuite::PortfolioTest::suite());
 
-    // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;
