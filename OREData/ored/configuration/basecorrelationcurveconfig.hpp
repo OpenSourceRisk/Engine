@@ -74,6 +74,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const bool& extrapolate() const { return extrapolate_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

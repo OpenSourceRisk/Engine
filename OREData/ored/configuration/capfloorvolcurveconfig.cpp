@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -34,6 +35,45 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
       extrapolate_(extrapolate), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter),
       settleDays_(settleDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
       iborIndex_(iborIndex), discountCurve_(discountCurve) {}
+
+const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
+
+    if (quotes_.size() == 0) {
+        string volType;
+        switch (volatilityType_) {
+        case VolatilityType::Lognormal:
+            volType = "RATE_LNVOL";
+            break;
+        case VolatilityType::Normal:
+            volType = "RATE_NVOL";
+            break;
+        case VolatilityType::ShiftedLognormal:
+            volType = "RATE_SLNVOL";
+            break;
+        default:
+            QL_FAIL("volatility type not found");
+            break;
+        }
+        
+        std::vector<string> tokens;
+        split(tokens, iborIndex_, boost::is_any_of("-"));
+
+        Currency ccy = parseCurrency(tokens[0]);
+        
+        string base = "CAPFLOOR/" + volType + "/" + ccy.code() + "/";
+        vector<string> quotes;
+
+        //TODO: how to tell if atmFlag or relative flag should be true
+        for (auto t : tenors_)
+                for (auto s : strikes_)
+                    quotes_.push_back(base + to_string(t) + "/0/0/" + to_string(s));
+                    
+        if (volatilityType_ == VolatilityType::ShiftedLognormal)
+            for (auto t : tenors_)
+                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
+    }
+    return quotes_;
+}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CapFloorVolatility");
@@ -65,6 +105,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+
 }
 
 XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {

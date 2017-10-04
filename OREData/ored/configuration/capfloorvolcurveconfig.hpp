@@ -77,6 +77,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& iborIndex() const { return iborIndex_; }
     const string& discountCurve() const { return discountCurve_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

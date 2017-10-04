@@ -63,7 +63,6 @@ public:
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }
     const Type& type() const { return type_; }
-    const vector<string>& quotes() const { return quotes_; }
     const string& conventions() const { return conventions_; }
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
@@ -79,7 +78,6 @@ public:
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
     Type& type() { return type_; }
-    vector<string>& quotes() { return quotes_; }
     string& conventions() { return conventions_; }
     bool& extrapolate() { return extrapolate_; }
     Calendar& calendar() { return calendar_; }
@@ -95,7 +93,6 @@ public:
 private:
     string nominalTermStructure_;
     Type type_;
-    vector<string> quotes_;
     string conventions_;
     string interpolationMethod_;
     bool extrapolate_;

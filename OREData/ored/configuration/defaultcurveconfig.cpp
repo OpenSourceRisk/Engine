@@ -28,9 +28,9 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
                                        const vector<string>& quotes, bool extrapolation)
-    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
+    : CurveConfig(curveID, curveDescription, quotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
-      conventionID_(conventionID), quotes_(quotes), extrapolation_(extrapolation) {}
+      conventionID_(conventionID), extrapolation_(extrapolation) {}
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
@@ -61,6 +61,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
+
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {

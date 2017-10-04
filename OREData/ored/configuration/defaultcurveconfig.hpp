@@ -76,7 +76,6 @@ public:
     const string& recoveryRateQuote() const { return recoveryRateQuote_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const string& conventionID() const { return conventionID_; }
-    const vector<string>& quotes() const { return quotes_; }
     bool extrapolation() const { return extrapolation_; }
     //@}
 
@@ -89,7 +88,6 @@ public:
     string& recoveryRateQuote() { return recoveryRateQuote_; }
     DayCounter& dayCounter() { return dayCounter_; }
     string& conventionID() { return conventionID_; }
-    vector<string>& quotes() { return quotes_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
@@ -101,7 +99,6 @@ private:
     string recoveryRateQuote_;
     DayCounter dayCounter_;
     string conventionID_;
-    vector<string> quotes_;
     bool extrapolation_;
 };
 } // namespace data

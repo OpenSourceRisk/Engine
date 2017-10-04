@@ -71,6 +71,7 @@ public:
     const vector<Real>& capStrikes() const { return capStrikes_; }
     const vector<Real>& floorStrikes() const { return floorStrikes_; }
     const vector<Period>& maturities() const { return maturities_; }
+    const vector<string>& quotes() override;
 
     // Setters
     Type& type() { return type_; }

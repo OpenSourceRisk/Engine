@@ -60,6 +60,7 @@ public:
     //! \name Inspectors
     //@{
     const vector<string>& expiries() const { return expiries_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

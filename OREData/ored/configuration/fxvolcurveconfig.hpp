@@ -54,7 +54,8 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries);
+                            const vector<Period>& expiries, const string& fxSpotID = "", const string& fxForeignCurveID = "",
+                            const string& fxDomesticCurveID = "");
     //! Default destructor
     virtual ~FXVolatilityCurveConfig() {}
     //@}
@@ -73,6 +74,7 @@ public:
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

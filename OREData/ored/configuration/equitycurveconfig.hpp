@@ -72,9 +72,8 @@ public:
     const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
-    const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
+    const string& equitySpotQuoteID() const { return quotes_[0]; }
     const string& dayCountID() const { return dayCountID_; }
-    const vector<string>& quotes() const { return quotes_; }
     bool extrapolation() const { return extrapolation_; }
     //@}
 
@@ -85,7 +84,6 @@ public:
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
-    vector<string>& quotes() { return quotes_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
@@ -94,7 +92,6 @@ private:
     string currency_;
     Type type_;
     string equitySpotQuoteID_;
-    vector<string> quotes_;
     string dayCountID_;
     bool extrapolation_;
 };

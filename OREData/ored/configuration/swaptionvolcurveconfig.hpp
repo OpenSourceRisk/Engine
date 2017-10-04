@@ -94,7 +94,7 @@ public:
     const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
     const vector<Period>& smileSwapTenors() const { return smileSwapTenors_; }
     const vector<Spread>& smileSpreads() const { return smileSpreads_; }
-
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

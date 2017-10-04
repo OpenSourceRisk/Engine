@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -44,6 +46,47 @@ SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
         QL_REQUIRE(smileOptionTenors.size() == 0 && smileSwapTenors.size() == 0 && smileSpreads.size() == 0,
                    "Smile tenors/strikes/spreads should only be set when dim=Smile");
     }
+}
+
+const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
+
+    if (quotes_.size() == 0) {
+        string volType;
+        switch (volatilityType_) {
+        case VolatilityType::Lognormal:
+            volType = "RATE_LNVOL";
+            break;
+        case VolatilityType::Normal:
+            volType = "RATE_NVOL";
+            break;
+        case VolatilityType::ShiftedLognormal:
+            volType = "RATE_SLNVOL";
+            break;
+        default:
+            QL_FAIL("volatility type not found");
+            break;
+        }
+        
+        std::vector<string> tokens;
+        split(tokens, swapIndexBase_, boost::is_any_of("-"));
+
+        Currency ccy = parseCurrency(tokens[0]);
+        
+        string base = "SWAPTION/" + volType + "/" + ccy.code() + "/";
+        if (dimension_ == Dimension::ATM) {
+            for (auto o : optionTenors_)
+                for (auto s : swapTenors_)
+                    quotes_.push_back(base + to_string(o) + "/" + to_string(s) + "/ATM");
+
+        } else {
+            for (auto o : smileOptionTenors_)
+                for (auto s : smileSwapTenors_)
+                    for (auto sp : smileSpreads_)
+                        quotes_.push_back(base + to_string(o) + "/" + to_string(s) + "/Smile/" + to_string(sp));
+
+        }
+    }
+    return quotes_;
 }
 
 void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
@@ -104,6 +147,7 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
     smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
     smileSwapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileSwapTenors");
     smileSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SmileSpreads");
+
 }
 
 XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {
