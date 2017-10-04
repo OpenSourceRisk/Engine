@@ -62,11 +62,7 @@ public:
     //@}
 
     //! Return all the market quotes required for this config
-    virtual const vector<string>& quotes() { 
-      //  for(Size i=0; i< quotes_.size(); i++)
-        //    std::cout<<quotes_[i]<<std::endl;
-        return quotes_; 
-    }
+    virtual const vector<string>& quotes() { return quotes_; }
 
 protected:
     string curveID_;
