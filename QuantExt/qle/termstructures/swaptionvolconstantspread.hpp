@@ -100,6 +100,8 @@ public:
     const Period& maxSwapTenor() const { return atm_->maxSwapTenor(); }
     VolatilityType volatilityType() const { return atm_->volatilityType(); }
     //@}
+    const Handle<SwaptionVolatilityStructure>& atmVol() { return atm_; }
+    const Handle<SwaptionVolatilityStructure>& cube() { return cube_; }
 
 protected:
     boost::shared_ptr<SmileSection> smileSectionImpl(Time optionTime, Time swapLength) const {
