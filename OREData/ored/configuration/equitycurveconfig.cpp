@@ -28,7 +28,10 @@ EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveD
                                      const string& currency, const EquityCurveConfig::Type& type, const string& equitySpotQuote,
                                      const vector<string>& quotes, const string& dayCountID, bool extrapolation)
     : CurveConfig(curveID, curveDescription, quotes), forecastingCurve_(forecastingCurve), currency_(currency), type_(type),
-      equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
+      dayCountID_(dayCountID), extrapolation_(extrapolation) {
+        quotes_ = quotes;
+        quotes_.insert(quotes_.begin(), equitySpotQuote);
+      }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
@@ -47,9 +50,11 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Type " << type << " not recognized");
     }
 
-    equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
+    string equitySpotQuoteID = XMLUtils::getChildValue(node, "SpotQuote", true);
     quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    quotes_.insert(quotes_.begin(), equitySpotQuoteID);
+
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
@@ -68,7 +73,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     else
         QL_FAIL("Unkown type in EquityCurveConfig::toXML()");
 
-    XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
+    XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID());
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);

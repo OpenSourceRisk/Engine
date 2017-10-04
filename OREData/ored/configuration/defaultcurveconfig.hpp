@@ -73,7 +73,7 @@ public:
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const string& benchmarkCurveID() const { return benchmarkCurveID_; }
-    const string& recoveryRateQuote() const { return recoveryRateQuote_; }
+    const string& recoveryRateQuote() const { return quotes_[0]; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const string& conventionID() const { return conventionID_; }
     bool extrapolation() const { return extrapolation_; }
@@ -85,7 +85,7 @@ public:
     Type& type() { return type_; }
     string& discountCurveID() { return discountCurveID_; }
     string& benchmarkCurveID() { return benchmarkCurveID_; }
-    string& recoveryRateQuote() { return recoveryRateQuote_; }
+    string& recoveryRateQuote() { return quotes_[0]; }
     DayCounter& dayCounter() { return dayCounter_; }
     string& conventionID() { return conventionID_; }
     bool& extrapolation() { return extrapolation_; }
@@ -96,7 +96,6 @@ private:
     Type type_;
     string discountCurveID_;
     string benchmarkCurveID_;
-    string recoveryRateQuote_;
     DayCounter dayCounter_;
     string conventionID_;
     bool extrapolation_;

@@ -82,7 +82,7 @@ public:
     string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
-    string& equitySpotQuoteID() { return equitySpotQuoteID_; }
+    string& equitySpotQuoteID() { return quotes_[0]; }
     string& dayCountID() { return dayCountID_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
@@ -91,7 +91,6 @@ private:
     string forecastingCurve_;
     string currency_;
     Type type_;
-    string equitySpotQuoteID_;
     string dayCountID_;
     bool extrapolation_;
 };
