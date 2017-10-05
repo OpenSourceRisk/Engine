@@ -206,7 +206,7 @@ struct CommonVars {
         return capfloor;
     }
 
-    CommonVars() : ccy("EUR"), isPayer("false"), start("20160301"), end("20360301"), fixtenor("1Y"), cmstenor("6M") {
+    CommonVars() : ccy("EUR"), isPayer(false), start("20160301"), end("20360301"), fixtenor("1Y"), cmstenor("6M") {
         
 	longShort = isPayer ? "Short" : "Long";
         cal = TARGET();
