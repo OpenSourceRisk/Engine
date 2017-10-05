@@ -126,8 +126,8 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
-        // If yield curve is an Equity dividend or forecast curve, we will not be simulating
-        if (y != ore::data::YieldCurveType::EquityDividend && y != ore::data::YieldCurveType::EquityForecast) {
+        // Check if the risk factor is simulated before adding it
+        if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
             simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
             LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
         }
@@ -174,6 +174,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
     if (!parameters->simulateBaseCorrelations())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
+    if (!parameters->simulateEquityNames()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityForecastCurve);
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
+    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
