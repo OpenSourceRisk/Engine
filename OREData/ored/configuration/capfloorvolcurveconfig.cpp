@@ -63,17 +63,14 @@ const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
         //TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
             for (auto s : strikes_) {
-                std::stringstream ss;
-                ss << base << to_string(t) << "/" << to_string(tenor) << "/0/0/" << to_string(s);
-                quotes_.push_back(ss.str());
+                quotes_.push_back(base + to_string(t) + "/" + to_string(tenor) + "/0/0/" + to_string(s));
             }
         }
                     
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                ss << "CAPFLOOR/SHIFT/" << ccy.code() << "/" << to_string(t);
-                quotes_.push_back(ss.str());
+                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
             }
         }
     }

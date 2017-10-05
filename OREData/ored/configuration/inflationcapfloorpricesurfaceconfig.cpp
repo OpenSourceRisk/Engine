@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
@@ -49,10 +50,12 @@ const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
 
         string base = type + "_INFLATIONCAPFLOOR/PRICE/" + index_ + "/";
         for (auto m : maturities_) {
-            for (auto f : floorStrikes_)
+            for (auto f : floorStrikes_) {
                 quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
-            for (auto c : capStrikes_)
+            }
+            for (auto c : capStrikes_) {
                 quotes_.push_back(base + to_string(m) + "/C/" + to_string(c));
+            }
         }
     }
     return quotes_;
