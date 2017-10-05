@@ -20,6 +20,7 @@
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 #include <ql/errors.hpp>
 
@@ -51,10 +52,8 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 
 const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        std::vector<string> tokens;
-        split(tokens, iborIndex_, boost::is_any_of("-"));
-
-        Currency ccy = parseCurrency(tokens[0]);
+        boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_);
+        Currency ccy = index->currency();
        
         std::stringstream ssBase;
         ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";

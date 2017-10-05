@@ -978,7 +978,9 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
     }
 
     vector<string> averageOisQuoteIDs = averageOisSegment->quotes();
-    for (Size i = 0; i < averageOisQuoteIDs.size(); i++) {
+    for (Size i = 0; i < averageOisQuoteIDs.size(); i+=2) {
+        //we are assuming i = spread, i+1 = rate
+        QL_REQUIRE(i%2==0, "i is not even");
         /* An average OIS quote is a composite of a swap quote and a basis
            spread quote. Check first that we have these. */
         // Firstly, the rate quote.
@@ -992,16 +994,15 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
             QL_FAIL("Could not find quote for ID " << averageOisQuoteIDs[i] << " with as of date "
                                                    << io::iso_date(asofDate_) << ".");
         }
-        i++;
         // Secondly, the basis spread quote.
-        marketQuote = loader_.get(averageOisQuoteIDs[i], asofDate_);
+        marketQuote = loader_.get(averageOisQuoteIDs[i+1], asofDate_);
         boost::shared_ptr<BasisSwapQuote> basisQuote;
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BASIS_SWAP,
                        "Market quote not of type basis swap.");
             basisQuote = boost::dynamic_pointer_cast<BasisSwapQuote>(marketQuote);
         } else {
-            QL_FAIL("Could not find quote for ID " << averageOisQuoteIDs[i] << " with as of date "
+            QL_FAIL("Could not find quote for ID " << averageOisQuoteIDs[i+1] << " with as of date "
                                                    << io::iso_date(asofDate_) << ".");
         }
 

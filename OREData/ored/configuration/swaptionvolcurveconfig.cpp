@@ -64,10 +64,8 @@ SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
 const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
 
     if (quotes_.size() == 0) {
-        std::vector<string> tokens;
-        split(tokens, swapIndexBase_, boost::is_any_of("-"));
-
-        Currency ccy = parseCurrency(tokens[0]);
+        boost::shared_ptr<SwapIndex> index = parseSwapIndex(swapIndexBase_);
+        Currency ccy = index->currency();
        
         std::stringstream ssBase;
         ssBase << "SWAPTION/" << volatilityType_ << "/" << ccy.code() << "/";
@@ -93,6 +91,8 @@ const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
                 }
             }
         }
+        for (auto q : quotes_)
+            std::cout<<q<<std::endl;
     }
     return quotes_;
 }
