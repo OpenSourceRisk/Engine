@@ -35,17 +35,19 @@ const vector<string>& EquityVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         string base = "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/";
         if (dimension_ == Dimension::ATM) {
-            for (auto e : expiries_) {
-                    quotes_.push_back(base + to_string(e) + "/ATMF");
-            }
-        } else {
             for (auto e : expiries_)
-                for (auto s : strikes_)
+                quotes_.push_back(base + to_string(e) + "/ATMF");
+        } else {
+            for (auto e : expiries_) {
+                for (auto s : strikes_) {
                     quotes_.push_back(base + to_string(e) + "/" + to_string(s));
+                }
+            }
         }
     }
     return quotes_;
 }
+
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
 

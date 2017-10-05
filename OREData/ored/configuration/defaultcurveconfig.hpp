@@ -73,10 +73,12 @@ public:
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const string& benchmarkCurveID() const { return benchmarkCurveID_; }
-    const string& recoveryRateQuote() const { return quotes_[0]; }
+    const string& recoveryRateQuote() const { return recoveryRateQuote_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const string& conventionID() const { return conventionID_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& cdsQuotes() { return cdsQuotes_; }
+
     //@}
 
     //! \name Setters
@@ -85,17 +87,19 @@ public:
     Type& type() { return type_; }
     string& discountCurveID() { return discountCurveID_; }
     string& benchmarkCurveID() { return benchmarkCurveID_; }
-    string& recoveryRateQuote() { return quotes_[0]; }
+    string& recoveryRateQuote() { return recoveryRateQuote_; }
     DayCounter& dayCounter() { return dayCounter_; }
     string& conventionID() { return conventionID_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
 private:
+    vector<string> cdsQuotes_;
     string currency_;
     Type type_;
     string discountCurveID_;
     string benchmarkCurveID_;
+    string recoveryRateQuote_;
     DayCounter dayCounter_;
     string conventionID_;
     bool extrapolation_;

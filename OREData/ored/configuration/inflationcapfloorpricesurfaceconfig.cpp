@@ -48,12 +48,12 @@ const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
             type = "YY";
 
         string base = type + "_INFLATIONCAPFLOOR/PRICE/" + index_ + "/";
-            for (auto m : maturities_) {
-                for (auto f : floorStrikes_)
-                    quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
-                for (auto c : capStrikes_)
-                    quotes_.push_back(base + to_string(m) + "/F/" + to_string(c));
-            }
+        for (auto m : maturities_) {
+            for (auto f : floorStrikes_)
+                quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
+            for (auto c : capStrikes_)
+                quotes_.push_back(base + to_string(m) + "/F/" + to_string(c));
+        }
     }
     return quotes_;
 }

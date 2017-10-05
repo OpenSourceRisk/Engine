@@ -72,9 +72,10 @@ public:
     const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
-    const string& equitySpotQuoteID() const { return quotes_[0]; }
+    const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
     //! \name Setters
@@ -82,15 +83,17 @@ public:
     string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
-    string& equitySpotQuoteID() { return quotes_[0]; }
+    string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
 private:
+    vector<string> fwdQuotes_;
     string forecastingCurve_;
     string currency_;
     Type type_;
+    string equitySpotQuoteID_;
     string dayCountID_;
     bool extrapolation_;
 };

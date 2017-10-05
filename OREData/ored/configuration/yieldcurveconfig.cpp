@@ -150,7 +150,6 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
 }
 
 const vector<string>& YieldCurveConfig::quotes() {
-    
     if (quotes_.size() == 0) {
         vector<string> segmentQuotes;
         for (auto c : curveSegments_) {

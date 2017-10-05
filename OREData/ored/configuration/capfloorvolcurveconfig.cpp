@@ -26,6 +26,19 @@
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t) {
+    switch (t) {
+        case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
+            return out << "RATE_LNVOL";
+        case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
+            return out << "RATE_NVOL";
+        case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+            return out << "RATE_SLNVOL";
+        default:
+            QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
+    }
+}
+
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, const bool extrapolate,
     bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
@@ -37,40 +50,32 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
       iborIndex_(iborIndex), discountCurve_(discountCurve) {}
 
 const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
-
     if (quotes_.size() == 0) {
-        string volType;
-        switch (volatilityType_) {
-        case VolatilityType::Lognormal:
-            volType = "RATE_LNVOL";
-            break;
-        case VolatilityType::Normal:
-            volType = "RATE_NVOL";
-            break;
-        case VolatilityType::ShiftedLognormal:
-            volType = "RATE_SLNVOL";
-            break;
-        default:
-            QL_FAIL("volatility type not found");
-            break;
-        }
-        
         std::vector<string> tokens;
         split(tokens, iborIndex_, boost::is_any_of("-"));
 
         Currency ccy = parseCurrency(tokens[0]);
-        
-        string base = "CAPFLOOR/" + volType + "/" + ccy.code() + "/";
-        vector<string> quotes;
+       
+        std::stringstream ssBase;
+        ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";
+        string base = ssBase.str();
 
         //TODO: how to tell if atmFlag or relative flag should be true
-        for (auto t : tenors_)
-                for (auto s : strikes_)
-                    quotes_.push_back(base + to_string(t) + "/0/0/" + to_string(s));
+        for (auto t : tenors_) {
+            for (auto s : strikes_) {
+                std::stringstream ss;
+                ss << base << to_string(t) << "/0/0/" << to_string(s);
+                quotes_.push_back(ss.str());
+            }
+        }
                     
-        if (volatilityType_ == VolatilityType::ShiftedLognormal)
-            for (auto t : tenors_)
-                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
+        if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+            for (auto t : tenors_) {
+                std::stringstream ss;
+                ss << "CAPFLOOR/SHIFT/" << ccy.code() << "/" << to_string(t);
+                quotes_.push_back(ss.str());
+            }
+        }
     }
     return quotes_;
 }

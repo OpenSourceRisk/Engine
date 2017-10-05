@@ -27,12 +27,12 @@ namespace data {
 DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                        const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
-                                       const vector<string>& quotes, bool extrapolation)
-    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
-      discountCurveID_(discountCurveID), dayCounter_(dayCounter),
+                                       const vector<string>& cdsQuotes, bool extrapolation)
+    : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
+      discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation) {
-        quotes_ = quotes;
-        quotes_.insert(quotes_.begin(), recoveryRateQuote);
+        quotes_ = cdsQuotes; 
+ 		quotes_.insert(quotes_.begin(), recoveryRateQuote_);
       }
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
@@ -56,14 +56,14 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
     benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", false);
 
+    recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
     string dc = XMLUtils::getChildValue(node, "DayCounter", true);
     dayCounter_ = parseDayCounter(dc);
 
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
-    
-    string recoveryRateQuote = XMLUtils::getChildValue(node, "RecoveryRate", false);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-    quotes_.insert(quotes_.begin(), recoveryRateQuote);
+    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);    
+    cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    quotes_ = cdsQuotes_; 
+ 	quotes_.insert(quotes_.begin(), recoveryRateQuote_); 
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 
@@ -90,12 +90,11 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
     XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
-    XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote());
+    XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     
-    vector<string> quoteNames(quotes_.begin() + 1, quotes_.end());
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quoteNames);
+    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;

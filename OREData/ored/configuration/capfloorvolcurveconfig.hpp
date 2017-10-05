@@ -48,6 +48,7 @@ namespace data {
 class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
+    
 
     CapFloorVolatilityCurveConfig() {}
     CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
@@ -106,5 +107,7 @@ private:
     string iborIndex_;
     string discountCurve_;
 };
+
+std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);
 } // namespace data
 } // namespace ore

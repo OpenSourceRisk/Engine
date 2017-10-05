@@ -126,5 +126,7 @@ private:
     vector<Period> smileSwapTenors_;
     vector<Spread> smileSpreads_;
 };
+
+std::ostream& operator<<(std::ostream& out, SwaptionVolatilityCurveConfig::VolatilityType t);
 } // namespace data
 } // namespace ore

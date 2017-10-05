@@ -37,7 +37,6 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
 
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
-
     if (quotes_.size() == 0) {
         vector<string> tokens;
         boost::split(tokens, fxSpotID(), boost::is_any_of("/"));
