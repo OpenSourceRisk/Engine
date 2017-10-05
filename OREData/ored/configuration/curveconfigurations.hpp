@@ -108,6 +108,8 @@ public:
         return equityVolCurveConfigs_[curveID];
     };
     const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
+
+    std::set<string> quotes() const;
     //@}
 
     //! \name Serialisation

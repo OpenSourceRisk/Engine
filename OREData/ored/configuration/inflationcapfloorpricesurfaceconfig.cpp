@@ -52,7 +52,7 @@ const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
             for (auto f : floorStrikes_)
                 quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
             for (auto c : capStrikes_)
-                quotes_.push_back(base + to_string(m) + "/F/" + to_string(c));
+                quotes_.push_back(base + to_string(m) + "/C/" + to_string(c));
         }
     }
     return quotes_;

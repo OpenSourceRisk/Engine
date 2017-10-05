@@ -74,6 +74,7 @@ public:
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
+    const vector<string>& swapQuotes() { return swapQuotes_; }
 
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
@@ -91,6 +92,7 @@ public:
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
+    vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
     string conventions_;

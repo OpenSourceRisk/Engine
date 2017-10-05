@@ -54,6 +54,7 @@ const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_);
         Currency ccy = index->currency();
+        Period tenor = index->tenor();
        
         std::stringstream ssBase;
         ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";
@@ -63,7 +64,7 @@ const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
         for (auto t : tenors_) {
             for (auto s : strikes_) {
                 std::stringstream ss;
-                ss << base << to_string(t) << "/0/0/" << to_string(s);
+                ss << base << to_string(t) << "/" << to_string(tenor) << "/0/0/" << to_string(s);
                 quotes_.push_back(ss.str());
             }
         }

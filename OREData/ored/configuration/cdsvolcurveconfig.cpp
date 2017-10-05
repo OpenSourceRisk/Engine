@@ -30,7 +30,7 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const 
 
 const vector<string>& CDSVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        string base = "INDEX_CDS_OPTION/LNVOL/" + curveID_ + "/";
+        string base = "INDEX_CDS_OPTION/RATE_LNVOL/" + curveID_ + "/";
         for (auto e : expiries_)
             quotes_.push_back(base + e);
     }
