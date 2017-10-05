@@ -15,7 +15,7 @@ class TestExamples(object):
         by calling 'check_example' with example.
         """
 
-        for example in get_list_of_examples(exclude_list):
+        for example in get_list_of_examples(self.exclude_list):
             yield self.check_example, example
 
     def check_example(self, example_subdir):
