@@ -1071,8 +1071,6 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     };
 
     Real epsilon = 1.e-15; // a small number
-    string discountCurveStr = "DiscountCurve";
-    string yieldCurveStr = "YieldCurve";
     string equitySpotStr = "EquitySpot";
     string equityVolStr = "EquityVolatility";
 
@@ -1110,7 +1108,6 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
                 continue;
             } else if (isEquityVol) {
                 BOOST_CHECK(tokens.size() > 2);
-                string equity = tokens[1];
                 res.equityVolDelta += sensiVal;
                 continue;
             } else {
@@ -1603,11 +1600,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
                                                 simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<tuple<string, string, string>, Real> cgMap = sa->crossGamma();
-    map<std::string, Real> baseNpvMap = sa->baseNPV();
-    std::set<string> sensiTrades = sa->trades();
 
     struct GammaResult {
         string id;
@@ -1856,7 +1849,6 @@ void SensitivityAnalysisTest::testCrossGamma() {
             auto cached_it = cachedMap.find(key);
             BOOST_CHECK_MESSAGE(cached_it != cachedMap.end(), keyStr << " not found in cached results");
             if (cached_it != cachedMap.end()) {
-                tuple<string, string, string> cached_key = cached_it->first;
                 Real cached_cg = cached_it->second;
                 BOOST_CHECK_CLOSE(crossgamma, cached_cg, rel_tol);
                 count++;

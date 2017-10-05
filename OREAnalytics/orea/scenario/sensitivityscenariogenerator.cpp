@@ -1379,7 +1379,6 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
                                                                                                       bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-    std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
     return desc;
@@ -1388,7 +1387,6 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::equityScenarioDescription(string equity,
                                                                                                           bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
-    std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
     return desc;
