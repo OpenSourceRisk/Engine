@@ -155,7 +155,6 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
     smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
     smileSwapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileSwapTenors");
     smileSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SmileSpreads");
-
 }
 
 XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {

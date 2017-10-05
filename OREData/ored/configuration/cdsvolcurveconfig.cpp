@@ -43,7 +43,6 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
-
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {

@@ -48,7 +48,6 @@ namespace data {
 class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
-    
 
     CapFloorVolatilityCurveConfig() {}
     CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,

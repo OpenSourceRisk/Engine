@@ -52,7 +52,6 @@ public:
     //@{
     const string& curveID() const { return curveID_; }
     const string& curveDescription() const { return curveDescription_; }
-
     //@}
 
     //! \name Setters

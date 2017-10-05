@@ -110,7 +110,6 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
-
 }
 
 XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {

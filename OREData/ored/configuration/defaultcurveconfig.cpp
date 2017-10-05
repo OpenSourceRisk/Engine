@@ -66,7 +66,6 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
  	quotes_.insert(quotes_.begin(), recoveryRateQuote_); 
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
-
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
@@ -93,10 +92,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
-    
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
-
     return node;
 }
 } // namespace data

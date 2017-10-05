@@ -55,7 +55,6 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     extrapolate_ = parseBool(XMLUtils::getChildValue(node, "Extrapolate", true));
-
 }
 
 XMLNode* BaseCorrelationCurveConfig::toXML(XMLDocument& doc) {
