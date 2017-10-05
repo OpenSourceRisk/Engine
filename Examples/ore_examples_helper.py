@@ -16,11 +16,11 @@ from math import log
 
 
 def get_list_of_examples(exclude_list=None):
-	if exclude_list is None:
-		exclude_list = []
-	
-	list_examples = [e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_' and e not in exclude_list]
-	
+    if exclude_list is None:
+        exclude_list = []
+    
+    list_examples = [e for e in os.listdir(os.getcwd()) if e[:8] == 'Example_' and e not in exclude_list]
+    
     return sorted(list_examples, key=lambda e: int(e.split('_')[1]))
 
 
