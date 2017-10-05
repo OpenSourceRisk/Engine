@@ -126,8 +126,11 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-        LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        // If yield curve is an Equity dividend or forecast curve, we will not be simulating
+        if (y != ore::data::YieldCurveType::EquityDividend && y != ore::data::YieldCurveType::EquityForecast) {
+            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
+            LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;

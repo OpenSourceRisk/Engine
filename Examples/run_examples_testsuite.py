@@ -4,6 +4,10 @@ output_directory = "Output"
 
 
 class TestExamples(object):
+	
+	# List of tests to exclude
+	# Example_20 because it is only a placeholder
+	exclude_list = ['Example_20']
 
     def test_examples(self):
         """
