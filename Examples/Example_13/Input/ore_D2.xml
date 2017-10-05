@@ -45,7 +45,7 @@
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube_D.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata_D.dat</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata_D.dat</Parameter>
       <Parameter name="scenariodump">scenariodump.csv</Parameter>
     </Analytic>
     <Analytic type="xva">

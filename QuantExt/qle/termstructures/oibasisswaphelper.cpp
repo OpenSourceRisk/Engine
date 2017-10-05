@@ -32,11 +32,13 @@ void no_deletion(YieldTermStructure*) {}
 OIBSHelper::OIBSHelper(Natural settlementDays,
                        const Period& tenor, // swap maturity
                        const Handle<Quote>& oisSpread, const boost::shared_ptr<OvernightIndex>& overnightIndex,
-                       const boost::shared_ptr<IborIndex>& iborIndex)
+                       const boost::shared_ptr<IborIndex>& iborIndex, const Handle<YieldTermStructure>& discount)
     : RelativeDateRateHelper(oisSpread), settlementDays_(settlementDays), tenor_(tenor),
-      overnightIndex_(overnightIndex), iborIndex_(iborIndex) {
+      overnightIndex_(overnightIndex), iborIndex_(iborIndex), discount_(discount) {
     registerWith(overnightIndex_);
     registerWith(iborIndex_);
+    if (!discount_.empty())
+        registerWith(discount_);
     initializeDates();
 }
 
@@ -50,17 +52,28 @@ void OIBSHelper::initializeDates() {
     // if the evaluation date is not a business day
     // then move to the next business day
     asof = iborIndex_->fixingCalendar().adjust(asof);
-    
+
     Date settlementDate = iborIndex_->fixingCalendar().advance(asof, settlementDays_, Days);
-    Schedule oisSchedule =
-        MakeSchedule().from(settlementDate).to(settlementDate + tenor_).withTenor(1 * Years).forwards();
-    Schedule iborSchedule =
-        MakeSchedule().from(settlementDate).to(settlementDate + tenor_).withTenor(iborIndex_->tenor()).forwards();
+    Schedule oisSchedule = MakeSchedule()
+                               .from(settlementDate)
+                               .to(settlementDate + tenor_)
+                               .withTenor(1 * Years)
+                               .withCalendar(overnightIndex_->fixingCalendar())
+                               .withConvention(overnightIndex_->businessDayConvention())
+                               .forwards();
+    Schedule iborSchedule = MakeSchedule()
+                                .from(settlementDate)
+                                .to(settlementDate + tenor_)
+                                .withTenor(iborIndex_->tenor())
+                                .withCalendar(iborIndex_->fixingCalendar())
+                                .withConvention(iborIndex_->businessDayConvention())
+                                .forwards();
     swap_ = boost::shared_ptr<OvernightIndexedBasisSwap>(new OvernightIndexedBasisSwap(OvernightIndexedBasisSwap::Payer,
                                                                                        10000.0, // arbitrary
                                                                                        oisSchedule, overnightIndex_,
                                                                                        iborSchedule, clonedIborIndex));
-    boost::shared_ptr<PricingEngine> engine(new DiscountingSwapEngine(overnightIndex_->forwardingTermStructure()));
+    boost::shared_ptr<PricingEngine> engine(
+        new DiscountingSwapEngine(discount_.empty() ? overnightIndex_->forwardingTermStructure() : discount_));
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
