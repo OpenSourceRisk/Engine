@@ -89,6 +89,10 @@ std::set<string> CurveConfigurations::quotes() const {
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : equityVolCurveConfigs_)
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : securityConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : fxSpotConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
         
     return std::set<string>(quotes.begin(), quotes.end());
 }
@@ -141,6 +145,16 @@ CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
     return get(curveID, equityVolCurveConfigs_);
 }
 
+const boost::shared_ptr<SecurityConfig>&
+CurveConfigurations::securityConfig(const string& curveID) const {
+    return get(curveID, securityConfigs_);
+}
+
+const boost::shared_ptr<FXSpotConfig>&
+CurveConfigurations::fxSpotConfig(const string& curveID) const {
+    return get(curveID, fxSpotConfigs_);
+}
+
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
@@ -157,7 +171,8 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
     parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
         inflationCapFloorPriceSurfaceConfigs_);
-
+    parseNode(node, "Securities", "Security", securityConfigs_);
+    parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
@@ -175,6 +190,8 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
+    addNodes(doc, parent, "SecuritySpreads", securityConfigs_);
+    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
 
     return parent;
 }

@@ -69,7 +69,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("SwaptionVolatility");
+    XMLNode* node = doc.allocNode("DefaultCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
