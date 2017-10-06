@@ -616,8 +616,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
         }
     }
 
-    string domestic = simMarketData_->baseCcy();
-
     Size n_fxvol_pairs = fxVolCcyPairs.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
@@ -708,8 +706,6 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-
-    string domestic = simMarketData_->baseCcy();
 
     Size n_eqvol_names = equityVolNames.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
