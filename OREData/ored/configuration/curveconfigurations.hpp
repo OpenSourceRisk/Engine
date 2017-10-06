@@ -37,7 +37,6 @@
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/fxspotconfig.hpp>
-#include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;

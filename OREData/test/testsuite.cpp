@@ -68,6 +68,7 @@ using boost::unit_test::test_suite;
 #include "yieldcurve.hpp"
 #include "swaption.hpp"
 #include "portfolio.hpp"
+#include "curveconfig.hpp"
 
 namespace {
 
@@ -115,6 +116,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::CmsTest::suite());
     test->add(testsuite::SwaptionTest::suite());
     test->add(testsuite::PortfolioTest::suite());
+    test->add(testsuite::CurveConfigTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
