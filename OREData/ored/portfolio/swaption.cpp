@@ -221,7 +221,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
             Size fltIdx = std::lower_bound(flt.dates().begin(), flt.dates().end(), exDates[i]) - flt.dates().begin();
             // play safe
             fixIdx = std::min(fixIdx, nonstandardSwap->fixedRate().size() - 1);
-            fltIdx = std::min(fixIdx, nonstandardSwap->spreads().size() - 1);
+            fltIdx = std::min(fltIdx, nonstandardSwap->spreads().size() - 1);
             strikes[i] = nonstandardSwap->fixedRate()[fixIdx] - nonstandardSwap->spreads()[fltIdx];
             DLOG("calibration strike for ex date " << QuantLib::io::iso_date(exDates[i]) << " is " << strikes[i]
                                                    << " (fixed rate " << nonstandardSwap->fixedRate()[fixIdx]

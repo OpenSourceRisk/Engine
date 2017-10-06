@@ -169,7 +169,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // LOG("scenario description " << j << ": " << desc[j].text());
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up ||
                 desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
@@ -190,7 +189,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // double shift scenarios: cross gamma
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // select cross scenarios here
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 Real npv = cube->get(i, 0, j, 0);

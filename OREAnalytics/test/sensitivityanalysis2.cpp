@@ -1348,8 +1348,6 @@ void SensitivityAnalysis2Test::testSensitivities() {
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
     map<tuple<string, string, string>, Real> crossGammaMap = sa->crossGamma();
-    map<std::string, Real> baseNpvMap = sa->baseNPV();
-    std::set<string> sensiTrades = sa->trades();
 
     Real shiftSize = 1E-5; // shift size
 

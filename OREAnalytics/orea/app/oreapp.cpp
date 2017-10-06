@@ -376,7 +376,6 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 void OREApp::writeInitialReports() {
 
     string outputPath = params_->get("setup", "outputPath");
-    string inputPath = params_->get("setup", "inputPath");
 
     /************
      * Curve dump
