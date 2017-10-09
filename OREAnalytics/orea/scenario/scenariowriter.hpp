@@ -34,6 +34,10 @@ class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
     ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',');
+
+    //! Constructor to write single scenarios
+    ScenarioWriter(const std::string& filename, const char sep = ',');
+
     //! Destructor
     virtual ~ScenarioWriter();
 
@@ -43,8 +47,11 @@ public:
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset();
 
+
 private:
     void close();
+
+    void open(const std::string& filename);
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;

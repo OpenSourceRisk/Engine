@@ -27,6 +27,15 @@ namespace analytics {
 ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
                                const char sep)
     : src_(src), fp_(nullptr), i_(0), sep_(sep) {
+    open(filename);
+}
+
+ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep)
+    : fp_(nullptr), i_(0), sep_(sep) {
+    open(filename);
+}
+
+void ScenarioWriter::open(const std::string& filename){
     fp_ = fopen(filename.c_str(), "w+");
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
 }
