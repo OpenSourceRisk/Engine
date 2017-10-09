@@ -50,6 +50,7 @@
     </DefaultCurves>
 		
 	<Equities>
+      <SimulateEquityNames>true</SimulateEquityNames>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
