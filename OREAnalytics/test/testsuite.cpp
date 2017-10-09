@@ -94,7 +94,6 @@ test_suite* init_unit_test_suite(int, char* []) {
             enablePerformanceTests = true;
     }
     string name(argv[0]);
-    string baseName = name.substr(name.find_last_of("/\\") + 1);
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
