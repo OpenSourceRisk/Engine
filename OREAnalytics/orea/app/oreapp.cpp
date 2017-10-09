@@ -563,11 +563,32 @@ void OREApp::writeBaseScenario() {
     // FIXME: Do we want binary format or human readable csv like the following, consistent with ScenarioWriter?
     // FIXME: Reuse ScenarioWriter?
 
+    /*string separator = params_->get("baseScenario", "separator");
+    QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
+    const char sep = separator.c_str()[0];
+
+    bool append = parseBool(params_->get("baseScenario", "append"));
+    string mode = append ? "a+" : "w+"; */
+
+
+
     string separator = params_->get("baseScenario", "separator");
     QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
     const char sep = separator.c_str()[0];
     std::vector<RiskFactorKey> keys = scenario->keys();
     std::sort(keys.begin(), keys.end());
+
+    //boost::shared_ptr<ScenarioGenerator>& sgen = simMarket_->scenarioGenerator();
+    
+    boost::shared_ptr<ScenarioGenerator>& sgen = simMarket_->scenarioGenerator();
+    std::cout << "I am here" << std::endl;
+    string mytestfilename = "foobar";
+    std::cout << outputFile << std::endl;
+    //FILE* fp_ = fopen(mytestfilename.c_str(), "w+");
+    std::cout << "I am here" << std::endl;
+    ScenarioWriter sw(simMarket_->scenarioGenerator(), mytestfilename);
+    //sw->next(today);
+
 
     bool append = parseBool(params_->get("baseScenario", "append"));
     string mode = append ? "a+" : "w+";
@@ -576,7 +597,7 @@ void OREApp::writeBaseScenario() {
 
     QL_REQUIRE(keys.size() > 0, "No keys in scenario");
 
-    // write header
+    // write header 
     bool header = parseBool(params_->get("baseScenario", "header"));
     if (header) {
         fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
@@ -585,16 +606,16 @@ void OREApp::writeBaseScenario() {
         fprintf(f, "\n");
     }
 
-    // write data
+    // write data 
     Size i = 1;
     fprintf(f, "%s%c%zu%c%.8f", to_string(today).c_str(), sep, i, sep, scenario->getNumeraire());
     for (auto k : keys)
         fprintf(f, "%c%.8f", sep, scenario->get(k));
     fprintf(f, "\n");
     fflush(f);
-    fclose(f);
 
     DLOG("Base scenario written to file " << outputFile);
+  
 }
 
 void OREApp::initAggregationScenarioData() {
