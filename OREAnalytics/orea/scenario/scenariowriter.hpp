@@ -33,10 +33,10 @@ namespace analytics {
 class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',');
+    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',', const string& filemode ="w+");
 
     //! Constructor to write single scenarios
-    ScenarioWriter(const std::string& filename, const char sep = ',');
+    ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+");
 
     //! Destructor
     virtual ~ScenarioWriter();
@@ -51,7 +51,7 @@ public:
 private:
     void close();
 
-    void open(const std::string& filename);
+    void open(const std::string& filename, const std::string& filemode = "w+");
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;

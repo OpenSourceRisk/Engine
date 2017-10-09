@@ -25,18 +25,18 @@ namespace ore {
 namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
-                               const char sep)
+                               const char sep, const string& filemode)
     : src_(src), fp_(nullptr), i_(0), sep_(sep) {
-    open(filename);
+    open(filename, filemode);
 }
 
-ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep)
+ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode)
     : fp_(nullptr), i_(0), sep_(sep) {
-    open(filename);
+    open(filename, filemode);
 }
 
-void ScenarioWriter::open(const std::string& filename){
-    fp_ = fopen(filename.c_str(), "w+");
+void ScenarioWriter::open(const std::string& filename, const std::string& filemode){
+    fp_ = fopen(filename.c_str(), filemode.c_str());
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
 }
 
