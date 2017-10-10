@@ -219,6 +219,9 @@ public:
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
 
+    bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
+    bool& simulateDividendYield() { return dividendYieldSimulate_; }
+
 
     //@}
 
@@ -307,6 +310,9 @@ private:
     map<string, vector<Period>> zeroInflationTenors_;
     vector<string> yoyInflationIndices_;
     map<string, vector<Period>> yoyInflationTenors_;
+
+    bool equityForecastCurveSimulate_;
+    bool dividendYieldSimulate_;
 };
 } // namespace analytics
 } // namespace ore

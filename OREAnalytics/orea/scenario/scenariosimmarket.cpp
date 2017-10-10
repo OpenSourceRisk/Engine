@@ -174,8 +174,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
     if (!parameters->simulateBaseCorrelations())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
-    if (!parameters->simulateEquityNames()) {
+    if (!parameters->simulateEquityForecastCurve()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityForecastCurve);
+    }
+    if (!parameters->simulateDividendYield()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
     }
 
