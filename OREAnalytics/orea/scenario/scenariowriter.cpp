@@ -56,11 +56,15 @@ void ScenarioWriter::close() {
 }
 
 boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
+    QL_REQUIRE(src_, "No ScenarioGenerator found.");
     boost::shared_ptr<Scenario> s = src_->next(d);
-    if (fp_) {
-        if (i_ == 0) {
-            // write header
+    writeScenario(s, d, i_ == 0);
+    return s;
+}
 
+void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const Date& d, const bool writeHeader) {
+    if (fp_) {
+        if (writeHeader) {
             // take a copy of the keys here to ensure the order is preseved
             keys_ = s->keys();
             std::sort(keys_.begin(), keys_.end());
@@ -83,7 +87,7 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
         fprintf(fp_, "\n");
         fflush(fp_);
     }
-    return s;
 }
+
 } // namespace analytics
 } // namespace ore

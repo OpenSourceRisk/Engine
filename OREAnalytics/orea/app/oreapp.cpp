@@ -560,59 +560,15 @@ void OREApp::writeBaseScenario() {
     string outputPath = params_->get("setup", "outputPath");
     string outputFile = outputPath + "/" + params_->get("baseScenario", "outputFileName");
 
-    // FIXME: Do we want binary format or human readable csv like the following, consistent with ScenarioWriter?
-    // FIXME: Reuse ScenarioWriter?
-
-    /*string separator = params_->get("baseScenario", "separator");
-    QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
-    const char sep = separator.c_str()[0];
-
-    bool append = parseBool(params_->get("baseScenario", "append"));
-    string mode = append ? "a+" : "w+"; */
-
-
-
     string separator = params_->get("baseScenario", "separator");
     QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
-    const char sep = separator.c_str()[0];
-    std::vector<RiskFactorKey> keys = scenario->keys();
-    std::sort(keys.begin(), keys.end());
-
-    //boost::shared_ptr<ScenarioGenerator>& sgen = simMarket_->scenarioGenerator();
-    
-    boost::shared_ptr<ScenarioGenerator>& sgen = simMarket_->scenarioGenerator();
-    std::cout << "I am here" << std::endl;
-    string mytestfilename = "foobar";
-    std::cout << outputFile << std::endl;
-    //FILE* fp_ = fopen(mytestfilename.c_str(), "w+");
-    std::cout << "I am here" << std::endl;
-    ScenarioWriter sw(simMarket_->scenarioGenerator(), mytestfilename);
-    //sw->next(today);
-
+    const char sep = separator.c_str()[0];;
 
     bool append = parseBool(params_->get("baseScenario", "append"));
     string mode = append ? "a+" : "w+";
-    FILE* f = fopen(outputFile.c_str(), mode.c_str());
-    QL_REQUIRE(f, "error opening file " << outputFile);
 
-    QL_REQUIRE(keys.size() > 0, "No keys in scenario");
-
-    // write header 
-    bool header = parseBool(params_->get("baseScenario", "header"));
-    if (header) {
-        fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
-        for (Size i = 1; i < keys.size(); i++)
-            fprintf(f, "%c%s", sep, to_string(keys[i]).c_str());
-        fprintf(f, "\n");
-    }
-
-    // write data 
-    Size i = 1;
-    fprintf(f, "%s%c%zu%c%.8f", to_string(today).c_str(), sep, i, sep, scenario->getNumeraire());
-    for (auto k : keys)
-        fprintf(f, "%c%.8f", sep, scenario->get(k));
-    fprintf(f, "\n");
-    fflush(f);
+    ScenarioWriter sw(outputFile, sep, mode);
+    sw.writeScenario(scenario, today, true);
 
     DLOG("Base scenario written to file " << outputFile);
   

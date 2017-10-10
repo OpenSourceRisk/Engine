@@ -44,6 +44,9 @@ public:
     //! Return the next scenario for the given date.
     virtual boost::shared_ptr<Scenario> next(const Date& d);
 
+    //! Write a single scenario
+    void writeScenario(boost::shared_ptr<Scenario>& s, const Date& d, const bool writeHeader);
+
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset();
 
