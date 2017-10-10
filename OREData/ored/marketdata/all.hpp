@@ -23,8 +23,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>

@@ -190,7 +190,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
-    addNodes(doc, parent, "SecuritySpreads", securityConfigs_);
+    addNodes(doc, parent, "Securities", securityConfigs_);
     addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
 
     return parent;
