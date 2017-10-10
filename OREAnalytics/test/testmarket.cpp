@@ -403,6 +403,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->simulateSurvivalProbabilities() = true;
     simMarketData->securities() = {"Bond1"};
 
+    simMarketData->simulateEquityNames() = true;
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
     simMarketData->setEquityDividendTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
     simMarketData->setEquityDividendTenors("Lufthansa", { 6 * Months, 1 * Years, 2 * Years });
