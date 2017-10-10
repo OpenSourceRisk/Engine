@@ -30,12 +30,12 @@ using namespace ore::data;
 
 namespace {
 
-boost::shared_ptr<vector<boost::shared_ptr<LgmData>>> irConfigsData() {
+boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
 
     // Create three instances
-    boost::shared_ptr<LgmData> lgmData1(new data::LgmData());
-    boost::shared_ptr<LgmData> lgmData2(new data::LgmData());
-    boost::shared_ptr<LgmData> lgmData3(new data::LgmData());
+    boost::shared_ptr<IrLgmData> lgmData1(new data::IrLgmData());
+    boost::shared_ptr<IrLgmData> lgmData2(new data::IrLgmData());
+    boost::shared_ptr<IrLgmData> lgmData3(new data::IrLgmData());
 
     vector<std::string> expiries = {"1Y", "2Y", "36M"};
     vector<std::string> terms = {"5Y", "2Y", "6M"};
@@ -65,9 +65,9 @@ boost::shared_ptr<vector<boost::shared_ptr<LgmData>>> irConfigsData() {
     lgmData1->aValues() = aValues;
     lgmData1->shiftHorizon() = 1.0;
 
-    lgmData1->swaptionExpiries() = expiries;
-    lgmData1->swaptionTerms() = terms;
-    lgmData1->swaptionStrikes() = strikes;
+    lgmData1->optionExpiries() = expiries;
+    lgmData1->optionTerms() = terms;
+    lgmData1->optionStrikes() = strikes;
 
     lgmData1->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData1->scaling() = 1.0;
@@ -91,9 +91,9 @@ boost::shared_ptr<vector<boost::shared_ptr<LgmData>>> irConfigsData() {
     lgmData2->aValues() = aValues;
     lgmData2->shiftHorizon() = 1.0;
 
-    lgmData2->swaptionExpiries() = expiries;
-    lgmData2->swaptionTerms() = terms;
-    lgmData2->swaptionStrikes() = strikes;
+    lgmData2->optionExpiries() = expiries;
+    lgmData2->optionTerms() = terms;
+    lgmData2->optionStrikes() = strikes;
 
     lgmData2->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData2->scaling() = 1.0;
@@ -117,14 +117,14 @@ boost::shared_ptr<vector<boost::shared_ptr<LgmData>>> irConfigsData() {
     lgmData3->aValues() = aValues;
     lgmData3->shiftHorizon() = 1.0;
 
-    lgmData3->swaptionExpiries() = expiries;
-    lgmData3->swaptionTerms() = terms;
-    lgmData3->swaptionStrikes() = strikes;
+    lgmData3->optionExpiries() = expiries;
+    lgmData3->optionTerms() = terms;
+    lgmData3->optionStrikes() = strikes;
 
     lgmData3->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData3->scaling() = 1.0;
 
-    boost::shared_ptr<vector<boost::shared_ptr<LgmData>>> lgmDataVector(new vector<boost::shared_ptr<LgmData>>);
+    boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<IrLgmData>>);
     *lgmDataVector = {lgmData1, lgmData2, lgmData3};
     return lgmDataVector;
 }

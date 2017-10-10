@@ -363,11 +363,20 @@
     <ClInclude Include="ored\utilities\csvfilereader.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\utilities\timeperiod.hpp" >
+    <ClInclude Include="ored\utilities\timeperiod.hpp">
       <Filter>utilities</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp" >
+    <ClInclude Include="ored\portfolio\forwardrateagreement.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\infdkdata.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\infdkbuilder.hpp">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\model\irlgmdata.hpp">
+      <Filter>model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -640,6 +649,15 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\forwardrateagreement.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\infdkdata.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\infdkbuilder.cpp">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\model\irlgmdata.cpp">
+      <Filter>model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

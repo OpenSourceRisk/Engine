@@ -95,6 +95,14 @@ void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const
     yoyInflationTenors_[key] = p;
 }
 
+void ScenarioSimMarketParameters::setCpiCapFloorVolExpiries(const string& key, const vector<Period>& p) {
+    cpiCapFloorVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setYoyCapFloorVolExpiries(const string& key, const vector<Period>& p) {
+    yoyCapFloorVolExpiries_[key] = p;
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
@@ -121,7 +129,13 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
         baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
         zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationTenors_ != rhs.zeroInflationTenors_ || 
-        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ) {
+        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
+        cpiCapFloorVolSimulate_ != rhs.cpiCapFloorVolSimulate_ ||
+        cpiCapFloorVolIndices_ != rhs.cpiCapFloorVolIndices_ || cpiCapFloorVolExpiries_ != rhs.cpiCapFloorVolExpiries_ ||
+        cpiCapFloorVolStrikes_ != rhs.cpiCapFloorVolStrikes_ || cpiCapFloorVolDecayMode_ != rhs.cpiCapFloorVolDecayMode_ ||
+        yoyCapFloorVolSimulate_ != rhs.yoyCapFloorVolSimulate_ ||
+        yoyCapFloorVolIndices_ != rhs.yoyCapFloorVolIndices_ || yoyCapFloorVolExpiries_ != rhs.yoyCapFloorVolExpiries_ ||
+        yoyCapFloorVolStrikes_ != rhs.yoyCapFloorVolStrikes_ || yoyCapFloorVolDecayMode_ != rhs.yoyCapFloorVolDecayMode_) {
         return false;
     } else {
         return true;
@@ -345,6 +359,21 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         zeroInflationTenors_.clear();
     }
 
+    DLOG("Loading CpiCapFloorVolatilities");
+
+    nodeChild = XMLUtils::getChildNode(node, "CpiCapFloorVolatilities");
+    if (nodeChild) {
+        cpiCapFloorVolSimulate_ = false;
+        XMLNode* cpiCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (cpiCapVolSimNode)
+            cpiCapFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(cpiCapVolSimNode));
+        cpiCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        // TODO read other keys
+        cpiCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        cpiCapFloorVolIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        cpiCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+    }
+
     DLOG("Loading YYInflationIndexCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
@@ -355,6 +384,22 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     else {
         yoyInflationIndices_.clear();
         yoyInflationTenors_.clear();
+    }
+
+
+    DLOG("Loading YYCapFloorVolatilities");
+
+    nodeChild = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (nodeChild) {
+        yoyCapFloorVolSimulate_ = false;
+        XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yoyCapVolSimNode)
+            yoyCapFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode));
+        yoyCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        // TODO read other keys
+        yoyCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        yoyCapFloorVolIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        yoyCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }
 
     DLOG("Loading AggregationScenarioDataIndices");

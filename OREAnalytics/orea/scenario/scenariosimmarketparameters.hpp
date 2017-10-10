@@ -217,6 +217,18 @@ public:
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
 
+    bool& simulateCpiCapFloorVols() { return cpiCapFloorVolSimulate_; }
+    vector<string>& cpiCapFloorVolIndices() { return cpiCapFloorVolIndices_; }
+    void setCpiCapFloorVolExpiries(const string& key, const vector<Period>& p);
+    vector<Real>& cpiCapFloorVolStrikes() { return cpiCapFloorVolStrikes_; }
+    string& cpiCapFloorVolDecayMode() { return cpiCapFloorVolDecayMode_; }
+
+    bool& simulateYoyCapFloorVols() { return yoyCapFloorVolSimulate_; }
+    vector<string>& yoyCapFloorVolIndices() { return yoyCapFloorVolIndices_; }
+    void setYoyCapFloorVolExpiries(const string& key, const vector<Period>& p);
+    vector<Real>& yoyCapFloorVolStrikes() { return yoyCapFloorVolStrikes_; }
+    string& yoyCapFloorVolDecayMode() { return yoyCapFloorVolDecayMode_; }
+
 
     //@}
 
@@ -304,6 +316,18 @@ private:
     map<string, vector<Period>> zeroInflationTenors_;
     vector<string> yoyInflationIndices_;
     map<string, vector<Period>> yoyInflationTenors_;
+
+    bool cpiCapFloorVolSimulate_;
+    vector<string> cpiCapFloorVolIndices_;
+    map<string, vector<Period>> cpiCapFloorVolExpiries_;
+    vector<Real> cpiCapFloorVolStrikes_;
+    string cpiCapFloorVolDecayMode_;
+
+    bool yoyCapFloorVolSimulate_;
+    vector<string> yoyCapFloorVolIndices_;
+    map<string, vector<Period>> yoyCapFloorVolExpiries_;
+    vector<Real> yoyCapFloorVolStrikes_;
+    string yoyCapFloorVolDecayMode_;
 };
 } // namespace analytics
 } // namespace ore

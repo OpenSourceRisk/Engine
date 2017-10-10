@@ -86,6 +86,9 @@
     <ClInclude Include="ored\model\eqbsdata.hpp" />
     <ClInclude Include="ored\model\fxbsbuilder.hpp" />
     <ClInclude Include="ored\model\fxbsdata.hpp" />
+    <ClInclude Include="ored\model\infdkbuilder.hpp" />
+    <ClInclude Include="ored\model\infdkdata.hpp" />
+    <ClInclude Include="ored\model\irlgmdata.hpp" />
     <ClInclude Include="ored\model\lgmbuilder.hpp" />
     <ClInclude Include="ored\model\lgmdata.hpp" />
     <ClInclude Include="ored\model\modelbuilder.hpp" />
@@ -199,6 +202,9 @@
     <ClCompile Include="ored\model\eqbsdata.cpp" />
     <ClCompile Include="ored\model\fxbsbuilder.cpp" />
     <ClCompile Include="ored\model\fxbsdata.cpp" />
+    <ClCompile Include="ored\model\infdkbuilder.cpp" />
+    <ClCompile Include="ored\model\infdkdata.cpp" />
+    <ClCompile Include="ored\model\irlgmdata.cpp" />
     <ClCompile Include="ored\model\lgmbuilder.cpp" />
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
