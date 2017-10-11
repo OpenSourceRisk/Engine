@@ -93,7 +93,6 @@ test_suite* init_unit_test_suite(int, char* []) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)
             enablePerformanceTests = true;
     }
-    string name(argv[0]);
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
