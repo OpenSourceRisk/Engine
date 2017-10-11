@@ -467,7 +467,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         string pair = keylabel;
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
-            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
             Size keyIdx = key.index;
             Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);

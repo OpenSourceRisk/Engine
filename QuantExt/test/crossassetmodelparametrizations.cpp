@@ -39,7 +39,7 @@ using boost::unit_test_framework::test_suite;
 namespace {
 
 // check for expected result up to round off errors
-void check(std::string s, const Real x, const Real y, const Real e, const Size n = 42) {
+void check(const std::string& s, const Real x, const Real y, const Real e, const Size n = 42) {
     if (!close_enough(y, e, n)) {
         BOOST_ERROR("failed to verify " << s << "(" << x << ") = " << e << " up to round off errors, it is " << y
                                         << " instead (difference is " << (y - e) << ", n is " << n << ")");
@@ -47,7 +47,7 @@ void check(std::string s, const Real x, const Real y, const Real e, const Size n
 }
 
 // check for expected result up to truncation errors with absolute tolerance
-void check2(std::string s, const Real x, const Real y, const Real e, const Real tol) {
+void check2(const std::string& s, const Real x, const Real y, const Real e, const Real tol) {
     if (std::abs(y - e) > tol) {
         BOOST_ERROR("failed to verify " << s << "(" << x << ") = " << e << ", it is " << y << " instead (difference is "
                                         << (y - e) << ", abs tol=" << tol << ")");
