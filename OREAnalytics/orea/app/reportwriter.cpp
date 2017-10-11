@@ -24,6 +24,7 @@
 #include <ostream>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/errors.hpp>
 #include <stdio.h>
 
@@ -149,6 +150,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                             boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                        boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
+                            boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
                         if (ptrFloat) {
@@ -163,6 +166,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
                             flowType = "Index";
+                        } else if (ptrFxlCf) {
+                            fixingDate = ptrFxlCf->fxFixingDate();
+                            fixingValue = ptrFxlCf->fxRate();
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
