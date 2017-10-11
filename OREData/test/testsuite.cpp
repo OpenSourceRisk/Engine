@@ -51,6 +51,7 @@ using boost::unit_test::test_suite;
 #include "bond.hpp"
 #include "calendars.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cds.hpp"
 #include "cms.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
@@ -115,6 +116,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::CmsTest::suite());
     test->add(testsuite::SwaptionTest::suite());
     test->add(testsuite::PortfolioTest::suite());
+    test->add(testsuite::CreditDefaultSwapTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

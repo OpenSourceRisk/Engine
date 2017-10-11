@@ -30,11 +30,11 @@ public:
     CreditDefaultSwapData() {}
 
     //! Constructor
-    CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const string& qualifier,
+    CreditDefaultSwapData(const string& issuerId, const string& creditCurveId,
                           const LegData& leg, const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>())
-        : issuerId_(issuerId), creditCurveId_(creditCurveId), qualifier_(qualifier), leg_(leg),
+        : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg),
           settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart),
           upfrontDate_(upfrontDate), upfrontFee_(upfrontFee) {}
 
@@ -43,7 +43,6 @@ public:
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
-    const string& qualifier() const { return qualifier_; }
     const LegData& leg() const { return leg_; }
     bool settlesAccrual() const { return settlesAccrual_; }
     bool paysAtDefaultTime() const { return paysAtDefaultTime_; }
@@ -54,7 +53,6 @@ public:
 private:
     string issuerId_;
     string creditCurveId_;
-    string qualifier_;
     LegData leg_;
     bool settlesAccrual_, paysAtDefaultTime_;
     Date protectionStart_, upfrontDate_;
