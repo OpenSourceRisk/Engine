@@ -308,11 +308,17 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    portfolio->load(portfolioFile, buildTradeFactory());
+    vector<string> portfolioFiles;
+    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto portfolioFile : portfolioFiles) {
+        boost::trim(portfolioFile);
+        portfolioFile = inputPath + "/" + portfolioFile;
+        portfolio->load(portfolioFile, buildTradeFactory());
+    }
     portfolio->build(factory);
     return portfolio;
 }
@@ -376,7 +382,6 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 void OREApp::writeInitialReports() {
 
     string outputPath = params_->get("setup", "outputPath");
-    string inputPath = params_->get("setup", "inputPath");
 
     /************
      * Curve dump

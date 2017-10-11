@@ -86,8 +86,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         // until we found the whole set of quotes or do not have more quotes in the
         // market data
 
-        vector<Real> quotes;
-        vector<Period> terms;
+        map<Period, Real> quotes;
         recoveryRate_ = Null<Real>();
 
         for (auto& md : loader.loadQuotes(asof)) {
@@ -109,18 +108,15 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
                 boost::shared_ptr<CdsSpreadQuote> q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
 
-                vector<string>::const_iterator it1 =
+                vector<string>::const_iterator it =
                     std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->cdsQuotes().end()) {
+                if (it != config->cdsQuotes().end()) {
+                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->term());
-                    quotes.push_back(q->quote()->value());
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                        << q->term() << ") while loading default curve " << config->curveID());
                 }
             }
 
@@ -128,18 +124,15 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE) {
                 boost::shared_ptr<HazardRateQuote> q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
 
-                vector<string>::const_iterator it1 =
+                vector<string>::const_iterator it =
                     std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->cdsQuotes().end()) {
+                if (it != config->cdsQuotes().end()) {
+                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->term());
-                    quotes.push_back(q->quote()->value());
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                        << q->term() << ") while loading default curve " << config->curveID());
                 }
             }
 
@@ -147,21 +140,18 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 md->instrumentType() == MarketDatum::InstrumentType::ZERO) {
                 boost::shared_ptr<ZeroQuote> q = boost::dynamic_pointer_cast<ZeroQuote>(md);
 
-                vector<string>::const_iterator it1 =
+                vector<string>::const_iterator it =
                     std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->cdsQuotes().end()) {
-                    QL_REQUIRE(q->tenorBased(), "require tenor based "
-                                                "zero quote in default "
-                                                "curves, date based "
-                                                "not allowed");
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->tenor());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->tenor() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->tenor());
-                    quotes.push_back(q->quote()->value());
+                if (it != config->cdsQuotes().end()) {
+                    QL_REQUIRE(q->tenorBased(), "require tenor based zero quote in default "
+                        "curves, date based not allowed");
+                    
+                    auto res = quotes.insert(pair<Period, Real>(q->tenor(), q->quote()->value()));
+
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                        << q->tenor() << ") while loading default curve " << config->curveID());
                 }
             }
         }
@@ -175,19 +165,15 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
             std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
-            for (Size i = 0; i < quotes.size(); ++i) {
+            for (auto quote : quotes) {
                 helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
-                    quotes[i], terms[i], cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+                    quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
                     asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
                                                                                           config->dayCounter());
-            
-            // Helpers may still be unsorted at this point
-            // Sort before the copy below => 'dates' vector will be ordered correctly 
-            std::sort(helper.begin(), helper.end(), detail::BootstrapHelperSorter());
             
             // like for yield curves we need to copy the piecewise curve because
             // on eval date changes the relative date helpers with trigger a
@@ -211,18 +197,25 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         if (config->type() == DefaultCurveConfig::Type::HazardRate) {
             Calendar cal = cdsConv->calendar();
             std::vector<Date> dates;
+            std::vector<Real> quoteValues;
+            
             // if first term is not zero, add asof point
-            if (terms[0] != 0 * Days) {
-                LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes[0] << ", because not given");
+            if (quotes.begin()->first != 0 * Days) {
+                LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << 
+                    quotes.begin()->second << ", because not given");
                 dates.push_back(asof);
-                quotes.insert(quotes.begin(), quotes[0]);
+                quoteValues.push_back(quotes.begin()->second);
             }
-            for (Size i = 0; i < terms.size(); ++i) {
-                dates.push_back(cal.advance(asof, terms[i], Following, false));
+            
+            for (auto quote : quotes) {
+                dates.push_back(cal.advance(asof, quote.first, Following, false));
+                quoteValues.push_back(quote.second);
             }
+
             LOG("DefaultCurve: set up interpolated hazard rate curve");
-            curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(dates, quotes, config->dayCounter(),
-                                                                                   BackwardFlat());
+            curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(
+                dates, quoteValues, config->dayCounter(),BackwardFlat());
+
             if (config->extrapolation()) {
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");
@@ -244,28 +237,36 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             Calendar spotCal = zeroConv->spotCalendar();
             BusinessDayConvention bdc = zeroConv->rollConvention();
             bool eom = zeroConv->eom();
+            
             // setup
             std::vector<Date> dates;
             std::vector<Real> impliedHazardRates;
-            if (terms[0] != 0 * Days) {
-                LOG("DefaultCurve: assume asof (" << asof << "), yield rate " << quotes[0] << ", because not given");
-                dates.push_back(asof);
-                quotes.insert(quotes.begin(), quotes[0]);
+            
+            // We do not want a divide by zero error below
+            LOG("DefaultCurve: added asof (" << asof << "), yield rate 0.0.");
+            dates.push_back(asof);
+            impliedHazardRates.push_back(0.0);
+
+            if (quotes.begin()->first == 0 * Days) {
+                LOG("DefaultCurve: removing quote (" << quotes.begin()->first << ", " << quotes.begin()->second << ".");
+                quotes.erase(quotes.begin());
             }
+
+            // Build up remainder of quotes
             Date spot = spotCal.advance(asof, spotLag * Days);
-            for (Size i = 0; i < terms.size(); ++i) {
-                dates.push_back(cal.advance(spot, terms[i], bdc, eom));
-            }
-            for (Size i = 0; i < dates.size(); ++i) {
-                // day counter in the quote is ignored, the one from the
-                // convention is used
-                InterestRate yield(quotes[i], dc, comp, freq);
-                Real t_y = dc.yearFraction(asof, dates[i]);
-                Real t_c = config->dayCounter().yearFraction(asof, dates[i]);
+            for (auto quote : quotes) {
+                Date maturity = cal.advance(spot, quote.first, bdc, eom);
+                dates.push_back(maturity);
+
+                // day counter in the quote is ignored, the one from the convention is used
+                InterestRate yield(quote.second, dc, comp, freq);
+                Real t_y = dc.yearFraction(asof, maturity);
+                Real t_c = config->dayCounter().yearFraction(asof, maturity);
                 // hazard rates are always continnuously compounded
                 Real impliedHr = -std::log(yield.discountFactor(t_y) / benchmarkCurve->discount(t_c)) / t_c;
                 impliedHazardRates.push_back(impliedHr);
             }
+
             LOG("DefaultCurve: set up interpolated hazard rate curve as yield over benchmark");
             curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(
                 dates, impliedHazardRates, config->dayCounter(), BackwardFlat());

@@ -69,7 +69,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     } catch (std::exception& e) {
         instrument_.reset();
-        throw e;
+        throw;
     }
     // Set up Legs
     legs_.resize(4);

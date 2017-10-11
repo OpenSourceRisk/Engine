@@ -341,14 +341,12 @@ void StressTestingTest::regression() {
     for (auto data : shiftedNPV) {
         pair<string, string> p = data.first;
         string id = data.first.first;
-        string label = data.first.second;
         Real npv = data.second;
         QL_REQUIRE(baseNPV.find(id) != baseNPV.end(), "base npv not found for trade " << id);
         Real base = baseNPV[id];
         Real delta = npv - base;
         if (fabs(delta) > 0.0) {
             count++;
-            // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << delta << " },");
             QL_REQUIRE(stressMap.find(p) != stressMap.end(),
                        "pair (" << p.first << ", " << p.second << ") not found in sensi map");
             BOOST_CHECK_MESSAGE(fabs(delta - stressMap[p]) < tolerance ||

@@ -169,7 +169,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // LOG("scenario description " << j << ": " << desc[j].text());
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up ||
                 desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
@@ -190,7 +189,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // double shift scenarios: cross gamma
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // select cross scenarios here
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 Real npv = cube->get(i, 0, j, 0);
@@ -469,7 +467,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         string pair = keylabel;
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
-            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
             Size keyIdx = key.index;
             Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);

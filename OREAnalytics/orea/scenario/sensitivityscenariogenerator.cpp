@@ -616,8 +616,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
         }
     }
 
-    string domestic = simMarketData_->baseCcy();
-
     Size n_fxvol_pairs = fxVolCcyPairs.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
@@ -708,8 +706,6 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-
-    string domestic = simMarketData_->baseCcy();
 
     Size n_eqvol_names = equityVolNames.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
@@ -1379,7 +1375,6 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
                                                                                                       bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-    std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
     return desc;
@@ -1388,7 +1383,6 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::equityScenarioDescription(string equity,
                                                                                                           bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
-    std::ostringstream o;
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
     return desc;
