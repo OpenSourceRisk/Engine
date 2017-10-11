@@ -320,6 +320,7 @@
       <xs:element name="Equities" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
+            <xs:element type="bool" name="SimulateEquityNames" maxOccurs="1" minOccurs="0"/>
             <xs:element name="Names">
               <xs:complexType>
                 <xs:sequence>

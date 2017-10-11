@@ -158,8 +158,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
-    DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
-    // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
+    try {
+        DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
+        // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
+    } catch (const std::exception& e) {
+        WLOG("Could not price underlying: " << e.what());
+    }
 
     // build exercise
     std::vector<QuantLib::Date> exDates;
@@ -169,6 +173,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
             exDates.push_back(exDate);
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
+    std::sort(exDates.begin(), exDates.end());
     maturity_ = exDates.back();
     boost::shared_ptr<Exercise> exercise(new BermudanExercise(exDates));
 
@@ -201,10 +206,31 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<BermudanSwaptionEngineBuilder> swaptionBuilder =
         boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
 
-    // TODO use more intelligent strikes for calibration if fixed rate of underlying is not constant
+    // determine strikes for calibration basket (simple approach, a la summit)
+    std::vector<Real> strikes(exDates.size(), Null<Real>());
+    if (!isNonStandard) {
+        Real tmp = vanillaSwap->fixedRate() - vanillaSwap->spread();
+        std::fill(strikes.begin(), strikes.end(), tmp);
+        DLOG("calibration strike is " << tmp << "(fixed rate " << vanillaSwap->fixedRate() << ", spread "
+                                      << vanillaSwap->spread() << ")");
+    } else {
+        for (Size i = 0; i < exDates.size(); ++i) {
+            const Schedule& fix = nonstandardSwap->fixedSchedule();
+            const Schedule& flt = nonstandardSwap->floatingSchedule();
+            Size fixIdx = std::lower_bound(fix.dates().begin(), fix.dates().end(), exDates[i]) - fix.dates().begin();
+            Size fltIdx = std::lower_bound(flt.dates().begin(), flt.dates().end(), exDates[i]) - flt.dates().begin();
+            // play safe
+            fixIdx = std::min(fixIdx, nonstandardSwap->fixedRate().size() - 1);
+            fltIdx = std::min(fltIdx, nonstandardSwap->spreads().size() - 1);
+            strikes[i] = nonstandardSwap->fixedRate()[fixIdx] - nonstandardSwap->spreads()[fltIdx];
+            DLOG("calibration strike for ex date " << QuantLib::io::iso_date(exDates[i]) << " is " << strikes[i]
+                                                   << " (fixed rate " << nonstandardSwap->fixedRate()[fixIdx]
+                                                   << ", spread " << nonstandardSwap->spreads()[fltIdx] << ")");
+        }
+    }
+
     boost::shared_ptr<PricingEngine> engine =
-        swaptionBuilder->engine(id(), isNonStandard, ccy_str, exDates, swap->maturityDate(),
-                                isNonStandard ? nonstandardSwap->fixedRate().front() : vanillaSwap->fixedRate());
+        swaptionBuilder->engine(id(), isNonStandard, ccy_str, exDates, swap->maturityDate(), strikes);
 
     Real ct = timer.elapsed();
     DLOG("Swaption model calibration time: " << ct * 1000 << " ms");
@@ -229,7 +255,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
     std::vector<Real> additionalMultipliers;
     if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
-        Real multiplier = positionType == Position::Long ? multiplier = 1.0 : -1.0;
+        Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
         Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
@@ -407,7 +433,7 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         std::vector<bool> payer(2);
         for (Size j = 0; j < legs.size(); ++j) {
             legs[j] = underlyingSwap->leg(j);
-            payer[j] = underlyingSwap->legNPV(j) < 0.0 ? true : false;
+            payer[j] = swap_[j].isPayer();
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
             while (legs[j].size() > 0 && coupon->accrualStartDate() < exerciseDates[i]) {
                 legs[j].erase(legs[j].begin());

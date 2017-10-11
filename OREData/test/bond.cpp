@@ -212,17 +212,8 @@ struct CommonVars {
         return bond;
     }
 
-    CommonVars() {
-        ccy = "EUR";
-        securityId = "Security1";
-        creditCurveId = "CreditCurve_A";
-        issuerId = "CPTY_A";
-        referenceCurveId = "BANK_EUR_LEND";
-        isPayer = false;
-        start = "20160203";
-        end = "20210203";
-        issue = "20160203";
-        fixtenor = "1Y";
+    CommonVars() : ccy("EUR"), securityId("Security1"), creditCurveId("CreditCurve_A"), issuerId("CPTY_A"), referenceCurveId("BANK_EUR_LEND"),
+		   isPayer(false), start("20160203"), end("20210203"), issue("20160203"), fixtenor("1Y") {
         cal = TARGET();
         calStr = "TARGET";
         conv = "MF";

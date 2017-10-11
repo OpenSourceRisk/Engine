@@ -195,7 +195,7 @@ void LegData::fromXML(XMLNode* node) {
     legType_ = XMLUtils::getChildValue(node, "LegType", true);
     isPayer_ = XMLUtils::getChildValueAsBool(node, "Payer");
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
-    dayCounter_ = XMLUtils::getChildValue(node, "DayCounter");
+    dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ =
@@ -262,12 +262,27 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LegType", legType_);
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
-    XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
+    if (dayCounter_ != "")
+        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
+    if (paymentConvention_ != "")
+        XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
-    XMLUtils::addChild(doc, node, "NotionalInitialExchange", notionalInitialExchange_);
-    XMLUtils::addChild(doc, node, "NotionalFinalExchange", notionalFinalExchange_);
-    XMLUtils::addChild(doc, node, "NotionalAmortizingExchange", notionalAmortizingExchange_);
+    
+    if(!isNotResetXCCY_) {
+        XMLNode* resetNode = doc.allocNode("FXReset");
+        XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
+        XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
+        XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
+        XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
+        XMLUtils::appendNode(node, resetNode);
+    }
+    
+    XMLNode* exchangeNode = doc.allocNode("Exchanges");
+    XMLUtils::addChild(doc, exchangeNode, "NotionalInitialExchange", notionalInitialExchange_);
+    XMLUtils::addChild(doc, exchangeNode, "NotionalFinalExchange", notionalFinalExchange_);
+    XMLUtils::addChild(doc, exchangeNode, "NotionalAmortizingExchange", notionalAmortizingExchange_);
+    XMLUtils::appendNode(node, exchangeNode);
+    
     XMLUtils::appendNode(node, schedule_.toXML(doc));
     // to do: Add toXML for reset
     if (legType_ == "Fixed") {

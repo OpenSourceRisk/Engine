@@ -52,7 +52,7 @@ public:
 
 private:
     void initializeDates();
-    Date getImmDate(Date asof, int i);
+    Date getImmDate(Date asof, Size i);
     Date fixingDate_;
     Size imm1_, imm2_;
     Pillar::Choice pillarChoice_;

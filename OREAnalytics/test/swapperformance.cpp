@@ -132,7 +132,6 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         string floatFreq = portfolioSize == 1 ? "6M" : index.substr(index.find('-', 4) + 1);
 
         // fixed details
-        string fixedTenor = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
         Real fixedRate = portfolioSize == 1 ? 0.02 : randInt(rng, minFixedBps, maxFixedBps) / 100.0;
         string fixFreq = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
 
@@ -298,13 +297,11 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     vector<string> swaptionStrikes(swaptionExpiries.size(), "ATM");
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
-    vector<Real> hValues = {};
-    vector<Real> aValues = {};
 
     std::vector<boost::shared_ptr<LgmData>> irConfigs;
 
-    hValues = {0.02};
-    aValues = {0.008};
+    vector<Real> hValues = {0.02};
+    vector<Real> aValues = {0.008};
     irConfigs.push_back(boost::make_shared<LgmData>(
         "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
@@ -337,10 +334,10 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     vector<string> optionExpiries = {"1Y", "2Y", "3Y", "5Y", "7Y", "10Y"};
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
-    vector<Real> sigmaValues = {};
 
     std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-    sigmaValues = {0.15};
+
+    vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(boost::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 

@@ -126,8 +126,11 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-        LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        // Check if the risk factor is simulated before adding it
+        if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
+            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
+            LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;
@@ -171,6 +174,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
     if (!parameters->simulateBaseCorrelations())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
+    if (!parameters->simulateEquityNames()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityForecastCurve);
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
+    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);

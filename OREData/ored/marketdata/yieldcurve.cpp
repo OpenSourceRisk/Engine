@@ -30,6 +30,7 @@
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
@@ -254,7 +255,7 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
     vector<Real> zeros(instruments.size() + 1, 0.0);
     vector<Real> discounts(instruments.size() + 1, 1.0);
     vector<Real> forwards(instruments.size() + 1, 0.0);
-    
+
     if (extrapolation_) {
         yieldts->enableExtrapolation();
     }
@@ -794,26 +795,26 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
 
         // Check that we have a valid FRA quote
         if (marketQuote) {
-            QL_REQUIRE((marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) || 
-                (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA),
+            QL_REQUIRE((marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) ||
+                           (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA),
                        "Market quote not of type FRA.");
-            
+
         } else {
             QL_FAIL("Could not find quote for ID " << fraQuoteIDs[i] << " with as of date " << io::iso_date(asofDate_)
                                                    << ".");
         }
 
         // Create a FRA helper if we do.
-        
+
         boost::shared_ptr<RateHelper> fraHelper;
-        
+
         if (marketQuote->instrumentType() == MarketDatum::InstrumentType::IMM_FRA) {
             boost::shared_ptr<ImmFraQuote> immFraQuote;
             immFraQuote = boost::dynamic_pointer_cast<ImmFraQuote>(marketQuote);
             Size imm1 = immFraQuote->imm1();
             Size imm2 = immFraQuote->imm2();
             fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
-        } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA){
+        } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
             boost::shared_ptr<FRAQuote> fraQuote;
             fraQuote = boost::dynamic_pointer_cast<FRAQuote>(marketQuote);
             Period periodToStart = fraQuote->fwdStart();
@@ -1091,13 +1092,22 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
 
         // Create a tenor basis swap helper if we do.
         Period basisSwapTenor = basisSwapQuote->maturity();
-        boost::shared_ptr<RateHelper> basisSwapHelper(new TenorBasisSwapHelper(
-            basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex, basisSwapConvention->shortPayTenor(),
-            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-            basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
-            basisSwapConvention->subPeriodsCouponType()));
-
-        instruments.push_back(basisSwapHelper);
+        boost::shared_ptr<RateHelper> basisSwapHelper;
+        if (boost::dynamic_pointer_cast<OvernightIndex>(shortIndex) != nullptr) {
+            // is it OIS vs Libor...
+            basisSwapHelper.reset(
+                new OIBSHelper(longIndex->fixingDays(), basisSwapTenor, basisSwapQuote->quote(),
+                               boost::static_pointer_cast<OvernightIndex>(shortIndex), longIndex,
+                               discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
+        } else {
+            // ...or Libor vs Libor?
+            basisSwapHelper.reset(new TenorBasisSwapHelper(
+                basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex, basisSwapConvention->shortPayTenor(),
+                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
+                basisSwapConvention->subPeriodsCouponType()));
+            instruments.push_back(basisSwapHelper);
+        }
     }
 }
 

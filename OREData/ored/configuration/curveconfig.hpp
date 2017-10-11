@@ -62,7 +62,7 @@ public:
     //@}
 
     //! Return all the market quotes required for this config
-    // TODO: vector<string> quotes() const = 0;
+    // TODO: const vector<string>& quotes() = 0;
 
 protected:
     string curveID_;

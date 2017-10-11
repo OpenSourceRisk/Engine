@@ -89,7 +89,7 @@ XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
     } else
         QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
 
-    std::ostringstream startRt, lag, cal, bdc, dc, idx;
+    std::ostringstream startRt, lag, cal, bdc, dc;
     startRt << std::fixed << std::setprecision(16) << startRate_;
     lag << observationLag_;
     cal << calendar_;

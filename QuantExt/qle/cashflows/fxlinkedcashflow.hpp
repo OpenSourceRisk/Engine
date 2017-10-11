@@ -74,6 +74,7 @@ public:
     Date fxFixingDate() const { return fxFixingDate_; }
     const boost::shared_ptr<FxIndex>& index() const { return fxIndex_; }
     bool invertIndex() const { return invertIndex_; }
+    Real fxRate() const;
 
     //! \name Visitability
     //@{
@@ -87,7 +88,6 @@ private:
     boost::shared_ptr<FxIndex> fxIndex_;
     bool invertIndex_;
 
-    Real fxRate() const;
 };
 
 inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {

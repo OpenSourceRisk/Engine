@@ -57,8 +57,8 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
-      overrideTenors_(false), initialized_(false), engineData_(engineData), portfolio_(portfolio), computed_(false) {}
+      recalibrateModels_(recalibrateModels), overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -169,7 +169,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // LOG("scenario description " << j << ": " << desc[j].text());
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up ||
                 desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
@@ -190,7 +189,6 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
 
         // double shift scenarios: cross gamma
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            string label = scenarioGenerator_->scenarios()[j]->label();
             // select cross scenarios here
             if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 Real npv = cube->get(i, 0, j, 0);
@@ -469,7 +467,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
         string pair = keylabel;
         shiftSize = sensitivityData_->equityVolShiftData()[pair].shiftSize;
         if (boost::to_upper_copy(sensitivityData_->equityVolShiftData()[pair].shiftType) == "RELATIVE") {
-            vector<Real> strikes = sensitivityData_->equityVolShiftData()[pair].shiftStrikes;
             Size keyIdx = key.index;
             Period p = sensitivityData_->equityVolShiftData()[pair].shiftExpiries[keyIdx];
             Handle<BlackVolTermStructure> vts = simMarket_->equityVol(pair, marketConfiguration_);
@@ -485,8 +482,6 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             vector<Period> tenors = sensitivityData_->swaptionVolShiftData()[ccy].shiftTerms;
             vector<Period> expiries = sensitivityData_->swaptionVolShiftData()[ccy].shiftExpiries;
             Size keyIdx = key.index;
-            Size strikeIdx = keyIdx % strikes.size();
-            Real p_strikeSpread = strikes[strikeIdx];
             Size expIdx = keyIdx / (tenors.size() * strikes.size());
             Period p_exp = expiries[expIdx];
             Size tenIdx = keyIdx % tenors.size();

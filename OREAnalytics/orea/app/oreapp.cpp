@@ -44,7 +44,7 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-void OREApp::run() {
+int OREApp::run() {
 
     boost::timer timer;
 
@@ -182,12 +182,14 @@ void OREApp::run() {
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
+        return 1;
     }
 
     out_ << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+    return 0;
 }
 
 void OREApp::readSetup() {
@@ -306,11 +308,17 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    portfolio->load(portfolioFile, buildTradeFactory());
+    vector<string> portfolioFiles;
+    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto portfolioFile : portfolioFiles) {
+        boost::trim(portfolioFile);
+        portfolioFile = inputPath + "/" + portfolioFile;
+        portfolio->load(portfolioFile, buildTradeFactory());
+    }
     portfolio->build(factory);
     return portfolio;
 }
@@ -374,7 +382,6 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 void OREApp::writeInitialReports() {
 
     string outputPath = params_->get("setup", "outputPath");
-    string inputPath = params_->get("setup", "inputPath");
 
     /************
      * Curve dump
@@ -792,11 +799,16 @@ void OREApp::runPostProcessor() {
 
     string marketConfiguration = params_->get("markets", "simulation");
 
+    bool fullInitialCollateralisation = false;
+    if (params_->has("xva", "fullInitialCollateralisation")) {
+        fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
+    }
+
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
 void OREApp::writeXVAReports() {

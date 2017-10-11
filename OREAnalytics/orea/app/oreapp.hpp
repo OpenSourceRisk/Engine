@@ -53,7 +53,7 @@ public:
     }
     virtual ~OREApp() {}
     //! generates XVA reports for a given portfolio and market
-    void run();
+    int run();
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
