@@ -298,8 +298,7 @@ namespace detail {
 template <class T>
 const T& returnLegData(const boost::shared_ptr<XMLSerializable>& d, const string& actualType,
                        const string& expectedType) {
-    QL_REQUIRE(boost::dynamic_pointer_cast<T>(d) != nullptr,
-               "leg is " << actualType << ", expected " << expectedType);
+    QL_REQUIRE(boost::dynamic_pointer_cast<T>(d) != nullptr, "leg is " << actualType << ", expected " << expectedType);
     return *boost::static_pointer_cast<T>(d);
 }
 } // namespace detail
@@ -320,7 +319,8 @@ public:
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, const AmortizationData& amortizationData = AmortizationData());
+            int fixingDays = 0,
+            const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>());
 
     //! \name Serialisation
     //@{
@@ -346,7 +346,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
-    const AmortizationData& amortizationData() const { return amortizationData_; }
+    const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //
     boost::shared_ptr<XMLSerializable> concreteLegData() const { return concreteLegData_; }
     const CashflowData& cashflowData() const {
@@ -392,7 +392,7 @@ private:
     double foreignAmount_;
     string fxIndex_;
     int fixingDays_;
-    AmortizationData amortizationData_;
+    std::vector<AmortizationData> amortizationData_;
 };
 
 //! \name Utilities for building QuantLib Legs
@@ -428,18 +428,21 @@ vector<double> buildScheduledVectorNormalised(const vector<double>& values, cons
 
 // notional vector derived from a fixed amortisation amount
 vector<double> buildAmortizationScheduleFixedAmount(const vector<double>& notionals, const Schedule& schedule,
-                                                    const LegData& data);
+                                                    const AmortizationData& data);
 
 // notional vector with amortizations expressed as a percentage of initial notional
 vector<double> buildAmortizationScheduleRelativeToInitialNotional(const vector<double>& notionals,
-                                                                  const Schedule& schedule, const LegData& data);
+                                                                  const Schedule& schedule,
+                                                                  const AmortizationData& data);
 
 // notional vector with amortizations expressed as a percentage of the respective previous notional
 vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<double>& notionals,
-                                                                   const Schedule& schedule, const LegData& data);
+                                                                   const Schedule& schedule,
+                                                                   const AmortizationData& data);
 
 // notional vector derived from a fixed annuity amount
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
-                                                     const Schedule& schedule, const LegData& data);
+                                                     const Schedule& schedule, const AmortizationData& data,
+                                                     const DayCounter& dc);
 } // namespace data
 } // namespace ore
