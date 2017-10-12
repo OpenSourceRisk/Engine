@@ -19,6 +19,8 @@
 #include "legdata.hpp"
 #include <ored/portfolio/legdata.hpp>
 
+#include <boost/make_shared.hpp>
+
 using namespace QuantLib;
 using namespace ore::data;
 using namespace boost::unit_test_framework;
@@ -66,9 +68,7 @@ void LegDataTest::testLegDataCashflows() {
     vector<double> amounts = {1000000, 2000000, 3000000};
     vector<string> dates = {"2015-01-01", "2016-01-01", "2017-01-01"};
 
-    CashflowData data(amounts, dates);
-
-    LegData legData(true, "EUR", data);
+    LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, "EUR", "Cashflow");
     Leg leg = makeSimpleLeg(legData);
 
     // Expect 100000, 200000, 300000

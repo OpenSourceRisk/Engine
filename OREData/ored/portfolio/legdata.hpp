@@ -37,6 +37,7 @@ using std::string;
 
 namespace ore {
 namespace data {
+
 //! Serializable Cashflow Leg Data
 /*!
   \ingroup tradedata
@@ -57,8 +58,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node);
+    XMLNode* toXML(XMLDocument& doc);
     //@}
 private:
     vector<double> amounts_;
@@ -293,6 +294,16 @@ private:
     bool initialized_;
 };
 
+namespace detail {
+template <class T>
+const T& returnLegData(const boost::shared_ptr<XMLSerializable>& d, const string& actualType,
+                       const string& expectedType) {
+    QL_REQUIRE(boost::dynamic_pointer_cast<T>(d) != nullptr,
+               "leg is " << actualType << ", expected " << expectedType);
+    return *boost::static_pointer_cast<T>(d);
+}
+} // namespace detail
+
 //! Serializable object holding leg data
 class LegData : public XMLSerializable {
 public:
@@ -301,82 +312,15 @@ public:
         : isPayer_(true), notionalInitialExchange_(false), notionalFinalExchange_(false),
           notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0) {}
 
-    //! Constructor with CashflowData
-    LegData(bool isPayer, const string& currency, CashflowData& data,
-            const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F",
-            bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-            bool notionalAmortizingExchange = false, AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("Cashflow"), cashflowData_(data),
-          notionalDates_(notionalDates), paymentConvention_(paymentConvention),
-          notionalInitialExchange_(notionalInitialExchange), notionalFinalExchange_(notionalFinalExchange),
-          notionalAmortizingExchange_(notionalAmortizingExchange), amortizationData_(amortizationData) {}
-
-    //! Constructor with FloatingLegData
-    LegData(bool isPayer, const string& currency, FloatingLegData& data, ScheduleData& schedule,
-            const string& dayCounter, const vector<double>& notionals,
-            const vector<string>& notionalDates = vector<string>(), const string& paymentConvention = "F",
-            bool notionalInitialExchange = false, bool notionalFinalExchange = false,
-            bool notionalAmortizingExchange = false, bool isNotResetXCCY = true, const string& foreignCurrency = "",
-            double foreignAmount = 0, const string& fxIndex = "", int fixingDays = 0,
-            AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("Floating"), floatingLegData_(data), schedule_(schedule),
-          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-          isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-          fxIndex_(fxIndex), fixingDays_(fixingDays), amortizationData_(amortizationData) {}
-
-    //! Constructor with FixedLegData
-    LegData(bool isPayer, const string& currency, FixedLegData& data, ScheduleData& schedule, const string& dayCounter,
-            const vector<double>& notionals, const vector<string>& notionalDates = vector<string>(),
-            const string& paymentConvention = "F", bool notionalInitialExchange = false,
-            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            const string& foreignCurrency = "", double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("Fixed"), fixedLegData_(data), schedule_(schedule),
-          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-          isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-          fxIndex_(fxIndex), fixingDays_(fixingDays), amortizationData_(amortizationData) {}
-
-    //! Constructor with CPILegData
-    LegData(bool isPayer, const string& currency, CPILegData& data, ScheduleData& schedule, const string dayCounter,
-            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
-            const string& paymentConvention = "F", bool notionalInitialExchange = false,
-            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("CPI"), cpiLegData_(data), schedule_(schedule),
-          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-          isNotResetXCCY_(isNotResetXCCY), amortizationData_(amortizationData) {}
-
-    //! Constructor with YoYLegData
-    LegData(bool isPayer, const string& currency, YoYLegData& data, ScheduleData& schedule, const string dayCounter,
-            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
-            const string& paymentConvention = "F", bool notionalInitialExchange = false,
-            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("YY"), yoyLegData_(data), schedule_(schedule),
-          dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
-          paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
-          notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
-          isNotResetXCCY_(isNotResetXCCY), amortizationData_(amortizationData) {}
-
-    //! Constructor with CMSLegData
-    LegData(bool isPayer, const string& currency, CMSLegData& data, ScheduleData& schedule, const string& dayCounter,
-            const vector<double> notionals, const vector<string>& notionalDates = vector<string>(),
-            const string& paymentConvention = "F", bool notionalInitialExchange = false,
-            bool notionalFinalExchange = false, bool notionalAmortizingExchange = false, bool isNotResetXCCY = true,
-            const string& foreignCurrency = "", double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0, AmortizationData amortizationData = AmortizationData())
-        : isPayer_(isPayer), currency_(currency), legType_("CMS"), cmsLegData_(data), schedule_(schedule),
-          dayCounter_(dayCounter), notionals_(notionals), paymentConvention_(paymentConvention),
-          notionalInitialExchange_(notionalInitialExchange), notionalFinalExchange_(notionalFinalExchange),
-          notionalAmortizingExchange_(notionalAmortizingExchange), isNotResetXCCY_(isNotResetXCCY),
-          foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount), fxIndex_(fxIndex), fixingDays_(fixingDays),
-          amortizationData_(amortizationData) {}
+    //! Constructorgy with concrete leg data
+    LegData(const boost::shared_ptr<XMLSerializable>& concreteLegData, bool isPayer, const string& currency,
+            const string& legType, const ScheduleData& scheduleData = ScheduleData(), const string& dayCounter = "",
+            const std::vector<double>& notionals = std::vector<double>(),
+            const std::vector<string>& notionalDates = std::vector<string>(), const string& paymentConvention = "F",
+            const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
+            const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
+            const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
+            int fixingDays = 0, const AmortizationData& amortizationData = AmortizationData());
 
     //! \name Serialisation
     //@{
@@ -397,29 +341,44 @@ public:
     bool notionalFinalExchange() const { return notionalFinalExchange_; }
     bool notionalAmortizingExchange() const { return notionalAmortizingExchange_; }
     const string& legType() const { return legType_; }
-    const CashflowData& cashflowData() const { return cashflowData_; }
-    const FloatingLegData& floatingLegData() const { return floatingLegData_; }
-    const FixedLegData& fixedLegData() const { return fixedLegData_; }
-    const CPILegData& cpiLegData() const { return cpiLegData_; }
-    const YoYLegData& yoyLegData() const { return yoyLegData_; }
-    const CMSLegData& cmsLegData() const { return cmsLegData_; }
     bool isNotResetXCCY() const { return isNotResetXCCY_; }
     const string& foreignCurrency() const { return foreignCurrency_; }
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
     const AmortizationData& amortizationData() const { return amortizationData_; }
+    //
+    boost::shared_ptr<XMLSerializable> concreteLegData() const { return concreteLegData_; }
+    const CashflowData& cashflowData() const {
+        return detail::returnLegData<CashflowData>(concreteLegData_, legType(), "cashflow");
+    }
+    const FixedLegData& fixedLegData() const {
+        return detail::returnLegData<FixedLegData>(concreteLegData_, legType(), "fixed");
+    }
+    const FloatingLegData& floatingLegData() const {
+        return detail::returnLegData<FloatingLegData>(concreteLegData_, legType(), "floating");
+    }
+    const CPILegData& cpiLegData() const {
+        return detail::returnLegData<CPILegData>(concreteLegData_, legType(), "cpi");
+    }
+    const YoYLegData& yoyLegData() const {
+        return detail::returnLegData<YoYLegData>(concreteLegData_, legType(), "yoy");
+    }
+    const CMSLegData& cmsLegData() const {
+        return detail::returnLegData<CMSLegData>(concreteLegData_, legType(), "cms");
+    }
     //@}
+
+protected:
+    virtual bool initialiseConcreteLegData();
+    boost::shared_ptr<XMLSerializable> concreteLegData_;
+    //
+    string legDataName_;
+
 private:
     bool isPayer_;
     string currency_;
     string legType_;
-    CashflowData cashflowData_;
-    FloatingLegData floatingLegData_;
-    FixedLegData fixedLegData_;
-    CPILegData cpiLegData_;
-    YoYLegData yoyLegData_;
-    CMSLegData cmsLegData_;
     ScheduleData schedule_;
     string dayCounter_;
     vector<double> notionals_;

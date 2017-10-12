@@ -122,14 +122,13 @@ struct CommonVars {
     vector<Real> notionals;
     vector<Real> spread;
 
-
     // utilities
     boost::shared_ptr<ore::data::Bond> makeBond() {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
-        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+                             fixedSchedule, fixDC, notionals);
 
         Envelope env("CP1");
 
@@ -137,14 +136,14 @@ struct CommonVars {
             env, issuerId, creditCurveId, securityId, referenceCurveId, settledays, calStr, issue, fixedLegData));
         return bond;
     }
-    
+
     boost::shared_ptr<ore::data::Bond> makeAmortizingFixedBond(string amortType, Real value, bool underflow) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
-        FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals, vector<string>(), conv, 
-                false, false, false, true, "", 0, "", 0, amortizationData);
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+                             fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
+                             "", 0, amortizationData);
 
         Envelope env("CP1");
 
@@ -156,11 +155,11 @@ struct CommonVars {
     boost::shared_ptr<ore::data::Bond> makeAmortizingFloatingBond(string amortType, Real value, bool underflow) {
         ScheduleData floatingSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
-        FloatingLegData floatingLegRateData("EUR-EURIBOR-6M", 2, false, spread);
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData floatingLegData(isPayer, ccy, floatingLegRateData, floatingSchedule, fixDC, notionals, vector<string>(), conv, 
-                false, false, false, true, "", 0, "", 0, amortizationData);
-                
+        LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
+                                "Floating", floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false,
+                                false, true, "", 0, "", 0, amortizationData);
+
         Envelope env("CP1");
 
         boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(

@@ -108,13 +108,13 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     ScheduleData fixedSchedule(ScheduleRules(start, end, fixFreq, calStr, conv, conv, rule));
 
     // fixed Leg - with dummy rate
-    FixedLegData fixedLegData(vector<double>(1, fixedRate));
-    LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixDC, notional);
+    LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+                     fixedSchedule, fixDC, notional);
 
     // float Leg
     vector<double> spreads(1, 0);
-    FloatingLegData floatingLegData(index, days, false, spread);
-    LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy, "Floating",
+                        floatSchedule, floatDC, notional);
 
     boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
 

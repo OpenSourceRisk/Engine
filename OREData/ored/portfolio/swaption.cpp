@@ -51,11 +51,13 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions not supported");
     QL_REQUIRE(isFixedFloating, "Basis Swaptions not supported");
 
-    bool isNonStandard =
-        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
-         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
-         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
-         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
+    bool isNonStandard = (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
+                          (swap_[0].legType() == "Floating" && swap_[0].floatingLegData().spreads().size() > 1) ||
+                          (swap_[1].legType() == "Floating" && swap_[1].floatingLegData().spreads().size() > 1) ||
+                          (swap_[0].legType() == "Floating" && swap_[0].floatingLegData().gearings().size() > 1) ||
+                          (swap_[1].legType() == "Floating" && swap_[1].floatingLegData().gearings().size() > 1) ||
+                          (swap_[0].legType() == "Fixed" && swap_[0].fixedLegData().rates().size() > 1) ||
+                          (swap_[1].legType() == "Fixed" && swap_[1].fixedLegData().rates().size() > 1));
 
     Exercise::Type exerciseType = parseExerciseType(option_.style());
     // QL_REQUIRE(!(isNonStandard && exerciseType == Exercise::European),
@@ -140,11 +142,13 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     string ccy_str = swap_[0].currency();
     Currency currency = parseCurrency(ccy_str);
 
-    bool isNonStandard =
-        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
-         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
-         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
-         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
+    bool isNonStandard = (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
+                          (swap_[0].legType() == "Floating" && swap_[0].floatingLegData().spreads().size() > 1) ||
+                          (swap_[1].legType() == "Floating" && swap_[1].floatingLegData().spreads().size() > 1) ||
+                          (swap_[0].legType() == "Floating" && swap_[0].floatingLegData().gearings().size() > 1) ||
+                          (swap_[1].legType() == "Floating" && swap_[1].floatingLegData().gearings().size() > 1) ||
+                          (swap_[0].legType() == "Fixed" && swap_[0].fixedLegData().rates().size() > 1) ||
+                          (swap_[1].legType() == "Fixed" && swap_[1].fixedLegData().rates().size() > 1));
 
     boost::shared_ptr<VanillaSwap> vanillaSwap;
     boost::shared_ptr<NonstandardSwap> nonstandardSwap;
@@ -261,7 +265,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
                    engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
-	DLOG("option premium added for bermudan swaption " << id()); 
+        DLOG("option premium added for bermudan swaption " << id());
     }
 
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));

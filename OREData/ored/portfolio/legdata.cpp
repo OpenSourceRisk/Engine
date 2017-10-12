@@ -190,6 +190,20 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     return node;
 }
 
+LegData::LegData(const boost::shared_ptr<XMLSerializable>& concreteLegData, bool isPayer, const string& currency,
+                 const string& legType, const ScheduleData& scheduleData, const string& dayCounter,
+                 const std::vector<double>& notionals, const std::vector<string>& notionalDates,
+                 const string& paymentConvention, const bool notionalInitialExchange, const bool notionalFinalExchange,
+                 const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
+                 const double foreignAmount, const string& fxIndex, int fixingDays,
+                 const AmortizationData& amortizationData)
+    : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), legType_(legType),
+      schedule_(scheduleData), dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
+      paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
+      notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
+      isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
+      fxIndex_(fxIndex), fixingDays_(fixingDays), amortizationData_(amortizationData) {}
+
 void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
     legType_ = XMLUtils::getChildValue(node, "LegType", true);
@@ -223,35 +237,46 @@ void LegData::fromXML(XMLNode* node) {
                 notionalAmortizingExchange_ = XMLUtils::getChildValueAsBool(exchangeNode, "NotionalAmortizingExchange");
         }
     }
-    fixedLegData_ = FixedLegData();
-    floatingLegData_ = FloatingLegData();
-    cashflowData_ = CashflowData();
-    cpiLegData_ = CPILegData();
-    yoyLegData_ = YoYLegData();
-    cmsLegData_ = CMSLegData();
-    tmp = XMLUtils::getChildNode(node, "ScheduleData");
-    if (tmp)
-        schedule_.fromXML(tmp);
-    if (legType_ == "Fixed") {
-        fixedLegData_.fromXML(XMLUtils::getChildNode(node, "FixedLegData"));
-    } else if (legType_ == "Floating") {
-        floatingLegData_.fromXML(XMLUtils::getChildNode(node, "FloatingLegData"));
-    } else if (legType_ == "Cashflow") {
-        cashflowData_.fromXML(XMLUtils::getChildNode(node, "CashflowData"));
-    } else if (legType_ == "CPI") {
-        cpiLegData_.fromXML(XMLUtils::getChildNode(node, "CPILegData"));
-    } else if (legType_ == "YY") {
-        yoyLegData_.fromXML(XMLUtils::getChildNode(node, "YYLegData"));
-    } else if (legType_ == "CMS") {
-        cmsLegData_.fromXML(XMLUtils::getChildNode(node, "CMSLegData"));
-    } else {
-        QL_FAIL("Unknown legType :" << legType_);
-    }
 
     XMLNode* amortizationNode = XMLUtils::getChildNode(node, "AmortizationData");
     if (amortizationNode) {
         amortizationData_.fromXML(amortizationNode);
     }
+    tmp = XMLUtils::getChildNode(node, "ScheduleData");
+    if (tmp)
+        schedule_.fromXML(tmp);
+
+    QL_REQUIRE(initialiseConcreteLegData(), "Unknown legType :" << legType_);
+    concreteLegData_->fromXML(XMLUtils::getChildNode(node, legDataName_));
+}
+
+bool LegData::initialiseConcreteLegData() {
+    if (legType_ == "Fixed") {
+        legDataName_ = "FixedLegData";
+        concreteLegData_ = boost::make_shared<FixedLegData>();
+        return true;
+    } else if (legType_ == "Floating") {
+        legDataName_ = "FloatingLegData";
+        concreteLegData_ = boost::make_shared<FloatingLegData>();
+        return true;
+    } else if (legType_ == "Cashflow") {
+        legDataName_ = "CashflowData";
+        concreteLegData_ = boost::make_shared<CashflowData>();
+        return true;
+    } else if (legType_ == "CPI") {
+        legDataName_ = "CPILegData";
+        concreteLegData_ = boost::make_shared<CPILegData>();
+        return true;
+    } else if (legType_ == "YY") {
+        legDataName_ = "YYLegData";
+        concreteLegData_ = boost::make_shared<YoYLegData>();
+        return true;
+    } else if (legType_ == "CMS") {
+        legDataName_ = "CMSLegData";
+        concreteLegData_ = boost::make_shared<CMSLegData>();
+        return true;
+    }
+    return false;
 }
 
 XMLNode* LegData::toXML(XMLDocument& doc) {
@@ -274,29 +299,20 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
         XMLUtils::appendNode(node, resetNode);
     }
-    
+
     XMLNode* exchangeNode = doc.allocNode("Exchanges");
     XMLUtils::addChild(doc, exchangeNode, "NotionalInitialExchange", notionalInitialExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalFinalExchange", notionalFinalExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalAmortizingExchange", notionalAmortizingExchange_);
     XMLUtils::appendNode(node, exchangeNode);
-    
+
     XMLUtils::appendNode(node, schedule_.toXML(doc));
-    // to do: Add toXML for reset
-    if (legType_ == "Fixed") {
-        XMLUtils::appendNode(node, fixedLegData_.toXML(doc));
-    } else if (legType_ == "Floating") {
-        XMLUtils::appendNode(node, floatingLegData_.toXML(doc));
-    } else if (legType_ == "Cashflow") {
-        XMLUtils::appendNode(node, cashflowData_.toXML(doc));
-    } else {
-        QL_FAIL("Unkown legType :" << legType_);
-    }
 
     if (amortizationData_.initialized()) {
         XMLUtils::appendNode(node, amortizationData_.toXML(doc));
     }
 
+    XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
     return node;
 }
 
