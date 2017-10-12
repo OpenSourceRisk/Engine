@@ -190,6 +190,25 @@ private:
     unsigned minLevel_;
 };
 
+//! BoostTest Logger
+/*!
+  This logger writes each log message out to the BOOST_TEST_MESSAGE
+  \ingroup utilities
+  \see Log
+ */
+
+class BoostTestLogger : public Logger {
+public:
+    //! the name "BoostTestLogger"
+    static const string name;
+    //! Constructor
+    BoostTestLogger() : Logger(name) {}
+    //! Desctructor
+    virtual ~BoostTestLogger() {}
+    //! The log callback
+    virtual void log(unsigned, const string&);
+};
+
 //! Global static Log class
 /*!
   The Global Log class gets registered with individual loggers and recieves application log messages.
