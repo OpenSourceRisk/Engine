@@ -541,7 +541,6 @@ std::vector<string> parseListOfValues(string s) {
 AmortizationType parseAmortizationType(const std::string& s) {
     static map<string, AmortizationType> type = {
         {"None", AmortizationType::None},
-        {"", AmortizationType::None},
         {"FixedAmount", AmortizationType::FixedAmount},
         {"RelativeToInitialNotional", AmortizationType::RelativeToInitialNotional},
         {"RelativeToPreviousNotional", AmortizationType::RelativeToPreviousNotional},
