@@ -192,7 +192,8 @@ private:
 
 //! BoostTest Logger
 /*!
-  This logger writes each log message out to the BOOST_TEST_MESSAGE
+  This logger writes each log message out to the BOOST_TEST_MESSAGE.
+  To view log messages run ore unit tests with the flag "--log_level=test_suite"
   \ingroup utilities
   \see Log
  */
@@ -203,8 +204,6 @@ public:
     static const string name;
     //! Constructor
     BoostTestLogger() : Logger(name) {}
-    //! Desctructor
-    virtual ~BoostTestLogger() {}
     //! The log callback
     virtual void log(unsigned, const string&);
 };
