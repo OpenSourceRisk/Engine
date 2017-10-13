@@ -30,9 +30,8 @@ namespace data {
 
 void CreditDefaultSwapData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CreditDefaultSwapData");
-    issuerId_ = XMLUtils::getChildValue(node, "IssuerId", true);
+    issuerId_ = XMLUtils::getChildValue(node, "IssuerId");
     creditCurveId_ = XMLUtils::getChildValue(node, "CreditCurveId", true);
-    qualifier_ = XMLUtils::getChildValue(node, "Qualifier", true);
     settlesAccrual_ = XMLUtils::getChildValueAsBool(node, "SettlesAccrual", false);       // default = Y
     paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
     XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
@@ -57,7 +56,6 @@ XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, node);
     XMLUtils::addChild(doc, node, "IssuerId", issuerId_);
     XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId_);
-    XMLUtils::addChild(doc, node, "Qualifier", qualifier_);
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);
     XMLUtils::addChild(doc, node, "PaysAtDefaultTime", paysAtDefaultTime_);
     if (protectionStart_ != Date()) {

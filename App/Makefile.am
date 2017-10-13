@@ -15,7 +15,7 @@ AM_LDFLAGS = \
 	-L${top_builddir}/../OREData/ored -lOREData \
 	-L${top_builddir}/../QuantExt/qle -lQuantExt \
 	-L${top_builddir}/../QuantLib/ql -lQuantLib \
-	-lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -lboost_system
+	-lboost_serialization -lboost_date_time -lboost_regex -lboost_filesystem -lboost_system -lboost_unit_test_framework
 
 LDADD =
 
