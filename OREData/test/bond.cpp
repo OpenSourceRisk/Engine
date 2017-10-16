@@ -128,7 +128,7 @@ struct CommonVars {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals);
 
         Envelope env("CP1");
@@ -142,7 +142,7 @@ struct CommonVars {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, 
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
                              "", 0, {amortizationData});
 
@@ -158,7 +158,7 @@ struct CommonVars {
 
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
         LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
-                                "Floating", floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false,
+                                floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false,
                                 false, true, "", 0, "", 0, {amortizationData});
 
         Envelope env("CP1");
@@ -176,7 +176,7 @@ struct CommonVars {
 
         AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
-        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, "Fixed",
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
                              "", 0, {amortizationData1, amortizationData2});
 
@@ -196,7 +196,7 @@ struct CommonVars {
         AmortizationData amortizationData1(amortType1, value1, start, end1, fixtenor, underflow1);
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
         LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
-                                "Floating", floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false,
+                                floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false,
                                 false, true, "", 0, "", 0, {amortizationData1, amortizationData2});
 
         Envelope env("CP1");
@@ -467,8 +467,8 @@ void BondTest::testMultiPhaseBond() {
     ScheduleData schedule1(ScheduleRules("05-02-2016", "05-02-2018", "1Y", "TARGET", "F", "F", "Forward"));
     ScheduleData schedule2(ScheduleRules("05-02-2018", "05-02-2020", "6M", "TARGET", "F", "F", "Forward"));
     auto fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, 0.01));
-    LegData legdata1(fixedLegRateData, vars.isPayer, vars.ccy, "Fixed", schedule1, vars.fixDC, vars.notionals);
-    LegData legdata2(fixedLegRateData, vars.isPayer, vars.ccy, "Fixed", schedule2, vars.fixDC, vars.notionals);
+    LegData legdata1(fixedLegRateData, vars.isPayer, vars.ccy, schedule1, vars.fixDC, vars.notionals);
+    LegData legdata2(fixedLegRateData, vars.isPayer, vars.ccy, schedule2, vars.fixDC, vars.notionals);
     Envelope env("CP1");
     boost::shared_ptr<ore::data::Bond> bond(new ore::data::Bond(env, vars.issuerId, vars.creditCurveId, vars.securityId,
                                                                 vars.referenceCurveId, vars.settledays, vars.calStr,

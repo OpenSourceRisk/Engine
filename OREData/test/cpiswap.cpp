@@ -253,7 +253,7 @@ void CPISwapTest::testCPISwapPrice() {
     string indexLibor = "GBP-LIBOR-6M";
     vector<Real> spread(1, 0);
     LegData legLibor(boost::make_shared<FloatingLegData>(indexLibor, 0, isInArrears, spread), isPayerLibor, "GBP",
-                     "Floating", scheduleLibor, "A365F", notional, vector<string>(), paymentConvention);
+                     scheduleLibor, "A365F", notional, vector<string>(), paymentConvention);
 
     // GBP CPI Leg
     bool isPayerCPI = false;
@@ -263,7 +263,7 @@ void CPISwapTest::testCPISwapPrice() {
     std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
     LegData legCPI(boost::make_shared<CPILegData>(indexCPI, baseCPI, CPIlag, interpolated, fixedRate), isPayerCPI,
-                   "GBP", "CPI", scheduleCPI, dc, notional, vector<string>(), paymentConvention);
+                   "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention);
 
     // Build swap trades
     boost::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));

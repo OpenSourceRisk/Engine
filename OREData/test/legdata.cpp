@@ -68,7 +68,7 @@ void LegDataTest::testLegDataCashflows() {
     vector<double> amounts = {1000000, 2000000, 3000000};
     vector<string> dates = {"2015-01-01", "2016-01-01", "2017-01-01"};
 
-    LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, "EUR", "Cashflow");
+    LegData legData(boost::make_shared<CashflowData>(amounts, dates), true, "EUR");
     Leg leg = makeSimpleLeg(legData);
 
     // Expect 100000, 200000, 300000

@@ -59,9 +59,9 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, "Fixed", fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, fixedLeg));
@@ -97,9 +97,9 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, "Fixed", fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // leg vector
     vector<LegData> legs;
@@ -147,9 +147,9 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, fixedFreq, cal, conv, conv, rule));
     // fixed leg
-    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, "Fixed", fixedSchedule, fixedDC, notionals);
+    LegData fixedLeg(boost::make_shared<FixedLegData>(rates), isPayer, ccy, fixedSchedule, fixedDC, notionals);
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // leg vector
     vector<LegData> legs;
@@ -261,7 +261,7 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     // float leg
     FloatingLegData floatingLegData;
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), false, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), false, ccy,
                         floatSchedule, floatDC, notionals);
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::CapFloor(env, longShort, floatingLeg, capRates, floorRates));
@@ -319,11 +319,11 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     ScheduleData cpiSchedule(ScheduleRules(startDate, endDate, cpiFreq, cal, conv, conv, rule));
     // float leg
     FloatingLegData floatingLegData;
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // fixed leg
     LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, baseRate, observationLag, interpolated, cpiRates), isPayer,
-                   ccy, "CPI", cpiSchedule, cpiDC, notionals);
+                   ccy, cpiSchedule, cpiDC, notionals);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));
@@ -357,10 +357,10 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData yySchedule(ScheduleRules(startDate, endDate, yyFreq, cal, conv, conv, rule));
     // float leg
-    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, "Floating",
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // fixed leg
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, interpolated, fixDays), isPayer, ccy, "YY",
+    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, interpolated, fixDays), isPayer, ccy,
                   yySchedule, yyDC, notionals);
 
     // trade
