@@ -682,6 +682,10 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real lag = inflationYearFraction(freq, infdk(i)->termStructure()->indexIsInterpolated(),
                                      irlgm1f(0)->termStructure()->dayCounter(), baseDate,
                                      infdk(i)->termStructure()->referenceDate());
+    
+//    Period lag = infdk(i)->termStructure()->observationLag();
+
+
     // TODO account for seasonality ...
     // compute final results depending on z and y
     Real It = std::pow(1.0 + infdk(i)->termStructure()->zeroRate(t - lag), t) * std::exp(Hyt * z - y - V0);

@@ -556,6 +556,7 @@
     <ClInclude Include="qle\models\crossassetmodel.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp" />
+    <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
@@ -682,6 +683,7 @@
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp" />
+    <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
