@@ -17,14 +17,13 @@
 */
 
 #include "staticallycorrectedyieldtermstructure.hpp"
+#include "utilities.hpp"
 
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -120,7 +119,7 @@ void StaticallyCorrectedYieldTermStructureTest::testCorrectedYts() {
 
 test_suite* StaticallyCorrectedYieldTermStructureTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("StaticallyCorrectedYieldTermStructure tests");
-    suite->add(QUANTLIB_TEST_CASE(&StaticallyCorrectedYieldTermStructureTest::testCorrectedYts));
+    suite->add(BOOST_TEST_CASE(&StaticallyCorrectedYieldTermStructureTest::testCorrectedYts));
     return suite;
 }
 } // namespace testsuite
