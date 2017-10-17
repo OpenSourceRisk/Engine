@@ -677,6 +677,7 @@
     <ClInclude Include="swaptionmarketdata.hpp" />
     <ClInclude Include="swaptionvolatilityconverter.hpp" />
     <ClInclude Include="swaptionvolconstantspread.hpp" />
+    <ClInclude Include="utilities.hpp" />
     <ClInclude Include="yieldcurvemarketdata.hpp" />
   </ItemGroup>
   <ItemGroup>
