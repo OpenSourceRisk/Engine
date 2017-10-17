@@ -247,13 +247,6 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
 }
 
 test_suite* ScenarioSimMarketTest::suite() {
-    // boost::shared_ptr<ore::data::FileLogger> logger =
-    // boost::make_shared<ore::data::FileLogger>("simmarket_test.log");
-    // ore::data::Log::instance().removeAllLoggers();
-    // ore::data::Log::instance().registerLogger(logger);
-    // ore::data::Log::instance().switchOn();
-    // ore::data::Log::instance().setMask(255);
-
     test_suite* suite = BOOST_TEST_SUITE("ScenarioSimMarketTests");
     suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
     return suite;

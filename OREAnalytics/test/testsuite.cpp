@@ -27,6 +27,7 @@ using namespace std;
 
 // Boost
 #include <boost/timer.hpp>
+#include <boost/make_shared.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -34,6 +35,8 @@ using namespace boost;
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
+
+#include <ored/utilities/log.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -85,6 +88,13 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
+    
+    boost::shared_ptr<ore::data::BoostTestLogger> logger =
+    boost::make_shared<ore::data::BoostTestLogger>();
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
 
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
