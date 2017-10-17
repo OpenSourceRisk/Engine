@@ -55,11 +55,19 @@ if test [ -n "$ql_boost_include_path" ] ; then
    AC_SUBST([BOOST_INCLUDE],["-I${ql_boost_include_path}"])
    AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_boost_include_path}"])
 fi
+
+# Set ql_boost_lib_path if --with-boost-lib is provided
 AC_ARG_WITH([boost-lib],
             AC_HELP_STRING([--with-boost-lib=LIB_PATH],
                            [Supply the location of Boost libraries]),
             [ql_boost_lib_path="`cd ${withval} 2>/dev/null && pwd`"],
-            [ql_boost_lib_path="${BOOST}/stage/lib"])
+            [])
+
+# If --with-boost-lib is not provided, check env $BOOST
+if test [ -z "$ql_boost_lib_path" ] && [ -n "$BOOST" ] ; then
+  ql_boost_lib_path="${BOOST}/stage/lib"
+fi
+
 if test [ -n "$ql_boost_lib_path" ] ; then
    AC_SUBST([BOOST_LIB],["-L${ql_boost_lib_path}"])
    AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_boost_lib_path}"])
@@ -67,8 +75,10 @@ fi
 
 # QuantLib
 ql_path="`cd ../QuantLib 2>/dev/null && pwd`"
-AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_path}"])
-AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_path}/ql/.libs"])
+if test [ -n "$ql_path" ] ; then
+  AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_path}"])
+  AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_path}/ql/.libs"])
+fi
 
 # Continue setup
 
