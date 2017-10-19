@@ -85,6 +85,11 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
         LOG("Build the cube object to store sensitivities");
         initializeCube(cube);
     }
+
+    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenDesc = boost::make_shared<vector<ShiftScenarioGenerator::ScenarioDescription>>
+        (scenarioGenerator_->scenarioDescriptions());
+
+    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenDesc);
     initialized_ = true;
 }
 
@@ -102,9 +107,9 @@ void SensitivityAnalysis::generateSensitivities() {
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
-    engine.buildCube(portfolio_, cube, calculators);
+    engine.buildCube(portfolio_, sensiCube_->npvCube(), calculators);
 
-    collectResultsFromCube(cube);
+    collectResultsFromCube();
     computed_ = true;
     LOG("Sensitivity analysis completed");
 }
@@ -147,7 +152,7 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const
                                                            scenarioGenerator_->samples());
 }
 
-void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube) {
+void SensitivityAnalysis::collectResultsFromCube() {
 
     /***********************************************
      * Collect results
@@ -156,72 +161,41 @@ void SensitivityAnalysis::collectResultsFromCube(const boost::shared_ptr<NPVCube
      * - NPVs after single factor down shifts
      * - deltas, gammas and cross gammas
      */
-    baseNPV_.clear();
-    vector<ShiftScenarioGenerator::ScenarioDescription> desc = scenarioGenerator_->scenarioDescriptions();
-    QL_REQUIRE(desc.size() == scenarioGenerator_->samples(),
-               "descriptions size " << desc.size() << " does not match samples " << scenarioGenerator_->samples());
     for (Size i = 0; i < portfolio_->size(); ++i) {
 
-        Real npv0 = cube->getT0(i, 0);
+        Real npv0 = sensiCube_->baseNPV(i);
         string id = portfolio_->trades()[i]->id();
         trades_.insert(id);
-        baseNPV_[id] = npv0;
 
-        // single shift scenarios: up, down, delta
         for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            // LOG("scenario description " << j << ": " << desc[j].text());
-            if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up ||
-                desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-                Real npv = cube->get(i, 0, j, 0);
-                string factor = desc[j].factor1();
+            ShiftScenarioGenerator::ScenarioDescription desc = (*sensiCube_->scenDesc())[j];
+            ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
+            Real npv = sensiCube_->getNPV(i, j);
+            if ( type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+                // delta
+                string factor = desc.factor1();
                 pair<string, string> p(id, factor);
-                if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-                    LOG("up npv stored for id " << id << ", factor " << factor << ", npv " << npv);
-                    upNPV_[p] = npv;
-                    delta_[p] = npv - npv0;
-                } else if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-                    downNPV_[p] = npv;
-                } else
-                    continue;
-                storeFactorShifts(desc[j]);
-            }
-        }
-
-        // double shift scenarios: cross gamma
-        for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            // select cross scenarios here
-            if (desc[j].type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                Real npv = cube->get(i, 0, j, 0);
-                string f1 = desc[j].factor1();
-                string f2 = desc[j].factor2();
-                std::pair<string, string> p1(id, f1);
-                std::pair<string, string> p2(id, f2);
+                delta_[p] = npv - npv0;
+                storeFactorShifts(desc);
+            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
+                // gamma
+                string factor = desc.factor1();
+                pair<string, string> p(id, factor);
+                Real u = sensiCube_->upNPV(i, factor);
+                Real d = sensiCube_->downNPV(i, factor);
+                gamma_[p] = u - 2.0 * npv0 + d; // = f_xx(x) * u^2
+                storeFactorShifts(desc);
+            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                // cross gamma
+                string f1 = desc.factor1();
+                string f2 = desc.factor2();
                 // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-                Real base = baseNPV_[id];
-                Real up1 = upNPV_[p1];
-                Real up2 = upNPV_[p2];
+                Real up1 = sensiCube_->upNPV(i, f1);
+                Real up2 = sensiCube_->upNPV(i, f2);
                 std::tuple<string, string, string> triple(id, f1, f2);
-                crossNPV_[triple] = npv;
-                crossGamma_[triple] = npv - up1 - up2 + base; // f_xy(x,y) * u * v
+                crossGamma_[triple] = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
             }
         }
-    }
-
-    // gamma
-    for (auto data : upNPV_) {
-        pair<string, string> p = data.first;
-        Real u = data.second;
-        string id = p.first;
-        string factor = p.second;
-        QL_REQUIRE(baseNPV_.find(id) != baseNPV_.end(), "base NPV not found for trade " << id);
-        Real b = baseNPV_[id];
-        QL_REQUIRE(downNPV_.find(p) != downNPV_.end(),
-                   "down shift result not found for trade " << id << ", factor " << factor);
-        Real d = downNPV_[p];
-        // f_x(x) = (f(x+u) - f(x)) / u
-        delta_[p] = u - b;           // = f_x(x) * u
-                                     // f_xx(x) = (f(x+u) - 2*f(x) + f(x-u)) / u^2
-        gamma_[p] = u - 2.0 * b + d; // = f_xx(x) * u^2
     }
 }
 
@@ -236,58 +210,31 @@ void SensitivityAnalysis::writeScenarioReport(const boost::shared_ptr<Report>& r
     report->addColumn("Scenario NPV", double(), 2);
     report->addColumn("Difference", double(), 2);
 
-    for (auto data : upNPV_) {
-        string id = data.first.first;
-        string factor = data.first.second;
-        Real npv = data.second;
-        Real base = baseNPV_[id];
-        Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold) {
-            report->next();
-            report->add(id);
-            report->add(factor);
-            report->add("Up");
-            report->add(base);
-            report->add(npv);
-            report->add(sensi);
-        }
-    }
+    for (Size i = 0; i < portfolio_->size(); ++i) {
+        string id = portfolio_->trades()[i]->id();
+        Real base = sensiCube_->baseNPV(i);
+        for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
+            ShiftScenarioGenerator::ScenarioDescription desc = (*sensiCube_->scenDesc())[j];
+            string type = desc.typeString();
+            
+            ostringstream o;
+            o << desc.factor1();
+            if (desc.factor2() != "")
+                o << ":" << desc.factor2();
+            string factor = o.str();
 
-    for (auto data : downNPV_) {
-        string id = data.first.first;
-        string factor = data.first.second;
-        Real npv = data.second;
-        Real base = baseNPV_[id];
-        Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold) {
-            report->next();
-            report->add(id);
-            report->add(factor);
-            report->add("Down");
-            report->add(base);
-            report->add(npv);
-            report->add(sensi);
-        }
-    }
-
-    for (auto data : crossNPV_) {
-        string id = std::get<0>(data.first);
-        string factor1 = std::get<1>(data.first);
-        string factor2 = std::get<2>(data.first);
-        ostringstream o;
-        o << factor1 << ":" << factor2;
-        string factor = o.str();
-        Real npv = data.second;
-        Real base = baseNPV_[id];
-        Real sensi = npv - base;
-        if (fabs(sensi) > outputThreshold) {
-            report->next();
-            report->add(id);
-            report->add(factor);
-            report->add("Cross");
-            report->add(base);
-            report->add(npv);
-            report->add(sensi);
+            Real npv = sensiCube_->getNPV(i, j);
+            Real sensi = npv-base;
+            
+            if (fabs(sensi) > outputThreshold) {
+                report->next();
+                report->add(id);
+                report->add(factor);
+                report->add(type);
+                report->add(base);
+                report->add(npv);
+                report->add(sensi);
+            }
         }
     }
 
@@ -312,7 +259,7 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
         Real shiftSize = factors_[factor];
         Real delta = data.second;
         Real gamma = gamma_[p];
-        Real base = baseNPV_[id];
+        Real base = baseNPV(id);
         if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
             report->next();
             report->add(id);
@@ -345,7 +292,7 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
         string factor2 = std::get<2>(data.first);
         Real shiftSize2 = factors_[factor2];
         Real crossGamma = data.second;
-        Real base = baseNPV_[id];
+        Real base = baseNPV(id);
         if (fabs(crossGamma) > outputThreshold) {
             report->next();
             report->add(id);
@@ -563,9 +510,10 @@ const std::map<std::string, QuantLib::Real>& SensitivityAnalysis::factors() cons
     return factors_;
 }
 
-const std::map<std::string, Real>& SensitivityAnalysis::baseNPV() const {
+Real SensitivityAnalysis::baseNPV(std::string& id) const {
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    return baseNPV_;
+    Size index = std::distance(trades_.begin(), trades_.find(id));
+    return sensiCube_->baseNPV(index);
 }
 
 const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::delta() const {

@@ -28,6 +28,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <orea/engine/sensitivitycube.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
@@ -81,7 +82,7 @@ public:
     const std::map<std::string, QuantLib::Real>& factors() const;
 
     //! Return base NPV by trade, before shift
-    const std::map<std::string, Real>& baseNPV() const;
+    Real baseNPV(std::string& id) const;
 
     //! Return delta/vega (first order sensitivity times shift) by trade/factor pair
     const std::map<std::pair<std::string, std::string>, Real>& delta() const;
@@ -144,7 +145,7 @@ protected:
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
     //! collect the sensitivity results from the cube and populate appropriate containers
-    void collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube);
+    void collectResultsFromCube();
 
     //! archive the actual shift size for each risk factor (so as to interpret results)
     void storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc);
@@ -161,12 +162,10 @@ protected:
     Conventions conventions_;
     bool recalibrateModels_, overrideTenors_;
 
-    // base NPV by trade
-    std::map<std::string, Real> baseNPV_;
     // NPV respectively sensitivity by trade and factor
-    std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_;
+    std::map<std::pair<string, string>, Real> delta_, gamma_;
     // cross gamma by trade, factor1, factor2
-    std::map<std::tuple<string, string, string>, Real> crossNPV_, crossGamma_;
+    std::map<std::tuple<string, string, string>, Real> crossGamma_;
     // unique set of factors
     std::map<std::string, QuantLib::Real> factors_;
     // unique set of trades
@@ -181,6 +180,8 @@ protected:
     bool initialized_, computed_;
     //! model builders
     std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
+    //! sensitivityCube
+    boost::shared_ptr<SensitivityCube> sensiCube_;
 };
 } // namespace analytics
 } // namespace ore

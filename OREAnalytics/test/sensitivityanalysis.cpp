@@ -1057,7 +1057,6 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
-    map<std::string, Real> baseNpvMap = sa->baseNPV();
     std::set<string> sensiTrades = sa->trades();
 
     struct SensiResults {
@@ -1085,7 +1084,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = baseNpvMap[sensiTrnId];
+            res.baseNpv = sa->baseNPV(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
@@ -1266,7 +1265,6 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
     map<pair<string, string>, Real> deltaMap = sa->delta();
     map<pair<string, string>, Real> gammaMap = sa->gamma();
-    map<std::string, Real> baseNpvMap = sa->baseNPV();
     std::set<string> sensiTrades = sa->trades();
 
     struct SensiResults {
@@ -1311,7 +1309,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = baseNpvMap[sensiTrnId];
+            res.baseNpv = sa->baseNPV(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
