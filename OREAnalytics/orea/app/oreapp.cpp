@@ -73,7 +73,6 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-	string groupName = "setup";
         boost::shared_ptr<EngineFactory> factory = buildEngineFactory(market_);
         out_ << "OK" << endl;
 
