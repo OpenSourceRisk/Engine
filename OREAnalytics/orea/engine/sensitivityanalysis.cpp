@@ -89,7 +89,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenDesc = boost::make_shared<vector<ShiftScenarioGenerator::ScenarioDescription>>
         (scenarioGenerator_->scenarioDescriptions());
 
-    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenDesc);
+    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenDesc, portfolio_);
     initialized_ = true;
 }
 
@@ -512,8 +512,7 @@ const std::map<std::string, QuantLib::Real>& SensitivityAnalysis::factors() cons
 
 Real SensitivityAnalysis::baseNPV(std::string& id) const {
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    Size index = std::distance(trades_.begin(), trades_.find(id));
-    return sensiCube_->baseNPV(index);
+    return sensiCube_->baseNPV(id);
 }
 
 const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::delta() const {
