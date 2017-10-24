@@ -40,10 +40,10 @@ namespace ore {
 namespace data {
 
 // Really bad name....
-class LegInnerData : public XMLSerializable {
+class LegAdditionalData : public XMLSerializable {
 public:
-    LegInnerData(const string& legType, const string& legNodeName) : legType_(legType), legNodeName_(legNodeName) {}
-    LegInnerData(const string& legType) : legType_(legType), legNodeName_(legType + "LegData") {}
+    LegAdditionalData(const string& legType, const string& legNodeName) : legType_(legType), legNodeName_(legNodeName) {}
+    LegAdditionalData(const string& legType) : legType_(legType), legNodeName_(legType + "LegData") {}
 
     const string& legType() const { return legType_; }
     const string& legNodeName() const { return legNodeName_; }
@@ -59,12 +59,12 @@ private:
   \ingroup tradedata
 */
 
-class CashflowData : public LegInnerData {
+class CashflowData : public LegAdditionalData {
 public:
     //! Default constructor
-    CashflowData() : LegInnerData("Cashflow", "CashflowData") {}
+    CashflowData() : LegAdditionalData("Cashflow", "CashflowData") {}
     //! Constructor
-    CashflowData(const vector<double>& amounts, const vector<string>& dates) : LegInnerData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
+    CashflowData(const vector<double>& amounts, const vector<string>& dates) : LegAdditionalData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
 
     //! \name Inspectors
     //@{
@@ -86,13 +86,13 @@ private:
 /*!
   \ingroup tradedata
 */
-class FixedLegData : public LegInnerData {
+class FixedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FixedLegData() : LegInnerData("Fixed") {}
+    FixedLegData() : LegAdditionalData("Fixed") {}
     //! Constructor
     FixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>())
-        : LegInnerData("Fixed"), rates_(rates), rateDates_(rateDates) {}
+        : LegAdditionalData("Fixed"), rates_(rates), rateDates_(rateDates) {}
 
     //! \name Inspectors
     //@{
@@ -114,10 +114,10 @@ private:
 /*!
   \ingroup tradedata
 */
-class FloatingLegData : public LegInnerData {
+class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FloatingLegData() : LegInnerData("Floating"), fixingDays_(0), isInArrears_(true) {}
+    FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(0), isInArrears_(true) {}
     //! Constructor
     FloatingLegData(const string& index, int fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
@@ -125,7 +125,7 @@ public:
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false)
-        : LegInnerData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
+        : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates) {}
 
@@ -165,12 +165,12 @@ private:
     vector<string> gearingDates_;
 };
 
-class CPILegData : public LegInnerData {
+class CPILegData : public LegAdditionalData {
 public:
-    CPILegData() : LegInnerData("CPI") {}
+    CPILegData() : LegAdditionalData("CPI") {}
     CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates,
                const vector<string>& rateDates = std::vector<string>())
-        : LegInnerData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), rates_(rates),
+        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), rates_(rates),
           rateDates_(rateDates) {}
 
     const string index() const { return index_; }
@@ -192,15 +192,15 @@ private:
     vector<string> rateDates_;
 };
 
-class YoYLegData : public LegInnerData {
+class YoYLegData : public LegAdditionalData {
 public:
-    YoYLegData() : LegInnerData("YY") {}
+    YoYLegData() : LegAdditionalData("YY") {}
     YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays,
                const vector<double>& gearings = std::vector<double>(),
                const vector<string>& gearingDates = std::vector<string>(),
                const vector<double>& spreads = std::vector<double>(),
                const vector<string>& spreadDates = std::vector<string>())
-        : LegInnerData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated), fixingDays_(fixingDays),
+        : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated), fixingDays_(fixingDays),
           gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
 
     const string index() const { return index_; }
@@ -226,17 +226,17 @@ private:
     vector<string> spreadDates_;
 };
 
-class CMSLegData : public LegInnerData {
+class CMSLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMSLegData() : LegInnerData("CMS"), fixingDays_(0), isInArrears_(true) {}
+    CMSLegData() : LegAdditionalData("CMS"), fixingDays_(0), isInArrears_(true) {}
     //! Constructor
     CMSLegData(const string& swapIndex, int fixingDays, bool isInArrears, const vector<double>& spreads,
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
                const vector<string>& gearingDates = vector<string>())
-        : LegInnerData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
+        : LegAdditionalData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates) {}
 
@@ -319,7 +319,7 @@ public:
           notionalAmortizingExchange_(false), isNotResetXCCY_(true), foreignAmount_(0.0), fixingDays_(0) {}
 
     //! Constructor with concrete leg data
-    LegData(const boost::shared_ptr<LegInnerData>& innerLegData, bool isPayer, const string& currency,
+    LegData(const boost::shared_ptr<LegAdditionalData>& innerLegData, bool isPayer, const string& currency,
             const ScheduleData& scheduleData = ScheduleData(), const string& dayCounter = "",
             const std::vector<double>& notionals = std::vector<double>(),
             const std::vector<string>& notionalDates = std::vector<string>(), const string& paymentConvention = "F",
@@ -355,14 +355,14 @@ public:
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //
     const string& legType() const { return concreteLegData_->legType(); }
-    boost::shared_ptr<LegInnerData> concreteLegData() const { return concreteLegData_; }
+    boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
     //@}
 
 protected:
-    virtual boost::shared_ptr<LegInnerData> initialiseConcreteLegData(const string&);
+    virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
 
 private:
-    boost::shared_ptr<LegInnerData> concreteLegData_;
+    boost::shared_ptr<LegAdditionalData> concreteLegData_;
     bool isPayer_;
     string currency_;
     string legType_;

@@ -190,7 +190,7 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     return node;
 }
 
-LegData::LegData(const boost::shared_ptr<LegInnerData>& concreteLegData, bool isPayer, const string& currency,
+LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
                  const ScheduleData& scheduleData, const string& dayCounter,
                  const std::vector<double>& notionals, const std::vector<string>& notionalDates,
                  const string& paymentConvention, const bool notionalInitialExchange, const bool notionalFinalExchange,
@@ -255,7 +255,7 @@ void LegData::fromXML(XMLNode* node) {
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
 }
 
-boost::shared_ptr<LegInnerData> LegData::initialiseConcreteLegData(const string& legType) {
+boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
     if (legType == "Fixed") {
         return boost::make_shared<FixedLegData>();
     } else if (legType == "Floating") {
