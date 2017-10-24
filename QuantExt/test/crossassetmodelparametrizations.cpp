@@ -17,6 +17,7 @@
 */
 
 #include "crossassetmodelparametrizations.hpp"
+#include "utilities.hpp"
 
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
@@ -26,8 +27,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/models/all.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -492,9 +491,9 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
 
 test_suite* CrossAssetModelParametrizationsTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }
 } // namespace testsuite
