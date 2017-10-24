@@ -145,13 +145,13 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         bool isPayer = randBoolean(rng);
 
         // fixed Leg - with dummy rate
-        FixedLegData fixedLegData(vector<double>(1, fixedRate));
-        LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixDC, notional);
+        LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+                         fixedSchedule, fixDC, notional);
 
         // float Leg
         vector<double> spreads(1, 0);
-        FloatingLegData floatingLegData(index, days, false, spread);
-        LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
+        LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
+                            floatSchedule, floatDC, notional);
 
         boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
 
