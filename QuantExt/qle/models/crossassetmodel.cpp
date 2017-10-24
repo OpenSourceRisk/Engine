@@ -622,6 +622,26 @@ void CrossAssetModel::calibrateInfDkReversionsIterative(
     update();
 }
 
+void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method, 
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
+    }
+    update();
+}
+
+void CrossAssetModel::calibrateInfDkReversionsGlobal(
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
+    }
+    update();
+}
+
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
     const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {

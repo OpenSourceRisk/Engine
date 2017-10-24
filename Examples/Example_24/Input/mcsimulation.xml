@@ -25,8 +25,8 @@
       <Currency>GBP</Currency>
     </Currencies>
     <InflationIndices>
+      <InflationIndex>EUHICPXT</InflationIndex>
       <InflationIndex>UKRPI</InflationIndex>
-	  <InflationIndex>EUHICP</InflationIndex>
     </InflationIndices>
     <BootstrapTolerance>0.0001</BootstrapTolerance>
     <InterestRateModels>
@@ -141,6 +141,7 @@
           <InitialValue>0.03</InitialValue>
         </Reversion>
         <CalibrationCapFloors>
+		  <CapFloor>Floor</CapFloor>
           <Expiries> 1Y, 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
           <Strikes>0.015, 0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
         </CalibrationCapFloors>
@@ -161,13 +162,14 @@
           <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
-          <Calibrate>N</Calibrate>
-          <ReversionType>HullWhite</ReversionType>
+          <Calibrate>Y</Calibrate>
+          <ReversionType>Hagan</ReversionType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>1, 1, 1, 1, 1, 1, 1, 1</InitialValue>
         </Reversion>
         <CalibrationCapFloors>
+		  <CapFloor>Floor</CapFloor>
           <Expiries> 1Y, 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
           <Strikes>0.015, 0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
         </CalibrationCapFloors>
@@ -181,9 +183,9 @@
       <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>
       <Correlation factor1="IR:EUR" factor2="FX:GBPEUR">0</Correlation>
       <Correlation factor1="IR:GBP" factor2="FX:GBPEUR">0</Correlation>
-      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICP">0</Correlation>
+      <Correlation factor1="INF:UKRPI" factor2="INF:EUHICPXT">0</Correlation>
 	  <Correlation factor1="INF:UKRPI" factor2="IR:GBP">0</Correlation>
-	  <Correlation factor1="INF:EUHICP" factor2="IR:EUR">0</Correlation>
+	  <Correlation factor1="INF:EUHICPXT" factor2="IR:EUR">0</Correlation>
       <!-- ... -->
     </InstantaneousCorrelations>
   </CrossAssetModel>
@@ -266,7 +268,7 @@
     
 	<ZeroInflationIndexCurves>
       <Names>
-      	<Name>EUHICP</Name>
+      	<Name>EUHICPXT</Name>
         <Name>UKRPI</Name>
       </Names>
       <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
@@ -276,7 +278,7 @@
       <Simulate>false</Simulate>
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Names>
-      	<Name>EUHICP</Name>
+      	<Name>EUHICPXT</Name>
         <Name>UKRPI</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
@@ -287,7 +289,7 @@
       <Simulate>false</Simulate>
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Names>
-      	<Name>EUHICP</Name>
+      	<Name>EUHICPXT</Name>
         <Name>UKRPI</Name>
       </Names>
       <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>

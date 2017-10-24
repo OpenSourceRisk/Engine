@@ -338,7 +338,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
 
     for (Size i = 0; i < infParametrizations.size(); i++) {
         boost::shared_ptr<InfDkData> inf = config->infConfigs()[i];
-        if (!inf->calibrateH()) {
+        if ((!inf->calibrateA() && !inf->calibrateH()) || (inf->calibrationType() == CalibrationType::None)) {
             LOG("INF Calibration " << i << " skipped");
             continue;
         }
@@ -350,21 +350,34 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         for (Size j = 0; j < infCapFloorBaskets_[i].size(); j++)
             infCapFloorBaskets_[i][j]->setPricingEngine(engine);
 
-        if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise)
-            model->calibrateInfDkVolatilitiesIterative(i, infCapFloorBaskets_[i],
-                *optimizationMethod_, endCriteria_);
-        else
-            model->calibrateBsVolatilitiesGlobal(CrossAssetModelTypes::INF, i, infCapFloorBaskets_[i], *optimizationMethod_,
-                endCriteria_);
+        if (inf->calibrateA() && !inf->calibrateH()) {
+            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise) {
+                model->calibrateInfDkVolatilitiesIterative(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+            }
+            else {
+                model->calibrateInfDkVolatilitiesGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+            }
+        }
+        else if (!inf->calibrateA() && inf->calibrateH()) {
+            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise) {
+                model->calibrateInfDkReversionsIterative(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+            }
+            else {
+                model->calibrateInfDkReversionsGlobal(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+            }
+        }
+        else {
+            model->calibrate(infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
+        }
 
         LOG("INF " << inf->infIndex() << " calibration errors:");
-        /*infOptionCalibrationErrors_[i] =
-            logCalibrationErrors(infOptionBaskets_[i], infParametrizations[i], irParametrizations[0]);
+        infCapFloorCalibrationErrors_[i] =
+            logCalibrationErrors(infCapFloorBaskets_[i], infParametrizations[i], irParametrizations[0]);
         if (inf->calibrationType() == CalibrationType::Bootstrap) {
-            QL_REQUIRE(fabs(infOptionCalibrationErrors_[i]) < config->bootstrapTolerance(),
-                "calibration error " << infOptionCalibrationErrors_[i] << " exceeds tolerance "
+            QL_REQUIRE(fabs(infCapFloorCalibrationErrors_[i]) < config->bootstrapTolerance(),
+                "calibration error " << infCapFloorCalibrationErrors_[i] << " exceeds tolerance "
                 << config->bootstrapTolerance());
-        }*/
+        }
     }
 
     /*************************

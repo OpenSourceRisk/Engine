@@ -137,12 +137,14 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_inf = simMarketConfig_->zeroInflationIndices().size();
     zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
     for (Size j = 0; j < n_inf; ++j) {
-        ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(simMarketConfig_->zeroInflationIndices()[j]));
+        std::string index = model->infdk(j)->name();
+        ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(index));
         Size n_ten = ten_inf_.back().size();
         for (Size k = 0; k < n_ten; ++k) {
-            zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, simMarketConfig_->zeroInflationIndices()[j], k);
+            zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, index, k);
         }
     }
+
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -300,6 +302,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Date d = dates_[i] + ten_inf_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real zero = zeroInfCurves[j]->zeroRate(T);
+                LOG("Zero for date " << dates_[i] << " tenor " << k << " is " << zero);
                 scenarios[i]->add(zeroInflationKeys_[j * ten_inf_[j].size() + k], zero);
             }
         }

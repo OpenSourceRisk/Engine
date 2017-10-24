@@ -69,6 +69,7 @@ public:
     std::string& infIndex() { return index_; }
     Real baseCPI() { return baseCPI_; }
     std::string currency() { return currency_; }
+    std::string capFloor() { return capfloor_; }
     //@}
 
     //! \name Serialisation
@@ -80,6 +81,7 @@ public:
 private:
     std::string index_;
     std::string currency_;
+    std::string capfloor_;
     Real baseCPI_;
 };
 } // namespace data

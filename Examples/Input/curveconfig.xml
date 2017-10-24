@@ -2091,7 +2091,8 @@
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2110,7 +2111,8 @@
           <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2129,7 +2131,8 @@
           <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
       </InflationCapFloorPriceSurface>

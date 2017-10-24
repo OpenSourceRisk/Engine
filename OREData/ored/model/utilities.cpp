@@ -20,6 +20,7 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/cpicapfloorhelper.hpp>
 
 #include <ql/exercise.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
@@ -163,5 +164,47 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     LOG("rmse = " << rmse);
     return rmse;
 }
+
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+                          const boost::shared_ptr<InfDkParametrization>& parametrization,
+                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+    LOG("# modelValue marketValue (diff) infdkAlpha infdkH");
+    Real rmse = 0;
+    Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
+    for (Size j = 0; j < basket.size(); j++) {
+        Real modelValue = basket[j]->modelValue();
+        Real marketValue = basket[j]->marketValue();
+        Real valueDiff = (modelValue - marketValue);
+        boost::shared_ptr<CpiCapFloorHelper> instr = boost::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
+        if (instr != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
+            // report alpha, H at t_expiry^-
+            t = inflationYearFraction(parametrization->termStructure()->frequency(),
+                parametrization->termStructure()->indexIsInterpolated(),
+                parametrization->termStructure()->dayCounter(),
+                parametrization->termStructure()->baseDate(),
+                instr->instrument()->payDate()) -
+                1.0 / 500.0;
+            modelAlpha = parametrization->alpha(t);
+            modelH = parametrization->H(t);
+        }
+        // TODO handle other calibration helpers, too (capfloor)
+        rmse += valueDiff * valueDiff;
+        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelValue << " " << marketValue << " (" 
+            << std::setw(8) << valueDiff << ")  " << modelAlpha << " " << modelH);
+    }
+    if (parametrization != nullptr) {
+        // report alpha, kappa at t_expiry^+ for last expiry
+        t += 2 * 1.0 / 500.0;
+        modelAlpha = parametrization->alpha(t);
+        modelH = parametrization->H(t);
+    }
+    LOG("t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH);
+    rmse = sqrt(rmse / basket.size());;
+    LOG("rmse = " << rmse);
+    return rmse;
+}
+
+
+
 } // namespace data
 } // namespace ore

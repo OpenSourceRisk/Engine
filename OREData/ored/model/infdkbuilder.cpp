@@ -84,22 +84,20 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
         QL_REQUIRE(h.size() == hTimes.size() + 1, "H grids do not match");
     }
 
-    QL_REQUIRE(!data_->calibrateA(), "DkBuilder, calibrateA not supported.");
-
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
         LOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h);
+            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
     }
     else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
         LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseConstant");
         parametrization_ = boost::make_shared<InfDkPiecewiseConstantParametrization>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h);
+            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
     }
     else {
         parametrization_ = boost::make_shared<InfDkPiecewiseLinearParametrization>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h);
+            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
         LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseLinear");
     }
 
@@ -130,7 +128,7 @@ void InfDkBuilder::buildCapFloorBasket() {
 
     Handle<CPICapFloorTermPriceSurface> infVol = market_->inflationCapFloorPriceSurface(infIndex, configuration_);
     QL_REQUIRE(!infVol.empty(), "Inf vol termstructure not found for " << infIndex);
-        
+
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     optionBasket_.clear();
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
@@ -154,10 +152,20 @@ void InfDkBuilder::buildCapFloorBasket() {
         Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(infIndex, configuration_);
         Calendar fixCalendar = zInfIndex->fixingCalendar();
 
+        Option::Type capfloor;
+        Real marketPrem;
+        if (data_->capFloor() == "Cap") {
+            capfloor = Option::Type::Call;
+            marketPrem = infVol->capPrice(expiry, strikeValue);
+        } else {
+            capfloor = Option::Type::Put;
+            marketPrem = infVol->floorPrice(expiry, strikeValue);
+        }
+
         boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
-            boost::make_shared<QuantExt::CpiCapFloorHelper>(Option::Type::Call, baseCPI, expiryDate, fixCalendar,
-                infVol->businessDayConvention(), fixCalendar, infVol->businessDayConvention(), strikeValue, zInfIndex,
-                infVol->observationLag(), infVol->capPrice(expiry, strikeValue));
+            boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, 
+                infVol->businessDayConvention(), fixCalendar, infVol->businessDayConvention(), strikeValue, 
+                zInfIndex, infVol->observationLag(), marketPrem);
 
         optionBasket_.push_back(helper);
         helper->performCalculations();

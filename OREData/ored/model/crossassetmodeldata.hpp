@@ -114,6 +114,7 @@ public:
     const string& domesticCurrency() const { return domesticCurrency_; }
     const vector<string>& currencies() const { return currencies_; }
     const vector<string>& equities() const { return equities_; }
+    const vector<string>& infIndices() const { return infindices_; }
     const vector<boost::shared_ptr<IrLgmData>>& irConfigs() const { return irConfigs_; }
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
@@ -127,6 +128,7 @@ public:
     string& domesticCurrency() { return domesticCurrency_; }
     vector<string>& currencies() { return currencies_; }
     vector<string>& equities() { return equities_; }
+    vector<string>& infIndices() { return infindices_; }
     vector<boost::shared_ptr<IrLgmData>>& irConfigs() { return irConfigs_; }
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }

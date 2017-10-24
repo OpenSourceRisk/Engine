@@ -30,7 +30,7 @@ void InfDkData::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency");
     LOG("Cross-Asset Inflation Index = " << currency_);
 
-    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "baseCPI");
+    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI");
     LOG("Cross-Asset Inflation Index = " << baseCPI_);
 
     // Calibration CapFloors
@@ -43,6 +43,7 @@ void InfDkData::fromXML(XMLNode* node) {
         LOG("LGM Bermudan Calibration Strategy " << calibrationStrategy());
     }
 
+    capfloor_ = XMLUtils::getChildValue(optionsNode, "CapFloor");
     optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
     if (optionStrikes().size() > 0) {

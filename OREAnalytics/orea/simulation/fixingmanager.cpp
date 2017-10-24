@@ -21,6 +21,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
@@ -57,6 +58,10 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                 boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
                 if (flcf)
                     setIndices.insert(flcf->index());
+
+                boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
+                if (cpc)
+                    setIndices.insert(cpc->index());
 
                 // add more coupon types here ...
             }
