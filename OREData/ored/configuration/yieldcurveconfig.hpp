@@ -84,6 +84,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
+    virtual vector<string> quotes() const  { return quotes_; }
     //@}
 
     //! \name Visitability
@@ -97,8 +98,9 @@ protected:
     //! Default constructor
     YieldCurveSegment() {}
     //! Detailed constructor
-    YieldCurveSegment(const string& typeID, const string& conventionsID);
+    YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes);
     //@}
+    vector<string> quotes_;
 
 private:
     // TODO: why type and typeID?
@@ -132,18 +134,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \name Inspectors
-    //@{
-    const vector<string>& quotes() const { return quotes_; }
-    //@}
-
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
 
-private:
-    vector<string> quotes_;
 };
 
 //! Simple yield curve segment
@@ -174,7 +169,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& projectionCurveID() const { return projectionCurveID_; }
     //@}
 
@@ -184,7 +178,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string projectionCurveID_;
 };
 
@@ -204,8 +197,8 @@ public:
     //! Default constructor
     AverageOISYieldCurveSegment() {}
     //! Detailec constructor
-    AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID,
-                                const vector<pair<string, string>>& quotes, const string& projectionCurveID);
+    AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
+                                const string& projectionCurveID);
     //! Default destructor
     virtual ~AverageOISYieldCurveSegment() {}
     //@}
@@ -218,7 +211,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<pair<string, string>>& quotes() const { return quotes_; }
     const string& projectionCurveID() const { return projectionCurveID_; }
     //@}
 
@@ -228,7 +220,6 @@ public:
     //@}
 
 private:
-    vector<pair<string, string>> quotes_;
     string projectionCurveID_;
 };
 
@@ -261,7 +252,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& shortProjectionCurveID() const { return shortProjectionCurveID_; }
     const string& longProjectionCurveID() const { return longProjectionCurveID_; }
     //@}
@@ -272,7 +262,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string shortProjectionCurveID_;
     string longProjectionCurveID_;
 };
@@ -310,7 +299,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& spotRateID() const { return spotRateID_; }
     const string& foreignDiscountCurveID() const { return foreignDiscountCurveID_; }
     const string& domesticProjectionCurveID() const { return domesticProjectionCurveID_; }
@@ -323,7 +311,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string spotRateID_;
     string foreignDiscountCurveID_;
     string domesticProjectionCurveID_;
@@ -358,7 +345,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& referenceCurveID() const { return referenceCurveID_; }
     //@}
 
@@ -368,7 +354,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string referenceCurveID_;
 };
 
@@ -395,8 +380,8 @@ public:
 
     //! \name Serilalisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -421,6 +406,7 @@ public:
     Real& tolerance() { return tolerance_; }
     //@}
 
+    const vector<string>& quotes() override;
 private:
     void populateRequiredYieldCurveIDs();
 

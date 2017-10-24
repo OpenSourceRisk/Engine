@@ -109,10 +109,10 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 boost::shared_ptr<CdsSpreadQuote> q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
 
                 vector<string>::const_iterator it =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
+                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it != config->quotes().end()) {
+                if (it != config->cdsQuotes().end()) {
                     auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
                     QL_REQUIRE(res.second, "duplicate term in quotes found ("
@@ -125,10 +125,10 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 boost::shared_ptr<HazardRateQuote> q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
 
                 vector<string>::const_iterator it =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
+                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it != config->quotes().end()) {
+                if (it != config->cdsQuotes().end()) {
                     auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
                     QL_REQUIRE(res.second, "duplicate term in quotes found ("
@@ -141,10 +141,10 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 boost::shared_ptr<ZeroQuote> q = boost::dynamic_pointer_cast<ZeroQuote>(md);
 
                 vector<string>::const_iterator it =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
+                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it != config->quotes().end()) {
+                if (it != config->cdsQuotes().end()) {
                     QL_REQUIRE(q->tenorBased(), "require tenor based zero quote in default "
                         "curves, date based not allowed");
                     
@@ -158,8 +158,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
         LOG("DefaultCurve: read " << quotes.size() << " default quotes");
 
-        QL_REQUIRE(quotes.size() == config->quotes().size(),
-                   "read " << quotes.size() << ", but " << config->quotes().size() << " required.");
+        QL_REQUIRE(quotes.size() == config->cdsQuotes().size(),
+                   "read " << quotes.size() << ", but " << config->cdsQuotes().size() << " required.");
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "

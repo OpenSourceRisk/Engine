@@ -16,35 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/securityrecoveryrate.hpp
-    \brief
-    \ingroup marketdata
+/*! \file test/curveconfig.hpp
+    \brief test curve config quotes method
+    \ingroup tests
 */
 
 #pragma once
 
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/handle.hpp>
-#include <ql/quote.hpp>
+#include <boost/test/unit_test.hpp>
 
-namespace ore {
-namespace data {
+namespace testsuite {
 
-//! Wrapper class for holding Bond recovery rate quotes
+//! Test CurveConfig construction
 /*!
-  \ingroup marketdata
+  \ingroup tests
 */
-class SecurityRecoveryRate {
+class CurveConfigTest {
 public:
-    //! Constructor
-    SecurityRecoveryRate(const Date& asof, SecurityRecoveryRateSpec spec, const Loader& loader);
-
-    //! Inspector
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }
-
-private:
-    Handle<Quote> recoveryRate_;
+    //! Testing curve config quotes method
+    static void testCurveConfigQuotes();
+    static boost::unit_test_framework::test_suite* suite();
 };
-} // namespace data
-} // namespace ore
+} // namespace testsuite

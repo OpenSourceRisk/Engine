@@ -2035,8 +2035,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Default curves
 \item Equity curves (to project forward prices)
 \item Equity volatility structures
-\item Security Spreads
-\item Security Recovery Rates
+\item Securities
 \item Inflation index curves (to project zero or yoy inflation fixings)
 \item Inflation Cap/Floor price surfaces
 \end{itemize}
@@ -2263,43 +2262,24 @@ This instructs ORE to build a set of default probability curves, again defined i
 curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
 (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
 
-\subsubsection{Security Spreads}\label{sssec:securityspreads}
+\subsubsection{Securities}\label{sssec:securities}
 
-The following is an excerpt of the Security Spreads block with ID 'default' from the same example file:
+The following is an excerpt of the Security block with ID 'default' from the same example file:
 
 \begin{listing}[H]
 	%\hrule\medskip
 	\begin{minted}[fontsize=\footnotesize]{xml}
-<SecuritySpreads id="default">
-  <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
-</SecuritySpreads>
+<Securities id="default">
+  <Security name="SECURITY_1">Security/SECURITY_1</Security>
+</Securities>
 	\end{minted}
-	\caption{Security spreads block with ID 'default'}
+	\caption{Securities block with ID 'default'}
 	\label{lst:secspread_spec}
 \end{listing}
 
-The pricing of bonds includes (among other components) a security specific spread, which is defined in this block. The
-link to the specific security is established via the name in the security spread definition and the security id in the
-bond trade definition.
-
-\subsubsection{Security Recovery Rates}\label{sssec:securityrecoveryrates}
-
-The following is an excerpt of the Security Recovery Rates block with ID 'default' from the same example file:
-
-\begin{listing}[H]
-	%\hrule\medskip
-	\begin{minted}[fontsize=\footnotesize]{xml}
-<SecurityRecoveryRates id="default">
-    <SecurityRecoveryRates name="SECURITY_1">
-        SecurityRecoveryRate/SECURITY_1
-    </SecurityRecoveryRate>
-</SecurityRecoveryRates>
-	\end{minted}
-	\caption{Security recovery rates block with ID 'default'}
-	\label{lst:secrecrate_spec}
-\end{listing}
-
-The pricing of bonds includes (among other components) a recovery rate. This can be specified per security using this structure. The link to the specific security is established via the name in the security spread recovery rate definition and the security id in the bond trade definition.
+The pricing of bonds includes (among other components) a security specific spread and rate. 
+This block links a security name to a spread and rate pair defined in the curve configuration file. This name may then be referenced 
+as the security id in the bond trade definition.
 
 \subsubsection{Equity Curves}
 The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
@@ -3198,6 +3178,8 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 The configuration of various term structures required to price a portfolio is covered in a single configuration file
 which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This
 configuration determines the composition of yield curves, default curves, Swaption and FX Option volatility structures.
+This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
+for the construction of a market.
  
 \include{yieldcurves}
 
@@ -3306,6 +3288,7 @@ configuration determines the composition of yield curves, default curves, Swapti
     <CurveId>SP5</CurveId>
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
+    <ForecastingCurve>EUR1D</ForecastingCurve>
     <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
     <Quotes>
@@ -3326,7 +3309,7 @@ configuration determines the composition of yield curves, default curves, Swapti
 \end{listing}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
-yields. Upon construction, ORE stores internally an equity spot price quote and a dividend yield term structure, which 
+yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield term structure, which 
 are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
@@ -3479,6 +3462,57 @@ floor price surface.
   strike region).
 \item {\tt Maturities:} The maturities for which cap and floor prices are quoted
 \end{itemize}
+
+
+\subsubsection{FXSpots}
+
+Listing \ref{lst:fxspot_configuration} shows the configuration of the fxSpots. It is assumed that each FXSpot CurveId is of
+the form "Ccy1Ccy2".
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FXSpots>
+  <FXSpot>
+    <CurveId>EURUSD</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURGBP</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURCHF</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURJPY</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+</FXSpots>
+\end{minted}
+\caption{FXSpot Configuration}
+\label{lst:fxspot_configuration}
+\end{listing}
+
+\subsubsection{Securities}
+
+Listing \ref{lst:security_configuration} shows the configuration of the Securities. Each Security name is associated with
+a SpreadQuote and a RecoveryRateQuote.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Securities>
+  <Security>
+    <CurveId>SECURITY_1</CurveId>
+    <CurveDescription>Security</CurveDescription>
+    <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
+    <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+  </Security>
+</Securities>\end{minted}
+\caption{Security Configuration}
+\label{lst:security_configuration}
+\end{listing}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}

@@ -57,14 +57,12 @@ public:
                       bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
-    //! Default destructor
-    virtual ~EquityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -74,8 +72,8 @@ public:
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
-    const vector<string>& quotes() const { return quotes_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
     //! \name Setters
@@ -85,16 +83,15 @@ public:
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
-    vector<string>& quotes() { return quotes_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
 private:
+    vector<string> fwdQuotes_;
     string forecastingCurve_;
     string currency_;
     Type type_;
     string equitySpotQuoteID_;
-    vector<string> quotes_;
     string dayCountID_;
     bool extrapolation_;
 };

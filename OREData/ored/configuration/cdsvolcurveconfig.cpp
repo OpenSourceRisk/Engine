@@ -28,6 +28,15 @@ CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const 
                                                    const vector<string>& expiries)
     : CurveConfig(curveID, curveDescription), expiries_(expiries) {}
 
+const vector<string>& CDSVolatilityCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        string base = "INDEX_CDS_OPTION/RATE_LNVOL/" + curveID_ + "/";
+        for (auto e : expiries_)
+            quotes_.push_back(base + e);
+    }
+    return quotes_;
+}
+
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CDSVolatility");
 
