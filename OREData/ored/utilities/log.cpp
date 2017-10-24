@@ -24,7 +24,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <iomanip>
 #include <ored/utilities/log.hpp>
-#include <boost/test/unit_test.hpp>
 #include <ql/errors.hpp>
 
 using namespace boost::posix_time;
@@ -36,7 +35,6 @@ namespace data {
 const string StderrLogger::name = "StderrLogger";
 const string BufferLogger::name = "BufferLogger";
 const string FileLogger::name = "FileLogger";
-const string BoostTestLogger::name = "BoostTestLogger";
 
 // -- Buffer Logger
 
@@ -71,10 +69,6 @@ FileLogger::~FileLogger() {
 void FileLogger::log(unsigned, const string& msg) {
     if (fout_.is_open())
         fout_ << msg << endl;
-}
-
-void  BoostTestLogger::log(unsigned, const string& msg) {
-    BOOST_TEST_MESSAGE(msg);
 }
 
 // The Log itself

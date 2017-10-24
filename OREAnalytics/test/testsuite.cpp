@@ -36,7 +36,7 @@ using namespace boost;
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
 
-#include <ored/utilities/log.hpp>
+#include <oret/oret.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -89,8 +89,8 @@ void stopTimer() {
 
 test_suite* init_unit_test_suite(int, char* []) {
     
-    boost::shared_ptr<ore::data::BoostTestLogger> logger =
-    boost::make_shared<ore::data::BoostTestLogger>();
+    boost::shared_ptr<ore::test::BoostTestLogger> logger =
+        boost::make_shared<ore::test::BoostTestLogger>();
     ore::data::Log::instance().removeAllLoggers();
     ore::data::Log::instance().registerLogger(logger);
     ore::data::Log::instance().switchOn();
