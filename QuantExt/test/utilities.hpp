@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,30 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/bond.hpp
-    \brief bond test
-    \ingroup tests
+/*! \file test/utilities.hpp
+    \brief helper macros and methods for tests
 */
 
-#pragma once
+#ifndef quantext_test_utilities_hpp
+#define quantext_test_utilities_hpp
 
-#include <boost/test/unit_test.hpp>
+// This makes it easier to use array literals (alas, no std::vector literals)
+#define LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
-namespace testsuite {
-
-//! Test Bond pricing
-/*!
-    \ingroup tests
-*/
-class BondTest {
-public:
-    //! Test Bond pricing
-    static void testZeroBond();
-    static void testBondZeroSpreadDefault();
-    static void testBondCompareDefault();
-    static void testAmortizingBond();
-    static void testAmortizingBondWithChangingAmortisation();
-    static void testMultiPhaseBond();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
+#endif

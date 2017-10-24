@@ -1081,16 +1081,6 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
 test_suite* ScenarioGeneratorTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ScenarioGeneratorTest");
 
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-    boost::shared_ptr<ore::data::FileLogger> logger
-        = boost::make_shared<ore::data::FileLogger>("scenariogenerator_test.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
-    */
-
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmLowDiscrepancy));

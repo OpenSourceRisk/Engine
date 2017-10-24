@@ -18,6 +18,7 @@
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <ostream>
 using namespace QuantLib;
 using namespace QuantExt;
@@ -802,7 +803,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
 
     volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
     shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
-    
+
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = swaptionVolCurrencies[i];
         SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
@@ -828,6 +829,16 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*ts);
             QL_REQUIRE(tmp, "swaption cube missing")
             cube = tmp->cube();
+        } else {
+            // if atmOnly == true, we might have a matrix or a SwaptionVolatilityConstantSpread
+            // in the latter case we extract the underlying cube which is used below to determine
+            // the atm strike
+            auto tmp = boost::dynamic_pointer_cast<SwaptionVolatilityConstantSpread>(*ts);
+            if (tmp != nullptr) {
+                auto tmp2 = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*tmp->cube());
+                QL_REQUIRE(tmp2, "swaption cube missing");
+                cube = tmp2->cube();
+            }
         }
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -844,7 +855,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Period term = simMarketData_->swapVolTerms()[k];
                 for (Size l = 0; l < n_swvol_strike; ++l) {
-                    Real strike = atmOnly_swvol ? Null<Real>() : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l]; 
+                    Real strike = cube == nullptr
+                                      ? Null<Real>()
+                                      : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l];
                     Real swvol = ts->volatility(expiry, term, strike);
                     volData[l][j][k] = swvol;
                 }
@@ -870,13 +883,13 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                     //if simulating atm only we shift all strikes otherwise we shift each strike individually
                     Size loopStart = atmOnly_swvol ? 0 : l;
                     Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart+1;
-                    
+
                     LOG("Swap vol looping over "<<loopStart<<" to "<<loopEnd <<" for strike "<<shiftStrikes[l]);
                     for (Size ll=loopStart; ll < loopEnd; ++ll){
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                 volTermTimes, volData[ll], shiftedVolData[ll], true);
                     }
-                    
+
                     for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                         for (Size kk = 0; kk < n_swvol_term; ++kk) {
                             for (Size ll = 0; ll < n_swvol_strike; ++ll) {

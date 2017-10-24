@@ -10,7 +10,6 @@
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariogeneratordata.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>

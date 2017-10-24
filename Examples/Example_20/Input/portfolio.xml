@@ -11,7 +11,6 @@
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
       <CreditCurveId>BANK</CreditCurveId>
-      <Qualifier>SECURITY_1</Qualifier>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>

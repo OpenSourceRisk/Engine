@@ -27,6 +27,7 @@ using namespace std;
 
 // Boost
 #include <boost/timer.hpp>
+#include <boost/make_shared.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -34,6 +35,8 @@ using namespace boost;
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
+
+#include <ored/utilities/log.hpp>
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>
@@ -51,6 +54,7 @@ using boost::unit_test::test_suite;
 #include "bond.hpp"
 #include "calendars.hpp"
 #include "ccyswapwithresets.hpp"
+#include "cds.hpp"
 #include "cms.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
@@ -91,6 +95,13 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
+    
+    boost::shared_ptr<ore::data::BoostTestLogger> logger =
+    boost::make_shared<ore::data::BoostTestLogger>();
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
 
     test_suite* test = BOOST_TEST_SUITE("OREDataTestSuite");
 
@@ -117,6 +128,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SwaptionTest::suite());
     test->add(testsuite::PortfolioTest::suite());
     test->add(testsuite::CurveConfigTest::suite());
+    test->add(testsuite::CreditDefaultSwapTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

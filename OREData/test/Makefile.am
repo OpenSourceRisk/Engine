@@ -21,7 +21,8 @@ OREDATA_TESTS = \
 	equitytrades.hpp equitytrades.cpp \
 	swaption.hpp swaption.cpp \
 	portfolio.hpp portfolio.cpp \
-    curveconfig.hpp curveconfig.cpp
+    curveconfig.hpp curveconfig.cpp \
+	cds.hpp cds.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
