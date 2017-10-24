@@ -292,7 +292,7 @@ void OREApp::getMarketParameters() {
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName) {
     map<MarketContext, string> configurations;
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    string inputPath = params_->get(groupName, "inputPath");
+    string inputPath = params_->get("setup", "inputPath");
     string pricingEnginesFile = inputPath + "/" + params_->get(groupName, "pricingEnginesFile");
     if (params_->get(groupName, "pricingEnginesFile") != "")
         engineData->fromFile(pricingEnginesFile);
