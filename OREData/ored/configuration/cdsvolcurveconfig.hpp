@@ -47,14 +47,12 @@ public:
     CDSVolatilityCurveConfig() {}
     //! Detailed constructor
     CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries);
-    //! Default destructor
-    virtual ~CDSVolatilityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors

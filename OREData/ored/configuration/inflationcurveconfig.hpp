@@ -55,10 +55,9 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
                          const vector<string>& seasonalityFactors);
-    virtual ~InflationCurveConfig() {}
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }

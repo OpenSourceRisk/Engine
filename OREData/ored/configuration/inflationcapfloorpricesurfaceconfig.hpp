@@ -53,10 +53,9 @@ public:
                                         const DayCounter& dayCounter, const string& index, const string& indexCurve,
                                         const string& yieldTermStructure, const vector<Real>& capStrikes,
                                         const vector<Real>& floorStrikes, const vector<Period>& maturities);
-    virtual ~InflationCapFloorPriceSurfaceConfig() {}
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     // Inspectors
     const Type& type() const { return type_; }

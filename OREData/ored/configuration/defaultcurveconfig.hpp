@@ -57,14 +57,12 @@ public:
                        const string& conventionID, const vector<string>& quotes, bool extrapolation = true);
     //! Default constructor
     DefaultCurveConfig() {}
-    //! Default destructor
-    virtual ~DefaultCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors

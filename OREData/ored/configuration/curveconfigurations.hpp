@@ -125,8 +125,8 @@ public:
 
     //! \name Serialisation
     //@{
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;

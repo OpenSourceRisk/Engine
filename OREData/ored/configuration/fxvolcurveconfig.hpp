@@ -56,14 +56,12 @@ public:
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                             const vector<Period>& expiries, const string& fxSpotID = "", const string& fxForeignCurveID = "",
                             const string& fxDomesticCurveID = "");
-    //! Default destructor
-    virtual ~FXVolatilityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors

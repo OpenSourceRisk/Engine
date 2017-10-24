@@ -287,7 +287,7 @@ void YieldCurveConfig::populateRequiredYieldCurveIDs() {
 }
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes = vector<string>())
-    : type_(parseYieldCurveSegement(typeID)), typeID_(typeID), conventionsID_(conventionsID), quotes_(quotes) {}
+    : quotes_(quotes), type_(parseYieldCurveSegement(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);

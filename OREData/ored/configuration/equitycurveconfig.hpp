@@ -57,14 +57,12 @@ public:
                       bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
-    //! Default destructor
-    virtual ~EquityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors

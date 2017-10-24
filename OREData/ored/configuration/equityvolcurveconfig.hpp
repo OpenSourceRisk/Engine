@@ -52,14 +52,12 @@ public:
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const Dimension& dimension, const vector<string>& expiries,
                                 const vector<string>& strikes = vector<string>());
-    //! Default destructor
-    virtual ~EquityVolatilityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors

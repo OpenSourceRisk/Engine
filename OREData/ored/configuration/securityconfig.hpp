@@ -49,8 +49,6 @@ public:
      };
     //! Default constructor
     SecurityConfig() {}
-    //! Default destructor
-    virtual ~SecurityConfig() {}
     //@}
 
     //! \name Inspectors
@@ -59,7 +57,7 @@ public:
     const string& recoveryRatesQuote() { return quotes_[1]; }
     //@}
 
-    void fromXML(XMLNode* node) {
+    void fromXML(XMLNode* node) override {
         XMLUtils::checkNode(node, "Security");
 
         curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
@@ -68,7 +66,7 @@ public:
         quotes_.push_back(XMLUtils::getChildValue(node, "RecoveryRateQuote", true));
     }
 
-    XMLNode* toXML(XMLDocument& doc) {
+    XMLNode* toXML(XMLDocument& doc) override {
         XMLNode* node = doc.allocNode("Security");
 
         XMLUtils::addChild(doc, node, "CurveId", curveID_);

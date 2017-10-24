@@ -44,8 +44,6 @@ public:
     : curveID_(curveID), curveDescription_(curveDescription), quotes_(quotes) {}
     //! Default constructor
     CurveConfig() {}
-    //! Default destructor
-    virtual ~CurveConfig() {}
     //@}
 
     //! \name Inspectors

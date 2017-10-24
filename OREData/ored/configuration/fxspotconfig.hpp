@@ -55,11 +55,9 @@ public:
      };
     //! Default constructor
     FXSpotConfig() {}
-    //! Default destructor
-    virtual ~FXSpotConfig() {}
     //@}
 
-    void fromXML(XMLNode* node) {
+    void fromXML(XMLNode* node) override {
         XMLUtils::checkNode(node, "FXSpot");
         curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
         QL_REQUIRE(curveID_.size() == 6, "FXSpot curveID must be of the form Ccy1Ccy2");
@@ -70,7 +68,7 @@ public:
         curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     }
 
-    XMLNode* toXML(XMLDocument& doc) {
+    XMLNode* toXML(XMLDocument& doc) override {
         XMLNode* node = doc.allocNode("FXSpot");
         XMLUtils::addChild(doc, node, "CurveId", curveID_);
         XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
