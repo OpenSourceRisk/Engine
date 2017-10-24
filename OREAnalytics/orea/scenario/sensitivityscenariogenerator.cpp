@@ -36,6 +36,19 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
 }
 
+struct FindPair {
+    FindPair (string first, string second)
+    : m_first_value(first)
+    , m_second_value(second) { }
+
+    string m_first_value;
+    string m_second_value;
+    bool operator()
+        ( const std::pair<string, string> &p ) {
+            return (p.first == m_first_value && p.second == m_second_value) || (p.second == m_first_value && p.first == m_second_value);
+    }
+};
+
 void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
 
     generateDiscountCurveScenarios(sensiScenarioFactory, true);
@@ -104,25 +117,17 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     vector<RiskFactorKey> keys = baseScenario()->keys();
     Size index = scenarios_.size();
     for (Size i = 0; i < index; ++i) {
+        if (scenarioDescriptions_[i].type() != ScenarioDescription::Type::Up)
+            continue;
         for (Size j = i + 1; j < index; ++j) {
-            if (i == j || scenarioDescriptions_[i].type() != ScenarioDescription::Type::Up ||
-                scenarioDescriptions_[j].type() != ScenarioDescription::Type::Up)
+            if (scenarioDescriptions_[j].type() != ScenarioDescription::Type::Up)
                 continue;
             // filter desired cross shift combinations
-            bool match = false;
-            for (Size k = 0; k < sensitivityData_->crossGammaFilter().size(); ++k) {
-                if ((scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
-                         string::npos &&
-                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
-                         string::npos) ||
-                    (scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
-                         string::npos &&
-                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
-                         string::npos)) {
-                    match = true;
-                    break;
-                }
-            }
+            bool match = (
+                    find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(), 
+                    FindPair( scenarioDescriptions_[i].keyName1(), scenarioDescriptions_[j].keyName1()))
+                    != sensitivityData_->crossGammaFilter().end());
+
             if (!match)
                 continue;
 

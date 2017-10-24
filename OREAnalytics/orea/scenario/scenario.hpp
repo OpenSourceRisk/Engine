@@ -82,6 +82,8 @@ public:
     std::string name;
     //! Index
     Size index;
+    
+    std::string keyName() const;
 
 private:
     friend class boost::serialization::access;

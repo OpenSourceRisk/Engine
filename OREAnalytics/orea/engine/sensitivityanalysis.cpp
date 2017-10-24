@@ -39,6 +39,7 @@
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
+#include <ored/utilities/osutils.hpp>
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -94,6 +95,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
 }
 
 void SensitivityAnalysis::generateSensitivities() {
+    Real start = ore::data::os::getMemoryUsageBytes();
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
     // initialize the helper member objects
@@ -107,10 +109,14 @@ void SensitivityAnalysis::generateSensitivities() {
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
-    engine.buildCube(portfolio_, sensiCube_->npvCube(), calculators);
+    engine.buildCube(portfolio_, cube, calculators);
+
+    LOG("CubeSize: "<<ore::data::os::getMemoryUsageBytes()-start);
+    start = ore::data::os::getMemoryUsageBytes();
 
     collectResultsFromCube();
     computed_ = true;
+    LOG("ResultSize: "<<ore::data::os::getMemoryUsageBytes()-start);
     LOG("Sensitivity analysis completed");
 }
 
@@ -161,39 +167,42 @@ void SensitivityAnalysis::collectResultsFromCube() {
      * - NPVs after single factor down shifts
      * - deltas, gammas and cross gammas
      */
-    for (Size i = 0; i < portfolio_->size(); ++i) {
+    Size ps = portfolio_->size();
+    Size ss = scenarioGenerator_->samples();
+    vector<SensitivityScenarioGenerator::ScenarioDescription> scenDesc =  *sensiCube_->scenDesc();
+    for (Size i = 0; i < ps; ++i) {
 
         Real npv0 = sensiCube_->baseNPV(i);
         string id = portfolio_->trades()[i]->id();
         trades_.insert(id);
 
-        for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-            ShiftScenarioGenerator::ScenarioDescription desc = (*sensiCube_->scenDesc())[j];
+        for (Size j = 0; j < ss; ++j) {
+            ShiftScenarioGenerator::ScenarioDescription desc = scenDesc[j];
             ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
             Real npv = sensiCube_->getNPV(i, j);
-            if ( type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-                // delta
-                string factor = desc.factor1();
-                pair<string, string> p(id, factor);
-                delta_[p] = npv - npv0;
-                storeFactorShifts(desc);
+            if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+                    // delta
+                    string factor = desc.factor1();
+                    pair<string, string> p(id, factor);
+                    delta_[p] = npv - npv0;
+                    storeFactorShifts(desc);
             } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-                // gamma
-                string factor = desc.factor1();
-                pair<string, string> p(id, factor);
-                Real u = sensiCube_->upNPV(i, factor);
-                Real d = sensiCube_->downNPV(i, factor);
-                gamma_[p] = u - 2.0 * npv0 + d; // = f_xx(x) * u^2
-                storeFactorShifts(desc);
+                    // gamma
+                    string factor = desc.factor1();
+                    pair<string, string> p(id, factor);
+                    Real u = sensiCube_->upNPV(i, factor);
+                    Real d = sensiCube_->downNPV(i, factor);
+                    gamma_[p] = u - 2.0 * npv0 + d; // = f_xx(x) * u^2
+                    storeFactorShifts(desc);
             } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                // cross gamma
-                string f1 = desc.factor1();
-                string f2 = desc.factor2();
-                // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-                Real up1 = sensiCube_->upNPV(i, f1);
-                Real up2 = sensiCube_->upNPV(i, f2);
-                std::tuple<string, string, string> triple(id, f1, f2);
-                crossGamma_[triple] = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
+                    // cross gamma
+                    string f1 = desc.factor1();
+                    string f2 = desc.factor2();
+                    // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
+                    Real up1 = sensiCube_->upNPV(i, f1);
+                    Real up2 = sensiCube_->upNPV(i, f2);
+                    std::tuple<string, string, string> triple(id, f1, f2);
+                    crossGamma_[triple] = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
             }
         }
     }
