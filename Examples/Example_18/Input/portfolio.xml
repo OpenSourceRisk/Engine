@@ -8,13 +8,13 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-	  <IssuerId>CPTY_C</IssuerId>
-	  <CreditCurveId>CPTY_C</CreditCurveId>
-	  <SecurityId>SECURITY_1</SecurityId>
-	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-	  <SettlementDays>2</SettlementDays>
-	  <Calendar>TARGET</Calendar>
-	  <IssueDate>20160203</IssueDate>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>CPTY_C</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -44,7 +44,7 @@
           </Rules>
         </ScheduleData>
       </LegData>
-     </BondData>
+    </BondData>
   </Trade>
   <Trade id="Bond_Floating">
     <TradeType>Bond</TradeType>
@@ -54,13 +54,13 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-	  <IssuerId>CPTY_C</IssuerId>
-	  <CreditCurveId>CPTY_C</CreditCurveId>
-	  <SecurityId>SECURITY_1</SecurityId>
-	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-	  <SettlementDays>2</SettlementDays>
-	  <Calendar>TARGET</Calendar>
-	  <IssueDate>20160203</IssueDate>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>CPTY_C</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
       <LegData>
         <LegType>Floating</LegType>
         <Payer>false</Payer>
@@ -72,7 +72,8 @@
         <PaymentConvention>F</PaymentConvention>
         <FloatingLegData>
           <Spreads>
-            <Spread>0.01</Spread> <!-- 100bps -->
+            <Spread>0.01</Spread>
+            <!-- 100bps -->
           </Spreads>
           <Index>EUR-EURIBOR-6M</Index>
           <IsInArrears>false</IsInArrears>
@@ -93,7 +94,7 @@
           </Rules>
         </ScheduleData>
       </LegData>
-     </BondData>
+    </BondData>
   </Trade>
   <Trade id="Bond_Fixed_Then_Floating">
     <TradeType>Bond</TradeType>
@@ -103,13 +104,13 @@
       <AdditionalFields/>
     </Envelope>
     <BondData>
-	  <IssuerId>CPTY_C</IssuerId>
-	  <CreditCurveId>CPTY_C</CreditCurveId>
-	  <SecurityId>SECURITY_1</SecurityId>
-	  <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-	  <SettlementDays>2</SettlementDays>
-	  <Calendar>TARGET</Calendar>
-	  <IssueDate>20160203</IssueDate>
+      <IssuerId>CPTY_C</IssuerId>
+      <CreditCurveId>CPTY_C</CreditCurveId>
+      <SecurityId>SECURITY_1</SecurityId>
+      <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
+      <SettlementDays>2</SettlementDays>
+      <Calendar>TARGET</Calendar>
+      <IssueDate>20160203</IssueDate>
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>false</Payer>
@@ -150,7 +151,8 @@
         <PaymentConvention>F</PaymentConvention>
         <FloatingLegData>
           <Spreads>
-            <Spread>0.01</Spread> <!-- 100bps -->
+            <Spread>0.01</Spread>
+            <!-- 100bps -->
           </Spreads>
           <Index>EUR-EURIBOR-6M</Index>
           <IsInArrears>false</IsInArrears>
@@ -171,7 +173,7 @@
           </Rules>
         </ScheduleData>
       </LegData>
-     </BondData>
+    </BondData>
   </Trade>
   <Trade id="Bond_Amortizing_FixedAmount">
     <TradeType>Bond</TradeType>
@@ -195,14 +197,16 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>FixedAmount</Type>
-	  <Value>1000000</Value>
-	  <StartDate>20170203</StartDate>
-	  <Frequency>1Y</Frequency>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
-	<DayCounter>ACT/ACT</DayCounter>
+        <Amortizations>
+          <AmortizationData>
+            <Type>FixedAmount</Type>
+            <Value>1000000</Value>
+            <StartDate>20170203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
+        <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
@@ -248,14 +252,16 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>RelativeToInitialNotional</Type>
-	  <Value>0.05</Value>
-	  <StartDate>20170203</StartDate>
-	  <Frequency>1Y</Frequency>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
-	<DayCounter>ACT/ACT</DayCounter>
+        <Amortizations>
+          <AmortizationData>
+            <Type>RelativeToInitialNotional</Type>
+            <Value>0.05</Value>
+            <StartDate>20170203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
+        <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
@@ -301,14 +307,16 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>RelativeToPreviousNotional</Type>
-	  <Value>0.05</Value>
-	  <StartDate>20170203</StartDate>
-	  <Frequency>1Y</Frequency>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
-	<DayCounter>ACT/ACT</DayCounter>
+        <Amortizations>
+          <AmortizationData>
+            <Type>RelativeToPreviousNotional</Type>
+            <Value>0.05</Value>
+            <StartDate>20170203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
+        <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
@@ -354,12 +362,14 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>Annuity</Type>
-	  <Value>1000000</Value>
-	  <StartDate>20170203</StartDate>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
+        <Amortizations>
+          <AmortizationData>
+            <Type>Annuity</Type>
+            <Value>1000000</Value>
+            <StartDate>20170203</StartDate>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
@@ -406,17 +416,20 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>Annuity</Type>
-	  <Value>1000000</Value>
-	  <StartDate>20170203</StartDate>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
+        <Amortizations>
+          <AmortizationData>
+            <Type>Annuity</Type>
+            <Value>1000000</Value>
+            <StartDate>20170203</StartDate>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FloatingLegData>
           <Spreads>
-            <Spread>0.01</Spread> <!-- 100bps -->
+            <Spread>0.01</Spread>
+            <!-- 100bps -->
           </Spreads>
           <Index>EUR-EURIBOR-6M</Index>
           <IsInArrears>false</IsInArrears>
@@ -461,21 +474,23 @@
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
-	<AmortizationData>
-	  <Type>FixedAmount</Type>
-	  <Value>1000000</Value>
-	  <StartDate>20170203</StartDate>
-	  <Frequency>1Y</Frequency>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
-	<AmortizationData>
-	  <Type>RelativeToPreviousNotional</Type>
-	  <Value>0.01</Value>
-	  <StartDate>20210203</StartDate>
-	  <Frequency>1Y</Frequency>
-	  <Underflow>false</Underflow>
-	</AmortizationData>
-	<DayCounter>ACT/ACT</DayCounter>
+        <Amortizations>
+          <AmortizationData>
+            <Type>FixedAmount</Type>
+            <Value>1000000</Value>
+            <StartDate>20170203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+          <AmortizationData>
+            <Type>RelativeToPreviousNotional</Type>
+            <Value>0.01</Value>
+            <StartDate>20210203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+        </Amortizations>
+        <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>

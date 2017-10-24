@@ -238,11 +238,13 @@ void LegData::fromXML(XMLNode* node) {
         }
     }
 
-    XMLNode* amortizationNode = XMLUtils::getChildNode(node, "AmortizationData");
-    while (amortizationNode) {
-        amortizationData_.push_back(AmortizationData());
-        amortizationData_.back().fromXML(amortizationNode);
-        amortizationNode = XMLUtils::getNextSibling(amortizationNode, "AmortizationData");
+    XMLNode* amortizationParentNode = XMLUtils::getChildNode(node, "Amortizations");
+    if (amortizationParentNode) {
+        auto adNodes = XMLUtils::getChildrenNodes(amortizationParentNode, "AmortizationData");
+        for (auto const& a : adNodes) {
+            amortizationData_.push_back(AmortizationData());
+            amortizationData_.back().fromXML(a);
+        }
     }
 
     tmp = XMLUtils::getChildNode(node, "ScheduleData");

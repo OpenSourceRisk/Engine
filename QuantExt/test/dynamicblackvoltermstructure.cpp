@@ -17,6 +17,7 @@
 */
 
 #include "dynamicblackvoltermstructure.hpp"
+#include "utilities.hpp"
 
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 
@@ -25,8 +26,6 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
-
-#include <test-suite/utilities.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -347,10 +346,10 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
 
 test_suite* DynamicBlackVolTermStructureTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("DynamicBlackVolTermStructure tests");
-    suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike));
-    suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyLogMoneyness));
-    suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike));
-    suite->add(QUANTLIB_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness));
+    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike));
+    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyLogMoneyness));
+    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike));
+    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness));
     return suite;
 }
 } // namespace testsuite

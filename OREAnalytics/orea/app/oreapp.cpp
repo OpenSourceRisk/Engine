@@ -289,14 +289,13 @@ void OREApp::getMarketParameters() {
     }
 }
 
-boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
-    string inputPath = params_->get("setup", "inputPath");
-    string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    if (params_->get("setup", "pricingEnginesFile") != "")
-        engineData->fromFile(pricingEnginesFile);
-
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName) {
     map<MarketContext, string> configurations;
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    string inputPath = params_->get("setup", "inputPath");
+    string pricingEnginesFile = inputPath + "/" + params_->get(groupName, "pricingEnginesFile");
+    if (params_->get(groupName, "pricingEnginesFile") != "")
+        engineData->fromFile(pricingEnginesFile);
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -653,7 +652,9 @@ void OREApp::generateNPVCube() {
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
         simMarket_->scenarioGenerator() = sg;
-        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_);
+	
+	string groupName = "simulation";
+        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");
         simPortfolio_ = buildPortfolio(simFactory);

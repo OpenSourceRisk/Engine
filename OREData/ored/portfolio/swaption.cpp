@@ -197,9 +197,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<QuantLib::Instrument> swaption;
     if (isNonStandard)
         swaption =
-            boost::shared_ptr<QuantLib::Instrument>(new QuantLib::NonstandardSwaption(nonstandardSwap, exercise));
+            boost::shared_ptr<QuantLib::Instrument>(new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery));
     else
-        swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise));
+        swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise, delivery));
 
     QuantLib::Position::Type positionType = parsePositionType(option_.longShort());
     if (delivery == Settlement::Physical)
