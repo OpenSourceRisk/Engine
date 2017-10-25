@@ -68,14 +68,12 @@ public:
                                   const vector<Period>& smileOptionTenors = vector<Period>(),
                                   const vector<Period>& smileSwapTenors = vector<Period>(),
                                   const vector<Spread>& smileSpreads = vector<Spread>());
-    //! Default destructor
-    virtual ~SwaptionVolatilityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -94,7 +92,7 @@ public:
     const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
     const vector<Period>& smileSwapTenors() const { return smileSwapTenors_; }
     const vector<Spread>& smileSpreads() const { return smileSpreads_; }
-
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
@@ -126,5 +124,7 @@ private:
     vector<Period> smileSwapTenors_;
     vector<Spread> smileSpreads_;
 };
+
+std::ostream& operator<<(std::ostream& out, SwaptionVolatilityCurveConfig::VolatilityType t);
 } // namespace data
 } // namespace ore

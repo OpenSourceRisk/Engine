@@ -35,16 +35,18 @@ namespace data {
 /*!
   \ingroup marketdata
 */
-class SecuritySpread {
+class Security {
 public:
     //! Constructor
-    SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader);
+    Security(const Date& asof, SecuritySpec spec, const Loader& loader);
 
     //! Inspector
     Handle<Quote> spread() const { return spread_; }
+    Handle<Quote> recoveryRate() const { return recoveryRate_; }
 
 private:
     Handle<Quote> spread_;
+    Handle<Quote> recoveryRate_;
 };
 } // namespace data
 } // namespace ore

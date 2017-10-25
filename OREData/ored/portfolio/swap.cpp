@@ -100,7 +100,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (legData_[i].legType() == "Fixed") {
             legs_[i] = makeFixedLeg(legData_[i]);
         } else if (legData_[i].legType() == "Floating") {
-            string indexName = legData_[i].floatingLegData().index();
+            boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
+            string indexName = floatData->index();
 
             Handle<IborIndex> hIndex =
                 engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
@@ -144,15 +146,19 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
             }
         } else if (legData_[i].legType() == "CPI") {
-            string inflationIndexName = legData_[i].cpiLegData().index();
+            boost::shared_ptr<CPILegData> cpiData = boost::dynamic_pointer_cast<CPILegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
+            string inflationIndexName = cpiData->index();
             boost::shared_ptr<ZeroInflationIndex> index =
                 *market->zeroInflationIndex(inflationIndexName);
-            QL_REQUIRE(index, "zero inflation index not found for index " << legData_[i].cpiLegData().index());
+            QL_REQUIRE(index, "zero inflation index not found for index " << inflationIndexName);
             legs_[i] = makeCPILeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION";
         } else if (legData_[i].legType() == "YY") {
-            string inflationIndexName = legData_[i].yoyLegData().index();
+            boost::shared_ptr<YoYLegData> yyData = boost::dynamic_pointer_cast<YoYLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(yyData, "Wrong LegType, expected Floating");
+            string inflationIndexName = yyData->index();
             boost::shared_ptr<YoYInflationIndex> index =
                 *market->yoyInflationIndex(inflationIndexName);
             legs_[i] = makeYoYLeg(legData_[i], index);
@@ -161,7 +167,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         } else if (legData_[i].legType() == "Cashflow") {
             legs_[i] = makeSimpleLeg(legData_[i]);
         } else if (legData_[i].legType() == "CMS") {
-            string swapIndexName = legData_[i].cmsLegData().swapIndex();
+            boost::shared_ptr<CMSLegData> cmsData = boost::dynamic_pointer_cast<CMSLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cmsData, "Wrong LegType, expected Floating");
+            string swapIndexName = cmsData->swapIndex();
 
             Handle<SwapIndex> hIndex =
                 engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));

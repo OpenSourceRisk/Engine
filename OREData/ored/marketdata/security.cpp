@@ -16,31 +16,43 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/securityrecoveryrate.cpp
+/*! \file ored/marketdata/bondspread.cpp
     \brief
     \ingroup
 */
 
 #include <ored/marketdata/marketdatum.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/security.hpp>
 
 namespace ore {
 namespace data {
 
-SecurityRecoveryRate::SecurityRecoveryRate(const Date& asof, SecurityRecoveryRateSpec spec, const Loader& loader) {
+Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
 
     for (auto& md : loader.loadQuotes(asof)) {
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::BOND) {
 
+            boost::shared_ptr<SecuritySpreadQuote> q = boost::dynamic_pointer_cast<SecuritySpreadQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to SecuritySpreadQuote");
+            if (q->securityID() == spec.securityID()) {
+                spread_ = q->quote();
+            }
+        }
+        
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
+            
             boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to RecoveryRateQuote");
             if (q->underlyingName() == spec.securityID()) {
                 recoveryRate_ = q->quote();
-                return;
             }
         }
+        
+        if (!spread_.empty() && !recoveryRate_.empty())
+            return;
     }
+    
     QL_FAIL("Failed to find a quote for " << spec);
 }
 } // namespace data

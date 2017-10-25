@@ -65,7 +65,37 @@ void addNodes(XMLDocument &doc, XMLNode *parent, const char *nodeName, map<strin
         XMLUtils::appendNode(node, it.second->toXML(doc));
 }
 
-
+std::set<string> CurveConfigurations::quotes() const {
+    vector<string> quotes;
+    for (auto m : yieldCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : fxVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : swaptionVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : capFloorVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : defaultCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : cdsVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : baseCorrelationCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : inflationCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : inflationCapFloorPriceSurfaceConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : equityCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : equityVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : securityConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : fxSpotConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        
+    return std::set<string>(quotes.begin(), quotes.end());
+}
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
     return get(curveID, yieldCurveConfigs_);
 }
@@ -115,6 +145,16 @@ CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
     return get(curveID, equityVolCurveConfigs_);
 }
 
+const boost::shared_ptr<SecurityConfig>&
+CurveConfigurations::securityConfig(const string& curveID) const {
+    return get(curveID, securityConfigs_);
+}
+
+const boost::shared_ptr<FXSpotConfig>&
+CurveConfigurations::fxSpotConfig(const string& curveID) const {
+    return get(curveID, fxSpotConfigs_);
+}
+
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
@@ -131,7 +171,8 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
     parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
         inflationCapFloorPriceSurfaceConfigs_);
-
+    parseNode(node, "Securities", "Security", securityConfigs_);
+    parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
@@ -149,6 +190,8 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
+    addNodes(doc, parent, "Securities", securityConfigs_);
+    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
 
     return parent;
 }

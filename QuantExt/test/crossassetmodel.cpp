@@ -17,6 +17,7 @@
 */
 
 #include "crossassetmodel.hpp"
+#include "utilities.hpp"
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
@@ -48,8 +49,6 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
@@ -4302,39 +4301,39 @@ void CrossAssetModelTest::testCrCalibration() {
 
 test_suite* CrossAssetModelTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrMoments));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMoments));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery));
 
     return suite;
 } // suite

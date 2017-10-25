@@ -17,6 +17,7 @@
 */
 
 #include "analyticlgmswaptionengine.hpp"
+#include "utilities.hpp"
 
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
@@ -34,8 +35,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/calendars/target.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -516,10 +515,10 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
 
 test_suite* AnalyticLgmSwaptionEngineTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Analytic LGM swaption engine tests");
-    suite->add(QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testMonoCurve));
-    suite->add(QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testDualCurve));
-    suite->add(QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines));
-    suite->add(QUANTLIB_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
+    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testMonoCurve));
+    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testDualCurve));
+    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines));
+    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
     return suite;
 }
 } // namespace testsuite
