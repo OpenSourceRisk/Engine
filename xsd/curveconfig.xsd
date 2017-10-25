@@ -4,6 +4,7 @@
 
   <xs:complexType name="curveconfiguration">
       <xs:sequence>
+        <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
         <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
         <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
         <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
@@ -17,6 +18,19 @@
         <xs:element type="securities" name="Securities" minOccurs="0" />
         <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
       </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxSpots">
+    <xs:sequence>
+      <xs:element type="fxSpot" name="FXSpot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxSpot">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="fxVolatilities">
