@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 namespace {
-static constexpr Size numberOfMarketObjects = 18;
+static constexpr Size numberOfMarketObjects = 17;
 // clang-format off
 static const vector<string> marketObjectStrings = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
                                                    "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
