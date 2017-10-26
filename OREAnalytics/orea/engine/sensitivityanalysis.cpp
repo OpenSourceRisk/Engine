@@ -285,7 +285,6 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
 
         Real npv0 = sensiCube_->baseNPV(i);
         string id = portfolio_->trades()[i]->id();
-        trades_.insert(id);
 
         for (Size j = 0; j < ss; ++j) {
             ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
