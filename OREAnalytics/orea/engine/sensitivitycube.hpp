@@ -71,15 +71,6 @@ public:
     }
 
     Real getNPV(Size i, Size j) const { return cube_->get(i, 0, j, 0);}
-    
-    boost::shared_ptr<NPVCube>& npvCube() { return cube_;}
-    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
-    
-private:
-    Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2 = "") const {
-        Size index = getFactorIndex(type, factor1, factor2);
-        return cube_->get(tradeIdx, 0, index, 0);
-    }
 
     //the scenarioDescriptions_ indices match the cube_ indices for a given type/factor
     Size getFactorIndex(ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2) const {
@@ -92,6 +83,17 @@ private:
         auto it = tradeIndices_.find(tradeId);
         return it->second;
     }
+
+    
+    boost::shared_ptr<NPVCube>& npvCube() { return cube_;}
+    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
+    
+private:
+    Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2 = "") const {
+        Size index = getFactorIndex(type, factor1, factor2);
+        return cube_->get(tradeIdx, 0, index, 0);
+    }
+
 
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;

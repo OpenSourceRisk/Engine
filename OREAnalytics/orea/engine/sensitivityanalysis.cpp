@@ -39,6 +39,7 @@
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
+#include <ored/utilities/osutils.hpp>
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -108,6 +109,7 @@ void SensitivityAnalysis::generateSensitivities() {
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
     
+
     collectResultsFromCube();
     computed_ = true;
     LOG("Sensitivity analysis completed");
@@ -267,7 +269,7 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
 }
 
 void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
-
+    LOG("writing CrossGamma");
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
 
     report->addColumn("TradeId", string());
@@ -285,7 +287,7 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
 
         Real npv0 = sensiCube_->baseNPV(i);
         string id = portfolio_->trades()[i]->id();
-
+        
         for (Size j = 0; j < ss; ++j) {
             ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
             ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
@@ -297,25 +299,26 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
                 // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
                 Real up1 = sensiCube_->upNPV(i, factor1);
                 Real up2 = sensiCube_->upNPV(i, factor2);
-                Real crossGamma = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
 
+                Real cg = crossGamma( id, factor1, factor2); 
+                
                 Real shiftSize1 = factors_[factor1];
                 Real shiftSize2 = factors_[factor2];
-                Real base = baseNPV(id);
-                if (fabs(crossGamma) > outputThreshold) {
+                if (fabs(cg) > outputThreshold) {
                     report->next();
                     report->add(id);
                     report->add(factor1);
                     report->add(shiftSize1);
                     report->add(factor2);
                     report->add(shiftSize2);
-                    report->add(base);
-                    report->add(crossGamma);
+                    report->add(npv0);
+                    report->add(cg);
                 }
             }
         }
     }
     report->end();
+    LOG("CrossGamma written");
 }
 
 void SensitivityAnalysis::storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc) {
@@ -536,9 +539,18 @@ const std::map<std::pair<std::string, std::string>, Real>& SensitivityAnalysis::
     return gamma_;
 }
 
-const std::map<std::tuple<std::string, std::string, std::string>, Real>& SensitivityAnalysis::crossGamma() const {
+Real SensitivityAnalysis::crossGamma(const std::string& trade, const std::string& factor1, const std::string& factor2) const {
     QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    return crossGamma_;
+
+    // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
+    Size i = sensiCube_->getTradeIndex(trade);
+    Real npv = sensiCube_->crossNPV(i, factor1, factor2);
+    Real npv0 = sensiCube_->baseNPV(i);
+    Real up1 = sensiCube_->upNPV(i, factor1);
+    Real up2 = sensiCube_->upNPV(i, factor2);
+    return npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
 }
 } // namespace analytics
 } // namespace ore
+
+

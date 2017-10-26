@@ -1598,7 +1598,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
                                                 simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
-    map<tuple<string, string, string>, Real> cgMap = sa->crossGamma();
+    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
 
     struct GammaResult {
         string id;
@@ -1832,24 +1832,28 @@ void SensitivityAnalysisTest::testCrossGamma() {
     Real rel_tol = 0.005;
     Real threshold = 1.e-6;
     Size count = 0;
-    for (auto it : cgMap) {
-        tuple<string, string, string> key = it.first;
-        string id = std::get<0>(it.first);
-        string factor1 = std::get<1>(it.first);
-        string factor2 = std::get<2>(it.first);
-        ostringstream os;
-        os << id << "_" << factor1 << "_" << factor2;
-        string keyStr = os.str();
-        Real crossgamma = it.second;
-        if (fabs(crossgamma) >= threshold) {
-            // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" << factor2 <<
-            // "\", " << crossgamma << " },");
-            auto cached_it = cachedMap.find(key);
-            BOOST_CHECK_MESSAGE(cached_it != cachedMap.end(), keyStr << " not found in cached results");
-            if (cached_it != cachedMap.end()) {
-                Real cached_cg = cached_it->second;
-                BOOST_CHECK_CLOSE(crossgamma, cached_cg, rel_tol);
-                count++;
+    for (Size i=0; i<portfolio->size(); i++) {
+        string id = portfolio->trades()[i]->id();
+        for (auto const& s : scenDesc) {
+            if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                string factor1 = s.factor1();
+                string factor2 = s.factor2();
+                ostringstream os;
+                os << id << "_" << factor1 << "_" << factor2;
+                string keyStr = os.str();
+                tuple<string, string, string> key = make_tuple(id,factor1,factor2);
+                Real crossgamma = sa->crossGamma(id, factor1, factor2);
+                if (fabs(crossgamma) >= threshold) {
+                    // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" << factor2 <<
+                    // "\", " << crossgamma << " },");
+                    auto cached_it = cachedMap.find(key);
+                    BOOST_CHECK_MESSAGE(cached_it != cachedMap.end(), keyStr << " not found in cached results");
+                    if (cached_it != cachedMap.end()) {
+                        Real cached_cg = cached_it->second;
+                        BOOST_CHECK_CLOSE(crossgamma, cached_cg, rel_tol);
+                        count++;
+                    }
+                }
             }
         }
     }

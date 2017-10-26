@@ -130,17 +130,24 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
 
             if (!match)
                 continue;
-
             boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
 
-            for (Size k = 0; k < keys.size(); ++k) {
-                Real baseValue = baseScenario()->get(keys[k]);
-                Real iValue = scenarios_[i]->get(keys[k]);
-                Real jValue = scenarios_[j]->get(keys[k]);
-                Real newVal = iValue + jValue - baseValue;
-                if (newVal != baseValue)
-                    crossScenario->add(keys[k], newVal);
-            }
+            RiskFactorKey key = scenarioDescriptions_[i].key1();
+            Real baseValue = baseScenario()->get(key);
+            Real iValue = scenarios_[i]->get(key);
+            Real jValue = scenarios_[j]->get(key);
+            Real newVal = iValue + jValue - baseValue;
+            if (newVal != baseValue)
+                crossScenario->add(key, newVal);
+
+            key = scenarioDescriptions_[j].key1();
+            baseValue = baseScenario()->get(key);
+            iValue = scenarios_[i]->get(key);
+            jValue = scenarios_[j]->get(key);
+            newVal = iValue + jValue - baseValue;
+            if (newVal != baseValue)
+                crossScenario->add(key, newVal);
+
             scenarios_.push_back(crossScenario);
             scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");

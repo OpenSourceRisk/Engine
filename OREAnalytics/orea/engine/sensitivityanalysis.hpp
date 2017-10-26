@@ -91,7 +91,7 @@ public:
     const std::map<std::pair<std::string, std::string>, Real>& gamma() const;
 
     //! Return cross gamma (mixed second order sensitivity times shift^2) by trade/factor1/factor2
-    const std::map<std::tuple<std::string, std::string, std::string>, Real>& crossGamma() const;
+    Real crossGamma(const std::string& trade, const std::string& factor1, const std::string& factor2) const;
 
     //! Write "raw" NPV by trade/scenario (contains base, up and down shift scenarios)
     void writeScenarioReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
@@ -164,8 +164,6 @@ protected:
 
     // NPV respectively sensitivity by trade and factor
     std::map<std::pair<string, string>, Real> delta_, gamma_;
-    // cross gamma by trade, factor1, factor2
-    std::map<std::tuple<string, string, string>, Real> crossGamma_;
     // unique set of factors
     std::map<std::string, QuantLib::Real> factors_;
     // unique set of trades
