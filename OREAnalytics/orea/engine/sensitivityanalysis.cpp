@@ -39,7 +39,6 @@
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
-#include <ored/utilities/osutils.hpp>
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -89,20 +88,18 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
 
     boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenDesc = boost::make_shared<vector<ShiftScenarioGenerator::ScenarioDescription>>
         (scenarioGenerator_->scenarioDescriptions());
-
     sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenDesc, portfolio_);
     initialized_ = true;
 }
 
 void SensitivityAnalysis::generateSensitivities() {
-    Real start = ore::data::os::getMemoryUsageBytes();
+    
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
     // initialize the helper member objects
     boost::shared_ptr<NPVCube> cube;
     initialize(cube);
     QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
-
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
@@ -110,13 +107,9 @@ void SensitivityAnalysis::generateSensitivities() {
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
-
-    LOG("CubeSize: "<<ore::data::os::getMemoryUsageBytes()-start);
-    start = ore::data::os::getMemoryUsageBytes();
-
+    
     collectResultsFromCube();
     computed_ = true;
-    LOG("ResultSize: "<<ore::data::os::getMemoryUsageBytes()-start);
     LOG("Sensitivity analysis completed");
 }
 
@@ -169,7 +162,7 @@ void SensitivityAnalysis::collectResultsFromCube() {
      */
     Size ps = portfolio_->size();
     Size ss = scenarioGenerator_->samples();
-    vector<SensitivityScenarioGenerator::ScenarioDescription> scenDesc =  *sensiCube_->scenDesc();
+    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
     for (Size i = 0; i < ps; ++i) {
 
         Real npv0 = sensiCube_->baseNPV(i);
@@ -177,7 +170,7 @@ void SensitivityAnalysis::collectResultsFromCube() {
         trades_.insert(id);
 
         for (Size j = 0; j < ss; ++j) {
-            ShiftScenarioGenerator::ScenarioDescription desc = scenDesc[j];
+            ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
             ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
             Real npv = sensiCube_->getNPV(i, j);
             if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
@@ -194,15 +187,6 @@ void SensitivityAnalysis::collectResultsFromCube() {
                     Real d = sensiCube_->downNPV(i, factor);
                     gamma_[p] = u - 2.0 * npv0 + d; // = f_xx(x) * u^2
                     storeFactorShifts(desc);
-            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                    // cross gamma
-                    string f1 = desc.factor1();
-                    string f2 = desc.factor2();
-                    // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-                    Real up1 = sensiCube_->upNPV(i, f1);
-                    Real up2 = sensiCube_->upNPV(i, f2);
-                    std::tuple<string, string, string> triple(id, f1, f2);
-                    crossGamma_[triple] = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
             }
         }
     }
@@ -294,23 +278,42 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
     report->addColumn("Base NPV", double(), 2);
     report->addColumn("CrossGamma", double(), 2);
 
-    for (auto data : crossGamma_) {
-        string id = std::get<0>(data.first);
-        string factor1 = std::get<1>(data.first);
-        Real shiftSize1 = factors_[factor1];
-        string factor2 = std::get<2>(data.first);
-        Real shiftSize2 = factors_[factor2];
-        Real crossGamma = data.second;
-        Real base = baseNPV(id);
-        if (fabs(crossGamma) > outputThreshold) {
-            report->next();
-            report->add(id);
-            report->add(factor1);
-            report->add(shiftSize1);
-            report->add(factor2);
-            report->add(shiftSize2);
-            report->add(base);
-            report->add(crossGamma);
+    Size ps = portfolio_->size();
+    Size ss = scenarioGenerator_->samples();
+    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
+    for (Size i = 0; i < ps; ++i) {
+
+        Real npv0 = sensiCube_->baseNPV(i);
+        string id = portfolio_->trades()[i]->id();
+        trades_.insert(id);
+
+        for (Size j = 0; j < ss; ++j) {
+            ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
+            ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
+            Real npv = sensiCube_->getNPV(i, j);
+            if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                // cross gamma
+                string factor1 = desc.factor1();
+                string factor2 = desc.factor2();
+                // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
+                Real up1 = sensiCube_->upNPV(i, factor1);
+                Real up2 = sensiCube_->upNPV(i, factor2);
+                Real crossGamma = npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
+
+                Real shiftSize1 = factors_[factor1];
+                Real shiftSize2 = factors_[factor2];
+                Real base = baseNPV(id);
+                if (fabs(crossGamma) > outputThreshold) {
+                    report->next();
+                    report->add(id);
+                    report->add(factor1);
+                    report->add(shiftSize1);
+                    report->add(factor2);
+                    report->add(shiftSize2);
+                    report->add(base);
+                    report->add(crossGamma);
+                }
+            }
         }
     }
     report->end();
