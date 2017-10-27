@@ -54,7 +54,6 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
 
     // TODO, support other param types
     QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported currently");
-    QL_REQUIRE(data_->hParamType() == ParamType::Piecewise, "DkBuilder, only piecewise reversion is supported currently");
 
     if (data_->calibrateA()) { // override
         if (data_->aTimes().size() > 0) {
@@ -63,6 +62,9 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
         QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
         aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
         alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
+        for (auto a : alpha) {
+            a /= exp(-data_->hValues()[0]*)
+        }
     }
     else { // use input time grid and input alpha array otherwise
         aTimes = Array(data_->aTimes().begin(), data_->aTimes().end());

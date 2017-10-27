@@ -555,7 +555,19 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                   .withPaymentCalendar(schedule.calendar())
                   .withFixedRates(rates)
                   .withObservationInterpolation(interpolationMethod);
-    QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
+    Size n = leg.size();
+    QL_REQUIRE(n > 0, "Empty CPI Leg");
+    
+    // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
+    // If Notional Exchange set to false, remove the final cashflow.
+
+    if (!data.notionalFinalExchange()) {
+        boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[n - 2]);
+        if (cpicf && (cpicf->date() == coupon->date()))
+            leg.pop_back();
+    }
+
     return leg;
 }
 

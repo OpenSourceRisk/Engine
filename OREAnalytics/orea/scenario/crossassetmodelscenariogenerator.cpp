@@ -302,7 +302,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Date d = dates_[i] + ten_inf_[j][k];
                 Time T = dc.yearFraction(dates_[i], d);
                 Real zero = zeroInfCurves[j]->zeroRate(T);
-                LOG("Zero for date " << dates_[i] << " tenor " << k << " is " << zero);
                 scenarios[i]->add(zeroInflationKeys_[j * ten_inf_[j].size() + k], zero);
             }
         }

@@ -351,7 +351,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
             infCapFloorBaskets_[i][j]->setPricingEngine(engine);
 
         if (inf->calibrateA() && !inf->calibrateH()) {
-            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->hParamType() == ParamType::Piecewise) {
+            if (inf->calibrationType() == CalibrationType::Bootstrap && inf->aParamType() == ParamType::Piecewise) {
                 model->calibrateInfDkVolatilitiesIterative(i, infCapFloorBaskets_[i], *optimizationMethod_, endCriteria_);
             }
             else {

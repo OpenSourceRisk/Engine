@@ -155,23 +155,23 @@
 		<BaseCPI>200</BaseCPI>
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
-          <Calibrate>N</Calibrate>
+          <Calibrate>Y</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
+          <TimeGrid>2.0, 4.0, 6.0, 8.0, 10.0</TimeGrid>
+          <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
-          <Calibrate>Y</Calibrate>
-          <ReversionType>Hagan</ReversionType>
+          <Calibrate>N</Calibrate>
+          <ReversionType>HullWhite</ReversionType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
-          <InitialValue>1, 1, 1, 1, 1, 1, 1, 1</InitialValue>
+          <TimeGrid/>
+          <InitialValue>0.06</InitialValue>
         </Reversion>
         <CalibrationCapFloors>
 		  <CapFloor>Floor</CapFloor>
-          <Expiries> 1Y, 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
-          <Strikes>0.015, 0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
+          <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
+          <Strikes>0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
         </CalibrationCapFloors>
         <ParameterTransformation>
           <ShiftHorizon>0.0</ShiftHorizon>
