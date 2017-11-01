@@ -108,7 +108,6 @@ void SensitivityAnalysis::generateSensitivities() {
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
     engine.buildCube(portfolio_, cube, calculators);
-    
 
     collectResultsFromCube();
     computed_ = true;
@@ -291,15 +290,10 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
         for (Size j = 0; j < ss; ++j) {
             ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
             ShiftScenarioGenerator::ScenarioDescription::Type type = desc.type();
-            Real npv = sensiCube_->getNPV(i, j);
             if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 // cross gamma
                 string factor1 = desc.factor1();
                 string factor2 = desc.factor2();
-                // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-                Real up1 = sensiCube_->upNPV(i, factor1);
-                Real up2 = sensiCube_->upNPV(i, factor2);
-
                 Real cg = crossGamma( id, factor1, factor2); 
                 
                 Real shiftSize1 = factors_[factor1];
