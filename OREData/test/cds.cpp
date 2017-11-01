@@ -99,8 +99,8 @@ struct CommonVars {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CDS
-        FixedLegData fixedLegRateData(vector<double>(1, rate));
-        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
+        boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
+        LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
         CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false, true);
         Envelope env("CP1");

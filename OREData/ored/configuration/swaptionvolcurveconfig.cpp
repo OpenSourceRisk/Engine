@@ -16,13 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 namespace ore {
 namespace data {
+
+std::ostream& operator<<(std::ostream& out, SwaptionVolatilityCurveConfig::VolatilityType t) {
+    switch (t) {
+        case SwaptionVolatilityCurveConfig::VolatilityType::Lognormal:
+            return out << "RATE_LNVOL";
+        case SwaptionVolatilityCurveConfig::VolatilityType::Normal:
+            return out << "RATE_NVOL";
+        case SwaptionVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+            return out << "RATE_SLNVOL";
+        default:
+            QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
+    }
+}
 
 SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Dimension& dimension,
@@ -44,6 +59,42 @@ SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
         QL_REQUIRE(smileOptionTenors.size() == 0 && smileSwapTenors.size() == 0 && smileSpreads.size() == 0,
                    "Smile tenors/strikes/spreads should only be set when dim=Smile");
     }
+}
+
+const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
+
+    if (quotes_.size() == 0) {
+        std::vector<string> tokens;
+        split(tokens, swapIndexBase_, boost::is_any_of("-"));
+
+        Currency ccy = parseCurrency(tokens[0]);
+       
+        std::stringstream ssBase;
+        ssBase << "SWAPTION/" << volatilityType_ << "/" << ccy.code() << "/";
+        string base = ssBase.str();
+
+        if (dimension_ == Dimension::ATM) {
+            for (auto o : optionTenors_) {
+                for (auto s : swapTenors_) {
+                    std::stringstream ss;
+                    ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
+                    quotes_.push_back(ss.str());
+                }
+            }
+
+        } else {
+            for (auto o : smileOptionTenors_) {
+                for (auto s : smileSwapTenors_) {
+                    for (auto sp : smileSpreads_) {
+                        std::stringstream ss;
+                        ss << base << to_string(o) << "/" << to_string(s) << "/Smile/" << to_string(sp);
+                        quotes_.push_back(ss.str());
+                    }
+                }
+            }
+        }
+    }
+    return quotes_;
 }
 
 void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {

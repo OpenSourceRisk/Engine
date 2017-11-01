@@ -93,13 +93,16 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             if (coupons_[i].legType() == "Fixed")
                 leg = makeFixedLeg(coupons_[i]);
             else if (coupons_[i].legType() == "Floating") {
-                string indexName = coupons_[i].floatingLegData().index();
+                boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(coupons_[i].concreteLegData());
+                QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << coupons_[i].legType());
+
+                string indexName = floatData->index();
                 hIndex = engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
                 indexes.push_back(*hIndex); // for registration below
                 QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
                 boost::shared_ptr<IborIndex> index = hIndex.currentLink();
                 leg = makeIborLeg(coupons_[i], index, engineFactory);
-                if (!coupons_[i].floatingLegData().floors().empty() || !coupons_[i].floatingLegData().caps().empty()) {
+                if (!floatData->floors().empty() || !floatData->caps().empty()) {
                     ovs =
                         engineFactory->market()->capFloorVol(currency_, builder->configuration(MarketContext::pricing));
                     ovses.push_back(*ovs); // for registration below

@@ -15,4 +15,6 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/configuration/securityconfig.hpp>
+#include <ored/configuration/fxspotconfig.hpp>
 

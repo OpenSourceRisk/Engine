@@ -4,6 +4,7 @@
 
   <xs:complexType name="curveconfiguration">
       <xs:sequence>
+        <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
         <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
         <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
         <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
@@ -14,9 +15,22 @@
         <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
         <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
         <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
-        <xs:element type="securitySpreads" name="SecuritySpreads" minOccurs="0" />
+        <xs:element type="securities" name="Securities" minOccurs="0" />
         <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
       </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxSpots">
+    <xs:sequence>
+      <xs:element type="fxSpot" name="FXSpot" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="fxSpot">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="fxVolatilities">
@@ -237,17 +251,18 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="securitySpreads">
+  <xs:complexType name="securities">
     <xs:sequence>
-      <xs:element type="securitySpread" name="SecuritySpread" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="security" name="Security" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="securitySpread">
+  <xs:complexType name="security">
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="quoteType" name="Quotes"/>
+      <xs:element type="xs:string" name="SpreadQuote"/>
+      <xs:element type="xs:string" name="RecoveryRateQuote"/>
     </xs:sequence>
   </xs:complexType>
 

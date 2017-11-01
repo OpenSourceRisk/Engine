@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,35 +16,36 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/securityrecoveryrate.hpp
-    \brief
-    \ingroup marketdata
+/*! \file oret/log.hpp
+    \brief boost test logger
 */
 
 #pragma once
 
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/handle.hpp>
-#include <ql/quote.hpp>
+#include <ored/utilities/log.hpp>
+#include <boost/test/unit_test.hpp>
+
+using ore::data::Logger;
 
 namespace ore {
-namespace data {
+namespace test {
 
-//! Wrapper class for holding Bond recovery rate quotes
+//! BoostTest Logger
 /*!
-  \ingroup marketdata
-*/
-class SecurityRecoveryRate {
+  This logger writes each log message out to the BOOST_TEST_MESSAGE.
+  To view log messages run ore unit tests with the flag "--log_level=test_suite"
+  \ingroup utilities
+  \see Log
+ */
+class BoostTestLogger : public Logger {
 public:
     //! Constructor
-    SecurityRecoveryRate(const Date& asof, SecurityRecoveryRateSpec spec, const Loader& loader);
-
-    //! Inspector
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }
-
-private:
-    Handle<Quote> recoveryRate_;
+    BoostTestLogger() : Logger("BoostTestLogger") {}
+    //! The log callback
+    virtual void log(unsigned, const string& msg) {
+        BOOST_TEST_MESSAGE(msg);
+    }
 };
-} // namespace data
-} // namespace ore
+
+}
+}

@@ -54,15 +54,14 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries);
-    //! Default destructor
-    virtual ~FXVolatilityCurveConfig() {}
+                            const vector<Period>& expiries, const string& fxSpotID = "", const string& fxForeignCurveID = "",
+                            const string& fxDomesticCurveID = "");
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -73,6 +72,7 @@ public:
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
