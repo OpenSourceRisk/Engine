@@ -64,8 +64,10 @@ AC_ARG_WITH([boost-lib],
             [])
 
 # If --with-boost-lib is not provided, check env $BOOST
-if test [ -z "$ql_boost_lib_path" ] && [ -n "$BOOST" ] ; then
-  ql_boost_lib_path="${BOOST}/stage/lib"
+if test [ -z "$ql_boost_lib_path" ] ; then
+  if test [ -n "$BOOST" ] ; then
+    ql_boost_lib_path="${BOOST}/stage/lib"
+  fi
 fi
 
 if test [ -n "$ql_boost_lib_path" ] ; then
