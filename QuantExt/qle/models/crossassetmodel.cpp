@@ -599,10 +599,7 @@ void CrossAssetModel::calibrateBsVolatilitiesGlobal(const AssetType& assetType, 
                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
                                                     const Constraint& constraint, const std::vector<Real>& weights) {
     QL_REQUIRE(assetType == FX || assetType == EQ, "Unsupported AssetType for BS calibration");
-    for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
-        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, aIdx, Null<Size>()));
-    }
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, aIdx, Null<Size>()));
     update();
 }
 
