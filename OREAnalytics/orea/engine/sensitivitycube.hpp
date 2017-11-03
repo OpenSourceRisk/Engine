@@ -44,8 +44,18 @@ public:
             cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
         for (Size i=0; i<scenarioDescriptions->size(); i++) {
             ShiftScenarioGenerator::ScenarioDescription desc = (*scenarioDescriptions)[i];
-            std::tuple<ShiftScenarioGenerator::ScenarioDescription::Type, string, string> triple(desc.type(), desc.factor1(), desc.factor2()); 
-            factorIndices_[triple] = i;
+
+            if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+                upFactorIndices_[desc.factor1()] = i;
+            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
+                downFactorIndices_[desc.factor1()] = i;
+            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                std::pair<string, string> pair(desc.factor1(), desc.factor2());
+                crossFactorIndices_[pair] = i;
+            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
+                baseFactorIndices_[desc.factor1()] = i;
+            }
+
         }
         for (Size i=0; i<portfolio->size(); i++) {
             tradeIndices_[portfolio->trades()[i]->id()] = i;
@@ -74,17 +84,27 @@ public:
 
     //the scenarioDescriptions_ indices match the cube_ indices for a given type/factor
     Size getFactorIndex(ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2) const {
-        std::tuple<ShiftScenarioGenerator::ScenarioDescription::Type, string, string> triple(type, factor1, factor2);
-        auto it = factorIndices_.find(triple);
-        return it->second;
-    };
+            if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+                return upFactorIndices_.find(factor1)->second;
+            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
+                return downFactorIndices_.find(factor1)->second;
+            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                std::pair<string, string> pair(factor1, factor2);
+                return crossFactorIndices_.find(pair)->second;
+            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
+                return baseFactorIndices_.find(factor1)->second;
+            }
+    }
 
     Size getTradeIndex(string tradeId) const {
         auto it = tradeIndices_.find(tradeId);
         return it->second;
     }
 
-    
+    std::map<string, Size> upFactors() const { return  upFactorIndices_;}
+    std::map<string, Size> downFactors() const { return  downFactorIndices_;}
+    std::map<pair<string, string>, Size> crossFactors() const { return  crossFactorIndices_;}
+
     boost::shared_ptr<NPVCube>& npvCube() { return cube_;}
     boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
     
@@ -98,8 +118,8 @@ private:
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;
 
-    std::map<string, Size> tradeIndices_;
-    std::map<tuple<ShiftScenarioGenerator::ScenarioDescription::Type, string, string>, Size> factorIndices_;
+    std::map<string, Size> tradeIndices_, upFactorIndices_, downFactorIndices_, baseFactorIndices_;
+    std::map<pair<string, string>, Size> crossFactorIndices_;
 
 };
 } // namespace analytics
