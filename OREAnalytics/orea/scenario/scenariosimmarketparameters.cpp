@@ -117,7 +117,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         cdsVolSimulate_ != rhs.cdsVolSimulate_ || cdsVolNames_ != rhs.cdsVolNames_ ||
         cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDecayMode_ != rhs.cdsVolDecayMode_ ||
         equityNames_ != rhs.equityNames_ || equityDividendTenors_ != rhs.equityDividendTenors_ || equityForecastTenors_ != rhs.equityForecastTenors_ ||
-        fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
+        equityNamesSimulate_ != rhs.equityNamesSimulate_ || fxVolSimulate_ != rhs.fxVolSimulate_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || fxVolCcyPairs_ != rhs.fxVolCcyPairs_ ||
         fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
         equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
@@ -276,6 +276,9 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     equityNames_.clear();
     if (nodeChild) {
+        XMLNode* equityNamesSimNode = XMLUtils::getChildNode(nodeChild, "SimulateEquityNames");
+        if (equityNamesSimNode)
+            equityNamesSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(equityNamesSimNode));
         equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true); 
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);

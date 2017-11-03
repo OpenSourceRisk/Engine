@@ -175,6 +175,7 @@ void EquityMarketDataTest::testEqCurveConfigLoad() {
     //BOOST_CHECK_EQUAL(ore::data::EquityCurveConfig::Type::DividendYield, ec->type());
     BOOST_CHECK_EQUAL("A365", ec->dayCountID());
     vector<string> anticipatedQuotes = boost::assign::list_of
+        ("EQUITY/PRICE/SP5/USD")
         ("EQUITY_DIVIDEND/RATE/SP5/USD/1M")
         ("EQUITY_DIVIDEND/RATE/SP5/USD/2016-09-15")
         ("EQUITY_DIVIDEND/RATE/SP5/USD/1Y")

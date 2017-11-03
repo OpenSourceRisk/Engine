@@ -29,17 +29,20 @@ namespace data {
 
 InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& curveDescription,
                                            const string& nominalTermStructure, const Type type,
-                                           const vector<string>& quotes, const string& conventions,
+                                           const vector<string>& swapQuotes, const string& conventions,
                                            const bool extrapolate, const Calendar& calendar,
                                            const DayCounter& dayCounter, const Period& lag, const Frequency& frequency,
                                            const Real baseRate, const Real tolerance, const Date& seasonalityBaseDate,
                                            const Frequency& seasonalityFrequency,
                                            const vector<string>& seasonalityFactors)
-    : CurveConfig(curveID, curveDescription), nominalTermStructure_(nominalTermStructure), type_(type),
-      quotes_(quotes), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
+    : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
+      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
       dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
-      seasonalityFactors_(seasonalityFactors) {}
+      seasonalityFactors_(seasonalityFactors) {
+        quotes_ = swapQuotes; 
+ 		quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end()); 
+      }
 
 void InflationCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "InflationCurve");
@@ -56,7 +59,7 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     } else
         QL_FAIL("Type " << type << " not recognized");
 
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    swapQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
 
     conventions_ = XMLUtils::getChildValue(node, "Conventions", true);
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", false);
@@ -85,10 +88,12 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     seasonalityBaseDate_ = QuantLib::Null<Date>();
     seasonalityFrequency_ = QuantLib::NoFrequency;
     seasonalityFactors_.clear();
+    quotes_ = swapQuotes_; 
     if (seasonalityNode != nullptr) {
         seasonalityBaseDate_ = parseDate(XMLUtils::getChildValue(seasonalityNode, "BaseDate", true));
         seasonalityFrequency_ = parseFrequency(XMLUtils::getChildValue(seasonalityNode, "Frequency", true));
         seasonalityFactors_ = XMLUtils::getChildrenValues(seasonalityNode, "Factors", "Factor", true);
+ 		quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end()); 
     }
 }
 
@@ -105,7 +110,7 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     } else
         QL_FAIL("Unknown Type in InflationCurveConfig::toXML()");
 
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+    XMLUtils::addChildren(doc, node, "Quotes", "Quote", swapQuotes_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
     string extrap = (extrapolate_ ? "true" : "false");
     XMLUtils::addChild(doc, node, "Extrapolation", extrap);

@@ -17,6 +17,7 @@
 */
 
 #include "crossassetmodelparametrizations.hpp"
+#include "utilities.hpp"
 
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
@@ -26,8 +27,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/models/all.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -39,7 +38,7 @@ using boost::unit_test_framework::test_suite;
 namespace {
 
 // check for expected result up to round off errors
-void check(std::string s, const Real x, const Real y, const Real e, const Size n = 42) {
+void check(const std::string& s, const Real x, const Real y, const Real e, const Size n = 42) {
     if (!close_enough(y, e, n)) {
         BOOST_ERROR("failed to verify " << s << "(" << x << ") = " << e << " up to round off errors, it is " << y
                                         << " instead (difference is " << (y - e) << ", n is " << n << ")");
@@ -47,7 +46,7 @@ void check(std::string s, const Real x, const Real y, const Real e, const Size n
 }
 
 // check for expected result up to truncation errors with absolute tolerance
-void check2(std::string s, const Real x, const Real y, const Real e, const Real tol) {
+void check2(const std::string& s, const Real x, const Real y, const Real e, const Real tol) {
     if (std::abs(y - e) > tol) {
         BOOST_ERROR("failed to verify " << s << "(" << x << ") = " << e << ", it is " << y << " instead (difference is "
                                         << (y - e) << ", abs tol=" << tol << ")");
@@ -492,9 +491,9 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
 
 test_suite* CrossAssetModelParametrizationsTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
     return suite;
 }
 } // namespace testsuite

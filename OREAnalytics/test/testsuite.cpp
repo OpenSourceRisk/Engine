@@ -27,6 +27,7 @@ using namespace std;
 
 // Boost
 #include <boost/timer.hpp>
+#include <boost/make_shared.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -34,6 +35,8 @@ using namespace boost;
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
+
+#include <oret/oret.hpp>
 
 #ifdef BOOST_MSVC
 #include <orea/auto_link.hpp>
@@ -85,6 +88,13 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
+    
+    boost::shared_ptr<ore::test::BoostTestLogger> logger =
+        boost::make_shared<ore::test::BoostTestLogger>();
+    ore::data::Log::instance().removeAllLoggers();
+    ore::data::Log::instance().registerLogger(logger);
+    ore::data::Log::instance().switchOn();
+    ore::data::Log::instance().setMask(255);
 
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
@@ -93,8 +103,6 @@ test_suite* init_unit_test_suite(int, char* []) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)
             enablePerformanceTests = true;
     }
-    string name(argv[0]);
-    string baseName = name.substr(name.find_last_of("/\\") + 1);
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 

@@ -16,35 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/securityrecoveryrate.hpp
-    \brief
-    \ingroup marketdata
+/*! \file test/utilities.hpp
+    \brief helper macros and methods for tests
 */
 
-#pragma once
+#ifndef quantext_test_utilities_hpp
+#define quantext_test_utilities_hpp
 
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/handle.hpp>
-#include <ql/quote.hpp>
+// This makes it easier to use array literals (alas, no std::vector literals)
+#define LENGTH(a) (sizeof(a)/sizeof(a[0]))
 
-namespace ore {
-namespace data {
-
-//! Wrapper class for holding Bond recovery rate quotes
-/*!
-  \ingroup marketdata
-*/
-class SecurityRecoveryRate {
-public:
-    //! Constructor
-    SecurityRecoveryRate(const Date& asof, SecurityRecoveryRateSpec spec, const Loader& loader);
-
-    //! Inspector
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }
-
-private:
-    Handle<Quote> recoveryRate_;
-};
-} // namespace data
-} // namespace ore
+#endif

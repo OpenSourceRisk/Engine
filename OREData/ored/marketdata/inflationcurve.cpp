@@ -63,7 +63,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
 
         // We loop over all market data, looking for quotes that match the configuration
 
-        const std::vector<string> strQuotes = config->quotes();
+        const std::vector<string> strQuotes = config->swapQuotes();
         std::vector<Handle<Quote>> quotes(strQuotes.size(), Handle<Quote>());
         std::vector<Period> terms(strQuotes.size());
         std::vector<bool> isZc(strQuotes.size(), true);

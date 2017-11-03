@@ -16,32 +16,37 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/bondspread.cpp
+/*! \file ored/marketdata/securityspread.hpp
     \brief
-    \ingroup
+    \ingroup marketdata
 */
 
-#include <ored/marketdata/marketdatum.hpp>
-#include <ored/marketdata/securityspread.hpp>
+#pragma once
+
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ql/handle.hpp>
+#include <ql/quote.hpp>
 
 namespace ore {
 namespace data {
 
-SecuritySpread::SecuritySpread(const Date& asof, SecuritySpreadSpec spec, const Loader& loader) {
+//! Wrapper class for holding Bond Spread quotes
+/*!
+  \ingroup marketdata
+*/
+class Security {
+public:
+    //! Constructor
+    Security(const Date& asof, SecuritySpec spec, const Loader& loader);
 
-    for (auto& md : loader.loadQuotes(asof)) {
+    //! Inspector
+    Handle<Quote> spread() const { return spread_; }
+    Handle<Quote> recoveryRate() const { return recoveryRate_; }
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::BOND) {
-
-            boost::shared_ptr<SecuritySpreadQuote> q = boost::dynamic_pointer_cast<SecuritySpreadQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to SecuritySpreadQuote");
-            if (q->securityID() == spec.securityID()) {
-                spread_ = q->quote();
-                return;
-            }
-        }
-    }
-    QL_FAIL("Failed to find a quote for " << spec);
-}
+private:
+    Handle<Quote> spread_;
+    Handle<Quote> recoveryRate_;
+};
 } // namespace data
 } // namespace ore

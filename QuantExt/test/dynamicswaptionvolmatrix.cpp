@@ -17,14 +17,13 @@
 */
 
 #include "dynamicswaptionvolmatrix.hpp"
+#include "utilities.hpp"
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/calendars/target.hpp>
-
-#include <test-suite/utilities.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -150,8 +149,8 @@ void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
 
 test_suite* DynamicSwaptionVolMatrixTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("DynamicSwaptionVolMatrix tests");
-    suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
-    suite->add(QUANTLIB_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
+    suite->add(BOOST_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
+    suite->add(BOOST_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
     return suite;
 }
 } // namespace testsuite
