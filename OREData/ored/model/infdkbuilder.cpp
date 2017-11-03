@@ -62,9 +62,6 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
         QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
         aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
         alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
-        for (auto a : alpha) {
-            a /= exp(-data_->hValues()[0]*)
-        }
     }
     else { // use input time grid and input alpha array otherwise
         aTimes = Array(data_->aTimes().begin(), data_->aTimes().end());
@@ -136,12 +133,9 @@ void InfDkBuilder::buildCapFloorBasket() {
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         std::string expiryString = data_->optionExpiries()[j];
         // may wish to calibrate against specific futures expiry dates...
-        Period expiry;
-        Date expiryDate;
-        bool isDate;
-        parseDateOrPeriod(expiryString, expiryDate, expiry, isDate);
-        if (!isDate)
-            expiryDate = today + expiry;
+        Period expiry = parsePeriod(expiryString);
+        Date expiryDate = inflationIndex_->fixingCalendar().advance(today, expiry);
+
         QL_REQUIRE(expiryDate > today, "expired calibration option expiry " << QuantLib::io::iso_date(expiryDate));
         Strike strike = parseStrike(data_->optionStrikes()[j]);
 
@@ -150,9 +144,10 @@ void InfDkBuilder::buildCapFloorBasket() {
             << data_->optionStrikes()[j]);
         strikeValue = strike.value;
 
-        Real baseCPI = data_->baseCPI();
         Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(infIndex, configuration_);
         Calendar fixCalendar = zInfIndex->fixingCalendar();
+        Date baseDate = zInfIndex->zeroInflationTermStructure()->baseDate();
+        Real baseCPI = market_->zeroInflationIndex(infIndex)->fixing(baseDate);
 
         Option::Type capfloor;
         Real marketPrem;
@@ -172,8 +167,8 @@ void InfDkBuilder::buildCapFloorBasket() {
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = inflationYearFraction(zInfIndex->frequency(), zInfIndex->interpolated(),
-            zInfIndex->zeroInflationTermStructure()->dayCounter(), zInfIndex->zeroInflationTermStructure()->baseDate(), 
-            expiryDate);
+            zInfIndex->zeroInflationTermStructure()->dayCounter(), baseDate, 
+            helper->instrument()->fixingDate());
         LOG("Added InflationOptionHelper " << infIndex << " " << expiry);
     }
 

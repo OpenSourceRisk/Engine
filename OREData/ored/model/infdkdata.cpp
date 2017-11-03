@@ -30,9 +30,6 @@ void InfDkData::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency");
     LOG("Cross-Asset Inflation Index = " << currency_);
 
-    baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI");
-    LOG("Cross-Asset Inflation Index = " << baseCPI_);
-
     // Calibration CapFloors
 
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationCapFloors");
@@ -63,7 +60,6 @@ XMLNode* InfDkData::toXML(XMLDocument& doc) {
     XMLNode* node = LgmData::toXML(doc);
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
 
     // capfloor calibration
     XMLNode* calibrationCapFloorNode = XMLUtils::addChild(doc, node, "CalibrationCapFloors");

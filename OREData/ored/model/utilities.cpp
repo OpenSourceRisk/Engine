@@ -182,8 +182,8 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
                 parametrization->termStructure()->indexIsInterpolated(),
                 parametrization->termStructure()->dayCounter(),
                 parametrization->termStructure()->baseDate(),
-                instr->instrument()->payDate()) -
-                1.0 / 500.0;
+                instr->instrument()->payDate() - parametrization->termStructure()->observationLag()) -
+                1.0 / 250.0;
             modelAlpha = parametrization->alpha(t);
             modelH = parametrization->H(t);
         }

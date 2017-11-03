@@ -344,9 +344,8 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         }
         LOG("INF Calibration " << i);
         // attach pricing engines to helpers
-        Real infBaseCPI = inf->baseCPI();
         boost::shared_ptr<QuantExt::AnalyticDkCpiCapFloorEngine> engine =
-            boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model, i, infBaseCPI);
+            boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model, i);
         for (Size j = 0; j < infCapFloorBaskets_[i].size(); j++)
             infCapFloorBaskets_[i][j]->setPricingEngine(engine);
 
