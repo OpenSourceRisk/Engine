@@ -78,7 +78,7 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
 template <class TS>
 Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdaptor(
     const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& sigmaDates, const Array& sigma,
-    const std::vector<Date>& kappaDates, const Array& kappa, const std::string& name = std::string())
+    const std::vector<Date>& kappaDates, const Array& kappa, const std::string& name)
     : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure),
       PiecewiseConstantHelper2(kappaDates, termStructure) {

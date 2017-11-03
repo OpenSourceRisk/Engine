@@ -76,7 +76,7 @@ Lgm1fPiecewiseConstantParametrization<TS>::Lgm1fPiecewiseConstantParametrization
 template <class TS>
 Lgm1fPiecewiseConstantParametrization<TS>::Lgm1fPiecewiseConstantParametrization(
     const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& alphaDates, const Array& alpha,
-    const std::vector<Date>& kappaDates, const Array& kappa, const std::string& name = std::string())
+    const std::vector<Date>& kappaDates, const Array& kappa, const std::string& name)
     : Lgm1fParametrization<TS>(currency, termStructure, name), PiecewiseConstantHelper1(alphaDates, termStructure),
       PiecewiseConstantHelper2(kappaDates, termStructure) {
     initialize(alpha, kappa);

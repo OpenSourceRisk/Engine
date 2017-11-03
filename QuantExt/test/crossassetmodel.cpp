@@ -3953,7 +3953,7 @@ void CrossAssetModelTest::testCpiCalibrationByAlpha() {
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
+        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0);
 
     for (Size i = 0; i < cpiHelpers.size(); ++i) {
         cpiHelpers[i]->setPricingEngine(engine);
@@ -4085,7 +4085,7 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
 
     // pricing engine
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> engine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0, baseCPI);
+        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0);
 
     for (Size i = 0; i < cpiHelpers.size(); ++i) {
         cpiHelpers[i]->setPricingEngine(engine);
