@@ -486,8 +486,9 @@ void CrossAssetModel::checkCorrelationMatrix() const {
             QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is no symmetric, for (i,j)=("
                                                                  << i << "," << j << ") rho(i,j)=" << rho_[i][j]
                                                                  << " but rho(j,i)=" << rho_[j][i]);
-            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0, "correlation matrix has invalid entry at (i,j)=("
-                                                                    << i << "," << j << ") equal to " << rho_[i][j]);
+            QL_REQUIRE(close_enough(std::abs(rho_[i][j]), 1.0) || (rho_[i][j] > -1.0 && rho_[i][j] < 1.0),
+                       "correlation matrix has invalid entry at (i,j)=(" << i << "," << j << ") equal to "
+                                                                         << rho_[i][j]);
         }
         QL_REQUIRE(close_enough(rho_[i][i], 1.0), "correlation matrix must have unit diagonal elements, "
                                                   "but rho(i,i)="
