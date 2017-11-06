@@ -542,6 +542,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices_);
     XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
 
+    // cpi cap/floor volatilities
+    XMLNode* cpiVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CpiCapFloorVolatilities");
+    XMLUtils::addChild(doc, cpiVolatilitiesNode, "Simulate", cpiCapFloorVolSimulate_);
+    XMLUtils::addChild(doc, cpiVolatilitiesNode, "ReactionToTimeDecay", cpiCapFloorVolDecayMode_);
+    XMLUtils::addChildren(doc, cpiVolatilitiesNode, "Names", "Name", cpiCapFloorVolIndices_);
+    XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Expiries", returnTenors(cpiCapFloorVolExpiries_, ""));
+    XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Strikes", cpiCapFloorVolStrikes_);
+
     // yoy inflation
     XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
     XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices_);
