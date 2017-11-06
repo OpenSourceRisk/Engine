@@ -80,6 +80,25 @@ public:
             currencies_.push_back(irConfigs_[i]->ccy());
         validate();
     }
+    //! Detailed constructor (IR/FX/EQ only)
+    CrossAssetModelData( //! Vector of IR model specifications
+        const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
+        //! Vector of FX model specifications
+        const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
+        //! Vector of EQ model specifications
+        const std::vector<boost::shared_ptr<EqBsData>>& eqConfigs,
+        //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, EQ:Apple,
+        const std::map<std::pair<std::string, std::string>, Real>& c,
+        //! Bootstrap tolerance used in model calibration
+        Real tolerance = 1e-4)
+        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs),
+        correlations_(c), bootstrapTolerance_(tolerance) {
+        domesticCurrency_ = irConfigs_[0]->ccy();
+        currencies_.clear();
+        for (Size i = 0; i < irConfigs_.size(); ++i)
+            currencies_.push_back(irConfigs_[i]->ccy());
+        validate();
+    }
     //! Detailed constructor (all asset classes) - TODO: add inflation, credit, commodity
     CrossAssetModelData( //! Vector of IR model specifications
         const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
