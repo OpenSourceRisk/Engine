@@ -567,6 +567,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices_);
     XMLUtils::addGenericChildAsList(doc, yoyNode, "Tenors", returnTenors(yoyInflationTenors_, ""));
 
+    // yoy cap/floor volatilities
+    XMLNode* yoyVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YYCapFloorVolatilities");
+    XMLUtils::addChild(doc, yoyVolatilitiesNode, "Simulate", yoyCapFloorVolSimulate_);
+    XMLUtils::addChild(doc, yoyVolatilitiesNode, "ReactionToTimeDecay", yoyCapFloorVolDecayMode_);
+    XMLUtils::addChildren(doc, yoyVolatilitiesNode, "Names", "Name", yoyCapFloorVolIndices_);
+    XMLUtils::addGenericChildAsList(doc, yoyVolatilitiesNode, "Expiries", returnTenors(yoyCapFloorVolExpiries_, ""));
+    XMLUtils::addGenericChildAsList(doc, yoyVolatilitiesNode, "Strikes", yoyCapFloorVolStrikes_);
+
     return marketNode;
 }
 } // namespace analytics
