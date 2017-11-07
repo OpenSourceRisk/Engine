@@ -145,6 +145,19 @@ public:
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
 
+    bool simulateCpiCapFloorVols() const { return cpiCapFloorVolSimulate_; }
+    const vector<string>& cpiCapFloorVolIndices() const { return cpiCapFloorVolIndices_; }
+    const vector<Period>& cpiCapFloorVolExpiries(const string& key) const;
+    bool hasCpiCapFloorVolExpiries(const string& key) const { return cpiCapFloorVolExpiries_.count(key) > 0; }
+    const vector<Real>& cpiCapFloorVolStrikes() const { return cpiCapFloorVolStrikes_; }
+    const string& cpiCapFloorVolDecayMode() const { return cpiCapFloorVolDecayMode_; }
+
+    bool simulateYoyCapFloorVols() const { return yoyCapFloorVolSimulate_; }
+    const vector<string>& yoyCapFloorVolIndices() const { return yoyCapFloorVolIndices_; }
+    const vector<Period>& yoyCapFloorVolExpiries(const string& key) const;
+    bool hasYoyCapFloorVolExpiries(const string& key) const { return yoyCapFloorVolExpiries_.count(key) > 0; }
+    const vector<Real>& yoyCapFloorVolStrikes() const { return yoyCapFloorVolStrikes_; }
+    const string& yoyCapFloorVolDecayMode() const { return yoyCapFloorVolDecayMode_; }
     //@}
 
     //! \name Setters

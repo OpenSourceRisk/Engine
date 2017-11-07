@@ -135,16 +135,17 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
 
     // Cache INF rate keys0
     Size n_inf = simMarketConfig_->zeroInflationIndices().size();
-    zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
-    for (Size j = 0; j < n_inf; ++j) {
-        std::string index = model->infdk(j)->name();
-        ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(index));
-        Size n_ten = ten_inf_.back().size();
-        for (Size k = 0; k < n_ten; ++k) {
-            zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, index, k);
+    if (n_inf > 0) {
+        zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
+        for (Size j = 0; j < n_inf; ++j) {
+            std::string index = model->infdk(j)->name();
+            ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(index));
+            Size n_ten = ten_inf_.back().size();
+            for (Size k = 0; k < n_ten; ++k) {
+                zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, index, k);
+            }
         }
     }
-
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {

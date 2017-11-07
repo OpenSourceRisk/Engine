@@ -67,6 +67,14 @@ const vector<Period>& ScenarioSimMarketParameters::yoyInflationTenors(const stri
     return returnTenors(yoyInflationTenors_, key);
 }
 
+const vector<Period>& ScenarioSimMarketParameters::cpiCapFloorVolExpiries(const string& key) const {
+    return returnTenors(cpiCapFloorVolExpiries_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyCapFloorVolExpiries(const string& key) const {
+    return returnTenors(yoyCapFloorVolExpiries_, key);
+}
+
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
 }
@@ -157,6 +165,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     equityDividendTenors_.clear();
     equityForecastTenors_.clear();
     swapIndices_.clear();
+    zeroInflationTenors_.clear();
+    yoyInflationTenors_.clear();
+    cpiCapFloorVolExpiries_.clear();
+    yoyCapFloorVolExpiries_.clear();
 
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
     DLOG("Loading Currencies");
