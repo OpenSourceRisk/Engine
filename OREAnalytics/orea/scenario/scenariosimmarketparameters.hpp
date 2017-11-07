@@ -50,13 +50,16 @@ public:
         : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
           capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
           equityNamesSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false) {
+          equityVolSimulateATMOnly_(true), cpiCapFloorVolSimulate_(false), yoyCapFloorVolSimulate_(false), equityMoneyness_({1}),
+          baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityDividendTenors_[""];
         equityForecastTenors_[""];
         zeroInflationTenors_[""];
+        cpiCapFloorVolExpiries_[""];
+        yoyCapFloorVolExpiries_[""];
         yoyInflationTenors_[""];
     }
 
