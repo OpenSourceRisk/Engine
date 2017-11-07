@@ -525,7 +525,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 boost::shared_ptr<SecuritySpec> securityspec =
                     boost::dynamic_pointer_cast<SecuritySpec>(spec);
                 QL_REQUIRE(securityspec, "Failed to convert spec " << *spec << " to security spec");
-                const boost::shared_ptr<SecurityConfig>& sc = curveConfigs.securityConfig(securityspec->securityID());
                 
                 auto check = requiredDefaultCurves.find(securityspec->securityID());
                 if (check != requiredDefaultCurves.end())

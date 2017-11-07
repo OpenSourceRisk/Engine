@@ -156,6 +156,7 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         fixingTime += timer.elapsed();
     }
 
+    simMarket_->reset();
     updateProgress(outputCube->samples(), outputCube->samples());
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.elapsed() << " sec, "
                                            << "pricing " << pricingTime << " sec, "

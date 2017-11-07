@@ -46,9 +46,11 @@
     <ClInclude Include="ored\configuration\defaultcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\equitycurveconfig.hpp" />
     <ClInclude Include="ored\configuration\equityvolcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorpricesurfaceconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\securityconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\yieldcurveconfig.hpp" />
     <ClInclude Include="ored\marketdata\all.hpp" />
@@ -73,8 +75,7 @@
     <ClInclude Include="ored\marketdata\marketdatum.hpp" />
     <ClInclude Include="ored\marketdata\marketdatumparser.hpp" />
     <ClInclude Include="ored\marketdata\marketimpl.hpp" />
-    <ClInclude Include="ored\marketdata\securityrecoveryrate.hpp" />
-    <ClInclude Include="ored\marketdata\securityspread.hpp" />
+    <ClInclude Include="ored\marketdata\security.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
@@ -187,8 +188,7 @@
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
     <ClCompile Include="ored\marketdata\marketdatumparser.cpp" />
     <ClCompile Include="ored\marketdata\marketimpl.cpp" />
-    <ClCompile Include="ored\marketdata\securityrecoveryrate.cpp" />
-    <ClCompile Include="ored\marketdata\securityspread.cpp" />
+    <ClCompile Include="ored\marketdata\security.cpp" />
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
