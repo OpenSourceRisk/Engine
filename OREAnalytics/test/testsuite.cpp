@@ -88,21 +88,19 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
-    
-    boost::shared_ptr<ore::test::BoostTestLogger> logger =
-        boost::make_shared<ore::test::BoostTestLogger>();
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
 
+    // Get command line arguments
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
+    
     bool enablePerformanceTests = false;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)
             enablePerformanceTests = true;
     }
+
+    // Set up test logging
+    ore::test::setupTestLogging(argc, argv);
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 
