@@ -60,16 +60,8 @@ public:
         RiskFactorKey key2() const { return key2_; }
         string indexDesc1() const { return indexDesc1_; }
         string indexDesc2() const { return indexDesc2_; }
-        string keyName1() const {
-            std::ostringstream o;
-            o << key1_.keytype << "/" << key1_.keyName();
-            return o.str();
-        }
-        string keyName2() const {
-            std::ostringstream o;
-            o << key2_.keytype << "/" << key2_.keyName();
-            return o.str();
-        }
+        string keyName1() const { return keyName(key1_);}
+        string keyName2() const { return keyName(key2_);}
         //@}
         //! Return type as string
         string typeString() const;
@@ -81,6 +73,7 @@ public:
         string text() const;
 
     private:
+        string keyName( RiskFactorKey key) const;
         Type type_;
         RiskFactorKey key1_;
         string indexDesc1_;

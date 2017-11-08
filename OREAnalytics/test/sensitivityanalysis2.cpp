@@ -1345,8 +1345,14 @@ void SensitivityAnalysis2Test::testSensitivities() {
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
+    map<pair<string, string>, Real> deltaMap;
+    map<pair<string, string>, Real> gammaMap;
+    for (auto p : portfolio->trades()) { 
+	    for (auto f : sa->sensiCube()->upFactors()) { 
+	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
+	    } 
+    }
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
 
     Real shiftSize = 1E-5; // shift size

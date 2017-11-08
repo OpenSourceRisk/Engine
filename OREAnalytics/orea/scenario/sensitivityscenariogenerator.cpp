@@ -36,19 +36,28 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
 }
 
-struct FindPair {
-    FindPair (string first, string second)
-    : m_first_value(first)
-    , m_second_value(second) { }
+struct findFactor {
+    findFactor (string factor)
+        : factor_(factor){}
 
-    string m_first_value;
-    string m_second_value;
+    string factor_;
     bool operator()
         ( const std::pair<string, string> &p ) {
-            return (p.first == m_first_value && p.second == m_second_value) || (p.second == m_first_value && p.first == m_second_value);
+            return (p.first == factor_) || (p.second == factor_);
     }
 };
 
+struct findPair {
+    findPair (string first, string second)
+        : first_(first), second_(second) {}
+
+    string first_;
+    string second_;
+    bool operator()
+        ( const std::pair<string, string> &p ) {
+            return (p.first == first_ && p.second == second_) || (p.second == first_ && p.first == second_);
+    }
+};
 void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
 
     generateDiscountCurveScenarios(sensiScenarioFactory, true);
@@ -114,42 +123,62 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     }
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
-    vector<RiskFactorKey> keys = baseScenario()->keys();
+
+    //store base scenario values
+    boost::shared_ptr<Scenario> base = baseScenario();
+    vector<RiskFactorKey> keys = base->keys();
+    vector<Real> baseValues;
+    for (auto k : keys) {
+        baseValues.push_back(base->get(k));
+    }
+
     Size index = scenarios_.size();
     for (Size i = 0; i < index; ++i) {
-        if (scenarioDescriptions_[i].type() != ScenarioDescription::Type::Up)
+        ScenarioDescription iDesc = scenarioDescriptions_[i];
+        if (iDesc.type() != ScenarioDescription::Type::Up)
             continue;
+        string iKeyName = iDesc.keyName1();
+
+        //Check Filters for i
+        bool match = (
+                find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(), 
+                findFactor( iKeyName))
+                    != sensitivityData_->crossGammaFilter().end());
+
+        if (!match)
+            continue;
+
+        boost::shared_ptr<Scenario> iScenario = scenarios_[i];
+        vector<Real> iValues;
+        for (auto k : keys)
+            iValues.push_back(iScenario->get(k));
+
         for (Size j = i + 1; j < index; ++j) {
-            if (scenarioDescriptions_[j].type() != ScenarioDescription::Type::Up)
+            ScenarioDescription jDesc = scenarioDescriptions_[j];
+            if (jDesc.type() != ScenarioDescription::Type::Up)
                 continue;
             // filter desired cross shift combinations
-            bool match = (
+            match = (
                     find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(), 
-                    FindPair( scenarioDescriptions_[i].keyName1(), scenarioDescriptions_[j].keyName1()))
+                    findPair( iKeyName, jDesc.keyName1()))
                     != sensitivityData_->crossGammaFilter().end());
 
             if (!match)
                 continue;
+                
             boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
-
-            RiskFactorKey key = scenarioDescriptions_[i].key1();
-            Real baseValue = baseScenario()->get(key);
-            Real iValue = scenarios_[i]->get(key);
-            Real jValue = scenarios_[j]->get(key);
-            Real newVal = iValue + jValue - baseValue;
-            if (newVal != baseValue)
-                crossScenario->add(key, newVal);
-
-            key = scenarioDescriptions_[j].key1();
-            baseValue = baseScenario()->get(key);
-            iValue = scenarios_[i]->get(key);
-            jValue = scenarios_[j]->get(key);
-            newVal = iValue + jValue - baseValue;
-            if (newVal != baseValue)
-                crossScenario->add(key, newVal);
-
+            boost::shared_ptr<Scenario> jScenario = scenarios_[j];
+            for (Size k=0; k<keys.size(); k++) { 
+                Real iValue = iValues[k];
+                Real jValue = jScenario->get(keys[k]);
+                Real baseValue = baseValues[k];
+                if (iValue != baseValue || jValue != baseValue)  {
+                    Real newVal = iValue + jValue - baseValue; 
+                    crossScenario->add(keys[k], newVal);
+                }
+            }
             scenarios_.push_back(crossScenario);
-            scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
+            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }

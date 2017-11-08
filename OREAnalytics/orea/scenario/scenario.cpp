@@ -27,14 +27,6 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-    std::string RiskFactorKey::keyName() const {
-        if (keytype != RiskFactorKey::KeyType::IndexCurve)
-            return name;
-        
-        std::vector<string> tokens;
-        boost::split(tokens, name, boost::is_any_of("-"));
-        return tokens[0];
-    }
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) {
     switch (type) {
     case RiskFactorKey::KeyType::DiscountCurve:
