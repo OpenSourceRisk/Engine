@@ -220,8 +220,8 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     std::map<std::string, boost::shared_ptr<InfDkData>> infDataMap;
     XMLNode* infNode = XMLUtils::getChildNode(modelNode, "InflationIndexModels");
     if (infNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(infNode, "CrossAssetLGM"); child;
-            child = XMLUtils::getNextSibling(child, "CrossAssetLGM")) {
+        for (XMLNode* child = XMLUtils::getChildNode(infNode, "LGM"); child;
+            child = XMLUtils::getNextSibling(child, "LGM")) {
 
             boost::shared_ptr<InfDkData> config(new InfDkData());
             config->fromXML(child);
@@ -392,6 +392,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, crossAssetModelNode, "DomesticCcy", domesticCurrency_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Currencies", "Currency", currencies_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");

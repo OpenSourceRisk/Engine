@@ -122,7 +122,7 @@
       </CrossCcyLGM>
     </ForeignExchangeModels>
 	<InflationIndexModels>
-	  <CrossAssetLGM index="EUHICPXT">
+	  <LGM index="EUHICPXT">
 		<Currency>EUR</Currency>
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
@@ -148,8 +148,8 @@
           <ShiftHorizon>0.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
-      </CrossAssetLGM>
-	  <CrossAssetLGM index="UKRPI">
+      </LGM>
+	  <LGM index="UKRPI">
 		<Currency>GBP</Currency>
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
@@ -175,7 +175,7 @@
           <ShiftHorizon>0.0</ShiftHorizon>
           <Scaling>1.0</Scaling>
         </ParameterTransformation>
-	  </CrossAssetLGM>
+	  </LGM>
 	</InflationIndexModels>
     <InstantaneousCorrelations>
       <Correlation factor1="IR:EUR" factor2="IR:GBP">0.3</Correlation>

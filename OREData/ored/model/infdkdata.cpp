@@ -58,7 +58,7 @@ void InfDkData::fromXML(XMLNode* node) {
 
 XMLNode* InfDkData::toXML(XMLDocument& doc) {
     XMLNode* node = LgmData::toXML(doc);
-    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addAttribute(doc, node, "index", index_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     // capfloor calibration
