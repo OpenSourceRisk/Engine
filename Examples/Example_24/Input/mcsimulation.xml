@@ -122,9 +122,8 @@
       </CrossCcyLGM>
     </ForeignExchangeModels>
 	<InflationIndexModels>
-	  <CrossAssetLGM index="default">
+	  <CrossAssetLGM index="EUHICPXT">
 		<Currency>EUR</Currency>
-		<BaseCPI>100</BaseCPI>
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
           <Calibrate>N</Calibrate>
@@ -134,11 +133,11 @@
           <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
-          <Calibrate>N</Calibrate>
-          <ReversionType>HullWhite</ReversionType>
+          <Calibrate>Y</Calibrate>
+          <ReversionType>Hagan</ReversionType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.03</InitialValue>
+          <TimeGrid>1.0, 2.0, 3.0, 4.0, 5.0, 7.0, 10.0</TimeGrid>
+          <InitialValue>1, 1, 1, 1, 1, 1, 1, 1</InitialValue>
         </Reversion>
         <CalibrationCapFloors>
 		  <CapFloor>Floor</CapFloor>
@@ -152,26 +151,25 @@
       </CrossAssetLGM>
 	  <CrossAssetLGM index="UKRPI">
 		<Currency>GBP</Currency>
-		<BaseCPI>200</BaseCPI>
         <CalibrationType>Bootstrap</CalibrationType>
         <Volatility>
-          <Calibrate>Y</Calibrate>
+          <Calibrate>N</Calibrate>
           <VolatilityType>Hagan</VolatilityType>
           <ParamType>Piecewise</ParamType>
           <TimeGrid>2.0, 4.0, 6.0, 8.0, 10.0</TimeGrid>
           <InitialValue>0.01, 0.01, 0.01, 0.01, 0.01, 0.01</InitialValue>
         </Volatility>
         <Reversion>
-          <Calibrate>N</Calibrate>
-          <ReversionType>HullWhite</ReversionType>
+          <Calibrate>Y</Calibrate>
+          <ReversionType>Hagan</ReversionType>
           <ParamType>Piecewise</ParamType>
-          <TimeGrid/>
-          <InitialValue>0.06</InitialValue>
+          <TimeGrid>2.0, 4.0, 6.0, 8.0, 10.0</TimeGrid>
+          <InitialValue>0.6, 0.6, 0.6, 0.6, 0.6, 0.6</InitialValue>
         </Reversion>
         <CalibrationCapFloors>
 		  <CapFloor>Floor</CapFloor>
           <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
-          <Strikes>0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
+          <Strikes>0.03, 0.03, 0.03, 0.03, 0.03</Strikes>
         </CalibrationCapFloors>
         <ParameterTransformation>
           <ShiftHorizon>0.0</ShiftHorizon>
