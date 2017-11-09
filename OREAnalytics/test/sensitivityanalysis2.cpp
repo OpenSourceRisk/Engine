@@ -135,8 +135,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
 boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     boost::shared_ptr<SensitivityScenarioData> sensiData = boost::make_shared<SensitivityScenarioData>();
 
-    sensiData->parConversion() = false;
-
     SensitivityScenarioData::CurveShiftData cvsData;
 
     // identical to sim market tenor structure, we can only check this case, because the analytic engine
@@ -281,8 +279,7 @@ void SensitivityAnalysis2Test::testSensitivities() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
-    sensiData->parConversion() = false;
+    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(false);
 
     // build scenario sim market
     Conventions conventions = *conv();
