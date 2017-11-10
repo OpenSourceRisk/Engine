@@ -232,6 +232,7 @@ TestMarket::TestMarket(Date asof) {
     vector<Rate> ratesZCII = { 2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
         3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
 
+    zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, ii, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]);
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount,"GBP")]);
 }
