@@ -67,7 +67,7 @@ void FxSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         notional_ = nearBoughtAmount_;
         maturity_ = farDate;
 
-    } catch (std::exception& e) {
+    } catch (std::exception) {
         instrument_.reset();
         throw;
     }
