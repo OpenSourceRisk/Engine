@@ -135,6 +135,20 @@ struct TestData {
         fxConfigs.push_back(boost::make_shared<FxBsData>("GBP", "EUR", calibrationType, true, ParamType::Piecewise,
                                                          sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
+
+        std::vector<boost::shared_ptr<InfDkData>> infConfigs;
+
+        vector<std::string> infExpiries = { "1Y", "2Y", "36M" };
+        vector<std::string> infStrikes = { "0.03", "0.03", "0.03" };
+        std::vector<Time> hTimes = { 1.0, 2.0, 3.0, 4.0 };
+        std::vector<Real> hValues = { 1.0, 2.0, 3.0, 4.0 };
+        std::vector<Time> aTimes = { 1.0, 2.0, 3.0, 4.0 };
+        std::vector<Real> aValues = { 1.0, 2.0, 3.0, 4.0 };
+
+        infConfigs.push_back(boost::make_shared<InfDkData>("EUHICPXT", "EUR", calibrationType, revType, volType, false,
+            ParamType::Constant, hTimes, hValues, true, ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, infExpiries,
+            std::vector<std::string>(), infStrikes));
+
         std::map<std::pair<std::string, std::string>, Real> corr;
         corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
         corr[std::make_pair("IR:EUR", "IR:GBP")] = 0.3;
@@ -146,6 +160,7 @@ struct TestData {
         corr[std::make_pair("IR:USD", "FX:GBPEUR")] = -0.1;
         corr[std::make_pair("IR:GBP", "FX:USDEUR")] = 0.0;
         corr[std::make_pair("IR:GBP", "FX:GBPEUR")] = 0.1;
+        corr[std::make_pair("INF:EUHICPXT", "IR:EUR")] = 1.0;
 
         boost::shared_ptr<CrossAssetModelData> config(
             boost::make_shared<CrossAssetModelData>(irConfigs, fxConfigs, corr));
@@ -292,6 +307,11 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setZeroInflationTenors("", { 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                                  5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                                  30 * Years, 40 * Years, 50 * Years });
+
+    simMarketConfig->simulateCpiCapFloorVols() = false;
 
     // Multi path generator
     BigNatural seed = 42;
@@ -319,7 +339,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
 
     // Basic martingale tests
     Size samples = 10000;
-    Real eur = 0.0, usd = 0.0, gbp = 0.0, eur2 = 0.0, usd2 = 0.0, gbp2 = 0.0;
+    Real eur = 0.0, usd = 0.0, gbp = 0.0, eur2 = 0.0, usd2 = 0.0, gbp2 = 0.0, eur3 = 0.0;
 
     boost::timer timer;
     for (Size i = 0; i < samples; i++) {
@@ -332,6 +352,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                 RiskFactorKey gbpKey(RiskFactorKey::KeyType::DiscountCurve, "GBP", 8);
                 RiskFactorKey usdeurKey(RiskFactorKey::KeyType::FXSpot, "USDEUR");
                 RiskFactorKey gbpeurKey(RiskFactorKey::KeyType::FXSpot, "GBPEUR");
+                RiskFactorKey euhicpKey(RiskFactorKey::KeyType::ZeroInflationCurve, "EUHICPXT", 4);
 
                 Real usdeurFX = scenario->get(usdeurKey);
                 Real gbpeurFX = scenario->get(gbpeurKey);
@@ -339,12 +360,14 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                 Real eur10yDiscount = scenario->get(eurKey);
                 Real gbp10yDiscount = scenario->get(gbpKey);
                 Real usd10yDiscount = scenario->get(usdKey);
+                Real euhicpZero = scenario->get(euhicpKey);
                 eur += eur10yDiscount / numeraire;
                 gbp += gbp10yDiscount * gbpeurFX / numeraire;
                 usd += usd10yDiscount * usdeurFX / numeraire;
                 eur2 += 1.0 / numeraire;
                 gbp2 += gbpeurFX / numeraire;
                 usd2 += usdeurFX / numeraire;
+                eur3 += euhicpZero / numeraire;
             }
         }
     }
@@ -356,6 +379,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     eur2 /= samples;
     gbp2 /= samples;
     usd2 /= samples;
+    eur3 /= samples;
 
     Real relTolerance = 0.01;
     Real eurExpected = d.market->discountCurve("EUR")->discount(20.);
@@ -378,6 +402,10 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
+    Real eurExpected3 = d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.);
+    BOOST_CHECK_MESSAGE(fabs(eur3 - eurExpected3) / eurExpected3 < relTolerance,
+        "EUR 10Y Discount mismatch: " << eur3 << " vs " << eurExpected3);
+
     BOOST_TEST_MESSAGE("CrossAssetModel " << (sobol ? "Sobol " : "MersenneTwister ") << (antithetic ? "Antithetic" : "")
                                           << (brownianBridge ? "BrownianBridge" : ""));
     BOOST_TEST_MESSAGE("EUR 20Y Discount:        " << eur << " vs " << eurExpected);
@@ -386,6 +414,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_TEST_MESSAGE("EUR 10Y Discount:        " << eur2 << " vs " << eurExpected2);
     BOOST_TEST_MESSAGE("GBP 10Y Discount in EUR: " << gbp2 << " vs " << gbpExpected2);
     BOOST_TEST_MESSAGE("USD 10Y Discount in EUR: " << usd2 << " vs " << usdExpected2);
+    BOOST_TEST_MESSAGE("EUHICPXT 10Y Zero Rate:  " << eur3 << " vs " << eurExpected3);
     BOOST_TEST_MESSAGE("Simulation time " << elapsed);
 }
 

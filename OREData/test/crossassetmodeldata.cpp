@@ -133,11 +133,9 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
 
     // Create two instances
     boost::shared_ptr<InfDkData> infDkData1(new data::InfDkData());
-    boost::shared_ptr<InfDkData> infDkData2(new data::InfDkData());
 
     vector<std::string> expiries = {"1Y", "2Y", "36M"};
     vector<std::string> strikes = {"0.03", "0.03", "0.03"};
-    std::vector<Time> times = {1.0, 2.0, 3.0, 4.0};
 
     // First instance
     infDkData1->infIndex() = "EUHICPXT";
