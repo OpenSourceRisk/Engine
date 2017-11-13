@@ -140,10 +140,10 @@ struct TestData {
 
         vector<std::string> infExpiries = { "1Y", "2Y", "36M" };
         vector<std::string> infStrikes = { "0.03", "0.03", "0.03" };
-        std::vector<Time> hTimes = { 1.0, 2.0, 3.0, 4.0 };
-        std::vector<Real> hValues = { 1.0, 2.0, 3.0, 4.0 };
-        std::vector<Time> aTimes = { 1.0, 2.0, 3.0, 4.0 };
-        std::vector<Real> aValues = { 1.0, 2.0, 3.0, 4.0 };
+        hTimes = { 1.0, 2.0, 3.0, 4.0 };
+        hValues = { 1.0, 2.0, 3.0, 4.0 };
+        aTimes = { 1.0, 2.0, 3.0, 4.0 };
+        aValues = { 1.0, 2.0, 3.0, 4.0 };
 
         infConfigs.push_back(boost::make_shared<InfDkData>("EUHICPXT", "EUR", calibrationType, revType, volType, false,
             ParamType::Constant, hTimes, hValues, true, ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, infExpiries,
