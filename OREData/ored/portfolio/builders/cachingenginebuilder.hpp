@@ -50,6 +50,7 @@ public:
     /*! Constructor that takes a model and engine name
         @param model the model name
         @param engine the engine name
+        @param tradeTypes a set of trade types
      */
     CachingEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
         : EngineBuilder(model, engine, tradeTypes) {}
