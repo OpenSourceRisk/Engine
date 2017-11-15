@@ -79,7 +79,7 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+    ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                            const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_);
     //! Default destructor
     ~ShiftScenarioGenerator(){};
@@ -172,7 +172,7 @@ public:
     boost::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    const boost::shared_ptr<ScenarioSimMarket> simMarket_;
+    const boost::shared_ptr<Scenario> baseScenario_;
     const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     Size counter_;

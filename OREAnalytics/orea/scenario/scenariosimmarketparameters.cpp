@@ -97,7 +97,7 @@ void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
-    if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
+    if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || yieldCurveDayCounter_ != rhs.yieldCurveDayCounter_ || yieldCurveNames_ != rhs.yieldCurveNames_ ||
         yieldCurveCurrencies_ != rhs.yieldCurveCurrencies_ || yieldCurveTenors_ != rhs.yieldCurveTenors_ ||
         indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ || interpolation_ != rhs.interpolation_ ||
         extrapolate_ != rhs.extrapolate_ || swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
@@ -168,6 +168,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "YieldCurves");
     if (nodeChild) {
         nodeChild = XMLUtils::getChildNode(nodeChild, "Configuration");
+        yieldCurveDayCounter_ = XMLUtils::getChildValue(nodeChild, "DayCounter", true);
         yieldCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
         // TODO read other keys
         interpolation_ = XMLUtils::getChildValue(nodeChild, "Interpolation", true);
@@ -209,6 +210,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
             swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
             swapVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
+            swapVolDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
             swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
             XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
             if (cubeNode) {
@@ -234,6 +236,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         if (capVolSimNode)
             capFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(capVolSimNode));
         capFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        capFloorVolDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
         // TODO read other keys
         capFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
         capFloorVolCcys_ = XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true);
@@ -247,6 +250,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "DefaultCurves");
     if (nodeChild) {
         defaultNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        defaultDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
+        defaultCal_ = XMLUtils::getChildValue(nodeChild, "Calendar");
         defaultTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
         // TODO read other keys
         XMLNode* survivalProbabilitySimNode = XMLUtils::getChildNode(nodeChild, "SimulateSurvivalProbabilities");
@@ -341,6 +346,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
     if (nodeChild) {
         zeroInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        zeroInflationDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
         zeroInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
     }
     else {
@@ -353,6 +359,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
     if (nodeChild) {
         yoyInflationIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        yoyInflationDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
         yoyInflationTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
     }
     else {
@@ -374,6 +381,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     if (nodeChild) {
         baseCorrelationSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
         baseCorrelationNames_ = XMLUtils::getChildrenValues(nodeChild, "IndexNames", "IndexName", true);
+        baseCorrelationDcs_ = XMLUtils::getChildValue(nodeChild, "DayCounter");
         baseCorrelationTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
         baseCorrelationDetachmentPoints_ =
             XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "DetachmentPoints", true);
