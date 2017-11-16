@@ -243,8 +243,8 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->crossGammaFilter() = {{"DiscountCurve/EUR", "DiscountCurve/EUR"},
                                      {"DiscountCurve/USD", "DiscountCurve/USD"},
-                                     {"DiscountCurve/EUR", "IndexCurve/EUR-EURIBOR-6M"},
-                                     {"IndexCurve/EUR-EURIBOR-6M", "IndexCurve/EUR-EURIBOR-6M"},
+                                     {"DiscountCurve/EUR", "IndexCurve/EUR"},
+                                     {"IndexCurve/EUR", "IndexCurve/EUR"},
                                      {"DiscountCurve/EUR", "DiscountCurve/USD"}};
 
     return sensiData;
@@ -1345,9 +1345,15 @@ void SensitivityAnalysis2Test::testSensitivities() {
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
-    map<tuple<string, string, string>, Real> crossGammaMap = sa->crossGamma();
+    map<pair<string, string>, Real> deltaMap;
+    map<pair<string, string>, Real> gammaMap;
+    for (auto p : portfolio->trades()) { 
+	    for (auto f : sa->sensiCube()->upFactors()) { 
+	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
+	    } 
+    }
+    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
 
     Real shiftSize = 1E-5; // shift size
 
@@ -1405,20 +1411,25 @@ void SensitivityAnalysis2Test::testSensitivities() {
     // check cross gammas
     BOOST_TEST_MESSAGE("Checking cross-gammas...");
     Size foundCrossGammas = 0, zeroCrossGammas = 0;
-    for (auto const& x : crossGammaMap) {
-        string key = std::get<0>(x.first) + " " + std::get<1>(x.first) + " " + std::get<2>(x.first);
-        Real scaledResult = x.second / (shiftSize * shiftSize);
-        // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
-        if (analyticalResultsCrossGamma.count(key) > 0) {
-            if (!check(analyticalResultsCrossGamma.at(key), scaledResult))
-                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                           << ") could not be verified against analytic result ("
-                                                           << analyticalResultsCrossGamma.at(key) << ")");
-            ++foundCrossGammas;
-        } else {
-            if (!close_enough(x.second, 0.0))
-                BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult << ") expected to be zero");
-            ++zeroCrossGammas;
+    for (Size i=0; i<portfolio->size(); i++) {
+        string id = portfolio->trades()[i]->id();
+        for (auto const& s : scenDesc) {
+            if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+                string key =  id + " " + s.factor1() + " " + s.factor2();
+                Real scaledResult = sa->crossGamma(id, s.factor1(), s.factor2()) / (shiftSize * shiftSize);
+                // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
+                if (analyticalResultsCrossGamma.count(key) > 0) {
+                    if (!check(analyticalResultsCrossGamma.at(key), scaledResult))
+                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
+                                                            << ") could not be verified against analytic result ("
+                                                            << analyticalResultsCrossGamma.at(key) << ")");
+                    ++foundCrossGammas;
+                } else {
+                    if (!close_enough(sa->crossGamma(id, s.factor1(), s.factor2()), 0.0))
+                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult << ") expected to be zero");
+                    ++zeroCrossGammas;
+                }
+            }
         }
     }
     if (foundCrossGammas != analyticalResultsCrossGamma.size())

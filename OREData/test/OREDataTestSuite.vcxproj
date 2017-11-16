@@ -631,6 +631,7 @@
     <ClInclude Include="bond.hpp" />
     <ClInclude Include="calendars.hpp" />
     <ClInclude Include="ccyswapwithresets.hpp" />
+    <ClInclude Include="cds.hpp" />
     <ClInclude Include="cms.hpp" />
     <ClInclude Include="cpiswap.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
@@ -654,6 +655,7 @@
     <ClCompile Include="bond.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
+    <ClCompile Include="cds.cpp" />
     <ClCompile Include="cms.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
