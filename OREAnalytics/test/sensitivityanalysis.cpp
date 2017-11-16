@@ -672,10 +672,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     std::set<string> sensiTrades; 
     for (auto p : portfolio->trades()) { 
         sensiTrades.insert(p->id());
-	    for (auto f : sa->sensiCube()->upFactors()) { 
-	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
             gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-	    } 
+        } 
     }
 
     std::vector<Results> cachedResults2 = {
@@ -1068,10 +1068,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     std::set<string> sensiTrades; 
     for (auto p : portfolio->trades()) { 
         sensiTrades.insert(p->id());
-	    for (auto f : sa->sensiCube()->upFactors()) { 
-	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
             gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-	    } 
+        } 
     }
 
     struct SensiResults {
@@ -1283,10 +1283,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     std::set<string> sensiTrades; 
     for (auto p : portfolio->trades()) { 
         sensiTrades.insert(p->id());
-	    for (auto f : sa->sensiCube()->upFactors()) { 
-	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
             gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-	    } 
+        } 
     }
 
 
