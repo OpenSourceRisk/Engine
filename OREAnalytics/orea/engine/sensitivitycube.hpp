@@ -26,6 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
@@ -39,7 +40,7 @@ public:
 
     SensitivityCube() {}
     
-    SensitivityCube(boost::shared_ptr<NPVCube>& cube, boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions, 
+    SensitivityCube(boost::shared_ptr<NPVCube>& cube, boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions, 
         const boost::shared_ptr<ore::data::Portfolio>& portfolio):
             cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
         for (Size i=0; i<scenarioDescriptions->size(); i++) {
@@ -94,7 +95,7 @@ public:
             } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
                 return baseFactorIndices_.find(factor1)->second;
             } else {
-                QL_FAIL("Invalid type " << type);
+                QL_FAIL("Invalid type");
             }
     }
 
@@ -108,7 +109,7 @@ public:
     std::map<pair<string, string>, Size> crossFactors() const { return  crossFactorIndices_;}
 
     boost::shared_ptr<NPVCube>& npvCube() { return cube_;}
-    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
+    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
     
 private:
     Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2 = "") const {
@@ -118,7 +119,7 @@ private:
 
 
     boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;
+    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;
 
     std::map<string, Size> tradeIndices_, upFactorIndices_, downFactorIndices_, baseFactorIndices_;
     std::map<pair<string, string>, Size> crossFactorIndices_;
