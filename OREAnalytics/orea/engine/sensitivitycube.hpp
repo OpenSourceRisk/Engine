@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -93,6 +93,8 @@ public:
                 return crossFactorIndices_.find(pair)->second;
             } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
                 return baseFactorIndices_.find(factor1)->second;
+            } else {
+                QL_FAIL("Invalid type " << type);
             }
     }
 
