@@ -72,6 +72,9 @@
     <ClInclude Include="curveconfig.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="cds.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -136,6 +139,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="curveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cds.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
