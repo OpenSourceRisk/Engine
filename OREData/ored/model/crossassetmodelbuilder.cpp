@@ -170,7 +170,7 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         boost::shared_ptr<InfDkData> inf = config->infConfigs()[i];
         string infIndex = inf->infIndex();
         boost::shared_ptr<InfDkBuilder> builder =
-            boost::make_shared<InfDkBuilder>(market_, inf, configurationEqCalibration_);
+            boost::make_shared<InfDkBuilder>(market_, inf, configurationInfCalibration_);
         boost::shared_ptr<QuantExt::InfDkParametrization> parametrization = builder->parametrization();
         infCapFloorBaskets_[i] = builder->optionBasket();
         infParametrizations.push_back(parametrization);

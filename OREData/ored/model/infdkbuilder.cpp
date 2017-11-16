@@ -53,7 +53,7 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     Array h(data_->hValues().begin(), data_->hValues().end());
 
     // TODO, support other param types
-    QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported currently");
+  //  QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported currently");
 
     if (data_->calibrateA()) { // override
         if (data_->aTimes().size() > 0) {

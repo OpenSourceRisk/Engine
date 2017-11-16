@@ -134,7 +134,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     }
 
     // Cache INF rate keys0
-    Size n_inf = simMarketConfig_->zeroInflationIndices().size();
+    Size n_inf = model_->components(INF);
     if (n_inf > 0) {
         zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
         for (Size j = 0; j < n_inf; ++j) {

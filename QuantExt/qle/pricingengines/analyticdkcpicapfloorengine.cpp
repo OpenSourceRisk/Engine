@@ -50,19 +50,13 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real k = std::pow(1.0 + arguments_.strike, t);
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
-    Real zero = model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate);
-    Real m = arguments_.baseCPI * std::pow(1.0 + zero, t);
+
+    Real m = arguments_.baseCPI * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate), t);
 
     Real Ht = Hy(index_).eval(x, t);
-    Real zety = zetay(index_).eval(x, t);
-    Real v1 = Ht * Ht * zety;
-    Real v2 = integral(x, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
-    Real v3 = -2.0 * Ht * integral(x, P(Hy(index_), ay(index_), ay(index_)), 0.0, t);
-    Real v = v1 + v2 + v3;
-
-  /*  Real v = Ht * Ht * zetay(index_).eval(x, t) -
+    Real v = Ht * Ht * zetay(index_).eval(x, t) -
              2.0 * Ht * integral(x, P(Hy(index_), ay(index_), ay(index_)), 0.0, t) +
-             integral(x, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t); */
+             integral(x, P(Hy(index_), Hy(index_), ay(index_), ay(index_)), 0.0, t);
 
     Size irIdx = x->ccyIndex(x->infdk(index_)->currency());
     Real discount = model_->irlgm1f(irIdx)->termStructure()->discount(arguments_.payDate);

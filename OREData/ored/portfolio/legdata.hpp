@@ -168,15 +168,16 @@ private:
 class CPILegData : public LegAdditionalData {
 public:
     CPILegData() : LegAdditionalData("CPI") {}
-    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates,
-               const vector<string>& rateDates = std::vector<string>())
-        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), rates_(rates),
-          rateDates_(rateDates) {}
+    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates, 
+               const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = false)
+        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), 
+          rates_(rates), subtractInflationNominal_(subtractInflationNominal), rateDates_(rateDates) {}
 
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }
     const string observationLag() const { return observationLag_; }
     bool interpolated() const { return interpolated_; }
+    bool subtractInflationNominal() const { return subtractInflationNominal_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
 
@@ -188,6 +189,7 @@ private:
     double baseCPI_;
     string observationLag_;
     bool interpolated_;
+    bool subtractInflationNominal_;
     vector<double> rates_;
     vector<string> rateDates_;
 };

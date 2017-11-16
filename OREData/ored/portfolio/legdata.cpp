@@ -103,6 +103,11 @@ void CPILegData::fromXML(XMLNode* node) {
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
+    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotionnal");
+    if (subNomNode)
+        subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
+    else
+        subtractInflationNominal_ = false;
     rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
 }
 
@@ -113,6 +118,7 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
+    XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     return node;
 }
 
@@ -590,7 +596,8 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
                   .withFixedRates(rates)
-                  .withObservationInterpolation(interpolationMethod);
+                  .withObservationInterpolation(interpolationMethod)
+                  .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
     Size n = leg.size();
     QL_REQUIRE(n > 0, "Empty CPI Leg");
     

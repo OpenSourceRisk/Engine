@@ -16,9 +16,9 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/infbsbuilder.hpp
-\brief
-\ingroup models
+/*! \file ored/model/infdkbuilder.hpp
+    \brief
+    \ingroup models
 */
 
 #pragma once

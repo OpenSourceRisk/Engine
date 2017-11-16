@@ -84,6 +84,13 @@
            </xs:sequence>
          </xs:complexType>
       </xs:element>
+      <xs:element name="InflationIndexModels" maxOccurs="1" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+             <xs:element type="lgm" name="LGM" maxOccurs="unbounded" minOccurs="0"/>
+           </xs:sequence>
+         </xs:complexType>
+      </xs:element>
       <xs:element name="InstantaneousCorrelations">
         <xs:complexType>
            <xs:sequence>

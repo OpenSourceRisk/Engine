@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file model/infbsdata.hpp
+/*! \file model/infdkdata.hpp
     \brief INF component data for the cross asset model
     \ingroup models
 */
@@ -58,11 +58,12 @@ public:
     InfDkData(std::string index, std::string currency, CalibrationType calibrationType, ReversionType revType,
         VolatilityType volType, bool calibrateH, ParamType hType, std::vector<Time> hTimes, std::vector<Real> hValues, 
         bool calibrateA, ParamType aType, std::vector<Time> aTimes, std::vector<Real> aValues, 
-        Real shiftHorizon = 0.0, Real scaling = 1.0, std::vector<std::string> optionExpiries = std::vector<std::string>(),
+        Real shiftHorizon = 0.0, Real scaling = 1.0, std::string calibrateToCapfloor = "Floor", 
+        std::vector<std::string> optionExpiries = std::vector<std::string>(),
         std::vector<std::string> optionTerms = std::vector<std::string>(),
         std::vector<std::string> optionStrikes = std::vector<std::string>())
         : LgmData(index, calibrationType, revType, volType, calibrateH, hType, hTimes, hValues, calibrateA, aType, aTimes, aValues,
-        shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes), index_(index), currency_(currency) {}
+        shiftHorizon, scaling, optionExpiries, optionTerms, optionStrikes), index_(index), currency_(currency), capfloor_(calibrateToCapfloor) {}
 
     //! \name Setters/Getters
     //@{

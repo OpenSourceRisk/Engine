@@ -376,8 +376,8 @@ void CrossAssetModelData::buildInfConfigs(std::map<std::string, boost::shared_pt
             boost::shared_ptr<InfDkData> infData = boost::make_shared<InfDkData>(
                 index, def->currency(), def->calibrationType(), def->reversionType(), def->volatilityType(),
                 def->calibrateH(), def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(),
-                def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(), def->optionTerms(),
-                def->optionStrikes());
+                def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->capFloor(), def->optionExpiries(), 
+                def->optionTerms(), def->optionStrikes());
 
             infConfigs_.push_back(infData);
         }
