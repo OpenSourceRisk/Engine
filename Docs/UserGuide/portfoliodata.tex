@@ -57,11 +57,12 @@ allowable values follows below. There are two XML elements directly under the to
 Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 
 
-\item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
-  the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
+\item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
+ORE currently supports 11 trade types.
 
-Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
-
+%Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
+Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
+EquityForward, EquityOption, CreditDefaultSwap, Bond}
 
 \end{itemize}
 
@@ -87,11 +88,11 @@ The meanings and allowable values of the various elements in the \lstinline!Enve
 
   Allowable values: Any alphanumeric string. The underscore (\_) sign may be used as well.
 
-\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
-  element in the envelope. Both elements should have the same entry.
-
-Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
-EquityForward, EquityOption, CreditDefaultSwap, Bond}
+%\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
+%  element in the envelope. Both elements should have the same entry.
+%
+%Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
+%EquityForward, EquityOption, CreditDefaultSwap, Bond}
 
 \item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by
   counterparty.
