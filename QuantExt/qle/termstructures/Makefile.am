@@ -67,7 +67,6 @@ this_include_HEADERS = \
 	strippedoptionletadapter2.hpp \
 	swaptionvolatilityconverter.hpp \
 	subperiodsswaphelper.hpp \
-	survivalprobabilitycurve.hpp \
 	blackvolsurfacewithatm.hpp \
 	defaultprobabilityhelpers.hpp \
 	survivalprobabilitycurve.hpp \

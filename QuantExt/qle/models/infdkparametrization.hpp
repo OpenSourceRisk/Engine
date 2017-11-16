@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file infdklgm1fparametrization.hpp
+/*! \file qle/models/infdkparametrization.hpp
     \brief Inflation Dodgson Kainth parametrization
 */
 

@@ -52,8 +52,7 @@ public:
         InflationCapFloorPrice,
         Equity,
         EquityVolatility,
-        SecuritySpread,
-        SecurityRecoveryRate,
+        Security,
         BaseCorrelation
     };
     //! Default destructor
@@ -79,10 +78,8 @@ public:
             return "FX";
         case CurveType::FXVolatility:
             return "FXVolatility";
-        case CurveType::SecuritySpread:
-            return "SecuritySpread";
-        case CurveType::SecurityRecoveryRate:
-            return "SecurityRecoveryRate";
+        case CurveType::Security:
+            return "Security";
         case CurveType::Default:
             return "Default";
         case CurveType::CDSVolatility:
@@ -411,28 +408,13 @@ private:
     string curveConfigID_;
 };
 
-//! SecuritySpread description
-class SecuritySpreadSpec : public CurveSpec {
+//! Security description
+class SecuritySpec : public CurveSpec {
 public:
-    SecuritySpreadSpec(const string& securityID) : securityID_(securityID) {}
+    SecuritySpec(const string& securityID) : securityID_(securityID) {}
     //! Default constructor
-    SecuritySpreadSpec() {}
-    CurveType baseType() const { return CurveType::SecuritySpread; }
-    string subName() const { return securityID_; }
-    const string& securityID() const { return securityID_; }
-    //@}
-
-protected:
-    string securityID_;
-};
-
-//! SecurityRecoveryRate description
-class SecurityRecoveryRateSpec : public CurveSpec {
-public:
-    SecurityRecoveryRateSpec(const string& securityID) : securityID_(securityID) {}
-    //! Default constructor
-    SecurityRecoveryRateSpec() {}
-    CurveType baseType() const { return CurveType::SecurityRecoveryRate; }
+    SecuritySpec() {}
+    CurveType baseType() const { return CurveType::Security; }
     string subName() const { return securityID_; }
     const string& securityID() const { return securityID_; }
     //@}

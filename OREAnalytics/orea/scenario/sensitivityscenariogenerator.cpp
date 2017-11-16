@@ -18,6 +18,7 @@
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <ostream>
 using namespace QuantLib;
 using namespace QuantExt;
@@ -35,6 +36,28 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
 }
 
+struct findFactor {
+    findFactor (string factor)
+        : factor_(factor){}
+
+    string factor_;
+    bool operator()
+        ( const std::pair<string, string> &p ) {
+            return (p.first == factor_) || (p.second == factor_);
+    }
+};
+
+struct findPair {
+    findPair (string first, string second)
+        : first_(first), second_(second) {}
+
+    string first_;
+    string second_;
+    bool operator()
+        ( const std::pair<string, string> &p ) {
+            return (p.first == first_ && p.second == second_) || (p.second == first_ && p.first == second_);
+    }
+};
 void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
 
     generateDiscountCurveScenarios(sensiScenarioFactory, true);
@@ -100,43 +123,62 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     }
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
-    vector<RiskFactorKey> keys = baseScenario()->keys();
+
+    //store base scenario values
+    boost::shared_ptr<Scenario> base = baseScenario();
+    vector<RiskFactorKey> keys = base->keys();
+    vector<Real> baseValues;
+    for (auto k : keys) {
+        baseValues.push_back(base->get(k));
+    }
+
     Size index = scenarios_.size();
     for (Size i = 0; i < index; ++i) {
+        ScenarioDescription iDesc = scenarioDescriptions_[i];
+        if (iDesc.type() != ScenarioDescription::Type::Up)
+            continue;
+        string iKeyName = iDesc.keyName1();
+
+        //Check Filters for i
+        bool match = (
+                find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(), 
+                findFactor( iKeyName))
+                    != sensitivityData_->crossGammaFilter().end());
+
+        if (!match)
+            continue;
+
+        boost::shared_ptr<Scenario> iScenario = scenarios_[i];
+        vector<Real> iValues;
+        for (auto k : keys)
+            iValues.push_back(iScenario->get(k));
+
         for (Size j = i + 1; j < index; ++j) {
-            if (i == j || scenarioDescriptions_[i].type() != ScenarioDescription::Type::Up ||
-                scenarioDescriptions_[j].type() != ScenarioDescription::Type::Up)
+            ScenarioDescription jDesc = scenarioDescriptions_[j];
+            if (jDesc.type() != ScenarioDescription::Type::Up)
                 continue;
             // filter desired cross shift combinations
-            bool match = false;
-            for (Size k = 0; k < sensitivityData_->crossGammaFilter().size(); ++k) {
-                if ((scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
-                         string::npos &&
-                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
-                         string::npos) ||
-                    (scenarioDescriptions_[i].factor1().find(sensitivityData_->crossGammaFilter()[k].second) !=
-                         string::npos &&
-                     scenarioDescriptions_[j].factor1().find(sensitivityData_->crossGammaFilter()[k].first) !=
-                         string::npos)) {
-                    match = true;
-                    break;
-                }
-            }
+            match = (
+                    find_if(sensitivityData_->crossGammaFilter().begin(), sensitivityData_->crossGammaFilter().end(), 
+                    findPair( iKeyName, jDesc.keyName1()))
+                    != sensitivityData_->crossGammaFilter().end());
+
             if (!match)
                 continue;
-
+                
             boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
-
-            for (Size k = 0; k < keys.size(); ++k) {
-                Real baseValue = baseScenario()->get(keys[k]);
-                Real iValue = scenarios_[i]->get(keys[k]);
-                Real jValue = scenarios_[j]->get(keys[k]);
-                Real newVal = iValue + jValue - baseValue;
-                if (newVal != baseValue)
+            boost::shared_ptr<Scenario> jScenario = scenarios_[j];
+            for (Size k=0; k<keys.size(); k++) { 
+                Real iValue = iValues[k];
+                Real jValue = jScenario->get(keys[k]);
+                Real baseValue = baseValues[k];
+                if (iValue != baseValue || jValue != baseValue)  {
+                    Real newVal = iValue + jValue - baseValue; 
                     crossScenario->add(keys[k], newVal);
+                }
             }
             scenarios_.push_back(crossScenario);
-            scenarioDescriptions_.push_back(ScenarioDescription(scenarioDescriptions_[i], scenarioDescriptions_[j]));
+            scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
@@ -616,8 +658,6 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
         }
     }
 
-    string domestic = simMarketData_->baseCcy();
-
     Size n_fxvol_pairs = fxVolCcyPairs.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
@@ -708,8 +748,6 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-
-    string domestic = simMarketData_->baseCcy();
 
     Size n_eqvol_names = equityVolNames.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
@@ -806,7 +844,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
 
     volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
     shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
-    
+
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = swaptionVolCurrencies[i];
         SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
@@ -832,6 +870,16 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*ts);
             QL_REQUIRE(tmp, "swaption cube missing")
             cube = tmp->cube();
+        } else {
+            // if atmOnly == true, we might have a matrix or a SwaptionVolatilityConstantSpread
+            // in the latter case we extract the underlying cube which is used below to determine
+            // the atm strike
+            auto tmp = boost::dynamic_pointer_cast<SwaptionVolatilityConstantSpread>(*ts);
+            if (tmp != nullptr) {
+                auto tmp2 = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*tmp->cube());
+                QL_REQUIRE(tmp2, "swaption cube missing");
+                cube = tmp2->cube();
+            }
         }
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -848,7 +896,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             for (Size k = 0; k < n_swvol_term; ++k) {
                 Period term = simMarketData_->swapVolTerms()[k];
                 for (Size l = 0; l < n_swvol_strike; ++l) {
-                    Real strike = atmOnly_swvol ? Null<Real>() : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l]; 
+                    Real strike = cube == nullptr
+                                      ? Null<Real>()
+                                      : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l];
                     Real swvol = ts->volatility(expiry, term, strike);
                     volData[l][j][k] = swvol;
                 }
@@ -874,13 +924,13 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                     //if simulating atm only we shift all strikes otherwise we shift each strike individually
                     Size loopStart = atmOnly_swvol ? 0 : l;
                     Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart+1;
-                    
+
                     LOG("Swap vol looping over "<<loopStart<<" to "<<loopEnd <<" for strike "<<shiftStrikes[l]);
                     for (Size ll=loopStart; ll < loopEnd; ++ll){
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                 volTermTimes, volData[ll], shiftedVolData[ll], true);
                     }
-                    
+
                     for (Size jj = 0; jj < n_swvol_exp; ++jj) {
                         for (Size kk = 0; kk < n_swvol_term; ++kk) {
                             for (Size ll = 0; ll < n_swvol_strike; ++ll) {

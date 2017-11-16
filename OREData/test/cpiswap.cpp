@@ -252,9 +252,8 @@ void CPISwapTest::testCPISwapPrice() {
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
     vector<Real> spread(1, 0);
-    FloatingLegData legdataLibor(indexLibor, 0, isInArrears, spread);
-    LegData legLibor(isPayerLibor, "GBP", legdataLibor, scheduleLibor, "A365F", notional, vector<string>(),
-                     paymentConvention);
+    LegData legLibor(boost::make_shared<FloatingLegData>(indexLibor, 0, isInArrears, spread), isPayerLibor, "GBP",
+                     scheduleLibor, "A365F", notional, vector<string>(), paymentConvention);
 
     // GBP CPI Leg
     bool isPayerCPI = false;
@@ -263,8 +262,8 @@ void CPISwapTest::testCPISwapPrice() {
     string CPIlag = "2M";
     std::vector<double> fixedRate(1, 0.02);
     bool interpolated = false;
-    CPILegData legdataCPI(indexCPI, baseCPI, CPIlag, interpolated, fixedRate);
-    LegData legCPI(isPayerCPI, "GBP", legdataCPI, scheduleCPI, dc, notional, vector<string>(), paymentConvention);
+    LegData legCPI(boost::make_shared<CPILegData>(indexCPI, baseCPI, CPIlag, interpolated, fixedRate), isPayerCPI,
+                   "GBP", scheduleCPI, dc, notional, vector<string>(), paymentConvention);
 
     // Build swap trades
     boost::shared_ptr<Trade> CPIswap(new ore::data::Swap(env, legLibor, legCPI));
@@ -309,15 +308,6 @@ void CPISwapTest::testCPISwapPrice() {
 }
 
 test_suite* CPISwapTest::suite() {
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-    boost::shared_ptr<ore::data::FileLogger> logger =
-    boost::make_shared<ore::data::FileLogger>("CPISwap_test.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
-    */
     test_suite* suite = BOOST_TEST_SUITE("CPISwapTest");
     suite->add(BOOST_TEST_CASE(&CPISwapTest::testCPISwapPrice));
     return suite;
