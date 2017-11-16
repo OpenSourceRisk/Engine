@@ -824,15 +824,6 @@ Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_
 
 Allowable values: Each child element can take any positive real number.
 
-In case of exchange of currencies an initial exchange, a final exchange
-and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
-\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
-\lstinline!NotionalAmortizingExchange! as subelements.
-
-FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
-\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
-\lstinline!FixingDays! (integer) subelements.
-
 \vspace{1em}
 
 An example of a \lstinline!Notionals! element for an amortising leg with four coupons is shown in Listing \ref{lst:notionals}.
@@ -867,9 +858,16 @@ Another allowable specification of the notional schedule is shown in Listing \re
 The first notional must not have a start date, it will be associated
 with the schedule's start, The subsequent notionals can have a start
 date specified from which date onwards the new notional is applied. This allows
-specifying notionals only for dates where the notional changes.
+specifying notionals only for dates where the notional changes. 
 
-An example for a cross currency exchange leg is shown in Listing \ref{lst:notional_exchange}.
+\vspace{1em} 
+
+In case of exchange of currencies an initial exchange, a final exchange
+and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
+\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
+\lstinline!NotionalAmortizingExchange! as subelements, see listing
+\ref{lst:notional_exchange}.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -878,11 +876,35 @@ An example for a cross currency exchange leg is shown in Listing \ref{lst:notion
                     <Exchanges>
                       <NotionalInitialExchange>true</NotionalInitialExchange>
                       <NotionalFinalExchange>true</NotionalFinalExchange>
+                      <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
                     </Exchanges>
                 </Notionals>
 \end{minted}
 \caption{Notional list with exchange}
 \label{lst:notional_exchange}
+\end{listing}
+
+FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
+\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
+\lstinline!FixingDays! (integer) subelements, see listing
+\ref{lst:notional_fxreset} for an example
+
+ \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>65000000</Notional> <!-- in USD -->
+                    <FXReset>
+                      <ForeignCurrency> EUR </ForeignCurrency>
+                      <ForeignAmount> 60000000 </ForeignAmount>
+                      <FXIndex> FX-SOURCE-USD-EUR </FXIndex>
+                      <FixingDays> 2 </FixingDays>
+                    </FXReset>
+                </Notionals>
+\end{minted}
+\caption{Notional list with exchange}
+\label{lst:notional_fxreset}
 \end{listing}
 
 
