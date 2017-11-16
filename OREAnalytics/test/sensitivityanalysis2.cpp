@@ -279,7 +279,7 @@ void SensitivityAnalysis2Test::testSensitivities() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> simMarketData = setupSimMarketData5();
 
     // sensitivity config
-    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5(false);
+    boost::shared_ptr<SensitivityScenarioData> sensiData = setupSensitivityScenarioData5();
 
     // build scenario sim market
     Conventions conventions = *conv();
