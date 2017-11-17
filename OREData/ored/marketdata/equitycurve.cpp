@@ -34,7 +34,8 @@ namespace ore {
 namespace data {
 
 EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                         const Conventions& conventions) {
+                         const Conventions& conventions, 
+                         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {
 
@@ -128,8 +129,11 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         curveType_ = config->type();
         YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
-        boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                        asof, ycspec, curveConfigs, loader, conventions);
+        // at this stage we should have built the curve already 
+        //  (consider building curve on fly if not? Would need to work around fact that requiredYieldCurves is currently const ref)
+        auto itr = requiredYieldCurves.find(ycspec.name());
+        QL_REQUIRE(itr != requiredYieldCurves.end(), "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
+        boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
         forecastYieldTermStructure_ = yieldCurve->handle();
     } catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());

@@ -267,9 +267,16 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     equityNames_.clear();
     if (nodeChild) {
-        XMLNode* equityNamesSimNode = XMLUtils::getChildNode(nodeChild, "SimulateEquityNames");
-        if (equityNamesSimNode)
-            equityNamesSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(equityNamesSimNode));
+        XMLNode* equityForecastCurveSimNode = XMLUtils::getChildNode(nodeChild, "SimulateEquityForecastCurve");
+        if (equityForecastCurveSimNode)
+            equityForecastCurveSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(equityForecastCurveSimNode));
+        else
+            equityForecastCurveSimulate_ = true;
+        XMLNode* dividendYieldSimNode = XMLUtils::getChildNode(nodeChild, "SimulateDividendYield");
+        if (dividendYieldSimNode)
+            dividendYieldSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(dividendYieldSimNode));
+        else
+            dividendYieldSimulate_ = false;
         equityNames_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true); 
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);

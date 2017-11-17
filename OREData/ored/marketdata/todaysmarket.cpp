@@ -457,7 +457,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     // build the curve
                     LOG("Building EquityCurve for asof " << asof);
                     boost::shared_ptr<EquityCurve> equityCurve =
-                        boost::make_shared<EquityCurve>(asof, *equityspec, loader, curveConfigs, conventions);
+                        boost::make_shared<EquityCurve>(asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 

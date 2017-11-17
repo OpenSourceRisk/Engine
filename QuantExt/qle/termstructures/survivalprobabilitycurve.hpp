@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file survivalprobabilitycurve.hpp
+/*! \file qle/termstructures/survivalprobabilitycurve.hpp
     \brief interpolated survival probability term structure
     \ingroup termstructures
 */
