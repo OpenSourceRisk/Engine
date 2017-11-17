@@ -840,17 +840,19 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
         Date date0 = asof_ - inflationTs->observationLag();
-        vector<Date> zeroCurveDates, quoteDates;
-        zeroCurveDates.push_back(date0);
+        DayCounter dc = inflationTs->dayCounter();
+        vector<Date> quoteDates;
+        vector<Time> zeroCurveTimes(1, 0.0);
         vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days,
                    "zero inflation tenors must not include t=0");
+
         for (auto& tenor : parameters->zeroInflationTenors(zic)) {
-            zeroCurveDates.push_back(date0 + tenor);
+            zeroCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
             quoteDates.push_back(asof_ + tenor);
         }
 
-        for (Size i = 1; i < zeroCurveDates.size(); i++) {
+        for (Size i = 1; i < zeroCurveTimes.size(); i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i - 1])));
             Handle<Quote> qh(q);
             if (i == 1) {
@@ -865,13 +867,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             LOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
         }
 
+        // FIXME: Settlement days set to zero - needed for floating term structure implementation
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-
-        // Note this is *not* a floating term structure, it is only suitable for sensi runs
-        // TODO: floating
         zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>>(new ZeroInflationCurveObserver<Linear>(
-            asof_, inflationIndex->fixingCalendar(), inflationTs->dayCounter(), inflationTs->observationLag(),
-            inflationTs->frequency(), inflationTs->indexIsInterpolated(), yts, zeroCurveDates, quotes,
+            0, inflationIndex->fixingCalendar(), 
+            inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
+            inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes,
             inflationTs->seasonality()));
 
         Handle<ZeroInflationTermStructure> its(zeroCurve);

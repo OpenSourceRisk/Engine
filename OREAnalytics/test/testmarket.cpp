@@ -256,9 +256,9 @@ TestMarket::TestMarket(Date asof) {
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount,"GBP")]);
 
     inflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = flatRateCps(zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")],
-        vector<Real> {0.99, 1.0}, vector<Real>{0.0, 0.01, 0.02}, vector<Period> {5 * Years, 10 * Years}, Matrix(2, 2, 0.01), Matrix(3, 2, 0.01));
+        vector<Real>{0.0, 0.01, 0.02}, vector<Real> {-1.0, -0.99}, vector<Period> {5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15)); 
     inflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatRateCps(zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")],
-        vector<Real>{0.0, 0.01, 0.02}, vector<Real> {-1.0, -0.99},  vector<Period> {5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
+        vector<Real>{0.0, 0.01, 0.02}, vector<Real> {-1.0, -0.99}, vector<Period> {5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 

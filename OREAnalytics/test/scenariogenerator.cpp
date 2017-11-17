@@ -1153,7 +1153,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     simMarketConfig->simulateEquityVols() = false;
 
 
-    simMarketConfig->baseCcy() = "GBP";
+    simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = { "EUR", "USD", "GBP" };
     simMarketConfig->indices() = { "GBP-LIBOR-6M" };
     simMarketConfig->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
@@ -1164,7 +1164,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
         5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years });
     simMarketConfig->simulateCpiCapFloorVols() = false;
     simMarketConfig->cpiCapFloorVolDecayMode() = ConstantVariance;
-    simMarketConfig->cpiCapFloorVolIndices() = { "UKRPI" };
+    simMarketConfig->cpiCapFloorVolIndices() = { "EUHICPXT" };
     simMarketConfig->setCpiCapFloorVolExpiries("", { 5 * Years});
     simMarketConfig->cpiCapFloorVolStrikes() = { 0.00 };
 
@@ -1191,29 +1191,27 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     // fx forward for expsoure generation (otm) and engine
     Date maturity = grid->dates().back() + 2; // make sure the option is live on last grid date
    
-    Handle<ZeroInflationIndex> infIndex = simMarket->zeroInflationIndex("UKRPI");
+    Handle<ZeroInflationIndex> infIndex = d.market->zeroInflationIndex("EUHICPXT");
 
     Schedule cpiSchedule(vector<Date> { maturity });
-    Leg cashflowLeg;
-    cashflowLeg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(10000000.0, maturity)));
     Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), 258.5, 2 * Months)
         .withFixedRates(1)
         .withNotionals(10000000)
-        .withObservationInterpolation(CPI::Flat)
+        .withObservationInterpolation(CPI::AsIndex)
         .withPaymentDayCounter(ActualActual())
         .withPaymentAdjustment(Following)
         .withSubtractInflationNominal(true);
 
     boost::shared_ptr<QuantLib::Swap> cpiSwap =
         boost::make_shared<QuantLib::Swap>(vector<Leg> {cpiLeg}, vector<bool> {false});
-    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(simMarket->discountCurve("GBP"));
+    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(simMarket->discountCurve("EUR"));
     cpiSwap->setPricingEngine(dscEngine);
 
     // cpi floor options as reference
     // note that we set the IR vols to zero, so that we can
     // use a simple adjustment of strike an notional
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> modelEngine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 0);
+        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1);
 
     boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 10000000.0, today, 258.5,
         maturity, infIndex->fixingCalendar(), Following, infIndex->fixingCalendar(), Following, 0.0, infIndex, 2 * Months);
