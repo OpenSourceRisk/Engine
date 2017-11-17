@@ -881,7 +881,7 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
             oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
             oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
             oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
+            discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
 
         instruments.push_back(oisHelper);
     }
