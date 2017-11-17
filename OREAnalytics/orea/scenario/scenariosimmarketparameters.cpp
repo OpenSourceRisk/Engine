@@ -277,8 +277,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     } else {
-        equityDividendTenors_.clear();
-        equityForecastTenors_.clear();
+        equityDividendTenors_[""];
+        equityForecastTenors_[""];
     }
     
     DLOG("Loading CDSVolatilities Rates");
