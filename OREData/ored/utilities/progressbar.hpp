@@ -81,8 +81,8 @@ private:
 */
 class SimpleProgressBar : public ProgressIndicator {
 public:
-    SimpleProgressBar(const std::string& message, const unsigned int messageWidth = 40,
-                      const unsigned int barWidth = 40, const unsigned int numberOfScreenUpdates = 100);
+    SimpleProgressBar(const std::string& message, const QuantLib::Size messageWidth = 40,
+                      const QuantLib::Size barWidth = 40, const QuantLib::Size numberOfScreenUpdates = 100);
 
     //! ProgressIndicator interface
     void updateProgress(const unsigned long progress, const unsigned long total) override;
