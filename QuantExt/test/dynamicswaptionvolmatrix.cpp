@@ -25,6 +25,8 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 #include <ql/time/calendars/target.hpp>
 
+#include <ql/time/daycounters/actual365fixed.hpp>
+
 using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;

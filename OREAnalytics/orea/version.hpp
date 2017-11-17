@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/version.hpp
+/*! \file orea/version.hpp
     \brief Version
 */
 
