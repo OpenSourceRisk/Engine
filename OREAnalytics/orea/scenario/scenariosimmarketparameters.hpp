@@ -50,7 +50,8 @@ public:
         : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
           capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
           equityNamesSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false) {
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false), equityForecastCurveSimulate_(true),
+          dividendYieldSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -71,7 +72,7 @@ public:
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
-    const bool& extrapolate() const { return extrapolate_; }
+    bool extrapolate() const { return extrapolate_; }
 
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
@@ -141,6 +142,9 @@ public:
     const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
+
+    bool simulateEquityForecastCurve() const { return equityForecastCurveSimulate_; }
+    bool simulateDividendYield() const { return dividendYieldSimulate_; }
 
     //@}
 
