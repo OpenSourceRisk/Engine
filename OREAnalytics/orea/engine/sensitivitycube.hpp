@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/cube/sensitivitycube.hpp
+/*! \file orea/engine/sensitivitycube.hpp
     \brief wrapper class for an npvCube and a vector of scenarioDescriotions for use in sensitivity generation
     \ingroup Cube
 */

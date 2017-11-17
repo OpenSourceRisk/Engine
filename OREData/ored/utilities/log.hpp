@@ -327,16 +327,16 @@ private:
     The proper usage is to use the macro LOGGERSTREAM and DLOGGERSTREAM, if a function takes
     a std::ostream& as a parameter, use the macro instead.
 
-    <code>
+    \code{.cpp}
     void function(int x, int y, std::ostream& out);
 
     void main () {
 
       // call function
       function (3, 4, LOGGERSTREAM);
-      // All logging will be completed before this line.
+      // All logging will be completed before this line
     }
-    </code>
+    \endcode
  */
 class LoggerStream {
 public:
