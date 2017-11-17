@@ -75,11 +75,15 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
 
-    generateEquityForecastCurveScenarios(sensiScenarioFactory, true);
-    generateEquityForecastCurveScenarios(sensiScenarioFactory, false);
+    if (simMarket_->isSimulated(RiskFactorKey::KeyType::EquityForecastCurve)) {
+        generateEquityForecastCurveScenarios(sensiScenarioFactory, true);
+        generateEquityForecastCurveScenarios(sensiScenarioFactory, false);
+    }
 
-    generateDividendYieldScenarios(sensiScenarioFactory, true);
-    generateDividendYieldScenarios(sensiScenarioFactory, false);
+    if (simMarket_->isSimulated(RiskFactorKey::KeyType::DividendYield)) {
+        generateDividendYieldScenarios(sensiScenarioFactory, true);
+        generateDividendYieldScenarios(sensiScenarioFactory, false);
+    }
 
     generateZeroInflationScenarios(sensiScenarioFactory, true);
     generateZeroInflationScenarios(sensiScenarioFactory, false);
