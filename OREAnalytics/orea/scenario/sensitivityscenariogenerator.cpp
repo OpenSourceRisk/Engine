@@ -320,36 +320,21 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve(times, quotes, 0, TARGET(), dc));
-
-        times.erase(times.begin());
         
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j-1];
+            times[j] = dc.yearFraction(asof, d);
+
+            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
@@ -412,35 +397,20 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten+1);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
@@ -502,35 +472,20 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         Size n_ten = simMarketData_->yieldCurveTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->yieldCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(name)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
@@ -591,35 +546,20 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         Size n_ten = simMarketData_->equityForecastTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->equityForecastCurveShiftData()[name];
         ShiftType shiftType = parseShiftType(data.shiftType);
         
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::EquityForecastCurve, name, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->equityForecastTenors(name)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityForecastTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::EquityForecastCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastTenors(name)
@@ -687,28 +627,13 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten + 1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::DividendYield, name, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->equityDividendTenors(name)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
         
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityDividendTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::DividendYield, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
@@ -1149,33 +1074,13 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->defaultDcs());
         Calendar calendar = parseCalendar(simMarketData_->defaultCal());
-        vector<Handle<Quote>> quotes;
-
-
-        vector<Date> dates(1, asof);
-
-        for (Size i = 0; i < n_ten; i++) {
-            dates.push_back(asof + simMarketData_->defaultTenors(name)[i]);
-        }
-
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-        for (Size i = 0; i < dates.size() - 1; i++) {
-            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, i);
-            Real prob = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-        }
-
-        boost::shared_ptr<DefaultProbabilityTermStructure> ts(
-            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, calendar));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->defaultTenors(crNames[i])[j];
             times[j] = dc.yearFraction(asof, d);
-            Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
-            hazardRates[j] = -std::log(s_t) / times[j];
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
+            Real prob = baseScenario_->get(key);
+            hazardRates[j] = -std::log(prob ) / times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)

@@ -132,37 +132,20 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
         
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>(
-            new QuantExt::InterpolatedDiscountCurve(times, quotes, 0, TARGET(), dc));
-
-        times.erase(times.begin());
-
         for (Size j = 0; j < n_ten; ++j) {
-            Date date = asof + simMarketData_->yieldCurveTenors(ccy)[j];
-            zeros[j] = ts->zeroRate(date, dc, Continuous);
+            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -208,28 +191,12 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
 
 
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
-
         for (Size j = 0; j < n_ten; ++j) {
-            Date date = asof + simMarketData_->yieldCurveTenors(indexName)[j];
-            zeros[j] = ts->zeroRate(date, dc, Continuous);
+            Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -272,28 +239,13 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
-        vector<Handle<Quote>> quotes;
-        
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size j = 1; j < n_ten+1; ++j) {
-            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j-1);
-            Real quote = baseScenario_->get(key);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(quote));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-            Date d = asof + simMarketData_->yieldCurveTenors(name)[j-1];
-            times[j] = dc.yearFraction(asof, d);
-        }
-
-        boost::shared_ptr<YieldTermStructure> ts = boost::shared_ptr<YieldTermStructure>( new QuantExt::InterpolatedDiscountCurve2(times, quotes, dc));
-
-        times.erase(times.begin());
 
         for (Size j = 0; j < n_ten; ++j) {
-            Date date = asof + simMarketData_->yieldCurveTenors(name)[j];
-            zeros[j] = ts->zeroRate(date, dc, Continuous);
+            Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
