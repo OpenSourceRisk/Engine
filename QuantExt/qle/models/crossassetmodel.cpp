@@ -347,6 +347,10 @@ void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> i
         allTimes.insert(allTimes.end(), p_[idx(CR, i)]->parameterTimes(1).begin(),
                         p_[idx(CR, i)]->parameterTimes(1).end());
     }
+    for (Size i = 0; i < nEqBs_; ++i) {
+        allTimes.insert(allTimes.end(), p_[idx(EQ, i)]->parameterTimes(0).begin(),
+                        p_[idx(EQ, i)]->parameterTimes(0).end());
+    }
 
     // use piecewise integrator avoiding the step points
     integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
