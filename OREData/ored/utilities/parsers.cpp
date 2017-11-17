@@ -328,10 +328,10 @@ DayCounter parseDayCounter(const string& s) {
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
                                         {"Business/252", Business252()},
-                                        {"Actual/365 (No Leap)", Actual365NoLeap()},
-                                        {"Act/365 (NL)", Actual365NoLeap()},
-                                        {"NL/365", Actual365NoLeap()},
-                                        {"Actual/365 (JGB)", Actual365NoLeap()}};
+                                        {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
 
     auto it = m.find(s);
     if (it != m.end()) {
