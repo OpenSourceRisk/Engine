@@ -232,7 +232,9 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
     }
     for (Size k = 0; k < fxCcyPairs.size(); k++) {
         string ccypair = fxCcyPairs[k]; // foreign + domestic;
-        SensitivityScenarioData::SpotShiftData data = sensitivityData_->fxShiftData()[ccypair];
+        auto itr = sensitivityData_->fxShiftData().find(ccypair);
+        QL_REQUIRE(itr != sensitivityData_->fxShiftData().end(), "fxShiftData not found for " << ccypair);
+        SensitivityScenarioData::SpotShiftData data = itr->second;
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         // QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
@@ -270,7 +272,9 @@ void SensitivityScenarioGenerator::generateEquityScenarios(
     }
     for (Size k = 0; k < equityNames.size(); k++) {
         string equity = equityNames[k];
-        SensitivityScenarioData::SpotShiftData data = sensitivityData_->equityShiftData()[equity];
+        auto itr = sensitivityData_->equityShiftData().find(equity);
+        QL_REQUIRE(itr != sensitivityData_->equityShiftData().end(), "equityShiftData not found for " << equity);
+        SensitivityScenarioData::SpotShiftData data = itr->second;
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
@@ -315,8 +319,9 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->discountCurveShiftData()[ccy];
+        auto itr = sensitivityData_->discountCurveShiftData().find(ccy);
+        QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "CurveShiftData not found for " << ccy);
+        SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->discountCurve(ccy);
         DayCounter dc = ts->dayCounter();
@@ -387,7 +392,9 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->indexCurveShiftData()[indexName];
+        auto itr = sensitivityData_->indexCurveShiftData().find(indexName);
+        QL_REQUIRE(itr != sensitivityData_->indexCurveShiftData().end(), "CurveShiftData not found for " << indexName);
+        SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<IborIndex> iborIndex = simMarket_->iborIndex(indexName);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
@@ -459,7 +466,9 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->yieldCurveShiftData()[name];
+        auto itr = sensitivityData_->yieldCurveShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->yieldCurveShiftData().end(), "CurveShiftData not found for " << name);
+        SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->yieldCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -529,7 +538,9 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->equityForecastCurveShiftData()[name];
+        auto itr = sensitivityData_->equityForecastCurveShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->equityForecastCurveShiftData().end(), "equityForecast CurveShiftData not found for " << name);
+        SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->equityForecastCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -598,7 +609,9 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->dividendYieldShiftData()[name];
+        auto itr = sensitivityData_->dividendYieldShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->dividendYieldShiftData().end(), "dividendYield CurveShiftData not found for " << name);
+        SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->equityDividendCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -847,7 +860,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
 
     for (Size i = 0; i < n_swvol_ccy; ++i) {
         std::string ccy = swaptionVolCurrencies[i];
-        SensitivityScenarioData::SwaptionVolShiftData data = sensitivityData_->swaptionVolShiftData()[ccy];
+        auto itr = sensitivityData_->swaptionVolShiftData().find(ccy);
+        QL_REQUIRE(itr != sensitivityData_->swaptionVolShiftData().end(), "SwaptionVolShiftData not found for " << ccy);
+        SensitivityScenarioData::SwaptionVolShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
@@ -976,8 +991,9 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
     for (Size i = 0; i < n_cfvol_ccy; ++i) {
         std::string ccy = capFloorVolCurrencies[i];
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
-        SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
-
+        auto itr = sensitivityData_->capFloorVolShiftData().find(ccy);
+        QL_REQUIRE(itr != sensitivityData_->capFloorVolShiftData().end(), "SwaptionVolShiftData not found for " << ccy);
+        SensitivityScenarioData::CapFloorVolShiftData data = itr->second;  
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
         vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
@@ -1070,7 +1086,9 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         times.resize(n_ten);
         // buffer for shifted survival prob curves
         std::vector<Real> shiftedHazardRates(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->creditCurveShiftData()[name];
+        auto itr = sensitivityData_->creditCurveShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(), "credit CurveShiftData not found for " << name);
+        SensitivityScenarioData::CurveShiftData data = itr->second;  
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -1144,7 +1162,9 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
 
     for (Size i = 0; i < n_cdsvol_name; ++i) {
         std::string name = cdsVolNames[i];
-        SensitivityScenarioData::CdsVolShiftData data = sensitivityData_->cdsVolShiftData()[name];
+        auto itr = sensitivityData_->cdsVolShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->cdsVolShiftData().end(), "CdsVolShiftData not found for " << name);
+        SensitivityScenarioData::CdsVolShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
@@ -1215,8 +1235,9 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->zeroInflationCurveShiftData()[indexName];
-
+        auto itr = sensitivityData_->zeroInflationCurveShiftData().find(indexName);
+        QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(), "zero inflation CurveShiftData not found for " << indexName);
+        SensitivityScenarioData::CurveShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<ZeroInflationIndex> inflationIndex = simMarket_->zeroInflationIndex(indexName);
         Handle<ZeroInflationTermStructure> ts = inflationIndex->zeroInflationTermStructure();
@@ -1288,7 +1309,9 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedYoys(n_ten);
-        SensitivityScenarioData::CurveShiftData data = sensitivityData_->yoyInflationCurveShiftData()[indexName];
+        auto itr = sensitivityData_->yoyInflationCurveShiftData().find(indexName);
+        QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(), "yoyinflation CurveShiftData not found for " << indexName);
+        SensitivityScenarioData::CurveShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YoYInflationIndex> inflationIndex = simMarket_->yoyInflationIndex(indexName);
         Handle<YoYInflationTermStructure> ts = inflationIndex->yoyInflationTermStructure();
@@ -1360,7 +1383,9 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
 
     for (Size i = 0; i < n_bc_names; ++i) {
         std::string name = baseCorrelationNames[i];
-        SensitivityScenarioData::BaseCorrelationShiftData data = sensitivityData_->baseCorrelationShiftData()[name];
+        auto itr = sensitivityData_->baseCorrelationShiftData().find(name);
+        QL_REQUIRE(itr !=sensitivityData_->baseCorrelationShiftData().end(), "BaseCorrelationShiftData not found for " << name);
+        SensitivityScenarioData::BaseCorrelationShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
