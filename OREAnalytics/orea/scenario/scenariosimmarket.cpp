@@ -979,6 +979,9 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
+
+    // update market asof date
+    asof_ = scenario->asof();
 }
 
 void ScenarioSimMarket::reset() {
@@ -1013,6 +1016,7 @@ void ScenarioSimMarket::update(const Date& d) {
         ObservableSettings::instance().disableUpdates(true);
 
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
 
     numeraire_ = scenario->getNumeraire();
 
