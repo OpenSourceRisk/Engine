@@ -49,7 +49,7 @@ public:
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
           capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          equityNamesSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
+          fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
           equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false), equityForecastCurveSimulate_(true),
           dividendYieldSimulate_(false) {
         // set default tenors
@@ -103,7 +103,6 @@ public:
     const vector<string>& cdsVolNames() const { return cdsVolNames_; }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
-    bool simulateEquityNames() const { return equityNamesSimulate_; }
     const vector<string>& equityNames() const { return equityNames_; }
     const vector<Period>& equityDividendTenors(const string& key) const;
     bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
@@ -187,7 +186,6 @@ public:
     vector<string>& cdsVolNames() { return cdsVolNames_; }
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
 
-    bool& simulateEquityNames() { return equityNamesSimulate_; }
     vector<string>& equityNames() { return equityNames_; }
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
     void setEquityForecastTenors(const string& key, const vector<Period>& p);
@@ -279,8 +277,9 @@ private:
     vector<Period> cdsVolExpiries_;
     string cdsVolDecayMode_;
 
-    bool equityNamesSimulate_;
     vector<string> equityNames_;
+    bool equityForecastCurveSimulate_;
+    bool dividendYieldSimulate_;
     map<string, vector<Period>> equityDividendTenors_;
     map<string, vector<Period>> equityForecastTenors_;
 
@@ -315,8 +314,6 @@ private:
     vector<string> yoyInflationIndices_;
     map<string, vector<Period>> yoyInflationTenors_;
 
-    bool equityForecastCurveSimulate_;
-    bool dividendYieldSimulate_;
 };
 } // namespace analytics
 } // namespace ore
