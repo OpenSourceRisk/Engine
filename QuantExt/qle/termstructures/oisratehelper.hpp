@@ -42,7 +42,8 @@ public:
                   BusinessDayConvention fixedConvention = Following,
                   BusinessDayConvention paymentAdjustment = Following,
                   DateGeneration::Rule rule = DateGeneration::Backward,
-                  const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>());
+                  const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
+                  bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -74,6 +75,7 @@ protected:
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
+    bool telescopicValueDates_;
 };
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
@@ -87,7 +89,8 @@ public:
                        BusinessDayConvention fixedConvention = Following,
                        BusinessDayConvention paymentAdjustment = Following,
                        DateGeneration::Rule rule = DateGeneration::Backward,
-                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>());
+                       const Handle<YieldTermStructure>& discountingCurve = Handle<YieldTermStructure>(),
+                       bool telescopicValueDates = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -110,6 +113,7 @@ protected:
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
     Handle<YieldTermStructure> discountHandle_;
     RelinkableHandle<YieldTermStructure> discountRelinkableHandle_;
+    bool telescopicValueDates_;
 };
 } // namespace QuantExt
 
