@@ -677,9 +677,16 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
         // if a gearing is zero, QL will build fixed rate coupons, these do not need a pricer
         if (boost::dynamic_pointer_cast<FixedRateCoupon>(cashflow))
             continue;
-        boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow);
-        QL_REQUIRE(coupon, "Expected a coupon of type FloatingRateCoupon");
-        coupon->setPricer(couponPricer);
+        if (!couponCapFloor && !nakedCapFloor) { 
+            boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cashflow); 
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type FloatingRateCoupon"); 
+            coupon->setPricer(couponPricer); 
+        } else { 
+            // as FloatingRateCoupon::setPricer() is not virtual we need to cast up here to pass in the correct pricer
+            boost::shared_ptr<CappedFlooredCmsCoupon> coupon = boost::dynamic_pointer_cast<CappedFlooredCmsCoupon>(cashflow); 
+            QL_REQUIRE(coupon, "Expected a leg of coupons of type CappedFlooredCmsCoupon"); 
+            coupon->setPricer(couponPricer); 
+        }
     }
     return tmpLeg;
 }
