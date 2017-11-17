@@ -48,10 +48,10 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
-          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
+          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false), 
+          equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
           fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false), equityForecastCurveSimulate_(true),
-          dividendYieldSimulate_(false) {
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
