@@ -329,7 +329,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
         
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j-1];
+            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
 
             RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
@@ -620,7 +620,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         Size n_ten = simMarketData_->equityDividendTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
         SensitivityScenarioData::CurveShiftData data = sensitivityData_->dividendYieldShiftData()[name];

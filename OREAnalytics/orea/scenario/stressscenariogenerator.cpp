@@ -181,7 +181,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
 
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
@@ -231,7 +231,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten + 1, 0.0);
+        std::vector<Real> times(n_ten);
 
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
