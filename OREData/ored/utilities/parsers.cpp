@@ -377,9 +377,7 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
         {"Twentieth", DateGeneration::Twentieth},
         {"TwentiethIMM", DateGeneration::TwentiethIMM},
         {"OldCDS", DateGeneration::OldCDS},
-#if QL_HEX_VERSION >= 0x011000f0
         {"CDS2015", DateGeneration::CDS2015},
-#endif
         {"CDS", DateGeneration::CDS}
     };
 
