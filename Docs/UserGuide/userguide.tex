@@ -1481,14 +1481,28 @@ Year on Year Swap:
 After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
 
 %--------------------------------------------------------
-\subsection{Bonds}
+\subsection{Bonds and Amortisation Structures}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_18} computes NPVs and flow projections for a vanilla bond portfolio
-consisting of a fixed rate bond and a Euribor-6M floater.
+The example in folder {\tt Examples/Example\_18} computes NPVs and cash flow projections for a vanilla bond portfolio
+consisting of a range of bond products, in particular demonstrating amortisation features:
+\begin{itemize}
+\item fixed rate bond
+\item floating rate bond linked to Euribor 6M
+\item bond switching from fixed to floating
+\item bond with 'fixed amount' amortisation
+\item bond with percentage amortisation relative to the initial notional
+\item bond with percentage amortisation relative to the previous notional
+\item bond with fixed annuity amortisation
+\item bond with floating annuity amortisation (this example needs QuantLib 1.10 or higher to work, in particular the amount() method in the Coupon class needs to be virtual)
+\item bond with fixed amount amortisation followed by percentage amortisation relative to previous notional
+\end{itemize}
 
 After running the example, the results of the computation can be found in the output files {\tt npv.csv} and {\tt
   flows.csv}, respectively.
+
+\medskip
+Note that the amortisation features used here are linked to the LegData structure, hence not limited to the Bond instrument, see section \ref{ss:amortisationdata}.
 
 %--------------------------------------------------------
  
