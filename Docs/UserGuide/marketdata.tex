@@ -208,29 +208,47 @@ Example:
 
 \begin{table}[H]
 \centering
-  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
   \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{FRA} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
-    Forward start & An integer followed by D, W, M or Y, or an IMM date convention  & Period from today to start, or number of IMM dates from today to start  \\ \hline
-    Term & An integer followed by D, W, M or Y, or an IMM date convention & Period from start to maturity, or number of IMM dates from today to maturity\\ \hline
+    Forward start & An integer followed by D, W, M or Y  & Period from today to start  \\ \hline
+    Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hline
   \end{tabular}
   \caption{FRA Rate}
   \label{tab:fra_quote}
 \end{table}
-The IMM date convention for ORE is `IMx' where x represents a number of IMM dates from today. 
-If the number of dates is 9 or less we take x to be the number itself, otherwise we take x to be A for 10, B for 11, C for 12 or D for 13.
 FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate
 adjustment of dates. 
+
+\medskip 
+IMM FRA quotes are represented as follows.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{IMM\_FRA} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
+    Start & An integer & Number of IMM dates from today to start  \\ \hline
+    End & An integer & Number of IMM dates from today to maturity\\ \hline
+  \end{tabular}
+  \caption{IMM FRA Rate}
+  \label{tab:imm_fra_quote}
+\end{table}
 
 \medskip
 Example:
 \begin{itemize}
 \item {FRA/RATE/EUR/9M/3M}
-\item {FRA/RATE/EUR/IM9/IMB}
+\item {IMM\_FRA/RATE/EUR/2/3}
 \end{itemize}
+
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Money Market Futures Price}
