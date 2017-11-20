@@ -30,15 +30,16 @@ Allowable values: Any real number.
     \hline
     \bfseries{Market Data Parameter} & \bfseries{Allowable Values} \\
     \hline
- Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA,
-  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX, FX\_FWD,
+ Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA, IMM\_FRA,
+  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX\_SPOT, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
-  EQUITY\_OPTION, BOND} \\
+  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION} \\
 \hline
-  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
-  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} \\
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
+  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
+  BASE\_CORRELATION, SHIFT} \\
 \hline
   \end{tabu}
   \caption{Allowable values for Instrument and Quote type market data.}
@@ -167,6 +168,38 @@ Examples with a Term and with a DiscountDate:
 Example:
 \begin{itemize}
 \item {FX/RATE/EUR/USD}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{FX Forward Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{ss:fx_forward_rate}
+
+An FX Forward quote is expected in ``forward points'' quotation
+$$
+\mbox{Forward Points} = \frac{\mbox{FX Forward} - \mbox{FX
+    Spot}}{\mbox{Conversion Factor}}
+$$ 
+with conversion factor set to 1.
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description}\\ \hline
+    Instrument Type & \emph{FX\_FWD} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
+    Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+%    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
+  \end{tabular}
+  \caption{FX Forward Rate}
+  \label{tab:fxfwd_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {FX\_FWD/RATE/EUR/USD/1M}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
