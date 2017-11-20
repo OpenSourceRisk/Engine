@@ -37,24 +37,24 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
 }
 
 struct findFactor {
-    findFactor (string factor)
+    findFactor (const string& factor)
         : factor_(factor){}
 
     string factor_;
-    bool operator()
-        ( const std::pair<string, string> &p ) {
+    const bool operator()
+        ( const std::pair<string, string> &p ) const {
             return (p.first == factor_) || (p.second == factor_);
     }
 };
 
 struct findPair {
-    findPair (string first, string second)
+    findPair (const string& first, const string& second)
         : first_(first), second_(second) {}
 
     string first_;
     string second_;
-    bool operator()
-        ( const std::pair<string, string> &p ) {
+    const bool operator()
+        ( const std::pair<string, string> &p ) const {
             return (p.first == first_ && p.second == second_) || (p.second == first_ && p.first == second_);
     }
 };
