@@ -562,7 +562,7 @@ void OREApp::writeBaseScenario() {
 
     string separator = params_->get("baseScenario", "separator");
     QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
-    const char sep = separator.c_str()[0];;
+    const char sep = separator.c_str()[0];
 
     bool append = parseBool(params_->get("baseScenario", "append"));
     string mode = append ? "a+" : "w+";
