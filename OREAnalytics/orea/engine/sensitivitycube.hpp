@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/cube/sensitivitycube.hpp
+/*! \file orea/engine/sensitivitycube.hpp
     \brief wrapper class for an npvCube and a vector of scenarioDescriotions for use in sensitivity generation
     \ingroup Cube
 */
@@ -38,9 +38,8 @@ class SensitivityCube {
 
 public:
 
-    SensitivityCube() {}
-    
-    SensitivityCube(boost::shared_ptr<NPVCube>& cube, boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions, 
+    //! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
+    SensitivityCube(const boost::shared_ptr<NPVCube>& cube, boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions, 
         const boost::shared_ptr<ore::data::Portfolio>& portfolio):
             cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
         for (Size i=0; i<scenarioDescriptions->size(); i++) {
@@ -104,12 +103,13 @@ public:
         return it->second;
     }
 
-    std::map<string, Size> upFactors() const { return  upFactorIndices_;}
-    std::map<string, Size> downFactors() const { return  downFactorIndices_;}
-    std::map<pair<string, string>, Size> crossFactors() const { return  crossFactorIndices_;}
+    //! Accessors
+    const std::map<string, Size>& upFactors() const { return  upFactorIndices_; }
+    const std::map<string, Size>& downFactors() const { return  downFactorIndices_; }
+    const std::map<pair<string, string>, Size>& crossFactors() const { return  crossFactorIndices_; }
 
-    boost::shared_ptr<NPVCube>& npvCube() { return cube_;}
-    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() { return  scenarioDescriptions_;}
+    const boost::shared_ptr<NPVCube>& npvCube() const { return cube_; }
+    const boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() const { return scenarioDescriptions_; }
     
 private:
     Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2 = "") const {

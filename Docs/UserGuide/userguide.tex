@@ -348,7 +348,7 @@ executables:
 To build ORE from sources:
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
+\item Set up QuantLib 1.11 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
   installed; QuantLib needs to be located in this project directory {\tt ORE-1.8}. Alternatively, you can create a
   symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
@@ -3914,6 +3914,9 @@ definition of FVA can be given in a very similar fashion as the sum of unilatera
   \FVA &= \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left\{S_C(t_{i-1})\, S_B(t_{i-1})\, [-\NPV(t_i)+C(t_i)]^+\,
          D(t_i)\right\}}_{\mbox{Funding Benefit Adjustment (FBA)}}\nonumber\\
        & {} - \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left\{S_C(t_{i-1})\, S_B(t_{i-1})\, [\NPV(t_i)-C(t_i)]^+\, D(t_i)\right\}}_{\mbox{Funding Cost Adjustment (FCA)}}\label{eq_simple_fva}
+%  \FVA &= - \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (\NPV(t_i))^+\,
+ %        D(t_i)\right]}_{\mbox{Funding Cost Adjustment (FCA)}}\nonumber\\
+ %      & {} \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (-\NPV(t_i))^+\, D(t_i)\right]}_{\mbox{Funding Benefit Adjustment (FBA)}}\label{eq_simple_fva}
 \end{align}
 where
 \begin{align*}

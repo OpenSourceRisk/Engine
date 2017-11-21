@@ -131,6 +131,15 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
+
+    // Equity Forecast curve keys
+    equityForecastCurveKeys_.reserve(n_ccy * simMarketConfig_->equityForecastTenors("").size());
+    for (Size j = 0; j < model_->components(EQ); j++) {
+        ten_efc_.push_back(simMarketConfig_->equityForecastTenors(simMarketConfig_->equityNames()[j]));
+        Size n_ten = ten_efc_.back().size();
+        for (Size k = 0; k < n_ten; k++)
+            equityForecastCurveKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve, simMarketConfig_->equityNames()[j], k); // j * n_ten + k
+    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -144,6 +153,8 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves;
+    vector<Currency> equityForecastCurrency;
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
 
@@ -169,6 +180,16 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
         yieldCurves.push_back(impliedYieldCurve);
         yieldCurveCurrency.push_back(ccy);
+    }
+
+    for (Size j = 0; j < n_eq; ++j) {
+        std::string curveName = simMarketConfig_->equityNames()[j];
+        Currency ccy = model_->eqbs(j)->currency();
+        Handle<YieldTermStructure> yts = initMarket_->equityForecastCurve(curveName, configuration_);
+        auto ForecastCurve =
+            boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
+        equityForecastCurves.push_back(ForecastCurve);
+        equityForecastCurrency.push_back(ccy);
     }
 
     for (Size i = 0; i < dates_.size(); i++) {
@@ -269,6 +290,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
                 }
+            }
+        }
+
+        // EquityForecastCurve
+        for (Size j = 0; j < n_eq; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(equityForecastCurrency[j]))][i + 1];
+            equityForecastCurves[j]->move(dates_[i], z);
+            for (Size k = 0; k < ten_efc_[j].size(); ++k) {
+                Date d = dates_[i] + ten_efc_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real discount = std::max(equityForecastCurves[j]->discount(T), 0.00001);
+                scenarios[i]->add(equityForecastCurveKeys_[j * ten_efc_[j].size() + k], discount);
             }
         }
 

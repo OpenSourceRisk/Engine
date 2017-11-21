@@ -667,8 +667,16 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions, false);
     sa->generateSensitivities();
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
+    map<pair<string, string>, Real> deltaMap;
+    map<pair<string, string>, Real> gammaMap;
+    std::set<string> sensiTrades; 
+    for (auto p : portfolio->trades()) { 
+        sensiTrades.insert(p->id());
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
+        } 
+    }
 
     std::vector<Results> cachedResults2 = {
         // trade, factor, delta, gamma
@@ -1054,10 +1062,17 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
                                                 simMarketData, sensiData, conventions, recalibrateModels);
     sa->generateSensitivities();
-
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
-    std::set<string> sensiTrades = sa->trades();
+    
+    map<pair<string, string>, Real> deltaMap;
+    map<pair<string, string>, Real> gammaMap;
+    std::set<string> sensiTrades; 
+    for (auto p : portfolio->trades()) { 
+        sensiTrades.insert(p->id());
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
+        } 
+    }
 
     struct SensiResults {
         string id;
@@ -1263,9 +1278,17 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
         recalibrateModels, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
-    map<pair<string, string>, Real> deltaMap = sa->delta();
-    map<pair<string, string>, Real> gammaMap = sa->gamma();
-    std::set<string> sensiTrades = sa->trades();
+    map<pair<string, string>, Real> deltaMap;
+    map<pair<string, string>, Real> gammaMap;
+    std::set<string> sensiTrades; 
+    for (auto p : portfolio->trades()) { 
+        sensiTrades.insert(p->id());
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
+        } 
+    }
+
 
     struct SensiResults {
         string id;
