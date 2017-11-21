@@ -61,12 +61,7 @@ protected:
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
 
-#if QL_HEX_VERSION < 0x011000f0
-        //The analyticEuropean engine in earlier QL versions does not support a seperate discount curve
-        QL_FAIL("ORE does not support EquityOptions with QL 1.8 or 1.9. Please upgrade to 1.10");
-#else
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
-#endif
         
     }
 };

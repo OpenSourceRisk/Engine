@@ -108,12 +108,10 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData() : parConversion_(false){};
+    SensitivityScenarioData() {};
 
     //! \name Inspectors
     //@{
-    bool parConversion() const { return parConversion_; }
-
     const vector<string>& discountCurrencies() const { return discountCurrencies_; }
     const map<string, CurveShiftData>& discountCurveShiftData() const { return discountCurveShiftData_; }
 
@@ -166,8 +164,6 @@ public:
 
     //! \name Setters
     //@{
-    bool& parConversion() { return parConversion_; }
-
     vector<string>& discountCurrencies() { return discountCurrencies_; }
     map<string, CurveShiftData>& discountCurveShiftData() { return discountCurveShiftData_; }
 
@@ -238,9 +234,7 @@ public:
     string getIndexCurrency(string indexName);
     //@}
 
-private:
-    bool parConversion_;
-
+protected:
     vector<string> discountCurrencies_;
     map<string, CurveShiftData> discountCurveShiftData_; // key: ccy
 

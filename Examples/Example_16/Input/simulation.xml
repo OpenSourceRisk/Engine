@@ -174,7 +174,7 @@
         </CalibrationOptions>
       </CrossAssetLGM>    
       <CrossAssetLGM name="SP5">
-        <Currency>EUR</Currency>
+        <Currency>USD</Currency>
         <CalibrationType>Bootstrap</CalibrationType>
         <Sigma>
           <Calibrate>Y</Calibrate>
@@ -252,6 +252,8 @@
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
     <Equities>
+      <SimulateEquityForecastCurve>true</SimulateEquityForecastCurve>
+      <SimulateDividendYield>false</SimulateDividendYield>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>

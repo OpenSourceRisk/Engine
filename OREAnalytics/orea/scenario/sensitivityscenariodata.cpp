@@ -29,11 +29,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* node = XMLUtils::locateNode(root, "SensitivityAnalysis");
     XMLUtils::checkNode(node, "SensitivityAnalysis");
 
-    XMLNode* parNode = XMLUtils::getChildNode(node, "ParConversion");
-    parConversion_ = false;
-    if (parNode)
-        parConversion_ = XMLUtils::getChildValueAsBool(node, "ParConversion");
-
     LOG("Get discount curve sensitivity parameters");
     XMLNode* discountCurves = XMLUtils::getChildNode(node, "DiscountCurves");
     if (discountCurves) {
@@ -45,16 +40,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            } else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for discount curve " << ccy);
-            }
+
             discountCurveShiftData_[ccy] = data;
             discountCurrencies_.push_back(ccy);
         }
@@ -71,17 +57,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            } else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for index curve " << index);
-            }
-            // ... to here
+
             indexCurveShiftData_[index] = data;
             indexNames_.push_back(index);
         }
@@ -98,17 +74,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            } else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for yield curve " << curveName);
-            }
-            // ... to here
+
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
             if (curveType == "EquityForecast") {
                 equityForecastCurveShiftData_[curveName] = data;
@@ -217,16 +183,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            } else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for credit curve " << name);
-            }
             // ... to here
             creditCurveShiftData_[name] = data;
             creditNames_.push_back(name);
@@ -306,17 +262,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            }
-            else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for zero inflation curve " << index);
-            }
             zeroInflationCurveShiftData_[index] = data;
             zeroInflationIndices_.push_back(index);
         }
@@ -332,17 +277,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftType = XMLUtils::getChildValue(child, "ShiftType");
             data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
             data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
-            XMLNode* par = XMLUtils::getChildNode(child, "ParConversion");
-            if (par) {
-                data.parInstruments = XMLUtils::getChildrenValuesAsStrings(par, "Instruments", true);
-                data.parInstrumentSingleCurve = XMLUtils::getChildValueAsBool(par, "SingleCurve", true);
-                XMLNode* conventionsNode = XMLUtils::getChildNode(par, "Conventions");
-                data.parInstrumentConventions =
-                    XMLUtils::getChildrenAttributesAndValues(conventionsNode, "Convention", "id", true);
-            }
-            else if (parConversion_) {
-                QL_FAIL("par conversion data not provided for yoy inflation curve " << index);
-            }
             yoyInflationCurveShiftData_[index] = data;
             yoyInflationIndices_.push_back(index);
         }

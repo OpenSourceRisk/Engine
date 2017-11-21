@@ -34,7 +34,7 @@ class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
     ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',');
-    //! Destructor
+    //! Destructor - this closes the file by calling close()
     virtual ~ScenarioWriter();
 
     //! Return the next scenario for the given date.
@@ -43,8 +43,9 @@ public:
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset();
 
-private:
+    //! Close the file if it is open, not normally needed by client code
     void close();
+private:
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
