@@ -1195,7 +1195,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     Schedule cpiSchedule(vector<Date> { maturity });
     Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), 262.1, 2 * Months)
         .withFixedRates(1)
-        .withNotionals(10000000)
+        .withNotionals(1)
         .withObservationInterpolation(CPI::Flat)
         .withPaymentDayCounter(ActualActual())
         .withPaymentAdjustment(Following)
@@ -1234,7 +1234,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> modelEngine =
         boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1);
 
-    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 10000000.0, today, 262.1,
+    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 1.0, today, 262.1,
         maturity, infIndex->fixingCalendar(), ModifiedFollowing, infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex,
         2 * Months, CPI::Flat);
     cap->setPricingEngine(modelEngine);
