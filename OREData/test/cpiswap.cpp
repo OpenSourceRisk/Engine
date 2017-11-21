@@ -14,7 +14,7 @@
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+*/
 
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
