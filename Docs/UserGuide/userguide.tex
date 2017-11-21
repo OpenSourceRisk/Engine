@@ -3845,6 +3845,17 @@ The equity/IR covariance over the interval $[s,t] := [t_0, t_0+\Delta t]$ (condi
 	&&+ \rho_{ij}^{sz} \int_s^t \sigma_i^S (u) \alpha_j (u) du\\
 \end{eqnarray*}
 
+The equity/inflation covariances over the interval $[s,t] := [t_0, t_0+\Delta t]$ (conditional on $\mathcal{F}_{t_0}$) are as follows:
+\begin{eqnarray*}
+	Cov \left[\Delta ln[s_i], \Delta z_{I,j} \right] &=&
+	\rho_{\phi(i)j}^{zI} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) \alpha_{I,j} (u) du\\
+	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) \alpha_{I,j} (u) du\\	
+	Cov \left[\Delta ln[s_i], \Delta y_{I,j} \right] &=&
+	\rho_{\phi(i)j}^{zI} \int_s^t (H_{\phi(i)} (t) - H_{\phi(i)} (u)) \alpha_{\phi(i)} (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
+	&&+ \rho_{ij}^{sI} \int_s^t \sigma_i^S (u) H_{I,j} (u) \alpha_{I,j} (u) du\\
+\end{eqnarray*}
+
+
 
 \subsection{Exposures}\label{sec:app_exposure}
 
