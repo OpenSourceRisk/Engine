@@ -54,7 +54,6 @@ public:
     };
     
     struct CurveShiftData : ShiftData {
-        CurveShiftData() : parInstrumentSingleCurve(false) {}
         vector<Period> shiftTenors;
         
         vector<string> parInstruments;
