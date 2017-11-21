@@ -397,8 +397,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples;
-                ene[j + 1] += std::max(-exposure + dim, 0.0) / samples;
+                epe[j + 1] += std::max(exposure - dim, 0.0) / samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) / samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
