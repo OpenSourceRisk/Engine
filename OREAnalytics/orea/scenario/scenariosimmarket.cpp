@@ -54,7 +54,7 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobserver.hpp>
-#include <qle/termstructures/zeroinflationcurveobserver2.hpp>
+#include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 
 #include <boost/timer.hpp>
@@ -887,7 +887,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
         // FIXME: Settlement days set to zero - needed for floating term structure implementation
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver2<Linear>>(new ZeroInflationCurveObserver2<Linear>(
+        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
             0, inflationIndex->fixingCalendar(), 
             inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
             inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes,

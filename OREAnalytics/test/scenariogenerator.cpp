@@ -1188,45 +1188,45 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     Size samples = 10000;
 
     // fx forward for expsoure generation (otm) and engine
-    // Date maturity = grid->dates().back() + 2; // make sure the option is live on last grid date
+    Date maturity = grid->dates().back() + 2; // make sure the option is live on last grid date
    
     Handle<ZeroInflationIndex> infIndex = simMarket->zeroInflationIndex("EUHICPXT");
 
-    /*Schedule cpiSchedule(vector<Date> { maturity });
+    Schedule cpiSchedule(vector<Date> { maturity });
     Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), 262.1, 2 * Months)
         .withFixedRates(1)
         .withNotionals(10000000)
-        .withObservationInterpolation(CPI::AsIndex)
+        .withObservationInterpolation(CPI::Flat)
         .withPaymentDayCounter(ActualActual())
         .withPaymentAdjustment(Following)
-        .withSubtractInflationNominal(true);*/
+        .withSubtractInflationNominal(true);
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
 
-    Envelope env("CP");
-    ScheduleData cpiSched(ScheduleDates("TARGET", vector<string> { "01-08-2020" }));
-    LegData cpiLegData(boost::make_shared<CPILegData>("EUHICPXT", 262.1, "2M", false, vector<Real>{1.0},
-        vector<string>(), true), false, "EUR", cpiSched, "30/360", vector<double> {10000000.0}, vector<string>(),
-        "MF", false, true);
+    //Envelope env("CP");
+    //ScheduleData cpiSched(ScheduleDates("TARGET", vector<string> { "01-08-2020" }));
+    //LegData cpiLegData(boost::make_shared<CPILegData>("EUHICPXT", 262.1, "2M", false, vector<Real>{1.0},
+    //    vector<string>(), true), false, "EUR", cpiSched, "30/360", vector<double> {10000000.0}, vector<string>(),
+    //    "MF", false, true);
 
-    // trade
-    boost::shared_ptr<Trade> trade(new ore::data::Swap(env, vector<LegData> {cpiLegData} ));
-    trade->id() = "CpiSwap";
-    portfolio->add(trade);
+    //// trade
+    //boost::shared_ptr<Trade> trade(new ore::data::Swap(env, vector<LegData> {cpiLegData} ));
+    //trade->id() = "CpiSwap";
+    //portfolio->add(trade);
 
-    boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
-    data->model("Swap") = "DiscountedCashflows";
-    data->engine("Swap") = "DiscountingSwapEngine";
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    portfolio->build(factory);
+    //boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
+    //data->model("Swap") = "DiscountedCashflows";
+    //data->engine("Swap") = "DiscountingSwapEngine";
+    //boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
+    //factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+    //portfolio->build(factory);
 
-    simMarket->fixingManager()->initialise(portfolio);
+    //simMarket->fixingManager()->initialise(portfolio);
 
-    //boost::shared_ptr<QuantLib::Swap> cpiSwap =
-    //    boost::make_shared<QuantLib::Swap>(vector<Leg> {cpiLeg}, vector<bool> {false});
-    //auto dscEngine = boost::make_shared<DiscountingSwapEngine>(simMarket->discountCurve("EUR"));
-    //cpiSwap->setPricingEngine(dscEngine);
+    boost::shared_ptr<QuantLib::Swap> cpiSwap =
+        boost::make_shared<QuantLib::Swap>(vector<Leg> {cpiLeg}, vector<bool> {false});
+    auto dscEngine = boost::make_shared<DiscountingSwapEngine>(simMarket->discountCurve("EUR"));
+    cpiSwap->setPricingEngine(dscEngine);
 
     // cpi floor options as reference
     // note that we set the IR vols to zero, so that we can
@@ -1235,28 +1235,26 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
         boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1);
 
     boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 10000000.0, today, 262.1,
-        Date(01, August, 2020), infIndex->fixingCalendar(), ModifiedFollowing, infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex,
+        maturity, infIndex->fixingCalendar(), ModifiedFollowing, infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex,
         2 * Months, CPI::Flat);
     cap->setPricingEngine(modelEngine);
     Real capNpv = cap->NPV();
 
     // collect discounted epe
     Real cpiSwap_epe = 0.0;
-    Real trade_epe = 0.0;
+    //Real trade_epe = 0.0;
     boost::timer timer;
-    vector<Real> npvs(10000);
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
     for (Size i = 0; i < samples; i++) {
         simMarket->update(grid->dates().back());
         // we do not use the valuation engine, so in case updates are disabled we need to
         // take care of the instrument update ourselves
-        //cpiSwap->update();
-        trade->instrument()->reset();
+        cpiSwap->update();
+        //trade->instrument()->reset();
         Real numeraire = simMarket->numeraire();
-        //npvs[i] = cpiSwap->NPV();
-        //cpiSwap_epe += std::max(cpiSwap->NPV(), 0.0) / numeraire;
-        trade_epe += std::max(trade->instrument()->NPV(), 0.0) / numeraire;
+        cpiSwap_epe += std::max(cpiSwap->NPV(), 0.0) / numeraire;
+        //trade_epe += std::max(trade->instrument()->NPV(), 0.0) / numeraire;
 
         simMarket->fixingManager()->reset();
     }
@@ -1265,11 +1263,11 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
     // compute summary statistics for swap
     Real tol = 3.0E-4;
-    //cpiSwap_epe /= samples;
-    trade_epe /= samples;
-    BOOST_TEST_MESSAGE("CPI Swap at t=" << grid->dates().back() << " epe = " << trade_epe << " CPI Cap epe = "
-        << capNpv << " difference is " << (trade_epe - capNpv));
-    BOOST_CHECK_MESSAGE(fabs(trade_epe - capNpv) < tol,
+    cpiSwap_epe /= samples;
+    //trade_epe /= samples;
+    BOOST_TEST_MESSAGE("CPI Swap at t=" << grid->dates().back() << " epe = " << cpiSwap_epe << " CPI Cap epe = "
+        << capNpv << " difference is " << (cpiSwap_epe - capNpv));
+    BOOST_CHECK_MESSAGE(fabs(cpiSwap_epe - capNpv) < tol,
         "discounted CPI Swap epe ("
         << cpiSwap_epe << ") inconsistent to analytical CPI Cap premium (" << capNpv
         << "), tolerance is " << tol);

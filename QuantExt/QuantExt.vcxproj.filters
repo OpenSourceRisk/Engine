@@ -291,9 +291,6 @@
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -501,8 +498,11 @@
     <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver2.hpp" />
     <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
