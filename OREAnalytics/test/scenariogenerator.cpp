@@ -110,7 +110,7 @@ struct TestData {
         std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
 
         vector<Real> hValues = {0.02};
-        vector<Real> aValues = {0.08};
+        vector<Real> aValues = {0.008};
         irConfigs.push_back(boost::make_shared<IrLgmData>(
             "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
             ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
