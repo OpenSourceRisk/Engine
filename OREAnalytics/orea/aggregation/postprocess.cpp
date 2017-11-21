@@ -1195,8 +1195,8 @@ void PostProcess::performT0DimCalc() {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
-                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            if (std::labs(daysFromT0 - dimHorizonCalendarDays_) <=
+                std::labs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
             } else {
