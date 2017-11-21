@@ -3886,25 +3886,58 @@ wrong-way-risk analysis, CVA/DVA formulas will be generalised.
 
 \subsection{FVA}\label{sec:fva}
 
+%Any exposure (uncollateralised or residual after taking collateral into account) gives rise to funding cost or benefits
+%depending on the sign of the residual position. This can be expressed as a Funding Value Adjustment (FVA). A simple
+%definition of FVA can be given in a very similar fashion as the sum of unilateral CVA and DVA which we defined by
+%(\ref{CVA},\ref{DVA}), namely as an expectation of exposures times funding spreads:
+%\begin{align}
+%  \FVA &= \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (\NPV(t_i))^+\,
+%         D(t_i)\right]}_{\mbox{Funding Benefit Adjustment (FBA)}}\nonumber\\
+%       & {} - \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (-\NPV(t_i))^+\, D(t_i)\right]}_{\mbox{Funding Cost Adjustment (FCA)}}\label{eq_simple_fva}
+%\end{align}
+%where
+%\begin{align*}
+%D(t_i) & \mbox{ stochastic discount factor, $1/N(t_i)$ in LGM}\\
+%\NPV(t_i) & \mbox{ portfolio value after potential collateralization}\\
+%S_C(t_j) & \mbox{ survival probability of the counterparty}\\
+%S_B(t_j) & \mbox{ survival probability of the bank}\\
+%f_b(t_j) & \mbox{ borrowing spread for the bank relative to the collateral compounding rate}\\
+%f_l(t_j) & \mbox{ lending spread for the bank relative to the collateral compounding rate}
+%\end{align*}
+%For details see e.g. Chapter 14 in Gregory \cite{Gregory12} and the discussion in \cite{Lichters}.
+
 Any exposure (uncollateralised or residual after taking collateral into account) gives rise to funding cost or benefits
 depending on the sign of the residual position. This can be expressed as a Funding Value Adjustment (FVA). A simple
 definition of FVA can be given in a very similar fashion as the sum of unilateral CVA and DVA which we defined by
 (\ref{CVA},\ref{DVA}), namely as an expectation of exposures times funding spreads:
 \begin{align}
-  \FVA &= \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (\NPV(t_i))^+\,
-         D(t_i)\right]}_{\mbox{Funding Benefit Adjustment (FBA)}}\nonumber\\
-       & {} - \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (-\NPV(t_i))^+\, D(t_i)\right]}_{\mbox{Funding Cost Adjustment (FCA)}}\label{eq_simple_fva}
+  \FVA &= \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left\{S_C(t_{i-1})\, S_B(t_{i-1})\, [-\NPV(t_i)+C(t_i)]^+\,
+         D(t_i)\right\}}_{\mbox{Funding Benefit Adjustment (FBA)}}\nonumber\\
+       & {} - \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left\{S_C(t_{i-1})\, S_B(t_{i-1})\, [\NPV(t_i)-C(t_i)]^+\, D(t_i)\right\}}_{\mbox{Funding Cost Adjustment (FCA)}}\label{eq_simple_fva}
 \end{align}
 where
 \begin{align*}
 D(t_i) & \mbox{ stochastic discount factor, $1/N(t_i)$ in LGM}\\
-\NPV(t_i) & \mbox{ portfolio value after potential collateralization}\\
+\NPV(t_i) & \mbox{ portfolio value at time } t_i\\
+C(t_i) & \mbox{Collateral account balance at time } t_i \\ 
 S_C(t_j) & \mbox{ survival probability of the counterparty}\\
 S_B(t_j) & \mbox{ survival probability of the bank}\\
-f_b(t_j) & \mbox{ borrowing spread for the bank relative to the collateral compounding rate}\\
-f_l(t_j) & \mbox{ lending spread for the bank relative to the collateral compounding rate}
+f_b(t_j) & \mbox{ borrowing spread for the bank relative to OIS flat}\\
+f_l(t_j) & \mbox{ lending spread for the bank relative to OIS flat}
 \end{align*}
 For details see e.g. Chapter 14 in Gregory \cite{Gregory12} and the discussion in \cite{Lichters}.
+
+\medskip
+The reasoning leading to the expression above is as follows. Consider, for example, a single partially collateralised derivative (no collateral at all or CSA with a significant threshold) between us (the Bank) and counterparty 1 (trade 1). 
+
+We assume that we enter into an offsetting trade with (hypothetical) counterparty 2 which is perfectly collateralised (trade 2). We label the NPV of trade 1 and 2 $\NPV_{1,2}$ respectively (from our perspective, excluding CVA). Then $\NPV_2=-\NPV_1$. The respective collateral amounts due to trade 1 and 2 are $C_1$ and $C_2$ from our perspective. Because of the perfect collateralisation of trade 2 we assume $C_2=\NPV_2$. The imperfect collateralisation of trade 1 means $C_1 \ne \NPV_1$. The net collateral balance from our perspective is then $C=C_1+C_2$ which can be written $C=C_1+C_2 = C_1 + \NPV_2 = -\NPV_1 + C_1$.
+
+\begin{itemize}
+\item If $C>0$ we receive net collateral and pay the overnight rate on this notional amount. On the other hand we can invest the received collateral and earn our lending rate, so that we have a benefit proportional to the lending spread $f_l$ (lending rate minus overnight rate). It is a benefit assuming $f_l >0$. $C>0$ means $-\NPV_1 + C_1 > 0$ so that we can cover this case with ``lending notional'' $[-\NPV_1 + C_1]^+$.
+\item If $C<0$ we post collateral amount $-C$ and receive the overnight rate on this amount. Amount $-C$ needs to be funded in the market, and we pay our borrowing rate on it. This leads to a funding cost proportional to the borrowing spread $f_b$ (borrowing rate minus overnight). $C<0$ means $\NPV_1 - C_1 > 0$, so that we can cover this case with ``borrowing notional'' $[\NPV_1 - C_1]^+$. If the borrowing spread is positive, this term proportional to $f_b \times [\NPV_1 - C_1]^+$ is indeed a cost and therefore needs to be subtracted from the benefit above.
+\end{itemize}
+   
+Formula \eqref{eq_simple_fva} evaluates these funding cost components on the basis of the original trade's or portfolio's $\NPV$. Perfectly collateralised portfolios hence do not contribute to FVA because under the hedging fiction, they are hedged with a perfectly collateralised opposite portfolio, so any collateral payments on portfolio 1 are canceled out by those of the opposite sign on portfolio 2.
 
 \subsection{COLVA}
 
