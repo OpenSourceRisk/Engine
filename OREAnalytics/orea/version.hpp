@@ -16,26 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/crossassetmodeldata.hpp
-    \brief CrossAssetModel name parsing test
-    \ingroup tests
+/*! \file orea/version.hpp
+    \brief Version
 */
 
 #pragma once
 
-#include <boost/test/unit_test.hpp>
-
-namespace testsuite {
-
-//! Testing toXML/fromXML
-/*!
-\ingroup tests
-*/
-class CrossAssetModelDataTest {
-public:
-    //! Testing toXML/fromXML
-    static void testToXMLFromXML();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
-#pragma once
+#include <qle/version.hpp>

@@ -22,26 +22,4 @@
 
 #pragma once
 
-// Boost Version
-// Boost 1.55 has been tested on Linux and 1.57 on Windows.
-// Any boost version above 1.46 might work (we use boost filesystem 3 which is the default
-// from 1.46 - so some modification will be needed for pre 1.46).
-//
-// Note that for MSVC 2013 the boost config file needs 1.57 (but this can be modified).
-// Note that for MSVC 2015 the boost config file needs 1.58 (but this can be modified).
-#include <boost/version.hpp>
-#if BOOST_VERSION < 105500
-#error using an old version of Boost, please update.
-#endif
-
-// We require QuantLib 1.8 or higher
-#include <ql/version.hpp>
-#if QL_HEX_VERSION < 0x010800f0
-#error using an old version of QuantLib, please update.
-#endif
-
-//! Version string
-#define OPEN_SOURCE_RISK_VERSION "1.8.2.0"
-
-//! Version number
-#define OPEN_SOURCE_RISK_VERSION_NUM 1080200
+#include <qle/version.hpp>

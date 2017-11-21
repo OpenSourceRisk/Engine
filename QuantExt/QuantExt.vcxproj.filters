@@ -486,9 +486,6 @@
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
-    <ClInclude Include="qle\indexes\ibor\cdor.hpp">
-      <Filter>indexes\ibor</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\corra.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>

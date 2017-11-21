@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -1752,7 +1752,7 @@ void CrossAssetModelTest::testIrFxCrCorrelationRecovery() {
             boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
             boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-            Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+            Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
             Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
             Matrix r1(dim, dim), r2(dim, dim);
@@ -3489,7 +3489,7 @@ void CrossAssetModelTest::testCorrelationRecovery() {
         boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
         boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-        Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+        Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
         Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
         Matrix r1(dim, dim), r2(dim, dim);
@@ -3639,7 +3639,7 @@ void CrossAssetModelTest::testIrFxInfCrCorrelationRecovery() {
                 boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                 boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-                Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+                Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                 Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
                 Matrix r1(dim, dim), r2(dim, dim);
@@ -3823,7 +3823,7 @@ void CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery() {
                     boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                     boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-                    Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+                    Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                     Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
                     Matrix r1(dim, dim), r2(dim, dim);

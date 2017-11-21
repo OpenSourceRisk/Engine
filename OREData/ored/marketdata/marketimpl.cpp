@@ -35,10 +35,6 @@ namespace data {
 
 namespace {
 
-inline std::ostream& operator<<(std::ostream& out, pair<string, bool> p) {
-    return out << p.first << " (" << (p.second ? "true" : "false") << ")";
-}
-
 template <class A, class B, class C>
 A lookup(const B& map, const C& key, const string& configuration, const string& type) {
     auto it = map.find(make_pair(configuration, key));

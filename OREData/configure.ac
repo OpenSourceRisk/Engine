@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([OREData], [1.8.2],
+AC_INIT([OREData], [1.8.3],
         [opensourcerisk.org/forum],
         [OREData])
 AC_PREREQ(2.62)
@@ -122,6 +122,9 @@ fi
 # Check for Boost components
 QL_CHECK_BOOST
 AM_CONDITIONAL(BOOST_UNIT_TEST_FOUND, test "x${BOOST_UNIT_TEST_LIB}" != "x")
+
+# Check for QuantLib version
+QL_CHECK_QUANTLIB
 
 # Check for Emacs
 AM_PATH_LISPDIR

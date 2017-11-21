@@ -42,9 +42,10 @@ namespace data {
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ ||
-        correlations_ != rhs.correlations_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
-        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
-        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size()) {
+        equities_ != rhs.equities_ || correlations_ != rhs.correlations_ ||
+        bootstrapTolerance_ != rhs.bootstrapTolerance_ || irConfigs_.size() != rhs.irConfigs_.size() ||
+        fxConfigs_.size() != rhs.fxConfigs_.size() || eqConfigs_.size() != rhs.eqConfigs_.size()
+		|| infConfigs_.size() != rhs.infConfigs_.size()) {
         return false;
     }
 
@@ -79,6 +80,7 @@ bool CrossAssetModelData::operator!=(const CrossAssetModelData& rhs) { return !(
 
 void CrossAssetModelData::clear() {
     currencies_.clear();
+    equities_.clear();
     irConfigs_.clear();
     fxConfigs_.clear();
     eqConfigs_.clear();
