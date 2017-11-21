@@ -185,8 +185,7 @@ The product coverage of the second release of ORE in May 2017 is sketched in the
 \hline
 Product & Pricing and Cashflows & Sensitivity Analysis \& Stress Testing & Exposure Simulation \& XVA\\
 \hline
-\hline
-{\color{red}Fixed and Floating Rate Bonds/Loans} & Y & Y & N \\
+Fixed and Floating Rate Bonds/Loans & Y & Y & N \\
 \hline
 Interest Rate Swaps & Y & Y & Y \\
 \hline
@@ -194,19 +193,27 @@ Caps/Floors & Y & Y & Y \\
 \hline
 Swaptions & Y & Y & Y \\
 \hline
+{\color{red}Constant Maturity Swaps, Capped/Floored} & Y & Y & Y \\
+\hline
 FX Forwards & Y & Y & Y \\
 \hline
 Cross Currency Swaps & Y & Y & Y \\
 \hline
 FX Options & Y & Y & Y \\
 \hline
-{\color{red}Equity Forwards} & Y & Y & Y \\
+Equity Forwards & Y & Y & Y \\
 \hline
-{\color{red}Equity Options} & Y & Y & Y \\
+Equity Options & Y & Y & Y \\
 \hline
-{\color{red}CPI Swaps} & Y & N & N \\
+CPI Swaps & Y & Y & Y \\
 \hline
-{\color{red}YY Inflation Swaps} & Y & N & N \\
+{\color{red}CPI Caps/Floors} & Y & Y & N \\
+\hline
+Year-on-Year Inflation Swaps & Y & Y & N \\
+\hline
+{\color{red}Year-on-Year Inflation Caps/Floors} & Y & N & N \\
+\hline
+{\color{red}Credit Default Swaps} & Y & N & N \\
 \hline
 \end{tabular}
 \caption{ORE product coverage, products highlighted in red were added in ORE release 2.}
@@ -447,8 +454,9 @@ Alternatively, compile all Boost libraries directly from the source code:
 
 \begin{enumerate}
 
-\item Download and install Visual Studio Community Edition. During the installation, make sure you install the Visual
-  C++ support under the Programming Languages features (disabled by default).
+\item Download and install Visual Studio Community Edition (Version 2013 or later). 
+During the installation, make sure you install the Visual
+C++ support under the Programming Languages features (disabled by default).
 
 \item To configure the boost paths in Visual Studio open any of the Visual Studio solution files in item 3 below and
   select View $\rightarrow$ Other Windows $\rightarrow$ Property Manager. It does not matter which solution you open, if
@@ -651,15 +659,23 @@ Example & Description \\
 \hline
 14 & Minimal Market Data Setup \\
 \hline
-15 & Sensitivity and Stress Scenario Computation \\
+15 & Sensitivity Analysis and Stress Testing \\
 \hline
 16 & Equity Derivatives \\
 \hline
 17 & Inflation Swaps \\
 \hline
-18 & Bonds \\
+18 & Bonds and Amortisation Structures\\
 \hline
-19 & Forward Rate Agreement \\
+19 & Swaption Pricing with Smile\\
+\hline
+20 & Credit Default Swap Pricing\\
+\hline
+21 & Constant Maturity Swap Pricing\\
+\hline
+22 & Equity Option Sensitivity Analysis\\
+\hline
+23 & Forward Rate Agreement \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1354,7 +1370,7 @@ and second order polynomial choice makes a difference before option expiry.
 The example in folder {\tt Examples/Example\_14} demonstrates using a minimal market data setup in order to rerun the vanilla Swap exposure simulation shown in {\tt Examples/Example\_1}. The minimal market data uses single points per curve where possible.
 
 %--------------------------------------------------------
-\subsection{Sensitivity and Stress Scenario Computation}\label{ex:sensitivity_stress}
+\subsection{Sensitivity Analysis and Stress Testing}\label{ex:sensitivity_stress}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_15} demonstrates the calculation of sensitivities and stress scenarios. The
@@ -1505,9 +1521,22 @@ After running the example, the results of the computation can be found in the ou
 Note that the amortisation features used here are linked to the LegData structure, hence not limited to the Bond instrument, see section \ref{ss:amortisationdata}.
 
 %--------------------------------------------------------
- 
+\subsection{Swaption Pricing with Smile}% Example 19
 %--------------------------------------------------------
-\subsection{Sensitivity using Equity Volatility}
+TODO
+
+%--------------------------------------------------------
+\subsection{Credit Default Swap Pricing}% Example 20
+%--------------------------------------------------------
+TODO
+
+%--------------------------------------------------------
+\subsection{Constant Maturity Swap Pricing}% Example 21
+%--------------------------------------------------------
+TODO
+
+%--------------------------------------------------------
+\subsection{Equity Option Sensitivity Analysis}% Example 22
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for equity options where the equity volatility has a smile. ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml.
@@ -1518,6 +1547,11 @@ The portfolio used in this example consists of:
 	\item an equity call option denominated in USD (``SP5'')
 	\item an equity put option denominated in USD (``SP5'')
 \end{itemize}
+
+%--------------------------------------------------------
+\subsection{FRA and Average OIS Exposure}% Example 23
+%--------------------------------------------------------
+TODO
 
 
 \clearpage
