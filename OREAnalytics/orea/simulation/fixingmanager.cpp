@@ -63,6 +63,10 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                 if (cpc)
                     setIndices.insert(cpc->index());
 
+                boost::shared_ptr<CPICashFlow> cpcf = boost::dynamic_pointer_cast<CPICashFlow>(cf);
+                if (cpcf)
+                    setIndices.insert(cpcf->index());
+
                 // add more coupon types here ...
             }
         }
@@ -152,7 +156,13 @@ void FixingManager::applyFixings(Date start, Date end) {
             }
 
             if (needFixings) {
-                Date currentFixingDate = index->fixingCalendar().adjust(end, Following);
+                boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
+                Date currentFixingDate;
+                if (zii) {
+                    currentFixingDate = index->fixingCalendar().adjust(end - zii->zeroInflationTermStructure()->observationLag(), Following);
+                } else {
+                    currentFixingDate = index->fixingCalendar().adjust(end, Following);
+                }
                 Rate currentFixing = index->fixing(currentFixingDate);
                 vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {

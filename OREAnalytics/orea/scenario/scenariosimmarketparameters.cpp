@@ -362,6 +362,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolNames_.clear();
     }
 
+    DLOG("Loading CpiInflationIndexCurves");
+
+    nodeChild = XMLUtils::getChildNode(node, "CpiInflationIndexCurves");
+    if (nodeChild) {
+        cpiIndices_ = XMLUtils::getChildrenValues(nodeChild, "CpiIndices", "Index", true);
+    }
+    else {
+        cpiIndices_.clear();
+    }
+
+
     DLOG("Loading ZeroInflationIndexCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
@@ -548,6 +559,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames_);
     XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
     XMLUtils::addGenericChildAsList(doc, bcNode, "DetachmentPoints", baseCorrelationDetachmentPoints_);
+
+    // zero inflation
+    XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
+    XMLUtils::addChildren(doc, cpiNode, "CpiIndices", "Index", cpiIndices_);
 
     // zero inflation
     XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");

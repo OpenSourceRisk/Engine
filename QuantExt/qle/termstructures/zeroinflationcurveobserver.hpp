@@ -51,18 +51,6 @@ public:
         const boost::shared_ptr<Seasonality> &seasonality = boost::shared_ptr<Seasonality>(),
         const Interpolator &interpolator = Interpolator());
 
-    ZeroInflationCurveObserver(Natural settlementDays,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        const Period& lag,
-        Frequency frequency,
-        bool indexIsInterpolated,
-        const Handle<YieldTermStructure>& yTS,
-        const std::vector<Time>& times,
-        const std::vector<Handle<Quote> >& rates,
-        const boost::shared_ptr<Seasonality> &seasonality = boost::shared_ptr<Seasonality>(),
-        const Interpolator &interpolator = Interpolator());
-
     //! \name InflationTermStructure interface
     //@{
     Date baseDate() const;
@@ -176,55 +164,8 @@ ZeroInflationCurveObserver<Interpolator>::
     this->interpolation_.update();
 
     // register with each of the quotes
-    for (Size i = 0; i < this->quotes_.size(); i++)
-        registerWith(this->quotes_[i]);
-}
-
-
-template <class Interpolator>
-ZeroInflationCurveObserver<Interpolator>::
-ZeroInflationCurveObserver(Natural settlementDays,
-    const Calendar& calendar,
-    const DayCounter& dayCounter,
-    const Period& lag,
-    Frequency frequency,
-    bool indexIsInterpolated,
-    const Handle<YieldTermStructure>& yTS,
-    const std::vector<Time>& times,
-    const std::vector<Handle<Quote> >& rates,
-    const boost::shared_ptr<Seasonality> &seasonality,
-    const Interpolator& interpolator)
-    : ZeroInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(),
-        lag, frequency, indexIsInterpolated, yTS, seasonality),
-    InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator),
-    quotes_(rates) {
-    
-    QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
-    this->times_.resize(times.size());
-    this->times_[0] = times[0];
-    for (Size i = 1; i < times.size(); i++) {
-        QL_REQUIRE(times[i] > times[i - 1], "times not sorted");
-        this->times_[i] = times[i];
-    }
-
-    QL_REQUIRE(this->quotes_.size() == this->times_.size(),
-        "quotes/times count mismatch: "
-        << this->quotes_.size() << " vs " << this->times_.size());
-
-    // initalise data vector, values are copied from quotes in performCalculations()
-    this->data_.resize(this->times_.size());
-    for (Size i = 0; i < this->times_.size(); i++)
-        this->data_[0] = 0.0;
-    
-    this->interpolation_ =
-        this->interpolator_.interpolate(this->times_.begin(),
-            this->times_.end(),
-            this->data_.begin());
-    this->interpolation_.update();
-
-    // register with each of the quotes
-    for (Size i = 0; i < this->quotes_.size(); i++)
-        registerWith(this->quotes_[i]);
+    for (Size i = 0; i < quotes_.size(); i++)
+        registerWith(quotes_[i]);
 }
 
 template <class T>

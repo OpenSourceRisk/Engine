@@ -37,6 +37,7 @@ namespace data {
 
 class AnalysisGenerator : public QuantLib::AcyclicVisitor,
                           public QuantLib::Visitor<QuantLib::CashFlow>,
+                          public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
                           public QuantLib::Visitor<QuantLib::Coupon>,
                           public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
                           public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
@@ -51,6 +52,7 @@ public:
     AnalysisGenerator();
     void reset();
     void visit(QuantLib::CashFlow& c);
+    void visit(QuantLib::IndexedCashFlow& c);
     void visit(QuantLib::Coupon& c);
     void visit(QuantLib::FloatingRateCoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);
@@ -128,6 +130,11 @@ void AnalysisGenerator::visit(QuantLib::CPICoupon& c) {
     flowAnalysis_.back()[INDEX] = c.index()->name();
 }
 
+void AnalysisGenerator::visit(QuantLib::IndexedCashFlow& c) {
+    visit(static_cast<QuantLib::CashFlow&>(c));
+    flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
+    flowAnalysis_.back()[INDEX] = c.index()->name();
+}
 const vector<vector<string>>& AnalysisGenerator::analysis() const { return flowAnalysis_; }
 
 vector<vector<string>> flowAnalysis(const QuantLib::Leg& leg) {

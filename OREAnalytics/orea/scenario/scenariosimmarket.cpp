@@ -54,7 +54,8 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobserver.hpp>
-#include <qle/termstructures/zeroinflationcurveobserver.hpp>
+#include <qle/termstructures/zeroinflationcurveobserver2.hpp>
+#include <qle/indexes/inflationindexobserver.hpp>
 
 #include <boost/timer.hpp>
 
@@ -824,8 +825,25 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     LOG("base correlations done");
 
     LOG("building CPI Indices...");
-    // TODO: do we need anything here?
+    for (const auto& ci : parameters->cpiIndices()) {
 
+        DLOG("adding " << ci << " base CPI price");
+        Handle<ZeroInflationIndex> zeroInflationIndex = initMarket->zeroInflationIndex(ci, configuration);
+        Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
+        Date today = Settings::instance().evaluationDate();
+        Date fixingDate = today - obsLag;
+
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        Handle<Quote> qh(q);
+
+        boost::shared_ptr<InflationIndex> inflationIndex = boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
+        Handle<InflationIndexObserver> inflObserver(boost::make_shared<InflationIndexObserver>(inflationIndex, qh, fixingDate, obsLag));
+
+        baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(make_pair(Market::defaultConfiguration, ci), inflObserver));
+        simData_.emplace(std::piecewise_construct, 
+                         std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, ci),
+                         std::forward_as_tuple(q));
+    }
     LOG("CPI Indices done");
 
     LOG("building zero inflation curves...");
@@ -869,7 +887,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
         // FIXME: Settlement days set to zero - needed for floating term structure implementation
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver<Linear>>(new ZeroInflationCurveObserver<Linear>(
+        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserver2<Linear>>(new ZeroInflationCurveObserver2<Linear>(
             0, inflationIndex->fixingCalendar(), 
             inflationTs->dayCounter(), inflationTs->observationLag(), inflationTs->frequency(), 
             inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes,

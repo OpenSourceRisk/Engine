@@ -59,6 +59,7 @@ namespace QuantExt {
         void move(const Date& d, const Real s_z, const Real s_y);
 
         void update();
+        Real I_t(Time t) const;
 
     protected:
         Real zeroRateImpl(Time t) const;
@@ -117,6 +118,12 @@ namespace QuantExt {
         QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
         std::pair<Real, Real> ii = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_z_, state_y_);
         return std::pow(ii.second, 1 / t) - 1;
+    }
+    
+    inline Real DkImpliedZeroInflationTermStructure::I_t(Time t) const {
+        QL_REQUIRE(t >= 0.0, "negative time (" << t << ") given");
+        std::pair<Real, Real> ii = model_->infdkI(index_, relativeTime_, relativeTime_ + t, state_z_, state_y_);
+        return ii.first;
     }
 
 } // namespace QuantExt

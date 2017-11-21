@@ -35,4 +35,6 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
-
+#include <qle/termstructures/zeroinflationcurveobserver.hpp>
+#include <qle/termstructures/zeroinflationcurveobserver2.hpp>
+#include <qle/termstructures/yoyinflationcurveobserver.hpp>

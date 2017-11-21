@@ -522,6 +522,7 @@
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
+    <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
@@ -645,6 +646,7 @@
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver2.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />

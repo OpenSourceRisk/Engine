@@ -501,6 +501,8 @@
     <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp">
       <Filter>models</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver2.hpp" />
+    <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

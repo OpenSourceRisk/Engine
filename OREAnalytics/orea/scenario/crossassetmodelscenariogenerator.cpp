@@ -22,6 +22,7 @@
 
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/indexes/inflationindexobserver.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -137,6 +138,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
     Size n_inf = model_->components(INF);
     if (n_inf > 0) {
         zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
+        cpiIndices_.reserve(n_inf);
         for (Size j = 0; j < n_inf; ++j) {
             std::string index = model->infdk(j)->name();
             ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(index));
@@ -144,6 +146,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             for (Size k = 0; k < n_ten; ++k) {
                 zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, index, k);
             }
+            cpiIndices_.emplace_back(RiskFactorKey::KeyType::CPIIndex, index);
         }
     }
 }
@@ -156,7 +159,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Size n_inf = model_->components(INF);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    vector<string> ccyPairs(n_ccy - 1);
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
     vector<boost::shared_ptr<QuantExt::DkImpliedZeroInflationTermStructure>> zeroInfCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
@@ -305,6 +307,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 Real zero = zeroInfCurves[j]->zeroRate(T);
                 scenarios[i]->add(zeroInflationKeys_[j * ten_inf_[j].size() + k], zero);
             }
+
+            // update fixing manage with fixing for base date
+            auto index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
+            Real iT = zeroInfCurves[j]->I_t(0);
+            scenarios[i]->add(cpiIndices_[j], iT);
         }
 
         // TODO: Further risk factor classes are added here

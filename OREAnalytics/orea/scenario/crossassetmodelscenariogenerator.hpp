@@ -75,7 +75,7 @@ private:
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
     std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, zeroInflationKeys_, yoyInflationKeys;
-    std::vector<RiskFactorKey> fxKeys_, eqKeys_;
+    std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiIndices_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
     std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_inf_;

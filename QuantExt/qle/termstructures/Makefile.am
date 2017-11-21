@@ -76,6 +76,7 @@ this_include_HEADERS = \
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserver.hpp \
 	zeroinflationcurveobserver.hpp \
+    zeroinflationcurveobserver2.hpp \
 	fxvannavolgasmilesection.hpp \
 	fxblackvolsurface.hpp \
 	fxsmilesection.hpp \
