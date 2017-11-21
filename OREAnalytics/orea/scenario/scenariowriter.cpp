@@ -58,12 +58,13 @@ void ScenarioWriter::close() {
 boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
     QL_REQUIRE(src_, "No ScenarioGenerator found.");
     boost::shared_ptr<Scenario> s = src_->next(d);
-    writeScenario(s, d, i_ == 0);
+    writeScenario(s, i_ == 0);
     return s;
 }
 
-void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const Date& d, const bool writeHeader) {
+void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader) {
     if (fp_) {
+        const Date d = s->asof();
         if (writeHeader) {
             // take a copy of the keys here to ensure the order is preseved
             keys_ = s->keys();

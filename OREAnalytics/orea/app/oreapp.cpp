@@ -568,7 +568,7 @@ void OREApp::writeBaseScenario() {
     string mode = append ? "a+" : "w+";
 
     ScenarioWriter sw(outputFile, sep, mode);
-    sw.writeScenario(scenario, today, true);
+    sw.writeScenario(scenario, true);
 
     DLOG("Base scenario written to file " << outputFile);
   
