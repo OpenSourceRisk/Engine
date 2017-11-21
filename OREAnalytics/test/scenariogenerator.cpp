@@ -91,7 +91,7 @@ boost::shared_ptr<data::Conventions> convs() {
 }
 
 struct TestData {
-    TestData() : referenceDate(30, July, 2015) {
+    TestData() : referenceDate(31, July, 2015) {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Build test market
@@ -325,6 +325,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
 
     simMarketConfig->simulateCpiCapFloorVols() = false;
 
+
     // Multi path generator
     BigNatural seed = 42;
     // bool antithetic = true;
@@ -483,6 +484,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -627,6 +629,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -768,6 +771,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -910,6 +914,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1036,6 +1041,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1133,12 +1139,12 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // set ir vols to zero
-    for (Size j = 0; j < 3; ++j) {
-        for (Size i = 0; i < model->irlgm1f(j)->parameter(0)->size(); ++i) {
-            model->irlgm1f(j)->parameter(0)->setParam(i, 0.0);
-        }
-    }
-    model->update();
+    //for (Size j = 0; j < 3; ++j) {
+    //    for (Size i = 0; i < model->irlgm1f(j)->parameter(0)->size(); ++i) {
+    //        model->irlgm1f(j)->parameter(0)->setParam(i, 0.0);
+    //    }
+    //}
+    //model->update();
 
     // State process
     QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;

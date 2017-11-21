@@ -147,7 +147,7 @@ Date ZeroInflationCurveObserverMoving<T>::baseDate() const {
 
 template <class T>
 Time ZeroInflationCurveObserverMoving<T>::maxTime() const {
-    return times_.back();
+    return this->times_.back();
 }
 
 template <class T>
