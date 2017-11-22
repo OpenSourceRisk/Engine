@@ -777,7 +777,6 @@ void OREApp::runPostProcessor() {
     string dvaName = params_->get("xva", "dvaName");
     string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
     string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
-    Real collateralSpread = parseReal(params_->get("xva", "collateralSpread"));
 
     Real dimQuantile = 0.99;
     Size dimHorizonCalendarDays = 14;
@@ -808,7 +807,7 @@ void OREApp::runPostProcessor() {
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
+        fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
