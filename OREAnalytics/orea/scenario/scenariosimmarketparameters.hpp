@@ -54,8 +54,8 @@ public:
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
           fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
           equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), baseCorrelationSimulate_(false) {
+
         // set default tenors
-        yieldCurveDayCounters_[""] = "A365";
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityDividendTenors_[""];
@@ -259,6 +259,7 @@ public:
     //@}
 
 private:
+    void setDefaults();
     string baseCcy_;
     map<string, string>  yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;

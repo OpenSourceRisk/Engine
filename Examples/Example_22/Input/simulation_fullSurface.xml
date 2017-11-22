@@ -17,9 +17,6 @@
         <Interpolation>LogLinear</Interpolation>
         <!-- Alternative: LinearZero -->
         <Extrapolation>Y</Extrapolation>
-        <DayCounters>
-          <DayCounter>A365</DayCounter>
-        </DayCounters>
       </Configuration>
     </YieldCurves>
     
@@ -50,12 +47,6 @@
       </Names>
       <Tenors>6M,1Y,2Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
-      <DayCounters>
-        <DayCounter>A365</DayCounter>
-      </DayCounters>
-      <Calendars>
-        <Calendar>TARGET</Calendar>
-      </Calendars>
     </DefaultCurves>
         
     <Equities>
@@ -82,9 +73,6 @@
           <SimulateATMOnly>false</SimulateATMOnly>
           <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
       </Cube>
-      <DayCounters>
-        <DayCounter>A365</DayCounter>
-      </DayCounters>
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>
@@ -96,9 +84,6 @@
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
       <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
-      <DayCounters>
-        <DayCounter>A365</DayCounter>
-      </DayCounters>
     </CapFloorVolatilities>
 
     <FxVolatilities>

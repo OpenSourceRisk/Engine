@@ -48,6 +48,17 @@ const string& returnDayCounter(const map<string, string>& m, const string& k) {
 
 } // namespace
 
+void ScenarioSimMarketParameters::setDefaults() {
+    yieldCurveDayCounters_[""] = "A365";
+    swapVolDayCounters_[""] = "A365";
+    capFloorVolDayCounters_[""] = "A365";
+    defaultCurveDayCounters_[""] = "A365";
+    defaultCurveCalendars_[""] = "TARGET";
+    baseCorrelationDayCounters_[""] = "A365";
+    zeroInflationDayCounters_[""] = "A365";
+    yoyInflationDayCounters_[""] = "A365";
+}
+
 const vector<Period>& ScenarioSimMarketParameters::yieldCurveTenors(const string& key) const {
     return returnTenors(yieldCurveTenors_, key);
 }
@@ -218,6 +229,17 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     equityForecastTenors_.clear();
     swapIndices_.clear();
 
+    yieldCurveDayCounters_.clear();
+    swapVolDayCounters_.clear();
+    capFloorVolDayCounters_.clear();
+    defaultCurveDayCounters_.clear();
+    defaultCurveCalendars_.clear();
+    baseCorrelationDayCounters_.clear();
+    zeroInflationDayCounters_.clear();
+    yoyInflationDayCounters_.clear();
+
+    setDefaults();
+
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
     DLOG("Loading Currencies");
 
@@ -256,9 +278,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 yieldCurveDayCounters_[label] = XMLUtils::getNodeValue(child);
             }
         }
-        if (yieldCurveDayCounters_.find("") == yieldCurveDayCounters_.end())
-            yieldCurveDayCounters_[""] = "A365";
-
+        QL_REQUIRE(yieldCurveDayCounters_.find("") != yieldCurveDayCounters_.end(), "default daycounter is not set for yieldCurves");
     }
 
     indices_ = XMLUtils::getChildrenValues(node, "Indices", "Index");
@@ -318,8 +338,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                     string label = XMLUtils::getAttribute(child, "ccy");
                     swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
                 }
-                QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(), "default daycounter must be provided for swapVolSurfaces");
             }
+            QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(), "default daycounter is not set for swapVolSurfaces");
         }
     }
 
@@ -341,8 +361,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "ccy");
                 capFloorVolDayCounters_[label] = XMLUtils::getNodeValue(child);
             }
-            QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(), "default daycounter must be provided for capFloorVolSurfaces");
         }
+        QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(), "default daycounter is not set for capFloorVolSurfaces");
     }
 
     DLOG("Loading DefaultCurves Rates");
@@ -368,8 +388,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "name");
                 defaultCurveDayCounters_[label] = XMLUtils::getNodeValue(child);
             }
-            QL_REQUIRE(defaultCurveDayCounters_.find("") != defaultCurveDayCounters_.end(), "default daycounter must be provided for defaultCurves");
         }
+        QL_REQUIRE(defaultCurveDayCounters_.find("") != defaultCurveDayCounters_.end(), "default daycounter is not set  for defaultCurves");
 
         XMLNode* cal = XMLUtils::getChildNode(nodeChild, "Calendars");
         if (cal) {
@@ -378,8 +398,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "name");
                 defaultCurveCalendars_[label] = XMLUtils::getNodeValue(child);
             }
-            QL_REQUIRE(defaultCurveCalendars_.find("") != defaultCurveCalendars_.end(), "default calendar must be provided for defaultCurves");
         }
+        QL_REQUIRE(defaultCurveCalendars_.find("") != defaultCurveCalendars_.end(), "default calendar is not set for defaultCurves");
     }
 
     DLOG("Loading Equities Rates");
@@ -482,8 +502,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "name");
                 zeroInflationDayCounters_[label] = XMLUtils::getNodeValue(child);
             }
-            QL_REQUIRE(zeroInflationDayCounters_.find("") != zeroInflationDayCounters_.end(), "default daycounter must be provided for zeroInflation Surfaces");
         }
+        QL_REQUIRE(zeroInflationDayCounters_.find("") != zeroInflationDayCounters_.end(), "default daycounter is not set for zeroInflation Surfaces");
     }
     else {
         zeroInflationIndices_.clear();
@@ -503,8 +523,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "name");
                 yoyInflationDayCounters_[label] = XMLUtils::getNodeValue(child);
             }   
-            QL_REQUIRE(yoyInflationDayCounters_.find("") != yoyInflationDayCounters_.end(), "default daycounter must be provided for yoyInflation Surfaces");
         }
+        QL_REQUIRE(yoyInflationDayCounters_.find("") != yoyInflationDayCounters_.end(), "default daycounter is not set for yoyInflation Surfaces");
     }
     else {
         yoyInflationIndices_.clear();
@@ -536,8 +556,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                 string label = XMLUtils::getAttribute(child, "name");
                 baseCorrelationDayCounters_[label] = XMLUtils::getNodeValue(child);
             }
-            QL_REQUIRE(baseCorrelationDayCounters_.find("") != baseCorrelationDayCounters_.end(), "default daycounter must be provided for baseCorrelation Surfaces");
         }
+        QL_REQUIRE(baseCorrelationDayCounters_.find("") != baseCorrelationDayCounters_.end(), "default daycounter is not set for baseCorrelation Surfaces");
 
     } else {
         baseCorrelationSimulate_ = false;
