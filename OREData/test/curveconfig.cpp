@@ -95,7 +95,7 @@ void CurveConfigTest::testCurveConfigQuotes() {
     };
     boost::shared_ptr<EquityCurveConfig> equityCurveConfig =
         boost::make_shared<EquityCurveConfig>("SP5", "", "USD1D", "USD", EquityCurveConfig::Type::DividendYield, 
-            "EQUITY/PRICE/SP5/USD", fwdQuotes, "A365", true);
+            "EQUITY/PRICE/SP5/USD", fwdQuotes, "A365", "Zero", "Linear", true);
 
     curveConfigs.equityCurveConfig("SP5") = equityCurveConfig;
    

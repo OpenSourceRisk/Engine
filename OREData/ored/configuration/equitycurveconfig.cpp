@@ -26,11 +26,13 @@ namespace data {
 
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, 
                                      const string& currency, const EquityCurveConfig::Type& type, const string& equitySpotQuote,
-                                     const vector<string>& fwdQuotes, const string& dayCountID, bool extrapolation)
+                                     const vector<string>& fwdQuotes, const string& dayCountID, const string& dividendInterpVariable,
+                                     const string& dividendInterpMethod, bool extrapolation)
     : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve), currency_(currency), type_(type),
-      equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID), extrapolation_(extrapolation) {
+      equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID), divInterpVariable_(dividendInterpVariable), 
+      divInterpMethod_(dividendInterpMethod), extrapolation_(extrapolation) {
         quotes_ = fwdQuotes; 
- 		quotes_.insert(quotes_.begin(), equitySpotQuote); 
+        quotes_.insert(quotes_.begin(), equitySpotQuote); 
       }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
@@ -54,8 +56,18 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
     fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     quotes_ = fwdQuotes_; 
- 	quotes_.insert(quotes_.begin(), equitySpotQuoteID_); 
-    
+ 	quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
+
+    XMLNode* divInterpNode = XMLUtils::getChildNode(node, "DividendInterpolation");
+    if (divInterpNode) {
+        divInterpVariable_ = XMLUtils::getChildValue(divInterpNode, "InterpolationVariable", true);
+        divInterpMethod_ = XMLUtils::getChildValue(divInterpNode, "InterpolationMethod", true);
+    }
+    else {
+        divInterpVariable_ = "Zero";
+        divInterpMethod_ = divInterpVariable_ == "Zero" ? "Linear" : "LogLinear";
+    }
+
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
@@ -77,6 +89,11 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
+
+    XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
+    XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
+    XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;

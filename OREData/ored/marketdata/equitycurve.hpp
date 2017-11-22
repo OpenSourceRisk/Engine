@@ -66,6 +66,8 @@ private:
     vector<Date> terms_;
     DayCounter dc_;
     Handle<YieldTermStructure> forecastYieldTermStructure_;
+    YieldCurve::InterpolationVariable dividendInterpVariable_;
+    YieldCurve::InterpolationMethod dividendInterpMethod_;
 };
 } // namespace data
 } // namespace ore
