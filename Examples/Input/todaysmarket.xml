@@ -157,10 +157,6 @@
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
-  <!-- cds vol definition -->
-  <CDSVolatilities id="default">
-   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
-  </CDSVolatilities>
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
