@@ -460,8 +460,8 @@
       <xs:element type="bool" name="SettlesAccrual"/>
       <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="date" name="ProtectionStart"/>
-      <xs:element type="date" name="UpfrontDate"/>
-      <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
+      <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
   </xs:complexType>
