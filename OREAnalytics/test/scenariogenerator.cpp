@@ -91,7 +91,7 @@ boost::shared_ptr<data::Conventions> convs() {
 }
 
 struct TestData {
-    TestData() : referenceDate(31, July, 2015) {
+    TestData() : referenceDate(30, July, 2015) {
         Settings::instance().evaluationDate() = referenceDate;
 
         // Build test market
@@ -110,7 +110,7 @@ struct TestData {
         std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
 
         vector<Real> hValues = {0.02};
-        vector<Real> aValues = {0.008};
+        vector<Real> aValues = {0.08};
         irConfigs.push_back(boost::make_shared<IrLgmData>(
             "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
             ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
@@ -365,7 +365,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                 RiskFactorKey gbpKey(RiskFactorKey::KeyType::DiscountCurve, "GBP", 8);
                 RiskFactorKey usdeurKey(RiskFactorKey::KeyType::FXSpot, "USDEUR");
                 RiskFactorKey gbpeurKey(RiskFactorKey::KeyType::FXSpot, "GBPEUR");
-                RiskFactorKey euhicpKey(RiskFactorKey::KeyType::ZeroInflationCurve, "EUHICPXT", 4);
+                RiskFactorKey euhicpKey(RiskFactorKey::KeyType::CPIIndex, "EUHICPXT");
 
                 Real usdeurFX = scenario->get(usdeurKey);
                 Real gbpeurFX = scenario->get(gbpeurKey);
@@ -373,14 +373,14 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                 Real eur10yDiscount = scenario->get(eurKey);
                 Real gbp10yDiscount = scenario->get(gbpKey);
                 Real usd10yDiscount = scenario->get(usdKey);
-                Real euhicpZero = scenario->get(euhicpKey);
+                Real euhicp = scenario->get(euhicpKey);
                 eur += eur10yDiscount / numeraire;
                 gbp += gbp10yDiscount * gbpeurFX / numeraire;
                 usd += usd10yDiscount * usdeurFX / numeraire;
                 eur2 += 1.0 / numeraire;
                 gbp2 += gbpeurFX / numeraire;
                 usd2 += usdeurFX / numeraire;
-                eur3 += euhicpZero / numeraire;
+                eur3 += euhicp / numeraire;
             }
         }
     }
@@ -415,9 +415,10 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
-    Real eurExpected3 = d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.);
+    Real eurExpected3 = pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
+                        d.market->discountCurve("EUR")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(eur3 - eurExpected3) / eurExpected3 < relTolerance,
-        "EUR 10Y Discount mismatch: " << eur3 << " vs " << eurExpected3);
+        "EUHICPXT CPI Rate mismatch: " << eur3 << " vs " << eurExpected3);
 
     BOOST_TEST_MESSAGE("CrossAssetModel " << (sobol ? "Sobol " : "MersenneTwister ") << (antithetic ? "Antithetic" : "")
                                           << (brownianBridge ? "BrownianBridge" : ""));
@@ -427,7 +428,7 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_TEST_MESSAGE("EUR 10Y Discount:        " << eur2 << " vs " << eurExpected2);
     BOOST_TEST_MESSAGE("GBP 10Y Discount in EUR: " << gbp2 << " vs " << gbpExpected2);
     BOOST_TEST_MESSAGE("USD 10Y Discount in EUR: " << usd2 << " vs " << usdExpected2);
-    BOOST_TEST_MESSAGE("EUHICPXT 10Y Zero Rate:  " << eur3 << " vs " << eurExpected3);
+    BOOST_TEST_MESSAGE("EUHICPXT CPI:  " << eur3 << " vs " << eurExpected3);
     BOOST_TEST_MESSAGE("Simulation time " << elapsed);
 }
 
@@ -1139,12 +1140,18 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     boost::shared_ptr<QuantExt::CrossAssetModel> model = d.ccLgm;
 
     // set ir vols to zero
-    //for (Size j = 0; j < 3; ++j) {
-    //    for (Size i = 0; i < model->irlgm1f(j)->parameter(0)->size(); ++i) {
-    //        model->irlgm1f(j)->parameter(0)->setParam(i, 0.0);
-    //    }
-    //}
-    //model->update();
+    for (Size j = 0; j < 3; ++j) {
+        for (Size i = 0; i < model->irlgm1f(j)->parameter(0)->size(); ++i) {
+            model->irlgm1f(j)->parameter(0)->setParam(i, 0.0);
+        }
+    }
+    for (Size k = 0; k < 2; ++k) {
+        for (Size i = 0; i < model->infdk(k)->parameter(0)->size(); ++i) {
+            model->infdk(k)->parameter(0)->setParam(i, 0.0);
+        }
+    }
+
+    model->update();
 
     // State process
     QuantExt::CrossAssetStateProcess::discretization discretization = QuantExt::CrossAssetStateProcess::exact;
@@ -1184,7 +1191,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
     boost::shared_ptr<ScenarioGenerator> sg = sgb.build(model, sf, simMarketConfig, today, d.market);
-    // boost::shared_ptr<ore::analytics::DateGrid> grid = sb.dateGrid();
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
@@ -1193,8 +1199,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
     Size samples = 10000;
 
-    // fx forward for expsoure generation (otm) and engine
-    Date maturity = grid->dates().back() + 2; // make sure the option is live on last grid date
+    Date maturity = grid->dates().back() + 1; // make sure the option is live on last grid date
    
     Handle<ZeroInflationIndex> infIndex = simMarket->zeroInflationIndex("EUHICPXT");
     Real baseCPI = infIndex->fixing(infIndex->zeroInflationTermStructure()->baseDate());
@@ -1209,26 +1214,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
         .withSubtractInflationNominal(true);
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
-
-    //Envelope env("CP");
-    //ScheduleData cpiSched(ScheduleDates("TARGET", vector<string> { "01-08-2020" }));
-    //LegData cpiLegData(boost::make_shared<CPILegData>("EUHICPXT", 262.1, "2M", false, vector<Real>{1.0},
-    //    vector<string>(), true), false, "EUR", cpiSched, "30/360", vector<double> {10000000.0}, vector<string>(),
-    //    "MF", false, true);
-
-    //// trade
-    //boost::shared_ptr<Trade> trade(new ore::data::Swap(env, vector<LegData> {cpiLegData} ));
-    //trade->id() = "CpiSwap";
-    //portfolio->add(trade);
-
-    //boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
-    //data->model("Swap") = "DiscountedCashflows";
-    //data->engine("Swap") = "DiscountingSwapEngine";
-    //boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    //factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
-    //portfolio->build(factory);
-
-    //simMarket->fixingManager()->initialise(portfolio);
 
     boost::shared_ptr<QuantLib::Swap> cpiSwap =
         boost::make_shared<QuantLib::Swap>(vector<Leg> {cpiLeg}, vector<bool> {false});
@@ -1249,7 +1234,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
     // collect discounted epe
     Real cpiSwap_epe = 0.0;
-    //Real trade_epe = 0.0;
     boost::timer timer;
     Real updateTime = 0.0;
     BOOST_TEST_MESSAGE("running " << samples << " samples simulation over " << grid->dates().size() << " time steps");
@@ -1258,10 +1242,8 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
         // we do not use the valuation engine, so in case updates are disabled we need to
         // take care of the instrument update ourselves
         cpiSwap->update();
-        //trade->instrument()->reset();
         Real numeraire = simMarket->numeraire();
         cpiSwap_epe += std::max(cpiSwap->NPV(), 0.0) / numeraire;
-        //trade_epe += std::max(trade->instrument()->NPV(), 0.0) / numeraire;
 
         simMarket->fixingManager()->reset();
     }
@@ -1271,7 +1253,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     // compute summary statistics for swap
     Real tol = 3.0E-4;
     cpiSwap_epe /= samples;
-    //trade_epe /= samples;
     BOOST_TEST_MESSAGE("CPI Swap at t=" << grid->dates().back() << " epe = " << cpiSwap_epe << " CPI Cap epe = "
         << capNpv << " difference is " << (cpiSwap_epe - capNpv));
     BOOST_CHECK_MESSAGE(fabs(cpiSwap_epe - capNpv) < tol,
@@ -1282,6 +1263,8 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
 test_suite* ScenarioGeneratorTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ScenarioGeneratorTest");
+
+    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testVanillaSwapExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCpiSwapExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic));
@@ -1293,7 +1276,7 @@ test_suite* ScenarioGeneratorTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetLowDiscrepancyBrownianBridge));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket2));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testVanillaSwapExposure));
+
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposureZeroIrVol));
     
