@@ -220,15 +220,6 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-  <CDSVolatilities>
-    <CDSVolatility>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
-      <Expiries>
-        1M,3M,6M
-      </Expiries>
-    </CDSVolatility>
-  </CDSVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
@@ -2188,14 +2179,13 @@
             </Expiries>
         </EquityVolatility>
   </EquityVolatilities>
-  <SecuritySpreads>
-    <SecuritySpread>
+  <Securities>
+    <Security>
       <CurveId>SECURITY_1</CurveId>
-      <CurveDescription>Security Spread</CurveDescription>
-      <Quotes>
-        <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
-      </Quotes>
-    </SecuritySpread>
-  </SecuritySpreads>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    </Security>
+  </Securities>
 </CurveConfiguration>
 

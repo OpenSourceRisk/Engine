@@ -1,20 +1,20 @@
 /*
-   Copyright (C) 2017 Quaternion Risk Management Ltd
-   All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-   This file is part of ORE, a free-software/open-source library
-   for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-   ORE is free software: you can redistribute it and/or modify it
-   under the terms of the Modified BSD License.  You should have received a
-   copy of the license along with this program.
-   The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-   This program is distributed on the basis that it will form a useful
-   contribution to risk analytics and model standardisation, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer.hpp>
@@ -289,14 +289,13 @@ void OREApp::getMarketParameters() {
     }
 }
 
-boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
-    string inputPath = params_->get("setup", "inputPath");
-    string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    if (params_->get("setup", "pricingEnginesFile") != "")
-        engineData->fromFile(pricingEnginesFile);
-
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName) {
     map<MarketContext, string> configurations;
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    string inputPath = params_->get("setup", "inputPath");
+    string pricingEnginesFile = inputPath + "/" + params_->get(groupName, "pricingEnginesFile");
+    if (params_->get(groupName, "pricingEnginesFile") != "")
+        engineData->fromFile(pricingEnginesFile);
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -308,11 +307,17 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    portfolio->load(portfolioFile, buildTradeFactory());
+    vector<string> portfolioFiles;
+    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto portfolioFile : portfolioFiles) {
+        boost::trim(portfolioFile);
+        portfolioFile = inputPath + "/" + portfolioFile;
+        portfolio->load(portfolioFile, buildTradeFactory());
+    }
     portfolio->build(factory);
     return portfolio;
 }
@@ -376,7 +381,6 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 void OREApp::writeInitialReports() {
 
     string outputPath = params_->get("setup", "outputPath");
-    string inputPath = params_->get("setup", "inputPath");
 
     /************
      * Curve dump
@@ -625,7 +629,9 @@ void OREApp::generateNPVCube() {
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
         simMarket_->scenarioGenerator() = sg;
-        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_);
+	
+	string groupName = "simulation";
+        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");
         simPortfolio_ = buildPortfolio(simFactory);

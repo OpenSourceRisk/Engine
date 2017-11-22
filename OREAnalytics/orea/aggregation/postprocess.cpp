@@ -397,8 +397,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples;
-                ene[j + 1] += std::max(-exposure + dim, 0.0) / samples;
+                epe[j + 1] += std::max(exposure - dim, 0.0) / samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) / samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
@@ -657,15 +657,15 @@ void PostProcess::updateStandAloneXVA() {
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fbaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
-            tradeFBA_[tradeId] += fbaIncrement;
+            Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
+            tradeFCA_[tradeId] += fcaIncrement;
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fcaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
-            tradeFCA_[tradeId] += fcaIncrement;
+            Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
+            tradeFBA_[tradeId] += fbaIncrement;
         }
         if (sumTradeCVA_.find(nid) == sumTradeCVA_.end()) {
             sumTradeCVA_[nid] = 0.0;
@@ -683,7 +683,6 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
-        vector<Real> ec = expectedCollateral_[nettingSetId];
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];

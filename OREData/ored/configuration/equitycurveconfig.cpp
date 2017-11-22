@@ -26,9 +26,12 @@ namespace data {
 
 EquityCurveConfig::EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, 
                                      const string& currency, const EquityCurveConfig::Type& type, const string& equitySpotQuote,
-                                     const vector<string>& quotes, const string& dayCountID, bool extrapolation)
-    : CurveConfig(curveID, curveDescription), forecastingCurve_(forecastingCurve), currency_(currency), type_(type),
-      equitySpotQuoteID_(equitySpotQuote), quotes_(quotes), dayCountID_(dayCountID), extrapolation_(extrapolation) {}
+                                     const vector<string>& fwdQuotes, const string& dayCountID, bool extrapolation)
+    : CurveConfig(curveID, curveDescription), fwdQuotes_(fwdQuotes), forecastingCurve_(forecastingCurve), currency_(currency), type_(type),
+      equitySpotQuoteID_(equitySpotQuote), dayCountID_(dayCountID), extrapolation_(extrapolation) {
+        quotes_ = fwdQuotes; 
+ 		quotes_.insert(quotes_.begin(), equitySpotQuote); 
+      }
 
 void EquityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityCurve");
@@ -49,7 +52,10 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
 
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    quotes_ = fwdQuotes_; 
+ 	quotes_.insert(quotes_.begin(), equitySpotQuoteID_); 
+    
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
@@ -70,7 +76,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+    XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;

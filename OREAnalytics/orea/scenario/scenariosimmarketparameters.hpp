@@ -48,9 +48,10 @@ public:
     //! Default constructor
     ScenarioSimMarketParameters()
         : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
-          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
-          fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
-          equityMoneyness_({1}), baseCorrelationSimulate_(false) {
+          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false), 
+          equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
+          fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -71,7 +72,7 @@ public:
     const vector<string>& indices() const { return indices_; }
     const map<string, string>& swapIndices() const { return swapIndices_; }
     const string& interpolation() const { return interpolation_; }
-    const bool& extrapolate() const { return extrapolate_; }
+    bool extrapolate() const { return extrapolate_; }
 
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
@@ -140,6 +141,9 @@ public:
     const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
+
+    bool simulateEquityForecastCurve() const { return equityForecastCurveSimulate_; }
+    bool simulateDividendYield() const { return dividendYieldSimulate_; }
 
     //@}
 
@@ -217,6 +221,9 @@ public:
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
 
+    bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
+    bool& simulateDividendYield() { return dividendYieldSimulate_; }
+
 
     //@}
 
@@ -271,6 +278,8 @@ private:
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
+    bool equityForecastCurveSimulate_;
+    bool dividendYieldSimulate_;
     map<string, vector<Period>> equityDividendTenors_;
     map<string, vector<Period>> equityForecastTenors_;
 
@@ -304,6 +313,7 @@ private:
     map<string, vector<Period>> zeroInflationTenors_;
     vector<string> yoyInflationIndices_;
     map<string, vector<Period>> yoyInflationTenors_;
+
 };
 } // namespace analytics
 } // namespace ore

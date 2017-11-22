@@ -27,10 +27,13 @@ namespace data {
 DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                        const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
-                                       const vector<string>& quotes, bool extrapolation)
-    : CurveConfig(curveID, curveDescription), currency_(currency), type_(type),
+                                       const vector<string>& cdsQuotes, bool extrapolation)
+    : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
-      conventionID_(conventionID), quotes_(quotes), extrapolation_(extrapolation) {}
+      conventionID_(conventionID), extrapolation_(extrapolation) {
+        quotes_ = cdsQuotes; 
+ 		quotes_.insert(quotes_.begin(), recoveryRateQuote_);
+      }
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
@@ -54,17 +57,19 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", false);
 
     recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
-
     string dc = XMLUtils::getChildValue(node, "DayCounter", true);
     dayCounter_ = parseDayCounter(dc);
 
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);    
+    cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    quotes_ = cdsQuotes_; 
+ 	quotes_.insert(quotes_.begin(), recoveryRateQuote_); 
+
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("SwaptionVolatility");
+    XMLNode* node = doc.allocNode("DefaultCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -89,7 +94,6 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
-
     return node;
 }
 } // namespace data

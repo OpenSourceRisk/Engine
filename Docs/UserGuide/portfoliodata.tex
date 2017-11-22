@@ -60,7 +60,7 @@ Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used
 \item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
   the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
 
-Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond}
+Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
 
 
 \end{itemize}
@@ -545,6 +545,47 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \end{listing}
 
 The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
+
+\subsubsection{Credit Default Swap}
+
+A credit default swap is set up using a {\tt CreditDefaultSwapData} block as shown in listing \ref{lst:cdsdata}. The CDS specific elements
+are
+
+\begin{itemize}
+\item IssuerId: A unique identifier for the issuer of the bond
+\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
+    todaysmarket.xml}
+\item SettleAtAccrual: Whether or not the accrued coupon is due in the event of a default.
+\item PaysAtDefaultTime: If set to true, any payments triggered by a default event are due at default time. If set to false, they are due at the end of the accrual period.
+\item ProtectionStart: The first date where a default event will trigger the contract.
+\item UpfrontDate: Settlement date for the upfront payment.
+\item UpfrontFee: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\end{itemize}
+
+A LegData block then defines the cashflow structure of the credit default swap, this must be be of type fixed.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CreditDefaultSwapData>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>BANK</CreditCurveId>
+      <Qualifier>SECURITY_1</Qualifier>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee>
+      <LegData>
+            <LegType>Fixed</LegType>
+            <Payer>false</Payer>
+            ...
+        </LegData>
+    </CreditDefaultSwapData>
+\end{minted}
+\caption{CreditDefaultSwap Data}
+\label{lst:cdsdata}
+\end{listing}
 
 \subsubsection{Forward Rate Agreement}
 

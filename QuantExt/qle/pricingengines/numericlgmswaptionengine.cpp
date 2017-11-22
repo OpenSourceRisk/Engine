@@ -139,7 +139,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 } // NumericLgmSwaptionEngineBase::calculate
 
 void NumericLgmSwaptionEngine::calculate() const {
-    QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions not yet implemented ...");
+    // TODO cash-settled swaptions are priced as if physically settled, this can be refined
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
@@ -177,7 +177,8 @@ Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date e
 } // NumericLgmSwaptionEngine::conditionalSwapValue
 
 void NumericLgmNonstandardSwaptionEngine::calculate() const {
-    QL_REQUIRE(arguments_.settlementType == Settlement::Physical, "cash-settled swaptions not yet implemented ...");
+    // FIXME handle cash settled swaption properly in this engine, for the time being we treat cash settlement
+    // the same as physical settlement
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();

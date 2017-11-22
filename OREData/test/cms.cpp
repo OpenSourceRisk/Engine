@@ -113,11 +113,10 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        FixedLegData fixedLegRateData(vector<double>(1, fixedRate));
-        LegData fixedLegData(!isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
-
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), !isPayer, ccy,
+                             fixedSchedule, fixDC, notionals);
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+                           cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
         boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
@@ -129,11 +128,10 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         // build CMSSwap
-        FixedLegData fixedLegRateData(vector<double>(1, fixedRate_));
-        LegData fixedLegData(!isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
-
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate_)), !isPayer, ccy,
+                             fixedSchedule, fixDC, notionals);
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+                           cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
         boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, fixedLegData, cmsLegData));
@@ -144,8 +142,9 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        CMSLegData cmsLegRateData;
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread), isPayer, ccy,
+                           cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
@@ -158,8 +157,9 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates, caps, capDates);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData cmsLegData(
+            boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates, caps, capDates),
+            isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
@@ -170,8 +170,8 @@ struct CommonVars {
     boost::shared_ptr<ore::data::CapFloor> makeCap(vector<double> caps) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
+                           ccy, cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
         boost::shared_ptr<ore::data::CapFloor> capfloor(
@@ -184,9 +184,9 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates, vector<double>(),
-                                  vector<string>(), floors, floorDates);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates,
+                                                          vector<double>(), vector<string>(), floors, floorDates),
+                           isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(cmsLegData);
 
         Envelope env("CP1");
@@ -197,8 +197,8 @@ struct CommonVars {
     boost::shared_ptr<ore::data::CapFloor> makeFloor(vector<double> floors) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
-        CMSLegData cmsLegRateData(index, fixingdays, isinarrears, spread, spreadDates);
-        LegData cmsLegData(isPayer, ccy, cmsLegRateData, cmsSchedule, fixDC, notionals);
+        LegData cmsLegData(boost::make_shared<CMSLegData>(index, fixingdays, isinarrears, spread, spreadDates), isPayer,
+                           ccy, cmsSchedule, fixDC, notionals);
 
         Envelope env("CP1");
         boost::shared_ptr<ore::data::CapFloor> capfloor(
@@ -206,14 +206,9 @@ struct CommonVars {
         return capfloor;
     }
 
-    CommonVars() {
-        ccy = "EUR";
-        isPayer = false;
+    CommonVars() : ccy("EUR"), isPayer(false), start("20160301"), end("20360301"), fixtenor("1Y"), cmstenor("6M") {
+
         longShort = isPayer ? "Short" : "Long";
-        start = "20160301";
-        end = "20360301";
-        fixtenor = "1Y";
-        cmstenor = "6M";
         cal = TARGET();
         calStr = "TARGET";
         conv = "MF";

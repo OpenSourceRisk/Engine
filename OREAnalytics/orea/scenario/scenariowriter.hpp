@@ -50,9 +50,9 @@ public:
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset();
 
-
-private:
+    //! Close the file if it is open, not normally needed by client code
     void close();
+private:
 
     void open(const std::string& filename, const std::string& filemode = "w+");
 

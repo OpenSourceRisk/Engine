@@ -16,35 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/securityrecoveryrate.hpp
-    \brief
-    \ingroup marketdata
+/*! \file orea/version.hpp
+    \brief Version
 */
 
 #pragma once
 
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/handle.hpp>
-#include <ql/quote.hpp>
-
-namespace ore {
-namespace data {
-
-//! Wrapper class for holding Bond recovery rate quotes
-/*!
-  \ingroup marketdata
-*/
-class SecurityRecoveryRate {
-public:
-    //! Constructor
-    SecurityRecoveryRate(const Date& asof, SecurityRecoveryRateSpec spec, const Loader& loader);
-
-    //! Inspector
-    Handle<Quote> recoveryRate() const { return recoveryRate_; }
-
-private:
-    Handle<Quote> recoveryRate_;
-};
-} // namespace data
-} // namespace ore
+#include <qle/version.hpp>

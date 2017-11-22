@@ -108,13 +108,13 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     ScheduleData fixedSchedule(ScheduleRules(start, end, fixFreq, calStr, conv, conv, rule));
 
     // fixed Leg - with dummy rate
-    FixedLegData fixedLegData(vector<double>(1, fixedRate));
-    LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixDC, notional);
+    LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
+                     fixedSchedule, fixDC, notional);
 
     // float Leg
     vector<double> spreads(1, 0);
-    FloatingLegData floatingLegData(index, days, false, spread);
-    LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
+    LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
+                        floatSchedule, floatDC, notional);
 
     boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
 
@@ -193,13 +193,11 @@ void simulation(string dateGridString, bool checkFixings) {
     vector<string> swaptionStrikes(swaptionExpiries.size(), "ATM");
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
-    vector<Real> hValues = {};
-    vector<Real> aValues = {};
 
     std::vector<boost::shared_ptr<LgmData>> irConfigs;
 
-    hValues = {0.02};
-    aValues = {0.008};
+    vector<Real> hValues = {0.02};
+    vector<Real> aValues = {0.008};
     irConfigs.push_back(boost::make_shared<LgmData>(
         "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
@@ -232,10 +230,9 @@ void simulation(string dateGridString, bool checkFixings) {
     vector<string> optionExpiries = {"1Y", "2Y", "3Y", "5Y", "7Y", "10Y"};
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
-    vector<Real> sigmaValues = {};
 
     std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-    sigmaValues = {0.15};
+    vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(boost::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
@@ -406,16 +403,6 @@ void ObservationModeTest::testDefer() {
 }
 
 test_suite* ObservationModeTest::suite() {
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-    boost::shared_ptr<ore::data::FileLogger> logger
-        = boost::make_shared<ore::data::FileLogger>("swapperformace_test.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
-    */
-
     test_suite* suite = BOOST_TEST_SUITE("ObservationModeTest");
     // Set the Observation mode here
     suite->add(BOOST_TEST_CASE(&ObservationModeTest::testNone));

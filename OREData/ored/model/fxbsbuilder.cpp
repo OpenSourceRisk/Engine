@@ -98,8 +98,11 @@ void FxBsBuilder::buildOptionBasket() {
     std::vector<Time> expiryTimes(data_->optionExpiries().size());
     for (Size j = 0; j < data_->optionExpiries().size(); j++) {
         std::string expiryString = data_->optionExpiries()[j];
-        Period expiry = ore::data::parsePeriod(expiryString);
-        Date expiryDate = today + expiry;
+        bool expiryDateBased;
+        Period expiryPb;
+        Date expiryDb;
+        parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
+        Date expiryDate = expiryDateBased ? expiryDb : today + expiryPb;
         ore::data::Strike strike = ore::data::parseStrike(data_->optionStrikes()[j]);
         Real strikeValue;
         // TODO: Extend strike type coverage
@@ -115,7 +118,8 @@ void FxBsBuilder::buildOptionBasket() {
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = ytsDom->timeFromReference(helper->option()->exercise()->date(0));
-        LOG("Added FxEqOptionHelper " << ccyPair << " " << expiry << " " << quote->value());
+        LOG("Added FxEqOptionHelper " << ccyPair << " " << QuantLib::io::iso_date(expiryDate) << " " << helper->strike()
+                                      << " " << quote->value());
     }
 
     std::sort(expiryTimes.begin(), expiryTimes.end());

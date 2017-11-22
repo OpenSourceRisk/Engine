@@ -58,7 +58,7 @@
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
 
-	<Equities>
+    <Equities>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
@@ -68,8 +68,8 @@
     </Equities>
 
     <!-- Even if we do not simulate them - option pricing needs vol
-	   surfaces, so we need to specify here how we propagate the
-	   vol structure and what its composition will be -->
+    surfaces, so we need to specify here how we propagate the
+    vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>

@@ -20,7 +20,9 @@ OREDATA_TESTS = \
 	equitymarketdata.hpp equitymarketdata.cpp \
 	equitytrades.hpp equitytrades.cpp \
 	swaption.hpp swaption.cpp \
-	portfolio.hpp portfolio.cpp
+	portfolio.hpp portfolio.cpp \
+    curveconfig.hpp curveconfig.cpp \
+	cds.hpp cds.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
@@ -30,7 +32,7 @@ dist-hook:
 
 if BOOST_UNIT_TEST_FOUND
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
 
 noinst_LTLIBRARIES = libUnitMain.la
 libUnitMain_la_SOURCES = main.cpp

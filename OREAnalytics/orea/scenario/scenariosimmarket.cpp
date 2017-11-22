@@ -126,8 +126,11 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         Handle<Quote> qh(q);
         quotes.push_back(qh);
 
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-        LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        // Check if the risk factor is simulated before adding it
+        if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
+            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
+            LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+        }
     }
 
     boost::shared_ptr<YieldTermStructure> yieldCurve;
@@ -171,6 +174,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
     if (!parameters->simulateBaseCorrelations())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
+    if (!parameters->simulateEquityForecastCurve()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityForecastCurve);
+    }
+    if (!parameters->simulateDividendYield()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
+    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
@@ -970,6 +979,9 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         }
         QL_FAIL("mismatch between scenario and sim data size, exit.");
     }
+
+    // update market asof date
+    asof_ = scenario->asof();
 }
 
 void ScenarioSimMarket::reset() {
@@ -1004,6 +1016,7 @@ void ScenarioSimMarket::update(const Date& d) {
         ObservableSettings::instance().disableUpdates(true);
 
     boost::shared_ptr<Scenario> scenario = scenarioGenerator_->next(d);
+    QL_REQUIRE(scenario->asof() == d, "Invalid Scenario date " << scenario->asof() << ", expected " << d);
 
     numeraire_ = scenario->getNumeraire();
 

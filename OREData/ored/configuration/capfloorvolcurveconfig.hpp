@@ -56,12 +56,11 @@ public:
                                   const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
                                   const BusinessDayConvention& businessDayConvention, const string& iborIndex,
                                   const string& discountCurve);
-    virtual ~CapFloorVolatilityCurveConfig() {}
 
     //! \name XMLSerializable interface
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -77,6 +76,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& iborIndex() const { return iborIndex_; }
     const string& discountCurve() const { return discountCurve_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
@@ -105,5 +105,7 @@ private:
     string iborIndex_;
     string discountCurve_;
 };
+
+std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);
 } // namespace data
 } // namespace ore

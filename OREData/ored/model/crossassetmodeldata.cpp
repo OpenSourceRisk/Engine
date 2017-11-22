@@ -42,8 +42,9 @@ namespace data {
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
     if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ ||
-        correlations_ != rhs.correlations_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
-        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size()) {
+        equities_ != rhs.equities_ || correlations_ != rhs.correlations_ ||
+        bootstrapTolerance_ != rhs.bootstrapTolerance_ || irConfigs_.size() != rhs.irConfigs_.size() ||
+        fxConfigs_.size() != rhs.fxConfigs_.size() || eqConfigs_.size() != rhs.eqConfigs_.size()) {
         return false;
     }
 
@@ -59,6 +60,12 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
+    for (Size i = 0; i < eqConfigs_.size(); i++) {
+        if (*eqConfigs_[i] != *(rhs.eqConfigs_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -66,8 +73,10 @@ bool CrossAssetModelData::operator!=(const CrossAssetModelData& rhs) { return !(
 
 void CrossAssetModelData::clear() {
     currencies_.clear();
+    equities_.clear();
     irConfigs_.clear();
     fxConfigs_.clear();
+    eqConfigs_.clear();
     correlations_.clear();
 }
 

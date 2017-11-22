@@ -31,6 +31,18 @@ BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID, co
                                                        const vector<Period>& terms)
     : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
 
+const vector<string>& BaseCorrelationCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        string base = "CDS_INDEX/BASE_CORRELATION/"+curveID_+"/";
+        for (auto t : terms_) {
+            for (auto dp : detachmentPoints_) {
+                quotes_.push_back(base + to_string(t) + "/" + to_string(dp));
+            }
+        }
+    }
+    return quotes_;
+}
+
 void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "BaseCorrelation");
 

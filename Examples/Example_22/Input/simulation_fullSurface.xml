@@ -40,16 +40,16 @@
       </SwapIndex>
     </SwapIndices>
 
-	
+    
     <DefaultCurves>
       <Names>
-	<Name>CPTY_C</Name>
+    <Name>CPTY_C</Name>
       </Names>
       <Tenors>6M,1Y,2Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
-		
-	<Equities>
+        
+    <Equities>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>

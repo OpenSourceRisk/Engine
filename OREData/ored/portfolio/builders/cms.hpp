@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oredp/portfolio/builders/cms.hpp
+/*! \file ored/portfolio/builders/cms.hpp
     \brief builder that returns an engine to price capped floored ibor legs
     \ingroup portfolio
 */
