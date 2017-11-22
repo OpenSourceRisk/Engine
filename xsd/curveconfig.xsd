@@ -148,6 +148,7 @@
       <xs:element type="xs:string" name="SpotQuote"/>
       <xs:element type="quoteType" name="Quotes"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dividendInterpolation" name="DividendInterpolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   
@@ -413,6 +414,13 @@
   <xs:complexType name="factorType">
     <xs:sequence>
       <xs:element type="xs:string" name="Factor" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="dividendInterpolation">
+    <xs:sequence>
+      <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="interpolationMethodType" name="InterpolationMethod" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
