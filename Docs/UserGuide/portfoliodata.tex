@@ -168,7 +168,7 @@ The \lstinline!CapFloorData! node is the trade data container for trade type Cap
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating}, plus
 elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
-\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates!
+\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both.
 
 \begin{listing}[H]
@@ -181,9 +181,9 @@ elements, or both.
     <LegType>Floating</LegType>
      ...
   </LegData>
-  <CapRates>
+  <Caps>
     <Rate>0.05</Rate>
-  </CapRates>
+  </Caps>
 </CapFloorData>
 \end{minted}
 \caption{Cap/Floor data}
@@ -200,7 +200,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 \item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
   one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
-\item CapRates: This node has child elements of type \lstinline!Rate!
+\item Caps: This node has child elements of type \lstinline!Rate!
   capping the floating leg. The first rate value corresponds to the
   first coupon, the second rate value corresponds to the second
   coupon, etc. If the number of coupons exceeds the number of rate
@@ -212,7 +212,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%
 
-\item FloorRates: This node has child elements of type
+\item Floors: This node has child elements of type
   \lstinline!Rate! flooring the floating leg.  The first rate value
   corresponds to the first coupon, the second rate value corresponds
   to the second coupon, etc. If the number of coupons exceeds the
@@ -1135,6 +1135,7 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                         <Floor>0.01</Floor>
                     </Floors>
                 </FloatingLegData>
+                <NakedOption>N</NakedOption>
 \end{minted}
 \caption{Floating leg data}
 \label{lst:floatingleg_data}
@@ -1203,6 +1204,9 @@ in Listing \ref{lst:spreads_dates}.
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
+
+\item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 
 \end{itemize}
 
