@@ -174,46 +174,46 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = cvsData;
     sensiData->discountCurveShiftData()["EUR"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["EUR"].parInstrumentConventions = {{"DEP", "EUR-DEP-CONVENTIONS"},
-                                                                           {"IRS", "EUR-6M-SWAP-CONVENTIONS"}};
+    sensiData->discountCurveShiftData()["EUR"].parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
+    sensiData->discountCurveShiftData()["EUR"].parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["USD"] = cvsData;
     sensiData->discountCurveShiftData()["USD"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["USD"].parInstrumentConventions = {{"DEP", "USD-DEP-CONVENTIONS"},
-                                                                           {"IRS", "USD-3M-SWAP-CONVENTIONS"}};
+    sensiData->discountCurveShiftData()["USD"].parInstrumentConventions["DEP"] = "USD-DEP-CONVENTIONS";
+    sensiData->discountCurveShiftData()["USD"].parInstrumentConventions["IRS"] = "USD-3M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["GBP"] = cvsData;
     sensiData->discountCurveShiftData()["GBP"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["GBP"].parInstrumentConventions = {{"DEP", "GBP-DEP-CONVENTIONS"},
-                                                                           {"IRS", "GBP-6M-SWAP-CONVENTIONS"}};
+    sensiData->discountCurveShiftData()["GBP"].parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
+    sensiData->discountCurveShiftData()["GBP"].parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["JPY"] = cvsData;
     sensiData->discountCurveShiftData()["JPY"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["JPY"].parInstrumentConventions = {{"DEP", "JPY-DEP-CONVENTIONS"},
-                                                                           {"IRS", "JPY-6M-SWAP-CONVENTIONS"}};
+    sensiData->discountCurveShiftData()["JPY"].parInstrumentConventions["DEP"] = "JPY-DEP-CONVENTIONS";
+    sensiData->discountCurveShiftData()["JPY"].parInstrumentConventions["IRS"] = "JPY-6M-SWAP-CONVENTIONS";
     sensiData->discountCurveShiftData()["CHF"] = cvsData;
     sensiData->discountCurveShiftData()["CHF"].parInstrumentSingleCurve = true;
-    sensiData->discountCurveShiftData()["CHF"].parInstrumentConventions = {{"DEP", "CHF-DEP-CONVENTIONS"},
-                                                                           {"IRS", "CHF-6M-SWAP-CONVENTIONS"}};
+    sensiData->discountCurveShiftData()["CHF"].parInstrumentConventions["DEP"] = "CHF-DEP-CONVENTIONS";
+    sensiData->discountCurveShiftData()["CHF"].parInstrumentConventions["IRS"] = "CHF-6M-SWAP-CONVENTIONS";
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentConventions = {{"DEP", "EUR-DEP-CONVENTIONS"},
-                                                                                   {"IRS", "EUR-6M-SWAP-CONVENTIONS"}};
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentConventions["DEP"] = "EUR-DEP-CONVENTIONS";
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"].parInstrumentConventions["IRS"] = "EUR-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
     sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentConventions = {{"DEP", "USD-DEP-CONVENTIONS"},
-                                                                                 {"IRS", "USD-3M-SWAP-CONVENTIONS"}};
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentConventions["DEP"] = "USD-DEP-CONVENTIONS";
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"].parInstrumentConventions["IRS"] = "USD-3M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
     sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions = {{"DEP", "GBP-DEP-CONVENTIONS"},
-                                                                                 {"IRS", "GBP-6M-SWAP-CONVENTIONS"}};
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions["DEP"] = "GBP-DEP-CONVENTIONS";
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"].parInstrumentConventions["IRS"] = "GBP-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = cvsData;
     sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentSingleCurve = false;
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentConventions = {{"DEP", "JPY-DEP-CONVENTIONS"},
-                                                                                 {"IRS", "JPY-6M-SWAP-CONVENTIONS"}};
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentConventions["DEP"] = "JPY-DEP-CONVENTIONS";
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"].parInstrumentConventions["IRS"] = "JPY-6M-SWAP-CONVENTIONS";
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentSingleCurve = true;
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentConventions = {{"DEP", "CHF-DEP-CONVENTIONS"},
-                                                                                 {"IRS", "CHF-6M-SWAP-CONVENTIONS"}};
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentConventions["DEP"] = "CHF-DEP-CONVENTIONS";
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"].parInstrumentConventions["IRS"] = "CHF-6M-SWAP-CONVENTIONS";
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -1347,10 +1347,10 @@ void SensitivityAnalysis2Test::testSensitivities() {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     for (auto p : portfolio->trades()) { 
-	    for (auto f : sa->sensiCube()->upFactors()) { 
-	        deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
+        for (auto f : sa->sensiCube()->upFactors()) { 
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
             gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-	    } 
+        } 
     }
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
 

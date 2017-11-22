@@ -374,7 +374,9 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    simMarketData->swapIndices() = {{"EUR-CMS-2Y", "EUR-EURIBOR-6M"}, {"EUR-CMS-30Y", "EUR-EURIBOR-6M"}};
+    simMarketData->swapIndices()["EUR-CMS-2Y"] = "EUR-EURIBOR-6M";
+    simMarketData->swapIndices()["EUR-CMS-30Y"] = "EUR-EURIBOR-6M";
+
     simMarketData->yieldCurveNames() = {"BondCurve1"};
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
