@@ -29,6 +29,7 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
@@ -82,6 +83,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    if(XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -94,6 +99,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -146,6 +152,7 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -165,6 +172,10 @@ void CMSLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    if(XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 void AmortizationData::fromXML(XMLNode* node) {
@@ -469,6 +480,11 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = iborLeg;
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
+
+    // build naked option leg if required
+    if(floatData->nakedOption()) {
+        tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+    }
     return tmpLeg;
 } // namespace data
 
@@ -666,6 +682,11 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = cmsLeg;
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
+
+    // build naked option leg if required
+    if(cmsData->nakedOption()) {
+        tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+    }
     return tmpLeg;
 }
 

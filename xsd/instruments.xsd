@@ -168,6 +168,7 @@
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -222,6 +223,7 @@
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>		
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
