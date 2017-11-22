@@ -344,8 +344,12 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
         }
         LOG("INF Calibration " << i);
         // attach pricing engines to helpers
+
+        Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(model->infdk(i)->name(), configurationInfCalibration_);
+        Real baseCPI = zInfIndex->fixing(zInfIndex->zeroInflationTermStructure()->baseDate());
+
         boost::shared_ptr<QuantExt::AnalyticDkCpiCapFloorEngine> engine =
-            boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model, i);
+            boost::make_shared<QuantExt::AnalyticDkCpiCapFloorEngine>(model, i, baseCPI);
         for (Size j = 0; j < infCapFloorBaskets_[i].size(); j++)
             infCapFloorBaskets_[i][j]->setPricingEngine(engine);
 

@@ -147,7 +147,7 @@ void InfDkBuilder::buildCapFloorBasket() {
         Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(infIndex, configuration_);
         Calendar fixCalendar = zInfIndex->fixingCalendar();
         Date baseDate = zInfIndex->zeroInflationTermStructure()->baseDate();
-        Real baseCPI = market_->zeroInflationIndex(infIndex)->fixing(baseDate);
+        Real baseCPI = zInfIndex->fixing(baseDate);
 
         Option::Type capfloor;
         Real marketPrem;

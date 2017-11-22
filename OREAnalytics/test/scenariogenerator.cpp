@@ -1197,9 +1197,10 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     Date maturity = grid->dates().back() + 2; // make sure the option is live on last grid date
    
     Handle<ZeroInflationIndex> infIndex = simMarket->zeroInflationIndex("EUHICPXT");
-
+    Real baseCPI = infIndex->fixing(infIndex->zeroInflationTermStructure()->baseDate());
+    
     Schedule cpiSchedule(vector<Date> { maturity });
-    Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), 262.1, 2 * Months)
+    Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), baseCPI, 2 * Months)
         .withFixedRates(1)
         .withNotionals(1)
         .withObservationInterpolation(CPI::Flat)
@@ -1238,9 +1239,9 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     // note that we set the IR vols to zero, so that we can
     // use a simple adjustment of strike an notional
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> modelEngine =
-        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1);
+        boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1, baseCPI);
 
-    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 1.0, today, 262.1,
+    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 1.0, today, baseCPI,
         maturity, infIndex->fixingCalendar(), ModifiedFollowing, infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex,
         2 * Months, CPI::Flat);
     cap->setPricingEngine(modelEngine);

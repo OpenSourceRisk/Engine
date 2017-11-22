@@ -25,7 +25,8 @@
 
 class InflationIndexObserver : public Observer, public Observable {
 public:
-    InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, Handle<Quote>& quote, Date& baseDate, Period& observationLag)
+    InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
+                           const Date& baseDate, const Period& observationLag)
         : index_(index), quote_(quote), baseDate_(baseDate), observationLag_(observationLag) {
         registerWith(quote);
     }

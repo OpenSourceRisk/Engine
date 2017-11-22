@@ -26,8 +26,8 @@ namespace QuantExt {
 using namespace CrossAssetAnalytics;
 
 AnalyticDkCpiCapFloorEngine::AnalyticDkCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model,
-                                                         const Size index)
-    : model_(model), index_(index){}
+                                                         const Size index, const Real baseCPI)
+    : model_(model), index_(index), baseCPI_(baseCPI) {}
 
 void AnalyticDkCpiCapFloorEngine::calculate() const {
 
@@ -51,7 +51,7 @@ void AnalyticDkCpiCapFloorEngine::calculate() const {
     Real kTilde = k * arguments_.baseCPI;
     Real nTilde = arguments_.nominal / arguments_.baseCPI;
 
-    Real m = arguments_.baseCPI * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate), t);
+    Real m = baseCPI_ * std::pow(1.0 + model_->infdk(index_)->termStructure()->zeroRate(arguments_.fixDate), t);
 
     Real Ht = Hy(index_).eval(x, t);
     Real v = Ht * Ht * zetay(index_).eval(x, t) -
