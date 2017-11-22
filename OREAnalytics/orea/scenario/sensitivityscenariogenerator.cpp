@@ -79,12 +79,12 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::EquityForecastCurve)) {
+    if (simMarketData_->simulateEquityForecastCurve()) {
         generateEquityForecastCurveScenarios(sensiScenarioFactory, true);
         generateEquityForecastCurveScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::DividendYield)) {
+    if (simMarketData_->simulateDividendYield()) {
         generateDividendYieldScenarios(sensiScenarioFactory, true);
         generateDividendYieldScenarios(sensiScenarioFactory, false);
     }
@@ -100,7 +100,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateFxVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarketData_->simulateEquityNames()) {
+    if (simMarketData_->simulateEquityVols()) {
         generateEquityVolScenarios(sensiScenarioFactory, true);
         generateEquityVolScenarios(sensiScenarioFactory, false);
     }
@@ -133,11 +133,10 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
     //store base scenario values
-    boost::shared_ptr<Scenario> base = baseScenario();
-    vector<RiskFactorKey> keys = base->keys();
+    vector<RiskFactorKey> keys = baseScenario_->keys();
     vector<Real> baseValues;
     for (auto k : keys) {
-        baseValues.push_back(base->get(k));
+        baseValues.push_back(baseScenario_->get(k));
     }
 
     Size index = scenarios_.size();
@@ -180,7 +179,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
                 Real iValue = iValues[k];
                 Real jValue = jScenario->get(keys[k]);
                 Real baseValue = baseValues[k];
-                if (iValue != baseValue || jValue != baseValue)  {
+                if (!close_enough(iValue, baseValue) || !close_enough(jValue, baseValue))  {
                     Real newVal = iValue + jValue - baseValue; 
                     crossScenario->add(keys[k], newVal);
                 }
@@ -335,7 +334,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "CurveShiftData not found for " << ccy);
         SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
         
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
@@ -370,8 +369,10 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
+                if (!close_enough(shiftedZeros[k], zeros[k]) {
+                    Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                    scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
+                }
             }
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
@@ -414,7 +415,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
@@ -491,7 +492,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
@@ -567,7 +568,7 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityForecastTenors(name)[j];
@@ -643,7 +644,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         SensitivityScenarioData::CurveShiftData data = itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
         
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityDividendTenors(name)[j];
@@ -901,7 +902,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             shiftStrikes = {0.0};
         }
 
-        DayCounter dc = parseDayCounter(simMarketData_->swapVolDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->swapVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -1014,7 +1015,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
-        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
@@ -1094,8 +1095,8 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(), "credit CurveShiftData not found for " << name);
         SensitivityScenarioData::CurveShiftData data = itr->second;  
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->defaultDcs());
-        Calendar calendar = parseCalendar(simMarketData_->defaultCal());
+        DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
+        Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->defaultTenors(crNames[i])[j];
@@ -1246,7 +1247,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
         QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(), "zero inflation CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->zeroInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, j);
@@ -1322,7 +1323,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
         QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(), "yoyinflation CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
@@ -1402,7 +1403,7 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
         vector<Real> shiftLevels = data.shiftLossLevels;
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        DayCounter dc = parseDayCounter(simMarketData_->baseCorrelationDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->baseCorrelationDayCounter(name));
 
         // cache original base correlation data
         for (Size j = 0; j < n_bc_terms; ++j) {

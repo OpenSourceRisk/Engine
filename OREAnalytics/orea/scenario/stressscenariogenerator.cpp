@@ -47,7 +47,7 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
         addYieldCurveShifts(data, scenario);
         if (simMarketData_->simulateFXVols())
             addFxVolShifts(data, scenario);
-        if (simMarketData_->simulateEquityNames())
+        if (simMarketData_->simulateEquityVols())
             addEquityVolShifts(data, scenario);
         if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);
@@ -138,7 +138,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
         
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
@@ -188,7 +188,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 
 
         for (Size j = 0; j < n_ten; ++j) {
@@ -238,7 +238,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter());
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
@@ -400,7 +400,7 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        DayCounter dc = parseDayCounter(simMarketData_->swapVolDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->swapVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
@@ -481,7 +481,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> shifts = data.shifts;
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
-        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDcs());
+        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {

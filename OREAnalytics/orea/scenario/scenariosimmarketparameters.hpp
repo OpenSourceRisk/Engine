@@ -53,6 +53,7 @@ public:
           fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 
           equityVolSimulateATMOnly_(true), equityMoneyness_({1}), baseCorrelationSimulate_(false) {
         // set default tenors
+        yieldCurveDayCounters_[""] = "A365";
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityDividendTenors_[""];
@@ -65,7 +66,7 @@ public:
     //@{
     const string& baseCcy() const { return baseCcy_; }
     const vector<string>& ccys() const { return ccys_; }
-    const string& yieldCurveDayCounter() const { return yieldCurveDayCounter_; }
+    const string& yieldCurveDayCounter(const string& key) const;
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
     const vector<string>& yieldCurveCurrencies() const { return yieldCurveCurrencies_; }
     const vector<Period>& yieldCurveTenors(const string& key) const;
@@ -83,13 +84,13 @@ public:
     const vector<Period>& swapVolTerms() const { return swapVolTerms_; }
     const vector<Period>& swapVolExpiries() const { return swapVolExpiries_; }
     const vector<string>& swapVolCcys() const { return swapVolCcys_; }
-    const string& swapVolDcs() const { return swapVolDcs_; }
+    const string& swapVolDayCounter(const string& key) const;
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads() const { return swapVolStrikeSpreads_; }
 
     bool simulateCapFloorVols() const { return capFloorVolSimulate_; }
     const vector<string>& capFloorVolCcys() const { return capFloorVolCcys_; }
-    const string& capFloorVolDcs() const { return capFloorVolDcs_; }
+    const string& capFloorVolDayCounter(const string& key) const;
     const vector<Period>& capFloorVolExpiries(const string& key) const;
     bool hasCapFloorVolExpiries(const string& key) const { return capFloorVolExpiries_.count(key) > 0; }
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
@@ -98,8 +99,8 @@ public:
     bool simulateSurvivalProbabilities() const { return survivalProbabilitySimulate_; }
     bool simulateRecoveryRates() const { return recoveryRateSimulate_; }
     const vector<string>& defaultNames() const { return defaultNames_; }
-    const string& defaultDcs() const { return defaultDcs_; }
-    const string& defaultCal() const { return defaultCal_; }
+    const string& defaultCurveDayCounter(const string& key) const;
+    const string& defaultCurveCalendar(const string& key) const;
     const vector<Period>& defaultTenors(const string& key) const;
     bool hasDefaultTenors(const string& key) const { return defaultTenors_.count(key) > 0; }
 
@@ -138,14 +139,14 @@ public:
     const vector<Period>& baseCorrelationTerms() const { return baseCorrelationTerms_; }
     const vector<Real>& baseCorrelationDetachmentPoints() const { return baseCorrelationDetachmentPoints_; }
     const vector<string>& baseCorrelationNames() const { return baseCorrelationNames_; }
-    const string& baseCorrelationDcs() const { return baseCorrelationDcs_; }
+    const string& baseCorrelationDayCounter(const string& key) const;
 
     const vector<string>& cpiIndices() const { return cpiIndices_; }
     const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
-    const string& zeroInflationDcs() const { return zeroInflationDcs_; }
+    const string& zeroInflationDayCounter(const string& key) const;
     const vector<Period>& zeroInflationTenors(const string& key) const;
     bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }
-    const string& yoyInflationDcs() const { return yoyInflationDcs_; }
+    const string& yoyInflationDayCounter(const string& key) const;
     const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
@@ -159,9 +160,9 @@ public:
     //@{
     string& baseCcy() { return baseCcy_; }
     vector<string>& ccys() { return ccys_; }
-    string& yieldCurveDayCounter() { return yieldCurveDayCounter_; }
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
     vector<string>& yieldCurveCurrencies() { return yieldCurveCurrencies_; }
+    void setYieldCurveDayCounters(const string& key, const string& p);
     void setYieldCurveTenors(const string& key, const vector<Period>& p);
     vector<string>& indices() { return indices_; }
     map<string, string>& swapIndices() { return swapIndices_; }
@@ -175,24 +176,24 @@ public:
     bool& simulateSwapVolATMOnly() { return swapVolSimulateATMOnly_; }
     vector<Period>& swapVolTerms() { return swapVolTerms_; }
     vector<string>& swapVolCcys() { return swapVolCcys_; }
-    string& swapVolDcs() { return swapVolDcs_; }
     vector<Period>& swapVolExpiries() { return swapVolExpiries_; }
     vector<Real>& swapVolStrikeSpreads() { return swapVolStrikeSpreads_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
+    void setSwapVolDayCounters(const string& key, const string& p);
 
     bool& simulateCapFloorVols() { return capFloorVolSimulate_; }
     vector<string>& capFloorVolCcys() { return capFloorVolCcys_; }
-    string& capFloorVolDcs() { return capFloorVolDcs_; }
     void setCapFloorVolExpiries(const string& key, const vector<Period>& p);
     vector<Real>& capFloorVolStrikes() { return capFloorVolStrikes_; }
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
+    void setCapFloorVolDayCounters(const string& key, const string& p);
 
     bool& simulateSurvivalProbabilities() { return survivalProbabilitySimulate_; }
     bool& simulateRecoveryRates() { return recoveryRateSimulate_; }
     vector<string>& defaultNames() { return defaultNames_; }
-    string& defaultDcs() { return defaultDcs_; }
-    string& defaultCal() { return defaultCal_; }
     void setDefaultTenors(const string& key, const vector<Period>& p);
+    void setDefaultCurveDayCounters(const string& key, const string& p);
+    void setDefaultCurveCalendars(const string& key, const string& p);
 
     bool& simulateCdsVols() { return cdsVolSimulate_; }
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
@@ -227,15 +228,15 @@ public:
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
     vector<Real>& baseCorrelationDetachmentPoints() { return baseCorrelationDetachmentPoints_; }
     vector<string>& baseCorrelationNames() { return baseCorrelationNames_; }
-    string& baseCorrelationDcs() { return baseCorrelationDcs_; }
+    void setBaseCorrelationDayCounters(const string& key, const string& p);
 
     vector<string>& cpiIndices() { return cpiIndices_; }
     vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
-    string& zeroInflationDcs() { return zeroInflationDcs_; }
     void setZeroInflationTenors(const string& key, const vector<Period>& p);
+    void setZeroInflationDayCounters(const string& key, const string& p);
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
-    string& yoyInflationDcs() { return yoyInflationDcs_; }
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
+    void setYoyInflationDayCounters(const string& key, const string& p);
 
     bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
     bool& simulateDividendYield() { return dividendYieldSimulate_; }
@@ -257,7 +258,7 @@ public:
 
 private:
     string baseCcy_;
-    string yieldCurveDayCounter_;
+    map<string, string>  yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;
     vector<string> yieldCurveNames_;
     vector<string> yieldCurveCurrencies_;
@@ -274,14 +275,14 @@ private:
     bool swapVolSimulateATMOnly_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
-    string swapVolDcs_;
+    map<string, string>  swapVolDayCounters_;
     vector<Period> swapVolExpiries_;
     vector<Real> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
-    string capFloorVolDcs_;
+    map<string, string>  capFloorVolDayCounters_;
     map<string, vector<Period>> capFloorVolExpiries_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
@@ -289,8 +290,8 @@ private:
     bool survivalProbabilitySimulate_;
     bool recoveryRateSimulate_;
     vector<string> defaultNames_;
-    string defaultDcs_;
-    string defaultCal_;
+    map<string, string>  defaultCurveDayCounters_;
+    map<string, string>  defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
 
     bool cdsVolSimulate_;
@@ -326,16 +327,16 @@ private:
 
     bool baseCorrelationSimulate_;
     vector<string> baseCorrelationNames_;
-    string baseCorrelationDcs_;
     vector<Period> baseCorrelationTerms_;
+    map<string, string>  baseCorrelationDayCounters_;
     vector<Real> baseCorrelationDetachmentPoints_;
     
     vector<string> cpiIndices_;
     vector<string> zeroInflationIndices_;
-    string zeroInflationDcs_;
+    map<string, string>  zeroInflationDayCounters_;
     map<string, vector<Period>> zeroInflationTenors_;
     vector<string> yoyInflationIndices_;
-    string yoyInflationDcs_;
+    map<string, string>  yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
 
 };
