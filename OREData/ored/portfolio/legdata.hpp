@@ -117,17 +117,17 @@ private:
 class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(0), isInArrears_(true) {}
+    FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
     FloatingLegData(const string& index, int fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
-                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false)
+                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false, bool nakedOption = false)
         : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-          gearings_(gearings), gearingDates_(gearingDates) {}
+          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
 
     //! \name Inspectors
     //@{
@@ -143,6 +143,7 @@ public:
     const vector<string>& floorDates() const { return floorDates_; }
     const vector<double>& gearings() const { return gearings_; }
     const vector<string>& gearingDates() const { return gearingDates_; }
+    bool nakedOption() const { return nakedOption_; }
     //@}
 
     //! \name Serialisation
@@ -163,6 +164,7 @@ private:
     vector<string> floorDates_;
     vector<double> gearings_;
     vector<string> gearingDates_;
+    bool nakedOption_;
 };
 
 class CPILegData : public LegAdditionalData {
@@ -229,16 +231,16 @@ private:
 class CMSLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMSLegData() : LegAdditionalData("CMS"), fixingDays_(0), isInArrears_(true) {}
+    CMSLegData() : LegAdditionalData("CMS"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
     CMSLegData(const string& swapIndex, int fixingDays, bool isInArrears, const vector<double>& spreads,
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
-               const vector<string>& gearingDates = vector<string>())
+               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false )
         : LegAdditionalData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-          gearings_(gearings), gearingDates_(gearingDates) {}
+          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
 
     //! \name Inspectors
     //@{
@@ -253,6 +255,7 @@ public:
     const vector<string>& floorDates() const { return floorDates_; }
     const vector<double>& gearings() const { return gearings_; }
     const vector<string>& gearingDates() const { return gearingDates_; }
+    bool nakedOption() const { return nakedOption_; }
     //@}
 
     //! \name Serialisation
@@ -272,6 +275,7 @@ private:
     vector<string> floorDates_;
     vector<double> gearings_;
     vector<string> gearingDates_;
+    bool nakedOption_;
 };
 
 //! Serializable object holding amortization rules

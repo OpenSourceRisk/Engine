@@ -145,8 +145,8 @@ void CapFloor::fromXML(XMLNode* node) {
     XMLNode* capFloorNode = XMLUtils::getChildNode(node, "CapFloorData");
     longShort_ = XMLUtils::getChildValue(capFloorNode, "LongShort", true);
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
-    caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "CapRates", "Rate");
-    floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "FloorRates", "Rate");
+    caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
+    floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
 }
 
 XMLNode* CapFloor::toXML(XMLDocument& doc) {
@@ -155,8 +155,8 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, capFloorNode);
     XMLUtils::addChild(doc, capFloorNode, "LongShort", longShort_);
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
-    XMLUtils::addChildren(doc, capFloorNode, "CapRates", "Rate", caps_);
-    XMLUtils::addChildren(doc, capFloorNode, "FloorRates", "Rate", floors_);
+    XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
+    XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
     return node;
 }
 } // namespace data
