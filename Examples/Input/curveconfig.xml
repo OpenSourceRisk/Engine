@@ -2142,6 +2142,10 @@
                 <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
+            <DividendInterpolation>
+                <InterpolationVariable>Zero</InterpolationVariable>
+                <InterpolationMethod>Linear</InterpolationMethod>
+            </DividendInterpolation>
         </EquityCurve>
         <EquityCurve>
             <CurveId>Lufthansa</CurveId>
