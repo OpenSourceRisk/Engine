@@ -306,36 +306,36 @@
         </FloatingLegData>
       </LegData>
       <Caps>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.025</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.030</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
-        <Rate>0.045</Rate>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.025</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.030</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
+        <Cap>0.045</Cap>
       </Caps>
     </CapFloorData>
   </Trade>
