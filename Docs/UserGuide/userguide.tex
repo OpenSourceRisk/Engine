@@ -3106,6 +3106,9 @@ There are two methods in ORE for swaption volatility cube simulation:
 
 FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
+For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
+If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
+
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -3120,6 +3123,7 @@ FX volatilities are taken to be a curve by default, to simulate an FX volatility
       <Tenors>3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,12Y,15Y,20Y</Tenors>
       <Interpolation>LogLinear</Interpolation>
       <Extrapolation>Y</Extrapolation>
+      <DayCounter>ACT/ACT</DayCounter> //Sets a new default for all yieldCurves 
     </Configuration>
   </YieldCurves>
   <Indices>
@@ -3135,6 +3139,15 @@ FX volatilities are taken to be a curve by default, to simulate an FX volatility
       <DiscountingIndex>EUR-EONIA</DiscountingIndex>
     </SwapIndex>
   </SwapIndices>
+  <DefaultCurves> 
+      <Names> 
+	    <Name>CPTY1</Name> 
+	    <Name>CPTY2</Name> 
+      </Names> 
+      <Tenors>6M,1Y,2Y</Tenors> 
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities> 
+      <DayCounter name="CPTY1">ACT/ACT</DayCounter> 
+  </DefaultCurves> 
   <SwaptionVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
     <Currencies>
@@ -3147,6 +3160,7 @@ FX volatilities are taken to be a curve by default, to simulate an FX volatility
      <SimulateATMOnly>false</SimulateATMOnly>
      <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </Cube>
+    <DayCounter ccy="EUR">ACT/ACT</DayCounter> //Sets a new daycounter for just the EUR swaptionVolatility surface 
   </SwaptionVolatilities> 
   <CapFloorVolatilities>
     <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -3154,6 +3168,7 @@ FX volatilities are taken to be a curve by default, to simulate an FX volatility
       <Currency>EUR</Currency>
       <Currency>USD</Currency>
     </Currencies>
+    <DayCounter ccy="EUR">ACT/ACT</DayCounter>
   </CapFloorVolatilities>
   <FxVolatilities>
     <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
