@@ -112,12 +112,12 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.04</Rate>
-      </CapRates>
-      <FloorRates>
-        <Rate>0.04</Rate>
-      </FloorRates>
+      <Caps>
+        <Cap>0.04</Cap>
+      </Caps>
+      <Floors>
+        <Floor>0.04</Floor>
+      </Floors>
     </CapFloorData>
   </Trade>
 </Portfolio>

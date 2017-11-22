@@ -399,10 +399,10 @@
     <xs:sequence>
       <xs:element type="longShort" name="LongShort"/>
       <xs:element type="legData_capfloor" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element name="CapRates" minOccurs="0" maxOccurs="1">
+      <xs:element name="Caps" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Rate" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Cap" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -414,10 +414,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="FloorRates" minOccurs="0" maxOccurs="1">
+      <xs:element name="Floors" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Rate" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Floor" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">

@@ -305,7 +305,7 @@
           <FixingDays>0</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
+      <Caps>
         <Rate>0.025</Rate>
         <Rate>0.025</Rate>
         <Rate>0.025</Rate>
@@ -336,7 +336,7 @@
         <Rate>0.045</Rate>
         <Rate>0.045</Rate>
         <Rate>0.045</Rate>
-      </CapRates>
+      </Caps>
     </CapFloorData>
   </Trade>
   <Trade id="capped_swap">
