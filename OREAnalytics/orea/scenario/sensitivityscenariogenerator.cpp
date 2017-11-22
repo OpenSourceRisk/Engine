@@ -369,7 +369,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                if (!close_enough(shiftedZeros[k], zeros[k]) {
+                if (!close_enough(shiftedZeros[k], zeros[k]) ){
                     Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                     scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
                 }
