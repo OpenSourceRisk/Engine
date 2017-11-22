@@ -1292,7 +1292,68 @@ Note:
 \subsubsection{CMS Leg Data}
 \label{ss:cmslegdata}
 
-\todo[inline]{Add CMS leg data documentation}
+Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS. 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>CMS</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+        <CMSLegData>
+          <Index>EUR-CMS-10Y</Index>
+          <Spreads>
+            <Spread>0.0010</Spread>
+          </Spreads>
+          <Gearings>
+            <Gearing>2.0</Gearing>
+          </Gearings>
+          <Caps>
+            <Cap>0.05</Cap>
+          </Caps>
+          <Floors>
+            <Floor>0.01</Floor>
+          </Floors>
+        </CMSLegData>
+        <NakedOption>N</NakedOption>
+      </LegData>
+\end{minted}
+\caption{CMS leg data}
+\label{lst:cmslegdata}
+\end{listing}
+ 
+The CMSLegData block contains the following elements:
+
+\begin{itemize}
+\item Index: The underlying CMS index
+\item Spreads: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
+  values.
+\item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
+  i.e. the fixing gap is calculated in relation to the current period
+  end date.\\ \emph{false} indicates that  fixing is in advance,
+  i.e. the fixing gap is calculated in relation to the previous period
+  end date.  
+\item FixingDays: This is the fixing gap, i.e. the number of days
+  before the period end date an index fixing is taken.   
+\item Gearings: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+  multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  above.
+\item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+\end{itemize}
 
 \subsubsection{CPI Leg Data}
 \label{ss:cpilegdata}
