@@ -1,6 +1,7 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
+
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,6 +24,7 @@
 #include <ostream>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/errors.hpp>
 #include <stdio.h>
 
@@ -48,7 +50,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
         .addColumn("NPV(Base)", double(), 6)
         .addColumn("BaseCurrency", string())
         .addColumn("Notional", double(), 2)
-        .addColumn("Notional(Base)", double(), 2);
+        .addColumn("Notional(Base)", double(), 2)
+        .addColumn("NettingSet", string())
+        .addColumn("CounterParty", string());
     for (auto trade : portfolio->trades()) {
         string npvCcy = trade->npvCurrency();
         Real fx = 1.0;
@@ -66,7 +70,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(npv * fx)
                 .add(baseCurrency)
                 .add(trade->notional())
-                .add(trade->notional() * fx);
+                .add(trade->notional() * fx)
+                .add(trade->envelope().nettingSetId())
+                .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             report.next()
@@ -79,7 +85,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
-                .add(Null<Real>());
+                .add(Null<Real>())
+                .add("#NA")
+                .add("#NA");
         }
     }
     report.end();
@@ -93,6 +101,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("Type", string())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
+        .addColumn("FlowType", string())
         .addColumn("Amount", double(), 4)
         .addColumn("Currency", string())
         .addColumn("Coupon", double(), 10)
@@ -118,6 +127,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                     Date payDate = ptrFlow->date();
                     if (payDate >= asof) {
                         Real amount = ptrFlow->amount();
+                        string flowType = "";
                         if (payer)
                             amount *= -1.0;
                         std::string ccy = trades[k]->legCurrencies()[i];
@@ -128,9 +138,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
+                            flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
+                            flowType = "Notional";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
@@ -138,17 +150,25 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantLib::InflationCoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::IndexedCashFlow> ptrIndCf =
                             boost::dynamic_pointer_cast<QuantLib::IndexedCashFlow>(ptrFlow);
+                        boost::shared_ptr<QuantExt::FXLinkedCashFlow> ptrFxlCf =
+                            boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
+                            if (fixingDate > asof) flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
+                            flowType = "Inflation";
                         } else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
+                            flowType = "Index";
+                        } else if (ptrFxlCf) {
+                            fixingDate = ptrFxlCf->fxFixingDate();
+                            fixingValue = ptrFxlCf->fxRate();
                         } else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
@@ -158,6 +178,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(trades[k]->tradeType())
                             .add(i)
                             .add(payDate)
+                            .add(flowType)
                             .add(amount)
                             .add(ccy)
                             .add(coupon)
@@ -179,17 +200,22 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                                const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
-    LOG("Write yield curve discount factors... ");
+    LOG("Write curves... ");
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
 
-    map<string, string> discountCurves = marketConfig.discountingCurves(configID);
-    map<string, string> YieldCurves = marketConfig.yieldCurves(configID);
-    map<string, string> indexCurves = marketConfig.indexForwardingCurves(configID);
-    map<string, string> zeroInflationIndices = marketConfig.zeroInflationIndexCurves(configID);
+    map<string, string> discountCurves = marketConfig.mapping(MarketObject::DiscountCurve, configID);
+    map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
+    map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
+    map<string, string> zeroInflationIndices, defaultCurves;
+    if(marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
+        zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
+    if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
+        defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);
 
     vector<Handle<YieldTermStructure>> yieldCurves;
     vector<Handle<ZeroInflationIndex>> zeroInflationFixings;
+    vector<Handle<DefaultProbabilityTermStructure>> probabilityCurves;
 
     report.addColumn("Tenor", Period()).addColumn("Date", Date());
 
@@ -209,11 +235,16 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
         yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
     }
     for (auto it : zeroInflationIndices) {
+        DLOG("inflation curve - " << it.first);
         report.addColumn(it.first, double(), 15);
-        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, true, configID));
+        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, configID));
+    }
+    for (auto it : defaultCurves) {
+        DLOG("default curve - " << it.first);
+        report.addColumn(it.first, double(), 15);
+        probabilityCurves.push_back(market->defaultCurve(it.first, configID));
     }
 
-    // Output the discount factors for each tenor in turn
     for (Size j = 0; j < grid.size(); ++j) {
         Date date = grid[j];
         report.next().add(grid.tenors()[j]).add(date);
@@ -221,6 +252,8 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
             report.add(yieldCurves[i]->discount(date));
         for (Size i = 0; i < zeroInflationFixings.size(); ++i)
             report.add(zeroInflationFixings[i]->fixing(date));
+        for (Size i = 0; i < probabilityCurves.size(); ++i)
+            report.add(probabilityCurves[i]->survivalProbability(date));
     }
     report.end();
 }
@@ -431,5 +464,24 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     }
     report.end();
 }
+
+void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+    report.addColumn("Date", Size()).addColumn("Scenario", Size());
+    for (auto const& k : data.keys()) {
+        std::string tmp = ore::data::to_string(k.first) + k.second;
+        report.addColumn(tmp.c_str(), double(), 8);
+    }
+    for (Size d = 0; d < data.dimDates(); ++d) {
+        for (Size s = 0; s < data.dimSamples(); ++s) {
+            report.next();
+            report.add(d).add(s);
+            for (auto const& k : data.keys()) {
+                report.add(data.get(d, s, k.first, k.second));
+            }
+        }
+    }
+    report.end();
+}
+
 } // namespace analytics
 } // namespace ore

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,7 +31,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -46,7 +45,7 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class DefaultCurveConfig : public XMLSerializable {
+class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
     enum class Type { SpreadCDS, HazardRate, Benchmark };
@@ -54,26 +53,23 @@ public:
     //@{
     //! Detailed constructor
     DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
-                       const string& discountCurveID, const string& benchmarkCurveID, const string& sourceCurveID,
-                       const string& recoveryRateQuote, const DayCounter& dayCounter, const string& conventionID,
-                       const std::vector<string>& quotes, const std::vector<Period>& pillars, const Calendar& calendar,
-                       const Size spotLag, bool extrapolation = true);
+                       const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
+                       const string& conventionID, const std::vector<string>& quotes, bool extrapolation = true,
+                       const string& benchmarkCurveID = "", const string& sourceCurveID = "",
+                       const std::vector<Period>& pillars = std::vector<Period>(),
+                       const Calendar& calendar = Calendar(), const Size spotLag = 0);
     //! Default constructor
     DefaultCurveConfig() {}
-    //! Default destructor
-    virtual ~DefaultCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
@@ -81,18 +77,17 @@ public:
     const string& sourceCurveID() const { return benchmarkCurveID_; }
     const string& recoveryRateQuote() const { return recoveryRateQuote_; }
     const string& conventionID() const { return conventionID_; }
-    const vector<string>& quotes() const { return quotes_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const std::vector<Period>& pillars() const { return pillars_; }
     const Calendar& calendar() const { return calendar_; }
     const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& cdsQuotes() { return cdsQuotes_; }
+
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
     string& discountCurveID() { return discountCurveID_; }
@@ -100,7 +95,6 @@ public:
     string& sourceCurveID() { return sourceCurveID_; }
     string& recoveryRateQuote() { return recoveryRateQuote_; }
     string& conventionID() { return conventionID_; }
-    vector<string>& quotes() { return quotes_; }
     DayCounter& dayCounter() { return dayCounter_; }
     std::vector<Period> pillars() { return pillars_; }
     Calendar calendar() { return calendar_; }
@@ -109,21 +103,19 @@ public:
     //@}
 
 private:
-    string curveID_;
-    string curveDescription_;
+    vector<string> cdsQuotes_;
     string currency_;
     Type type_;
     string discountCurveID_;
-    string benchmarkCurveID_;
-    string sourceCurveID_;
     string recoveryRateQuote_;
     DayCounter dayCounter_;
     string conventionID_;
-    vector<string> quotes_;
+    bool extrapolation_;
+    string benchmarkCurveID_;
+    string sourceCurveID_;
     vector<Period> pillars_;
     Calendar calendar_;
     Size spotLag_;
-    bool extrapolation_;
 };
 } // namespace data
 } // namespace ore

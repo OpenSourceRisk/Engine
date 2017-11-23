@@ -63,6 +63,9 @@ public:
     //! Get a quote from the repo, this will follow the algorithm described above
     Handle<Quote> getQuote(const std::string&) const;
 
+    //! Get all quotes currently stored in the triangulation
+    const std::map<std::string, Handle<Quote>>& quotes() const { return map_; }
+
 private:
     mutable std::map<std::string, Handle<Quote>> map_;
 };

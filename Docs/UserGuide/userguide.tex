@@ -49,6 +49,7 @@
 
 \usepackage{siunitx}
 
+\newenvironment{longlisting}{\captionsetup{type=listing}}{}
 %\usepackage[colorlinks=true]{hyperref}
 
 \renewcommand\P{\ensuremath{\mathbb{P}}}
@@ -346,7 +347,7 @@ executables:
 To build ORE from sources:
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
-\item Set up QuantLib 1.8 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
+\item Set up QuantLib 1.11 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
   installed; QuantLib needs to be located in this project directory {\tt ORE-1.8}. Alternatively, you can create a
   symbolic link named QuantLib here that points to the actual QuantLib directory
 \item Build QuantExt, OREData, OREAnalytics, App (in this order) as described in section \ref{sec:build}
@@ -656,6 +657,8 @@ Example & Description \\
 17 & Inflation Swaps \\
 \hline
 18 & Bonds \\
+\hline
+19 & Forward Rate Agreement \\
 \hline
 \end{tabular}
 \caption{ORE examples.}
@@ -1487,6 +1490,20 @@ After running the example, the results of the computation can be found in the ou
   flows.csv}, respectively.
 
 %--------------------------------------------------------
+ 
+%--------------------------------------------------------
+\subsection{Sensitivity using Equity Volatility}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for equity options where the equity volatility has a smile. ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml.
+The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile. 
+This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+The portfolio used in this example consists of:
+\begin{itemize}
+	\item an equity call option denominated in USD (``SP5'')
+	\item an equity put option denominated in USD (``SP5'')
+\end{itemize}
+
 
 \clearpage
 %========================================================
@@ -1853,7 +1870,8 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="dimOutputNettingSet">CPTY_A</Parameter>      
     <Parameter name="dimOutputGridPoints">0</Parameter>
     <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>     
+    <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    <Parameter name="fullInitialCollateralisation">true</Parameter>
   </Analytic>
 </Analytics>
 \end{minted}
@@ -1916,6 +1934,7 @@ through time
 sample)
 \item {\tt netCubeOutputFile:} File name for the aggregated NPV cube in human readable csv file format (per netting set,
 date, sample) {\em after} taking collateral into account
+\item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
 \end{itemize}
 
 The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section
@@ -2016,8 +2035,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Default curves
 \item Equity curves (to project forward prices)
 \item Equity volatility structures
-\item Security Spreads
-\item Security Recovery Rates
+\item Securities
 \item Inflation index curves (to project zero or yoy inflation fixings)
 \item Inflation Cap/Floor price surfaces
 \end{itemize}
@@ -2091,7 +2109,7 @@ See an excerpt of the yield curve block with ID 'default' from the same example 
 </YieldCurves>
 \end{minted}
 \caption{Yield curve block with ID 'default'}
-\label{lst:indexcurve_spec}
+\label{lst:yieldcurve_spec}
 \end{listing}
 
 This block of curve specifications instructs ORE to build another set of yield curves, unique strings
@@ -2244,43 +2262,24 @@ This instructs ORE to build a set of default probability curves, again defined i
 curve is then associated with a name (BANK, CUST\_A) for subsequent lookup.  As before, the last token
 (e.g. BANK\_SR\_USD) is user defined and will be found in the curve configuration's CurveId tag.
 
-\subsubsection{Security Spreads}\label{sssec:securityspreads}
+\subsubsection{Securities}\label{sssec:securities}
 
-The following is an excerpt of the Security Spreads block with ID 'default' from the same example file:
+The following is an excerpt of the Security block with ID 'default' from the same example file:
 
 \begin{listing}[H]
 	%\hrule\medskip
 	\begin{minted}[fontsize=\footnotesize]{xml}
-<SecuritySpreads id="default">
-  <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
-</SecuritySpreads>
+<Securities id="default">
+  <Security name="SECURITY_1">Security/SECURITY_1</Security>
+</Securities>
 	\end{minted}
-	\caption{Security spreads block with ID 'default'}
+	\caption{Securities block with ID 'default'}
 	\label{lst:secspread_spec}
 \end{listing}
 
-The pricing of bonds includes (among other components) a security specific spread, which is defined in this block. The
-link to the specific security is established via the name in the security spread definition and the security id in the
-bond trade definition.
-
-\subsubsection{Security Recovery Rates}\label{sssec:securityrecoveryrates}
-
-The following is an excerpt of the Security Recovery Rates block with ID 'default' from the same example file:
-
-\begin{listing}[H]
-	%\hrule\medskip
-	\begin{minted}[fontsize=\footnotesize]{xml}
-<SecurityRecoveryRates id="default">
-    <SecurityRecoveryRates name="SECURITY_1">
-        SecurityRecoveryRate/SECURITY_1
-    </SecurityRecoveryRate>
-</SecurityRecoveryRates>
-	\end{minted}
-	\caption{Security recovery rates block with ID 'default'}
-	\label{lst:secrecrate_spec}
-\end{listing}
-
-The pricing of bonds includes (among other components) a recovery rate. This can be specified per security using this structure. The link to the specific security is established via the name in the security spread recovery rate definition and the security id in the bond trade definition.
+The pricing of bonds includes (among other components) a security specific spread and rate. 
+This block links a security name to a spread and rate pair defined in the curve configuration file. This name may then be referenced 
+as the security id in the bond trade definition.
 
 \subsubsection{Equity Curves}
 The following is an excerpt of the Equity curves block with ID 'default' from the same example file:
@@ -2500,6 +2499,7 @@ following excerpt of the Example section's {\tt pricingengine.xml} shows the sel
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
+      <Parameter name="ShiftHorizon">0.5</Parameter>
       <Parameter name="Tolerance">0.0001</Parameter>
     </ModelParameters>
     <Engine>Grid</Engine>
@@ -2527,6 +2527,10 @@ pricing model, calibrate it and construct the pricing engine for it:
     Hagan}. Calibration and BermudanStrategy can be set to {\em None} in order to skip model calibration. Alternatively,
   Calibration is set to {\em Bootstrap} and BermudanStrategy to {\em CoterminalATM} in order to calibrate to
   instrument-specific co-terminal ATM Swaptions, i.e. chosen to match the instruments first expiry and final maturity.
+  If {\em CoterminalDealStrike} is chosen, the co-terminal swaptions will match the fixed rate of the deal (if the deal
+  has changing fixed rates, the first rate is matched). Finally if the ShiftHorizon parameter is given, its value times
+  the remaining maturity time of the deal is chosen as the horizon shift parameter for the LGM model. If not given, this
+  parameter defaults to $0.5$.
 
 \item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
   number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
@@ -2855,9 +2859,25 @@ yield curves that can be 'understood' by the instruments which we want to price 
 
 Moreover we need to specify how volatility structures evolve even if we do not explicitly simulate volatility. This 
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 
-within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the following small example.
+within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the following small example.
 
-\begin{listing}[H]
+It should be noted that equity volatilities are taken to be a curve by default, to simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
+There are two methods in ORE for equity volatility simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
+\end{itemize}
+
+Swaption volatilities are taken to be a surface by default, to simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+There are two methods in ORE for swaption volatility cube simulation: 
+\begin{itemize}
+\item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
+\item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
+\end{itemize}
+
+FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Market>
@@ -2894,7 +2914,10 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
     </Currencies>
     <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
     <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-    <Strikes/>
+    <Cube>
+     <SimulateATMOnly>false</SimulateATMOnly>
+     <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
+    </Cube>
   </SwaptionVolatilities> 
   <CapFloorVolatilities>
     <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -2909,8 +2932,24 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
       <CurrencyPair>EURUSD</CurrencyPair>
     </CurrencyPairs>
     <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-    <Strikes/>
+    <Surface>
+     <Moneyness>0.5,0.6,0.7,0.8,0.9</Moneyness>
+    </Surface>
   </FxVolatilities>
+  <EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+      <Surface>
+        <SimulateATMOnly>false</SimulateATMOnly><!-- false -->
+        <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
+      </Surface>
+ </EquityVolatilities>
   <AdditionalScenarioDataCurrencies>
     <Currency>EUR</Currency>
     <Currency>USD</Currency>
@@ -2924,7 +2963,7 @@ within the enclosing tags {\tt <Market>} and {\tt </Market}, as shown in the fol
 \end{minted}
 \caption{Simulation market configuration}
 \label{lst:simulation_market_configuration}
-\end{listing}
+\end{longlisting}
 
 \todo[inline]{Comment on cap/floor surface structure and reaction to time decay}
 \todo[inline]{Remove DefaultCurves from SimMarket constructor and configuration section}
@@ -3139,6 +3178,8 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 The configuration of various term structures required to price a portfolio is covered in a single configuration file
 which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This
 configuration determines the composition of yield curves, default curves, Swaption and FX Option volatility structures.
+This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
+for the construction of a market.
  
 \include{yieldcurves}
 
@@ -3247,6 +3288,7 @@ configuration determines the composition of yield curves, default curves, Swapti
     <CurveId>SP5</CurveId>
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
+    <ForecastingCurve>EUR1D</ForecastingCurve>
     <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
     <Quotes>
@@ -3267,7 +3309,7 @@ configuration determines the composition of yield curves, default curves, Swapti
 \end{listing}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
-yields. Upon construction, ORE stores internally an equity spot price quote and a dividend yield term structure, which 
+yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield term structure, which 
 are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
@@ -3420,6 +3462,57 @@ floor price surface.
   strike region).
 \item {\tt Maturities:} The maturities for which cap and floor prices are quoted
 \end{itemize}
+
+
+\subsubsection{FXSpots}
+
+Listing \ref{lst:fxspot_configuration} shows the configuration of the fxSpots. It is assumed that each FXSpot CurveId is of
+the form "Ccy1Ccy2".
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<FXSpots>
+  <FXSpot>
+    <CurveId>EURUSD</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURGBP</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURCHF</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+  <FXSpot>
+    <CurveId>EURJPY</CurveId>
+    <CurveDescription/>
+  </FXSpot>
+</FXSpots>
+\end{minted}
+\caption{FXSpot Configuration}
+\label{lst:fxspot_configuration}
+\end{listing}
+
+\subsubsection{Securities}
+
+Listing \ref{lst:security_configuration} shows the configuration of the Securities. Each Security name is associated with
+a SpreadQuote and a RecoveryRateQuote.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<Securities>
+  <Security>
+    <CurveId>SECURITY_1</CurveId>
+    <CurveDescription>Security</CurveDescription>
+    <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
+    <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+  </Security>
+</Securities>\end{minted}
+\caption{Security Configuration}
+\label{lst:security_configuration}
+\end{listing}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
@@ -3783,9 +3876,9 @@ depending on the sign of the residual position. This can be expressed as a Fundi
 definition of FVA can be given in a very similar fashion as the sum of unilateral CVA and DVA which we defined by
 (\ref{CVA},\ref{DVA}), namely as an expectation of exposures times funding spreads:
 \begin{align}
-  \FVA &= \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (\NPV(t_i))^+\,
-         D(t_i)\right]}_{\mbox{Funding Benefit Adjustment (FBA)}}\nonumber\\
-       & {} - \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (-\NPV(t_i))^+\, D(t_i)\right]}_{\mbox{Funding Cost Adjustment (FCA)}}\label{eq_simple_fva}
+  \FVA &= - \underbrace{\sum_{i=1}^n f_b(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (\NPV(t_i))^+\,
+         D(t_i)\right]}_{\mbox{Funding Cost Adjustment (FCA)}}\nonumber\\
+       & {} \underbrace{\sum_{i=1}^n f_l(t_{i-1},t_i)\,\delta_i \, \E^N\left[S_C(t_{i-1})\, S_B(t_{i-1})\, (-\NPV(t_i))^+\, D(t_i)\right]}_{\mbox{Funding Benefit Adjustment (FBA)}}\label{eq_simple_fva}
 \end{align}
 where
 \begin{align*}

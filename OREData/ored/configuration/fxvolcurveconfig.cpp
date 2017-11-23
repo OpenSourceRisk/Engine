@@ -17,6 +17,8 @@
 */
 
 #include <ored/configuration/fxvolcurveconfig.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <boost/algorithm/string.hpp>
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
@@ -25,8 +27,30 @@ namespace ore {
 namespace data {
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                 const Dimension& dimension, const vector<Period>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), dimension_(dimension), expiries_(expiries) {}
+                                                 const Dimension& dimension, const vector<Period>& expiries,
+                                                 const string& fxSpotID, const string& fxForeignCurveID,
+                                                 const string& fxDomesticCurveID)
+
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), fxSpotID_(fxSpotID),
+        fxForeignYieldCurveID_(fxForeignCurveID), fxDomesticYieldCurveID_(fxDomesticCurveID)
+        {}
+
+
+const vector<string>& FXVolatilityCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        vector<string> tokens;
+        boost::split(tokens, fxSpotID(), boost::is_any_of("/"));
+        string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
+        for (auto e : expiries_) {
+            quotes_.push_back(base + to_string(e) + "/ATM");
+            if (dimension_ == Dimension::Smile) {
+                quotes_.push_back(base + to_string(e) + "/25RR");
+                quotes_.push_back(base + to_string(e) + "/25BF");
+            }
+        }
+    }
+    return quotes_;
+}
 
 void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "FXVolatility");
@@ -34,12 +58,20 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
-    if (dim == "ATM")
+    if (dim == "ATM") {
         dimension_ = Dimension::ATM;
-    else {
+    } else if (dim == "Smile") {
+        dimension_ = Dimension::Smile;
+    } else {
         QL_FAIL("Dimension " << dim << " not supported yet");
     }
     expiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "Expiries", true);
+
+    if (dimension_ == Dimension::Smile) {
+        fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
+        fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", true);
+        fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
+    }
 }
 
 XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -49,10 +81,18 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
+    } else if (dimension_ == Dimension::Smile) {
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
     } else {
         QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
+
+    if (dimension_ == Dimension::Smile) {
+        XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
+        XMLUtils::addChild(doc, node, "FXForeignCurveID", fxForeignYieldCurveID_);
+        XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
+    }
 
     return node;
 }

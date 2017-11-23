@@ -5,7 +5,8 @@ OREDATA_TESTS = \
 	calendars.hpp calendars.cpp \
 	fxoption.hpp fxoption.cpp \
 	ccyswapwithresets.hpp ccyswapwithresets.cpp \
-    cpiswap.hpp cpiswap.cpp \
+	cpiswap.hpp cpiswap.cpp \
+	cms.hpp cms.cpp \
 	fxtriangulation.hpp fxtriangulation.cpp \
 	indices.hpp indices.cpp \
 	parser.hpp parser.cpp \
@@ -17,7 +18,11 @@ OREDATA_TESTS = \
 	yieldcurve.hpp yieldcurve.cpp \
 	crossassetmodeldata.hpp crossassetmodeldata.cpp \
 	equitymarketdata.hpp equitymarketdata.cpp \
-	equitytrades.hpp equitytrades.cpp
+	equitytrades.hpp equitytrades.cpp \
+	swaption.hpp swaption.cpp \
+	portfolio.hpp portfolio.cpp \
+    curveconfig.hpp curveconfig.cpp \
+	cds.hpp cds.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
@@ -27,7 +32,7 @@ dist-hook:
 
 if BOOST_UNIT_TEST_FOUND
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
+AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
 
 noinst_LTLIBRARIES = libUnitMain.la
 libUnitMain_la_SOURCES = main.cpp

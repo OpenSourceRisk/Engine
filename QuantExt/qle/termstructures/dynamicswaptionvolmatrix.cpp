@@ -33,8 +33,8 @@ const Period& DynamicSwaptionVolatilityMatrix::maxSwapTenor() const { return sou
 
 boost::shared_ptr<SmileSection> DynamicSwaptionVolatilityMatrix::smileSectionImpl(Time optionTime,
                                                                                   Time swapLength) const {
-    // dummy strike, just as in SwaptionVolatilityMatrix
-    return boost::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, 0.05),
+    // null strike to indicate ATM
+    return boost::make_shared<FlatSmileSection>(optionTime, volatilityImpl(optionTime, swapLength, Null<Real>()),
                                                 source_->dayCounter(), Null<Real>(), source_->volatilityType(),
                                                 shiftImpl(optionTime, swapLength));
 }
@@ -46,9 +46,12 @@ Volatility DynamicSwaptionVolatilityMatrix::volatilityImpl(Time optionTime, Time
             QL_REQUIRE(close_enough(source_->shift(tf + optionTime, swapLength), source_->shift(tf, swapLength)),
                        "DynamicSwaptionVolatilityMatrix: Shift must be constant in option time direction");
         }
-        return std::sqrt((source_->blackVariance(tf + optionTime, swapLength, strike) -
-                          source_->blackVariance(tf, swapLength, strike)) /
-                         optionTime);
+        Real realisedVariance = (source_->blackVariance(tf + optionTime, swapLength, strike) -
+                                 source_->blackVariance(tf, swapLength, strike));
+        QL_REQUIRE(realisedVariance >= 0.0, "DynamicSwaptionVolatilityMatrix: negative realised variance at t="
+                                     << tf << " (option time " << optionTime << ", swapLength " << swapLength
+                                     << ", strike " << strike << ")");
+        return std::sqrt(realisedVariance / optionTime);
     }
     if (decayMode_ == ConstantVariance) {
         return source_->volatility(optionTime, swapLength, strike);

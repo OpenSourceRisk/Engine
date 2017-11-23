@@ -45,7 +45,7 @@
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="storeFlows">Y</Parameter>
       <Parameter name="cubeFile">cube_B.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata_B.dat</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata_B.dat</Parameter>
       <Parameter name="scenariodump">scenariodump.csv</Parameter>
     </Analytic>
     <Analytic type="xva">
@@ -69,7 +69,6 @@
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="dim">Y</Parameter>
       <Parameter name="mva">Y</Parameter>

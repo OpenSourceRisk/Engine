@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
@@ -38,8 +39,17 @@
 using namespace QuantLib;
 using std::string;
 
+typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
+
 namespace ore {
 namespace data {
+
+enum class YieldCurveType {
+    Discount = 0, //Chosen to match MarketObject::DiscountCurve
+    Yield = 1, //Chosen to match MarketObject::YieldCurve
+    EquityDividend = 2,
+    EquityForecast = 3
+};
 
 //! Market
 /*!
@@ -58,6 +68,8 @@ public:
 
     //! \name Yield Curves
     //@{
+    virtual Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& name,
+                                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     discountCurve(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure> yieldCurve(const string& name,
@@ -94,6 +106,18 @@ public:
                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name (Index) CDS Option volatilities
+    //@{
+    virtual Handle<BlackVolTermStructure> cdsVol(const string&,
+                                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Base Correlation term structures
+    //@{
+    virtual Handle<BilinearBaseCorrelationTermStructure>
+    baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>
@@ -102,10 +126,10 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName, const bool interpolated,
+    zeroInflationIndex(const string& indexName,
                        const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const bool interpolated,
+    yoyInflationIndex(const string& indexName,
                       const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! Inflation Cap Floor Price Surfaces
@@ -125,6 +149,12 @@ public:
     //@{
     virtual Handle<BlackVolTermStructure>
     equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Equity volatilities
+    //@{
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

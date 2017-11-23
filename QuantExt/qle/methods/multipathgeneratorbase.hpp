@@ -36,6 +36,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
+enum SequenceType { MersenneTwister, MersenneTwisterAntithetic, Sobol, SobolBrownianBridge };
+
 //! Multi Path Generator Base
 /*! \ingroup methods
  */
@@ -107,6 +109,16 @@ private:
     boost::shared_ptr<SobolBrownianGenerator> gen_;
     mutable Sample<MultiPath> next_;
 };
+
+//! Make function for path generators
+boost::shared_ptr<MultiPathGeneratorBase>
+makeMultiPathGenerator(const SequenceType s, const boost::shared_ptr<StochasticProcess>& process,
+                       const TimeGrid& timeGrid, const BigNatural seed,
+                       const SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+                       const SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
+
+//! Output function
+std::ostream& operator<<(std::ostream& out, const SequenceType s);
 
 // inline
 

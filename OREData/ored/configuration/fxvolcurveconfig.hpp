@@ -23,13 +23,12 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -41,9 +40,12 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class FXVolatilityCurveConfig : public XMLSerializable {
+class FXVolatilityCurveConfig : public CurveConfig {
 public:
     //! supported volatility structure types
+    /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
+     *  TODO: Add more options (e.g. Delta)
+     */
     enum class Dimension { ATM, Smile };
 
     //! \name Constructors/Destructors
@@ -52,37 +54,41 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries);
-    //! Default destructor
-    virtual ~FXVolatilityCurveConfig() {}
+                            const vector<Period>& expiries, const string& fxSpotID = "", const string& fxForeignCurveID = "",
+                            const string& fxDomesticCurveID = "");
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<Period>& expiries() const { return expiries_; }
+    // only required for Smile
+    const string& fxSpotID() const { return fxSpotID_; }
+    const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
+    const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     Dimension& dimension() { return dimension_; }
     vector<Period>& expiries() { return expiries_; }
+    string& fxSpotID() { return fxSpotID_; }
+    string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
+    string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
     //@}
 private:
-    string curveID_;
-    string curveDescription_;
     Dimension dimension_;
     vector<Period> expiries_;
+    string fxSpotID_;
+    string fxForeignYieldCurveID_;
+    string fxDomesticYieldCurveID_;
 };
 } // namespace data
 } // namespace ore

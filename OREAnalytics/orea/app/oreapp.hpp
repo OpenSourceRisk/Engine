@@ -1,20 +1,20 @@
 /*
-  Copyright (C) 2016 Quaternion Risk Management Ltd
-  All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-  This file is part of ORE, a free-software/open-source library
-  for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-  ORE is free software: you can redistribute it and/or modify it
-  under the terms of the Modified BSD License.  You should have received a
-  copy of the license along with this program.
-  The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-  This program is distributed on the basis that it will form a useful
-  contribution to risk analytics and model standardisation, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 /*! \file orea/app/oreapp.hpp
   \brief Open Risk Engine App
@@ -46,12 +46,14 @@ public:
     OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
         : params_(params), out_(out), cubeDepth_(0) {
         tab_ = 40;
+        progressBarWidth_ = 72 - std::min<Size>(tab_, 67);
+
         asof_ = parseDate(params->get("setup", "asofDate"));
         Settings::instance().evaluationDate() = asof_;
     }
     virtual ~OREApp() {}
     //! generates XVA reports for a given portfolio and market
-    void run();
+    int run();
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
@@ -63,7 +65,7 @@ public:
     //! build today's market
     void buildMarket();
     //! build engine factory for a given market
-    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market);
+    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName = "setup");
     //! build trade factory
     virtual boost::shared_ptr<TradeFactory> buildTradeFactory();
     //! build portfolio for a given market
@@ -109,8 +111,13 @@ public:
     void writeCube();
     //! write out scenarioData
     void writeScenarioData();
+    //! write out base scenario
+    void writeBaseScenario();
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
+
+    //! write out additional reports
+    virtual void writeAdditionalReports() {}
 
 protected:
     //! Initialize input parameters to the sensitivities analysis
@@ -122,7 +129,7 @@ protected:
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
 
-    Size tab_;
+    Size tab_, progressBarWidth_;
     Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
@@ -134,6 +141,7 @@ protected:
     bool writeDIMReport_;
     bool sensitivity_;
     bool stress_;
+    bool writeBaseScenario_;
 
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<Portfolio> portfolio_;

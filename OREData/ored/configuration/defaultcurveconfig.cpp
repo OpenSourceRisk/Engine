@@ -25,15 +25,18 @@ namespace ore {
 namespace data {
 
 DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                       const Type& type, const string& discountCurveID, const string& benchmarkCurveID,
-                                       const string& sourceCurveID, const string& recoveryRateQuote,
+                                       const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
-                                       const std::vector<string>& quotes, const std::vector<Period>& pillars,
-                                       const Calendar& calendar, const Size spotLag, bool extrapolation)
-    : curveID_(curveID), curveDescription_(curveDescription), currency_(currency), type_(type),
-      discountCurveID_(discountCurveID), benchmarkCurveID_(benchmarkCurveID), sourceCurveID_(sourceCurveID),
-      recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter), conventionID_(conventionID), quotes_(quotes),
-      pillars_(pillars), calendar_(calendar), spotLag_(spotLag), extrapolation_(extrapolation) {}
+                                       const vector<string>& cdsQuotes, bool extrapolation,
+                                       const string& benchmarkCurveID, const string& sourceCurveID,
+                                       const std::vector<Period>& pillars, const Calendar& calendar, const Size spotLag)
+    : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
+      discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
+      conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag) {
+    quotes_ = cdsQuotes;
+    quotes_.insert(quotes_.begin(), recoveryRateQuote_);
+}
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
@@ -64,18 +67,19 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     }
 
     recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
-
     string dc = XMLUtils::getChildValue(node, "DayCounter", true);
     dayCounter_ = parseDayCounter(dc);
 
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", false);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", false);
+    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
+    cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    quotes_ = cdsQuotes_;
+    quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("SwaptionVolatility");
+    XMLNode* node = doc.allocNode("DefaultCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
@@ -108,7 +112,6 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
-
     return node;
 }
 } // namespace data

@@ -45,6 +45,19 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
     XMLDocument doc(fileName);
     LOG("Loaded XML file");
 
+    load(doc, factory);
+}
+
+void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
+    LOG("Parsing XML string");
+    XMLDocument doc;
+    doc.fromXMLString(xmlString);
+    LOG("Loaded XML string");
+
+    load(doc, factory);
+}
+
+void Portfolio::load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& factory) {
     XMLNode* node = doc.getFirstNode("Portfolio");
     if (node) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
@@ -62,7 +75,7 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
                 try {
                     trade->fromXML(nodes[i]);
                     trade->id() = id;
-                    trades_.push_back(trade);
+                    add(trade);
 
                     DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                         << " class:" << tradeType);
@@ -140,5 +153,17 @@ map<string, string> Portfolio::nettingSetMap() const {
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
 }
+
+void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
+    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
+    trades_.push_back(trade);
+}
+
+bool Portfolio::has(const string &id) {
+    return find_if(trades_.begin(),
+                   trades_.end(),
+                   [id](const boost::shared_ptr<Trade>& trade) {return trade->id() == id; }) != trades_.end();
+}
+
 } // namespace data
 } // namespace ore

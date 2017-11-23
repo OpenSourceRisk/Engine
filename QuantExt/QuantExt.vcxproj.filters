@@ -159,12 +159,6 @@
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\all.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\flatextrapolation.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\models\all.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -279,6 +273,9 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
@@ -292,6 +289,12 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\fxindex.hpp">
@@ -324,19 +327,9 @@
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\nadarayawatson.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\dynamicstype.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
-    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\instruments\deposit.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
@@ -382,9 +375,6 @@
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\stabilisedglls.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\models\fxeqoptionhelper.hpp">
       <Filter>models</Filter>
     </ClInclude>
@@ -420,6 +410,90 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp">
       <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\myrklibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\makecds.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\creditdefaultswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxsmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\payment.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\all.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\flatextrapolation.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\nadarayawatson.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\stabilisedglls.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\corra.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\immfraratehelper.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -458,6 +532,9 @@
     </Filter>
     <Filter Include="methods">
       <UniqueIdentifier>{dae20b1f-586f-4e4a-994a-73bda11865fd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utilities">
+      <UniqueIdentifier>{e0dfc578-ff16-4b64-a977-3cf9e8ebd310}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -611,6 +688,9 @@
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -636,6 +716,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\spreadedoptionletvolatility.cpp">
@@ -715,6 +798,42 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\makecds.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\creditdefaultswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\payment.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\immfraratehelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

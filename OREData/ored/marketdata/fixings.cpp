@@ -33,7 +33,7 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-void applyFixings(const vector<Fixing>& fixings) {
+void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conventions) {
     Size count = 0;
     map<string, boost::shared_ptr<Index>> cache;
     boost::timer timer;
@@ -42,7 +42,7 @@ void applyFixings(const vector<Fixing>& fixings) {
         try {
             auto it = cache.find(f.name);
             if (it == cache.end()) {
-                index = parseIndex(f.name);
+                index = parseIndex(f.name, conventions);
                 cache[f.name] = index;
             } else {
                 index = it->second;

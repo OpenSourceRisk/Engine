@@ -28,6 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <map>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <set>
@@ -38,7 +39,6 @@ using std::set;
 using std::pair;
 using std::map;
 using boost::optional;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::AcyclicVisitor;
@@ -84,6 +84,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
+    virtual vector<string> quotes() const  { return quotes_; }
     //@}
 
     //! \name Visitability
@@ -97,8 +98,9 @@ protected:
     //! Default constructor
     YieldCurveSegment() {}
     //! Detailed constructor
-    YieldCurveSegment(const string& typeID, const string& conventionsID);
+    YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes);
     //@}
+    vector<string> quotes_;
 
 private:
     // TODO: why type and typeID?
@@ -132,18 +134,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \name Inspectors
-    //@{
-    const vector<string>& quotes() const { return quotes_; }
-    //@}
-
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
 
-private:
-    vector<string> quotes_;
 };
 
 //! Simple yield curve segment
@@ -174,7 +169,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& projectionCurveID() const { return projectionCurveID_; }
     //@}
 
@@ -184,7 +178,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string projectionCurveID_;
 };
 
@@ -204,8 +197,8 @@ public:
     //! Default constructor
     AverageOISYieldCurveSegment() {}
     //! Detailec constructor
-    AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID,
-                                const vector<pair<string, string>>& quotes, const string& projectionCurveID);
+    AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
+                                const string& projectionCurveID);
     //! Default destructor
     virtual ~AverageOISYieldCurveSegment() {}
     //@}
@@ -218,7 +211,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<pair<string, string>>& quotes() const { return quotes_; }
     const string& projectionCurveID() const { return projectionCurveID_; }
     //@}
 
@@ -228,7 +220,6 @@ public:
     //@}
 
 private:
-    vector<pair<string, string>> quotes_;
     string projectionCurveID_;
 };
 
@@ -261,7 +252,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& shortProjectionCurveID() const { return shortProjectionCurveID_; }
     const string& longProjectionCurveID() const { return longProjectionCurveID_; }
     //@}
@@ -272,7 +262,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string shortProjectionCurveID_;
     string longProjectionCurveID_;
 };
@@ -310,7 +299,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& spotRateID() const { return spotRateID_; }
     const string& foreignDiscountCurveID() const { return foreignDiscountCurveID_; }
     const string& domesticProjectionCurveID() const { return domesticProjectionCurveID_; }
@@ -323,7 +311,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string spotRateID_;
     string foreignDiscountCurveID_;
     string domesticProjectionCurveID_;
@@ -358,7 +345,6 @@ public:
 
     //! \name Inspectors
     //@{
-    const vector<string>& quotes() const { return quotes_; }
     const string& referenceCurveID() const { return referenceCurveID_; }
     //@}
 
@@ -368,7 +354,6 @@ public:
     //@}
 
 private:
-    vector<string> quotes_;
     string referenceCurveID_;
 };
 
@@ -378,7 +363,7 @@ private:
 
   \ingroup configuration
  */
-class YieldCurveConfig : public XMLSerializable {
+class YieldCurveConfig : public CurveConfig {
 public:
     //! \name Constructors/Destructurs
     //@{
@@ -395,14 +380,12 @@ public:
 
     //! \name Serilalisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& currency() const { return currency_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const vector<boost::shared_ptr<YieldCurveSegment>>& curveSegments() const { return curveSegments_; }
@@ -423,12 +406,11 @@ public:
     Real& tolerance() { return tolerance_; }
     //@}
 
+    const vector<string>& quotes() override;
 private:
     void populateRequiredYieldCurveIDs();
 
     // Mandatory members
-    string curveID_;
-    string curveDescription_;
     string currency_;
     string discountCurveID_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;

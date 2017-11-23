@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -31,7 +31,6 @@
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -46,60 +45,61 @@ namespace data {
 /*!
   \ingroup configuration
 */
-class EquityCurveConfig : public XMLSerializable {
+class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
     enum class Type { DividendYield, ForwardPrice };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
+    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, const string& currency, const Type& type,
                       const string& equitySpotQuote, const vector<string>& quotes, const string& dayCountID = "",
+                      const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear", 
                       bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
-    //! Default destructor
-    virtual ~EquityCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
+    const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
-    const vector<string>& quotes() const { return quotes_; }
+    const string& dividendInterpolationVariable() const { return divInterpVariable_; }
+    const string& dividendInterpolationMethod() const { return divInterpMethod_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
+    string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
-    vector<string>& quotes() { return quotes_; }
+    string& dividendInterpolationVariable() { return divInterpVariable_; }
+    string& dividendInterpolationMethod() { return divInterpMethod_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
 private:
-    string curveID_;
-    string curveDescription_;
+    vector<string> fwdQuotes_;
+    string forecastingCurve_;
     string currency_;
     Type type_;
     string equitySpotQuoteID_;
-    vector<string> quotes_;
     string dayCountID_;
+    string divInterpVariable_;
+    string divInterpMethod_;
     bool extrapolation_;
 };
 } // namespace data

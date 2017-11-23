@@ -99,13 +99,11 @@ struct TestData {
         vector<string> swaptionStrikes(swaptionExpiries.size(), "ATM");
         vector<Time> hTimes = {};
         vector<Time> aTimes = {};
-        vector<Real> hValues = {};
-        vector<Real> aValues = {};
 
         std::vector<boost::shared_ptr<LgmData>> irConfigs;
 
-        hValues = {0.02};
-        aValues = {0.08};
+        vector<Real> hValues = {0.02};
+        vector<Real> aValues = {0.08};
         irConfigs.push_back(boost::make_shared<LgmData>(
             "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
             ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
@@ -126,10 +124,10 @@ struct TestData {
         vector<string> optionExpiries = {"1Y", "2Y", "3Y", "5Y", "7Y", "10Y"};
         vector<string> optionStrikes(optionExpiries.size(), "ATMF");
         vector<Time> sigmaTimes = {};
-        vector<Real> sigmaValues = {};
 
         std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-        sigmaValues = {0.15};
+
+        vector<Real> sigmaValues = {0.15};
         fxConfigs.push_back(boost::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                          sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
@@ -188,11 +186,11 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     // Multi path generator: Pseudo Random
     BigNatural seed = 42;
@@ -289,11 +287,11 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     // Multi path generator
     BigNatural seed = 42;
@@ -431,11 +429,11 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -448,7 +446,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -459,8 +457,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // Basic Martingale tests
     Size samples = 10000;
@@ -575,11 +573,11 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -592,7 +590,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::Sobol;
+    sgd->sequenceType() = Sobol;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -603,8 +601,8 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // set up model based simulation (mimicking exactly the scenario generator builder above)
     MultiPathGeneratorSobol pathGen(stateProcess, grid->timeGrid(), 42);
@@ -716,11 +714,11 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     // Simulation market parameters, we just need the yield curve structure here
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -733,7 +731,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -744,8 +742,8 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     // swaps for expsoure generation
 
@@ -856,9 +854,9 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -870,12 +868,12 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->fxVolCcyPairs() = {"USDEUR"};
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -886,8 +884,8 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     Size samples = 5000;
 
@@ -985,11 +983,11 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->yieldCurveTenors() = {3 * Months, 6 * Months, 1 * Years,  2 * Years,  3 * Years,
-                                           4 * Years,  5 * Years,  7 * Years,  10 * Years, 12 * Years,
-                                           15 * Years, 20 * Years, 30 * Years, 40 * Years, 50 * Years};
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEQVols() = false;
+    simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
@@ -1001,7 +999,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
-    sgd->sequenceType() = ScenarioGeneratorData::SequenceType::SobolBrownianBridge;
+    sgd->sequenceType() = SobolBrownianBridge;
     sgd->seed() = 42;
     sgd->grid() = grid;
 
@@ -1012,8 +1010,8 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
 
     BOOST_TEST_MESSAGE("set up scenario sim market");
     Conventions conventions = *convs();
-    boost::shared_ptr<ore::analytics::SimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sg, d.market, simMarketConfig, conventions);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
+    simMarket->scenarioGenerator() = sg;
 
     Size samples = 10000;
 
@@ -1082,16 +1080,6 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
 
 test_suite* ScenarioGeneratorTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ScenarioGeneratorTest");
-
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-    boost::shared_ptr<ore::data::FileLogger> logger
-        = boost::make_shared<ore::data::FileLogger>("scenariogenerator_test.log");
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
-    */
 
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic));

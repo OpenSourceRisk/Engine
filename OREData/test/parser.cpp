@@ -34,36 +34,38 @@ struct test_daycounter_data {
     DayCounter dc;
 };
 
-static struct test_daycounter_data daycounter_data[] = {{"A360", Actual360()},
-                                                        {"Actual/360", Actual360()},
-                                                        {"ACT/360", Actual360()},
-                                                        {"A365", Actual365Fixed()},
-                                                        {"A365F", Actual365Fixed()},
-                                                        {"Actual/365 (Fixed)", Actual365Fixed()},
-                                                        {"ACT/365", Actual365Fixed()},
-                                                        {"T360", Thirty360(Thirty360::USA)},
-                                                        {"30/360", Thirty360(Thirty360::USA)},
-                                                        {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
-                                                        {"ACT/nACT", Thirty360(Thirty360::USA)},
-                                                        {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
-                                                        {"30E/360", Thirty360(Thirty360::European)},
-                                                        {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
-                                                        {"ActActISDA", ActualActual(ActualActual::ISDA)},
-                                                        {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
-                                                        {"ACT/ACT", ActualActual(ActualActual::ISDA)},
-                                                        {"ACT29", ActualActual(ActualActual::ISDA)},
-                                                        {"ACT", ActualActual(ActualActual::ISDA)},
-                                                        {"ActActISMA", ActualActual(ActualActual::ISMA)},
-                                                        {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
-                                                        {"ActActAFB", ActualActual(ActualActual::AFB)},
-                                                        {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
-                                                        {"1/1", OneDayCounter()},
-                                                        {"BUS/252", Business252()},
-                                                        {"Business/252", Business252()},
-                                                        {"Actual/365 (No Leap)", Actual365NoLeap()},
-                                                        {"Act/365 (NL)", Actual365NoLeap()},
-                                                        {"NL/365", Actual365NoLeap()},
-                                                        {"Actual/365 (JGB)", Actual365NoLeap()}};
+static struct test_daycounter_data daycounter_data[] = {
+    {"A360", Actual360()},
+    {"Actual/360", Actual360()},
+    {"ACT/360", Actual360()},
+    {"A365", Actual365Fixed()},
+    {"A365F", Actual365Fixed()},
+    {"Actual/365 (Fixed)", Actual365Fixed()},
+    {"ACT/365", Actual365Fixed()},
+    {"T360", Thirty360(Thirty360::USA)},
+    {"30/360", Thirty360(Thirty360::USA)},
+    {"30/360 (Bond Basis)", Thirty360(Thirty360::USA)},
+    {"ACT/nACT", Thirty360(Thirty360::USA)},
+    {"30E/360 (Eurobond Basis)", Thirty360(Thirty360::European)},
+    {"30E/360", Thirty360(Thirty360::European)},
+    {"30/360 (Italian)", Thirty360(Thirty360::Italian)},
+    {"ActActISDA", ActualActual(ActualActual::ISDA)},
+    {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
+    {"ACT/ACT", ActualActual(ActualActual::ISDA)},
+    {"ACT29", ActualActual(ActualActual::ISDA)},
+    {"ACT", ActualActual(ActualActual::ISDA)},
+    {"ActActISMA", ActualActual(ActualActual::ISMA)},
+    {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
+    {"ActActAFB", ActualActual(ActualActual::AFB)},
+    {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
+    {"1/1", OneDayCounter()},
+    {"BUS/252", Business252()},
+    {"Business/252", Business252()},
+    {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
+    {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
+    {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
+    {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
+
 struct test_freq_data {
     const char* str;
     Frequency freq;
@@ -215,12 +217,82 @@ void ParseTest::testStrikeParsing() {
     BOOST_CHECK(true);
 }
 
+void ParseTest::testDatePeriodParsing() {
+    BOOST_TEST_MESSAGE("Testing Date and Period parsing...");
+
+    BOOST_CHECK_EQUAL(ore::data::parseDate("20170605"), Date(5, Jun, 2017));
+    //
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017-06-05"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017/06/05"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("2017.06.05"), Date(5, Jun, 2017));
+    //
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05-06-2017"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05/06/2017"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05.06.2017"), Date(5, Jun, 2017));
+    //
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05-06-17"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05/06/17"), Date(5, Jun, 2017));
+    BOOST_CHECK_EQUAL(ore::data::parseDate("05.06.17"), Date(5, Jun, 2017));
+    //
+    BOOST_CHECK_THROW(ore::data::parseDate("1Y"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("05-06-1Y"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("X5-06-17"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05-"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("-2017-06-05"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("xx17-06-05"), std::exception);
+
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3Y"), 3 * Years);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3y"), 3 * Years);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3M"), 3 * Months);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3m"), 3 * Months);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3W"), 3 * Weeks);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3w"), 3 * Weeks);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3D"), 3 * Days);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("3d"), 3 * Days);
+    //
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("1Y6M"), 1 * Years + 6 * Months);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0W"), 6 * Months + 0 * Weeks);
+    BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0D"), 6 * Months + 0 * Days);
+    //
+    BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), std::exception);
+
+    Date d;
+    Period p;
+    bool isDate;
+
+    ore::data::parseDateOrPeriod("20170605", d, p, isDate);
+    BOOST_CHECK(isDate && d == Date(5, Jun, 2017));
+    ore::data::parseDateOrPeriod("3Y", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 3 * Years);
+    ore::data::parseDateOrPeriod("3M", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 3 * Months);
+    ore::data::parseDateOrPeriod("3W", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 3 * Weeks);
+    ore::data::parseDateOrPeriod("3D", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 3 * Days);
+    ore::data::parseDateOrPeriod("1Y6M", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 1 * Years + 6 * Months);
+    ore::data::parseDateOrPeriod("20170605D", d, p, isDate);
+    BOOST_CHECK(!isDate && p == 20170605 * Days);
+    //
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), std::exception);
+}
+
 test_suite* ParseTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ParseTest");
     suite->add(BOOST_TEST_CASE(&ParseTest::testDayCounterParsing));
     suite->add(BOOST_TEST_CASE(&ParseTest::testFrequencyParsing));
     suite->add(BOOST_TEST_CASE(&ParseTest::testCompoundingParsing));
     suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
+    suite->add(BOOST_TEST_CASE(&ParseTest::testDatePeriodParsing));
     return suite;
 }
 } // namespace testsuite

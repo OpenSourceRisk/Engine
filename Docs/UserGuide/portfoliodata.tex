@@ -60,7 +60,7 @@ Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used
 \item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
   the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
 
-Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond}
+Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
 
 
 \end{itemize}
@@ -546,6 +546,86 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 
 The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
 
+\subsubsection{Credit Default Swap}
+
+A credit default swap is set up using a {\tt CreditDefaultSwapData} block as shown in listing \ref{lst:cdsdata}. The CDS specific elements
+are
+
+\begin{itemize}
+\item IssuerId: A unique identifier for the issuer of the bond
+\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
+    todaysmarket.xml}
+\item SettleAtAccrual: Whether or not the accrued coupon is due in the event of a default.
+\item PaysAtDefaultTime: If set to true, any payments triggered by a default event are due at default time. If set to false, they are due at the end of the accrual period.
+\item ProtectionStart: The first date where a default event will trigger the contract.
+\item UpfrontDate: Settlement date for the upfront payment.
+\item UpfrontFee: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\end{itemize}
+
+A LegData block then defines the cashflow structure of the credit default swap, this must be be of type fixed.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <CreditDefaultSwapData>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>BANK</CreditCurveId>
+      <Qualifier>SECURITY_1</Qualifier>
+      <SettlesAccrual>Y</SettlesAccrual>
+      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee>
+      <LegData>
+            <LegType>Fixed</LegType>
+            <Payer>false</Payer>
+            ...
+        </LegData>
+    </CreditDefaultSwapData>
+\end{minted}
+\caption{CreditDefaultSwap Data}
+\label{lst:cdsdata}
+\end{listing}
+
+\subsubsection{Forward Rate Agreement}
+
+A forward rate agreement is set up using a {\tt ForwardRateAgreementData} block as shown in listing \ref{lst:ForwardRateAgreementdata}. The forward rate agreement specific elements
+are
+
+\begin{itemize}
+\item StartDate: A FRA expires/settles on the startDate . \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
+    todaysmarket.xml}
+\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit
+\item Currency: The currency of the FRA notional.  	
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+\item Index: The name of the interest rate index the FRA is benchmarked against
+\item LongShort: Specifies whether the option position is long  or
+  short.
+\item Strike: The agreed forward interest rate
+\item Notional: No accretion or amortisation, just a constant notional.
+\end{itemize}
+
+A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <ForwardRateAgreementData>
+        <StartDate>20161028</StartDate>
+        <EndDate>20351028</EndDate>
+        <Currency>EUR</Currency>
+        <Index>EUR-EURIBOR-6M</Index>
+        <LongShort>Long</LongShort>
+        <Strike>0.00001</Strike>
+        <Notional>1000000000</Notional>
+    </ForwardRateAgreementData>
+\end{minted}
+\caption{Forward Rate Agreement Data}
+\label{lst:ForwardRateAgreementdata}
+\end{listing}
+
+The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
+
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -740,9 +820,18 @@ Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_
   the number of coupons exceeds the number of notional values, the
   notional will be kept flat at the value of last entered notional for
   the remaining coupons.  The number of entered notional values cannot
-  exceed the number of coupons. 
+  exceed the number of coupons.
 
 Allowable values: Each child element can take any positive real number.
+
+In case of exchange of currencies an initial exchange, a final exchange
+and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
+\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
+\lstinline!NotionalAmortizingExchange! as subelements.
+
+FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
+\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
+\lstinline!FixingDays! (integer) subelements.
 
 \vspace{1em}
 
@@ -779,6 +868,23 @@ The first notional must not have a start date, it will be associated
 with the schedule's start, The subsequent notionals can have a start
 date specified from which date onwards the new notional is applied. This allows
 specifying notionals only for dates where the notional changes.
+
+An example for a cross currency exchange leg is shown in Listing \ref{lst:notional_exchange}.
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Notionals>
+                    <Notional>65000000</Notional>
+                    <Exchanges>
+                      <NotionalInitialExchange>true</NotionalInitialExchange>
+                      <NotionalFinalExchange>true</NotionalFinalExchange>
+                    </Exchanges>
+                </Notionals>
+\end{minted}
+\caption{Notional list with exchange}
+\label{lst:notional_exchange}
+\end{listing}
+
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.

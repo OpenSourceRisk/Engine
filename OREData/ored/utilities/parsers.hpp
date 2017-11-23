@@ -37,6 +37,8 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+#include <qle/methods/multipathgeneratorbase.hpp>
+
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -173,5 +175,15 @@ template <class T> std::vector<T> parseListOfValues(string s, std::function<T(st
 }
 
 std::vector<string> parseListOfValues(string s);
+
+enum class AmortizationType { None, FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity };
+AmortizationType parseAmortizationType(const std::string& s);
+
+//! Convert string to sequence type
+/*!
+\ingroup utilities
+*/
+QuantExt::SequenceType parseSequenceType(const std::string& s);
+
 } // namespace data
 } // namespace ore

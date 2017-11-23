@@ -85,17 +85,18 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
                          Real marginalAllocationLimit, Real quantile, const string& calculationType,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
-                         Real collateralSpread, Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
+                         Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling)
+                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), collateralSpread_(collateralSpread),
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
       dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
       dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
       dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
-      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling) {
+      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
+      fullInitialCollateralisation_(fullInitialCollateralisation) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -354,12 +355,21 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
-        epe[0] = std::max(npv, 0.0);
-        ene[0] = std::max(-npv, 0.0);
+        if ((fullInitialCollateralisation_) &  (netting->activeCsaFlag())) {
+            // This assumes that the collateral at t=0 is the same as the npv at t=0.
+            epe[0] = 0;
+            ene[0] = 0;
+            pfe[0] = 0;
+        } else {
+            epe[0] = std::max(npv, 0.0);
+            ene[0] = std::max(-npv, 0.0);
+            pfe[0] = std::max(npv, 0.0);
+        }
+        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral" column
+        // of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
+        eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        eab[0] = -npv;
-        pfe[0] = std::max(npv, 0.0);
         nettedCube_->setT0(nettingSetValueToday[nettingSetId], nettingSetCount);
 
         for (Size j = 0; j < dates; ++j) {
@@ -387,8 +397,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples;
-                ene[j + 1] += std::max(-exposure + dim, 0.0) / samples;
+                epe[j + 1] += std::max(exposure - dim, 0.0) / samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) / samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
@@ -400,7 +410,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
-                    Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
+                    Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
+                    Real colvaDelta = -balance * collateralSpread * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
@@ -647,15 +658,15 @@ void PostProcess::updateStandAloneXVA() {
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fbaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
-            tradeFBA_[tradeId] += fbaIncrement;
+            Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
+            tradeFCA_[tradeId] += fcaIncrement;
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fcaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
-            tradeFCA_[tradeId] += fcaIncrement;
+            Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
+            tradeFBA_[tradeId] += fbaIncrement;
         }
         if (sumTradeCVA_.find(nid) == sumTradeCVA_.end()) {
             sumTradeCVA_[nid] = 0.0;
@@ -673,7 +684,6 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
-        vector<Real> ec = expectedCollateral_[nettingSetId];
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
@@ -1186,8 +1196,9 @@ void PostProcess::performT0DimCalc() {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
-                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            int daysFromT0CloseOut = daysFromT0 - dimHorizonCalendarDays_;
+            int prevDaysFromT0CloseOut = lastDaysFromT0 - dimHorizonCalendarDays_;
+            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
             } else {

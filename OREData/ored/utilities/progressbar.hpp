@@ -41,6 +41,7 @@ public:
     ProgressIndicator() {}
     virtual ~ProgressIndicator() {}
     virtual void updateProgress(const unsigned long progress, const unsigned long total) = 0;
+    virtual void reset() = 0;
 };
 
 //! Base class for a Progress Reporter
@@ -59,6 +60,14 @@ public:
     //! update progress
     void updateProgress(const unsigned long progress, const unsigned long total);
 
+    //! reset
+    void resetProgress();
+
+    //! return progress indicators
+    const boost::unordered_set<boost::shared_ptr<ProgressIndicator>>& progressIndicators() const {
+        return indicators_;
+    }
+
 private:
     boost::unordered_set<boost::shared_ptr<ProgressIndicator>> indicators_;
 };
@@ -72,11 +81,12 @@ private:
 */
 class SimpleProgressBar : public ProgressIndicator {
 public:
-    SimpleProgressBar(const std::string& message, const unsigned int messageWidth = 40,
-                      const unsigned int barWidth = 40, const unsigned int numberOfScreenUpdates = 100);
+    SimpleProgressBar(const std::string& message, const QuantLib::Size messageWidth = 40,
+                      const QuantLib::Size barWidth = 40, const QuantLib::Size numberOfScreenUpdates = 100);
 
     //! ProgressIndicator interface
     void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void reset() override;
 
 private:
     std::string message_;
@@ -93,6 +103,7 @@ public:
 
     //! ProgressIndicator interface
     void updateProgress(const unsigned long progress, const unsigned long total) override;
+    void reset() override;
 
 private:
     std::string message_;
@@ -106,6 +117,7 @@ public:
 
     /*! ProgressIndicator interface */
     void updateProgress(const unsigned long progress, const unsigned long total) override {}
+    void reset() override {}
 };
 
 } // namespace data

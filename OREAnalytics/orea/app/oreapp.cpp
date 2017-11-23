@@ -1,20 +1,20 @@
 /*
-   Copyright (C) 2017 Quaternion Risk Management Ltd
-   All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-   This file is part of ORE, a free-software/open-source library
-   for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-   ORE is free software: you can redistribute it and/or modify it
-   under the terms of the Modified BSD License.  You should have received a
-   copy of the license along with this program.
-   The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-   This program is distributed on the basis that it will form a useful
-   contribution to risk analytics and model standardisation, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer.hpp>
@@ -44,7 +44,7 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-void OREApp::run() {
+int OREApp::run() {
 
     boost::timer timer;
 
@@ -89,6 +89,18 @@ void OREApp::run() {
         out_ << setw(tab_) << left << "Write Reports... " << flush;
         writeInitialReports();
         out_ << "OK" << endl;
+
+        /**************************
+         * Write base scenario file
+         */
+        out_ << setw(tab_) << left << "Write Base Scenario... " << flush;
+        if (writeBaseScenario_) {
+            writeBaseScenario();
+            out_ << "OK" << endl;
+        } else {
+            LOG("skip base scenario");
+            out_ << "SKIP" << endl;
+        }
 
         /**********************
          * Sensitivity analysis
@@ -162,15 +174,22 @@ void OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
+        /*****************************
+         * Additional reports
+         */
+        writeAdditionalReports();
+
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
+        return 1;
     }
 
     out_ << "run time: " << setprecision(2) << timer.elapsed() << " sec" << endl;
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+    return 0;
 }
 
 void OREApp::readSetup() {
@@ -192,6 +211,8 @@ void OREApp::readSetup() {
                           : false;
     sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
     stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
+    writeBaseScenario_ =
+        (params_->hasGroup("baseScenario") && params_->get("baseScenario", "active") == "Y") ? true : false;
 }
 
 void OREApp::setupLog() {
@@ -268,13 +289,13 @@ void OREApp::getMarketParameters() {
     }
 }
 
-boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market) {
-    string inputPath = params_->get("setup", "inputPath");
-    string pricingEnginesFile = inputPath + "/" + params_->get("setup", "pricingEnginesFile");
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    engineData->fromFile(pricingEnginesFile);
-
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName) {
     map<MarketContext, string> configurations;
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    string inputPath = params_->get("setup", "inputPath");
+    string pricingEnginesFile = inputPath + "/" + params_->get(groupName, "pricingEnginesFile");
+    if (params_->get(groupName, "pricingEnginesFile") != "")
+        engineData->fromFile(pricingEnginesFile);
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
@@ -286,9 +307,17 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
+    string portfoliosString = params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    portfolio->load(portfolioFile, buildTradeFactory());
+    if (params_->get("setup", "portfolioFile") == "")
+        return portfolio;
+    vector<string> portfolioFiles;
+    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto portfolioFile : portfolioFiles) {
+        boost::trim(portfolioFile);
+        portfolioFile = inputPath + "/" + portfolioFile;
+        portfolio->load(portfolioFile, buildTradeFactory());
+    }
     portfolio->build(factory);
     return portfolio;
 }
@@ -352,7 +381,6 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 void OREApp::writeInitialReports() {
 
     string outputPath = params_->get("setup", "outputPath");
-    string inputPath = params_->get("setup", "inputPath");
 
     /************
      * Curve dump
@@ -408,7 +436,7 @@ void OREApp::runSensitivityAnalysis() {
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-    string marketConfiguration;
+    string marketConfiguration = params_->get("markets", "sensitivity");
 
     sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
@@ -449,7 +477,7 @@ void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>
     LOG("Get Portfolio");
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile);
+    sensiPortfolio->load(portfolioFile, buildTradeFactory());
 
     LOG("Build Sensitivity Analysis");
     marketConfiguration = params_->get("markets", "pricing");
@@ -516,6 +544,63 @@ void OREApp::runStressTest() {
     out_ << "OK" << endl;
 }
 
+void OREApp::writeBaseScenario() {
+
+    Date today = Settings::instance().evaluationDate();
+
+    LOG("Get Market Configuration");
+    string marketConfiguration = params_->get("baseScenario", "marketConfiguration");
+
+    LOG("Get Simulation Market Parameters");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("baseScenario", "marketConfigFile");
+    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
+    simMarketData->fromFile(marketConfigFile);
+
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration);
+    boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
+    QL_REQUIRE(scenario->asof() == today, "dates do not match");
+
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile = outputPath + "/" + params_->get("baseScenario", "outputFileName");
+
+    // FIXME: Do we want binary format or human readable csv like the following, consistent with ScenarioWriter?
+    // FIXME: Reuse ScenarioWriter?
+
+    string separator = params_->get("baseScenario", "separator");
+    QL_REQUIRE(separator.length() == 1, "separator needs length 1: " << separator);
+    const char sep = separator.c_str()[0];
+    std::vector<RiskFactorKey> keys = scenario->keys();
+    std::sort(keys.begin(), keys.end());
+
+    bool append = parseBool(params_->get("baseScenario", "append"));
+    string mode = append ? "a+" : "w+";
+    FILE* f = fopen(outputFile.c_str(), mode.c_str());
+    QL_REQUIRE(f, "error opening file " << outputFile);
+
+    QL_REQUIRE(keys.size() > 0, "No keys in scenario");
+
+    // write header
+    bool header = parseBool(params_->get("baseScenario", "header"));
+    if (header) {
+        fprintf(f, "Date%cScenario%cNumeraire%c%s", sep, sep, sep, to_string(keys[0]).c_str());
+        for (Size i = 1; i < keys.size(); i++)
+            fprintf(f, "%c%s", sep, to_string(keys[i]).c_str());
+        fprintf(f, "\n");
+    }
+
+    // write data
+    Size i = 1;
+    fprintf(f, "%s%c%zu%c%.8f", to_string(today).c_str(), sep, i, sep, scenario->getNumeraire());
+    for (auto k : keys)
+        fprintf(f, "%c%.8f", sep, scenario->get(k));
+    fprintf(f, "\n");
+    fflush(f);
+    fclose(f);
+
+    DLOG("Base scenario written to file " << outputFile);
+}
+
 void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
@@ -545,7 +630,7 @@ void OREApp::buildNPVCube() {
     o.str("");
     o << "Build Cube " << simPortfolio_->size() << " x " << grid_->size() << " x " << samples_ << "... ";
 
-    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, 72 - std::min<Size>(tab_, 67));
+    auto progressBar = boost::make_shared<SimpleProgressBar>(o.str(), tab_, progressBarWidth_);
     auto progressLog = boost::make_shared<ProgressLog>("Building cube...");
     engine.registerProgressIndicator(progressBar);
     engine.registerProgressIndicator(progressLog);
@@ -564,9 +649,12 @@ void OREApp::generateNPVCube() {
 
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(sg, market_, simMarketData, conventions_,
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
-        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_);
+        simMarket_->scenarioGenerator() = sg;
+	
+	string groupName = "simulation";
+        boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");
         simPortfolio_ = buildPortfolio(simFactory);
@@ -610,13 +698,24 @@ void OREApp::writeCube() {
 void OREApp::writeScenarioData() {
     out_ << endl << setw(tab_) << left << "Write Aggregation Scenario Data... " << flush;
     LOG("Write scenario data");
-    if (params_->has("simulation", "additionalScenarioDataFileName")) {
-        string outputPath = params_->get("setup", "outputPath");
+    bool skipped = true;
+    string outputPath = params_->get("setup", "outputPath");
+    if (params_->has("simulation", "aggregationScenarioDataFileName")) {
+        // binary output
         string outputFileNameAddScenData =
-            outputPath + "/" + params_->get("simulation", "additionalScenarioDataFileName");
+            outputPath + "/" + params_->get("simulation", "aggregationScenarioDataFileName");
         scenarioData_->save(outputFileNameAddScenData);
         out_ << "OK" << endl;
-    } else
+        skipped = false;
+    }
+    if (params_->has("simulation", "aggregationScenarioDataDump")) {
+        // csv output
+        string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "aggregationScenarioDataDump");
+        CSVFileReport report(outputFileNameAddScenData);
+        ReportWriter::writeAggregationScenarioData(report, *scenarioData_);
+        skipped = false;
+    }
+    if (skipped)
         out_ << "SKIP" << endl;
 }
 
@@ -678,7 +777,6 @@ void OREApp::runPostProcessor() {
     string dvaName = params_->get("xva", "dvaName");
     string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
     string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
-    Real collateralSpread = parseReal(params_->get("xva", "collateralSpread"));
 
     Real dimQuantile = 0.99;
     Size dimHorizonCalendarDays = 14;
@@ -701,11 +799,16 @@ void OREApp::runPostProcessor() {
 
     string marketConfiguration = params_->get("markets", "simulation");
 
+    bool fullInitialCollateralisation = false;
+    if (params_->has("xva", "fullInitialCollateralisation")) {
+        fullInitialCollateralisation = parseBool(params_->get("xva", "fullInitialCollateralisation"));
+    }
+
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling);
+        fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
 void OREApp::writeXVAReports() {

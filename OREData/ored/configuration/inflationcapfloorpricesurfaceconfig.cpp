@@ -16,8 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+
 #include <ql/errors.hpp>
 
 #include <iomanip>
@@ -32,10 +35,31 @@ InflationCapFloorPriceSurfaceConfig::InflationCapFloorPriceSurfaceConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const DayCounter& dayCounter,
     const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<Real>& capStrikes,
     const vector<Real>& floorStrikes, const vector<Period>& maturities)
-    : curveID_(curveID), curveDescription_(curveDescription), type_(type), observationLag_(observationLag),
+    : CurveConfig(curveID, curveDescription), type_(type), observationLag_(observationLag),
       calendar_(calendar), businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index),
       indexCurve_(indexCurve), yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes),
       floorStrikes_(floorStrikes), maturities_(maturities) {}
+
+const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
+    if (quotes_.size() == 0) {
+        string type;
+        if (type_ == Type::ZC)
+            type = "ZC";
+        else if (type_ == Type::YY)
+            type = "YY";
+
+        string base = type + "_INFLATIONCAPFLOOR/PRICE/" + index_ + "/";
+        for (auto m : maturities_) {
+            for (auto f : floorStrikes_) {
+                quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
+            }
+            for (auto c : capStrikes_) {
+                quotes_.push_back(base + to_string(m) + "/C/" + to_string(c));
+            }
+        }
+    }
+    return quotes_;
+}
 
 void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "InflationCapFloorPriceSurface");
@@ -74,6 +98,7 @@ void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
     capStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "CapStrikes", true);
     floorStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "FloorStrikes", true);
     maturities_ = XMLUtils::getChildrenValuesAsPeriods(node, "Maturities", true);
+
 }
 
 XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
@@ -89,7 +114,7 @@ XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
     } else
         QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
 
-    std::ostringstream startRt, lag, cal, bdc, dc, idx;
+    std::ostringstream startRt, lag, cal, bdc, dc;
     startRt << std::fixed << std::setprecision(16) << startRate_;
     lag << observationLag_;
     cal << calendar_;

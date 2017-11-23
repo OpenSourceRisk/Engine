@@ -51,11 +51,15 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions not supported");
     QL_REQUIRE(isFixedFloating, "Basis Swaptions not supported");
 
-    bool isNonStandard =
-        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
-         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
-         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
-         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
+    bool fixedFirst = swap_[0].legType() == "Fixed";
+    boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedFirst?0:1].concreteLegData());
+    boost::shared_ptr<FloatingLegData> floatingLegData = boost::dynamic_pointer_cast<FloatingLegData>(swap_[fixedFirst?1:0].concreteLegData());
+    
+    bool isNonStandard = (swap_[0].notionals().size() > 1 ||
+                          swap_[1].notionals().size() > 1 ||
+                          floatingLegData->spreads().size() > 1 ||
+                          floatingLegData->gearings().size() > 1 ||
+                          fixedLegData->rates().size() > 1);
 
     Exercise::Type exerciseType = parseExerciseType(option_.style());
     // QL_REQUIRE(!(isNonStandard && exerciseType == Exercise::European),
@@ -100,16 +104,32 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     Position::Type positionType = parsePositionType(option_.longShort());
     Real multiplier = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
 
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+	DLOG("option premium added for european swaption " << id()); 
+    }
+
     // Now set the instrument wrapper, depending on delivery
     if (settleType == Settlement::Physical) {
         // tracks state for any option flavour, including physical delivery
         instrument_ = boost::shared_ptr<InstrumentWrapper>(
             new EuropeanOptionWrapper(swaption, positionType == Position::Long ? true : false, exDate,
-                                      settleType == Settlement::Physical ? true : false, swap));
+                                      settleType == Settlement::Physical ? true : false, swap, 1.0, 1.0,
+                                      additionalInstruments, additionalMultipliers));
         // maturity of underlying
         maturity_ = std::max(swap->fixedSchedule().dates().back(), swap->floatingSchedule().dates().back());
     } else {
-        instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(swaption, multiplier));
+        instrument_ = boost::shared_ptr<InstrumentWrapper>(
+            new VanillaInstrument(swaption, multiplier, additionalInstruments, additionalMultipliers));
         maturity_ = exDate;
     }
 
@@ -124,11 +144,15 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     string ccy_str = swap_[0].currency();
     Currency currency = parseCurrency(ccy_str);
 
-    bool isNonStandard =
-        (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 ||
-         swap_[0].floatingLegData().spreads().size() > 1 || swap_[1].floatingLegData().spreads().size() > 1 ||
-         swap_[0].floatingLegData().gearings().size() > 1 || swap_[1].floatingLegData().gearings().size() > 1 ||
-         swap_[0].fixedLegData().rates().size() > 1 || swap_[1].fixedLegData().rates().size() > 1);
+    bool fixedFirst = swap_[0].legType() == "Fixed";
+    boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedFirst?0:1].concreteLegData());
+    boost::shared_ptr<FloatingLegData> floatingLegData = boost::dynamic_pointer_cast<FloatingLegData>(swap_[fixedFirst?1:0].concreteLegData());
+    
+    bool isNonStandard = (swap_[0].notionals().size() > 1 ||
+                          swap_[1].notionals().size() > 1 ||
+                          floatingLegData->spreads().size() > 1 ||
+                          floatingLegData->gearings().size() > 1 ||
+                          fixedLegData->rates().size() > 1);
 
     boost::shared_ptr<VanillaSwap> vanillaSwap;
     boost::shared_ptr<NonstandardSwap> nonstandardSwap;
@@ -142,8 +166,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
-    DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
-    // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
+    try {
+        DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
+        // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
+    } catch (const std::exception& e) {
+        WLOG("Could not price underlying: " << e.what());
+    }
 
     // build exercise
     std::vector<QuantLib::Date> exDates;
@@ -153,6 +181,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
             exDates.push_back(exDate);
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
+    std::sort(exDates.begin(), exDates.end());
     maturity_ = exDates.back();
     boost::shared_ptr<Exercise> exercise(new BermudanExercise(exDates));
 
@@ -168,9 +197,9 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<QuantLib::Instrument> swaption;
     if (isNonStandard)
         swaption =
-            boost::shared_ptr<QuantLib::Instrument>(new QuantLib::NonstandardSwaption(nonstandardSwap, exercise));
+            boost::shared_ptr<QuantLib::Instrument>(new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery));
     else
-        swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise));
+        swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise, delivery));
 
     QuantLib::Position::Type positionType = parsePositionType(option_.longShort());
     if (delivery == Settlement::Physical)
@@ -185,9 +214,31 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<BermudanSwaptionEngineBuilder> swaptionBuilder =
         boost::dynamic_pointer_cast<BermudanSwaptionEngineBuilder>(builder);
 
+    // determine strikes for calibration basket (simple approach, a la summit)
+    std::vector<Real> strikes(exDates.size(), Null<Real>());
+    if (!isNonStandard) {
+        Real tmp = vanillaSwap->fixedRate() - vanillaSwap->spread();
+        std::fill(strikes.begin(), strikes.end(), tmp);
+        DLOG("calibration strike is " << tmp << "(fixed rate " << vanillaSwap->fixedRate() << ", spread "
+                                      << vanillaSwap->spread() << ")");
+    } else {
+        for (Size i = 0; i < exDates.size(); ++i) {
+            const Schedule& fix = nonstandardSwap->fixedSchedule();
+            const Schedule& flt = nonstandardSwap->floatingSchedule();
+            Size fixIdx = std::lower_bound(fix.dates().begin(), fix.dates().end(), exDates[i]) - fix.dates().begin();
+            Size fltIdx = std::lower_bound(flt.dates().begin(), flt.dates().end(), exDates[i]) - flt.dates().begin();
+            // play safe
+            fixIdx = std::min(fixIdx, nonstandardSwap->fixedRate().size() - 1);
+            fltIdx = std::min(fltIdx, nonstandardSwap->spreads().size() - 1);
+            strikes[i] = nonstandardSwap->fixedRate()[fixIdx] - nonstandardSwap->spreads()[fltIdx];
+            DLOG("calibration strike for ex date " << QuantLib::io::iso_date(exDates[i]) << " is " << strikes[i]
+                                                   << " (fixed rate " << nonstandardSwap->fixedRate()[fixIdx]
+                                                   << ", spread " << nonstandardSwap->spreads()[fltIdx] << ")");
+        }
+    }
+
     boost::shared_ptr<PricingEngine> engine =
-        swaptionBuilder->engine(id(), isNonStandard, ccy_str, exDates, swap->maturityDate(),
-                                isNonStandard ? 0.0 : vanillaSwap->fixedRate()); // FIXME
+        swaptionBuilder->engine(id(), isNonStandard, ccy_str, exDates, swap->maturityDate(), strikes);
 
     Real ct = timer.elapsed();
     DLOG("Swaption model calibration time: " << ct * 1000 << " ms");
@@ -206,10 +257,26 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
 
     std::vector<boost::shared_ptr<Instrument>> underlyingSwaps = buildUnderlyingSwaps(swapEngine, swap, exDates);
 
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real multiplier = positionType == Position::Long ? 1.0 : -1.0;
+        Real premiumAmount = -multiplier * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, currency,
+                   engineFactory, swaptionBuilder->configuration(MarketContext::pricing));
+        DLOG("option premium added for bermudan swaption " << id());
+    }
+
     // instrument_ = boost::shared_ptr<InstrumentWrapper> (new VanillaInstrument (swaption, multiplier));
     instrument_ = boost::shared_ptr<InstrumentWrapper>(
         new BermudanOptionWrapper(swaption, positionType == Position::Long ? true : false, exDates,
-                                  delivery == Settlement::Physical ? true : false, underlyingSwaps));
+                                  delivery == Settlement::Physical ? true : false, underlyingSwaps, 1.0, 1.0,
+                                  additionalInstruments, additionalMultipliers));
 
     DLOG("Building Bermudan Swaption done");
 }
@@ -232,9 +299,11 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     } else {
         QL_FAIL("Invalid leg types " << swap_[0].legType() << " + " << swap_[1].legType());
     }
+    boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
+    boost::shared_ptr<FloatingLegData> floatingLegData = boost::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
 
-    QL_REQUIRE(swap_[fixedLegIndex].fixedLegData().rates().size() == 1, "Vanilla Swaption: constant rate required");
-    QL_REQUIRE(swap_[floatingLegIndex].floatingLegData().spreads().size() == 1,
+    QL_REQUIRE(fixedLegData->rates().size() == 1, "Vanilla Swaption: constant rate required");
+    QL_REQUIRE(floatingLegData->spreads().size() == 1,
                "Vanilla Swaption: constant spread required");
 
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
@@ -246,9 +315,9 @@ boost::shared_ptr<VanillaSwap> Swaption::buildVanillaSwap(const boost::shared_pt
     Currency currency = parseCurrency(ccy);
     Real nominal = swap_[0].notionals().back();
 
-    Real rate = swap_[fixedLegIndex].fixedLegData().rates().front();
-    Real spread = swap_[floatingLegIndex].floatingLegData().spreads().front();
-    string indexName = swap_[floatingLegIndex].floatingLegData().index();
+    Real rate = fixedLegData->rates().front();
+    Real spread = floatingLegData->spreads().front();
+    string indexName = floatingLegData->index();
 
     Schedule fixedSchedule = makeSchedule(swap_[fixedLegIndex].schedule());
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
@@ -311,6 +380,8 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     } else {
         QL_FAIL("Invalid leg types " << swap_[0].legType() << " + " << swap_[1].legType());
     }
+    boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedLegIndex].concreteLegData());
+    boost::shared_ptr<FloatingLegData> floatingLegData = boost::dynamic_pointer_cast<FloatingLegData>(swap_[floatingLegIndex].concreteLegData());
 
     boost::shared_ptr<EngineBuilder> tmp = engineFactory->builder("Swap");
     boost::shared_ptr<SwapEngineBuilderBase> swapBuilder = boost::dynamic_pointer_cast<SwapEngineBuilderBase>(tmp);
@@ -326,15 +397,15 @@ Swaption::buildNonStandardSwap(const boost::shared_ptr<EngineFactory>& engineFac
     vector<Real> floatNominal = buildScheduledVectorNormalised(
         swap_[floatingLegIndex].notionals(), swap_[floatingLegIndex].notionalDates(), floatingSchedule);
     vector<Real> fixedRate = buildScheduledVectorNormalised(
-        swap_[fixedLegIndex].fixedLegData().rates(), swap_[fixedLegIndex].fixedLegData().rateDates(), fixedSchedule);
+        fixedLegData->rates(), fixedLegData->rateDates(), fixedSchedule);
     vector<Real> spreads =
-        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().spreads(),
-                                       swap_[floatingLegIndex].floatingLegData().spreadDates(), floatingSchedule);
+        buildScheduledVectorNormalised(floatingLegData->spreads(),
+                                       floatingLegData->spreadDates(), floatingSchedule);
     // gearings are optional, i.e. may be empty
     vector<Real> gearings =
-        buildScheduledVectorNormalised(swap_[floatingLegIndex].floatingLegData().gearings(),
-                                       swap_[floatingLegIndex].floatingLegData().gearingDates(), floatingSchedule, 1.0);
-    string indexName = swap_[floatingLegIndex].floatingLegData().index();
+        buildScheduledVectorNormalised(floatingLegData->gearings(),
+                                       floatingLegData->gearingDates(), floatingSchedule, 1.0);
+    string indexName = floatingLegData->index();
     DayCounter fixedDayCounter = parseDayCounter(swap_[fixedLegIndex].dayCounter());
     Handle<IborIndex> index =
         engineFactory->market()->iborIndex(indexName, swapBuilder->configuration(MarketContext::pricing));
@@ -374,7 +445,7 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         std::vector<bool> payer(2);
         for (Size j = 0; j < legs.size(); ++j) {
             legs[j] = underlyingSwap->leg(j);
-            payer[j] = underlyingSwap->legNPV(j) < 0.0 ? true : false;
+            payer[j] = swap_[j].isPayer();
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
             while (legs[j].size() > 0 && coupon->accrualStartDate() < exerciseDates[i]) {
                 legs[j].erase(legs[j].begin());

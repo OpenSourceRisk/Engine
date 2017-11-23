@@ -19,9 +19,10 @@
 #include <ored/marketdata/defaultcurve.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
+
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
-#include <ql/termstructures/credit/defaultprobabilityhelpers.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <algorithm>
@@ -88,8 +89,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         // until we found the whole set of quotes or do not have more quotes in the
         // market data
 
-        vector<Real> quotes;
-        vector<Period> terms;
+        map<Period, Real> quotes;
         recoveryRate_ = Null<Real>();
 
         for (auto& md : loader.loadQuotes(asof)) {
@@ -111,18 +111,15 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
                 boost::shared_ptr<CdsSpreadQuote> q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
 
-                vector<string>::const_iterator it1 =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
+                vector<string>::const_iterator it =
+                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->quotes().end()) {
+                if (it != config->cdsQuotes().end()) {
+                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->term());
-                    quotes.push_back(q->quote()->value());
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                                               << q->term() << ") while loading default curve " << config->curveID());
                 }
             }
 
@@ -130,40 +127,38 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE) {
                 boost::shared_ptr<HazardRateQuote> q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
 
-                vector<string>::const_iterator it1 =
-                    std::find(config->quotes().begin(), config->quotes().end(), q->name());
+                vector<string>::const_iterator it =
+                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
-                if (it1 != config->quotes().end()) {
+                if (it != config->cdsQuotes().end()) {
+                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
 
-                    vector<Period>::const_iterator it2 = std::find(terms.begin(), terms.end(), q->term());
-                    QL_REQUIRE(it2 == terms.end(), "duplicate term in quotes found ("
-                                                       << q->term() << ") while loading default curve "
-                                                       << config->curveID());
-                    terms.push_back(q->term());
-                    quotes.push_back(q->quote()->value());
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                                               << q->term() << ") while loading default curve " << config->curveID());
                 }
             }
         }
 
         LOG("DefaultCurve: read " << quotes.size() << " default quotes");
 
-        QL_REQUIRE(quotes.size() == config->quotes().size(),
-                   "read " << quotes.size() << ", but " << config->quotes().size() << " required.");
+        QL_REQUIRE(quotes.size() == config->cdsQuotes().size(),
+                   "read " << quotes.size() << ", but " << config->cdsQuotes().size() << " required.");
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
             std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
-            for (Size i = 0; i < quotes.size(); ++i) {
-                helper.push_back(boost::make_shared<SpreadCdsHelper>(
-                    quotes[i], terms[i], cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
+            for (auto quote : quotes) {
+                helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
+                    quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
                                                                                           config->dayCounter());
+
             // like for yield curves we need to copy the piecewise curve because
             // on eval date changes the relative date helpers with trigger a
             // bootstrap.
@@ -186,18 +181,25 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         if (config->type() == DefaultCurveConfig::Type::HazardRate) {
             Calendar cal = cdsConv->calendar();
             std::vector<Date> dates;
+            std::vector<Real> quoteValues;
+
             // if first term is not zero, add asof point
-            if (terms[0] != 0 * Days) {
-                LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes[0] << ", because not given");
+            if (quotes.begin()->first != 0 * Days) {
+                LOG("DefaultCurve: add asof (" << asof << "), hazard rate " << quotes.begin()->second
+                                               << ", because not given");
                 dates.push_back(asof);
-                quotes.insert(quotes.begin(), quotes[0]);
+                quoteValues.push_back(quotes.begin()->second);
             }
-            for (Size i = 0; i < terms.size(); ++i) {
-                dates.push_back(cal.advance(asof, terms[i], Following, false));
+
+            for (auto quote : quotes) {
+                dates.push_back(cal.advance(asof, quote.first, Following, false));
+                quoteValues.push_back(quote.second);
             }
+
             LOG("DefaultCurve: set up interpolated hazard rate curve");
-            curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(dates, quotes, config->dayCounter(),
-                                                                                   BackwardFlat());
+            curve_ = boost::make_shared<InterpolatedHazardRateCurve<BackwardFlat>>(
+                dates, quoteValues, config->dayCounter(), BackwardFlat());
+
             if (config->extrapolation()) {
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");
@@ -231,6 +233,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             LOG("DefaultCurve: set up interpolated surv prob curve as yield over benchmark");
             curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, impliedSurvProb,
                                                                                          config->dayCounter());
+
             if (config->extrapolation()) {
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");

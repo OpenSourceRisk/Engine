@@ -106,14 +106,18 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
-    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
+    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
+               data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
-    } else {
+    } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
+               data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
+    } else {
+        QL_FAIL("Reversion type Hagan and volatility type HullWhite not covered");
     }
     LOG("alpha times size: " << aTimes.size());
     LOG("lambda times size: " << hTimes.size());
@@ -228,7 +232,8 @@ void LgmBuilder::buildSwaptionBasket() const {
         Real termT = Null<Real>();
         Period termTmp;
         if (termDateBased) {
-            termT = svts_->timeFromReference(termDb);
+            Date tmpExpiry = expiryDateBased ? expiryDb : svts_->optionDateFromTenor(expiryPb);
+            termT = svts_->dayCounter().yearFraction(tmpExpiry, termDb);
             // rounded to whole years, only used to distinguish between short and long
             // swap tenors, which in practice always are multiples of whole years
             termTmp = static_cast<Size>(termT + 0.5) * Years;

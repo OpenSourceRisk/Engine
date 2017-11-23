@@ -44,9 +44,10 @@ namespace data {
 class BondEngineBuilder
     : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
 protected:
-    BondEngineBuilder(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
+    BondEngineBuilder(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
-    virtual string keyImpl(const Currency&, const string& securityId, const string&, const string&) override {
+    virtual string keyImpl(const Currency&, const string&, const string& securityId, const string&) override {
         return securityId;
     }
 };

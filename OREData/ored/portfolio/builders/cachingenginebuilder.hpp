@@ -50,8 +50,10 @@ public:
     /*! Constructor that takes a model and engine name
         @param model the model name
         @param engine the engine name
+        @param tradeTypes a set of trade types
      */
-    CachingEngineBuilder(const string& model, const string& engine) : EngineBuilder(model, engine) {}
+    CachingEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
+        : EngineBuilder(model, engine, tradeTypes) {}
 
     //! Return a PricingEngine or a FloatingRateCouponPricer
     boost::shared_ptr<U> engine(Args... params) {

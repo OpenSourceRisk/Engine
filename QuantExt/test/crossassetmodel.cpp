@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -17,10 +17,12 @@
 */
 
 #include "crossassetmodel.hpp"
+#include "utilities.hpp"
 
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/all.hpp>
 #include <qle/pricingengines/all.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
 #include <qle/processes/all.hpp>
 
 #include <ql/currencies/america.hpp>
@@ -38,7 +40,6 @@
 #include <ql/methods/montecarlo/pathgenerator.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
 #include <ql/models/shortrate/onefactormodels/gsr.hpp>
-#include <ql/pricingengines/credit/midpointcdsengine.hpp>
 #include <ql/pricingengines/swaption/gaussian1dswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
@@ -48,8 +49,6 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
-
-#include <test-suite/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
@@ -1753,7 +1752,7 @@ void CrossAssetModelTest::testIrFxCrCorrelationRecovery() {
             boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
             boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-            Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+            Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
             Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
             Matrix r1(dim, dim), r2(dim, dim);
@@ -3490,7 +3489,7 @@ void CrossAssetModelTest::testCorrelationRecovery() {
         boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
         boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-        Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+        Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
         Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
         Matrix r1(dim, dim), r2(dim, dim);
@@ -3640,7 +3639,7 @@ void CrossAssetModelTest::testIrFxInfCrCorrelationRecovery() {
                 boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                 boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-                Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+                Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                 Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
                 Matrix r1(dim, dim), r2(dim, dim);
@@ -3824,7 +3823,7 @@ void CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery() {
                     boost::shared_ptr<StochasticProcess> peuler = model->stateProcess(CrossAssetStateProcess::euler);
                     boost::shared_ptr<StochasticProcess> pexact = model->stateProcess(CrossAssetStateProcess::exact);
 
-                    Matrix c1 = peuler->covariance(0.0, peuler->initialValues(), dt);
+                    Matrix c1 = peuler->covariance(dt, peuler->initialValues(), dt);
                     Matrix c2 = pexact->covariance(0.0, peuler->initialValues(), dt);
 
                     Matrix r1(dim, dim), r2(dim, dim);
@@ -4261,7 +4260,7 @@ void CrossAssetModelTest::testCrCalibration() {
 
     accumulator_set<double, stats<tag::mean, tag::error_of<tag::mean> > > cdso;
 
-    boost::shared_ptr<CreditDefaultSwap> underlying =
+    boost::shared_ptr<QuantExt::CreditDefaultSwap> underlying =
         boost::static_pointer_cast<CdsOptionHelper>(cdsoHelpers.back())->underlying();
     Real K = underlying->fairSpread();
     BOOST_TEST_MESSAGE("Last CDSO fair spread is " << K);
@@ -4271,7 +4270,7 @@ void CrossAssetModelTest::testCrCalibration() {
         boost::make_shared<LgmImpliedDefaultTermStructure>(model, 0, 0);
     boost::shared_ptr<LgmImpliedYieldTermStructure> ytsMc =
         boost::make_shared<LgmImpliedYieldTermStructure>(model->lgm(0));
-    boost::shared_ptr<MidPointCdsEngine> dynamicEngine = boost::make_shared<MidPointCdsEngine>(
+    boost::shared_ptr<QuantExt::MidPointCdsEngine> dynamicEngine = boost::make_shared<QuantExt::MidPointCdsEngine>(
         Handle<DefaultProbabilityTermStructure>(probMc), 0.4, Handle<YieldTermStructure>(ytsMc));
     underlying->setPricingEngine(dynamicEngine);
 
@@ -4302,39 +4301,39 @@ void CrossAssetModelTest::testCrCalibration() {
 
 test_suite* CrossAssetModelTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrMoments));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMoments));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testEqLgm5fMoments));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fMoments));
 
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxCrCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrCorrelationRecovery));
-    suite->add(QUANTLIB_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrCorrelationRecovery));
+    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery));
 
     return suite;
 } // suite

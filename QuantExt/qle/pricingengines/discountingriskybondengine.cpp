@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Aareal Bank AG
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,13 +17,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/date_time.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-#include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/date_time.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -31,8 +32,8 @@ namespace QuantExt {
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                                        const Handle<DefaultProbabilityTermStructure>& defaultCurve,
-                                                       const Handle<Quote>& securitySpread,
-                                                       const Handle<Quote>& recoveryRate, Period timestepPeriod,
+                                                       const Handle<Quote>& recoveryRate,
+                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
                                                        boost::optional<bool> includeSettlementDateFlows)
     : defaultCurve_(defaultCurve), recoveryRate_(recoveryRate), securitySpread_(securitySpread),
       timestepPeriod_(timestepPeriod), includeSettlementDateFlows_(includeSettlementDateFlows) {
@@ -118,4 +119,4 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
     return npvValue;
 }
-} // namespace QuantExt
+}

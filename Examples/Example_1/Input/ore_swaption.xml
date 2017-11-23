@@ -46,7 +46,7 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">N</Parameter>

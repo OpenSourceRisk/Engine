@@ -38,7 +38,8 @@ namespace data {
  */
 class EquityForwardEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:
-    EquityForwardEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine") {}
+    EquityForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine", {"EquityForward"}) {}
 
 protected:
     virtual string keyImpl(const string& equityName, const Currency& ccy) override {
@@ -47,7 +48,7 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         return boost::make_shared<QuantExt::DiscountingEquityForwardEngine>(
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));

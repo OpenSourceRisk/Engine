@@ -37,7 +37,8 @@ namespace data {
 */
 class FxForwardEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
-    FxForwardEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingFxForwardEngine") {}
+    FxForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingFxForwardEngine", {"FxForward"}) {}
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {

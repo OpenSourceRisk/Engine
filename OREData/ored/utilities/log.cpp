@@ -38,7 +38,10 @@ const string FileLogger::name = "FileLogger";
 
 // -- Buffer Logger
 
-void BufferLogger::log(unsigned, const string& s) { buffer_.push(s); }
+void BufferLogger::log(unsigned level, const string& s) {
+    if (level <= minLevel_)
+        buffer_.push(s);
+}
 
 bool BufferLogger::hasNext() { return !buffer_.empty(); }
 

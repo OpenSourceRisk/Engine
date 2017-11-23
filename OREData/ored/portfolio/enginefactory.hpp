@@ -40,6 +40,7 @@ using std::map;
 using std::set;
 using std::string;
 using std::pair;
+using std::tuple;
 using ore::data::Market;
 using QuantLib::PricingEngine;
 using QuantLib::Disposable;
@@ -93,8 +94,10 @@ public:
     /*! Constructor that takes a model and engine name
      *  @param model the model name
      *  @param engine the engine name
+     *  @param tradeTypes a set of trade types
      */
-    EngineBuilder(const string& model, const string& engine) : model_(model), engine_(engine) {}
+    EngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
+        : model_(model), engine_(engine), tradeTypes_(tradeTypes) {}
 
     //! Virtual destructor
     virtual ~EngineBuilder() {}
@@ -103,6 +106,8 @@ public:
     const string& model() const { return model_; }
     //! Return the engine name
     const string& engine() const { return engine_; }
+    //! Return the possible trade types
+    const set<string>& tradeTypes() const { return tradeTypes_; }
 
     //! Return a configuration (or the default one if key not found)
     const string& configuration(const MarketContext& key) {
@@ -126,16 +131,17 @@ public:
     }
 
     //! return model builders
-    const set<boost::shared_ptr<ModelBuilder>>& modelBuilders() const { return modelBuilders_; }
+    const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
 protected:
     string model_;
     string engine_;
+    set<string> tradeTypes_;
     boost::shared_ptr<Market> market_;
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
-    set<boost::shared_ptr<ModelBuilder>> modelBuilders_;
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 
 //! Pricing Engine Factory class
@@ -186,13 +192,13 @@ public:
     void clear() { builders_.clear(); }
 
     //! return model builders
-    Disposable<set<boost::shared_ptr<ModelBuilder>>> modelBuilders() const;
+    Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> modelBuilders() const;
 
 private:
     boost::shared_ptr<Market> market_;
     boost::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
-    map<pair<string, string>, boost::shared_ptr<EngineBuilder>> builders_;
+    map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
 };
 
 } // namespace data

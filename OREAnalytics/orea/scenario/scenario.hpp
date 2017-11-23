@@ -54,8 +54,17 @@ public:
         OptionletVolatility,
         FXSpot,
         FXVolatility,
-        EQSpot,
-        EQVolatility
+        EquitySpot,
+        EquityForecastCurve,
+        EquityVolatility,
+        DividendYield,
+        SurvivalProbability,
+        RecoveryRate,
+        CDSVolatility,
+        BaseCorrelation,
+        CPIIndex,
+        ZeroInflationCurve,
+        YoYInflationCurve
     };
 
     //! Constructor
@@ -73,7 +82,7 @@ public:
     std::string name;
     //! Index
     Size index;
-
+    
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
