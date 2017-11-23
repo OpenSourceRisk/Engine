@@ -56,7 +56,9 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Type " << type << " not recognized");
     }
 
-    discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
+    string dc = XMLUtils::getChildValue(node, "DayCounter", true);
+    dayCounter_ = parseDayCounter(dc);
+    extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 
     if (type_ == Type::Benchmark) {
         benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
@@ -64,18 +66,21 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         pillars_ = XMLUtils::getChildrenValuesAsPeriods(node, "Pillars", true);
         spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
         calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
+        discountCurveID_ = conventionID_ = recoveryRateQuote_ = "";
+        cdsQuotes_.clear();
+        quotes_.clear();
+    } else {
+        discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
+        conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
+        cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+        quotes_ = cdsQuotes_;
+        quotes_.insert(quotes_.begin(), recoveryRateQuote_);
+        recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        benchmarkCurveID_ = sourceCurveID_ = "";
+        calendar_ = Calendar();
+        spotLag_ = 0;
+        pillars_.clear();
     }
-
-    recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
-    string dc = XMLUtils::getChildValue(node, "DayCounter", true);
-    dayCounter_ = parseDayCounter(dc);
-
-    conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
-    cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-    quotes_ = cdsQuotes_;
-    quotes_.insert(quotes_.begin(), recoveryRateQuote_);
-
-    extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 }
 
 XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
@@ -85,32 +90,23 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
-    bool rec = false;
-
-    if (type_ == Type::SpreadCDS) {
-        XMLUtils::addChild(doc, node, "Type", "SpreadCDS");
-        rec = true;
-    }
-    if (type_ == Type::HazardRate) {
-        XMLUtils::addChild(doc, node, "Type", "HazardRate");
-        rec = true;
-    }
-    if (type_ == Type::Benchmark) {
+    if (type_ == Type::SpreadCDS || type_ == Type::HazardRate) {
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
+        XMLUtils::addChild(doc, node, "Conventions", conventionID_);
+        XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+        XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
+    } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
-        rec = true;
         XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
         XMLUtils::addChild(doc, node, "SourceCurve", sourceCurveID_);
         XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
         XMLUtils::addChild(doc, node, "SpotLag", (int)spotLag_);
         XMLUtils::addChild(doc, node, "Calendar", calendar_.name());
+    } else {
+        QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }
-    QL_REQUIRE(rec, "Unkown type in DefaultCurveConfig::toXML()");
-
-    XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
-    XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "Conventions", conventionID_);
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     return node;
 }
