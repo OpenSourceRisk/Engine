@@ -569,10 +569,11 @@ void OREApp::writeBaseScenario() {
     const char sep = separator.c_str()[0];
 
     bool append = parseBool(params_->get("baseScenario", "append"));
+    bool writeHeader = parseBool(params_->get("baseScenario", "header"));
     string mode = append ? "a+" : "w+";
 
     ScenarioWriter sw(outputFile, sep, mode);
-    sw.writeScenario(scenario, true);
+    sw.writeScenario(scenario, writeHeader);
 
     DLOG("Base scenario written to file " << outputFile);
   
