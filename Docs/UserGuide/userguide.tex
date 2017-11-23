@@ -88,7 +88,7 @@
 \author{Quaternion Risk Management}
 %\date{7 October 2016}
 %\date{28 April 2017}
-\date{\today}
+\date{30 November 2017}
 \maketitle
 
 \newpage
@@ -102,8 +102,8 @@
 Date & Author & Comment \\
 \hline
 7 October 2016 & Quaternion & initial release\\
-28 April 2017 & Quaternion  & updates for release v2\\
-1 December 2017 & Quaternion  & updates for release v3\\
+28 April 2017 & Quaternion  & updates for release 2\\
+30 November 2017 & Quaternion & updates for release 3\\
 \hline
 \end{supertabular}
 \end{center}
@@ -249,6 +249,34 @@ section \ref{sec:installation} we start in section \ref{sec:examples} with a ser
 launch ORE using its command line application, and we discuss typical results and reports. We then illustrate in section
 \ref{sec:visualisation} interactive analysis of resulting 'NPV cube' data. The final sections of this text document ORE
 parametrisation and the structure of trade and market data input.
+
+%========================================================
+\section{Release notes}\label{sec:releasenotes}
+%========================================================
+
+This section summarises the changes between release 2 (05/2017) and 3 (11/2017).
+
+\medskip
+Functionality 
+\begin{itemize}
+\item Added CMS and CMS Caps/Floors (pricing, sensitivity analysis and simulation)
+\item Added Credit Default Swaps (pricing and sensitivity analysis, no simulation yet)
+\item Added amortization structures (fixed, percentage relative to initial or previous notional, annuity)
+\item Extended sensitivity framework (adding inflation, equity and credit) 
+\item Added inflation simulation and XVA, Dodgeson-Kainth simulation model calibrated to CPI Caps/Floors
+\item Added basic parametric Value at Risk (Delta and Delta-Gamma Normal VaR)
+\item Additional unit tests and examples
+\item Curve loader refactoring
+\item User guide updates
+\end{itemize}
+
+\medskip
+API changes
+\begin{itemize}
+\item 
+\end{itemize}
+
+\todo[inline]{Add release notes}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
