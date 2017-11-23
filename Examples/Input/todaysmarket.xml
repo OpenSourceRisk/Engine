@@ -20,24 +20,28 @@
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (in ccy ois discounting) -->
   <YieldCurves id="ois">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="xois_eur">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="inccy_swap">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
     <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
   </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
@@ -163,6 +167,7 @@
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
+    <DefaultCurve name="BOND_YIELD_EUR_OVER_OIS">Default/EUR/BOND_YIELD_EUR_OVER_OIS</DefaultCurve>
   </DefaultCurves>
   <!-- inflation price surface definition -->
   <InflationCapFloorPriceSurfaces id="default">
