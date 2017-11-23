@@ -861,7 +861,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
 
     // compute summary statistics for swap
-    Real tol_eur = 4.0E-4, tol_usd = 12.0E-4;
+    Real tol_eur = 4.0E-4, tol_usd = 13.0E-4;
     for (Size i = 0; i < swap_eur_epe.size(); ++i) {
         Real t = grid->timeGrid()[i + 1];
         swap_eur_epe[i] /= samples;
@@ -1197,7 +1197,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     auto simMarket = boost::make_shared<ScenarioSimMarket>(d.market, simMarketConfig, conventions);
     simMarket->scenarioGenerator() = sg;
 
-    Size samples = 10000;
+    Size samples = 5000;
 
     Date maturity = grid->dates().back() + 1; // make sure the option is live on last grid date
    
@@ -1263,9 +1263,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
 test_suite* ScenarioGeneratorTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("ScenarioGeneratorTest");
-
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testVanillaSwapExposure));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCpiSwapExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmLowDiscrepancy));
@@ -1276,10 +1273,10 @@ test_suite* ScenarioGeneratorTest::suite() {
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetLowDiscrepancyBrownianBridge));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket2));
-
+    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testVanillaSwapExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposure));
     suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposureZeroIrVol));
-    
+    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCpiSwapExposure));
     return suite;
 }
 } // namespace testsuite

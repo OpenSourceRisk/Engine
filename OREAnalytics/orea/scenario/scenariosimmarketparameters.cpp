@@ -372,15 +372,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
     DLOG("Loading CpiInflationIndexCurves");
 
-    nodeChild = XMLUtils::getChildNode(node, "CpiInflationIndexCurves");
-    if (nodeChild) {
-        cpiIndices_ = XMLUtils::getChildrenValues(nodeChild, "CpiIndices", "Index", true);
-    }
-    else {
-        cpiIndices_.clear();
-    }
-
-
+    cpiIndices_ = XMLUtils::getChildrenValues(node, "CpiIndices", "Index", false);
+    
     DLOG("Loading ZeroInflationIndexCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");

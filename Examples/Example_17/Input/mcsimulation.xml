@@ -264,6 +264,11 @@
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
     </FxVolatilities>
     
+    <CpiIndices>
+      <Index>EUHICPXT</Index>
+      <Index>UKRPI</Index>
+    </CpiIndices>
+	
 	<ZeroInflationIndexCurves>
       <Names>
       	<Name>EUHICPXT</Name>

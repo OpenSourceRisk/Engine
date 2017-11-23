@@ -27,17 +27,17 @@
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <Parameter name="outputFileName">npv.csv</Parameter>
+      <Parameter name="outputFileName">npv_exposure.csv</Parameter>
     </Analytic>
     <Analytic type="cashflow">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="outputFileName">flows.csv</Parameter>
+      <Parameter name="outputFileName">flows_exposure.csv</Parameter>
     </Analytic>
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
-      <Parameter name="outputFileName">curves.csv</Parameter>
+      <Parameter name="outputFileName">curves_exposure.csv</Parameter>
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
@@ -45,7 +45,7 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
-      <Parameter name="cubeFile">cube.dat</Parameter>
+      <Parameter name="cubeFile">cube_exposure.dat</Parameter>
       <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="xva">
@@ -69,8 +69,8 @@
       <Parameter name="colva">N</Parameter>
       <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
-      <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
-      <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+      <Parameter name="rawCubeOutputFile">rawcube_exposure.csv</Parameter>
+      <Parameter name="netCubeOutputFile">netcube_exposure.csv</Parameter>
     </Analytic>
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
@@ -78,21 +78,21 @@
     </Analytic>
     <Analytic type="sensitivity">
       <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="marketConfigFile">mcsimulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="scenarioOutputFile">scenario_exposure.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity_exposure.csv</Parameter>
       <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="marketConfigFile">mcsimulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-      <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
+      <Parameter name="scenarioOutputFile">stresstest_exposure.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>
   </Analytics>
