@@ -19,6 +19,7 @@
 \usepackage{color,soul}
 \usepackage[font={small,it}]{caption}
 \floatsetup[listing]{style=Plaintop}    
+\floatsetup[longlisting]{style=Plaintop}    
 
 % Turn off indentation but allow \indent command to still work.
 \newlength\tindent
@@ -662,7 +663,7 @@ Example & Description \\
 \hline
 15 & Sensitivity Analysis and Stress Testing \\
 \hline
-16 & Equity Derivatives \\
+16 & Equity Derivatives Exposure \\
 \hline
 17 & Inflation Swaps \\
 \hline
@@ -1440,6 +1441,8 @@ The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
 The corresponding output file {\tt stresstest.csv} contains the base NPV, the NPV under the scenario shifts and the
 difference of the two for each trade and scenario label.
 
+\todo[inline]{Update after CDS has been added to the example.}
+
 %--------------------------------------------------------
 \subsection{Equity Derivatives Exposure}\label{ex:equityderivatives}
 %--------------------------------------------------------
@@ -1500,7 +1503,7 @@ Year on Year Swap:
 
 After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
 
-\todo[inline]{Merge with Example 24, inflation exposure examples}
+\todo[inline]{Merge new inflation exposure example 24 into example 17}
 
 %--------------------------------------------------------
 \subsection{Bonds and Amortisation Structures}
@@ -1569,7 +1572,7 @@ will launch a single ORE run to process the portfolio and generate NPV and cash 
 CMS structures can be included in sensitivity analysis, stress testing and exposure simulation. 
 
 %--------------------------------------------------------
-\subsection{Swaption and Equity Option Sensitivity Analysis with Smile}% Example 22
+\subsection{Option Sensitivity Analysis with Smile}% Example 22
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for European swaptions and equity options where the volatility surface has a smile. 
@@ -1591,14 +1594,13 @@ ORE supports two methods of simulating equity volatility smile. The first method
 \subsection{FRA and Average OIS Exposure}% Example 23
 %--------------------------------------------------------
 
-This example in folder {\tt Examples/Example\_23} demonstrates pricing, cash flow projection and exposure simulation for two additinal products
+This example in folder {\tt Examples/Example\_23} demonstrates pricing, cash flow projection and exposure simulation for two additional products
 \begin{itemize}
 \item Forward Rate Agreements
 \item Averaging Overnight Index Swaps
 \end{itemize}
-using a minimal portfolio of four trades, one FRA and three OIS. 
-
-\todo[inline]{Update this section when the OIS exposures are fixed.}
+using a minimal portfolio of four trades, one FRA and three OIS. The essential results are in {\tt npv.csv}, {\tt flows.csv} and 
+four {\tt exposure\_trade\_*.csv} files.
 
 \clearpage
 %========================================================
@@ -3141,8 +3143,8 @@ If no day counter is specified for a given riskfactor then the default Actual365
   </SwapIndices>
   <DefaultCurves> 
       <Names> 
-	    <Name>CPTY1</Name> 
-	    <Name>CPTY2</Name> 
+        <Name>CPTY1</Name> 
+        <Name>CPTY2</Name> 
       </Names> 
       <Tenors>6M,1Y,2Y</Tenors> 
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities> 
@@ -3160,7 +3162,8 @@ If no day counter is specified for a given riskfactor then the default Actual365
      <SimulateATMOnly>false</SimulateATMOnly>
      <StrikeSpreads>-0.02,-0.01,0.0,0.01,0.02</StrikeSpreads>
     </Cube>
-    <DayCounter ccy="EUR">ACT/ACT</DayCounter> //Sets a new daycounter for just the EUR swaptionVolatility surface 
+    <!-- Sets a new daycounter for just the EUR swaptionVolatility surface -->
+    <DayCounter ccy="EUR">ACT/ACT</DayCounter> 
   </SwaptionVolatilities> 
   <CapFloorVolatilities>
     <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
@@ -3469,7 +3472,22 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 
 The configuration of various term structures required to price a portfolio is covered in a single configuration file
 which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This
-configuration determines the composition of yield curves, default curves, Swaption and FX Option volatility structures.
+configuration determines the composition of 
+\begin{itemize}
+\item Yield curves % done
+\item Default curves % done
+\item Inflation curves % done
+\item Equity forward price curves % done
+\item Swaption volatility structures % done
+\item Cap/Floor volatility structures % done
+\item FX Option volatility structures % done
+\item CDS volatility structures
+\item Inflation Cap/Floor price surfaces % done
+\item Equity volatility structures % done
+\item Security spreads and recovery rates % done
+\item Base correlation curves
+\end{itemize}
+
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
 for the construction of a market.
  
@@ -3477,7 +3495,9 @@ for the construction of a market.
 
 \subsubsection{Default Curves}
 
-\begin{listing}[H]
+Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <DefaultCurves>
@@ -3501,17 +3521,19 @@ for the construction of a market.
     <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
   </DefaultCurve>
   <DefaultCurve>
-    <!-- ... -->
+  ...
   </DefaultCurve>
 </DefaultCurves>
 \end{minted}
 \caption{Default curve configuration}
 \label{lst:defaultcurve_configuration}
-\end{listing}
+\end{longlisting}
 
 \subsubsection{Swaption Volatility Structures}
 
-\begin{listing}[H]
+Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption volatility structures.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <SwaptionVolatilities>    
@@ -3529,27 +3551,64 @@ for the construction of a market.
     <!--Calendar and Business day convention for option tenor to date conversion -->
     <Calendar>TARGET</Calendar>
     <BusinessDayConvention>Following</BusinessDayConvention>
-    <OptionTenors>
-      1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-    </OptionTenors>
-    <SwapTenors>
-      1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y
-    </SwapTenors>
+    <!-- ATM matrix specification -->
+    <OptionTenors>1M,3M,6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</OptionTenors>
+    <SwapTenors>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,25Y,30Y</SwapTenors>
     <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
     <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+    <!-- Smile specification (optional) -->
+    <SmileOptionTenors>6M,1Y,10Y</SmileOptionTenors>
+    <SmileSwapTenors>2Y,5Y</SmileSwapTenors>
+    <SmileSpreads>-0.02,-0.01,0.01,0.02</SmileSpreads> <!-- i.e. strike spreads -->
   </SwaptionVolatility>
-    <SwaptionVolatility>
-      <!-- ... -->
-    </SwaptionVolatility>
+  <SwaptionVolatility>
+    ...
+  </SwaptionVolatility>
 </SwaptionVolatilities>
 \end{minted}
 \caption{Swaption volatility configuration}
 \label{lst:swaptionvol_configuration}
-\end{listing}
+\end{longlisting}
+
+\subsubsection{Cap/Floor Volatility Structures}
+
+Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor volatility structures.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CapFloorVolatilities>
+    <CapFloorVolatility>
+      <CurveId>EUR_CF_N</CurveId>
+      <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+      <!-- Normal, Lognormal or ShiftedLognormal -->
+      <VolatilityType>Normal</VolatilityType>
+      <!-- True or False -->
+      <Extrapolation>TRUE</Extrapolation>
+      <!-- Include ATM vol quotes also: True or False -->
+      <IncludeAtm>FALSE</IncludeAtm>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Calendar and Business day convention for cap/floor term to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <Tenors>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,15Y,20Y</Tenors>
+      <Strikes>-0.01,0.0,0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1</Strikes>
+      <IborIndex>EUR-EURIBOR-6M</IborIndex>
+      <DiscountCurve>Yield/EUR/EUR1D</DiscountCurve>
+    </CapFloorVolatility>
+    ...
+  </CapFloorVolatilities>
+\end{minted}
+\caption{Cap/Floor volatility configuration}
+\label{lst:capfloorvol_configuration}
+\end{longlisting}
 
 \subsubsection{FX Volatility Structures}
 
-\begin{listing}[H]
+Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volatility structures.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <FXVolatilities>
@@ -3557,22 +3616,24 @@ for the construction of a market.
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
     <Dimension>ATM</Dimension>
-    <Expiries>
-      1M,3M,6M,1Y,2Y,3Y,10Y
-    </Expiries>
+    <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
   </FXVolatility>
   <FXVolatility>
-    <!-- ... -->
+    ...
   </FXVolatility>
 </FXVolatilities>
 \end{minted}
 \caption{FX option volatility configuration}
 \label{lst:fxoptionvol_configuration}
-\end{listing}
+\end{longlisting}
+
+\todo[inline]{Add FX option with smile to example 22 and update the FX vol config section.}
 
 \subsubsection{Equity Curve Structures}
 
-\begin{listing}[H]
+Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forward price curves.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <EquityCurves>
@@ -3581,8 +3642,9 @@ for the construction of a market.
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
-    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
+    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice -->
+    <!-- Spot quote from the market data file -->
+    <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
     <Quotes>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/3M</Quote>
       <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20160915</Quote>
@@ -3592,21 +3654,23 @@ for the construction of a market.
     <DayCounter>A365</DayCounter>
   </EquityCurve>
   <EquityCurve>
-    <!-- ... -->
+    ...
   </EquityCurve> 
   </EquityCurves>
 \end{minted}
 \caption{Equity curve configuration}
 \label{lst:eqcurve_configuration}
-\end{listing}
+\end{longlisting}
 
 The equity curves here consists of a spot equity price, as well as a set of either forward prices or else dividend 
-yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield term structure, which 
-are then used together for projection of forward prices.
+yields. Upon construction, ORE stores internally an equity spot price quote, a forecasting curve and a dividend yield 
+term structure, which are then used together for projection of forward prices.
 
 \subsubsection{Equity Volatility Structures}
 
-\begin{listing}[H]
+Listing \ref{lst:eqoptionvol_configuration} shows the configuration of equity volatility structures.
+
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <EquityVolatilities>
@@ -3614,26 +3678,26 @@ are then used together for projection of forward prices.
     <CurveId>SP5</CurveId>
     <CurveDescription>Lognormal option implied vols for SP 500</CurveDescription>
     <Currency>USD</Currency>
-    <Dimension>ATM</Dimension>
-    <Expiries>
-      6M
-    </Expiries>
+    <Dimension>Smile</Dimension><!-- Alternative: ATM -->
+    <Expiries>1M,5Y,10Y</Expiries>
+    <!-- If Dimension is Smile: -->
+    <Strikes>1932.8,2147.56,2254.939</Strikes>
   </EquityVolatility>
   <EquityVolatility>
-    <!-- ... -->
+    ...
   </EquityVolatility>
 </EquityVolatilities>
 \end{minted}
 \caption{Equity option volatility configuration}
 \label{lst:eqoptionvol_configuration}
-\end{listing}
+\end{longlisting}
 
 \subsubsection{Inflation Curves}
 
 Listing \ref{lst:inflationcurve_configuration} shows the configuration of an inflation curve. The inflation curve specific
 elements are the following:
 
-\begin{listing}[H]
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <InflationCurves>
@@ -3680,7 +3744,7 @@ elements are the following:
 \end{minted}
 \caption{Inflation Curve Configuration}
 \label{lst:inflationcurve_configuration}
-\end{listing}
+\end{longlisting}
 
 \begin{itemize}
 \item {\tt NominalTermStructure}: The interest rate curve to be used to strip the inflation curve.
@@ -3711,7 +3775,7 @@ applied.
 Listing \ref{lst:inflationcapfloorpricesurface_configuration} shows the configuration of an zero coupon inflation cap
 floor price surface.
 
-\begin{listing}[H]
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <InflationCapFloorPriceSurfaces>
@@ -3736,7 +3800,7 @@ floor price surface.
 \end{minted}
 \caption{Inflation zc cap floor price surface configuration}
 \label{lst:inflationcapfloorpricesurface_configuration}
-\end{listing}
+\end{longlisting}
 
 \begin{itemize}
 \item {\tt Type}: The type of the surface, {\tt ZC} for zero coupon, {\tt YY} for year on year. Only zero coupon
@@ -3755,12 +3819,55 @@ floor price surface.
 \item {\tt Maturities:} The maturities for which cap and floor prices are quoted
 \end{itemize}
 
+\subsubsection{CDS Volatilities}
+
+Listing \ref{lst:cdsvol_configuration} shows the configuration of an ATM CDS volatility structure.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CDSVolatilities>
+    <CDSVolatility>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
+      <Expiries>1M,3M,6M</Expiries>
+    </CDSVolatility>
+  </CDSVolatilities>
+\end{minted}
+\caption{CDS Volatility Configuration}
+\label{lst:cdsvol_configuration}
+\end{longlisting}
+
+\subsubsection{Base Correlations}
+
+Listing \ref{lst:basecorr_configuration} shows the configuration of a Base Correlation curve.
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <BaseCorrelations>
+    <BaseCorrelation>
+      <CurveId>CDXIG</CurveId>
+      <CurveDescription>CDX IG Base Correlations</CurveDescription>
+      <Terms>1D</Terms>
+      <DetachmentPoints>0.03, 0.06, 0.10, 0.20, 1.0</DetachmentPoints>
+      <SettlementDays>0</SettlementDays>
+      <Calendar>US</Calendar>
+      <BusinessDayConvention>F</BusinessDayConvention>
+      <DayCounter>A365</DayCounter>
+      <Extrapolate>Y</Extrapolate>
+    </BaseCorrelation>
+  </BaseCorrelations>
+\end{minted}
+\caption{Base Correlation Configuration}
+\label{lst:basecorr_configuration}
+\end{longlisting}
 
 \subsubsection{FXSpots}
 
 Listing \ref{lst:fxspot_configuration} shows the configuration of the fxSpots. It is assumed that each FXSpot CurveId is of
 the form "Ccy1Ccy2".
-\begin{listing}[H]
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <FXSpots>
@@ -3784,14 +3891,14 @@ the form "Ccy1Ccy2".
 \end{minted}
 \caption{FXSpot Configuration}
 \label{lst:fxspot_configuration}
-\end{listing}
+\end{longlisting}
 
 \subsubsection{Securities}
 
 Listing \ref{lst:security_configuration} shows the configuration of the Securities. Each Security name is associated with
 a SpreadQuote and a RecoveryRateQuote.
 
-\begin{listing}[H]
+\begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <Securities>
@@ -3801,10 +3908,11 @@ a SpreadQuote and a RecoveryRateQuote.
     <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
     <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
   </Security>
-</Securities>\end{minted}
+</Securities>
+\end{minted}
 \caption{Security Configuration}
 \label{lst:security_configuration}
-\end{listing}
+\end{longlisting}
 
 %--------------------------------------------------------
 %\subsection{Conventions: {\tt conventions.xml}}
