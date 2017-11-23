@@ -41,10 +41,10 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.03</Rate>
-      </CapRates>
-      <FloorRates/>
+      <Caps>
+        <Cap>0.03</Cap>
+      </Caps>
+      <Floors/>
     </CapFloorData>
   </Trade>
   <Trade id="floor_01">
@@ -88,10 +88,10 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates/>
-      <FloorRates>
-        <Rate>0.005</Rate>
-      </FloorRates>
+      <Caps/>
+      <Floors>
+        <Floor>0.005</Floor>
+      </Floors>
     </CapFloorData>
   </Trade>
   <Trade id="collar_02">
@@ -135,12 +135,12 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.03</Rate>
-      </CapRates>
-      <FloorRates>
-        <Rate>0.005</Rate>
-      </FloorRates>
+      <Caps>
+        <Cap>0.03</Cap>
+      </Caps>
+      <Floors>
+        <Floor>0.005</Floor>
+      </Floors>
     </CapFloorData>
   </Trade>
 </Portfolio>

@@ -85,13 +85,13 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
                          Real marginalAllocationLimit, Real quantile, const string& calculationType,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
-                         Real collateralSpread, Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
+                         Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
                          Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), collateralSpread_(collateralSpread),
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
       dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
       dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
       dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
@@ -410,7 +410,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
-                    Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
+                    Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
+                    Real colvaDelta = -balance * collateralSpread * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
@@ -1195,8 +1196,9 @@ void PostProcess::performT0DimCalc() {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
-                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            int daysFromT0CloseOut = daysFromT0 - dimHorizonCalendarDays_;
+            int prevDaysFromT0CloseOut = lastDaysFromT0 - dimHorizonCalendarDays_;
+            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
             } else {

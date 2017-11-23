@@ -20,7 +20,9 @@
 #include <ored/utilities/log.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 
 #include <ored/utilities/parsers.hpp>
@@ -135,6 +137,9 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         QL_REQUIRE(itr != requiredYieldCurves.end(), "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
         forecastYieldTermStructure_ = yieldCurve->handle();
+
+        dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
+        dividendInterpMethod_ = parseYieldCurveInterpolationMethod(config->dividendInterpolationMethod());
     } catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());
     } catch (...) {
@@ -166,6 +171,12 @@ EquityCurve::divYieldTermStructure(const Date& asof) const {
         QL_REQUIRE(dividendRates.size() == terms_.size(), "vector size mismatch - dividend rates ("
                                                               << dividendRates.size() << ") vs terms (" << terms_.size()
                                                               << ")");
+        // store "dividend discount factors" - in case we wish to interpolate according to discounts
+        vector<Real> dividendDiscountFactors;
+        for (Size i = 0; i < quotes_.size(); i++) {
+            Time t = dc_.yearFraction(asof, terms_[i]);
+            dividendDiscountFactors.push_back(std::exp(-dividendRates[i] * t));
+        }
 
         boost::shared_ptr<YieldTermStructure> divCurve;
         // Build Dividend Term Structure
@@ -177,18 +188,70 @@ EquityCurve::divYieldTermStructure(const Date& asof) const {
             Size n = terms_.size();
             vector<Date> dates(n + 1); // n+1 so we include asof
             vector<Rate> rates(n + 1);
+            vector<Real> discounts(n + 1);
             for (Size i = 0; i < n; i++) {
                 dates[i + 1] = terms_[i];
                 rates[i + 1] = dividendRates[i];
+                discounts[i + 1] = dividendDiscountFactors[i];
             }
             dates[0] = asof;
             rates[0] = rates[1];
+            discounts[0] = 1.0;
             if (forecastYieldTermStructure_->maxDate() > dates.back()) {
                 dates.push_back(forecastYieldTermStructure_->maxDate());
                 rates.push_back(rates.back());
+                Time maxTime = dc_.yearFraction(asof, forecastYieldTermStructure_->maxDate());
+                discounts.push_back(std::exp(-rates.back()*maxTime)); // flat zero extrapolation used to imply dividend DF
             }
-            // FIXME, interpolation should be part of config?
-            divCurve.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, dc_, QuantLib::Linear()));
+            if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Zero) {
+                switch (dividendInterpMethod_) {
+                case YieldCurve::InterpolationMethod::Linear:
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, dc_, QuantLib::Linear()));
+                    break;
+                case YieldCurve::InterpolationMethod::LogLinear:
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, rates, dc_, QuantLib::LogLinear()));
+                    break;
+                case YieldCurve::InterpolationMethod::NaturalCubic:
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_, Cubic(CubicInterpolation::Kruger, true)));
+                    break;
+                case YieldCurve::InterpolationMethod::FinancialCubic:
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_, 
+                        Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                            CubicInterpolation::FirstDerivative)));
+                    break;
+                case YieldCurve::InterpolationMethod::ConvexMonotone:
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, rates, dc_, QuantLib::ConvexMonotone()));
+                    break;
+                default:
+                    QL_FAIL("Interpolation method not recognised.");
+                }
+            }
+            else if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Discount) {
+                switch (dividendInterpMethod_) {
+                case YieldCurve::InterpolationMethod::Linear:
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Linear>(dates, discounts, dc_, QuantLib::Linear()));
+                    break;
+                case YieldCurve::InterpolationMethod::LogLinear:
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, discounts, dc_, QuantLib::LogLinear()));
+                    break;
+                case YieldCurve::InterpolationMethod::NaturalCubic:
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(dates, discounts, dc_, Cubic(CubicInterpolation::Kruger, true)));
+                    break;
+                case YieldCurve::InterpolationMethod::FinancialCubic:
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(dates, discounts, dc_,
+                        Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                            CubicInterpolation::FirstDerivative)));
+                    break;
+                case YieldCurve::InterpolationMethod::ConvexMonotone:
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, discounts, dc_, QuantLib::ConvexMonotone()));
+                    break;
+                default:
+                    QL_FAIL("Interpolation method not recognised.");
+                }
+            }
+            else {
+                QL_FAIL("Unsupported interpolation variable for dividend yield curve");
+            }
             divCurve->enableExtrapolation();
         }
         return divCurve;
