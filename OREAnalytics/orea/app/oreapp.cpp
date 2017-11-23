@@ -1,20 +1,20 @@
 /*
-   Copyright (C) 2017 Quaternion Risk Management Ltd
-   All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-   This file is part of ORE, a free-software/open-source library
-   for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-   ORE is free software: you can redistribute it and/or modify it
-   under the terms of the Modified BSD License.  You should have received a
-   copy of the license along with this program.
-   The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-   This program is distributed on the basis that it will form a useful
-   contribution to risk analytics and model standardisation, but WITHOUT
-   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-   FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 #include <boost/algorithm/string.hpp>
 #include <boost/timer.hpp>
@@ -777,7 +777,6 @@ void OREApp::runPostProcessor() {
     string dvaName = params_->get("xva", "dvaName");
     string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
     string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
-    Real collateralSpread = parseReal(params_->get("xva", "collateralSpread"));
 
     Real dimQuantile = 0.99;
     Size dimHorizonCalendarDays = 14;
@@ -808,7 +807,7 @@ void OREApp::runPostProcessor() {
     postProcess_ = boost::make_shared<PostProcess>(
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
-        fvaLendingCurve, collateralSpread, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
+        fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 

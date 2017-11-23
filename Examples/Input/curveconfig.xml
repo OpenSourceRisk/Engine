@@ -220,15 +220,6 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-  <CDSVolatilities>
-    <CDSVolatility>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
-      <Expiries>
-        1M,3M,6M
-      </Expiries>
-    </CDSVolatility>
-  </CDSVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
@@ -2151,6 +2142,10 @@
                 <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
+            <DividendInterpolation>
+                <InterpolationVariable>Zero</InterpolationVariable>
+                <InterpolationMethod>Linear</InterpolationMethod>
+            </DividendInterpolation>
         </EquityCurve>
         <EquityCurve>
             <CurveId>Lufthansa</CurveId>

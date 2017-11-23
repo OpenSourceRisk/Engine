@@ -131,8 +131,6 @@ public:
         const string& fvaBorrowingCurve = "",
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
-        //! Collateral spread to be used in COLVA calculations
-        Real collateralSpread = 0.0,
         //! Quantile used in dynamic initial margin calculation
         Real dimQuantile = 0.99,
         //! Initial margin horizon in calendar days, 2 weeks = 14 days
@@ -297,7 +295,6 @@ private:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
-    Real collateralSpread_;
     Real dimQuantile_;
     Size dimHorizonCalendarDays_;
     Size dimRegressionOrder_;

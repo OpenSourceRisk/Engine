@@ -36,18 +36,20 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
     paysAtDefaultTime_ = XMLUtils::getChildValueAsBool(node, "PaysAtDefaultTime", false); // default = Y
     XMLNode* tmp = XMLUtils::getChildNode(node, "ProtectionStart");
     if (tmp)
-        protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
+        protectionStart_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or missing
     else
         protectionStart_ = Date();
     tmp = XMLUtils::getChildNode(node, "UpfrontDate");
     if (tmp)
-        upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty
+        upfrontDate_ = parseDate(XMLUtils::getNodeValue(tmp)); // null date if empty or mssing
     else
         upfrontDate_ = Date();
-    if (upfrontDate_ != Date())
-        upfrontFee_ = boost::lexical_cast<Real>(XMLUtils::getChildValue(node, "UpfrontFee")); // throw if empty
-    else
+    upfrontFee_ = parseReal(XMLUtils::getChildValue(node, "UpfrontFee", false)); // zero if empty or missing
+    if (upfrontDate_ == Date()) {
+        QL_REQUIRE(close_enough(upfrontFee_, 0.0), "CreditDefaultSwapData::fromXML(): UpfronFee not zero ("
+                                                       << upfrontFee_ << "), but no upfront data given");
         upfrontFee_ = Null<Real>();
+    }
     leg_.fromXML(XMLUtils::getChildNode(node, "LegData"));
 }
 
