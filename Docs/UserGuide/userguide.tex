@@ -4598,10 +4598,39 @@ Shifts at the left and right end of the shift curve are extrapolated flat, i.e. 
 
 The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points. 
 
+The details of the computation of sensitivities to implied volatilities in strike direction can be summarised as
+follows:
 
+For {\em Swaption Volatilities}, the initial market setup can be an ATM surface only or a full cube. The simulation
+market can be set up as ATM only or as a full cube as well, but the latter choice is only possible if a full cube is set
+up in the initial market. The sensitivitiy set up must match the simulation setup with regards to the strikes (i.e. it
+is ATM only if and only if the simulation setup is ATM only, or it must contain exactly the same strike spreads relative
+to ATM as the simulation setup). Finally, if the initial market setup is a full cube, and the simulation / sentivitiy
+setup is ATM only, sensitivtiies are computed by shifting the ATM volatility w.r.t. the given shift size and type and
+shifting the non-ATM volatilities by the same absolute amount as the ATM volatility.
 
+For {\em Cap/Floor Volatilities}, the initial market setup always contains a set of fixed strikes, i.e. there is no
+distinction between ATM only and a full surface. The same holds for the simulation market setup. The sensitivity setup
+may contain a different strike grid in this case than the simulation market. Sensitivitiy are computed per expiry and
+per strike in every case.
 
- 
+For {\em Equity Volatilities}, the initial market setup can be an ATM curve or a full surface. The simulation market can
+be set up as ATM only or a full surface as well, where a full surface is allowed even if the initial market setup in an
+ATM curve only. If we have a full surface in the initial market and an ATM curve in the simulation market, sensitivities
+are computed as in the case of Swaption Volatilities, i.e. the ATM volatility is shifted w.r.t. the specified shift size
+and type and the non-ATM volatilities are shifted by the same absolute amount as the ATM volatility. If the simulation
+market contains a full surface, all volatiilties are shifted individually using the specified shift size and type. In
+every case the sensitivties are aggregated on the ATM bucket in the sensitivity report.
+
+For {\em FX Volatilities}, the treatment is similar to Equity Volatilities. except for the case of a full surface
+definition in the initial market and an ATM only curve in the simulation market. In this case, the pricing in the
+simulation market is using the ATM curve only, i.e. the initial market's smile structure is lost.
+
+(For {\em CDS Volatilities} only an ATM curve can be defined.)
+
+In all cases the smile dynamics is ``sticky strike'', i.e. the implied vol used for pricing a deal does not change if
+the underlying spot price changes.
+
 \end{appendix}
 
 %========================================================
