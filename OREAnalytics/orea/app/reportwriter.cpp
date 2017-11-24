@@ -97,7 +97,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     LOG("Writing cashflow report for " << asof);
-    report.addColumn("ID", string())
+    report.addColumn("TradeId", string())
         .addColumn("Type", string())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
