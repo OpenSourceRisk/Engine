@@ -221,7 +221,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
     }
 }
-boost::shared_ptr<Index> parseIndex(const string& s) {
+
+boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
         ret_idx = parseIborIndex(s);
@@ -229,7 +230,11 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseSwapIndex(s);
+            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions.get(s));
+            QL_REQUIRE(c, "no swap index convention");
+            auto c2 = boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions()));
+            QL_REQUIRE(c2, "no swap convention");
+            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), c2);
         } catch (...) {
         }
     }

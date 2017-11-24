@@ -142,5 +142,11 @@ private:
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
 };
+
+//! Helper function for parsing interpolation method
+YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string& s);
+//! Helper function for parsing interpolation variable
+YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
+
 } // namespace data
 } // namespace ore

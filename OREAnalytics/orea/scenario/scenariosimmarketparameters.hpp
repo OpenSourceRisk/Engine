@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <boost/assign/list_of.hpp>
+
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
@@ -47,7 +49,7 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0}), 
+        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}), 
           capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false), 
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
           fxVolSimulate_(false), fxVolIsSurface_(false), equityVolSimulate_(false), equityIsSurface_(false), 

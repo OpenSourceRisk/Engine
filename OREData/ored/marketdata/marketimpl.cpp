@@ -290,6 +290,16 @@ void MarketImpl::refresh(const string& configuration) {
     for (auto& x : it->second)
         x->update();
 
+    // update fx spot quotes
+    auto fxSpots = fxSpots_.find(configuration);
+    if (fxSpots != fxSpots_.end()) {
+        for (auto& x : fxSpots->second.quotes()) {
+            auto dq = boost::dynamic_pointer_cast<Observer>(*x.second);
+            if(dq != nullptr)
+                dq->update();
+        }
+    }
+
 } // refresh
 
 } // namespace data

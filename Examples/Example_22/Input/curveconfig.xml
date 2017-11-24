@@ -4,10 +4,13 @@
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
       <CurveDescription/>
-      <Dimension>ATM</Dimension>
+      <Dimension>Smile</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
+      <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURGBP</CurveId>
@@ -135,15 +138,6 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-  <CDSVolatilities>
-    <CDSVolatility>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
-      <Expiries>
-        1M,3M,6M
-      </Expiries>
-    </CDSVolatility>
-  </CDSVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>

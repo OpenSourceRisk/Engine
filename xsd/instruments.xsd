@@ -168,6 +168,7 @@
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -222,6 +223,7 @@
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>		
+        <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -402,10 +404,10 @@
     <xs:sequence>
       <xs:element type="longShort" name="LongShort"/>
       <xs:element type="legData_capfloor" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element name="CapRates" minOccurs="0" maxOccurs="1">
+      <xs:element name="Caps" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Rate" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Cap" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -417,10 +419,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="FloorRates" minOccurs="0" maxOccurs="1">
+      <xs:element name="Floors" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Rate" minOccurs="0" maxOccurs="unbounded">
+            <xs:element name="Floor" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -463,8 +465,8 @@
       <xs:element type="bool" name="SettlesAccrual"/>
       <xs:element type="bool" name="PaysAtDefaultTime"/>
       <xs:element type="date" name="ProtectionStart"/>
-      <xs:element type="date" name="UpfrontDate"/>
-      <xs:element type="xs:float" name="UpfrontFee"/>
+      <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
+      <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
   </xs:complexType>
