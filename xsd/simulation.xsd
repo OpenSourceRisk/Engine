@@ -119,6 +119,7 @@
 
   <xs:complexType name="lgm">
     <xs:sequence>
+	  <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="calibrationTypeType" name="CalibrationType"/>
       <xs:element name="Volatility">
          <xs:complexType>
@@ -160,7 +161,8 @@
          </xs:complexType>
        </xs:element>
     </xs:sequence>
-    <xs:attribute type="currencyCodeWithDefault" name="ccy" use="required"/> <!-- FIXME: currency not ccy -->
+    <xs:attribute type="currencyCodeWithDefault" name="ccy" /> <!-- FIXME: currency not ccy -->
+    <xs:attribute type="xs:string" name="index" /> <!-- FIXME: currency not ccy -->
   </xs:complexType>
 
   <xs:simpleType name="calibrationTypeType">
@@ -471,6 +473,13 @@
         <xs:complexType>
           <xs:sequence>
             <xs:element type="xs:string" name="Security" minOccurs="0" maxOccurs="unbounded" />
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+	  <xs:element name="CpiIndices">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

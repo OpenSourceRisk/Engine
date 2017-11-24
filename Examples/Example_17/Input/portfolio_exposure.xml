@@ -34,8 +34,8 @@
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
           <Dates>
-            <Calendar>UK</Calendar>
-			<Dates>
+		    <Calendar>UK</Calendar>
+		    <Dates>
 			  <Date>2021-02-05</Date>
 			</Dates>
           </Dates>
