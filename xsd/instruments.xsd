@@ -315,14 +315,18 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="Dates">
-		<xs:element type="calendar" name="Calendar"/>
-		<xs:element name="Dates">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element type="date" name="Date" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-		</xs:element>
+	    <xs:complexType>
+          <xs:all>
+		    <xs:element type="calendar" name="Calendar"/>
+		    <xs:element name="Dates">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="date" name="Date" maxOccurs="unbounded"/>
+                </xs:sequence>
+              </xs:complexType>
+		    </xs:element>
+		  </xs:all>
+        </xs:complexType>
       </xs:element>
     </xs:choice>
   </xs:complexType>
