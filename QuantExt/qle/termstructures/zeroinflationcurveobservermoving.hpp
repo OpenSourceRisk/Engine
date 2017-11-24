@@ -191,7 +191,11 @@ template <class T>
 inline void ZeroInflationCurveObserverMoving<T>::performCalculations() const {
 
     Date d = Settings::instance().evaluationDate(); 
-    baseDate_ = d - this->observationLag();
+    Date d0 = d - this->observationLag();
+    if (!indexIsInterpolated_) {
+        baseDate_ = inflationPeriod(d0, this->frequency_).first;
+    }
+
 
     for (Size i = 0; i<this->times_.size(); ++i)
         this->data_[i] = quotes_[i]->value();

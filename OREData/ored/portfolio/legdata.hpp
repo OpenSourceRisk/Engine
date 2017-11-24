@@ -171,7 +171,7 @@ public:
     CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates, 
                const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = true)
         : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), 
-          rates_(rates), subtractInflationNominal_(subtractInflationNominal), rateDates_(rateDates) {}
+          rates_(rates), rateDates_(rateDates), subtractInflationNominal_(subtractInflationNominal){}
 
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }

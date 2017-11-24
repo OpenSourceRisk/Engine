@@ -859,10 +859,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         string ccy = inflationIndex->currency().code();
         Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
-        Date date0 = inflationPeriod(asof_ - inflationTs->observationLag(), inflationTs->frequency()).first;
+        Date date0 = asof_ - inflationTs->observationLag(); 
         DayCounter dc = inflationTs->dayCounter();
         vector<Date> quoteDates;
-        vector<Time> zeroCurveTimes(1, -dc.yearFraction(date0, asof_));
+        vector<Time> zeroCurveTimes(1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
         vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days,
                    "zero inflation tenors must not include t=0");
