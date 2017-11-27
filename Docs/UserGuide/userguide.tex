@@ -2809,6 +2809,7 @@ exploiting the analytcal tractability of the model to avoid any time discretizat
 discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
 purposes)
 \item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.
+\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
