@@ -107,7 +107,7 @@ Allowable values: An alphanumeric string that matches default curve names in the
 \item {\tt NettingSetId} [Optional]: The {\tt NettingSetId} element specifies the identifier for a netting set. If a
   \lstinline!NettingSetId! is specified, the trade is eligible for close-out netting under the terms of an associated
   ISDA agreement. The specified {\tt NettingSetId} must be defined within the netting set definitions file
-  (\ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
+  (see section \ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
   eligible for netting.
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
@@ -129,8 +129,9 @@ Allowable values: Any custom element.
 \subsection{Trade Specific Data}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each trade type supported by
-ORE. Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
+After the envelope node, trade-specific data for each trade type supported by
+ORE is included. 
+Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
 configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
 sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
 
@@ -142,7 +143,7 @@ Details of  trade-specific data for all trade types follow below.
 
 The \lstinline!SwapData! node is the trade data container for the Swap trade type. A Swap must have at least one leg,
 and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node,
-described in section \ref{ss:leg_data} Leg Data and Notionals. An example structure of a two-legged \lstinline!SwapData!
+described in section \ref{ss:leg_data}. An example structure of a two-legged \lstinline!SwapData!
 node is shown in Listing \ref{lst:swap_data}.
 
 \begin{listing}[H]
@@ -197,7 +198,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 \item LongShort: This node defines the position in the cap (floor, collar) and can take values \lstinline!Long! or
   \lstinline!Short!
 
-\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
+\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. Exactly
   one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
 \item Caps: This node has child elements of type \lstinline!Rate!
@@ -230,8 +231,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 The \lstinline!SwaptionData!  node is the trade data container for the Swaption trade type. The \lstinline!SwaptionData!
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
-component sub-node.  These trade components are outlined in section \ref{ss:option_data} Option Data and section
-\ref{ss:leg_data} Leg Data and Notionals.\\
+component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
+\ref{ss:leg_data}.\\
 
 Supported swaption exercise styles are European and Bermudan. European swaptions can have unlimited number of legs, with
 each leg represented by a \lstinline!LegData! sub-node. Bermudan swaptions must have two legs, i.e. two
@@ -321,7 +322,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \subsubsection{FX Option}
 
 The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
-supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
+supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount. The
 \lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
 specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
 \ref{lst:fxoption_data}.
@@ -346,7 +347,7 @@ specific to the FX Option. The structure of an example \lstinline!FXOptionData! 
 The meanings and allowable values of the elements in the \lstinline!FXOptionData!  node follow below.
 
 \begin{itemize}
-\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. Note that the
   FX option type allows for \emph{European} option style only.
 
 \item BoughtCurrency: The bought currency of the FX option.  
@@ -397,13 +398,13 @@ The meanings and allowable values of the elements in the \lstinline!EquityOption
 \begin{itemize}
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
 	that the FX option type allows for \emph{European} option style only.	
-	\item Name: The name of the underlying equity 	
+	\item Name: The name of the underlying equity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option.  	
+	\item Currency: The bought currency of the equity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The option strike price.  
+	\item Strike: The option strike price.\\
 	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying covered by the transaction  
+	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values:  Any positive real number.
 \end{itemize}
 
@@ -432,17 +433,17 @@ Listing \ref{lst:eqfwd_data}.
 The meanings and allowable values of the elements in the \lstinline!EquityForwardData!  node follow below.
 
 \begin{itemize}
-	\item LongShort: Defines whether the trade is long or short the underlying equity
+	\item LongShort: Defines whether the trade is long or short the underlying equity. \\
 	Allowable values: Long, Short.
-	\item Maturity: The maturity date of the forward contract
+	\item Maturity: The maturity date of the forward contract. \\
 	Allowable values: Any date string.
-	\item Name: The name of the underlying equity 	
+	\item Name: The name of the underlying equity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option.  	
+	\item Currency: The bought currency of the equity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The option strike price.  
+	\item Strike: The option strike price. \\
 	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying covered by the transaction  
+	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values:  Any positive real number.
 \end{itemize}
 
@@ -514,11 +515,11 @@ are
     todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
 \item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for
-  pricing, see section \ref{sssec:securityspreads}
+  pricing.
 \item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a curve in the yield
-  curves block in {\tt todaysmarket.xml}
-\item SettlementDays: The settlement delay applicable to the security
-\item Calendar: The calendar associated to the settlement lag
+  curves block in {\tt todaysmarket.xml}.
+\item SettlementDays: The settlement delay applicable to the security.
+\item Calendar: The calendar associated to the settlement lag.
 \item IssueDate: The issue date of the security.
 \end{itemize}
 
@@ -595,15 +596,16 @@ A forward rate agreement is set up using a {\tt ForwardRateAgreementData} block 
 are
 
 \begin{itemize}
-\item StartDate: A FRA expires/settles on the startDate . \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
-    todaysmarket.xml}
-\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit
-\item Currency: The currency of the FRA notional.  	
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-\item Index: The name of the interest rate index the FRA is benchmarked against
+\item StartDate: A FRA expires/settles on the startDate. \\
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt todaysmarket.xml}.
+\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
+\item Currency: The currency of the FRA notional. \\
+Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+\item Index: The name of the interest rate index the FRA is benchmarked against.
 \item LongShort: Specifies whether the option position is long  or
   short.
-\item Strike: The agreed forward interest rate
+\item Strike: The agreed forward interest rate.
 \item Notional: No accretion or amortisation, just a constant notional.
 \end{itemize}
 
@@ -625,8 +627,6 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \caption{Forward Rate Agreement Data}
 \label{lst:ForwardRateAgreementdata}
 \end{listing}
-
-The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}

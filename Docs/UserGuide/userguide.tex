@@ -143,7 +143,7 @@ available, contemporary risk application.
 
 \subsubsection*{Contributions}
 Quaternion Risk Management \cite{QRM} is committed to sponsoring the Open Source Risk project through ongoing project
-administration, through providing this initial release and a series of subsequent releases in order to achieve a wide
+administration, through providing an initial release and a series of subsequent releases in order to achieve a wide
 analytics, product and risk factor class coverage. The community is invited to contribute to ORE, for example through
 feedback, discussions and suggested enhancement in the forum on the ORE site \cite{ORE}, as well as contributions of ORE
 enhancements in the form of source code. See the FAQ section on the ORE site \cite{ORE} on how to get involved.
@@ -254,7 +254,7 @@ parametrisation and the structure of trade and market data input.
 \section{Release notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the changes between release 2 (05/2017) and 3 (11/2017).
+This section summarises the changes between release 2 (05/2017) and 3 (12/2017).
 
 \medskip
 Functionality 
@@ -364,12 +364,14 @@ When unpacked, it creates a directory {\tt ORE-<VERSION>} with the following fil
 \item {\tt App/}
 \item {\tt Docs/}
 \item {\tt Examples/}
+\item {\tt FrontEnd/}
 \item {\tt OREAnalytics/}
 \item {\tt OREData/}
 \item {\tt QuantExt/}
 \item {\tt ThirdPartyLibs/}
+\item {\tt tools/}
+\item {\tt xsd/}
 \item {\tt userguide.pdf}
-\item {\tt xsd}
 \end{enumerate} 
 
 The first three items and {\tt userguide.pdf} are sufficient to run the compiled ORE application
@@ -499,7 +501,9 @@ C++ support under the Programming Languages features (disabled by default).
   add your boost library directory to the 'Library Directories' entry. If for example your boost installation is in {\tt
     C:{\bs}boost\_1\_57\_0} and the libraries reside in the {\tt stage{\bs}lib} subfolder, add {\tt
     C:{\bs}boost\_1\_57\_0} to the 'Include Directories' entry and {\tt C:{\bs}boost\_1\_57\_0{\bs}stage{\bs} lib} to the
-  'Library Directories' entry. Press OK. If you want to configure the boost paths for Win32 resp. x64 as well, repeat
+  'Library Directories' entry. Press OK. 
+  (Alternatively, create and use an environment variable {\tt \%BOOST\%} pointing to your directory {\tt C:{\bs}boost\_1\_57\_0} instead of the directory itself.) 
+  If you want to configure the boost paths for Win32 resp. x64 as well, repeat
   the previous step for 'Microsoft.Cpp. Win32.user' respectively 'Microsoft.Cpp.x64.user'. To complete the configuration
   just close the property manager window.
 
@@ -530,7 +534,7 @@ C++ support under the Programming Languages features (disabled by default).
 \item Compile the project: Build $\rightarrow$ Build Solution
 \item Once the compilation is complete, run the test suite.
 \end{itemize}
-
+Alternatively, open the {\tt oreEverything\_*.sln} and build the entire solution (again, make sure to select the correct platform in the configuration manager first).
 \end{enumerate}
 
 \subsubsection*{Unix}
@@ -915,7 +919,7 @@ physical exposures are identical up to the first exercise date. When running thi
 significant difference in computation time compared to the European case (ballpark 30 minutes here for 2 Swaptions, 1000
 samples, 90 time steps). The Bermudan example takes significantly more computation time because we use an LGM grid
 engine for pricing under scenarios in this case. In a realistic context one would more likely resort to American Monte
-Carlo simulation, feasible in ORE, but not provided in the first release. However, this implementation can be used to
+Carlo simulation, feasible in ORE, but not provided in the current release. However, this implementation can be used to
 benchmark any faster / more sophisticated approach to Bermudan Swaption exposure simulation.
 
 %--------------------------------------------------------
@@ -1298,7 +1302,7 @@ $$
 H(t) \rightarrow H(t) - H(T) 
 $$ 
 It can be shown that this leaves all expectations computed in the model (such as EPE and ENE) invariant. As explained in
-\cite{Lichters}, subtracting a $H$ shift effectively means performing a change of measure from the `native' LGM measure
+\cite{Lichters}, subtracting an $H$ shift effectively means performing a change of measure from the `native' LGM measure
 to a T-Forward measure with horizon $T$, here 30 years. Both negative and positive shifts are permissible, but only
 negative shifts are connected with a T-Forward measure and improve numerical stability. \\
 
@@ -1356,7 +1360,7 @@ illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex
 order regression estimate of DIM differs noticeably from the higher orders (one and two). In the three swap cases we
 moreover see that first and second order polynomial choice makes hardly any difference; note that case C and D use up to
 three-dimensional regressors (simulated USD and EUR rate fixings and the EUR/USD FX rate). In the Swaption case B, first
-and second order polynomial choice makes a difference before option expiry.
+and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
  
 \begin{figure}[h!]
 \begin{center}
@@ -1720,7 +1724,7 @@ sheet, and kick off the ORE process.
 \section{Parametrisation}\label{sec:configuration}
 %========================================================
 
-ORE's batch version is kicked off with a single command line parameter 
+A run of ORE is kicked off with a single command line parameter 
 
 \medskip
 \centerline{\tt ore[.exe] ore.xml}
@@ -1728,6 +1732,7 @@ ORE's batch version is kicked off with a single command line parameter
 
 which points to the 'master input file' referred to  as {\tt ore.xml} subsequently. 
 This file is the starting point of the engine's configuration explained in the following sub section.
+An overview of all input configuration files respectively all output files is shown in Table \ref{tab_1} respectively Table \ref{tab_2}.
 
 \subsection{Master Input File: {\tt ore.xml}}\label{sec:master_input}
 
@@ -1771,7 +1776,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
 \end{listing}
 
 Parameter names are self explanatory: Input and output path are interpreted relative from the directory where the ORE
-script is started, but can also be specified using absolute paths. All file names are then interpreted relative to the
+executable is executed, but can also be specified using absolute paths. All file names are then interpreted relative to the
 'inputPath' and 'outputPath', respectively. The files starting with {\tt ../../Input/} then point to files in the global
 Example input directory {\tt Example/Input/*}, whereas files such as {\tt portfolio.xml} are local inputs in {\tt 
 Example/Example\_\#/Input/}. 
@@ -2065,7 +2070,7 @@ date, sample) {\em after} taking collateral into account
 \item {\tt fullInitialCollateralisation:} If set to {\tt true}, then for every netting set, the collateral balance at $t=0$ will be set to the NPV of the setting set. The resulting effect is that EPE, ENE and PFE are all zero at $t=0$. If set to {\tt false} (default value), then the collateral balance at $t=0$ will be set to zero.
 \end{itemize}
 
-The latter two cube file outputs are provided for interactive analysis and visualisation purposes, see section
+The two cube file outputs {\tt rawCubeOutputFile} and {\tt netCubeOutputFile} are provided for interactive analysis and visualisation purposes, see section
 \ref{sec:visualisation}.
 
 \medskip The {\tt sensitivity} and {\tt stress} 'analytics' provide computation of bump and revalue (zero rate
@@ -2806,7 +2811,7 @@ Let us discuss this section using the following example
 exploiting the analytcal tractability of the model to avoid any time discretization error. {\em Euler} uses a naive time
 discretization scheme which has numerical error and requires small time steps for accurate results (useful for testing
 purposes)
-\item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.
+\item {\tt Grid:} Specifies the simulation time grid, here 80 quarterly steps.\footnote{For exposure calculation under DIM, the second parameter has to match the Margin Period of Risk, i.e. if {\tt MarginPeriodOfRisk} is set to for instance {\tt 2W} in a netting set definition in {\tt netting.xml}, then one has to set {\tt Grid} to for instance {\tt 80,2W}.}
 \item {\tt Calendar:} Calendar or combination of calendars used to adjust the dates of the grid. Date adjustment is
 required because the simulation must step over 'good' dates on which index fixings can be stored.
 %\item {\tt Scenario: } Choose between {\em Simple } and {\em Complex } implementations, the latter optimized for
@@ -3123,21 +3128,21 @@ Moreover we need to specify how volatility structures evolve even if we do not e
 translation happens based on the information in the {\em simulation market} object, which is configured in the section 
 within the enclosing tags {\tt <Market>} and {\tt </Market>}, as shown in the following small example.
 
-It should be noted that equity volatilities are taken to be a curve by default, to simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
+It should be noted that equity volatilities are taken to be a curve by default. To simulate an equity volatility surface with smile the xml node {\tt <Surface> } must be supplied.
 There are two methods in ORE for equity volatility simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
 \item Simulating the full volatility surface. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit moneyness levels for simulation should be provided.
 \end{itemize}
 
-Swaption volatilities are taken to be a surface by default, to simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
+Swaption volatilities are taken to be a surface by default. To simulate a swaption volatility cube with smile the xml node {\tt <Cube> } must be supplied.
 There are two methods in ORE for swaption volatility cube simulation: 
 \begin{itemize}
 \item Simulating ATM volatilities only (and shifting other strikes relative to this using the $T_{0}$ smile). In this case set {\tt <SimulateATMOnly>} to true.
 \item Simulating the full volatility cube. The node {\tt <SimulateATMOnly>} should be omitted or set to false, and explicit strike spreads for simulation should be provided.
 \end{itemize}
 
-FX volatilities are taken to be a curve by default, to simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
+FX volatilities are taken to be a curve by default. To simulate an FX volatility cube with smile the xml node {\tt <Surface> } must be supplied. The surface node contains the moneyness levels to be simulated.
 
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
 If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
@@ -3314,7 +3319,7 @@ The general structure is shown in listing \ref{lst:sensitivity_config}, for a mo
 
 The cross gamma filter section contains a list of pairs of sensitivity keys. For each possible pair of sensitivity keys
 matching the given strings, a cross gamma sensitivity is computed. The given pair of keys can be (and usually are)
-shorter than the actual sensitivity keys, in this case only the prefix of the actual key is matched. For example, the
+shorter than the actual sensitivity keys. In this case only the prefix of the actual key is matched. For example, the
 pair {\tt DiscountCurve/EUR,DiscountCurve/EUR} matches all actual sensitivity pairs belonging to a cross sensitivity by
 one pillar of the EUR discount curve and another (different) pillar of the same curve. We list the possible keys by
 giving an example in each category:
@@ -4420,7 +4425,7 @@ To quantify these two effects one needs to model Initial Margin under future mar
 \end{itemize} 
 
 We skip the first option as too computationally expensive for ORE. In the first ORE release we focus on a relatively
-simple regression approach as in \cite{Anfuso2016}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
+simple regression approach as in \cite{Anfuso2016,LichtersEtAl}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
 are spaced one margin period of risk $\Delta$ apart. Moreover, let $F(t,t+\Delta)$ denote cumulative netting set cash
 flows between time $t$ and $t+\Delta$, converted into the NPV currency. Let $X(t)$ then denote the netting set value
 change during the margin period of risk excluding cash flows in that period:
@@ -4703,6 +4708,8 @@ the underlying spot price changes.
   %   https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
 
   % \bibitem{OO} http://www.openoffice.org
+
+\bibitem{LichtersEtAl} Peter Caspers, Paul Giltinan, Paul; Lichters, Roland; Nowaczyk , Nikolai. {\em Forecasting Initial Margin Requirements – A Model Evaluation}, Journal of Risk Management in Financial Institutions, Vol. 10 (2017), No. 4, \url{https://ssrn.com/abstract=2911167}
 
 \end{thebibliography}
 
