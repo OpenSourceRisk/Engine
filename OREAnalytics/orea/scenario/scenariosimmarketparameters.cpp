@@ -175,7 +175,6 @@ void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const
     yoyInflationTenors_[key] = p;
 }
 
-<<<<<<< HEAD
 void ScenarioSimMarketParameters::setYoyInflationDayCounters(const string& key, const string& s) {
     yoyInflationDayCounters_[key] = s;
 }
@@ -186,14 +185,14 @@ void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const
 
 void ScenarioSimMarketParameters::setCapFloorVolDayCounters(const string& key, const string& s) {
     capFloorVolDayCounters_[key] = s;
-=======
+}
+
 void ScenarioSimMarketParameters::setCpiCapFloorVolExpiries(const string& key, const vector<Period>& p) {
     cpiCapFloorVolExpiries_[key] = p;
 }
 
 void ScenarioSimMarketParameters::setYoyCapFloorVolExpiries(const string& key, const vector<Period>& p) {
     yoyCapFloorVolExpiries_[key] = p;
->>>>>>> master
 }
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
@@ -793,7 +792,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
     XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices_);
     XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
-<<<<<<< HEAD
     if (zeroInflationDayCounters_.size() > 0) {
         XMLNode* node = XMLUtils::addChild(doc, zeroNode, "DayCounters");
         for (auto dc : zeroInflationDayCounters_) {
@@ -802,7 +800,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             XMLUtils::appendNode(node, c);
         }
     }
-=======
 
     // cpi cap/floor volatilities
     XMLNode* cpiVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CpiCapFloorVolatilities");
@@ -812,7 +809,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Expiries", returnTenors(cpiCapFloorVolExpiries_, ""));
     XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Strikes", cpiCapFloorVolStrikes_);
 
->>>>>>> master
     // yoy inflation
     XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
     XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices_);

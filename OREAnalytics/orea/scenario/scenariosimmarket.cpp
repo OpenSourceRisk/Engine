@@ -896,7 +896,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
         // FIXME: Settlement days set to zero - needed for floating term structure implementation
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        DayCounter dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
+        dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
         zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
             0, inflationIndex->fixingCalendar(), 
             dc, inflationTs->observationLag(), inflationTs->frequency(), 
