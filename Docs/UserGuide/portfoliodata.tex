@@ -9,7 +9,7 @@ are generally the lowest level nodes.
 \vspace{1em}
 
 The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within
-the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.
+the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag. The trade Ids have to be unique.
 Further, the trade type is set by the TradeType XML element. Each trade has an Envelope node that includes the same XML
 elements for all trade types (Id, Type, Counterparty, Rating, NettingSetId) plus the Additional fields node, and after
 that, a node containing trade specific data.
