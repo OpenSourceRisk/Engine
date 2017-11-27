@@ -529,6 +529,7 @@
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
+    <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
@@ -563,6 +564,7 @@
     <ClInclude Include="qle\models\crossassetmodel.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp" />
+    <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
@@ -650,7 +652,8 @@
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
-    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
@@ -689,6 +692,7 @@
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp" />
+    <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />

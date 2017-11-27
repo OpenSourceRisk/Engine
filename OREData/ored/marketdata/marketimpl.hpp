@@ -26,7 +26,8 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/market.hpp>
-#include <ored/marketdata/marketimpl.hpp>
+
+#include <qle/indexes/inflationindexobserver.hpp>
 
 #include <map>
 
@@ -131,6 +132,10 @@ public:
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;
+
+    //! Cpi Base Quotes
+    Handle<InflationIndexObserver> baseCpis(const string& index, const string& configuration = Market::defaultConfiguration) const;
+
     //@}
 
     //! \name Disable copying
@@ -163,6 +168,7 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
+    map<pair<string, string>, Handle<InflationIndexObserver>> baseCpis_;
     Conventions conventions_;
 
     //! add a swap index to the market

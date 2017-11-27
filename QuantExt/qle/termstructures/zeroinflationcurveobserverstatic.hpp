@@ -20,8 +20,8 @@
     \brief Observable inflation term structure based on the interpolation of zero rate quotes.
 */
 
-#ifndef quantext_zero_inflation_curve_observer_hpp
-#define quantext_zero_inflation_curve_observer_hpp
+#ifndef quantext_zero_inflation_curve_observer_static_hpp
+#define quantext_zero_inflation_curve_observer_static_hpp
 
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
@@ -34,12 +34,12 @@ namespace QuantLib {
 //! Inflation term structure based on the interpolation of zero rates.
 /*! \ingroup inflationtermstructures */
 template<class Interpolator>
-class ZeroInflationCurveObserver
+class ZeroInflationCurveObserverStatic
     : public ZeroInflationTermStructure,
     protected InterpolatedCurve<Interpolator>,
     public LazyObject {
 public:
-    ZeroInflationCurveObserver(const Date& referenceDate,
+    ZeroInflationCurveObserverStatic(const Date& referenceDate,
         const Calendar& calendar,
         const DayCounter& dayCounter,
         const Period& lag,
@@ -92,8 +92,8 @@ protected:
 // template definitions
 
 template <class Interpolator>
-ZeroInflationCurveObserver<Interpolator>::
-    ZeroInflationCurveObserver(const Date& referenceDate,
+ZeroInflationCurveObserverStatic<Interpolator>::
+ZeroInflationCurveObserverStatic(const Date& referenceDate,
         const Calendar& calendar,
         const DayCounter& dayCounter,
         const Period& lag,
@@ -169,14 +169,14 @@ ZeroInflationCurveObserver<Interpolator>::
 }
 
 template <class T>
-Date ZeroInflationCurveObserver<T>::baseDate() const {
+Date ZeroInflationCurveObserverStatic<T>::baseDate() const {
     // if indexIsInterpolated we fixed the dates in the constructor
     calculate();
     return dates_.front();
 }
 
 template <class T>
-Date ZeroInflationCurveObserver<T>::maxDate() const {
+Date ZeroInflationCurveObserverStatic<T>::maxDate() const {
     Date d;
     if (indexIsInterpolated()) {
         d = dates_.back();
@@ -189,40 +189,40 @@ Date ZeroInflationCurveObserver<T>::maxDate() const {
 
 
 template <class T>
-inline Rate ZeroInflationCurveObserver<T>::zeroRateImpl(Time t) const {
+inline Rate ZeroInflationCurveObserverStatic<T>::zeroRateImpl(Time t) const {
     calculate();
     return this->interpolation_(t, true);
 }
 
 template <class T>
 inline const std::vector<Time>&
-    ZeroInflationCurveObserver<T>::times() const {
+    ZeroInflationCurveObserverStatic<T>::times() const {
     return this->times_;
 }
 
 template <class T>
 inline const std::vector<Date>&
-    ZeroInflationCurveObserver<T>::dates() const {
+    ZeroInflationCurveObserverStatic<T>::dates() const {
     return dates_;
 }
 
 template <class T>
 inline const std::vector<Rate>&
-    ZeroInflationCurveObserver<T>::rates() const {
+    ZeroInflationCurveObserverStatic<T>::rates() const {
     calculate();
     return this->data_;
 }
 
 template <class T>
 inline const std::vector<Real>&
-    ZeroInflationCurveObserver<T>::data() const {
+    ZeroInflationCurveObserverStatic<T>::data() const {
     calculate();
     return this->data_;
 }
 
 template <class T>
 inline std::vector<std::pair<Date, Rate> >
-    ZeroInflationCurveObserver<T>::nodes() const {
+    ZeroInflationCurveObserverStatic<T>::nodes() const {
     calculate();
     std::vector<std::pair<Date, Rate> > results(dates_.size());
     for (Size i = 0; i<dates_.size(); ++i)
@@ -231,13 +231,13 @@ inline std::vector<std::pair<Date, Rate> >
 }
 
 template <class T>
-inline void ZeroInflationCurveObserver<T>::update() {
+inline void ZeroInflationCurveObserverStatic<T>::update() {
     LazyObject::update();
     ZeroInflationTermStructure::update();
 }
 
 template <class T>
-inline void ZeroInflationCurveObserver<T>::performCalculations() const {
+inline void ZeroInflationCurveObserverStatic<T>::performCalculations() const {
     for (Size i = 0; i<dates_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =

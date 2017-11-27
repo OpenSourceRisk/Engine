@@ -21,6 +21,8 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/indexes/inflationindexobserver.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -132,6 +134,22 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
+    // Cache INF rate keys0
+    Size n_inf = model_->components(INF);
+    if (n_inf > 0) {
+        zeroInflationKeys_.reserve(n_inf * simMarketConfig_->zeroInflationTenors("").size());
+        cpiIndices_.reserve(n_inf);
+        for (Size j = 0; j < n_inf; ++j) {
+            std::string index = model->infdk(j)->name();
+            ten_inf_.push_back(simMarketConfig_->zeroInflationTenors(index));
+            Size n_ten = ten_inf_.back().size();
+            for (Size k = 0; k < n_ten; ++k) {
+                zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, index, k);
+            }
+            cpiIndices_.emplace_back(RiskFactorKey::KeyType::CPIIndex, index);
+        }
+    }
+
     // Equity Forecast curve keys
     equityForecastCurveKeys_.reserve(n_ccy * simMarketConfig_->equityForecastTenors("").size());
     for (Size j = 0; j < model_->components(EQ); j++) {
@@ -147,10 +165,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
+    Size n_inf = model_->components(INF);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    vector<string> ccyPairs(n_ccy - 1);
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
+    vector<boost::shared_ptr<QuantExt::DkImpliedZeroInflationTermStructure>> zeroInfCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves;
@@ -158,7 +177,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
 
-    for (Size j = 0; j < model_->components(IR); ++j) {
+    for (Size j = 0; j < n_ccy; ++j) {
         curves.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
     }
 
@@ -182,6 +201,11 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
         yieldCurveCurrency.push_back(ccy);
     }
 
+
+    for (Size j = 0; j < n_inf; ++j) {
+        zeroInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedZeroInflationTermStructure>(model_, j));
+    }
+  
     for (Size j = 0; j < n_eq; ++j) {
         std::string curveName = simMarketConfig_->equityNames()[j];
         Currency ccy = model_->eqbs(j)->currency();
@@ -291,6 +315,25 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
                 }
             }
+        }
+
+        // Zero Inflation curves
+        for (Size j = 0; j < n_inf; j++) {
+            // LGM factor value, second index = 0 holds initial values
+            Real z = sample.value[model_->pIdx(INF, j, 0)][i + 1];
+            Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
+            zeroInfCurves[j]->move(dates_[i], z, y);
+            for (Size k = 0; k < ten_inf_[j].size(); k++) {
+                Date d = dates_[i] + ten_inf_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real zero = zeroInfCurves[j]->zeroRate(T);
+                scenarios[i]->add(zeroInflationKeys_[j * ten_inf_[j].size() + k], zero);
+            }
+
+            // update fixing manage with fixing for base date
+            auto index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
+            Real iT = zeroInfCurves[j]->I_t(0);
+            scenarios[i]->add(cpiIndices_[j], iT);
         }
 
         // EquityForecastCurve
