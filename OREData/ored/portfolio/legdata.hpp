@@ -179,9 +179,9 @@ public:
     double baseCPI() const { return baseCPI_; }
     const string observationLag() const { return observationLag_; }
     bool interpolated() const { return interpolated_; }
-    bool subtractInflationNominal() const { return subtractInflationNominal_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
+    bool subtractInflationNominal() const { return subtractInflationNominal_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -191,9 +191,9 @@ private:
     double baseCPI_;
     string observationLag_;
     bool interpolated_;
-    bool subtractInflationNominal_;
     vector<double> rates_;
     vector<string> rateDates_;
+    bool subtractInflationNominal_;
 };
 
 class YoYLegData : public LegAdditionalData {
