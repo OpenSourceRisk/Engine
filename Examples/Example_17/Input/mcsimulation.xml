@@ -276,29 +276,7 @@
       </Names>
       <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
     </ZeroInflationIndexCurves>
-	
-    <CpiCapFloorVolatilities>
-      <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
-      <Names>
-      	<Name>EUHICPXT</Name>
-        <Name>UKRPI</Name>
-      </Names>
-      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
-      <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
-    </CpiCapFloorVolatilities>
-	
-    <YYCapFloorVolatilities>
-      <Simulate>false</Simulate>
-      <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
-      <Names>
-      	<Name>EUHICPXT</Name>
-        <Name>UKRPI</Name>
-      </Names>
-      <Expiries>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Expiries>
-      <Strikes>0.00,0.01,0.02,0.03,0.04,0.05,0.06</Strikes>
-    </YYCapFloorVolatilities>
-	
+		
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>
