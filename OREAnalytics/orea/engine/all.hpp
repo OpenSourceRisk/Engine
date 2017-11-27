@@ -7,4 +7,7 @@
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/sensitivitycube.hpp>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/parametricvar.hpp>
+#include <orea/engine/sensitivitydata.hpp>
 
