@@ -55,7 +55,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // Fixings
     // Apply them now in case a curve builder needs them
     LOG("Todays Market Loading Fixings");
-    applyFixings(loader.loadFixings());
+    applyFixings(loader.loadFixings(), conventions);
     LOG("Todays Market Loading Fixing done.");
 
     // store all curves built, since they might appear in several configurations
@@ -124,17 +124,17 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
                 // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
                 vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
-                for(auto& y : yieldCurveTypes) {
+                for (auto& y : yieldCurveTypes) {
                     MarketObject o = static_cast<MarketObject>(y);
                     for (auto& it : params.mapping(o, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                        << configuration.first);
+                                                     << configuration.first);
                             yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
                         }
                     }
                 }
-                
+
                 for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
@@ -181,8 +181,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredFxVolCurves.end()) {
                     // build the curve
                     LOG("Building FXVolatility for asof " << asof);
-                    boost::shared_ptr<FXVolCurve> fxVolCurve =
-                        boost::make_shared<FXVolCurve>(asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
+                    boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
+                        asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
                     itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                 }
 
@@ -390,9 +390,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
                                                                                            << ", but could not cast");
                         // index is not interpolated
-                        auto tmp = parseZeroInflationIndex(it.first, false,
-                                                           Handle<ZeroInflationTermStructure>(ts));
-                        zeroInflationIndices_[make_pair(configuration.first, it.first)] = Handle<ZeroInflationIndex>(tmp);
+                        auto tmp = parseZeroInflationIndex(it.first, false, Handle<ZeroInflationTermStructure>(ts));
+                        zeroInflationIndices_[make_pair(configuration.first, it.first)] =
+                            Handle<ZeroInflationIndex>(tmp);
                     }
                 }
                 // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
@@ -466,12 +466,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
                                                    << configuration.first);
                         Handle<YieldTermStructure> yts;
-                        boost::shared_ptr<EquityCurveConfig> equityConfig = curveConfigs.equityCurveConfig(equityspec->curveConfigID());
-                        boost::shared_ptr<YieldTermStructure> divYield =
-                            itr->second->divYieldTermStructure(asof);
+                        boost::shared_ptr<EquityCurveConfig> equityConfig =
+                            curveConfigs.equityCurveConfig(equityspec->curveConfigID());
+                        boost::shared_ptr<YieldTermStructure> divYield = itr->second->divYieldTermStructure(asof);
                         Handle<YieldTermStructure> div_h(divYield);
                         yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] = div_h;
-                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] = 
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] =
                             itr->second->forecastingYieldTermStructure();
                         equitySpots_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));

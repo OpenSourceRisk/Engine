@@ -81,6 +81,15 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
 
     parameters->fxCcyPairs() = {"USDEUR"};
 
+    parameters->zeroInflationIndices() = {"EUHICPXT"};
+    parameters->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years });
+
+    parameters->simulateCpiCapFloorVols() = false;
+    parameters->cpiCapFloorVolIndices() = { "EUHICPXT" };
+    parameters->setCpiCapFloorVolExpiries("", { 1 * Years, 2 * Years });
+    parameters->cpiCapFloorVolStrikes() = { 0.03, 0.03 };
+    parameters->cpiCapFloorVolDecayMode() = "ConstantVariance";
+
     return parameters;
 }
 } // namespace
@@ -195,6 +204,27 @@ void testDefaultCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
+void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
+                            boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                            boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+    for (const auto& spec : parameters->zeroInflationIndices()) {
+
+        Handle<ZeroInflationTermStructure> simCurve = simMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
+        Handle<ZeroInflationTermStructure> initCurve = initMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
+        BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
+        vector<Date> dates;
+        Date asof = initMarket->asofDate();
+        for (Size i = 0; i < parameters->zeroInflationTenors("").size(); i++) {
+            dates.push_back(asof + parameters->zeroInflationTenors("")[i]);
+        }
+
+        for (const auto& date : dates) {
+            BOOST_CHECK_CLOSE(simCurve->zeroRate(date), initCurve->zeroRate(date),
+                1e-12);
+        }
+    }
+}
+
 void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params) {
 
     BOOST_TEST_MESSAGE("Testing to XML...");
@@ -243,6 +273,7 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testSwaptionVolCurve(initMarket, simMarket, parameters);
     testFxVolCurve(initMarket, simMarket, parameters);
     testDefaultCurve(initMarket, simMarket, parameters);
+    testZeroInflationCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
 }
 

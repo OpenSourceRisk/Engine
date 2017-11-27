@@ -1561,7 +1561,7 @@ SensitivityScenarioGenerator::fxVolScenarioDescription(string ccypair, Size expi
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
     } else {
         QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
@@ -1583,7 +1583,7 @@ SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size e
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
     } else {
         QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
@@ -1632,7 +1632,7 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
         o << data.shiftExpiries[expiryBucket] << "/ATM";
     } else {
         o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];

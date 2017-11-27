@@ -1372,6 +1372,7 @@ portfolio used in this example consists of
 \item a cap in EUR
 \item a floor in UER
 \item a fixed rate bond
+\item a USD CDS.
 \end{itemize}
 
 The sensitivity configuration in {\tt sensitivity.xml} aims at computing the following sensitivities
@@ -1386,6 +1387,7 @@ The sensitivity configuration in {\tt sensitivity.xml} aims at computing the fol
 \item swaption vegas for the EUR surface on expiries 1Y, 5Y, 7Y, 10Y and underlying terms 1Y, 5Y, 10Y (relative shift of 0.01)
 \item caplet vegas for EUR and USD on an expiry grid 1Y, 2Y, 3Y, 5Y, 7Y, 10Y and strikes 0.01, 0.02, 0.03, 0.04,
   0.05. (absolute shift of 0.0001)
+\item credit curve sensitivities on tenors 6M, 1Y, 2Y, 5Y, 10Y (absolute shift of 0.0001).
 \end{itemize}
 
 Furthermore, mixed second order derivatives (``cross gammas'') are computed for discount-discount, discount-forward and
@@ -1411,7 +1413,8 @@ The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
 \begin{itemize}
 \item {\tt parallel\_rates}: Rates are shifted in parallel by 0.01 (absolute). The EUR bond benchmark curve is shifted by
   increasing amounts 0.001, ..., 0.009 on the pillars 6M, ..., 20Y. FX Spots are shifted by 0.01 (relative), FX vols by
-  0.1 (relative), swaption and cap floor vols by 0.0010 (absolute)
+  0.1 (relative), swaption and cap floor vols by 0.0010 (absolute).
+  Credit curves are not yet shifted.
 \item {\tt twist}: The EUR bond benchmark curve is shifted by amounts -0.0050, -0.0040, -0.0030, -0.0020, 0.0020,
   0.0040, 0.0060, 0.0080, 0.0100 on pillars 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y.
 \end{itemize}

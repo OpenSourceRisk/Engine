@@ -4,5 +4,6 @@
 #include <qle/indexes/genericiborindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/indexes/inflationindexobserver.hpp>
 
 #include <qle/indexes/ibor/all.hpp>

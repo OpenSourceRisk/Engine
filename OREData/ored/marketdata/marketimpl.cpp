@@ -181,6 +181,10 @@ Handle<Quote> MarketImpl::securitySpread(const string& key, const string& config
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
 
+Handle<InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
+    return lookup<Handle<InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
@@ -285,6 +289,16 @@ void MarketImpl::refresh(const string& configuration) {
 
     for (auto& x : it->second)
         x->update();
+
+    // update fx spot quotes
+    auto fxSpots = fxSpots_.find(configuration);
+    if (fxSpots != fxSpots_.end()) {
+        for (auto& x : fxSpots->second.quotes()) {
+            auto dq = boost::dynamic_pointer_cast<Observer>(*x.second);
+            if(dq != nullptr)
+                dq->update();
+        }
+    }
 
 } // refresh
 

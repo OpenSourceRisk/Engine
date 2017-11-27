@@ -54,6 +54,7 @@ public:
     //! Detailed constructor
     EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, const string& currency, const Type& type,
                       const string& equitySpotQuote, const vector<string>& quotes, const string& dayCountID = "",
+                      const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear", 
                       bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}
@@ -72,6 +73,8 @@ public:
     const Type& type() const { return type_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
+    const string& dividendInterpolationVariable() const { return divInterpVariable_; }
+    const string& dividendInterpolationMethod() const { return divInterpMethod_; }
     bool extrapolation() const { return extrapolation_; }
     const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
@@ -83,6 +86,8 @@ public:
     Type& type() { return type_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
+    string& dividendInterpolationVariable() { return divInterpVariable_; }
+    string& dividendInterpolationMethod() { return divInterpMethod_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
@@ -93,6 +98,8 @@ private:
     Type type_;
     string equitySpotQuoteID_;
     string dayCountID_;
+    string divInterpVariable_;
+    string divInterpMethod_;
     bool extrapolation_;
 };
 } // namespace data

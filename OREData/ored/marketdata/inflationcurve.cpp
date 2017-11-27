@@ -150,9 +150,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = asof + terms[i];
-                instruments.push_back(boost::make_shared<ZeroCouponInflationSwapHelper>(
+                boost::shared_ptr<ZeroInflationTraits::helper> instrument = boost::make_shared<ZeroCouponInflationSwapHelper>(
                     quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
-                    conv->dayCounter(), index));
+                    conv->dayCounter(), index);
+                instrument->unregisterWith(Settings::instance().evaluationDate());
+                instruments.push_back(instrument);
             }
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
@@ -203,9 +205,11 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                    << quotes[i]->value());
                 }
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
-                instruments.push_back(boost::make_shared<YearOnYearInflationSwapHelper>(
+                boost::shared_ptr<YoYInflationTraits::helper> instrument = boost::make_shared<YearOnYearInflationSwapHelper>(
                     Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(), maturity,
-                    conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index));
+                    conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index);
+                instrument->unregisterWith(Settings::instance().evaluationDate());
+                instruments.push_back(instrument);
             }
             // base zero rate: if given, take it, otherwise set it to first quote
             Real baseRate = config->baseRate() != Null<Real>() ? config->baseRate() : quotes[0]->value();
@@ -217,6 +221,7 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             curve_->setSeasonality(seasonality);
         }
         curve_->enableExtrapolation(config->extrapolate());
+        curve_->unregisterWith(Settings::instance().evaluationDate());
 
     } catch (std::exception& e) {
         QL_FAIL("inflation curve building failed: " << e.what());

@@ -111,12 +111,12 @@
           <FixingDays>2</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.03</Rate>
-      </CapRates>
-      <FloorRates>
-        <Rate>0.01</Rate>
-      </FloorRates>
+      <Caps>
+        <Cap>0.03</Cap>
+      </Caps>
+      <Floors>
+        <Floor>0.01</Floor>
+      </Floors>
     </CapFloorData>
   </Trade>
   <Trade id="swap_02">

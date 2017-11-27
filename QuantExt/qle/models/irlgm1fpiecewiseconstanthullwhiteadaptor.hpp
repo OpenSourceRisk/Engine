@@ -40,10 +40,11 @@ class Lgm1fPiecewiseConstantHullWhiteAdaptor : public Lgm1fParametrization<TS>,
 public:
     Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
                                            const Array& sigmaTimes, const Array& sigma, const Array& kappaTimes,
-                                           const Array& kappa);
+                                           const Array& kappa, const std::string& name = std::string());
     Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
                                            const std::vector<Date>& sigmaDates, const Array& sigma,
-                                           const std::vector<Date>& kappaDates, const Array& kappa);
+                                           const std::vector<Date>& kappaDates, const Array& kappa, 
+                                           const std::string& name = std::string());
     Real zeta(const Time t) const;
     Real H(const Time t) const;
     Real alpha(const Time t) const;
@@ -68,8 +69,8 @@ private:
 template <class TS>
 Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdaptor(
     const Currency& currency, const Handle<TS>& termStructure, const Array& sigmaTimes, const Array& sigma,
-    const Array& kappaTimes, const Array& kappa)
-    : Lgm1fParametrization<TS>(currency, termStructure), PiecewiseConstantHelper3(sigmaTimes, kappaTimes),
+    const Array& kappaTimes, const Array& kappa, const std::string& name)
+    : Lgm1fParametrization<TS>(currency, termStructure, name), PiecewiseConstantHelper3(sigmaTimes, kappaTimes),
       PiecewiseConstantHelper2(kappaTimes) {
     initialize(sigma, kappa);
 }
@@ -77,8 +78,8 @@ Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdapt
 template <class TS>
 Lgm1fPiecewiseConstantHullWhiteAdaptor<TS>::Lgm1fPiecewiseConstantHullWhiteAdaptor(
     const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& sigmaDates, const Array& sigma,
-    const std::vector<Date>& kappaDates, const Array& kappa)
-    : Lgm1fParametrization<TS>(currency, termStructure),
+    const std::vector<Date>& kappaDates, const Array& kappa, const std::string& name)
+    : Lgm1fParametrization<TS>(currency, termStructure, name),
       PiecewiseConstantHelper3(sigmaDates, kappaDates, termStructure),
       PiecewiseConstantHelper2(kappaDates, termStructure) {
     initialize(sigma, kappa);

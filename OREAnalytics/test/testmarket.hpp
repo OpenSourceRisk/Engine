@@ -30,6 +30,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -78,6 +79,15 @@ private:
             new QuantLib::ConstantOptionletVolatility(Settings::instance().evaluationDate(), NullCalendar(),
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
+    }
+    Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex, const std::vector<Rate> cStrikes,
+        std::vector<Rate> fStrikes, std::vector<Period> cfMaturities, Matrix cPrice, Matrix fPrice) {
+        boost::shared_ptr<CPICapFloorTermPriceSurface> ts(
+            new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
+                1.0, 0.0, infIndex->availabilityLag(), infIndex->zeroInflationTermStructure()->calendar(), 
+                Following, ActualActual(), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes,
+                cfMaturities, cPrice, fPrice));
+        return Handle<CPICapFloorTermPriceSurface>(ts);
     }
     Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts);
     Handle<YoYInflationIndex> makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<YoYInflationIndex> ii, Handle<YieldTermStructure> yts);

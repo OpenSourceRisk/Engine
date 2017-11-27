@@ -29,6 +29,7 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
@@ -82,6 +83,10 @@ void FloatingLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    if(XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
@@ -94,6 +99,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -103,6 +109,11 @@ void CPILegData::fromXML(XMLNode* node) {
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
+    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotionnal");
+    if (subNomNode)
+        subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
+    else
+        subtractInflationNominal_ = false;
     rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
 }
 
@@ -113,6 +124,7 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
+    XMLUtils::addChild(doc, node, "SubtractInflationNotional", subtractInflationNominal_);
     return node;
 }
 
@@ -146,6 +158,7 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -165,6 +178,10 @@ void CMSLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
+    if(XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 void AmortizationData::fromXML(XMLNode* node) {
@@ -469,6 +486,11 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = iborLeg;
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
+
+    // build naked option leg if required
+    if(floatData->nakedOption()) {
+        tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+    }
     return tmpLeg;
 } // namespace data
 
@@ -582,8 +604,21 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
                   .withFixedRates(rates)
-                  .withObservationInterpolation(interpolationMethod);
-    QL_REQUIRE(leg.size() > 0, "Empty CPI Leg");
+                  .withObservationInterpolation(interpolationMethod)
+                  .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
+    Size n = leg.size();
+    QL_REQUIRE(n > 0, "Empty CPI Leg");
+    
+    // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
+    // If Notional Exchange set to false, remove the final cashflow.
+
+    if (!data.notionalFinalExchange()) {
+        boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
+        boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[n - 2]);
+        if (cpicf && (cpicf->date() == coupon->date()))
+            leg.pop_back();
+    }
+
     return leg;
 }
 
@@ -666,6 +701,11 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // Loop over the coupons in the leg and set pricer
     Leg tmpLeg = cmsLeg;
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
+
+    // build naked option leg if required
+    if(cmsData->nakedOption()) {
+        tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+    }
     return tmpLeg;
 }
 

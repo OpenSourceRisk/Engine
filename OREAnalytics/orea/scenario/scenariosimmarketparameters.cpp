@@ -119,6 +119,14 @@ const string& ScenarioSimMarketParameters::baseCorrelationDayCounter(const strin
     return returnDayCounter(baseCorrelationDayCounters_, key);
 }
 
+const vector<Period>& ScenarioSimMarketParameters::cpiCapFloorVolExpiries(const string& key) const {
+    return returnTenors(cpiCapFloorVolExpiries_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyCapFloorVolExpiries(const string& key) const {
+    return returnTenors(yoyCapFloorVolExpiries_, key);
+}
+
 void ScenarioSimMarketParameters::setYieldCurveTenors(const string& key, const std::vector<Period>& p) {
     yieldCurveTenors_[key] = p;
 }
@@ -167,6 +175,7 @@ void ScenarioSimMarketParameters::setYoyInflationTenors(const string& key, const
     yoyInflationTenors_[key] = p;
 }
 
+<<<<<<< HEAD
 void ScenarioSimMarketParameters::setYoyInflationDayCounters(const string& key, const string& s) {
     yoyInflationDayCounters_[key] = s;
 }
@@ -177,6 +186,14 @@ void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const
 
 void ScenarioSimMarketParameters::setCapFloorVolDayCounters(const string& key, const string& s) {
     capFloorVolDayCounters_[key] = s;
+=======
+void ScenarioSimMarketParameters::setCpiCapFloorVolExpiries(const string& key, const vector<Period>& p) {
+    cpiCapFloorVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setYoyCapFloorVolExpiries(const string& key, const vector<Period>& p) {
+    yoyCapFloorVolExpiries_[key] = p;
+>>>>>>> master
 }
 
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
@@ -206,7 +223,13 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
         baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
         zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationTenors_ != rhs.zeroInflationTenors_ || 
-        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ) {
+        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ ||
+        cpiCapFloorVolSimulate_ != rhs.cpiCapFloorVolSimulate_ ||
+        cpiCapFloorVolIndices_ != rhs.cpiCapFloorVolIndices_ || cpiCapFloorVolExpiries_ != rhs.cpiCapFloorVolExpiries_ ||
+        cpiCapFloorVolStrikes_ != rhs.cpiCapFloorVolStrikes_ || cpiCapFloorVolDecayMode_ != rhs.cpiCapFloorVolDecayMode_ ||
+        yoyCapFloorVolSimulate_ != rhs.yoyCapFloorVolSimulate_ ||
+        yoyCapFloorVolIndices_ != rhs.yoyCapFloorVolIndices_ || yoyCapFloorVolExpiries_ != rhs.yoyCapFloorVolExpiries_ ||
+        yoyCapFloorVolStrikes_ != rhs.yoyCapFloorVolStrikes_ || yoyCapFloorVolDecayMode_ != rhs.yoyCapFloorVolDecayMode_) {
         return false;
     } else {
         return true;
@@ -228,6 +251,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     equityDividendTenors_.clear();
     equityForecastTenors_.clear();
     swapIndices_.clear();
+    zeroInflationTenors_.clear();
+    yoyInflationTenors_.clear();
+    cpiCapFloorVolExpiries_.clear();
+    yoyCapFloorVolExpiries_.clear();
 
     yieldCurveDayCounters_.clear();
     swapVolDayCounters_.clear();
@@ -488,6 +515,10 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         equityVolNames_.clear();
     }
 
+    DLOG("Loading CpiInflationIndexCurves");
+
+    cpiIndices_ = XMLUtils::getChildrenValues(node, "CpiIndices", "Index", false);
+    
     DLOG("Loading ZeroInflationIndexCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "ZeroInflationIndexCurves");
@@ -510,6 +541,21 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         zeroInflationTenors_.clear();
     }
 
+    DLOG("Loading CpiCapFloorVolatilities");
+
+    nodeChild = XMLUtils::getChildNode(node, "CpiCapFloorVolatilities");
+    if (nodeChild) {
+        cpiCapFloorVolSimulate_ = false;
+        XMLNode* cpiCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (cpiCapVolSimNode)
+            cpiCapFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(cpiCapVolSimNode));
+        cpiCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        // TODO read other keys
+        cpiCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        cpiCapFloorVolIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        cpiCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+    }
+
     DLOG("Loading YYInflationIndexCurves");
 
     nodeChild = XMLUtils::getChildNode(node, "YYInflationIndexCurves");
@@ -529,6 +575,22 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     else {
         yoyInflationIndices_.clear();
         yoyInflationTenors_.clear();
+    }
+
+
+    DLOG("Loading YYCapFloorVolatilities");
+
+    nodeChild = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (nodeChild) {
+        yoyCapFloorVolSimulate_ = false;
+        XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yoyCapVolSimNode)
+            yoyCapFloorVolSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode));
+        yoyCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        // TODO read other keys
+        yoyCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        yoyCapFloorVolIndices_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
+        yoyCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
     }
 
     DLOG("Loading AggregationScenarioDataIndices");
@@ -724,9 +786,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // zero inflation
+    XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
+    XMLUtils::addChildren(doc, cpiNode, "CpiIndices", "Index", cpiIndices_);
+
+    // zero inflation
     XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
     XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices_);
     XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
+<<<<<<< HEAD
     if (zeroInflationDayCounters_.size() > 0) {
         XMLNode* node = XMLUtils::addChild(doc, zeroNode, "DayCounters");
         for (auto dc : zeroInflationDayCounters_) {
@@ -735,6 +802,17 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             XMLUtils::appendNode(node, c);
         }
     }
+=======
+
+    // cpi cap/floor volatilities
+    XMLNode* cpiVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CpiCapFloorVolatilities");
+    XMLUtils::addChild(doc, cpiVolatilitiesNode, "Simulate", cpiCapFloorVolSimulate_);
+    XMLUtils::addChild(doc, cpiVolatilitiesNode, "ReactionToTimeDecay", cpiCapFloorVolDecayMode_);
+    XMLUtils::addChildren(doc, cpiVolatilitiesNode, "Names", "Name", cpiCapFloorVolIndices_);
+    XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Expiries", returnTenors(cpiCapFloorVolExpiries_, ""));
+    XMLUtils::addGenericChildAsList(doc, cpiVolatilitiesNode, "Strikes", cpiCapFloorVolStrikes_);
+
+>>>>>>> master
     // yoy inflation
     XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
     XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices_);
@@ -747,6 +825,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
             XMLUtils::appendNode(node, c);
         }
     }
+
+    // yoy cap/floor volatilities
+    XMLNode* yoyVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YYCapFloorVolatilities");
+    XMLUtils::addChild(doc, yoyVolatilitiesNode, "Simulate", yoyCapFloorVolSimulate_);
+    XMLUtils::addChild(doc, yoyVolatilitiesNode, "ReactionToTimeDecay", yoyCapFloorVolDecayMode_);
+    XMLUtils::addChildren(doc, yoyVolatilitiesNode, "Names", "Name", yoyCapFloorVolIndices_);
+    XMLUtils::addGenericChildAsList(doc, yoyVolatilitiesNode, "Expiries", returnTenors(yoyCapFloorVolExpiries_, ""));
+    XMLUtils::addGenericChildAsList(doc, yoyVolatilitiesNode, "Strikes", yoyCapFloorVolStrikes_);
 
     return marketNode;
 }

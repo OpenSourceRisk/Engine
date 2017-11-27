@@ -193,7 +193,13 @@
       <Currency>EUR</Currency>
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y</ShiftTenors>
+      <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
+    </CreditCurve>
+    <CreditCurve name="BANK">
+      <Currency>USD</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
     </CreditCurve>
   </CreditCurves>
   <!-- Equity spot shifts -->

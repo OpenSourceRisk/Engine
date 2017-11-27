@@ -24,6 +24,7 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
+#include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ql/time/date.hpp>
 #include <vector>
@@ -44,10 +45,10 @@ struct Fixing {
     QuantLib::Real fixing;
 
     //! Constructor
-    Fixing(const QuantLib::Date& d, const std::string& s, Real& f) : date(d), name(s), fixing(f) {}
+    Fixing(const QuantLib::Date& d, const std::string& s, const QuantLib::Real f) : date(d), name(s), fixing(f) {}
 };
 
 //! Utility to write a vector of fixings in the QuantLib index manager's fixing history
-void applyFixings(const std::vector<Fixing>& fixings);
+void applyFixings(const std::vector<Fixing>& fixings, const data::Conventions& conventions);
 } // namespace data
 } // namespace ore
