@@ -1358,7 +1358,7 @@ illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex
 order regression estimate of DIM differs noticeably from the higher orders (one and two). In the three swap cases we
 moreover see that first and second order polynomial choice makes hardly any difference; note that case C and D use up to
 three-dimensional regressors (simulated USD and EUR rate fixings and the EUR/USD FX rate). In the Swaption case B, first
-and second order polynomial choice makes a difference before option expiry.
+and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
  
 \begin{figure}[h!]
 \begin{center}
@@ -4419,7 +4419,7 @@ To quantify these two effects one needs to model Initial Margin under future mar
 \end{itemize} 
 
 We skip the first option as too computationally expensive for ORE. In the first ORE release we focus on a relatively
-simple regression approach as in \cite{Anfuso2016}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
+simple regression approach as in \cite{Anfuso2016,LichtersEtAl}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
 are spaced one margin period of risk $\Delta$ apart. Moreover, let $F(t,t+\Delta)$ denote cumulative netting set cash
 flows between time $t$ and $t+\Delta$, converted into the NPV currency. Let $X(t)$ then denote the netting set value
 change during the margin period of risk excluding cash flows in that period:
@@ -4702,6 +4702,8 @@ the underlying spot price changes.
   %   https://www2.isda.org/attachment/ODQzMg==/Risk\%20Data\%20Standards\_24\%20May\%202016\_v1.22\%20(PUBLIC).pdf}
 
   % \bibitem{OO} http://www.openoffice.org
+
+\bibitem{LichtersEtAl} Peter Caspers, Paul Giltinan, Paul; Lichters, Roland; Nowaczyk , Nikolai. {\em Forecasting Initial Margin Requirements – A Model Evaluation}, Journal of Risk Management in Financial Institutions, Vol. 10 (2017), No. 4, \url{https://ssrn.com/abstract=2911167}
 
 \end{thebibliography}
 
