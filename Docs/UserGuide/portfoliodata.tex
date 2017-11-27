@@ -1334,7 +1334,7 @@ Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS.
 The CMSLegData block contains the following elements:
 
 \begin{itemize}
-\item Index: The underlying CMS index
+\item Index: The underlying CMS index.
 \item Spreads: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
   values.
 \item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
@@ -1349,7 +1349,7 @@ The CMSLegData block contains the following elements:
 \item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
-  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 \item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
