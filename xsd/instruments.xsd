@@ -194,6 +194,7 @@
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
+		<xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>

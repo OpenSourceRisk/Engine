@@ -119,7 +119,7 @@
 
   <xs:complexType name="lgm">
     <xs:sequence>
-	  <xs:element type="currencyCode" name="Currency"/>
+	  <xs:element type="currencyCode" name="Currency" maxOccurs="1" minOccurs="0"/>
       <xs:element type="calibrationTypeType" name="CalibrationType"/>
       <xs:element name="Volatility">
          <xs:complexType>
@@ -139,15 +139,24 @@
              <xs:element type="reversionTypeType" name="ReversionType"/>
              <xs:element type="paramTypeType" name="ParamType"/>
              <xs:element type="xs:string" name="TimeGrid"/>
-             <xs:element type="xs:float" name="InitialValue"/>
+             <xs:element type="xs:string" name="InitialValue"/>
            </xs:sequence>
          </xs:complexType>
        </xs:element>
-       <xs:element name="CalibrationSwaptions">
+       <xs:element name="CalibrationSwaptions" maxOccurs="1" minOccurs="0">
          <xs:complexType>
            <xs:sequence>
              <xs:element type="xs:string" name="Expiries"/> <!-- FIXME: comma delimited list -->
              <xs:element type="xs:string" name="Terms"/> <!-- FIXME: comma delimited list -->
+             <xs:element type="xs:string" name="Strikes"/> <!-- FIXME: comma delimited list -->
+           </xs:sequence>
+         </xs:complexType>
+       </xs:element>
+	   <xs:element name="CalibrationCapFloors" maxOccurs="1" minOccurs="0">
+         <xs:complexType>
+           <xs:sequence>
+             <xs:element type="xs:string" name="CapFloor"/>
+             <xs:element type="xs:string" name="Expiries"/> <!-- FIXME: comma delimited list -->
              <xs:element type="xs:string" name="Strikes"/> <!-- FIXME: comma delimited list -->
            </xs:sequence>
          </xs:complexType>
@@ -161,7 +170,7 @@
          </xs:complexType>
        </xs:element>
     </xs:sequence>
-    <xs:attribute type="currencyCodeWithDefault" name="ccy" /> <!-- FIXME: currency not ccy -->
+    <xs:attribute type="currencyCodeWithDefault" name="ccy"/> <!-- FIXME: currency not ccy -->
     <xs:attribute type="xs:string" name="index" /> <!-- FIXME: currency not ccy -->
   </xs:complexType>
 
@@ -224,7 +233,7 @@
   <xs:complexType name="crossAssetLGM">
     <xs:sequence>
       <!-- FIXME: Why is this here every time?? -->
-      <xs:element type="currencyCode" name="Currency"/> <!-- FIXME: Currency not Ccy -->
+      <xs:element type="currencyCode" name="Currency" /> <!-- FIXME: Currency not Ccy -->
       <xs:element type="xs:string" name="CalibrationType"/>
       <xs:element name="Sigma">
         <xs:complexType>
@@ -476,10 +485,10 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-	  <xs:element name="CpiIndices">
+	  <xs:element name="CpiIndices" minOccurs="0" maxOccurs="1">
         <xs:complexType>
           <xs:sequence>
-            <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="xs:string" name="Index" maxOccurs="unbounded" minOccurs="0"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
