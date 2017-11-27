@@ -226,8 +226,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
         // check for notional exchanges on non FX reseting trades
-        else if (legData_[i].notionalInitialExchange() || legData_[i].notionalFinalExchange() ||
-                 legData_[i].notionalAmortizingExchange()) {
+        else if ((legData_[i].notionalInitialExchange() || legData_[i].notionalFinalExchange() ||
+                 legData_[i].notionalAmortizingExchange()) && (legData_[i].legType() != "CPI")) {
 
             legs_.push_back(makeNotionalLeg(legs_[i], legData_[i].notionalInitialExchange(),
                                             legData_[i].notionalFinalExchange(),

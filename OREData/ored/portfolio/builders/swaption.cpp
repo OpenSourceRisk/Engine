@@ -67,7 +67,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto reversionType = parseReversionType(modelParameters_.at("ReversionType"));
     auto volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));
 
-    auto data = boost::make_shared<LgmData>();
+    auto data = boost::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
     std::vector<std::pair<CalibrationType, LgmData::CalibrationStrategy>> validCalPairs = {
@@ -114,13 +114,13 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
             expiryDates.push_back(to_string(expiries[i]));
             termDates.push_back(to_string(maturity));
         }
-        data->swaptionExpiries() = expiryDates;
-        data->swaptionTerms() = termDates;
-        data->swaptionStrikes().resize(expiryDates.size(), "ATM");
+        data->optionExpiries() = expiryDates;
+        data->optionTerms() = termDates;
+        data->optionStrikes().resize(expiryDates.size(), "ATM");
         if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
             for (Size i = 0; i < expiries.size(); ++i) {
                 if (strikes[i] != Null<Real>())
-                    data->swaptionStrikes()[i] = std::to_string(strikes[i]);
+                    data->optionStrikes()[i] = std::to_string(strikes[i]);
             }
         }
         if (calibration == CalibrationType::Bootstrap) {

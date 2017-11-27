@@ -170,10 +170,10 @@ private:
 class CPILegData : public LegAdditionalData {
 public:
     CPILegData() : LegAdditionalData("CPI") {}
-    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates,
-               const vector<string>& rateDates = std::vector<string>())
-        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), rates_(rates),
-          rateDates_(rateDates) {}
+    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates, 
+               const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = true)
+        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), 
+          rates_(rates), rateDates_(rateDates), subtractInflationNominal_(subtractInflationNominal){}
 
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }
@@ -181,6 +181,7 @@ public:
     bool interpolated() const { return interpolated_; }
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
+    bool subtractInflationNominal() const { return subtractInflationNominal_; }
 
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -192,6 +193,7 @@ private:
     bool interpolated_;
     vector<double> rates_;
     vector<string> rateDates_;
+    bool subtractInflationNominal_;
 };
 
 class YoYLegData : public LegAdditionalData {
