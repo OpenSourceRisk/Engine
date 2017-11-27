@@ -1254,27 +1254,27 @@ Within each {\tt AmortisationData} block the meaning of elements is
 \begin{itemize}
 \item Type: Amortisation type with allowable values {\em FixedAmount,
   RelativeToInitialNotional, RelativeToPreviousNotional, Annuity.}
-\item Value: Interpreted depending on {\tt Type}, see below
+\item Value: Interpreted depending on {\tt Type}, see below.
 \item StartDate: Amortisation starts on first schedule date on or
-  beyond StartDate
-\item Frequency, entered as a period: Frequency of amortisations
+  beyond StartDate.
+\item Frequency, entered as a period: Frequency of amortisations.
 \item Underflow:  Allow amortisation below zero notional if {\tt true},
-  otherwise amortisation stops at zero notional 
+  otherwise amortisation stops at zero notional.
 \end{itemize}
 
 The amortisation data block's {\tt Value} element  is interpreted
 depending on the chosen {\tt Type}:
 \begin{itemize}
 \item FixedAmount: The value is interpreted as a notional amount to be
-  subtracted from the current notional on each amortisation date
+  subtracted from the current notional on each amortisation date.
 \item RelativeToInitialNotional: The value is interpreted as a
   fraction of the {\bf initial} notional to be subtraced from the current
-  notional on each amortisation date
+  notional on each amortisation date.
 \item RelativeToPreviousNotional: The value is interpreted as a
   fraction of the {\bf previous} notional to be subtraced from the current
-  notional on each amortisation date
+  notional on each amortisation date.
 \item Annuity: The value is interpreted as annuity amount (redemption
-  plus coupon)
+  plus coupon).
 \end{itemize}
 
 Annuity type amortisation is supported for fixed rate legs as well as
