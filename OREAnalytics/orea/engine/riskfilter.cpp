@@ -23,7 +23,8 @@
 namespace ore {
 namespace analytics {
 
-const std::vector<std::string> RiskFilter::riskClassLabel_ = {"(all)", "InterestRate", "Credit", "Equity", "FX"};
+const std::vector<std::string> RiskFilter::riskClassLabel_ = {"(all)",  "InterestRate", "Inflation",
+                                                              "Credit", "Equity",       "FX"};
 const std::vector<std::string> RiskFilter::riskTypeLabel_ = {"(all)", "DeltaGamma", "Vega", "BaseCorrelation"};
 
 RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
@@ -83,14 +84,18 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                              RiskFactorKey::KeyType::OptionletVolatility};
             break;
         case 2:
+            allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,
+                             RiskFactorKey::KeyType::YoYInflationCurve};
+            break;
+        case 3:
             allowed_class = {RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::RecoveryRate,
                              RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::BaseCorrelation};
             break;
-        case 3:
+        case 4:
             allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityForecastCurve,
                              RiskFactorKey::KeyType::EquityVolatility, RiskFactorKey::KeyType::DividendYield};
             break;
-        case 4:
+        case 5:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};
             break;
         default:

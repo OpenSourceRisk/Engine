@@ -17,8 +17,8 @@
 */
 
 /*! \file engine/parametricvar.hpp
-    \brief Perform var calculation for a given portfolio
-    \ingroup simulation
+    \brief Perform parametric var calculation for a given portfolio
+    \ingroup engine
 */
 
 #pragma once
@@ -37,7 +37,8 @@ namespace ore {
 namespace analytics {
 
 class ParametricVarCalculator {
-    ~ParametricVarCalculator() {}
+public:
+    virtual ~ParametricVarCalculator() {}
     ParametricVarCalculator(const std::map<std::string, std::string>& tradePortfolio,
                             const boost::shared_ptr<SensitivityData>& sensitivities,
                             const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
@@ -48,8 +49,6 @@ class ParametricVarCalculator {
 protected:
     virtual std::vector<Real> computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
                                          const std::vector<Real>& p);
-
-private:
     const std::map<std::string, std::string> tradePortfolio_;
     const boost::shared_ptr<SensitivityData> sensitivities_;
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance_;

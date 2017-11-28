@@ -124,6 +124,17 @@ int OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
+        /****************
+         * Parametric VaR
+         */
+        if (parametricVar_) {
+            runParametricVar();
+        } else {
+            LOG("skip parametric var");
+            out_ << setw(tab_) << left << "Parametric VaR... ";
+            out_ << "SKIP" << endl;
+        }
+
         /******************************************
          * Simulation: Scenario and Cube Generation
          */
@@ -211,6 +222,8 @@ void OREApp::readSetup() {
                           : false;
     sensitivity_ = (params_->hasGroup("sensitivity") && params_->get("sensitivity", "active") == "Y") ? true : false;
     stress_ = (params_->hasGroup("stress") && params_->get("stress", "active") == "Y") ? true : false;
+    parametricVar_ =
+        (params_->hasGroup("parametricVar") && params_->get("parametricVar", "active") == "Y") ? true : false;
     writeBaseScenario_ =
         (params_->hasGroup("baseScenario") && params_->get("baseScenario", "active") == "Y") ? true : false;
 }
@@ -542,6 +555,51 @@ void OREApp::runStressTest() {
     stressTest->writeReport(stressReport, threshold);
 
     out_ << "OK" << endl;
+}
+
+void OREApp::runParametricVar() {
+
+    out_ << setw(tab_) << left << "Parametric VaR Report... " << flush;
+    string inputPath = params_->get("setup", "inputPath");
+    string outputPath = params_->get("setup", "outputPath");
+
+    LOG("Get sensitivity data");
+    vector<string> sensiInputFiles = parseListOfValues(params_->get("parametricVar", "sensitivityInputFile"));
+    auto sensiData = boost::make_shared<SensitivityDataInMemory>();
+    for (auto const& f : sensiInputFiles) {
+        loadSensitivityDataFromCsv(*sensiData, inputPath + "/" + f);
+    }
+
+    LOG("Build trade id to portfolio mapping");
+    map<string, string> tradePortfolio;
+    for (auto const& t : portfolio_->trades()) {
+        auto pf = t->envelope().additionalFields().find("Portfolio");
+        if (pf != t->envelope().additionalFields().end())
+            tradePortfolio[t->id()] = pf->second;
+    }
+
+    LOG("Load covariance matrix data");
+    map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarData;
+    loadCovarianceDataFromCsv(covarData, inputPath + "/" + params_->get("parametricVar", "covarianceInputFile"));
+
+    LOG("Build parametric var report");
+    auto calc = buildParametricVarCalculator(
+        tradePortfolio, sensiData, covarData,
+        parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
+        params_->get("parametricVar", "method"), parseInteger(params_->get("parametricVar", "mcSamples")),
+        parseInteger(params_->get("parametricVar", "mcSeed")), parseBool(params_->get("parametricVar", "breakdown")));
+
+    CSVFileReport report(outputPath + "/" + params_->get("parametricVar", "outputFile"));
+    calc->calculate(report);
+    out_ << "OK" << endl;
+}
+
+boost::shared_ptr<ParametricVarCalculator> OREApp::buildParametricVarCalculator(
+    const std::map<std::string, std::string>& tradePortfolio, const boost::shared_ptr<SensitivityData>& sensitivities,
+    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
+    const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown) {
+    return boost::make_shared<ParametricVarCalculator>(tradePortfolio, sensitivities, covariance, p, method, mcSamples,
+                                                       mcSeed, breakdown);
 }
 
 void OREApp::writeBaseScenario() {

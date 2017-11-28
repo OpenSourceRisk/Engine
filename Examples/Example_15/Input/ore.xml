@@ -94,5 +94,17 @@
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>
+    <Analytic type="parametricVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="sensitivityInputFile">../Output/sensitivity.csv,../Output/crossgamma.csv</Parameter>
+      <Parameter name="covarianceInputFile">covariance.csv</Parameter>
+      <Parameter name="quantiles">0.95,0.99</Parameter>
+      <Parameter name="breakdown">Y</Parameter>
+      <!-- Delta, DeltaGammaNormal, MonteCarlo -->
+      <Parameter name="method">DeltaGammaNormal</Parameter>
+      <Parameter name="mcSamples">100000</Parameter>
+      <Parameter name="mcSeed">42</Parameter>
+      <Parameter name="outputFile">var.csv</Parameter>
+    </Analytic>
   </Analytics>
 </ORE>

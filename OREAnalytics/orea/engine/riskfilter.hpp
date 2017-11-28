@@ -39,8 +39,8 @@ public:
     RiskFilter(const Size riskClassIndex, const Size riskTypeIndex);
 
     bool allowed(const RiskFactorKey::KeyType& t) const;
-    const std::string& riskClassLabel() const { return riskClassLabel_[riskClassIndex_ - 1]; }
-    const std::string& riskTypeLabel() const { return riskTypeLabel_[riskTypeIndex_ - 1]; }
+    const std::string& riskClassLabel() const { return riskClassLabel_[riskClassIndex_]; }
+    const std::string& riskTypeLabel() const { return riskTypeLabel_[riskTypeIndex_]; }
 
     static Size numberOfRiskClasses() { return riskClassLabel_.size(); }
     static Size numberOfRiskTypes() { return riskTypeLabel_.size(); }

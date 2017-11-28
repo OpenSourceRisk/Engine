@@ -33,7 +33,9 @@ public:
     virtual void reset() = 0;
     virtual std::string tradeId() const = 0;
     virtual bool isCrossGamma() const = 0;
+    // key for delta and diagonal gamma
     virtual boost::shared_ptr<RiskFactorKey> factor1() const = 0;
+    // non-null only for cross gammas
     virtual boost::shared_ptr<RiskFactorKey> factor2() const = 0;
     // such as tenors, strikes (.../10Y/15Y/ATM)
     virtual std::vector<string> additionalTokens1() const = 0;
@@ -74,4 +76,4 @@ void loadMappingTableFromCsv(std::map<std::string, std::string>& data, const std
                              const char delim = '\n');
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

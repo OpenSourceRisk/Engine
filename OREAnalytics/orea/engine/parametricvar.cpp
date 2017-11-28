@@ -74,7 +74,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     }
     std::vector<RiskFactorKey> sensiKeys(sensiKeysTmp.begin(), sensiKeysTmp.end());
     std::vector<std::string> portfolios(portfoliosTmp.begin(), portfoliosTmp.end());
-    LOG("Read " << sensiKeys.size() << " sensitivity keys in " << value1.size() << " portfolios");
+    LOG("Have " << sensiKeys.size() << " sensitivity keys in " << value1.size() << " portfolios");
 
     // build global covariance matrix
     Matrix omega(sensiKeys.size(), sensiKeys.size(), 0.0);
@@ -88,18 +88,21 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             ++unusedCovariance;
         }
     }
-    LOG("Read " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
-                << " do not match a portfolio sensitivity and will not be used.");
+    LOG("Found " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
+                 << " do not match a portfolio sensitivity and will not be used.");
 
     // make covariance matrix positive semi-definite
-    LOG("Make covariance matrix positive semi-definite");
+    LOG("Make covariance matrix positive semi-definite, dimension is " << sensiKeys.size());
     QuantLib::Matrix covSqrt = pseudoSqrt(omega, SalvagingAlgorithm::Spectral);
     QuantLib::Matrix omegaSalvaged = covSqrt * transpose(covSqrt);
     LOG("Done.");
 
     // loop over portfolios (index 0 = all portfolios)
-    for (Size i = 0; i <= (breakdown_ ? portfolios.size() : 0); ++i) {
-        std::string portfolio = i == 0 ? "(all)" : portfolios[i];
+    Size loopLimitPf = breakdown_ && portfolios.size() > 1 ? portfolios.size() : 0;
+    for (Size i = 0; i <= loopLimitPf; ++i) {
+        std::string portfolio = i == 0 ? (portfolios.size() == 1 ? portfolios.front() : "(all)") : portfolios[i - 1];
+        if (portfolio == "")
+            portfolio = "(empty)";
         // build delta and gamma for given portfolio (or all portfolios)
         Array delta(sensiKeys.size(), 0.0);
         Matrix gamma(sensiKeys.size(), sensiKeys.size(), 0.0);
@@ -139,20 +142,23 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             }
         }
         // loop over risk class and type filters (index 0 == all risk types)
-        Array deltaFiltered(delta);
-        Matrix gammaFiltered(gamma);
-        for (Size j = 0; j <= (breakdown_ ? RiskFilter::numberOfRiskClasses() : 0); ++j) {
-            for (Size k = 0; j <= (breakdown_ ? RiskFilter::numberOfRiskTypes() : 0); ++k) {
+        for (Size j = 0; j < (breakdown_ ? RiskFilter::numberOfRiskClasses() : 1); ++j) {
+            for (Size k = 0; k < (breakdown_ ? RiskFilter::numberOfRiskTypes() : 1); ++k) {
+                // TODO should we rather project on the set of indices with non-zero sensis
+                // instead of copying the initial sensis and setting the non-releveant entries
+                // to zero?
+                Array deltaFiltered(delta);
+                Matrix gammaFiltered(gamma);
                 RiskFilter rf(j, k);
-                LOG("compute parametric var for portfolio \"" << portfolio << "\""
+                LOG("Compute parametric var for portfolio \"" << portfolio << "\""
                                                               << ", risk class " << rf.riskClassLabel()
                                                               << ", risk type " << rf.riskTypeLabel());
                 // set sensis which do not belong to risk type filter to zero
                 for (Size idx = 0; idx < sensiKeys.size(); ++idx) {
                     if (!rf.allowed(sensiKeys[idx].keytype)) {
-                        delta[idx] = 0.0;
+                        deltaFiltered[idx] = 0.0;
                         for (Size ii = 0; ii < sensiKeys.size(); ++ii) {
-                            gamma[idx][ii] = gamma[ii][idx] = 0.0;
+                            gammaFiltered[idx][ii] = gammaFiltered[ii][idx] = 0.0;
                         }
                     }
                 }
@@ -162,11 +168,14 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                 // compute var and write to report
                 std::vector<Real> var = zeroSensis ? std::vector<Real>(p_.size(), 0.0)
                                                    : computeVar(omega, deltaFiltered, gammaFiltered, p_);
-                report.add(portfolio);
-                report.add(rf.riskClassLabel());
-                report.add(rf.riskTypeLabel());
-                for (auto const& v : var)
-                    report.add(v);
+                if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
+                    report.next();
+                    report.add(portfolio);
+                    report.add(rf.riskClassLabel());
+                    report.add(rf.riskTypeLabel());
+                    for (auto const& v : var)
+                        report.add(v);
+                }
             } // for k (risk types)
         }     // for j (risk classes)
     }         // for i (portfolios)
