@@ -3983,8 +3983,7 @@ a SpreadQuote and a RecoveryRateQuote.
 \subsection{Risk Factor Evolution Model}\label{sec:app_rfe}
 
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
-evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk
-factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
+evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit (for $t0$-pricing). Extensions to full simulation of Credit and Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
 processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
