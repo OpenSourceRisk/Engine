@@ -144,6 +144,10 @@
           <Expiries> 1Y, 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
           <Strikes>0.015, 0.015, 0.015, 0.015, 0.015, 0.015</Strikes>
         </CalibrationCapFloors>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
       </LGM>
 	  <LGM index="UKRPI">
 		<Currency>GBP</Currency>
@@ -167,6 +171,10 @@
           <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y</Expiries>
           <Strikes>0.03, 0.03, 0.03, 0.03, 0.03</Strikes>
         </CalibrationCapFloors>
+        <ParameterTransformation>
+          <ShiftHorizon>0.0</ShiftHorizon>
+          <Scaling>1.0</Scaling>
+        </ParameterTransformation>
 	  </LGM>
 	</InflationIndexModels>
     <InstantaneousCorrelations>

@@ -112,6 +112,21 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     LOG("alpha times size: " << aTimes.size());
     LOG("lambda times size: " << hTimes.size());
 
+    LOG("Apply shift horizon and scale");
+
+    QL_REQUIRE(data_->shiftHorizon() >= 0.0, "shift horizon must be non negative");
+    QL_REQUIRE(data_->scaling() > 0.0, "scaling must be positive");
+
+    if (data_->shiftHorizon() > 0.0) {
+        LOG("Apply shift horizon " << data_->shiftHorizon() << " to the " << data_->infIndex() << " DK model");
+        parametrization_->shift() = data_->shiftHorizon();
+    }
+
+    if (data_->scaling() != 1.0) {
+        LOG("Apply scaling " << data_->scaling() << " to the " << data_->infIndex() << " DK model");
+        parametrization_->scaling() = data_->scaling();
+    }
+
 }
 
 void InfDkBuilder::buildCapFloorBasket() {
