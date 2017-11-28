@@ -32,7 +32,7 @@ using QuantLib::Matrix;
 
 namespace QuantExt {
 
-Real Trace(const Matrix& m) {
+inline Real Trace(const Matrix& m) {
     QL_REQUIRE(m.rows() == m.columns(), "Trace: input matrix must be quadratic");
     Real t = 0.0;
     for (Size i = 0; i < m.rows(); ++i)

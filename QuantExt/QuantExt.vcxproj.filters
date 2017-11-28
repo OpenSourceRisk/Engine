@@ -495,6 +495,12 @@
     <ClInclude Include="qle\termstructures\immfraratehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\trace.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\deltagammavar.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -834,6 +840,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\deltagammavar.cpp">
+      <Filter>math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
