@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/math/deltagammavar.hpp
-    \brief delta or delta-gamma VaR
+    \brief functions to compute delta or delta-gamma VaR numbers
     \ingroup math
 */
 
@@ -43,18 +43,29 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-/* delta VaR */
+//! function that computes a delta VaR
+/*! For a given covariance matrix and a delta vector this function computes a parametric var w.r.t. a given
+ * confidence level for multivariate normal risk factors. */
 Real deltaVar(const Matrix& omega, const Array& delta, const Real p);
 
-/* delta-gamma normal VaR */
+//! function that computes a delta-gamma normal VaR
+/*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
+ * w.r.t. a given confidence level. The gamma matrix is taken into account when computing the variance of the PL
+ * distirbution, but the PL distribution is still assumed to be normal. */
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p);
 
-/* delta-gamma VaR using Monte Carlo (single quantile) */
+//! function that computes a delta-gamma VaR using Monte Carlo (single quantile)
+/*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
+ * w.r.t. a given confidence level. The var quantile is estimated from Monte-Carlo realisations of a second order
+ * sensitivity based PL. */
 template <class RNG = PseudoRandom>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
                      const Size seed);
 
-/* delta-gamma VaR using Monte Carlo (multiple quantiles) */
+//! function that computes a delta-gamma VaR using Monte Carlo (multiple quantiles)
+/*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
+ * w.r.t. a vector of given confidence levels. The var quantile is estimated from Monte-Carlo realisations of a second
+ * order sensitivity based PL. */
 template <class RNG = PseudoRandom>
 Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
                                                const std::vector<Real>& p, const Size paths, const Size seed);

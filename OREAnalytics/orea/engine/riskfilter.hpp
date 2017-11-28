@@ -33,6 +33,10 @@ using QuantLib::Size;
 namespace ore {
 namespace analytics {
 
+//! Risk Filter
+/*! The risk filter class groups risk factor keys w.r.t. a risk class (IR, FX, EQ...) and a risk type (delta-gamma,
+ * vega, ...). It can e.g. be used to break down a var report.
+ */
 class RiskFilter {
 public:
     //! for both risk class and risk type, index 0 stands for "all"

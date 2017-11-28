@@ -25,6 +25,9 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
+//! Sensitivity Data Base Class
+/*! This class represents a stream of sensitivity data, consisting of a trade id, one (for delta, diagonal gamma) or two
+ * (for cross gamma) risk factor keys and associated sensitivity values. */
 class SensitivityData {
 public:
     SensitivityData() {}
@@ -45,6 +48,7 @@ public:
     virtual bool hasFactor(const RiskFactorKey& key) const = 0;
 };
 
+//! In Memory Implementaiton of sensitivity data
 class SensitivityDataInMemory : public SensitivityData {
 public:
     SensitivityDataInMemory() : index_(0) {}
@@ -70,8 +74,13 @@ private:
     std::vector<double> value_, value2_;
 };
 
+//! risk factor key parser that takes into account additional tokens occuring in sensitivity risk factor keys
 boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
+
+//! utitlity function that loads sensitivity data from a CSV file
 void loadSensitivityDataFromCsv(SensitivityDataInMemory& data, const std::string& fileName, const char delim = '\n');
+
+//! utility function that loads a mapping table from a CSV file
 void loadMappingTableFromCsv(std::map<std::string, std::string>& data, const std::string& fileName,
                              const char delim = '\n');
 

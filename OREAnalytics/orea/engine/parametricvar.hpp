@@ -36,6 +36,9 @@ using QuantLib::Array;
 namespace ore {
 namespace analytics {
 
+//! Parametric VaR Calculator
+/*! This class takes sensitivity data and a covariance matrix as an input and computes a parametric value at risk. The
+ * output can be broken down by portfolios, risk classes (IR, FX, EQ, ...) and risk types (delta-gamma, vega, ...). */
 class ParametricVarCalculator {
 public:
     virtual ~ParametricVarCalculator() {}
