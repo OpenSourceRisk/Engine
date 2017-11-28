@@ -41,7 +41,7 @@
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="simulationConfigFile">mcsimulation.xml</Parameter>
+      <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
@@ -78,7 +78,7 @@
     </Analytic>
     <Analytic type="sensitivity">
       <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">mcsimulation.xml</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario_exposure.csv</Parameter>
@@ -89,7 +89,7 @@
     </Analytic>
     <Analytic type="stress">
       <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">mcsimulation.xml</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
       <Parameter name="stressConfigFile">stresstest.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest_exposure.csv</Parameter>
