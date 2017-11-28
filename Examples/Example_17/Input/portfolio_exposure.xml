@@ -16,7 +16,7 @@
         <PaymentConvention>Unadjusted</PaymentConvention>
         <CashflowData>
 		  <Cashflow>
-            <Amount Date="2021-02-05">10000000</Amount>
+            <Amount Date="2036-02-05">20000000</Amount>
           </Cashflow>
         </CashflowData>
 	  </LegData>
@@ -36,7 +36,7 @@
           <Dates>
 		    <Calendar>UK</Calendar>
 		    <Dates>
-			  <Date>2021-02-05</Date>
+			  <Date>2036-02-05</Date>
 			</Dates>
           </Dates>
         </ScheduleData>
