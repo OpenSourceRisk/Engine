@@ -19,13 +19,13 @@ There are two distinct cases to consider:
 
 \begin{itemize}
 \item An ISDA agreement which does not contain a \emph{Credit Support
-    Annex} (CSA)
-\item An ISDA agreement which does contain a CSA
+    Annex} (CSA).
+\item An ISDA agreement which does contain a CSA.
 \end{itemize}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Uncollateralised Netting Set}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-If an ISDA agreement does not contain a Credit Support Annex the
+If an ISDA agreement does not contain a Credit Support Annex, the
 portfolio exposures are not eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
@@ -57,7 +57,7 @@ The meanings of the various elements are as follows:
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Collateralised Netting Set}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-If an ISDA agreement contains a Credit Support Annex the
+If an ISDA agreement contains a Credit Support Annex, the
 portfolio exposures are eligible for collateralisation. In such a
 case the netting set can be defined within the following XML template:
 
@@ -127,11 +127,11 @@ meanings of the various elements are as follows:
 \begin{itemize}
 \item Bilateral: Both parties to the CSA are legally entitled to
   request collateral to cover their counterparty credit risk exposure
-  on the underlying portfolio
+  on the underlying portfolio.
 \item CallOnly: Only we are entitled to hold collateral; the
-  counterparty has no such entitlement
+  counterparty has no such entitlement.
 \item PostOnly: Only the counterparty is entitled to hold collateral;
-  we have no such entitlement
+  we have no such entitlement.
 \end{itemize}
 
 \paragraph{CSACurrency} A three-letter ISO code specifying the master
