@@ -1174,11 +1174,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     simMarketConfig->zeroInflationIndices() = { "UKRPI", "EUHICPXT" };
     simMarketConfig->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
         5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years });
-    simMarketConfig->simulateCpiCapFloorVols() = false;
-    simMarketConfig->cpiCapFloorVolDecayMode() = ConstantVariance;
-    simMarketConfig->cpiCapFloorVolIndices() = { "EUHICPXT" };
-    simMarketConfig->setCpiCapFloorVolExpiries("", { 5 * Years});
-    simMarketConfig->cpiCapFloorVolStrikes() = { 0.00 };
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
