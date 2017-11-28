@@ -16,7 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file zeroinflationcurve2.hpp
+/*! \file qle/termstructures/zeroinflationcurveobservermoving.hpp
     \brief Observable inflation term structure based on the interpolation of zero rate quotes,
            but with floating reference date
 */
