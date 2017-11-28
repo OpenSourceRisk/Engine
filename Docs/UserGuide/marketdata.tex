@@ -1,7 +1,7 @@
 %========================================================
 \section{Market Data}\label{sec:market_data}
 %========================================================
-
+In this section we discuss the market data, which enters into the calibration of OREs risk factor evolution models. 
 Market data in the {\tt market.txt} file is given in three columns; Date, Quote and Quote value.
 
 \begin{itemize}
@@ -10,7 +10,7 @@ Market data in the {\tt market.txt} file is given in three columns; Date, Quote 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item {\bf Quote}: A generic description that contains Instrument Type
-  and Quote Type, followed by instrument specific descriptions (See \S
+  and Quote Type, followed by instrument specific descriptions (see 
   \ref{ss:zero_rate} ff.). The base of a quote consists of
   InstType/QuoteType followed by instrument specific information
   separated by slashes "/".
@@ -226,7 +226,7 @@ Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
 (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
 
 Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from
-today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S
+today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see 
 \ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2.
 
 \medskip

@@ -215,7 +215,7 @@ Year-on-Year Inflation Swaps & Y & Y & Y \\
 \hline
 %Year-on-Year Inflation Caps/Floors & Y & N & N \\
 %\hline
-Credit Default Swaps & Y & Y & N \\
+Credit Default Swaps & Y & only sensitivity & N \\
 \hline
 \end{tabular}
 \caption{ORE product coverage.}
@@ -343,8 +343,8 @@ launched in spreadsheets and key results presented automatically within the same
 \section{Getting and Building ORE}\label{sec:installation}
 %========================================================
 
-You can get ORE in two ways, either by downloading a release bundle as described in section \ref{sec:release} or by
-checking out the source code from the github repository as described in section \ref{sec:build_ore}.
+You can get ORE in two ways, either by downloading a release bundle as described in section \ref{sec:release} (easiest if you just want to use ORE) or by
+checking out the source code from the github repository as described in section \ref{sec:build_ore} (easiest if you want to build and develop ORE).
 
 \subsection{ORE Releases}\label{sec:release}
 
@@ -384,7 +384,7 @@ executables:
 \end{itemize}
 
 \medskip
-To build ORE from sources:
+The release bundle does contain the ORE source code, which is sufficient to build ORE from sources manually as follows (if you build ORE for development purposes, we recommend using git though, see section \ref{sec:build_ore}):
 \begin{itemize}
 \item Set up Boost as described in section \ref{sec:boost}, unless already installed
 \item Set up QuantLib 1.11 \cite{QL,quantlib-install} from its github or sourceforge download page, unless already
@@ -1733,6 +1733,7 @@ A run of ORE is kicked off with a single command line parameter
 which points to the 'master input file' referred to  as {\tt ore.xml} subsequently. 
 This file is the starting point of the engine's configuration explained in the following sub section.
 An overview of all input configuration files respectively all output files is shown in Table \ref{tab_1} respectively Table \ref{tab_2}.
+To set up your own ORE configuration, it might be not be necessary to start from scratch, but instead use any of the examples discussed in section \ref{sec:examples} as a boilerplate and just change the folders, see section \ref{sec:master_input}, and the trade data, see section \ref{sec:portfolio_data}, together with the netting definitions, see section \ref{sec:nettingsetinput}.
 
 \subsection{Master Input File: {\tt ore.xml}}\label{sec:master_input}
 
@@ -3986,8 +3987,7 @@ a SpreadQuote and a RecoveryRateQuote.
 \subsection{Risk Factor Evolution Model}\label{sec:app_rfe}
 
 ORE applies the cross asset model described in detail in \cite{Lichters} to evolve  the market through time. So far the
-evolution model in ORE is limited to IR and FX risk factors for any number of currencies, extensions to further risk
-factor classes (Inflation, Credit, Equity, Commodity) will follow. \\
+evolution model in ORE supports IR and FX risk factors for any number of currencies, Equity and Inflation as well as Credit (for $t0$-pricing). Extensions to full simulation of Credit and Commodity is planned. \\
 
 The Cross Asset Model is based on the Linear Gauss Markov model (LGM) for interest rates, lognormal FX and equity 
 processes and the Dodgson-Kainth model for inflation. We identify a single {\em domestic} currency; its LGM process, 
@@ -4424,7 +4424,7 @@ To quantify these two effects one needs to model Initial Margin under future mar
 \item ISDA's Standard Initial Margin (SIMM) under scenarios
 \end{itemize} 
 
-We skip the first option as too computationally expensive for ORE. In the first ORE release we focus on a relatively
+We skip the first option as too computationally expensive for ORE. In the current ORE release we focus on a relatively
 simple regression approach as in \cite{Anfuso2016,LichtersEtAl}. Consider the netting set values $\NPV(t)$ and $\NPV(t+\Delta)$ that
 are spaced one margin period of risk $\Delta$ apart. Moreover, let $F(t,t+\Delta)$ denote cumulative netting set cash
 flows between time $t$ and $t+\Delta$, converted into the NPV currency. Let $X(t)$ then denote the netting set value
@@ -4468,7 +4468,7 @@ spreads relative to the cash collateral rate.
 \subsection{Collateral Model}\label{sec:app_collateral}
 
 The collateral model implemented in ORE is based on the evolution of collateral account balances along each Monte Carlo
-path taking in to account thresholds, minimum transfer amounts and independent amounts defined in the CSA, as well as
+path taking into account thresholds, minimum transfer amounts and independent amounts defined in the CSA, as well as
 margin periods of risk.
 
 ORE computes the collateral requirement (aka \emph{Credit Support Amount}) through time along each Monte Carlo path
@@ -4482,9 +4482,9 @@ CSA(t_m) &=
 where
 \begin{itemize}
 \item $V_{set}(t_m)$ is the value of the netting set as of
-  time $t_m$
+  time $t_m$,
   \item $T_{hold}$ is the threshold exposure below which no collateral is
-  required (possibly asymmetric)
+  required (possibly asymmetric),
 %\item $MTA$ is the minimum transfer amount for collateral margin
 %  flow requests (possibly asymmetric)
 \item $I_A$ is the sum of all collateral independent amounts attached to
@@ -4614,7 +4614,7 @@ market can be set up as ATM only or as a full cube as well, but the latter choic
 up in the initial market. The sensitivitiy set up must match the simulation setup with regards to the strikes (i.e. it
 is ATM only if and only if the simulation setup is ATM only, or it must contain exactly the same strike spreads relative
 to ATM as the simulation setup). Finally, if the initial market setup is a full cube, and the simulation / sentivitiy
-setup is ATM only, sensitivtiies are computed by shifting the ATM volatility w.r.t. the given shift size and type and
+setup is ATM only, sensitivties are computed by shifting the ATM volatility w.r.t. the given shift size and type and
 shifting the non-ATM volatilities by the same absolute amount as the ATM volatility.
 
 For {\em Cap/Floor Volatilities}, the initial market setup always contains a set of fixed strikes, i.e. there is no

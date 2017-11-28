@@ -679,7 +679,7 @@ turn include further trade components such as \lstinline!FixedLegData!, \lstinli
 \label{lst:trade_component}
 \end{listing}
 
-Descriptions of all trade components supported in ORE follow below:
+Descriptions of all trade components supported in ORE follow below.
 
 \subsubsection{Option Data}
 \label{ss:option_data} 
@@ -804,13 +804,13 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
-\item DayCounter: The day count convention of the leg coupons. 
-
-Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
-
 \item PaymentConvention: The payment convention of the leg coupons. 
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+
+\item DayCounter: The day count convention of the leg coupons. 
+
+Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
 
 \item Notionals: This node contains child elements of type
   \lstinline!Notional!. If the notional is fixed over the life of the
@@ -867,7 +867,7 @@ specifying notionals only for dates where the notional changes.
 In case of exchange of currencies an initial exchange, a final exchange
 and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
 \lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
-\lstinline!NotionalAmortizingExchange! as subelements, see listing
+\lstinline!NotionalAmortizingExchange! as subelements, see Listing
 \ref{lst:notional_exchange}.
 
 \begin{listing}[H]
@@ -888,7 +888,7 @@ and an amortising exchange can be specified using an \lstinline!Exchanges! child
 
 FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
 \lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
-\lstinline!FixingDays! (integer) subelements, see listing
+\lstinline!FixingDays! (integer) subelements, see Listing
 \ref{lst:notional_fxreset} for an example
 
  \begin{listing}[H]
@@ -913,13 +913,13 @@ FX Resets can be specified using an \lstinline!FXReset! child element with subel
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.
 \item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is
-outlined in section \ref{ss:fixedleg_data} Fixed Leg Data and Rates.
+outlined in section \ref{ss:fixedleg_data}.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
 outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
 \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
-  outlined in section \ref{ss:cpilegdata} CPI Leg Data.
+  outlined in section \ref{ss:cpilegdata}.
 \item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
-  outlined in section \ref{ss:yylegdata} YY Leg Data.
+  outlined in section \ref{ss:yylegdata}.
 \end{itemize}
 
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
@@ -1074,7 +1074,7 @@ The meanings and allowable values of the elements in the \lstinline!FixedLegData
 
 \item Rates: This node contains child elements of type
   \lstinline!Rate!. If the rate is constant over the life of the fixed
-  leg only one rate value should be entered. If two or more coupons
+  leg, only one rate value should be entered. If two or more coupons
   have different rates, multiple rate values are required, each
   represented by a \lstinline!Rate! child element. The first rate
   value corresponds to the first coupon, the second rate value
@@ -1147,7 +1147,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item Index:  The combination of currency, index and term that
   identifies the relevant fixings and yield curve of the floating leg.  
 
-  Allowable values: An alphanumeric string on the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
     simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
@@ -1166,7 +1166,7 @@ Allowable values:  Positive integers.
 
 \item Spreads: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
-  floating leg only one spread value should be entered. If two or more
+  floating leg, only one spread value should be entered. If two or more
   coupons have different spreads, multiple spread values are required,
   each represented by a \lstinline!Spread! child element. The first
   spread value corresponds to the first coupon, the second spread
@@ -1202,7 +1202,7 @@ in Listing \ref{lst:spreads_dates}.
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
-  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
 \item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
@@ -1254,27 +1254,27 @@ Within each {\tt AmortisationData} block the meaning of elements is
 \begin{itemize}
 \item Type: Amortisation type with allowable values {\em FixedAmount,
   RelativeToInitialNotional, RelativeToPreviousNotional, Annuity.}
-\item Value: Interpreted depending on {\tt Type}, see below
+\item Value: Interpreted depending on {\tt Type}, see below.
 \item StartDate: Amortisation starts on first schedule date on or
-  beyond StartDate
-\item Frequency, entered as a period: Frequency of amortisations
+  beyond StartDate.
+\item Frequency, entered as a period: Frequency of amortisations.
 \item Underflow:  Allow amortisation below zero notional if {\tt true},
-  otherwise amortisation stops at zero notional 
+  otherwise amortisation stops at zero notional.
 \end{itemize}
 
 The amortisation data block's {\tt Value} element  is interpreted
 depending on the chosen {\tt Type}:
 \begin{itemize}
 \item FixedAmount: The value is interpreted as a notional amount to be
-  subtracted from the current notional on each amortisation date
+  subtracted from the current notional on each amortisation date.
 \item RelativeToInitialNotional: The value is interpreted as a
   fraction of the {\bf initial} notional to be subtraced from the current
-  notional on each amortisation date
+  notional on each amortisation date.
 \item RelativeToPreviousNotional: The value is interpreted as a
   fraction of the {\bf previous} notional to be subtraced from the current
-  notional on each amortisation date
+  notional on each amortisation date.
 \item Annuity: The value is interpreted as annuity amount (redemption
-  plus coupon)
+  plus coupon).
 \end{itemize}
 
 Annuity type amortisation is supported for fixed rate legs as well as
@@ -1334,7 +1334,7 @@ Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS.
 The CMSLegData block contains the following elements:
 
 \begin{itemize}
-\item Index: The underlying CMS index
+\item Index: The underlying CMS index.
 \item Spreads: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
   values.
 \item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
@@ -1349,7 +1349,7 @@ The CMSLegData block contains the following elements:
 \item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
-  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 \item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
@@ -1362,10 +1362,10 @@ Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI. The CPILegD
 elements:
 
 \begin{itemize}
-\item Index: The underlying zero inflation index
+\item Index: The underlying zero inflation index.
 \item Rates: The fixed rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
   values.
-\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons
+\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons.
 \item ObservationLag: The observation lag to be applied.
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 \end{itemize}
@@ -1418,8 +1418,8 @@ Listing \ref{lst:yylegdata} shows an example for a leg of type YY. The YYLegData
 elements:
 
 \begin{itemize}
-\item Index: The underlying zero inflation index
-\item FixingDays: The number of fixing days
+\item Index: The underlying zero inflation index.
+\item FixingDays: The number of fixing days.
 \item ObservationLag: The observation lag to be applied.
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 \end{itemize}
