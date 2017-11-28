@@ -3060,18 +3060,20 @@ The inflation model components are specified by a block as follows
 <CrossAssetModel>	
   ...
   <InflationIndexModels>
-    <LGM index="EUHICP">
+    <LGM index="EUHICPXT">
       <Currency>EUR</Currency>
-      <CalibrationCapFloors>
-        <CalibrationStrategy> ... </CalibrationStrategy> <!-- optional -->
-        <CapFloor> ... </CapFloor>
-        <Expiries> ... </Expiries>
-        <Strikes> ... </Strikes> <!-- can be empty, this will yield calibration to ATM -->
-      </CalibrationCapFloors>
-      <!-- As in the LGM parameterisation for IR components -->
+      <!-- As in the LGM parameterisation for any IR components -->
       <CalibrationType> ... </CalibrationType>
       <Volatility> ... </Volatility>
       <Reversion> ... </Reversion> 
+      <ParameterTransformation> ... </ParameterTransformation>
+      <!-- Inflation model specific -->
+      <CalibrationCapFloors>
+        <CalibrationStrategy> ... </CalibrationStrategy> <!-- not used yet, as there is only one strategy so far -->
+        <CapFloor> Floor </CapFloor> <!-- Cap, Floor -->
+        <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y </Expiries>
+        <Strikes> 0.03, 0.03, 0.03, 0.03, 0.03 </Strikes> <!-- can be empty, this will yield calibration to ATM -->
+      </CalibrationCapFloors>
     </LGM>
     <LGM index="USCPI">
       ...
@@ -3086,8 +3088,6 @@ The inflation model components are specified by a block as follows
 \end{listing}
 
 The inflation model parameterisation inherits from the LGM parameterisation for interest rate components, in particular the CalibrationType, Volatility and Reversion elements.  The additional elements specify the model's calibration to a selection of either Caps or Floors.
-
-\todo[inline]{Review the inflation model section when example 24 is complete}
 
 \medskip
 Finally, the instantaneous correlation structure is specified as follows.
