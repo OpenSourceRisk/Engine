@@ -323,9 +323,6 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                                                   5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                                   30 * Years, 40 * Years, 50 * Years });
 
-    simMarketConfig->simulateCpiCapFloorVols() = false;
-
-
     // Multi path generator
     BigNatural seed = 42;
     // bool antithetic = true;
