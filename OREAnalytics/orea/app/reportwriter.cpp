@@ -99,6 +99,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
+        .addColumn("CashflowNo", Size())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
         .addColumn("FlowType", string())
@@ -176,6 +177,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
+                            .add(j+1)
                             .add(i)
                             .add(payDate)
                             .add(flowType)
