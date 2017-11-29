@@ -199,7 +199,7 @@ std::vector<Real> ParametricVarCalculator::computeVar(const Matrix& omega, const
         }
         return res;
     } else if (method_ == "MonteCarlo") {
-        return QuantExt::deltaGammaVarMc(omega, delta, gamma, p, mcSamples_, mcSeed_);
+        return QuantExt::deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, p, mcSamples_, mcSeed_);
     } else {
         QL_FAIL("ParametricVarCalculator::computeVar(): method " << method_ << " not known.");
     }
