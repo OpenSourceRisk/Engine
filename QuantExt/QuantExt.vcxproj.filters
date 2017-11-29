@@ -291,9 +291,6 @@
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\zeroinflationcurveobserver.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -500,6 +497,18 @@
     </ClInclude>
     <ClInclude Include="qle\math\deltagammavar.hpp">
       <Filter>math</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\inflationindexobserver.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp">
+      <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -843,6 +852,9 @@
     </ClCompile>
     <ClCompile Include="qle\math\deltagammavar.cpp">
       <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp">
+      <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

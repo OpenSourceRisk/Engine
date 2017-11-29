@@ -37,11 +37,13 @@ namespace data {
 
 class AnalysisGenerator : public QuantLib::AcyclicVisitor,
                           public QuantLib::Visitor<QuantLib::CashFlow>,
+                          public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
                           public QuantLib::Visitor<QuantLib::Coupon>,
                           public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
                           public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
                           public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
-                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon> {
+                          public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
+                          public QuantLib::Visitor<QuantLib::CPICoupon> {
 private:
     vector<vector<string>> flowAnalysis_;
     static const QuantLib::Size numberOfColumns_ = 5;
@@ -50,11 +52,13 @@ public:
     AnalysisGenerator();
     void reset();
     void visit(QuantLib::CashFlow& c);
+    void visit(QuantLib::IndexedCashFlow& c);
     void visit(QuantLib::Coupon& c);
     void visit(QuantLib::FloatingRateCoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
+    void visit(QuantLib::CPICoupon& c);
     const vector<vector<string>>& analysis() const;
 };
 
@@ -120,6 +124,17 @@ void AnalysisGenerator::visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) {
     visit(static_cast<QuantExt::FXLinkedCashFlow&>(d));
 }
 
+void AnalysisGenerator::visit(QuantLib::CPICoupon& c) {
+    visit(static_cast<QuantLib::Coupon&>(c));
+    flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
+    flowAnalysis_.back()[INDEX] = c.index()->name();
+}
+
+void AnalysisGenerator::visit(QuantLib::IndexedCashFlow& c) {
+    visit(static_cast<QuantLib::CashFlow&>(c));
+    flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
+    flowAnalysis_.back()[INDEX] = c.index()->name();
+}
 const vector<vector<string>>& AnalysisGenerator::analysis() const { return flowAnalysis_; }
 
 vector<vector<string>> flowAnalysis(const QuantLib::Leg& leg) {

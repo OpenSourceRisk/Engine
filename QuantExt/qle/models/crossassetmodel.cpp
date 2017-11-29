@@ -483,7 +483,7 @@ void CrossAssetModel::checkCorrelationMatrix() const {
     QL_REQUIRE(rho_.columns() == n, "correlation matrix (" << n << " x " << m << " must be square");
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < m; ++j) {
-            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is no symmetric, for (i,j)=("
+            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is not symmetric, for (i,j)=("
                                                                  << i << "," << j << ") rho(i,j)=" << rho_[i][j]
                                                                  << " but rho(j,i)=" << rho_[j][i]);
             QL_REQUIRE(close_enough(std::abs(rho_[i][j]), 1.0) || (rho_[i][j] > -1.0 && rho_[i][j] < 1.0),
@@ -624,6 +624,26 @@ void CrossAssetModel::calibrateInfDkReversionsIterative(
     update();
 }
 
+void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method, 
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
+    }
+    update();
+}
+
+void CrossAssetModel::calibrateInfDkReversionsGlobal(
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    for (Size i = 0; i < helpers.size(); ++i) {
+        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
+    }
+    update();
+}
+
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
     const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
@@ -684,6 +704,10 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real lag = inflationYearFraction(freq, infdk(i)->termStructure()->indexIsInterpolated(),
                                      irlgm1f(0)->termStructure()->dayCounter(), baseDate,
                                      infdk(i)->termStructure()->referenceDate());
+    
+//    Period lag = infdk(i)->termStructure()->observationLag();
+
+
     // TODO account for seasonality ...
     // compute final results depending on z and y
     Real It = std::pow(1.0 + infdk(i)->termStructure()->zeroRate(t - lag), t) * std::exp(Hyt * z - y - V0);

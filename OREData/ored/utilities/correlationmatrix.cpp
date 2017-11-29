@@ -46,24 +46,24 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& regions) {
+                                                               const std::vector<std::string>& infIndices) {
     vector<string> factors;
-    return correlationMatrixImpl(ccys, regions, factors);
+    return correlationMatrixImpl(ccys, infIndices, factors);
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& regions,
+                                                               const std::vector<std::string>& infIndices,
                                                                const std::vector<std::string>& names) {
     vector<string> factors;
-    return correlationMatrixImpl(ccys, regions, names, factors);
+    return correlationMatrixImpl(ccys, infIndices, names, factors);
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrix(const std::vector<std::string>& ccys,
-                                                               const std::vector<std::string>& regions,
+                                                               const std::vector<std::string>& infIndices,
                                                                const std::vector<std::string>& names,
                                                                const std::vector<std::string>& equities) {
     vector<string> factors;
-    return correlationMatrixImpl(ccys, regions, names, equities, factors);
+    return correlationMatrixImpl(ccys, infIndices, names, equities, factors);
 }
 
 // -- Impl methods, used for building ontop of each other.
@@ -121,108 +121,79 @@ Disposable<Matrix> CorrelationMatrixBuilder::extendMatrix(const Matrix& mat, Siz
     return newMat;
 }
 
+Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matrix& mat, 
+                                                                     const vector<string>& names, 
+                                                                     vector<string>& factors,
+                                                                     const string& prefix) {
+    Size m = names.size();
+
+    // build extra factors
+    // { "UKRPI", "EUHICP" } -> { "INF:UKRPI", "INF:EUHICP" }
+    for (Size i = 0; i < m; i++)
+        factors.push_back(prefix + names[i]);
+
+    // Build extended matrix. 2n-1 => 2n-1+m
+    Matrix mat1 = extendMatrix(mat, m);
+
+    // now populate additional terms
+    Size len = mat1.rows();
+    QL_REQUIRE(len == mat1.columns(), "Matrix not square");
+    for (Size i = 0; i < len; i++) {
+        for (Size j = max(i + 1, mat.rows()); j < len; j++)
+            mat1[i][j] = mat1[j][i] = lookup(factors[i], factors[j]);
+    }
+
+    // check it
+    checkMatrix(mat1);
+
+    return mat1;
+
+}
+
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& regions,
+                                                                   const vector<string>& infIndices,
                                                                    vector<string>& factors) {
 
     // First, build the IR/FX matrix
     Matrix mat1 = correlationMatrixImpl(ccys, factors);
 
-    Size m = regions.size();
-    if (m == 0)
+    if (infIndices.size() == 0)
         return mat1;
-
-    // build extra factors, use dummy index name
-    // { "EU", "US" } -> { "INF:EU/Index/CPI", "INF:EU/Index/RR", "INF:US/Index/CPI", "INF:US/Index/RR" }
-    for (Size i = 0; i < m; i++) {
-        factors.push_back("INF:" + regions[i] + "/Index/CPI");
-        factors.push_back("INF:" + regions[i] + "/Index/RR");
-    }
-
-    // Build extended matrix. 2n-1 => 2n-1+2m
-    Matrix mat = extendMatrix(mat1, 2 * m);
-
-    // now populate additional terms
-    Size len = mat.rows();
-    QL_REQUIRE(len == mat.columns(), "Matrix not square");
-    for (Size i = 0; i < len; i++) {
-        for (Size j = max(i + 1, mat1.rows()); j < len; j++)
-            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j]);
-    }
-
-    // check it
-    checkMatrix(mat);
-
-    return mat;
+    
+    Matrix mat2 = extendCorrelationMatrix(mat1, infIndices, factors, "INF:");
+    return mat2;
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& regions,
+                                                                   const vector<string>& infIndices,
                                                                    const vector<string>& names,
                                                                    vector<string>& factors) {
 
     // First, build the IR/FX/INF matrix
-    Matrix mat2 = correlationMatrixImpl(ccys, regions, factors);
+    Matrix mat1 = correlationMatrixImpl(ccys, infIndices, factors);
 
-    Size k = names.size();
-    if (k == 0)
-        return mat2;
+    if (names.size() == 0)
+        return mat1;
 
-    // build extra factors
-    // { "APPLE", "HP" } -> { "CR:APPLE", "CR:HP" }
-    for (Size i = 0; i < k; i++)
-        factors.push_back("CR:" + names[i]);
+    Matrix mat2 = extendCorrelationMatrix(mat1, names, factors, "CR:");
+    return mat2;
 
-    // Build extended matrix. 2n-1+2m => 2n-1+2m+k
-    Matrix mat = extendMatrix(mat2, k);
-
-    // now populate additional terms
-    Size len = mat.rows();
-    QL_REQUIRE(len == mat.columns(), "Matrix not square");
-    for (Size i = 0; i < len; i++) {
-        for (Size j = max(i + 1, mat2.rows()); j < len; j++)
-            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j]);
-    }
-
-    // check it
-    checkMatrix(mat);
-
-    return mat;
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
-                                                                   const vector<string>& regions,
+                                                                   const vector<string>& infIndices,
                                                                    const vector<string>& names,
                                                                    const vector<string>& equities,
                                                                    vector<string>& factors) {
 
-    // First, build the IR/FX/INF matrix
-    Matrix mat3 = correlationMatrixImpl(ccys, regions, names, factors);
+    // First, build the IR/FX/INF/CR matrix
+    Matrix mat1 = correlationMatrixImpl(ccys, infIndices, names, factors);
+    
+    if (equities.size() == 0)
+        return mat1;
 
-    Size q = equities.size();
-    if (q == 0)
-        return mat3;
-
-    // build extra factors
-    // { "GOOGLE", "AMAZON" } -> { "EQ:GOOGLE", "EQ:AMAZON" }
-    for (Size i = 0; i < q; i++)
-        factors.push_back("EQ:" + equities[i]);
-
-    // Build extended matrix. 2n-1+2m+p => 2n-1+2m+p+q
-    Matrix mat = extendMatrix(mat3, q);
-
-    // now populate additional terms
-    Size len = mat.rows();
-    QL_REQUIRE(len == mat.columns(), "Matrix not square");
-    for (Size i = 0; i < len; i++) {
-        for (Size j = max(i + 1, mat3.rows()); j < len; j++)
-            mat[i][j] = mat[j][i] = lookup(factors[i], factors[j]);
-    }
-
-    // check it
-    checkMatrix(mat);
-
-    return mat;
+    Matrix mat2 = extendCorrelationMatrix(mat1, equities, factors, "EQ:");
+    return mat2;
 }
 
 // static
@@ -252,60 +223,28 @@ Size CorrelationMatrixBuilder::countNonZero(const Matrix& m) {
     return c;
 }
 
-// splits up INF:Region/Index/[CPI|RR], throws if invalid
-static void parseInflationName(const string& s, string& regionOut, string& indexOut, bool& isCpi) {
-    QL_REQUIRE(s.size() > 4 && s.substr(0, 4) == "INF:", "Invalid Inflation factor " << s);
-    vector<string> tmp;
-    boost::split(tmp, s, boost::is_any_of(":/"));
-    QL_REQUIRE(tmp.size() == 4 && tmp[0] == "INF" && tmp[1].size() == 2 && // valid region code
-                   tmp[2].size() > 0,                                      // valid index
-               "Invalid factor name " << s);
-    regionOut = tmp[1];
-    indexOut = tmp[2];
-    boost::to_upper(tmp[3]);
-    QL_REQUIRE(tmp[3] == "CPI" || tmp[3] == "RR", "Invalid factor name " << s);
-    isCpi = (tmp[3] == "CPI");
-}
-
 void CorrelationMatrixBuilder::checkFactor(const string& f) {
     if (f.substr(0, 3) == "IR:") {
         QL_REQUIRE(f.size() == 6, "Invalid factor name " << f);
     } else if (f.substr(0, 3) == "FX:") {
         QL_REQUIRE(f.size() == 9, "Invalid factor name " << f);
     } else if (f.substr(0, 4) == "INF:") {
-        // format is INF:<Region>/<index>/[CPI|RR]
-        string s1, s2;
-        bool b;
-        parseInflationName(f, s1, s2, b); // this will throw if bad
+        // Inflation index, check it's at least 1 character
+        QL_REQUIRE(f.size() > 4, "Invalid factor name " << f);
     } else if (f.substr(0, 3) == "CR:") {
-        // credit name, just check it's at leasr 1 character
+        // credit name, just check it's at least 1 character
         QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
     } else if (f.substr(0, 3) == "EQ:") {
-        // equity name, just check it's at leasr 1 character
+        // equity name, just check it's at least 1 character
         QL_REQUIRE(f.size() > 3, "Invalid factor name " << f);
     } else {
         QL_FAIL("Invalid factor name " << f);
     }
 }
 
-static bool isInf(const string& s) { return s.size() > 4 && s.substr(0, 4) == "INF:"; }
-// strip out Index from inflation name
-static string convertInf(const string& s) {
-    string r, i;
-    bool isCpi;
-    parseInflationName(s, r, i, isCpi);
-    return "INF:" + r + (isCpi ? "/CPI" : "/RR");
-}
-
 CorrelationMatrixBuilder::key CorrelationMatrixBuilder::buildkey(const string& f1In, const string& f2In) {
     string f1(f1In), f2(f2In); // we need local copies
     QL_REQUIRE(f1 != f2, "Correlation factors must be unique (" << f1 << ")");
-    // for inflation - we strip out the index!
-    if (isInf(f1))
-        f1 = convertInf(f1);
-    if (isInf(f2))
-        f2 = convertInf(f2);
-
     if (f1 < f2)
         return make_pair(f1, f2);
     else

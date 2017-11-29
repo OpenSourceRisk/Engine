@@ -53,8 +53,9 @@
     <DefaultCurves>
       <Names>
 	    <Name>CPTY_C</Name>
+		<Name>BANK</Name>
       </Names>
-      <Tenors>6M,1Y,2Y</Tenors>
+      <Tenors>6M,1Y,2Y,5Y,10Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
 
