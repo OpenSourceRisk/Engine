@@ -5,6 +5,11 @@
    European Swaption
    FX Forward
    FX Call and Put Options
+   Equity Forwards
+   European Equity Calls and Puts
+   Fixed Rate Bond
+   CPI Swap
+   YoY Inflation Swap
 
 2) Market
 
