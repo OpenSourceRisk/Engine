@@ -49,10 +49,9 @@ allowable values follows below. There are two XML elements directly under the to
 
 \begin{itemize}
 \item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
-  portfolio. Trade ids should be unique within a portfolio.  The {\tt Trade id} element is entered twice in the
-  instrument file, firstly with an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
-  in the beginning closed by {\tt </Trade>} at the end of the trade data, and secondly with a {\tt Id} element in the
-  envelope node.  Both Trade id entries should be identical.
+  portfolio. Trade ids should be unique within a portfolio.  The {\tt
+    Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
+  in the beginning closed by {\tt </Trade>} at the end of the trade data.
 
 Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 
@@ -99,10 +98,10 @@ The meanings and allowable values of the various elements in the \lstinline!Enve
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
 
-\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
-  calculations.  No CVA will be calculated if omitted or left blank.
+%\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
+% calculations.  No CVA will be calculated if omitted or left blank.
 
-Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
+%Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
 
 \item {\tt NettingSetId} [Optional]: The {\tt NettingSetId} element specifies the identifier for a netting set. If a
   \lstinline!NettingSetId! is specified, the trade is eligible for close-out netting under the terms of an associated
@@ -547,7 +546,7 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \label{lst:bonddata}
 \end{listing}
 
-The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
+The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sec:curveconfig} and \ref{md:sec_rec_rates}. 
 
 \subsubsection{Credit Default Swap}
 

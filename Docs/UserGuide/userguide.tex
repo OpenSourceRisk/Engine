@@ -183,39 +183,39 @@ The product coverage of the third release of ORE in December 2017 is sketched in
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
-\begin{tabular}{|l|p{1.5cm}|p{2.6cm}|p{1.5cm}|}
+\begin{tabular}{|l|p{1.5cm}|p{1.5cm}|p{1.2cm}|p{1.5cm}|}
 \hline
-Product & Pricing and Cashflows & Sensitivity Analysis \& Stress Testing & Exposure Simulation \& XVA\\
+Product & Pricing and Cashflows & Sensitivity Analysis & Stress Testing & Exposure Simulation \& XVA\\
 \hline
-Fixed and Floating Rate Bonds/Loans & Y & Y & N \\
+Fixed and Floating Rate Bonds/Loans & Y & Y & Y & N \\
 \hline
-Interest Rate Swaps & Y & Y & Y \\
+Interest Rate Swaps & Y & Y & Y & Y\\
 \hline
-Caps/Floors & Y & Y & Y \\
+Caps/Floors & Y & Y & Y & Y\\
 \hline
-Swaptions & Y & Y & Y \\
+Swaptions & Y & Y & Y &Y \\
 \hline
-Constant Maturity Swaps, CMS Caps/Floors & Y & Y & Y \\
+Constant Maturity Swaps, CMS Caps/Floors & Y & Y & Y & Y\\
 \hline
-FX Forwards & Y & Y & Y \\
+FX Forwards & Y & Y & Y & Y \\
 \hline
-Cross Currency Swaps & Y & Y & Y \\
+Cross Currency Swaps & Y & Y & Y & Y \\
 \hline
-FX Options & Y & Y & Y \\
+FX Options & Y & Y & Y & Y\\
 \hline
-Equity Forwards & Y & Y & Y \\
+Equity Forwards & Y & Y & Y & Y\\
 \hline
-Equity Options & Y & Y & Y \\
+Equity Options & Y & Y & Y & Y \\
 \hline
-CPI Swaps & Y & Y & Y \\
+CPI Swaps & Y & Y & N & Y \\
 \hline
 %CPI Caps/Floors & Y & Y & N \\
 %\hline
-Year-on-Year Inflation Swaps & Y & Y & Y \\
+Year-on-Year Inflation Swaps & Y & Y & N & Y \\
 \hline
 %Year-on-Year Inflation Caps/Floors & Y & N & N \\
 %\hline
-Credit Default Swaps & Y & only sensitivity & N \\
+Credit Default Swaps & Y & Y & N & N \\
 \hline
 \end{tabular}
 \caption{ORE product coverage.}
@@ -1261,7 +1261,7 @@ of EE\_B up to the horizon of one year.
 \begin{center}
 \includegraphics[scale=0.45]{mpl_basel_exposures.pdf}
 \end{center}
-\caption{Evolution of the expected exposure of Vanilla Swap, comparison to the `Basel' exposure measures EEE\_B, EPE\_B and EEPE\_B.}
+\caption{Evolution of the expected exposure of Vanilla Swap, comparison to the `Basel' exposure measures EEE\_B, EPE\_B and EEPE\_B. Note that the latter two are indistinguishable in this case, because the expected exposure is increasing for the first year.}
 \label{fig_14}
 \end{figure}
 
@@ -2309,7 +2309,7 @@ The following is an excerpt of the FX spot block with ID 'default' from the same
 \label{lst:fxspot_spec}
 \end{listing}
 
-This block instructs ORE to provide four FX quote objects in the market object, all quoted with target currency EUR so
+This block instructs ORE to provide four FX quotes, all quoted with target currency EUR so
 that foreign currency amounts can be converted into EUR via multiplication with that rate.
  
 \subsubsection{FX Volatilities}
