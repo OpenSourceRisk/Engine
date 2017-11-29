@@ -23,6 +23,7 @@
 #include <boost/make_shared.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/timer.hpp>
+#include <boost/foreach.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -97,19 +98,24 @@ void test(const Size dim, const bool nonzeroDelta, const bool nonzeroGamma, cons
 
     // check results against MC simulation
 
-    std::vector<Real> quantiles = {0.9, 0.95, 0.99, 0.999, 0.9999};
+    std::vector<Real> quantiles;
+    quantiles.push_back(0.9);
+    quantiles.push_back(0.95);
+    quantiles.push_back(0.99);
+    quantiles.push_back(0.999);
+    quantiles.push_back(0.9999);
 
     BOOST_TEST_MESSAGE("Run MC simulation...");
     Matrix nullGamma(dim, dim, 0.0);
-    auto mc1All = deltaGammaVarMc<PseudoRandom>(omega, delta, nullGamma, quantiles, paths, seedMc);
-    auto mc2All = deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, quantiles, paths, seedMc);
+    std::vector<Real> mc1All = deltaGammaVarMc<PseudoRandom>(omega, delta, nullGamma, quantiles, paths, seedMc);
+    std::vector<Real> mc2All = deltaGammaVarMc<PseudoRandom>(omega, delta, gamma, quantiles, paths, seedMc);
     BOOST_TEST_MESSAGE("MC simulation Done.");
 
     BOOST_TEST_MESSAGE("      Quantile      dVaR(MC)      dgVaR(MC)    dVaR(Mdl)");
     BOOST_TEST_MESSAGE("========================================================");
 
     Size i = 0;
-    for (auto const& q : quantiles) {
+    BOOST_FOREACH(Real q, quantiles) {
 
         Real mc1 = mc1All[i];
         Real mc2 = mc2All[i++];
@@ -165,7 +171,7 @@ void DeltaGammaVarTest::testNegativeGamma() {
 
     Real p = 0.99;
 
-    Real var_mc = deltaGammaVarMc(omega, delta, gamma_m, p, 1000000, 142);
+    Real var_mc = deltaGammaVarMc<PseudoRandom>(omega, delta, gamma_m, p, 1000000, 142);
 
     Real refVal = 0.5 * gamma * boost::math::quantile(chisq, 1.0 - p);
 

@@ -38,6 +38,7 @@
 #include <boost/accumulators/framework/accumulator_set.hpp>
 #include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
+#include <boost/foreach.hpp>
 
 using namespace QuantLib;
 
@@ -58,7 +59,7 @@ Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& 
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
  * w.r.t. a given confidence level. The var quantile is estimated from Monte-Carlo realisations of a second order
  * sensitivity based PL. */
-template <class RNG = PseudoRandom>
+template <class RNG>
 Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p, const Size paths,
                      const Size seed);
 
@@ -66,7 +67,7 @@ Real deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamm
 /*! For a given a covariance matrix, a delta vector and a gamma matrix this function computes a parametric var
  * w.r.t. a vector of given confidence levels. The var quantile is estimated from Monte-Carlo realisations of a second
  * order sensitivity based PL. */
-template <class RNG = PseudoRandom>
+template <class RNG>
 Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
                                                const std::vector<Real>& p, const Size paths, const Size seed);
 
@@ -76,9 +77,9 @@ void check(const Matrix& omega, const Array& delta);
 void check(const Matrix& omega, const Array& delta, const Matrix& gamma);
 template <typename A> Real absMax(const A& a) {
     Real tmp = 0.0;
-    for (auto x = a.begin(); x != a.end(); ++x) {
-        if (std::abs(*x) > tmp)
-            tmp = std::abs(*x);
+    BOOST_FOREACH (Real x, a) {
+        if (std::abs(x) > tmp)
+            tmp = std::abs(x);
     }
     return tmp;
 }
@@ -89,8 +90,7 @@ template <typename A> Real absMax(const A& a) {
 template <class RNG>
 Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array& delta, const Matrix& gamma,
                                                const std::vector<Real>& p, const Size paths, const Size seed) {
-    for (auto const& q : p)
-        detail::check(q);
+    BOOST_FOREACH (Real q, p) { detail::check(q); }
     detail::check(omega, delta, gamma);
 
     Real num = std::max(detail::absMax(delta), detail::absMax(gamma));
@@ -102,27 +102,26 @@ Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array&
     Matrix L = CholeskyDecomposition(omega, true);
 
     Real pmin = QL_MAX_REAL;
-    for (auto const& q : p) {
-        pmin = std::min(pmin, q);
-    }
+    BOOST_FOREACH (Real q, p) { pmin = std::min(pmin, q); }
 
     Size cache = Size(std::floor(static_cast<double>(paths) * (1.0 - pmin) + 0.5)) + 2;
     boost::accumulators::accumulator_set<
         double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::right> > >
         acc(boost::accumulators::tag::tail<boost::accumulators::right>::cache_size = cache);
 
-    auto rng = RNG::make_sequence_generator(delta.size(), seed);
+    typename RNG::rsg_type rng = RNG::make_sequence_generator(delta.size(), seed);
 
     for (Size i = 0; i < paths; ++i) {
-        auto seq = rng.nextSequence().value;
+        std::vector<Real> seq = rng.nextSequence().value;
         Array z(seq.begin(), seq.end());
         Array u = L * z;
         acc(DotProduct(u, delta) + 0.5 * DotProduct(u, gamma * u));
     }
 
     std::vector<Real> res;
-    for (auto const& q : p)
+    BOOST_FOREACH(Real q, p) {
         res.push_back(boost::accumulators::quantile(acc, boost::accumulators::quantile_probability = q));
+    }
 
     return res;
 }
