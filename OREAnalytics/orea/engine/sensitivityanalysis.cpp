@@ -329,10 +329,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string ccy = keylabel;
             auto itr = sensitivityData_->discountCurveShiftData().find(ccy);
             QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "shiftData not found for " << ccy);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<YieldTermStructure> yts = simMarket_->discountCurve(ccy, marketConfiguration_);
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
                 Real zeroRate = yts->zeroRate(t, Continuous);
@@ -345,10 +345,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string idx = keylabel;
             auto itr = sensitivityData_->indexCurveShiftData().find(idx);
             QL_REQUIRE(itr != sensitivityData_->indexCurveShiftData().end(), "shiftData not found for " << idx);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<YieldTermStructure> yts =
                     simMarket_->iborIndex(idx, marketConfiguration_)->forwardingTermStructure();
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
@@ -362,10 +362,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string yc = keylabel;
             auto itr = sensitivityData_->yieldCurveShiftData().find(yc);
             QL_REQUIRE(itr != sensitivityData_->yieldCurveShiftData().end(), "shiftData not found for " << yc);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<YieldTermStructure> yts = simMarket_->yieldCurve(yc, marketConfiguration_);
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
                 Real zeroRate = yts->zeroRate(t, Continuous);
@@ -378,11 +378,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string ec = keylabel;
             auto itr = sensitivityData_->equityForecastCurveShiftData().find(ec);
             QL_REQUIRE(itr != sensitivityData_->equityForecastCurveShiftData().end(), "shiftData not found for " << ec);
-            shiftSize = itr->second.shiftSize;
+            shiftSize = itr->second->shiftSize;
 
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<YieldTermStructure> yts = simMarket_->equityForecastCurve(ec, marketConfiguration_);
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
                 Real zeroRate = yts->zeroRate(t, Continuous);
@@ -395,11 +395,11 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string eq = keylabel;
             auto itr = sensitivityData_->dividendYieldShiftData().find(eq);
             QL_REQUIRE(itr != sensitivityData_->dividendYieldShiftData().end(), "shiftData not found for " << eq);
-            shiftSize = itr->second.shiftSize;
+            shiftSize = itr->second->shiftSize;
 
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<YieldTermStructure> ts = simMarket_->equityDividendCurve(eq, marketConfiguration_);
                 Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
                 Real zeroRate = ts->zeroRate(t, Continuous);
@@ -415,7 +415,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftSize = itr->second.shiftSize;
             if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 vector<Real> strikes = sensitivityData_->fxVolShiftData()[pair].shiftStrikes;
-                QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+                QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0],0), "Only ATM FX vols supported");
                 Real atmFwd = 0.0; // hardcoded, since only ATM supported
                 Size keyIdx = key.index;
                 Period p = itr->second.shiftExpiries[keyIdx];
@@ -513,10 +513,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string name = keylabel;
             auto itr = sensitivityData_->creditCurveShiftData().find(name);
             QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(), "shiftData not found for " << name);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name, marketConfiguration_);
                 Time t = ts->dayCounter().yearFraction(asof_, asof_ + p);
                 Real prob = ts->survivalProbability(t);
@@ -549,10 +549,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string idx = keylabel;
             auto itr = sensitivityData_->zeroInflationCurveShiftData().find(idx);
             QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(), "shiftData not found for " << idx);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = itr->second.shiftTenors[keyIdx];
+                Period p = itr->second->shiftTenors[keyIdx];
                 Handle<ZeroInflationTermStructure> yts =
                     simMarket_->zeroInflationIndex(idx, marketConfiguration_)->zeroInflationTermStructure();
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);
@@ -566,10 +566,10 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             string idx = keylabel;
             auto itr = sensitivityData_->yoyInflationCurveShiftData().find(idx);
             QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(), "shiftData not found for " << idx);
-            shiftSize = itr->second.shiftSize;
-            if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftSize = itr->second->shiftSize;
+            if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 Size keyIdx = key.index;
-                Period p = sensitivityData_->yoyInflationCurveShiftData()[idx].shiftTenors[keyIdx];
+                Period p = sensitivityData_->yoyInflationCurveShiftData()[idx]->shiftTenors[keyIdx];
                 Handle<YoYInflationTermStructure> yts =
                     simMarket_->yoyInflationIndex(idx, marketConfiguration_)->yoyInflationTermStructure();
                 Time t = yts->dayCounter().yearFraction(asof_, asof_ + p);

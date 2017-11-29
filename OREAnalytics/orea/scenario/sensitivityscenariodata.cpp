@@ -19,6 +19,7 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <boost/make_shared.hpp>
 using namespace QuantLib;
 
 namespace ore {
@@ -53,7 +54,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             LOG("Discount curve for ccy " << ccy);
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            discountCurveShiftData_[ccy] = data;
+            discountCurveShiftData_[ccy] = boost::make_shared<CurveShiftData> (data);
             discountCurrencies_.push_back(ccy);
         }
     }
@@ -66,7 +67,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            indexCurveShiftData_[index] = data;
+            indexCurveShiftData_[index] =  boost::make_shared<CurveShiftData> (data);
             indexNames_.push_back(index);
         }
     }
@@ -82,10 +83,10 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
             if (curveType == "EquityForecast") {
-                equityForecastCurveShiftData_[curveName] = data;
+                equityForecastCurveShiftData_[curveName] =  boost::make_shared<CurveShiftData> (data);
                 equityForecastCurveNames_.push_back(curveName);
             } else {
-                yieldCurveShiftData_[curveName] = data;
+                yieldCurveShiftData_[curveName] =  boost::make_shared<CurveShiftData> (data);
                 yieldCurveNames_.push_back(curveName);
             }
         }
@@ -100,7 +101,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             LOG("Add dividend yield curve data for equity " << curveName);
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            dividendYieldShiftData_[curveName] = data;
+            dividendYieldShiftData_[curveName] =  boost::make_shared<CurveShiftData> (data);
             dividendYieldNames_.push_back(curveName);
         }
     }
@@ -112,7 +113,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string ccypair = XMLUtils::getAttribute(child, "ccypair");
             SpotShiftData data;
             shiftDataFromXML(child, data);
-            fxShiftData_[ccypair] = data;
+            fxShiftData_[ccypair] =  data;
             fxCcyPairs_.push_back(ccypair);
         }
     }
@@ -128,7 +129,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             if (data.shiftStrikes.size() == 0)
                 data.shiftStrikes = {0.0};
-            swaptionVolShiftData_[ccy] = data;
+            swaptionVolShiftData_[ccy] =  data;
             swaptionVolCurrencies_.push_back(ccy);
         }
     }
@@ -144,7 +145,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             if (data.shiftStrikes.size() == 0)
                 data.shiftStrikes = {0.0};
             data.indexName = XMLUtils::getChildValue(child, "Index", true);
-            capFloorVolShiftData_[ccy] = data;
+            capFloorVolShiftData_[ccy] =  data;
             capFloorVolCurrencies_.push_back(ccy);
         }
     }
@@ -172,7 +173,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             creditCcys_[name] = ccy;
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            creditCurveShiftData_[name] = data;
+            creditCurveShiftData_[name] =  boost::make_shared<CurveShiftData> (data);
             creditNames_.push_back(name);
         }
     }
@@ -187,7 +188,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             CdsVolShiftData data;
             shiftDataFromXML(child, data);
             data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-            cdsVolShiftData_[name] = data;
+            cdsVolShiftData_[name] =  data;
             cdsVolNames_.push_back(name);
         }
     }
@@ -202,7 +203,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             shiftDataFromXML(child, data);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             data.shiftLossLevels = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftLossLevels", true);
-            baseCorrelationShiftData_[name] = data;
+            baseCorrelationShiftData_[name] =  data;
             baseCorrelationNames_.push_back(name);
         }
     }
@@ -215,7 +216,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string equity = XMLUtils::getAttribute(child, "equity");
             SpotShiftData data;
             shiftDataFromXML(child, data);
-            equityShiftData_[equity] = data;
+            equityShiftData_[equity] =  data;
             equityNames_.push_back(equity);
         }
     }
@@ -228,7 +229,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string equity = XMLUtils::getAttribute(child, "equity");
             VolShiftData data;
             volShiftDataFromXML(child, data);
-            equityVolShiftData_[equity] = data;
+            equityVolShiftData_[equity] =  data;
             equityVolNames_.push_back(equity);
         }
     }
@@ -242,7 +243,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            zeroInflationCurveShiftData_[index] = data;
+            zeroInflationCurveShiftData_[index] =  boost::make_shared<CurveShiftData> (data);
             zeroInflationIndices_.push_back(index);
         }
     }
@@ -255,7 +256,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             string index = XMLUtils::getAttribute(child, "index");
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
-            yoyInflationCurveShiftData_[index] = data;
+            yoyInflationCurveShiftData_[index] =  boost::make_shared<CurveShiftData> (data);
             yoyInflationIndices_.push_back(index);
         }
     }

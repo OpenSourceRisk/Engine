@@ -325,7 +325,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->discountCurveShiftData().find(ccy);
         QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "CurveShiftData not found for " << ccy);
-        SensitivityScenarioData::CurveShiftData data = itr->second;
+        SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->discountCurve(ccy);
         DayCounter dc = ts->dayCounter();
@@ -398,7 +398,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->indexCurveShiftData().find(indexName);
         QL_REQUIRE(itr != sensitivityData_->indexCurveShiftData().end(), "CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = itr->second;
+        SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<IborIndex> iborIndex = simMarket_->iborIndex(indexName);
         Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
@@ -472,7 +472,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->yieldCurveShiftData().find(name);
         QL_REQUIRE(itr != sensitivityData_->yieldCurveShiftData().end(), "CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = itr->second;
+        SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->yieldCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -544,7 +544,7 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->equityForecastCurveShiftData().find(name);
         QL_REQUIRE(itr != sensitivityData_->equityForecastCurveShiftData().end(), "equityForecast CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = itr->second;
+        SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->equityForecastCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -615,7 +615,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->dividendYieldShiftData().find(name);
         QL_REQUIRE(itr != sensitivityData_->dividendYieldShiftData().end(), "dividendYield CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = itr->second;
+        SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YieldTermStructure> ts = simMarket_->equityDividendCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -1092,7 +1092,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         std::vector<Real> shiftedHazardRates(n_ten);
         auto itr = sensitivityData_->creditCurveShiftData().find(name);
         QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(), "credit CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = itr->second;  
+        SensitivityScenarioData::CurveShiftData data = *itr->second;  
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name);
         DayCounter dc = ts->dayCounter();
@@ -1241,7 +1241,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
         std::vector<Real> shiftedZeros(n_ten);
         auto itr = sensitivityData_->zeroInflationCurveShiftData().find(indexName);
         QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(), "zero inflation CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = itr->second; 
+        SensitivityScenarioData::CurveShiftData data = *itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<ZeroInflationIndex> inflationIndex = simMarket_->zeroInflationIndex(indexName);
         Handle<ZeroInflationTermStructure> ts = inflationIndex->zeroInflationTermStructure();
@@ -1315,7 +1315,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
         std::vector<Real> shiftedYoys(n_ten);
         auto itr = sensitivityData_->yoyInflationCurveShiftData().find(indexName);
         QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(), "yoyinflation CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = itr->second; 
+        SensitivityScenarioData::CurveShiftData data = *itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
         Handle<YoYInflationIndex> inflationIndex = simMarket_->yoyInflationIndex(indexName);
         Handle<YoYInflationTermStructure> ts = inflationIndex->yoyInflationTermStructure();
@@ -1476,11 +1476,11 @@ SensitivityScenarioGenerator::dividendYieldScenarioDescription(string name, Size
     QL_REQUIRE(sensitivityData_->dividendYieldShiftData().find(name) !=
                    sensitivityData_->dividendYieldShiftData().end(),
                "equity " << name << " not found in dividend yield shift data");
-    QL_REQUIRE(bucket < sensitivityData_->dividendYieldShiftData()[name].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->dividendYieldShiftData()[name]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::DividendYield, name, bucket);
     std::ostringstream o;
-    o << sensitivityData_->dividendYieldShiftData()[name].shiftTenors[bucket];
+    o << sensitivityData_->dividendYieldShiftData()[name]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1491,11 +1491,11 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::discountScenarioDescription(string ccy, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->discountCurveShiftData().find(ccy) != sensitivityData_->discountCurveShiftData().end(),
                "currency " << ccy << " not found in discount shift data");
-    QL_REQUIRE(bucket < sensitivityData_->discountCurveShiftData()[ccy].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->discountCurveShiftData()[ccy]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, bucket);
     std::ostringstream o;
-    o << sensitivityData_->discountCurveShiftData()[ccy].shiftTenors[bucket];
+    o << sensitivityData_->discountCurveShiftData()[ccy]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1506,11 +1506,11 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::indexScenarioDescription(string index, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->indexCurveShiftData().find(index) != sensitivityData_->indexCurveShiftData().end(),
                "currency " << index << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->indexCurveShiftData()[index].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->indexCurveShiftData()[index]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, index, bucket);
     std::ostringstream o;
-    o << sensitivityData_->indexCurveShiftData()[index].shiftTenors[bucket];
+    o << sensitivityData_->indexCurveShiftData()[index]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1521,11 +1521,11 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->yieldCurveShiftData().find(name) != sensitivityData_->yieldCurveShiftData().end(),
                "currency " << name << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->yieldCurveShiftData()[name]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, bucket);
     std::ostringstream o;
-    o << sensitivityData_->yieldCurveShiftData()[name].shiftTenors[bucket];
+    o << sensitivityData_->yieldCurveShiftData()[name]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1537,11 +1537,11 @@ SensitivityScenarioGenerator::equityForecastCurveScenarioDescription(string name
     QL_REQUIRE(sensitivityData_->equityForecastCurveShiftData().find(name) !=
                    sensitivityData_->equityForecastCurveShiftData().end(),
                "equity " << name << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->equityForecastCurveShiftData()[name].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->equityForecastCurveShiftData()[name]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::EquityForecastCurve, name, bucket);
     std::ostringstream o;
-    o << sensitivityData_->equityForecastCurveShiftData()[name].shiftTenors[bucket];
+    o << sensitivityData_->equityForecastCurveShiftData()[name]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1643,11 +1643,11 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::survivalProbabilityScenarioDescription(string name, Size bucket, bool up) {
     QL_REQUIRE(sensitivityData_->creditCurveShiftData().find(name) != sensitivityData_->creditCurveShiftData().end(),
                "Name " << name << " not found in credit shift data");
-    QL_REQUIRE(bucket < sensitivityData_->creditCurveShiftData()[name].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->creditCurveShiftData()[name]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, bucket);
     std::ostringstream o;
-    o << sensitivityData_->creditCurveShiftData()[name].shiftTenors[bucket];
+    o << sensitivityData_->creditCurveShiftData()[name]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1676,11 +1676,11 @@ SensitivityScenarioGenerator::zeroInflationScenarioDescription(string index, Siz
     QL_REQUIRE(sensitivityData_->zeroInflationCurveShiftData().find(index) !=
                    sensitivityData_->zeroInflationCurveShiftData().end(),
                "inflation index " << index << " not found in zero inflation index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->zeroInflationCurveShiftData()[index].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->zeroInflationCurveShiftData()[index]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCurve, index, bucket);
     std::ostringstream o;
-    o << sensitivityData_->zeroInflationCurveShiftData()[index].shiftTenors[bucket];
+    o << sensitivityData_->zeroInflationCurveShiftData()[index]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
@@ -1692,11 +1692,11 @@ SensitivityScenarioGenerator::yoyInflationScenarioDescription(string index, Size
     QL_REQUIRE(sensitivityData_->yoyInflationCurveShiftData().find(index) !=
                    sensitivityData_->yoyInflationCurveShiftData().end(),
                "yoy inflation index " << index << " not found in zero inflation index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->yoyInflationCurveShiftData()[index].shiftTenors.size(),
+    QL_REQUIRE(bucket < sensitivityData_->yoyInflationCurveShiftData()[index]->shiftTenors.size(),
                "bucket " << bucket << " out of range");
     RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, index, bucket);
     std::ostringstream o;
-    o << sensitivityData_->yoyInflationCurveShiftData()[index].shiftTenors[bucket];
+    o << sensitivityData_->yoyInflationCurveShiftData()[index]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
