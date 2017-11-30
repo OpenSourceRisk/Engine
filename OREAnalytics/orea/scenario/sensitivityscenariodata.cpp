@@ -38,6 +38,8 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
     shiftDataFromXML(child, data);
     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
     data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+    if (data.shiftStrikes.size() == 0)
+        data.shiftStrikes = {0.0};
 }
 
 void SensitivityScenarioData::fromXML(XMLNode* root) {
