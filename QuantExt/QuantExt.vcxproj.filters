@@ -500,6 +500,7 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\models\dkimpliedyoyinflationtermstructure.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -843,5 +844,6 @@
     <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
+    <ClCompile Include="qle\models\dkimpliedyoyinflationtermstructure.cpp" />
   </ItemGroup>
 </Project>

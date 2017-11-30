@@ -26,8 +26,8 @@
 class InflationIndexObserver : public Observer, public Observable {
 public:
     InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
-                           const Date& baseDate, const Period& observationLag)
-        : index_(index), quote_(quote), baseDate_(baseDate), observationLag_(observationLag) {
+                           const Period& observationLag)
+        : index_(index), quote_(quote), observationLag_(observationLag) {
         registerWith(quote);
     }
 
@@ -41,13 +41,11 @@ private:
         Date today = Settings::instance().evaluationDate();
         Date fixingDate = today - observationLag_;
         // overwrite the current fixing in the QuantLib::FixingManager
-        Real baseCPI = index_->fixing(baseDate_);
-        index_->addFixing(fixingDate, baseCPI * quote_->value(), true);
+        index_->addFixing(fixingDate, quote_->value(), true);
     }
 
     boost::shared_ptr<InflationIndex> index_;
     Handle<Quote> quote_;
-    Date baseDate_;
     Period observationLag_;
 };
 
