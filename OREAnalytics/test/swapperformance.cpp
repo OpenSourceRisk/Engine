@@ -131,6 +131,11 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         string index = portfolioSize == 1 ? "EUR-EURIBOR-6M" : randString(rng, indices[ccy]);
         string floatFreq = portfolioSize == 1 ? "6M" : index.substr(index.find('-', 4) + 1);
 
+        // This variable is not used and only here to ensure that the random numbers generated in
+        // subsequent blocks produce a swap portfolio, which is compatible with the archived values.
+        string fixedTenor = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
+        fixedTenor = fixedTenor + "_";
+
         // fixed details
         Real fixedRate = portfolioSize == 1 ? 0.02 : randInt(rng, minFixedBps, maxFixedBps) / 100.0;
         string fixFreq = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
