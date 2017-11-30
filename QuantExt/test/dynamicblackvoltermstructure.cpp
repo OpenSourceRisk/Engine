@@ -26,7 +26,7 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 
-#include <test-suite/utilities.hpp>
+#include <test/utilities.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;

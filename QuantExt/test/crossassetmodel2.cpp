@@ -39,7 +39,7 @@
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <test-suite/utilities.hpp>
+#include <test/utilities.hpp>
 
 #include <boost/make_shared.hpp>
 // fix for boost 1.64, see https://lists.boost.org/Archives/boost/2016/11/231756.php
