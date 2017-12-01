@@ -64,6 +64,8 @@ public:
         cpiCapFloorVolExpiries_[""];
         yoyCapFloorVolExpiries_[""];
         yoyInflationTenors_[""];
+        // set default dayCounters
+        setDefaults();
     }
 
     //! \name Inspectors
