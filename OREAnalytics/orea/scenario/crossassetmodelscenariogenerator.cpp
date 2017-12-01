@@ -380,8 +380,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             yoyInfCurves[j]->move(dates_[i], z, y, ir_z);
             for (Size k = 0; k < ten_yinf_[j].size(); k++) {
                 Date d = dates_[i] + ten_yinf_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real yoy = yoyInfCurves[j]->yoyRate(T);
+                Real yoy = yoyInfCurves[j]->yoyRate(d);
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoy);
             }
         }
