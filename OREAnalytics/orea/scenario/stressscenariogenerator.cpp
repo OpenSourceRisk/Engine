@@ -18,6 +18,7 @@
 
 #include <orea/scenario/stressscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ql/time/calendars/target.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -27,29 +28,30 @@ namespace ore {
 namespace analytics {
 
 StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                                                 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+                                                 const boost::shared_ptr<Scenario>& baseScenario,
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData)
-    : ShiftScenarioGenerator(simMarket, simMarketData), stressData_(stressData) {
+    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData) {
     QL_REQUIRE(stressData_ != NULL, "StressScenarioGenerator: stressData is null");
 }
 
 void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory) {
+    Date asof = baseScenario_->asof();
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
-        boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(simMarket_->asofDate(), data.label);
+        boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(asof, data.label);
 
         addFxShifts(data, scenario);
         addEquityShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
         addYieldCurveShifts(data, scenario);
-        if (simMarket_->isSimulated(RiskFactorKey::KeyType::FXVolatility))
+        if (simMarketData_->simulateFXVols())
             addFxVolShifts(data, scenario);
-        if (simMarket_->isSimulated(RiskFactorKey::KeyType::EquityVolatility))
+        if (simMarketData_->simulateEquityVols())
             addEquityVolShifts(data, scenario);
-        if (simMarket_->isSimulated(RiskFactorKey::KeyType::SwaptionVolatility))
+        if (simMarketData_->simulateSwapVols())
             addSwaptionVolShifts(data, scenario);
-        if (simMarket_->isSimulated(RiskFactorKey::KeyType::OptionletVolatility))
+        if (simMarketData_->simulateCapFloorVols())
             addCapFloorVolShifts(data, scenario);
 
         scenarios_.push_back(scenario);
@@ -60,6 +62,8 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
 
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
                                           boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     for (auto d : std.fxShifts) {
         string ccypair = d.first; // foreign + domestic;
 
@@ -88,7 +92,8 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
 
-        Real rate = simMarket_->fxSpot(ccypair)->value();
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+        Real rate = scenario->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair), newRate);
     }
@@ -97,6 +102,8 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
 void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
                                               boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     for (auto d : std.equityShifts) {
         string equity = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;
@@ -104,8 +111,10 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
+        
+        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
+        Real rate = baseScenario_->get(key);
 
-        Real rate = simMarket_->equitySpot(equity)->value();
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
     }
@@ -114,6 +123,8 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
 
 void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::StressTestData& std,
                                                      boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     for (auto d : std.discountCurveShifts) {
         string ccy = d.first;
         LOG("Apply stress scenario to discount curve " << ccy);
@@ -127,12 +138,14 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->discountCurve(ccy);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
+        
         for (Size j = 0; j < n_ten; ++j) {
-            Date date = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(ccy)[j];
-            zeros[j] = ts->zeroRate(date, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), date);
+            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -141,7 +154,7 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         // apply zero rate shift at tenor point j
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -158,6 +171,8 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
 
 void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::StressTestData& std,
                                                   boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     for (auto d : std.indexCurveShifts) {
         string indexName = d.first;
         LOG("Apply stress scenario to index curve " << indexName);
@@ -173,13 +188,15 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<IborIndex> iborIndex = simMarket_->iborIndex(indexName);
-        Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
+
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(indexName)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -188,7 +205,7 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
             applyShift(j, shifts[j], true, shiftType, shiftTimes, zeros, times, shiftedZeros, j == 0 ? true : false);
@@ -204,6 +221,8 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
 
 void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::StressTestData& std,
                                                   boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     for (auto d : std.yieldCurveShifts) {
         string name = d.first;
         LOG("Apply stress scenario to yield curve " << name);
@@ -219,13 +238,14 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->yieldCurve(name);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date date = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(name)[j];
-            zeros[j] = ts->zeroRate(date, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), date);
-            // DLOG("yield curve " << name << ": " << times[j] << " " << zeros[j]);
+            Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -234,7 +254,7 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             // DLOG("apply yield curve shift " << shifts[j] << " to curve " << name << " at tenor " << shiftTenors[j]
@@ -256,6 +276,8 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
 
 void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestData& std,
                                              boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
 
     std::vector<Real> values(n_fxvol_exp);
@@ -270,13 +292,16 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        Handle<BlackVolTermStructure> ts = simMarket_->fxVol(ccypair);
-        DayCounter dc = ts->dayCounter();
+        //FIXME: this is also hardcoded in todaysmarket
+        DayCounter dc = Actual365Fixed();
         Real strike = 0.0; // FIXME
         for (Size j = 0; j < n_fxvol_exp; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->fxVolExpiries()[j];
-            values[j] = ts->blackVol(d, strike);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->fxVolExpiries()[j];
+
+            RiskFactorKey key (RiskFactorKey::KeyType::FXVolatility, ccypair, j);
+            values[j] = baseScenario_->get(key);
+
+            times[j] = dc.yearFraction(asof, d);
         }
 
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -287,7 +312,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -303,6 +328,8 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
 void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressTestData& std,
                                                  boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
 
     std::vector<Real> values(n_eqvol_exp);
@@ -317,12 +344,15 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        Handle<BlackVolTermStructure> ts = simMarket_->equityVol(equity);
-        DayCounter dc = ts->dayCounter();
+        //FIXME: this is also hardcoded in todaysmarket
+        DayCounter dc = Actual365Fixed();
         for (Size j = 0; j < n_eqvol_exp; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->equityVolExpiries()[j];
-            values[j] = ts->blackVol(d, 0.0); // ATM
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->equityVolExpiries()[j];
+            
+            RiskFactorKey key (RiskFactorKey::KeyType::EquityVolatility, equity, j);
+            values[j] = baseScenario_->get(key);
+
+            times[j] = dc.yearFraction(asof, d);
         }
 
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -333,7 +363,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         QL_REQUIRE(shiftTenors.size() == shifts.size(), "shift tenor and shift size vectors do not match");
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         // FIXME: Apply same shifts to non-ATM vectors if present
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -349,6 +379,8 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
 void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::StressTestData& std,
                                                    boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
 
@@ -368,33 +400,32 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        Handle<SwaptionVolatilityStructure> ts = simMarket_->swaptionVol(ccy);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->swapVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Date expiry = simMarket_->asofDate() + simMarketData_->swapVolExpiries()[j];
-            volExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), expiry);
+            Date expiry = asof + simMarketData_->swapVolExpiries()[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_swvol_term; ++j) {
-            Date term = simMarket_->asofDate() + simMarketData_->swapVolTerms()[j];
-            volTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), term);
+            Date term = asof + simMarketData_->swapVolTerms()[j];
+            volTermTimes[j] = dc.yearFraction(asof, term);
         }
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
-                Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, Null<Real>()); // ATM
-                volData[j][k] = swvol;
+                Size idx = j * n_swvol_term + k;
+
+                RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx);
+                volData[j][k]  = baseScenario_->get(key);
             }
         }
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] =
-                dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftExpiries[j]);
+                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
-            shiftTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftTerms[j]);
+            shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
         // loop over shift expiries and terms
         // FIXME: apply same shifts to all strikes when present
@@ -430,6 +461,8 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
 
 void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::StressTestData& std,
                                                    boost::shared_ptr<Scenario>& scenario) {
+    Date asof = baseScenario_->asof();
+
     vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
     Size n_cfvol_strikes = volStrikes.size();
 
@@ -448,27 +481,25 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
         vector<Real> shifts = data.shifts;
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
-        Handle<OptionletVolatilityStructure> ts = simMarket_->capFloorVol(ccy);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = simMarket_->asofDate() + simMarketData_->capFloorVolExpiries(ccy)[j];
-            volExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), expiry);
+            Date expiry = asof + simMarketData_->capFloorVolExpiries(ccy)[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries(ccy)[j];
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
-                Real strike = simMarketData_->capFloorVolStrikes()[k];
-                Real vol = ts->volatility(expiry, strike);
-                volData[j][k] = vol;
+                Size idx = j * n_cfvol_strikes + k;
+                RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
+                volData[j][k] = baseScenario_->get(key);
             }
         }
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] =
-                dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftExpiries[j]);
+                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // loop over shift expiries, apply same shifts across all strikes
         vector<Real> shiftStrikes = volStrikes;
