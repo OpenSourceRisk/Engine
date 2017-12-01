@@ -415,7 +415,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftSize = itr->second.shiftSize;
             if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 vector<Real> strikes = sensitivityData_->fxVolShiftData()[pair].shiftStrikes;
-                QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+                QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0],0), "Only ATM FX vols supported");
                 Real atmFwd = 0.0; // hardcoded, since only ATM supported
                 Size keyIdx = key.index;
                 Period p = itr->second.shiftExpiries[keyIdx];
