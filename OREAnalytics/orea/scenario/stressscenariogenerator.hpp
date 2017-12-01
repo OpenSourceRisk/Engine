@@ -70,7 +70,7 @@ class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                            const boost::shared_ptr<ScenarioSimMarket>& scenarioSimMarket,
+                            const boost::shared_ptr<Scenario>& baseScenario,
                             const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
     //! Default destructor
     ~StressScenarioGenerator(){};
