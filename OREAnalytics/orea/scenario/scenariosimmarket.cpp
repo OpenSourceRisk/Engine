@@ -248,7 +248,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
         vector<string> keys(parameters->yieldCurveTenors(ind).size());
 
-        DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(ind));// used to convert YieldCurve Periods to Times
+        DayCounter dc = ore::data::parseDayCounter(parameters->yieldCurveDayCounter(ind));// used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);       // include today
         vector<Date> yieldCurveDates(1, asof_);
         QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
