@@ -445,7 +445,7 @@ Swaption::buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>& swapEngin
         std::vector<bool> payer(2);
         for (Size j = 0; j < legs.size(); ++j) {
             legs[j] = underlyingSwap->leg(j);
-            payer[j] = swap_[j].isPayer();
+            payer[j] = swap_[0].legType() == "Fixed" ? swap_[j].isPayer() : swap_[1 - j].isPayer();
             boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(legs[j].front());
             while (legs[j].size() > 0 && coupon->accrualStartDate() < exerciseDates[i]) {
                 legs[j].erase(legs[j].begin());
