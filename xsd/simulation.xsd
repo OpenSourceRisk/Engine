@@ -286,6 +286,21 @@
                   <xs:element type="xs:string" name="Tenors"/>
                   <xs:element type="ycInterpolation" name="Interpolation"/>
                   <xs:element type="bool" name="Extrapolation"/>
+                  <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+                    <xs:complexType>
+                      <xs:sequence>
+                        <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                          <xs:complexType>
+                            <xs:simpleContent>
+                              <xs:extension base="xs:string">
+                                <xs:attribute name="curve" type="xs:string" use="optional"/>
+                              </xs:extension>
+                            </xs:simpleContent>
+                          </xs:complexType>
+                        </xs:element>
+                      </xs:sequence>
+                    </xs:complexType>
+                  </xs:element>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
@@ -339,6 +354,36 @@
             </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
             <xs:element type="xs:boolean" name="SimulateSurvivalProbabilities" minOccurs="0"/>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="Calendars" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="Calendar" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -381,6 +426,21 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -398,6 +458,21 @@
             </xs:element>
             <xs:element type="xs:string" name="Expiries"/>
             <xs:element type="xs:string" name="Strikes"/>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccy" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -503,6 +578,21 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -517,6 +607,21 @@
               </xs:complexType>
             </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
         </xs:complexType>
       </xs:element>
@@ -581,6 +686,21 @@
            </xs:element>
            <xs:element type="xs:string" name="Terms" maxOccurs="unbounded" minOccurs="0"/>
            <xs:element type="xs:string" name="DetachmentPoints" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="name" type="xs:string" use="optional"/>
+                        </xs:extension>
+                       </xs:simpleContent>
+                     </xs:complexType>
+                   </xs:element>
+                 </xs:sequence>
+                </xs:complexType>
+              </xs:element>
           </xs:sequence>
          </xs:complexType>
       </xs:element>
