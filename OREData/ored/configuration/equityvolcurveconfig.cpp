@@ -28,8 +28,9 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency, const Dimension& dimension,
-                                                         const vector<string>& expiries, const DayCounter& dayCounter, 
-                                                         const vector<string>& strikes)
+                                                         const vector<string>& expiries,
+                                                         const vector<string>& strikes,
+                                                         const DayCounter& dayCounter)
     : CurveConfig(curveID, curveDescription), ccy_(currency), dimension_(dimension),
       expiries_(expiries), dayCounter_(dayCounter), strikes_(strikes) {}
 

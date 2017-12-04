@@ -52,8 +52,9 @@ public:
     EquityVolatilityCurveConfig() {}
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
-                                const Dimension& dimension, const vector<string>& expiries, const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
-                                const vector<string>& strikes = vector<string>());
+                                const Dimension& dimension, const vector<string>& expiries,
+                                const vector<string>& strikes = vector<string>(),
+                                const DayCounter& dayCounter = QuantLib::Actual365Fixed());
     //@}
 
     //! \name Serialisation
