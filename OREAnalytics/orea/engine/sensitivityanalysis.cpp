@@ -124,7 +124,7 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     LOG("Initialise sim market for sensitivity analysis");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
     scenarioGenerator_ =
-        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarket_, simMarketData_, overrideTenors_);
+        boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarket_->baseScenario(), simMarketData_, overrideTenors_);
     simMarket_->scenarioGenerator() = scenarioGenerator_;
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenFactory =
@@ -415,7 +415,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftSize = itr->second.shiftSize;
             if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
                 vector<Real> strikes = sensitivityData_->fxVolShiftData()[pair].shiftStrikes;
-                QL_REQUIRE(strikes.size() == 0, "Only ATM FX vols supported");
+                QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0],0), "Only ATM FX vols supported");
                 Real atmFwd = 0.0; // hardcoded, since only ATM supported
                 Size keyIdx = key.index;
                 Period p = itr->second.shiftExpiries[keyIdx];

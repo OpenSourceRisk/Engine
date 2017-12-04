@@ -23,6 +23,13 @@
     <xs:all>
       <xs:element type="xs:string" name="CounterParty"/>
       <xs:element type="xs:string" name="NettingSetId" minOccurs="0"/>
+      <xs:element name="PortfolioIds" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="PortfolioId" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
       <xs:element name="AdditionalFields" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
