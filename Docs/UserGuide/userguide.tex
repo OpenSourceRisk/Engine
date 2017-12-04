@@ -1407,7 +1407,7 @@ and second order polynomial choice makes a difference before option expiry. More
 The example in folder {\tt Examples/Example\_14} demonstrates using a minimal market data setup in order to rerun the vanilla Swap exposure simulation shown in {\tt Examples/Example\_1}. The minimal market data uses single points per curve where possible.
 
 %--------------------------------------------------------
-\subsection{Sensitivity Analysis and Stress Testing}\label{ex:sensitivity_stress}
+\subsection{Sensitivity Analysis, Stress Testing and Parametric Value-at-Risk}\label{ex:sensitivity_stress}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_15} demonstrates the calculation of sensitivities and stress scenarios. The
@@ -1476,8 +1476,10 @@ The stress scenario definition in {\tt stresstest.xml} defines two stress tests:
 The corresponding output file {\tt stresstest.csv} contains the base NPV, the NPV under the scenario shifts and the
 difference of the two for each trade and scenario label.
 
-\todo[inline]{Update after CDS has been added to the example.}
-
+%\todo[inline]{Update after CDS has been added to the example.}
+\medskip
+Finally, this example demonstrates a parametric VaR calculation based on the sensitivity and cross gamma output from the sensitivity analysis (deltas, vegas, gammas, cross gammas) and an external covariance matrix input. The result in {\tt var.csv} shows a breakdown by portfolio, risk class (All, Interest Rate, FX, Inflation, Equity, Credit) and risk type (All, Delta, Vega). The results shown are Delta Gamma Normal VaRs for the 95\% and 99\% quantile, the holding period is incorporated into the input covariances. Alternatively, one can choose a Monte Carlo VaR which means that the sensitivity based P\&L distribution is evaluated with MC simulation assuming normal respectively log-normal risk factor distribution. 
+ 
 %--------------------------------------------------------
 \subsection{Equity Derivatives Exposure}\label{ex:equityderivatives}
 %--------------------------------------------------------
@@ -4642,6 +4644,58 @@ simulation market is using the ATM curve only, i.e. the initial market's smile s
 In all cases the smile dynamics is ``sticky strike'', i.e. the implied vol used for pricing a deal does not change if
 the underlying spot price changes.
 
+\subsection{Value at Risk}\label{sec:app_var}
+
+For the computation of the parametric, or variance-covariance VaR, we rely on a second order sensitivity-based P\&L approximation
+
+\begin{eqnarray}\label{taylorPl2}
+  \pi_S & = & \sum_{i=1}^n D^i_{T_i}\,V\cdot Y_i 
+        + \frac{1}{2} \sum_{i,j=1}^n D^{i,j}_{T_i,T_j}\,V\cdot \rho_{i,j} \cdot Y_i\cdot Y_j
+\end{eqnarray}
+
+with 
+\begin{itemize}
+\item portfolio value $V$
+\item random variables $Y_i$ representing risk factor returns; these are assumed to be multivariate normally distributed with zero mean
+and covariance matrix matrix $C = \{ \rho_{i,k} \sigma_i \sigma_k \}_{i,k}$, where $\sigma_i$ denotes the standard
+deviation of $Y_i$; covariance matrix $C$ may be estimated using the Pearson estimator on historical return data
+$\{ r_i(j) \}_{i,j}$. Since the raw estimate might not be positive semidefinite, we apply a salvaging algorithm to
+ensure this property, which basically replaces negative Eigenvalues by zero and renormalises the resulting matrix, see
+\cite{corrSalv};
+\item first or second order derivative operators $D$, depending
+on the market factor specific shift type $T_i \in \{ A,R,L \}$ (absolute shifts, relative shifts, absolute log-shifts), i.e.
+\begin{eqnarray*}\label{derivs}
+  D^i_A \,V(x) &=& \frac{\partial V(x)}{\partial x_i} \\
+  D^i_R \,V(x) = D^i_L f(x) &=& x_i\frac{\partial V(x)}{\partial x_i}
+\end{eqnarray*}
+and using the short hand notation
+\begin{equation*}
+  D^{i,j}_{T_i,T_j} V(x) = D^i_{T_i} D^j_{T_j} V(x)
+\end{equation*}
+In ORE, these first and second order sensitivities are computed as finite difference
+approximations (``bump and revalue'').
+\end{itemize}
+
+To approximate the $p$-quantile of $\pi_S$ in \eqref{taylorPl2} ORE offers the techniques outlined below.
+
+\subsubsection*{Delta Gamma Normal Approximation}
+ 
+The distribution of \eqref{taylorPl2} is non-normal due to the second order terms. 
+The delta gamma normal approximation in ORE computes mean $m$ and variance $v$ of the portfolio value change $\pi_S$ (discarding moments higher than two) following \cite{alexander} and provides a simple VaR estimate 
+$$
+VaR = m + N^{-1}(q)\,\sqrt{v}
+$$
+for the desired quantile $q$ ($N$ is the cumulative standard normal distribution). Omitting the second order terms in \eqref{taylorPl2} yields the delta normal approximation.
+ 
+\subsubsection*{Monte Carlo Simulation}
+
+By simulating a large number of realisations of the return vector $Y=\{ Y_i \}_i$ and computing the corresponding
+realisations of $\pi_S$ in \eqref{taylorPl2} we can estimate the desired quantile as the quantile of the empirical
+distribution generated by the Monte Carlo samples. Apart from the Monte Carlo Error no approximation is involved in this
+method, so that albeit slow it is well suited to produce values against which any other approximate approaches can be tested. Numerically, the simulation is implemented using a Cholesky Decomposition
+of the covariance matrix $C$ in conjunction with a pseudo random number generator (Mersenne Twister) and an
+implementation of the inverse cumulative normal distribution to transform $U[0,1]$ variates to $N(0,1)$ variates.
+
 \end{appendix}
 
 %========================================================
@@ -4713,6 +4767,12 @@ the underlying spot price changes.
   % \bibitem{OO} http://www.openoffice.org
 
 \bibitem{LichtersEtAl} Peter Caspers, Paul Giltinan, Paul; Lichters, Roland; Nowaczyk , Nikolai. {\em Forecasting Initial Margin Requirements – A Model Evaluation}, Journal of Risk Management in Financial Institutions, Vol. 10 (2017), No. 4, \url{https://ssrn.com/abstract=2911167}
+
+\bibitem{corrSalv} R. Rebonato and P. Jaeckel, The most general methodology to create a valid correlation matrix for
+  risk management and option pricing purposes, The Journal of Risk, 2(2), Winter 1999/2000,
+  \url{http://www.quarchome.org/correlationmatrix.pdf}
+
+\bibitem{alexander} Carol Alexander, Market Risk Analysis, Volume IV, Value at Risk Models, Wiley 2009
 
 \end{thebibliography}
 
