@@ -73,6 +73,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             value2[portfolio][key] += sensitivities_->value2();
     }
     std::vector<RiskFactorKey> sensiKeys(sensiKeysTmp.begin(), sensiKeysTmp.end());
+    std::vector<bool> sensiKeyHasNonZeroVariance(sensiKeys.size(), false);
     std::vector<std::string> portfolios(portfoliosTmp.begin(), portfoliosTmp.end());
     LOG("Have " << sensiKeys.size() << " sensitivity keys in " << value1.size() << " portfolios");
 
@@ -84,12 +85,19 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
         auto k2 = std::find(sensiKeys.begin(), sensiKeys.end(), c.first.second);
         if (k1 != sensiKeys.end() && k2 != sensiKeys.end()) {
             omega(k1 - sensiKeys.begin(), k2 - sensiKeys.begin()) = c.second;
+            if(k1 == k2)
+                sensiKeyHasNonZeroVariance[k1-sensiKeys.begin()] = true;
         } else {
             ++unusedCovariance;
         }
     }
     LOG("Found " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
                  << " do not match a portfolio sensitivity and will not be used.");
+    for(Size i=0;i<sensiKeyHasNonZeroVariance.size();++i) {
+        if(!sensiKeyHasNonZeroVariance[i]) {
+            WLOG("Zero variance assigned to sensitivity key " << sensiKeys[i]);
+        }
+    }
 
     // make covariance matrix positive semi-definite
     LOG("Make covariance matrix positive semi-definite, dimension is " << sensiKeys.size());
