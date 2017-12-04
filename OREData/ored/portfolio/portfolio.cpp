@@ -165,5 +165,12 @@ bool Portfolio::has(const string &id) {
                    [id](const boost::shared_ptr<Trade>& trade) {return trade->id() == id; }) != trades_.end();
 }
 
+std::set<std::string> Portfolio::portfolioIds() const {
+    std::set<std::string> portfolioIds;
+    for(auto const& t: trades_)
+        portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    return portfolioIds;
+}
+
 } // namespace data
 } // namespace ore
