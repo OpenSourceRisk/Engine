@@ -382,7 +382,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURGBP"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = {"EURGBP"};
 
     simMarketData->simulateCapFloorVols() = false;
@@ -422,7 +423,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
     simMarketData->simulateCapFloorVols() = true;
@@ -457,7 +459,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolIsSurface() = false;
     simMarketData->simulateEquityVolATMOnly() = true;
     simMarketData->equityVolMoneyness() = {1};
-
+    simMarketData->setEquityVolDayCounters("", "ACT/ACT");
+    
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });

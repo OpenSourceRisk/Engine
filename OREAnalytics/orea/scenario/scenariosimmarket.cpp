@@ -583,8 +583,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 quotes.emplace_back(q);
             }
-            //FIXME hardcoded in todaysmarket
-            DayCounter dc = Actual365Fixed();
+            
+            DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
             boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
                 0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
 
@@ -627,7 +627,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
             Calendar cal = wrapper->calendar();
             //FIXME hardcoded in todaysmarket
-            DayCounter dc = Actual365Fixed();
+            DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(ccyPair));
             vector<Time> times;
 
             for (Size i = 0; i < n; i++) {
@@ -716,8 +716,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
             vector<Time> times(m);
             Calendar cal = wrapper->calendar();
-            //FIXME hardcoded in todaysmarket
-            DayCounter dc = Actual365Fixed();
+            DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(equityName));
             bool atmOnly = parameters->simulateEquityVolATMOnly();
 
             for (Size i = 0; i < n; i++) {

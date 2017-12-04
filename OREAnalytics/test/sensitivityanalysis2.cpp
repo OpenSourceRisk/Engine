@@ -112,7 +112,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true; // false;
-    simMarketData->setSwapVolDayCounters("", "A365");
+    simMarketData->setSwapVolDayCounters("", "ACT/ACT");
     simMarketData->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
                                       5 * Years,  7 * Years, 10 * Years, 20 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
@@ -120,7 +120,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->fxVolIsSurface() = false;
     simMarketData->fxVolMoneyness() = {0};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;

@@ -114,7 +114,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupStressSimMarketDa
     simMarketData->fxVolIsSurface() = false;
     simMarketData->fxVolMoneyness() = {0.0};
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
