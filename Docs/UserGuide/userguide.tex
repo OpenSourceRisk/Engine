@@ -223,7 +223,7 @@ Credit Default Swaps & Y & Y & N & N \\
 \end{center}
 \end{table}
 
-Future releases will further extend the product and the risk factor range to Credit and Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
+Future releases will further extend the product and the risk factor range to Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
@@ -1990,7 +1990,6 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
     <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
     <Parameter name="colva">Y</Parameter>
-    <Parameter name="collateralSpread">0.0010</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
     <Parameter name="dim">Y</Parameter>
     <Parameter name="mva">Y</Parameter>
@@ -2042,9 +2041,8 @@ collateral rates floor to the collateral model file (netting.xml)}
 \item {\tt dvaName:} Credit name to look up the own default probability curve and recovery rate for DVA calculation
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
-\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one
-basis point is 0.0001) assuming the day count convention of the collateral rate. \todo[inline]{Move collateralSpread to
-the collateral model file (netting.xml)}
+%\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one
+%basis point is 0.0001) assuming the day count convention of the collateral rate. 
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
