@@ -134,7 +134,8 @@ protected:
 
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
-    buildParametricVarCalculator(const std::map<std::string, std::string>& tradePortfolio,
+    buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
+                                 const std::string& portfolioFilter,
                                  const boost::shared_ptr<SensitivityData>& sensitivities,
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,

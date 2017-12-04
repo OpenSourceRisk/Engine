@@ -28,19 +28,22 @@
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
 #include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 
+#include <boost/regex.hpp>
+
 using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
 
 ParametricVarCalculator::ParametricVarCalculator(
-    const std::map<std::string, std::string>& tradePortfolio, const boost::shared_ptr<SensitivityData>& sensitivities,
+    const std::map<std::string, std::set<string>>& tradePortfolios, const std::string& portfolioFilter,
+    const boost::shared_ptr<SensitivityData>& sensitivities,
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
     const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown,
     const bool salvageCovarianceMatrix)
-    : tradePortfolio_(tradePortfolio), sensitivities_(sensitivities), covariance_(covariance), p_(p), method_(method),
-      mcSamples_(mcSamples), mcSeed_(mcSeed), breakdown_(breakdown), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
-}
+    : tradePortfolios_(tradePortfolios), portfolioFilter_(portfolioFilter), sensitivities_(sensitivities),
+      covariance_(covariance), p_(p), method_(method), mcSamples_(mcSamples), mcSeed_(mcSeed), breakdown_(breakdown),
+      salvageCovarianceMatrix_(salvageCovarianceMatrix) {}
 
 void ParametricVarCalculator::calculate(ore::data::Report& report) {
     LOG("Parametric VaR calculation started...");
@@ -50,17 +53,33 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     for (Size i = 0; i < p_.size(); ++i)
         report.addColumn("Quantile_" + std::to_string(p_[i]), double(), 6);
 
+    // build portfolio filter, if given
+    bool hasFilter = false;
+    boost::regex filter;
+    if (portfolioFilter_ != "") {
+        hasFilter = true;
+        filter = boost::regex(portfolioFilter_);
+        LOG("Portfolio filter: " << portfolioFilter_);
+    } else {
+        LOG("No portfolio filter will be applied.");
+    }
+
     // read sensitivities and preaggregate them per prtfolio
     LOG("Preaggregate sensitivities per portfolio");
     std::set<RiskFactorKey> sensiKeysTmp;
     std::set<std::string> portfoliosTmp;
     std::map<std::string, std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>> value1, value2;
+    std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> value1All, value2All;
     while (sensitivities_->next()) {
-        std::string portfolio = "";
-        auto pn = tradePortfolio_.find(sensitivities_->tradeId());
-        if (pn != tradePortfolio_.end())
-            portfolio = pn->second;
-        portfoliosTmp.insert(portfolio);
+        std::set<std::string> portfolios;
+        auto pn = tradePortfolios_.find(sensitivities_->tradeId());
+        if (pn != tradePortfolios_.end()) {
+            if (pn->second.empty())
+                portfolios = {"(empty)"};
+            else
+                portfolios = pn->second;
+        } else
+            portfolios = {"(unknown)"};
         auto f1 = sensitivities_->factor1();
         auto f2 = sensitivities_->factor2();
         RiskFactorKey k1 = f1 == nullptr ? RiskFactorKey() : *f1;
@@ -70,15 +89,32 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
             sensiKeysTmp.insert(*f1);
         if (f2 != nullptr)
             sensiKeysTmp.insert(*f2);
-        if (sensitivities_->value() != Null<Real>())
-            value1[portfolio][key] += sensitivities_->value();
-        if (sensitivities_->value2() != Null<Real>())
-            value2[portfolio][key] += sensitivities_->value2();
+        bool relevant = false;
+        for (auto const& p : portfolios) {
+            if (!hasFilter || boost::regex_match(p, filter)) {
+                relevant = true;
+                portfoliosTmp.insert(p);
+                if (sensitivities_->value() != Null<Real>()) {
+                    value1[p][key] += sensitivities_->value();
+                }
+                if (sensitivities_->value2() != Null<Real>()) {
+                    value2[p][key] += sensitivities_->value2();
+                }
+            }
+        }
+        if (relevant) {
+            if (sensitivities_->value() != Null<Real>()) {
+                value1All[key] += sensitivities_->value();
+            }
+            if (sensitivities_->value2() != Null<Real>()) {
+                value2All[key] += sensitivities_->value2();
+            }
+        }
     }
     std::vector<RiskFactorKey> sensiKeys(sensiKeysTmp.begin(), sensiKeysTmp.end());
     std::vector<bool> sensiKeyHasNonZeroVariance(sensiKeys.size(), false);
     std::vector<std::string> portfolios(portfoliosTmp.begin(), portfoliosTmp.end());
-    LOG("Have " << sensiKeys.size() << " sensitivity keys in " << value1.size() << " portfolios");
+    LOG("Have " << sensiKeys.size() << " sensitivity keys in " << portfolios.size() << " portfolios");
 
     // build global covariance matrix
     Matrix omega(sensiKeys.size(), sensiKeys.size(), 0.0);
@@ -122,48 +158,37 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     LOG("Done.");
 
     // loop over portfolios (index 0 = all portfolios)
-    Size loopLimitPf = breakdown_ && portfolios.size() > 1 ? portfolios.size() : 0;
-    for (Size i = 0; i <= loopLimitPf; ++i) {
-        std::string portfolio = i == 0 ? (portfolios.size() == 1 ? portfolios.front() : "(all)") : portfolios[i - 1];
-        if (portfolio == "")
-            portfolio = "(empty)";
-        // build delta and gamma for given portfolio (or all portfolios)
+    for (Size i = 0; i <= (!breakdown_ || portfolios.size() == 1 ? 0 : portfolios.size()); ++i) {
+        std::string portfolioName = i == 0 ? (portfolios.size() > 1 ? "(all)" : portfolios.front()) : portfolios[i - 1];
+        // build delta and gamma for given portfolio
+        const auto& val1 = (i == 0 ? value1All : value1[portfolios[i - 1]]);
+        const auto& val2 = (i == 0 ? value2All : value2[portfolios[i - 1]]);
         Array delta(sensiKeys.size(), 0.0);
         Matrix gamma(sensiKeys.size(), sensiKeys.size(), 0.0);
-        Size jStart, jEnd;
-        if (i == 0) {
-            jStart = 0;
-            jEnd = portfolios.size();
-        } else {
-            jStart = i - 1;
-            jEnd = i;
+        for (auto const& p : val1) {
+            auto k1 = p.first.first;
+            auto k2 = p.first.second;
+            Size idx1 = std::find(sensiKeys.begin(), sensiKeys.end(), k1) - sensiKeys.begin();
+            QL_REQUIRE(idx1 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key1 \""
+                                                    << k1 << "\" in value1 not found, this is unexpected.");
+            if (k2 == RiskFactorKey()) {
+                // delta
+                delta[idx1] += p.second;
+            } else {
+                // cross gamma
+                Size idx2 = std::find(sensiKeys.begin(), sensiKeys.end(), k2) - sensiKeys.begin();
+                QL_REQUIRE(idx2 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key2 \""
+                                                        << k2 << "\" in value1 not found, this is unexpected.");
+                gamma[idx1][idx2] = gamma[idx2][idx1] = p.second;
+            }
         }
-        for (Size j = jStart; j < jEnd; ++j) {
-            for (auto const& p : value1[portfolios[j]]) {
-                auto k1 = p.first.first;
-                auto k2 = p.first.second;
-                Size idx1 = std::find(sensiKeys.begin(), sensiKeys.end(), k1) - sensiKeys.begin();
-                QL_REQUIRE(idx1 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key1 \""
-                                                        << k1 << "\" in value1 not found, this is unexpected.");
-                if (k2 == RiskFactorKey()) {
-                    // delta
-                    delta[idx1] += p.second;
-                } else {
-                    // cross gamma
-                    Size idx2 = std::find(sensiKeys.begin(), sensiKeys.end(), k2) - sensiKeys.begin();
-                    QL_REQUIRE(idx2 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key2 \""
-                                                            << k2 << "\" in value1 not found, this is unexpected.");
-                    gamma[idx1][idx2] = gamma[idx2][idx1] = p.second;
-                }
-            }
-            for (auto const& p : value2[portfolios[j]]) {
-                // diagonal gamma
-                auto k1 = p.first.first;
-                Size idx1 = std::find(sensiKeys.begin(), sensiKeys.end(), k1) - sensiKeys.begin();
-                QL_REQUIRE(idx1 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key1 \""
-                                                        << k1 << "\" in value2 not found, this is unexpected.");
-                gamma[idx1][idx1] = p.second;
-            }
+        for (auto const& p : val2) {
+            // diagonal gamma
+            auto k1 = p.first.first;
+            Size idx1 = std::find(sensiKeys.begin(), sensiKeys.end(), k1) - sensiKeys.begin();
+            QL_REQUIRE(idx1 < sensiKeys.size(), "ParametricVarCalculator::computeVar: key1 \""
+                                                    << k1 << "\" in value2 not found, this is unexpected.");
+            gamma[idx1][idx1] = p.second;
         }
         // loop over risk class and type filters (index 0 == all risk types)
         for (Size j = 0; j < (breakdown_ ? RiskFilter::numberOfRiskClasses() : 1); ++j) {
@@ -174,7 +199,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                 Array deltaFiltered(delta);
                 Matrix gammaFiltered(gamma);
                 RiskFilter rf(j, k);
-                LOG("Compute parametric var for portfolio \"" << portfolio << "\""
+                LOG("Compute parametric var for portfolio \"" << portfolioName << "\""
                                                               << ", risk class " << rf.riskClassLabel()
                                                               << ", risk type " << rf.riskTypeLabel());
                 // set sensis which do not belong to risk type filter to zero
@@ -194,7 +219,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                                                    : computeVar(omegaFinal, deltaFiltered, gammaFiltered, p_);
                 if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
                     report.next();
-                    report.add(portfolio);
+                    report.add(portfolioName);
                     report.add(rf.riskClassLabel());
                     report.add(rf.riskTypeLabel());
                     for (auto const& v : var)

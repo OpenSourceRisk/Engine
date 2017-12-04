@@ -30,6 +30,9 @@
 #include <ql/math/array.hpp>
 #include <ql/math/matrix.hpp>
 
+#include <map>
+#include <set>
+
 using QuantLib::Matrix;
 using QuantLib::Array;
 
@@ -42,7 +45,8 @@ namespace analytics {
 class ParametricVarCalculator {
 public:
     virtual ~ParametricVarCalculator() {}
-    ParametricVarCalculator(const std::map<std::string, std::string>& tradePortfolio,
+    ParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
+                            const std::string& portfolioFilter,
                             const boost::shared_ptr<SensitivityData>& sensitivities,
                             const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                             const std::vector<Real>& p, const std::string& method, const Size mcSamples,
@@ -52,7 +56,8 @@ public:
 protected:
     virtual std::vector<Real> computeVar(const Matrix& omega, const Array& delta, const Matrix& gamma,
                                          const std::vector<Real>& p);
-    const std::map<std::string, std::string> tradePortfolio_;
+    const std::map<std::string, std::set<std::string>> tradePortfolios_;
+    const std::string portfolioFilter_;
     const boost::shared_ptr<SensitivityData> sensitivities_;
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance_;
     const std::vector<Real> p_;

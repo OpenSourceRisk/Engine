@@ -573,32 +573,32 @@ void OREApp::runParametricVar() {
         loadSensitivityDataFromCsv(*sensiData, inputPath + "/" + f);
     }
 
-    LOG("Build trade id to portfolio mapping");
-    map<string, string> tradePortfolio;
+    LOG("Build trade to portfolio id mapping");
+    map<string, set<string>> tradePortfolio;
     for (auto const& t : portfolio_->trades()) {
-        auto pf = t->envelope().additionalFields().find("Portfolio");
-        if (pf != t->envelope().additionalFields().end())
-            tradePortfolio[t->id()] = pf->second;
+        tradePortfolio[t->id()].insert(t->portfolioIds().begin(), t->portfolioIds().end());
     }
 
     LOG("Load covariance matrix data");
     map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarData;
     loadCovarianceDataFromCsv(covarData, inputPath + "/" + params_->get("parametricVar", "covarianceInputFile"));
 
-    Size mcSamples = Null<Size>(), mcSeed=Null<Size>();
+    Size mcSamples = Null<Size>(), mcSeed = Null<Size>();
     string method = params_->get("parametricVar", "method");
     if (method == "MonteCarlo") {
-        mcSamples =parseInteger(params_->get("parametricVar", "mcSamples"));
+        mcSamples = parseInteger(params_->get("parametricVar", "mcSamples"));
         mcSeed = parseInteger(params_->get("parametricVar", "mcSeed"));
     }
 
+    string portfolioFilter =
+        params_->has("parametricVar", "portfolioFilter") ? params_->get("parametricVar", "portfolioFilter") : "";
+
     LOG("Build parametric var report");
-    auto calc = buildParametricVarCalculator(
-        tradePortfolio, sensiData, covarData,
-        parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
-        method, mcSamples,
-        mcSeed, parseBool(params_->get("parametricVar", "breakdown")),
-        parseBool(params_->get("parametricVar", "salvageCovarianceMatrix")));
+    auto calc =
+        buildParametricVarCalculator(tradePortfolio, portfolioFilter, sensiData, covarData,
+                                     parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
+                                     method, mcSamples, mcSeed, parseBool(params_->get("parametricVar", "breakdown")),
+                                     parseBool(params_->get("parametricVar", "salvageCovarianceMatrix")));
 
     CSVFileReport report(outputPath + "/" + params_->get("parametricVar", "outputFile"));
     calc->calculate(report);
@@ -606,13 +606,14 @@ void OREApp::runParametricVar() {
 }
 
 boost::shared_ptr<ParametricVarCalculator>
-OREApp::buildParametricVarCalculator(const std::map<std::string, std::string>& tradePortfolio,
+OREApp::buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
+                                     const std::string& portfolioFilter,
                                      const boost::shared_ptr<SensitivityData>& sensitivities,
                                      const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                      const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                      const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix) {
-    return boost::make_shared<ParametricVarCalculator>(tradePortfolio, sensitivities, covariance, p, method, mcSamples,
-                                                       mcSeed, breakdown, salvageCovarianceMatrix);
+    return boost::make_shared<ParametricVarCalculator>(tradePortfolio, portfolioFilter, sensitivities, covariance, p,
+                                                       method, mcSamples, mcSeed, breakdown, salvageCovarianceMatrix);
 }
 
 void OREApp::writeBaseScenario() {
