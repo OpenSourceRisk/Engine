@@ -58,9 +58,11 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries, const DayCounter& dayCounter = QuantLib::Actual365Fixed(), const Calendar& calendar = QuantLib::TARGET(),
+                            const vector<Period>& expiries,
                             const string& fxSpotID = "", const string& fxForeignCurveID = "",
-                            const string& fxDomesticCurveID = "");
+                            const string& fxDomesticCurveID = "",
+                            const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
+                            const Calendar& calendar = QuantLib::TARGET());
     //@}
 
     //! \name Serialisation

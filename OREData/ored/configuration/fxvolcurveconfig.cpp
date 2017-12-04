@@ -29,9 +29,9 @@ namespace data {
 
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const vector<Period>& expiries,
-                                                 const DayCounter& dayCounter, const Calendar& calendar,
                                                  const string& fxSpotID, const string& fxForeignCurveID,
-                                                 const string& fxDomesticCurveID)
+                                                 const string& fxDomesticCurveID,
+                                                 const DayCounter& dayCounter, const Calendar& calendar)
 
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter), calendar_(calendar), fxSpotID_(fxSpotID),
         fxForeignYieldCurveID_(fxForeignCurveID), fxDomesticYieldCurveID_(fxDomesticCurveID)
