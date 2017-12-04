@@ -325,6 +325,7 @@ protected:
     };
 
     mutable boost::unordered_map<cache_key, std::pair<Real, Real>, cache_hasher> cache_crlgm1fS_, cache_infdkI_;
+    mutable boost::unordered_map<cache_key, Real, cache_hasher> cache_infdkC_;
 
     /* members */
 

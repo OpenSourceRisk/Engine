@@ -698,8 +698,7 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
             // foreign inflation
         V0 = infV(i, ccy, 0, t);
         V_tilde = infV(i, ccy, t, T) - infV(i, ccy, 0, T) + infV(i, ccy, 0, t);
-        /*}
-        cache_infdkI_.insert(std::make_pair(k, std::make_pair(V0, V_tilde)));*/
+        cache_infdkI_.insert(std::make_pair(k, std::make_pair(V0, V_tilde)));
     }
     else {
         // take V0 and V_tilde from cache
@@ -749,14 +748,23 @@ Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Ti
     Real HyT = Hy(i).eval(this, T);
     Real HdS = irlgm1f(0)->H(S);
     Real HdT = irlgm1f(0)->H(T);
-
+    
+    Real C_tilde;
     Real V_tilde = infdkV(i, S, T).second;
     Real rho = correlation(IR, 0, INF, i);
 
     // TODO: For foeign currency inflation do we extra terms here?
-    Real C_tilde =  V_tilde + 0.5 * (HdT*HdT - HdS*HdS) * zetaz(ccy).eval(this, S)
-                    + 0.5 * pow(HyT - HyS, 2) * zetay(i).eval(this, S)
-                    - rho * (HyT - HyS) * HdT * integral(this, P(az(ccy), ay(i)), 0.0, S);
+    cache_key k = { i, ccy, S, T };
+    boost::unordered_map<cache_key, Real >::const_iterator it = cache_infdkC_.find(k);
+
+    if (it == cache_infdkC_.end()) {
+        C_tilde = V_tilde + 0.5 * (HdT*HdT - HdS*HdS) * zetaz(ccy).eval(this, S)
+            + 0.5 * pow(HyT - HyS, 2) * zetay(i).eval(this, S)
+            - rho * (HyT - HyS) * HdT * integral(this, P(az(ccy), ay(i)), 0.0, S);
+        cache_infdkC_.insert(std::make_pair(k, C_tilde));
+    } else {
+         C_tilde = it->second;
+    }
 
     Real I_tildeS = infdkI(i, t, S, z, y).second;
     Real I_tildeT = infdkI(i, t, T, z, y).second;
