@@ -103,8 +103,9 @@
       <Parameter name="breakdown">Y</Parameter>
       <!-- Delta, DeltaGammaNormal, MonteCarlo -->
       <Parameter name="method">DeltaGammaNormal</Parameter>
-      <Parameter name="mcSamples">100000</Parameter>
-      <Parameter name="mcSeed">42</Parameter>
+      <!-- Only required for method = MonteCarlo -->
+      <!-- <Parameter name="mcSamples">100000</Parameter> -->
+      <!-- <Parameter name="mcSeed">42</Parameter> -->
       <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>
   </Analytics>

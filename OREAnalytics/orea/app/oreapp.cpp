@@ -585,12 +585,19 @@ void OREApp::runParametricVar() {
     map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covarData;
     loadCovarianceDataFromCsv(covarData, inputPath + "/" + params_->get("parametricVar", "covarianceInputFile"));
 
+    Size mcSamples = Null<Size>(), mcSeed=Null<Size>();
+    string method = params_->get("parametricVar", "method");
+    if (method == "MonteCarlo") {
+        mcSamples =parseInteger(params_->get("parametricVar", "mcSamples"));
+        mcSeed = parseInteger(params_->get("parametricVar", "mcSeed"));
+    }
+
     LOG("Build parametric var report");
     auto calc = buildParametricVarCalculator(
         tradePortfolio, sensiData, covarData,
         parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
-        params_->get("parametricVar", "method"), parseInteger(params_->get("parametricVar", "mcSamples")),
-        parseInteger(params_->get("parametricVar", "mcSeed")), parseBool(params_->get("parametricVar", "breakdown")),
+        method, mcSamples,
+        mcSeed, parseBool(params_->get("parametricVar", "breakdown")),
         parseBool(params_->get("parametricVar", "salvageCovarianceMatrix")));
 
     CSVFileReport report(outputPath + "/" + params_->get("parametricVar", "outputFile"));
