@@ -18,7 +18,10 @@
 
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <ostream>
 using namespace QuantLib;
 using namespace QuantExt;
@@ -29,9 +32,9 @@ namespace analytics {
 
 SensitivityScenarioGenerator::SensitivityScenarioGenerator(
     const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+    const boost::shared_ptr<Scenario>& baseScenario,
     const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const bool overrideTenors)
-    : ShiftScenarioGenerator(simMarket, simMarketData), sensitivityData_(sensitivityData),
+    : ShiftScenarioGenerator(baseScenario, simMarketData), sensitivityData_(sensitivityData),
       overrideTenors_(overrideTenors) {
     QL_REQUIRE(sensitivityData_ != NULL, "SensitivityScenarioGenerator: sensitivityData is null");
 }
@@ -59,6 +62,7 @@ struct findPair {
     }
 };
 void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory) {
+    Date asof = baseScenario_->asof();
 
     generateDiscountCurveScenarios(sensiScenarioFactory, true);
     generateDiscountCurveScenarios(sensiScenarioFactory, false);
@@ -75,12 +79,12 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::EquityForecastCurve)) {
+    if (simMarketData_->simulateEquityForecastCurve()) {
         generateEquityForecastCurveScenarios(sensiScenarioFactory, true);
         generateEquityForecastCurveScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::DividendYield)) {
+    if (simMarketData_->simulateDividendYield()) {
         generateDividendYieldScenarios(sensiScenarioFactory, true);
         generateDividendYieldScenarios(sensiScenarioFactory, false);
     }
@@ -91,37 +95,37 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateYoYInflationScenarios(sensiScenarioFactory, true);
     generateYoYInflationScenarios(sensiScenarioFactory, false);
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::FXVolatility)) {
+    if (simMarketData_->simulateFXVols()) {
         generateFxVolScenarios(sensiScenarioFactory, true);
         generateFxVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::EquityVolatility)) {
+    if (simMarketData_->simulateEquityVols()) {
         generateEquityVolScenarios(sensiScenarioFactory, true);
         generateEquityVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::SwaptionVolatility)) {
+    if (simMarketData_->simulateSwapVols()) {
         generateSwaptionVolScenarios(sensiScenarioFactory, true);
         generateSwaptionVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::OptionletVolatility)) {
+    if (simMarketData_->simulateCapFloorVols()) {
         generateCapFloorVolScenarios(sensiScenarioFactory, true);
         generateCapFloorVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::SurvivalProbability)) {
+    if (simMarketData_->simulateSurvivalProbabilities()) {
         generateSurvivalProbabilityScenarios(sensiScenarioFactory, true);
         generateSurvivalProbabilityScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::CDSVolatility)) {
+    if (simMarketData_->simulateCdsVols()) {
         generateCdsVolScenarios(sensiScenarioFactory, true);
         generateCdsVolScenarios(sensiScenarioFactory, false);
     }
 
-    if (simMarket_->isSimulated(RiskFactorKey::KeyType::BaseCorrelation)) {
+    if (simMarketData_->simulateBaseCorrelations()) {
         generateBaseCorrelationScenarios(sensiScenarioFactory, true);
         generateBaseCorrelationScenarios(sensiScenarioFactory, false);
     }
@@ -129,11 +133,10 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
     //store base scenario values
-    boost::shared_ptr<Scenario> base = baseScenario();
-    vector<RiskFactorKey> keys = base->keys();
+    vector<RiskFactorKey> keys = baseScenario_->keys();
     vector<Real> baseValues;
     for (auto k : keys) {
-        baseValues.push_back(base->get(k));
+        baseValues.push_back(baseScenario_->get(k));
     }
 
     Size index = scenarios_.size();
@@ -170,13 +173,13 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
             if (!match)
                 continue;
                 
-            boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> crossScenario = sensiScenarioFactory->buildScenario(asof);
             boost::shared_ptr<Scenario> jScenario = scenarios_[j];
             for (Size k=0; k<keys.size(); k++) { 
                 Real iValue = iValues[k];
                 Real jValue = jScenario->get(keys[k]);
                 Real baseValue = baseValues[k];
-                if (iValue != baseValue || jValue != baseValue)  {
+                if (!close_enough(iValue, baseValue) || !close_enough(jValue, baseValue))  {
                     Real newVal = iValue + jValue - baseValue; 
                     crossScenario->add(keys[k], newVal);
                 }
@@ -204,6 +207,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
 
 void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                                        bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> fxCcyPairs;
     if (sensitivityData_->fxCcyPairs().size() > 0)
@@ -244,14 +248,15 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
         // QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
-        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
         scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
 
-        Real rate = simMarket_->fxSpot(ccypair)->value();
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+        Real rate = scenario->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::FXSpot, ccypair), newRate);
+        scenario->add(key, newRate);
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
@@ -262,6 +267,7 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
 void SensitivityScenarioGenerator::generateEquityScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
+    Date asof = baseScenario_->asof();
     std::vector<string> equityNames;
     if (sensitivityData_->equityNames().size() > 0)
         equityNames = sensitivityData_->equityNames();
@@ -283,14 +289,14 @@ void SensitivityScenarioGenerator::generateEquityScenarios(
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
-        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
         scenarioDescriptions_.push_back(equityScenarioDescription(equity, up));
-
-        Real rate = simMarket_->equitySpot(equity)->value();
+        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
+        Real rate = baseScenario_->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
-        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquitySpot, equity), newRate);
+        scenario->add(key, newRate);
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
@@ -300,6 +306,7 @@ void SensitivityScenarioGenerator::generateEquityScenarios(
 
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> discountCurrencies;
     if (sensitivityData_->discountCurrencies().size() > 0)
@@ -327,12 +334,15 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
         QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "CurveShiftData not found for " << ccy);
         SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->discountCurve(ccy);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
+        
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(ccy)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
+            times[j] = dc.yearFraction(asof, d);
+
+            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
@@ -343,13 +353,13 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
             DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
                                                           << scenarioDescriptions_.back().text());
@@ -359,8 +369,10 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
 
             // store shifted discount curve in the scenario
             for (Size k = 0; k < n_ten; ++k) {
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
+                if (!close_enough(shiftedZeros[k], zeros[k]) ){
+                    Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
+                    scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
+                }
             }
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
@@ -373,6 +385,8 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
+
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> indexNames;
     if (sensitivityData_->indexNames().size() > 0)
@@ -400,13 +414,15 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
         QL_REQUIRE(itr != sensitivityData_->indexCurveShiftData().end(), "CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<IborIndex> iborIndex = simMarket_->iborIndex(indexName);
-        Handle<YieldTermStructure> ts = iborIndex->forwardingTermStructure();
-        DayCounter dc = ts->dayCounter();
+
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(indexName)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
@@ -417,13 +433,13 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Index shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(indexScenarioDescription(indexName, j, up));
 
@@ -447,6 +463,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
 
 void SensitivityScenarioGenerator::generateYieldCurveScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer yield curves than listed in the market
     vector<string> yieldCurveNames;
     if (sensitivityData_->yieldCurveNames().size() > 0)
@@ -474,12 +491,15 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
         QL_REQUIRE(itr != sensitivityData_->yieldCurveShiftData().end(), "CurveShiftData not found for " << name);
         SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->yieldCurve(name);
-        DayCounter dc = ts->dayCounter();
+
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->yieldCurveTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
@@ -490,13 +510,13 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(yieldScenarioDescription(name, j, up));
 
@@ -520,6 +540,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
 void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer yield curves than listed in the market
+    Date asof = baseScenario_->asof();
     vector<string> equityForecastNames;
     if (sensitivityData_->equityForecastCurveNames().size() > 0)
         equityForecastNames = sensitivityData_->equityForecastCurveNames();
@@ -546,12 +567,15 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
         QL_REQUIRE(itr != sensitivityData_->equityForecastCurveShiftData().end(), "equityForecast CurveShiftData not found for " << name);
         SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->equityForecastCurve(name);
-        DayCounter dc = ts->dayCounter();
+        
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->equityForecastTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->equityForecastTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::EquityForecastCurve, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastTenors(name)
@@ -562,13 +586,13 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(equityForecastCurveScenarioDescription(name, j, up));
 
@@ -591,6 +615,8 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
 
 void SensitivityScenarioGenerator::generateDividendYieldScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
+
     // We can choose to shift fewer yield curves than listed in the market
     vector<string> dividendYieldNames;
     if (sensitivityData_->equityNames().size() > 0)
@@ -617,12 +643,15 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
         QL_REQUIRE(itr != sensitivityData_->dividendYieldShiftData().end(), "dividendYield CurveShiftData not found for " << name);
         SensitivityScenarioData::CurveShiftData data = *itr->second;
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YieldTermStructure> ts = simMarket_->equityDividendCurve(name);
-        DayCounter dc = ts->dayCounter();
+
+        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
+        
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->equityDividendTenors(name)[j];
-            zeros[j] = ts->zeroRate(d, dc, Continuous);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->equityDividendTenors(name)[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key (RiskFactorKey::KeyType::DividendYield, name, j);
+            Real quote = baseScenario_->get(key);
+            zeros[j] = -std::log(quote)/times[j];
         }
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
@@ -633,13 +662,13 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(dividendYieldScenarioDescription(name, j, up));
 
@@ -662,6 +691,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
 
 void SensitivityScenarioGenerator::generateFxVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> fxVolCcyPairs;
     if (sensitivityData_->fxVolCcyPairs().size() > 0)
@@ -688,12 +718,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
     map<string, SensitivityScenarioData::VolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
     for (Size i = 0; i < n_fxvol_pairs; ++i) {
         string ccyPair = fxVolCcyPairs[i];
-        Real spot = simMarket_->fxSpot(ccyPair)->value();
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
-        string forCcy = ccyPair.substr(0, 3);
-        string domCcy = ccyPair.substr(3, 3);
-        Handle<YieldTermStructure> forTS = simMarket_->discountCurve(forCcy);
-        Handle<YieldTermStructure> domTS = simMarket_->discountCurve(domCcy);
 
         QL_REQUIRE(shiftDataMap.find(ccyPair) != shiftDataMap.end(),
                    "ccy pair " << ccyPair << " not found in VolShiftData");
@@ -704,30 +729,25 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-        Handle<BlackVolTermStructure> ts = simMarket_->fxVol(ccyPair);
-        DayCounter dc = ts->dayCounter();
+        //FIXME: this is also hardcoded in todaysmarket
+        DayCounter dc = Actual365Fixed();
         for (Size j = 0; j < n_fxvol_exp; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->fxVolExpiries()[j];
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
-
+            Date d = asof + simMarketData_->fxVolExpiries()[j];
+            times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_fxvol_strikes; k++) {
-                Real strike;
-                if (simMarketData_->fxVolIsSurface()) {
-                    strike = spot * simMarketData_->fxVolMoneyness()[k] * forTS->discount(times[j]) /
-                             domTS->discount(times[j]);
-                } else {
-                    strike = Null<Real>();
-                }
-                values[k][j] = ts->blackVol(d, strike);
+                Size idx = k * n_fxvol_exp + j;
+
+                RiskFactorKey key (RiskFactorKey::KeyType::FXVolatility, ccyPair, idx);
+                values[k][j] = baseScenario_->get(key);
             }
         }
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             Size strikeBucket = 0; // FIXME
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(fxVolScenarioDescription(ccyPair, j, strikeBucket, up));
 
@@ -753,6 +773,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
 
 void SensitivityScenarioGenerator::generateEquityVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> equityVolNames;
     if (sensitivityData_->equityVolNames().size() > 0)
@@ -769,7 +790,6 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
     Size n_eqvol_names = equityVolNames.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
     Size n_eqvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
-    bool atmOnly = simMarketData_->simulateEquityVolATMOnly();
 
     // [strike] x [expiry]
     vector<vector<Real>> values(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
@@ -789,23 +809,23 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
         vector<Time> shiftTimes(shiftTenors.size());
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
-
-        Handle<BlackVolTermStructure> ts = simMarket_->equityVol(equity);
-        Real spot = simMarket_->equitySpot(equity)->value();
-        DayCounter dc = ts->dayCounter();
+        //FIXME: this is also hardcoded in todaysmarket
+        DayCounter dc = Actual365Fixed();
         for (Size j = 0; j < n_eqvol_exp; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->equityVolExpiries()[j];
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->equityVolExpiries()[j];
+            times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_eqvol_strikes; k++) {
-                Real strike = atmOnly ? Null<Real>() : spot * simMarketData_->equityVolMoneyness()[k];
-                values[k][j] = ts->blackVol(d, strike);
+                Size idx = k * n_eqvol_exp + j;
+
+                RiskFactorKey key (RiskFactorKey::KeyType::EquityVolatility, equity, idx);
+                values[k][j] = baseScenario_->get(key);
             }
         }
         for (Size j = 0; j < shiftTenors.size(); ++j) {
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
             Size strikeBucket = 0; // FIXME
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(equityVolScenarioDescription(equity, j, strikeBucket, up));
 
@@ -832,6 +852,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
 
 void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     LOG("starting swapVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> swaptionVolCurrencies;
@@ -873,8 +894,6 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
         vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        Handle<SwaptionVolatilityStructure> ts = simMarket_->swaptionVol(ccy);
-
         vector<Real> shiftStrikes;
         if (!atmOnly_swvol) {
             shiftStrikes = data.shiftStrikes;
@@ -883,43 +902,25 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             shiftStrikes = {0.0};
         }
 
-        DayCounter dc = ts->dayCounter();
-        boost::shared_ptr<SwaptionVolatilityCube> cube;
-        if(!atmOnly_swvol) {
-            boost::shared_ptr<SwaptionVolCubeWithATM> tmp = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*ts);
-            QL_REQUIRE(tmp, "swaption cube missing")
-            cube = tmp->cube();
-        } else {
-            // if atmOnly == true, we might have a matrix or a SwaptionVolatilityConstantSpread
-            // in the latter case we extract the underlying cube which is used below to determine
-            // the atm strike
-            auto tmp = boost::dynamic_pointer_cast<SwaptionVolatilityConstantSpread>(*ts);
-            if (tmp != nullptr) {
-                auto tmp2 = boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*tmp->cube());
-                QL_REQUIRE(tmp2, "swaption cube missing");
-                cube = tmp2->cube();
-            }
-        }
+        DayCounter dc = parseDayCounter(simMarketData_->swapVolDayCounter(ccy));
+
         // cache original vol data
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Date expiry = simMarket_->asofDate() + simMarketData_->swapVolExpiries()[j];
-            volExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), expiry);
+            Date expiry = asof + simMarketData_->swapVolExpiries()[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_swvol_term; ++j) {
-            Date term = simMarket_->asofDate() + simMarketData_->swapVolTerms()[j];
-            volTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), term);
+            Date term = asof + simMarketData_->swapVolTerms()[j];
+            volTermTimes[j] = dc.yearFraction(asof, term);
         }
 
         for (Size j = 0; j < n_swvol_exp; ++j) {
-            Period expiry = simMarketData_->swapVolExpiries()[j];
             for (Size k = 0; k < n_swvol_term; ++k) {
-                Period term = simMarketData_->swapVolTerms()[k];
                 for (Size l = 0; l < n_swvol_strike; ++l) {
-                    Real strike = cube == nullptr
-                                      ? Null<Real>()
-                                      : cube->atmStrike(expiry, term) + simMarketData_->swapVolStrikeSpreads()[l];
-                    Real swvol = ts->volatility(expiry, term, strike);
-                    volData[l][j][k] = swvol;
+                    Size idx = j *  n_swvol_term * n_swvol_strike + k * n_swvol_strike + l;
+
+                    RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx);
+                    volData[l][j][k] = baseScenario_->get(key);
                 }
             }
         }
@@ -927,16 +928,16 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
             // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] =
-                dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftExpiries[j]);
+                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
-            shiftTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftTerms[j]);
+            shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
         // loop over shift expiries, terms and strikes
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
                 for (Size l = 0; l < shiftStrikes.size(); ++l) {
                     Size strikeBucket = l;
-                    boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+                    boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
                     scenarioDescriptions_.push_back(swaptionVolScenarioDescription(ccy, j, k, strikeBucket, up));
 
@@ -974,6 +975,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     vector<string> capFloorVolCurrencies;
     if (sensitivityData_->capFloorVolCurrencies().size() > 0)
@@ -1013,31 +1015,29 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
 
-        Handle<OptionletVolatilityStructure> ts = simMarket_->capFloorVol(ccy);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
 
         // cache original vol data
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Date expiry = simMarket_->asofDate() + simMarketData_->capFloorVolExpiries(ccy)[j];
-            volExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), expiry);
+            Date expiry = asof + simMarketData_->capFloorVolExpiries(ccy)[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries(ccy)[j];
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
-                Real strike = simMarketData_->capFloorVolStrikes()[k];
-                Real vol = ts->volatility(expiry, strike);
-                volData[j][k] = vol;
+                Size idx = j * n_cfvol_strikes + k;
+                RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
+                volData[j][k] = baseScenario_->get(key);
             }
         }
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            shiftExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + expiries[j]);
+            shiftExpiryTimes[j] = dc.yearFraction(asof, asof + expiries[j]);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
-                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
                 scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up));
 
@@ -1062,6 +1062,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
 
 void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer credit curves than listed in the market
     std::vector<string> crNames;
 
@@ -1094,13 +1095,15 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
         QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(), "credit CurveShiftData not found for " << name);
         SensitivityScenarioData::CurveShiftData data = *itr->second;  
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<DefaultProbabilityTermStructure> ts = simMarket_->defaultCurve(name);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
+        Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
+
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->defaultTenors(crNames[i])[j];
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
-            Real s_t = ts->survivalProbability(times[j], true); // do we extrapolate or not?
-            hazardRates[j] = -std::log(s_t) / times[j];
+            Date d = asof + simMarketData_->defaultTenors(crNames[i])[j];
+            times[j] = dc.yearFraction(asof, d);
+            RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
+            Real prob = baseScenario_->get(key);
+            hazardRates[j] = -std::log(prob ) / times[j];
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
@@ -1113,13 +1116,13 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
 
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
             scenarioDescriptions_.push_back(survivalProbabilityScenarioDescription(name, j, up));
             LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
                                                                 << ", desc " << scenarioDescriptions_.back().text());
@@ -1144,6 +1147,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
 
 void SensitivityScenarioGenerator::generateCdsVolScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> cdsVolNames;
     if (sensitivityData_->cdsVolNames().size() > 0)
@@ -1174,29 +1178,28 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
 
         vector<Time> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
-        Handle<BlackVolTermStructure> ts = simMarket_->cdsVol(name);
-        DayCounter dc = ts->dayCounter();
+        // TODO: push into conventions or config
+        DayCounter dc = Actual365Fixed();
         Real strike = 0.0; // FIXME
 
         // cache original vol data
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
-            Date expiry = simMarket_->asofDate() + simMarketData_->cdsVolExpiries()[j];
-            volExpiryTimes[j] = dc.yearFraction(simMarket_->asofDate(), expiry);
+            Date expiry = asof + simMarketData_->cdsVolExpiries()[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
-            Period expiry = simMarketData_->cdsVolExpiries()[j];
-            Real cdsvol = ts->blackVol(simMarket_->asofDate() + expiry, strike);
-            volData[j] = cdsvol;
+            RiskFactorKey key(RiskFactorKey::KeyType::CDSVolatility, name, j);
+            volData[j] = baseScenario_->get(key);
         }
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] =
-                dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftExpiries[j]);
+                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
             Size strikeBucket = 0; // FIXME
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(CdsVolScenarioDescription(name, j, strikeBucket, up));
 
@@ -1216,6 +1219,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
 
 void SensitivityScenarioGenerator::generateZeroInflationScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> zeroInfIndexNames;
     if (sensitivityData_->zeroInflationIndices().size() > 0)
@@ -1243,13 +1247,13 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
         QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(), "zero inflation CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = *itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<ZeroInflationIndex> inflationIndex = simMarket_->zeroInflationIndex(indexName);
-        Handle<ZeroInflationTermStructure> ts = inflationIndex->zeroInflationTermStructure();
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->zeroInflationTenors(indexName)[j];
-            zeros[j] = ts->zeroRate(d);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->zeroInflationTenors(indexName)[j];
+            RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, j);
+            zeros[j] = baseScenario_->get(key);
+
+            times[j] = dc.yearFraction(asof, d);
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
@@ -1260,13 +1264,13 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Zero Inflation Index shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(zeroInflationScenarioDescription(indexName, j, up));
 
@@ -1290,6 +1294,8 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
 
 void SensitivityScenarioGenerator::generateYoYInflationScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
+
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> yoyInfIndexNames;
     if (sensitivityData_->yoyInflationIndices().size() > 0)
@@ -1317,13 +1323,13 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
         QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(), "yoyinflation CurveShiftData not found for " << indexName);
         SensitivityScenarioData::CurveShiftData data = *itr->second; 
         ShiftType shiftType = parseShiftType(data.shiftType);
-        Handle<YoYInflationIndex> inflationIndex = simMarket_->yoyInflationIndex(indexName);
-        Handle<YoYInflationTermStructure> ts = inflationIndex->yoyInflationTermStructure();
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = simMarket_->asofDate() + simMarketData_->yoyInflationTenors(indexName)[j];
-            yoys[j] = ts->yoyRate(d);
-            times[j] = dc.yearFraction(simMarket_->asofDate(), d);
+            Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
+            RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
+            yoys[j] = baseScenario_->get(key);
+
+            times[j] = dc.yearFraction(asof, d);
         }
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
@@ -1334,13 +1340,13 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
                                                                       << data.shiftTenors.size() << ")");
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + shiftTenors[j]);
+            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "YoY Inflation Index shift tenors not specified");
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
             scenarioDescriptions_.push_back(yoyInflationScenarioDescription(indexName, j, up));
 
@@ -1363,6 +1369,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
 
 void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> baseCorrelationNames;
     if (sensitivityData_->baseCorrelationNames().size() > 0)
@@ -1396,31 +1403,28 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
         vector<Real> shiftLevels = data.shiftLossLevels;
         vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
 
-        Handle<BilinearBaseCorrelationTermStructure> ts = simMarket_->baseCorrelation(name);
-        DayCounter dc = ts->dayCounter();
+        DayCounter dc = parseDayCounter(simMarketData_->baseCorrelationDayCounter(name));
 
         // cache original base correlation data
         for (Size j = 0; j < n_bc_terms; ++j) {
-            Date term = simMarket_->asofDate() + simMarketData_->baseCorrelationTerms()[j];
-            termTimes[j] = dc.yearFraction(simMarket_->asofDate(), term);
+            Date term = asof + simMarketData_->baseCorrelationTerms()[j];
+            termTimes[j] = dc.yearFraction(asof, term);
         }
         for (Size j = 0; j < n_bc_levels; ++j) {
-            Real level = levels[j];
             for (Size k = 0; k < n_bc_terms; ++k) {
-                Date term = simMarket_->asofDate() + simMarketData_->baseCorrelationTerms()[k];
-                Real bc = ts->correlation(term, level, true); // extrapolation
-                bcData[j][k] = bc;
+                RiskFactorKey key(RiskFactorKey::KeyType::BaseCorrelation, name, j);
+                bcData[j][k] = baseScenario_->get(key);
             }
         }
 
         // cache tenor times
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
-            shiftTermTimes[j] = dc.yearFraction(simMarket_->asofDate(), simMarket_->asofDate() + data.shiftTerms[j]);
+            shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
         // loop over shift levels and terms
         for (Size j = 0; j < shiftLevels.size(); ++j) {
             for (Size k = 0; k < shiftTermTimes.size(); ++k) {
-                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(simMarket_->asofDate());
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
 
                 scenarioDescriptions_.push_back(baseCorrelationScenarioDescription(name, j, k, up));
 
