@@ -1065,7 +1065,9 @@
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
       <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
+      <!-- <AdditionalFields> -->
+      <!--   <Portfolio>PF1</Portfolio> -->
+      <!-- </AdditionalFields> -->
     </Envelope>
     <CreditDefaultSwapData>
       <IssuerId>CPTY_C</IssuerId>
