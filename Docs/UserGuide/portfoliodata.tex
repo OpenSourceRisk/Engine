@@ -26,6 +26,10 @@ An example of a {\tt portfolio.xml} file with one Swap trade including the full 
     <Envelope>
       <CounterParty> Counterparty#1 </CounterParty>
       <NettingSetId> NettingSet#2 </NettingSetId>
+      <PortfolioIds>
+          <PortoliodId> PF#1 </PortfolioId>
+          <PortoliodId> PF#2 </PortfolioId>
+      </PortfolioIds>
       <AdditionalFields>
         <Sector> SectorA </Sector>
         <Book> BookB </Book>
@@ -69,16 +73,16 @@ EquityForward, EquityOption, CreditDefaultSwap, Bond}
 \subsection{Envelope}\label{ss:envelope}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 The envelope node contains basic identifying details of a trade ({\tt
-  Id}, {\tt Type}, {\tt Counterparty}, {\tt Rating}, {\tt
-  NettingSetId}), plus an {\tt AdditionalFields} node where custom
+  Id}, {\tt Type}, {\tt Counterparty}, {\tt NettingSetId}), a 
+{\tt PortfolioIds} node containing a list of portfolio assignments, 
+plus an {\tt AdditionalFields} node where custom
 elements can be added for informational purposes such as {\tt Book} or
 {\tt Sector}. Beside the custom elements within the {\tt
   AdditionalFields} node, the envelope contains the same elements for
 all Trade types.  The {\tt Id}, {\tt Type}, {\tt Counterparty} and
 {\tt NettingSetId} elements must have non-blank entries for ORE to
-run, whereas ORE will run without a {\tt Rating} element but fail to
-produce a CVA. \\
-
+run. 
+%, whereas ORE will run without a {\tt Rating} element but fail to produce a CVA. \\
 The meanings and allowable values of the various elements in the \lstinline!Envelope!  node follow below.
 
 \begin{itemize}
@@ -115,10 +119,20 @@ Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may
 % netting groups. Total netting
 % group %-- exposures and exposures from transactions not belonging to a netting group are then combined without offsetting.
 
+\item \lstinline!PortfolioIds! [Optional]: The PortfolioIds node
+  allows the assignment of a given trade to several portfolios, each
+  enclosed in its own pair of tags {\tt <PortfolioId>} and {\tt
+    </PortfolioId>} . Note that ORE does not assume a hierarchical 
+ organisation of such portfolios. If present, the portfolio IDs will be used in the
+  generation of some ORE reports such as the VaR report which provides
+  breakdown by any portfolio id that occurs in the trades' envelopes.
+
+Allowable values for each PortfolioId: Any string.
+
 \item \lstinline!AdditionalFields! [Optional]: The AdditionalFields node allows the insertion of additional trade
   information using custom XML elements.  For example, elements such as Sector, Desk or Folder can be used. The elements
-  within the \lstinline!AdditionalFields! node are used for informational purposes only, and do not affect pricing or
-  exposure calculations and analytics.
+  within the \lstinline!AdditionalFields! node are used for
+  informational purposes only, and do not affect any analytics in ORE.
 
 Allowable values: Any custom element.
 
