@@ -218,7 +218,7 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
-
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     // Multi path generator: Pseudo Random
     BigNatural seed = 42;
     // bool antithetic = true;
@@ -317,11 +317,13 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
     simMarketConfig->setZeroInflationTenors("", { 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                                   5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                                   30 * Years, 40 * Years, 50 * Years });
+    simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
 
     simMarketConfig->simulateCpiCapFloorVols() = false;
 
@@ -475,6 +477,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
 
@@ -484,6 +487,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
@@ -620,6 +624,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
 
@@ -629,6 +634,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
@@ -762,6 +768,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
 
@@ -771,6 +778,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
@@ -903,15 +911,18 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
     simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->fxVolDecayMode() = "ForwardVariance";
     simMarketConfig->fxVolCcyPairs() = {"USDEUR"};
+    simMarketConfig->setFxVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
@@ -1033,6 +1044,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
 
@@ -1041,6 +1053,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
@@ -1163,6 +1176,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     simMarketConfig->setYieldCurveTenors("", { 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
         5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
         30 * Years, 40 * Years, 50 * Years });
+    simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
     simMarketConfig->baseCcy() = "EUR";
@@ -1170,10 +1184,12 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     simMarketConfig->indices() = { "EUR-EURIBOR-6M" };
     simMarketConfig->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
     simMarketConfig->swapVolTerms() = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years };
+    simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = { "USDEUR", "GBPEUR" };
     simMarketConfig->zeroInflationIndices() = { "UKRPI", "EUHICPXT" };
     simMarketConfig->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
         5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years });
+    simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
     simMarketConfig->simulateCpiCapFloorVols() = false;
     simMarketConfig->cpiCapFloorVolDecayMode() = ConstantVariance;
     simMarketConfig->cpiCapFloorVolIndices() = { "EUHICPXT" };

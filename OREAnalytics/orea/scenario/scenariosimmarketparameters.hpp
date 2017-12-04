@@ -112,6 +112,7 @@ public:
 
     bool simulateCdsVols() const { return cdsVolSimulate_; }
     const vector<Period>& cdsVolExpiries() const { return cdsVolExpiries_; }
+    const string& cdsVolDayCounter(const string& key) const;
     const vector<string>& cdsVolNames() const { return cdsVolNames_; }
     const string& cdsVolDecayMode() const { return cdsVolDecayMode_; }
 
@@ -124,6 +125,7 @@ public:
     bool simulateFXVols() const { return fxVolSimulate_; }
     bool fxVolIsSurface() const { return fxVolIsSurface_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
+    const string& fxVolDayCounter(const string& key) const;
     const string& fxVolDecayMode() const { return fxVolDecayMode_; }
     const vector<string>& fxVolCcyPairs() const { return fxVolCcyPairs_; }
     const vector<Real>& fxVolMoneyness() const { return fxMoneyness_; }
@@ -132,6 +134,7 @@ public:
     bool equityVolIsSurface() const { return equityIsSurface_; }
     bool simulateEquityVolATMOnly() const { return equityVolSimulateATMOnly_; }
     const vector<Period>& equityVolExpiries() const { return equityVolExpiries_; }
+    const string& equityVolDayCounter(const string& key) const;
     const string& equityVolDecayMode() const { return equityVolDecayMode_; }
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const vector<Real>& equityVolMoneyness() const { return equityMoneyness_; }
@@ -219,6 +222,7 @@ public:
     vector<Period>& cdsVolExpiries() { return cdsVolExpiries_; }
     vector<string>& cdsVolNames() { return cdsVolNames_; }
     string& cdsVolDecayMode() { return cdsVolDecayMode_; }
+    void setCdsVolDayCounters(const string& key, const string& p);
 
     vector<string>& equityNames() { return equityNames_; }
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
@@ -230,6 +234,7 @@ public:
     string& fxVolDecayMode() { return fxVolDecayMode_; }
     vector<string>& fxVolCcyPairs() { return fxVolCcyPairs_; }
     vector<Real>& fxVolMoneyness() { return fxMoneyness_; }
+    void setFxVolDayCounters(const string& key, const string& p);
 
     bool& simulateEquityVols() { return equityVolSimulate_; }
     bool& equityVolIsSurface() { return equityIsSurface_; }
@@ -238,6 +243,7 @@ public:
     string& equityVolDecayMode() { return equityVolDecayMode_; }
     vector<string>& equityVolNames() { return equityVolNames_; }
     vector<Real>& equityVolMoneyness() { return equityMoneyness_; }
+    void setEquityVolDayCounters(const string& key, const string& p);
 
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
@@ -329,6 +335,7 @@ private:
     bool cdsVolSimulate_;
     vector<string> cdsVolNames_;
     vector<Period> cdsVolExpiries_;
+    map<string, string>  cdsVolDayCounters_;
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
@@ -340,6 +347,7 @@ private:
     bool fxVolSimulate_;
     bool fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
+    map<string, string>  fxVolDayCounters_;
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
     vector<Real> fxMoneyness_;
@@ -348,6 +356,7 @@ private:
     bool equityIsSurface_;
     bool equityVolSimulateATMOnly_;
     vector<Period> equityVolExpiries_;
+    map<string, string>  equityVolDayCounters_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;
     vector<Real> equityMoneyness_;

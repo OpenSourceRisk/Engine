@@ -19,6 +19,7 @@
 #include <ored/configuration/equityvolcurveconfig.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using ore::data::XMLUtils;
 
@@ -27,9 +28,10 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency, const Dimension& dimension,
-                                                         const vector<string>& expiries, const vector<string>& strikes)
+                                                         const vector<string>& expiries, const DayCounter& dayCounter, 
+                                                         const vector<string>& strikes)
     : CurveConfig(curveID, curveDescription), ccy_(currency), dimension_(dimension),
-      expiries_(expiries), strikes_(strikes) {}
+      expiries_(expiries), dayCounter_(dayCounter), strikes_(strikes) {}
 
 const vector<string>& EquityVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -62,6 +64,12 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
         strikes_= XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     }
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+
+    string dc = XMLUtils::getChildValue(node, "DayCounter");
+    if (dc == "")
+        dc = "A365";
+    dayCounter_ = parseDayCounter(dc);
+
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -77,6 +85,7 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;
 }
