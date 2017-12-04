@@ -378,11 +378,12 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
             Real ir_z = sample.value[model_->pIdx(IR, ccy)][i + 1];
             yoyInfCurves[j]->move(dates_[i], z, y, ir_z);
-            for (Size k = 0; k < ten_yinf_[j].size(); k++) {
-                Date d = dates_[i] + ten_yinf_[j][k];
-                Real yoy = yoyInfCurves[j]->yoyRate(d);
-                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoy);
-            }
+            vector<Date> d_yinf;
+            for (Size k = 0; k < ten_yinf_[j].size(); k++)
+                d_yinf.push_back(dates_[i] + ten_yinf_[j][k]);
+            map<Date, Real> yoyRates = yoyInfCurves[j]->yoyRates(d_yinf);
+            for(Size l = 0; l < d_yinf.size(); l++)
+                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
         }
 
         // EquityForecastCurve

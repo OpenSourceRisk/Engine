@@ -59,8 +59,8 @@ namespace QuantExt {
         void referenceDate(const Date& d);
         void state(const Real s_z, const Real s_y, const Real s_irz);
         void move(const Date& d, const Real s_z, const Real s_y, const Real s_irz);
-        Real yoyRate(const Date &d, const Period& instObsLag = Period(-1, Days),
-            bool forceLinearInterpolation = false, bool extrapolate = false) const;
+        Real yoyRate(const Date &d, const Period& instObsLag = Period(-1, Days)) const;
+        std::map<Date, Real>& yoyRates(const std::vector<Date> &dts, const Period& instObsLag = Period(-1, Days));
 
         void update();
 
@@ -132,8 +132,7 @@ namespace QuantExt {
         QL_FAIL("DkImpliedYoYInflationTermStructure yoyRate requires a date");
     }
 
-    inline Real DkImpliedYoYInflationTermStructure::yoyRate(const Date &d, const Period& instObsLag,
-        bool forceLinearInterpolation, bool extrapolate) const {
+    inline Real DkImpliedYoYInflationTermStructure::yoyRate(const Date &d, const Period& instObsLag) const {
 
         Period useLag = instObsLag;
         if (instObsLag == Period(-1, Days)) {
@@ -186,6 +185,76 @@ namespace QuantExt {
             yoyRate = seasonality()->correctYoYRate(d - useLag, yoyRate, *this);
         }
         return yoyRate;
+    }
+
+
+    inline std::map<Date, Real>& DkImpliedYoYInflationTermStructure::yoyRates(const std::vector<Date> &dts, const Period& instObsLag) {
+        std::map<Date, Real> yoys, yoyswaplet;
+
+        Period useLag = instObsLag;
+        if (instObsLag == Period(-1, Days)) {
+            useLag = observationLag();
+        }
+
+        Calendar cal = model_->infdk(index_)->termStructure()->calendar();
+        DayCounter dc = model_->infdk(index_)->termStructure()->dayCounter();
+        Date maturity;
+
+        for (Size i = 0; i < dts.size(); i++) {
+            if (model_->infdk(index_)->termStructure()->indexIsInterpolated()) {
+                maturity = dts[i] - useLag;
+            }
+            else {
+                maturity = inflationPeriod(dts[i] - useLag, frequency()).first;
+            }
+
+            Schedule schedule = MakeSchedule()
+                .from(baseDate())
+                .to(maturity)
+                .withTenor(1 * Years)
+                .withConvention(Unadjusted)
+                .withCalendar(cal)
+                .backwards();
+
+            Real yoyLegRate = 0.0;
+            Real fixedDiscounts = 0.0;
+            for (Size i = 1; i < schedule.dates().size(); i++) {
+                std::map<Date, Real>::const_iterator it = yoyswaplet.find(schedule.dates()[i]);
+                Real swapletPrice;
+                if (it == yoyswaplet.end()) {
+                    if (schedule.dates()[i - 1] < baseDate()) {
+                        // fot the first YoY swaplet, I(T_i-1) is known, obtained from a fixing. I(T_i) comes from the model directly - I(t) * Itilde(t,T).
+                        Time t1 = dayCounter().yearFraction(model_->infdk(index_)->termStructure()->baseDate(), schedule.dates()[i - 1]);
+                        Real I1 = model_->infdkI(index_, t1, t1, state_z_, state_y_).first;
+                        Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
+                        std::pair<Real, Real> II2 = model_->infdkI(index_, relativeTime_, relativeTime_ + t2, state_z_, state_y_);
+                        Real I2 = II2.first * II2.second;
+                        Real discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
+                        fixedDiscounts += discount;
+                        swapletPrice = discount * ((I2 / I1) - 1);
+
+                    }
+                    else {
+                        Time t1 = dc.yearFraction(baseDate(), schedule.dates()[i - 1]);
+                        Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
+                        Real discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
+                        fixedDiscounts += discount;
+                        swapletPrice = yoySwapletRate(t1, t2);
+                    }
+                    yoyswaplet[schedule.dates()[i]] = swapletPrice;
+                } else {
+                    swapletPrice = yoyswaplet[schedule.dates()[i]];
+                }
+                yoyLegRate += swapletPrice;
+            }
+            Real yoyRate = (yoyLegRate / fixedDiscounts);
+
+            if (hasSeasonality()) {
+                yoyRate = seasonality()->correctYoYRate(dts[i] - useLag, yoyRate, *this);
+            }
+            yoys[dts[i]] = yoyRate;
+        }
+        return yoys;
     }
 
 }  // namespace QuantExt
