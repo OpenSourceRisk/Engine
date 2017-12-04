@@ -116,8 +116,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
         // daycounter used for interpolation in time.
         // TODO: push into conventions or config
-        DayCounter dc = Actual365Fixed();
-        Calendar cal = TARGET();
+        DayCounter dc = config->dayCounter();
+        Calendar cal = config->calendar();
 
         // sort all quotes
         for (Size i = 0; i < n; i++) {

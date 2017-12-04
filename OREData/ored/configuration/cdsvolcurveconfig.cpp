@@ -18,6 +18,9 @@
 
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ql/errors.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <boost/algorithm/string.hpp>
 
 using ore::data::XMLUtils;
 
@@ -25,7 +28,7 @@ namespace ore {
 namespace data {
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                   const vector<string>& expiries)
+                                                   const vector<string>& expiries, const DayCounter& dayCounter)
     : CurveConfig(curveID, curveDescription), expiries_(expiries) {}
 
 const vector<string>& CDSVolatilityCurveConfig::quotes() {
@@ -43,6 +46,10 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+    string dc = XMLUtils::getChildValue(node, "DayCounter");
+    if (dc == "")
+        dc = "A365";
+    dayCounter_ = parseDayCounter(dc);
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -51,6 +58,7 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;
 }
