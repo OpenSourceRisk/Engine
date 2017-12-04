@@ -26,6 +26,7 @@
 #include <qle/math/deltagammavar.hpp>
 
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/math/matrixutilities/symmetricschurdecomposition.hpp>
 
 using namespace QuantLib;
 
@@ -35,9 +36,11 @@ namespace analytics {
 ParametricVarCalculator::ParametricVarCalculator(
     const std::map<std::string, std::string>& tradePortfolio, const boost::shared_ptr<SensitivityData>& sensitivities,
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
-    const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown)
+    const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown,
+    const bool salvageCovarianceMatrix)
     : tradePortfolio_(tradePortfolio), sensitivities_(sensitivities), covariance_(covariance), p_(p), method_(method),
-      mcSamples_(mcSamples), mcSeed_(mcSeed), breakdown_(breakdown) {}
+      mcSamples_(mcSamples), mcSeed_(mcSeed), breakdown_(breakdown), salvageCovarianceMatrix_(salvageCovarianceMatrix) {
+}
 
 void ParametricVarCalculator::calculate(ore::data::Report& report) {
     LOG("Parametric VaR calculation started...");
@@ -85,24 +88,37 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
         auto k2 = std::find(sensiKeys.begin(), sensiKeys.end(), c.first.second);
         if (k1 != sensiKeys.end() && k2 != sensiKeys.end()) {
             omega(k1 - sensiKeys.begin(), k2 - sensiKeys.begin()) = c.second;
-            if(k1 == k2)
-                sensiKeyHasNonZeroVariance[k1-sensiKeys.begin()] = true;
+            if (k1 == k2)
+                sensiKeyHasNonZeroVariance[k1 - sensiKeys.begin()] = true;
         } else {
             ++unusedCovariance;
         }
     }
     LOG("Found " << covariance_.size() << " covariance matrix entries, " << unusedCovariance
                  << " do not match a portfolio sensitivity and will not be used.");
-    for(Size i=0;i<sensiKeyHasNonZeroVariance.size();++i) {
-        if(!sensiKeyHasNonZeroVariance[i]) {
+    for (Size i = 0; i < sensiKeyHasNonZeroVariance.size(); ++i) {
+        if (!sensiKeyHasNonZeroVariance[i]) {
             WLOG("Zero variance assigned to sensitivity key " << sensiKeys[i]);
         }
     }
 
     // make covariance matrix positive semi-definite
-    LOG("Make covariance matrix positive semi-definite, dimension is " << sensiKeys.size());
-    QuantLib::Matrix covSqrt = pseudoSqrt(omega, SalvagingAlgorithm::Spectral);
-    QuantLib::Matrix omegaSalvaged = covSqrt * transpose(covSqrt);
+    Matrix omegaFinal;
+    LOG("Covariance matrix has dimension " << sensiKeys.size() << " x " << sensiKeys.size());
+    if (salvageCovarianceMatrix_) {
+        LOG("Make covariance matrix positive semi-definite using spectral method");
+        QuantLib::Matrix covSqrt = pseudoSqrt(omega, SalvagingAlgorithm::Spectral);
+        omegaFinal = covSqrt * transpose(covSqrt);
+    } else {
+        LOG("Covariance matrix is no salvaged, check for positive semi-definiteness");
+        SymmetricSchurDecomposition ssd(omega);
+        Real evMin = ssd.eigenvalues().back();
+        QL_REQUIRE(evMin > 0.0 || close_enough(evMin, 0.0),
+                   "ParametricVar: input covariance matrix is not positive semi-definite, smallest eigenvalue is "
+                       << evMin);
+        LOG("Smallest eigenvalue is " << evMin);
+        omegaFinal = omega;
+    }
     LOG("Done.");
 
     // loop over portfolios (index 0 = all portfolios)
@@ -175,7 +191,7 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                                   close_enough(QuantExt::detail::absMax(gammaFiltered), 0.0);
                 // compute var and write to report
                 std::vector<Real> var = zeroSensis ? std::vector<Real>(p_.size(), 0.0)
-                                                   : computeVar(omega, deltaFiltered, gammaFiltered, p_);
+                                                   : computeVar(omegaFinal, deltaFiltered, gammaFiltered, p_);
                 if (!close_enough(QuantExt::detail::absMax(var), 0.0)) {
                     report.next();
                     report.add(portfolio);

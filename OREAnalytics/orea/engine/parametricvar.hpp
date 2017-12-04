@@ -46,7 +46,7 @@ public:
                             const boost::shared_ptr<SensitivityData>& sensitivities,
                             const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                             const std::vector<Real>& p, const std::string& method, const Size mcSamples,
-                            const Size mcSeed, const bool breakdown);
+                            const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
     void calculate(ore::data::Report& report);
 
 protected:
@@ -58,7 +58,7 @@ protected:
     const std::vector<Real> p_;
     const std::string method_;
     const Size mcSamples_, mcSeed_;
-    const bool breakdown_;
+    const bool breakdown_, salvageCovarianceMatrix_;
 };
 
 void loadCovarianceDataFromCsv(std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>& data,

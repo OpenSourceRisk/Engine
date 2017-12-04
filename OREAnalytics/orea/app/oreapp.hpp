@@ -138,7 +138,7 @@ protected:
                                  const boost::shared_ptr<SensitivityData>& sensitivities,
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,
-                                 const Size mcSeed, const bool breakdown);
+                                 const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
 
     Size tab_, progressBarWidth_;
     Date asof_;

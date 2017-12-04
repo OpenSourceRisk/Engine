@@ -590,19 +590,22 @@ void OREApp::runParametricVar() {
         tradePortfolio, sensiData, covarData,
         parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
         params_->get("parametricVar", "method"), parseInteger(params_->get("parametricVar", "mcSamples")),
-        parseInteger(params_->get("parametricVar", "mcSeed")), parseBool(params_->get("parametricVar", "breakdown")));
+        parseInteger(params_->get("parametricVar", "mcSeed")), parseBool(params_->get("parametricVar", "breakdown")),
+        parseBool(params_->get("parametricVar", "salvageCovarianceMatrix")));
 
     CSVFileReport report(outputPath + "/" + params_->get("parametricVar", "outputFile"));
     calc->calculate(report);
     out_ << "OK" << endl;
 }
 
-boost::shared_ptr<ParametricVarCalculator> OREApp::buildParametricVarCalculator(
-    const std::map<std::string, std::string>& tradePortfolio, const boost::shared_ptr<SensitivityData>& sensitivities,
-    const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
-    const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown) {
+boost::shared_ptr<ParametricVarCalculator>
+OREApp::buildParametricVarCalculator(const std::map<std::string, std::string>& tradePortfolio,
+                                     const boost::shared_ptr<SensitivityData>& sensitivities,
+                                     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
+                                     const std::vector<Real>& p, const std::string& method, const Size mcSamples,
+                                     const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix) {
     return boost::make_shared<ParametricVarCalculator>(tradePortfolio, sensitivities, covariance, p, method, mcSamples,
-                                                       mcSeed, breakdown);
+                                                       mcSeed, breakdown, salvageCovarianceMatrix);
 }
 
 void OREApp::writeBaseScenario() {
