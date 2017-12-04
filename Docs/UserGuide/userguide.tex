@@ -887,7 +887,7 @@ physical delivery, respectively, see figure \ref{fig_3}.
 \includegraphics[scale=0.45]{mpl_swaption.pdf}
 \end{center}
 \caption{European Swaption exposure evolution, expiry in 10 years, final maturity in 20 years, for cash and physical
-  delivery. Simulation with 1000 paths and quarterly time steps.}
+  delivery. Simulation with 1000 paths and quarterly time steps. }
 \label{fig_3}
 \end{figure}
 The delivery type (cash vs physical) yields significantly different valuations as of today due to the steepness of the
@@ -895,7 +895,7 @@ relevant yield curves (EUR). The cash settled Swaption's exposure graph is trunc
 physically settled Swaption exposure turns into a Swap-like exposure after expiry. For comparison, the example also
 provides the exposure evolution of the underlying forward starting Swap which yields a somewhat higher exposure after
 the forward start date than the physically settled Swaption. This is due to scenarios with negative Swap NPV at expiry
-(hence not exercised) and positive NPVs thereafter.
+(hence not exercised) and positive NPVs thereafter. Note the reduced EPE in case of a Swaption with settlement of the option premium on exercise date.
 
 %--------------------------------------------------------
 \subsection{Bermudan Swaption Exposure}
@@ -3110,10 +3110,12 @@ The inflation model components are specified by a block as follows
       <ParameterTransformation> ... </ParameterTransformation>
       <!-- Inflation model specific -->
       <CalibrationCapFloors>
-        <CalibrationStrategy> ... </CalibrationStrategy> <!-- not used yet, as there is only one strategy so far -->
+        <!-- not used yet, as there is only one strategy so far -->
+        <CalibrationStrategy> ... </CalibrationStrategy> 
         <CapFloor> Floor </CapFloor> <!-- Cap, Floor -->
         <Expiries> 2Y, 4Y, 6Y, 8Y, 10Y </Expiries>
-        <Strikes> 0.03, 0.03, 0.03, 0.03, 0.03 </Strikes> <!-- can be empty, this will yield calibration to ATM -->
+        <!-- can be empty, this will yield calibration to ATM -->
+        <Strikes> 0.03, 0.03, 0.03, 0.03, 0.03 </Strikes> 
       </CalibrationCapFloors>
     </LGM>
     <LGM index="USCPI">
