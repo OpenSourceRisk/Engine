@@ -44,8 +44,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                    "Unkown Equity curve building dimension");
 
         // daycounter used for interpolation in time.
-        // TODO: push into conventions or config
-        DayCounter dc = Actual365Fixed();
+        DayCounter dc = config->dayCounter();
 
         bool isSurface = config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile;
 

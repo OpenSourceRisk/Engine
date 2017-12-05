@@ -181,6 +181,7 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};
     parameters->additionalScenarioDataCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     // Config
 

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
 using std::string;
@@ -31,6 +32,7 @@ using std::vector;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
+using QuantLib::DayCounter;
 
 namespace ore {
 namespace data {
@@ -46,7 +48,7 @@ public:
     //! Default constructor
     CDSVolatilityCurveConfig() {}
     //! Detailed constructor
-    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries);
+    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries, const DayCounter& dayCounter =  QuantLib::Actual365Fixed());
     //@}
 
     //! \name Serialisation
@@ -58,15 +60,18 @@ public:
     //! \name Inspectors
     //@{
     const vector<string>& expiries() const { return expiries_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
     const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
     vector<string>& expiries() { return expiries_; }
+    DayCounter& dayCounter() { return dayCounter_; }
     //@}
 private:
     vector<string> expiries_;
+    DayCounter dayCounter_;
 };
 } // namespace data
 } // namespace ore

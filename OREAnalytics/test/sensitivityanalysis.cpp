@@ -79,7 +79,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -776,7 +776,7 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -871,7 +871,7 @@ void SensitivityAnalysisTest::test2dShifts() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -982,7 +982,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1188,7 +1188,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);
@@ -1538,7 +1538,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket, simMarketData, false));
+        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
     boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
     boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
     scenarioGenerator->generateScenarios(scenarioFactory);

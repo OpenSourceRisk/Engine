@@ -87,12 +87,12 @@ string ShiftScenarioGenerator::ScenarioDescription::text() const {
     return ret;
 }
 
-ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                                                const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData)
-    : simMarket_(simMarket), simMarketData_(simMarketData), counter_(0) {
-    QL_REQUIRE(simMarket_ != NULL, "ShiftScenarioGenerator: simMarket is null");
+    : baseScenario_(baseScenario), simMarketData_(simMarketData), counter_(0) {
+    QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
     QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
-    scenarios_.push_back(simMarket_->baseScenario());
+    scenarios_.push_back(baseScenario_);
     scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));
 }
 

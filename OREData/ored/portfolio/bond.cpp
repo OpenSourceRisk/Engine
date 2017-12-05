@@ -126,10 +126,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
-    DLOG("Bond::build(): Bond NPV = " << bond->NPV());
-    DLOG("Bond::build(): Bond CleanPrice = " << bond->cleanPrice());
-    DLOG("Bond::build(): Bond DirtyPrice = " << bond->dirtyPrice());
-    DLOG("Bond::build(): Bond Settlement = " << bond->settlementValue());
     instrument_.reset(new VanillaInstrument(bond));
 
     npvCurrency_ = currency_;
