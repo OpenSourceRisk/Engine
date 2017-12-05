@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/zeroinflationcurveobserver.hpp
+/*! \file qle/termstructures/zeroinflationcurveobserverstatic.hpp
     \brief Observable inflation term structure based on the interpolation of zero rate quotes.
 */
 

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file zeroinflationobserver.hpp
-    \brief 
+/*! \file qle/indexes/inflationindexobserver.hpp
+    \brief
 */
 
 #ifndef quantext_inflation_index_observer_hpp

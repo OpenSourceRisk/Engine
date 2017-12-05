@@ -161,7 +161,6 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
 
     infDkData1->optionExpiries() = expiries;
     infDkData1->optionStrikes() = strikes;
-    infDkData1->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     infDkData1->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
