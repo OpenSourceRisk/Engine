@@ -1178,7 +1178,6 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
         vector<Time> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
         DayCounter dc = parseDayCounter(simMarketData_->cdsVolDayCounter(name));
-        Real strike = 0.0; // FIXME
 
         // cache original vol data
         for (Size j = 0; j < n_cdsvol_exp; ++j) {

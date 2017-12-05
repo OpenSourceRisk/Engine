@@ -24,9 +24,9 @@ namespace QuantExt {
         ZeroInflationTermStructure(model->infdk(index)->termStructure()->dayCounter(), model->infdk(index)->termStructure()->baseRate(),
             model->infdk(index)->termStructure()->observationLag(), model->infdk(index)->termStructure()->frequency(), 
             model->infdk(index)->termStructure()->indexIsInterpolated(), model->infdk(index)->termStructure()->nominalTermStructure()),
-          model_(model), index_(index),
+          model_(model),
           referenceDate_(model_->infdk(index)->termStructure()->referenceDate()),
-          state_z_(0.0), state_y_(0.0) {
+          state_z_(0.0), state_y_(0.0), index_(index) {
         registerWith(model_);
         update();
     }
