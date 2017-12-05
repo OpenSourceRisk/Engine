@@ -168,7 +168,7 @@ void FixingManager::applyFixings(Date start, Date end) {
                 vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     if (fixingDates[i] >= start && fixingDates[i] < end) {
-                        history[ixingDates[i]] = currentFixing;
+                        history[fixingDates[i]] = currentFixing;
                         modifiedFixingHistory_ = true;
                     }
                     if (fixingDates[i] >= end)
