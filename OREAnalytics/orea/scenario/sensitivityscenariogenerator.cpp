@@ -729,7 +729,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
-        DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccyPair));;
+        DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccyPair));
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
             times[j] = dc.yearFraction(asof, d);
@@ -808,7 +808,6 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
         vector<Time> shiftTimes(shiftTenors.size());
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
-        //FIXME: this is also hardcoded in todaysmarket
         DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries()[j];
@@ -1178,7 +1177,6 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
         vector<Time> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
 
         DayCounter dc = parseDayCounter(simMarketData_->cdsVolDayCounter(name));
-        Real strike = 0.0; // FIXME
 
         // cache original vol data
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
