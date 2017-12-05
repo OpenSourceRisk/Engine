@@ -23,6 +23,8 @@
 #ifndef quantext_inflation_index_observer_hpp
 #define quantext_inflation_index_observer_hpp
 
+#include <iostream>
+
 class InflationIndexObserver : public Observer, public Observable {
 public:
     InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
@@ -41,6 +43,7 @@ private:
         Date today = Settings::instance().evaluationDate();
         Date fixingDate = today - observationLag_;
         // overwrite the current fixing in the QuantLib::FixingManager
+        std::cout << "adding fixing for " << index_->name() << " date: " << fixingDate << " value: " << quote_->value() << std::endl;
         index_->addFixing(fixingDate, quote_->value(), true);
     }
 

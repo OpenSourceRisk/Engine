@@ -153,9 +153,31 @@ void FixingManager::applyFixings(Date start, Date end) {
         // Only need to apply fixings if the index is in fixingMap
         if (fixingMap_.find(qlIndexName) != fixingMap_.end()) {
 
+            boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
+            boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
+            vector<Date> fixingDates = fixingMap_[qlIndexName];
+            Date currentFixingDate;
+            if (zii) {// for inflation indices we just only add a fixing for the first date in the month
+                start = inflationPeriod(start - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                end = inflationPeriod(end - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                currentFixingDate = end;
+                for (Size i = 0; i < fixingDates.size(); i++) {
+                    fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
+                    cout << "Fixing needed for " << fixingDates[i] << endl;
+                }
+            }
+            else if (yii) {
+                start = inflationPeriod(start - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                end = inflationPeriod(end - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                currentFixingDate = end;
+                for (Size i = 0; i<fixingDates.size(); i++)
+                    fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
+            }
+            else
+                currentFixingDate = index->fixingCalendar().adjust(end, Following);
+
             // Add we have a coupon between start and asof.
             bool needFixings = false;
-            vector<Date>& fixingDates = fixingMap_[qlIndexName];
             for (Size i = 0; i < fixingDates.size(); i++) {
                 if (fixingDates[i] >= start && fixingDates[i] < end) {
                     needFixings = true;
@@ -164,28 +186,19 @@ void FixingManager::applyFixings(Date start, Date end) {
             }
 
             if (needFixings) {
-                boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
-                boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
-                Date currentFixingDate;
-                if (zii) {
-                    currentFixingDate = index->fixingCalendar().adjust(end - zii->zeroInflationTermStructure()->observationLag(), Following);
-                } else if (yii) {
-                    currentFixingDate = index->fixingCalendar().adjust(end - yii->yoyInflationTermStructure()->observationLag(), Following);
-                } else {
-                    currentFixingDate = index->fixingCalendar().adjust(end, Following);
-                }
-
-                cout << "set fixings " << currentFixingDate << endl;
+                cout << "Current Fixing Date " << currentFixingDate << endl;
                 Rate currentFixing = index->fixing(currentFixingDate);
-                vector<Date>& fixingDates = fixingMap_[qlIndexName];
+                TimeSeries<Real> history;
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     if (fixingDates[i] >= start && fixingDates[i] < end) {
-                        index->addFixing(fixingDates[i], currentFixing, true);
+                        history[fixingDates[i]] = currentFixing;
+                        cout << "Fixing date " << fixingDates[i] << " fixing: " << currentFixing << " for index " << index->name() << endl;
                         modifiedFixingHistory_ = true;
                     }
                     if (fixingDates[i] >= end)
                         break;
                 }
+                index->addFixings(history, true);
             }
         }
     }
