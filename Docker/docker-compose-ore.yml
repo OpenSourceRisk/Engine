@@ -7,4 +7,4 @@ services:
       context: ../
       dockerfile: Docker/Dockerfile-ORE
       args:
-        - quantlib_version=757cb17
+        - quantlib_version=1.11

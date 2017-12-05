@@ -382,7 +382,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURGBP"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = {"EURGBP"};
 
     simMarketData->simulateCapFloorVols() = false;
@@ -422,7 +423,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
     simMarketData->simulateCapFloorVols() = true;
@@ -457,7 +459,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolIsSurface() = false;
     simMarketData->simulateEquityVolATMOnly() = true;
     simMarketData->equityVolMoneyness() = {1};
-
+    simMarketData->setEquityVolDayCounters("", "ACT/ACT");
+    
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
@@ -502,16 +505,16 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
 
     sensiData->discountCurrencies() = {"EUR", "GBP"};
-    sensiData->discountCurveShiftData()["EUR"] = cvsData;
+    sensiData->discountCurveShiftData()["EUR"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->discountCurveShiftData()["GBP"] = cvsData;
+    sensiData->discountCurveShiftData()["GBP"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->yieldCurveNames() = {"BondCurve1"};
-    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+    sensiData->yieldCurveShiftData()["BondCurve1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURGBP"};
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -524,7 +527,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
 
     sensiData->creditNames() = {"BondIssuer1"};
-    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
+    sensiData->creditCurveShiftData()["BondIssuer1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     // sensiData->capFloorVolLabel() = "VOL_CAPFLOOR";
     // sensiData->capFloorVolCurrencies() = { "EUR", "GBP" };
@@ -572,16 +575,16 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     swvsData.shiftTerms = {2 * Years, 5 * Years, 10 * Years};
 
     sensiData->discountCurrencies() = {"EUR", "GBP"};
-    sensiData->discountCurveShiftData()["EUR"] = cvsData;
+    sensiData->discountCurveShiftData()["EUR"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->discountCurveShiftData()["GBP"] = cvsData;
+    sensiData->discountCurveShiftData()["GBP"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->yieldCurveNames() = {"BondCurve1"};
-    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+    sensiData->yieldCurveShiftData()["BondCurve1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURGBP"};
     sensiData->fxShiftData()["EURGBP"] = fxsData;
@@ -594,7 +597,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
 
     sensiData->creditNames() = {"BondIssuer1"};
-    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
+    sensiData->creditCurveShiftData()["BondIssuer1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     // sensiData->capFloorVolLabel() = "VOL_CAPFLOOR";
     // sensiData->capFloorVolCurrencies() = { "EUR", "GBP" };
@@ -653,32 +656,32 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
         7 * Years,  10 * Years, 15 * Years, 20 * Years };
 
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
-    sensiData->discountCurveShiftData()["EUR"] = cvsData;
+    sensiData->discountCurveShiftData()["EUR"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->discountCurveShiftData()["USD"] = cvsData;
+    sensiData->discountCurveShiftData()["USD"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
     
-    sensiData->discountCurveShiftData()["GBP"] = cvsData;
+    sensiData->discountCurveShiftData()["GBP"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->discountCurveShiftData()["JPY"] = cvsData;
+    sensiData->discountCurveShiftData()["JPY"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->discountCurveShiftData()["CHF"] = cvsData;
+    sensiData->discountCurveShiftData()["CHF"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = cvsData;
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = cvsData;
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->yieldCurveNames() = {"BondCurve1"};
-    sensiData->yieldCurveShiftData()["BondCurve1"] = cvsData;
+    sensiData->yieldCurveShiftData()["BondCurve1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->creditNames() = {"BondIssuer1"};
-    sensiData->creditCurveShiftData()["BondIssuer1"] = cvsData;
+    sensiData->creditCurveShiftData()["BondIssuer1"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -715,13 +718,13 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
     sensiData->equityForecastCurveNames() = { "SP5", "Lufthansa" };
-    sensiData->equityForecastCurveShiftData()["SP5"] = cvsData;
-    sensiData->equityForecastCurveShiftData()["Lufthansa"] = cvsData;
+    sensiData->equityForecastCurveShiftData()["SP5"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->equityForecastCurveShiftData()["Lufthansa"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->zeroInflationIndices() = { "UKRPI" };
-    sensiData->zeroInflationCurveShiftData()["UKRPI"] = zinfData;
+    sensiData->zeroInflationCurveShiftData()["UKRPI"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 
     sensiData->yoyInflationIndices() = { "UKRPI" };
-    sensiData->yoyInflationCurveShiftData()["UKRPI"] = zinfData;
+    sensiData->yoyInflationCurveShiftData()["UKRPI"] = boost::make_shared< ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 
     return sensiData;
 }

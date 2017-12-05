@@ -87,6 +87,9 @@ public:
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
 
+    //! Compute set of portfolios
+    std::set<std::string> portfolioIds() const;
+
 private:
     //! Load from XMLDocument
     void load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& tf);
