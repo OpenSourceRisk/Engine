@@ -288,8 +288,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        //FIXME: this is also hardcoded in todaysmarket
-        DayCounter dc = Actual365Fixed();
+        DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccypair));
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
 
@@ -339,8 +338,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        //FIXME: this is also hardcoded in todaysmarket
-        DayCounter dc = Actual365Fixed();
+        DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries()[j];
             
