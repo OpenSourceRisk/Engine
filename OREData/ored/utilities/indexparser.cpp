@@ -208,11 +208,17 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
         //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"EU HICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
         {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FR HICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
         {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UK RPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
-        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

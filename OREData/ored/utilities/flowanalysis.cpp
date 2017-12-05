@@ -43,7 +43,7 @@ class AnalysisGenerator : public QuantLib::AcyclicVisitor,
                           public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
                           public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
                           public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
-                          public QuantLib::Visitor<QuantLib::CPICoupon> {
+                          public QuantLib::Visitor<QuantLib::InflationCoupon> {
 private:
     vector<vector<string>> flowAnalysis_;
     static const QuantLib::Size numberOfColumns_ = 5;
@@ -58,7 +58,7 @@ public:
     void visit(QuantExt::AverageONIndexedCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
-    void visit(QuantLib::CPICoupon& c);
+    void visit(QuantLib::InflationCoupon& c);
     const vector<vector<string>>& analysis() const;
 };
 
@@ -124,7 +124,7 @@ void AnalysisGenerator::visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) {
     visit(static_cast<QuantExt::FXLinkedCashFlow&>(d));
 }
 
-void AnalysisGenerator::visit(QuantLib::CPICoupon& c) {
+void AnalysisGenerator::visit(QuantLib::InflationCoupon& c) {
     visit(static_cast<QuantLib::Coupon&>(c));
     flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
     flowAnalysis_.back()[INDEX] = c.index()->name();

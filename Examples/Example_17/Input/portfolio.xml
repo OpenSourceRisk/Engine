@@ -74,6 +74,7 @@
       </LegData>
     </SwapData>
   </Trade>
+  <!--
   <Trade id="YearOnYear_Swap">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -145,4 +146,5 @@
       </LegData>
     </SwapData>
   </Trade>
+  -->
 </Portfolio>
