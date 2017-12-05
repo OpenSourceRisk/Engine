@@ -22,6 +22,7 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <boost/make_shared.hpp>
 namespace testsuite {
@@ -199,7 +200,7 @@ TestMarket::TestMarket(Date asof) {
     Schedule fixingDatesUKRPI =
         MakeSchedule().from(cpiFixingStart).to(cpiFixingEnd).withTenor(1 * Months);
     Real fixingRatesUKRPI[] = { 258.5, 258.9, 258.6, 259.8, 259.6, 259.5,  259.8, 260.6,
-        258.8, 260.0, 261.1, 261.4, 262.1, -264.3, -265.2 };
+        258.8, 260.0, 261.1, 261.4, 262.1, 264.3, 265.2 };
 
     // build UKRPI index
     boost::shared_ptr<ZeroInflationIndex> ii = parseZeroInflationIndex("UKRPI");
@@ -212,6 +213,24 @@ TestMarket::TestMarket(Date asof) {
     for (Size i = 0; i < fixingDatesUKRPI.size(); i++) {
         // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
         ii->addFixing(fixingDatesUKRPI[i], fixingRatesUKRPI[i], true);
+    };
+
+    // build EUHICPXT fixing history
+    Schedule fixingDatesEUHICPXT =
+        MakeSchedule().from(cpiFixingStart).to(cpiFixingEnd).withTenor(1 * Months);
+    Real fixingRatesEUHICPXT[] = { 258.5, 258.9, 258.6, 259.8, 259.6, 259.5,  259.8, 260.6,
+        258.8, 260.0, 261.1, 261.4, 262.1, 264.3, 265.2 };
+
+    // build EUHICPXT index
+    boost::shared_ptr<ZeroInflationIndex> euii = parseZeroInflationIndex("EUHICPXT");
+    boost::shared_ptr<YoYInflationIndex> euyi = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(euii, false);
+
+    RelinkableHandle<ZeroInflationTermStructure> euhcpi;
+    interp = false;
+    euii = boost::shared_ptr<EUHICPXT>(new EUHICPXT(interp, euhcpi));
+    for (Size i = 0; i < fixingDatesEUHICPXT.size(); i++) {
+        // std::cout << i << ", " << fixingDatesUKRPI[i] << ", " << fixingRatesUKRPI[i] << std::endl;
+        euii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
 
     vector<Date> datesZCII = { asof_,
@@ -232,8 +251,14 @@ TestMarket::TestMarket(Date asof) {
     vector<Rate> ratesZCII = { 2.825, 2.9425, 2.975,  2.983, 3.0,  3.01,  3.008,
         3.009, 3.013,  3.0445, 3.044, 3.09, 3.109, 3.108 };
 
+    zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = makeZeroInflationIndex("EUHICPXT", datesZCII, ratesZCII, euii, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")]);
     zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeZeroInflationIndex("UKRPI", datesZCII, ratesZCII, ii, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")]);
     yoyInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")] = makeYoYInflationIndex("UKRPI", datesZCII, ratesZCII, yi, yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount,"GBP")]);
+
+    inflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "EUHICPXT")] = flatRateCps(zeroInflationIndices_[make_pair(Market::defaultConfiguration, "EUHICPXT")],
+        vector<Real>{0.0, 0.01, 0.02}, vector<Real> {-1.0, -0.99}, vector<Period> {5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15)); 
+    inflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatRateCps(zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")],
+        vector<Real>{0.0, 0.01, 0.02}, vector<Real> {-1.0, -0.99}, vector<Period> {5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, 
@@ -248,6 +273,7 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
         boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
             new ZeroCouponInflationSwapHelper(quote, Period(2, Months), dates[i], TARGET(),
                 ModifiedFollowing, ActualActual(), ii));
+        anInstrument->unregisterWith(Settings::instance().evaluationDate());
         instruments.push_back(anInstrument);
     };
     // we can use historical or first ZCIIS for this
@@ -258,6 +284,8 @@ Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vect
         baseZeroRate, yts, instruments));
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
+    cpiTS->enableExtrapolation(true);
+    cpiTS->unregisterWith(Settings::instance().evaluationDate());
     return Handle<ZeroInflationIndex>(
         parseZeroInflationIndex(index, false, Handle<ZeroInflationTermStructure>(cpiTS)));
 }
@@ -327,13 +355,15 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years,
                                             12 * Years, 15 * Years, 20 * Years, 25 * Years, 30 * Years});
+    simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketData->indices() = {"EUR-EURIBOR-6M", "GBP-LIBOR-6M"};
     simMarketData->defaultNames() = {"BondIssuer1"};
     simMarketData->setDefaultTenors(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->securities() = {"Bond1"};
     simMarketData->simulateSurvivalProbabilities() = true;
-
+    simMarketData->setDefaultCurveDayCounters("", "ACT/ACT");
+    simMarketData->setDefaultCurveCalendars("", "TARGET");
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
@@ -344,6 +374,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->swapVolCcys() = {"EUR", "GBP"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true;
+    simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
     simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
@@ -351,7 +382,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURGBP"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = {"EURGBP"};
 
     simMarketData->simulateCapFloorVols() = false;
@@ -367,6 +399,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
+    simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketData->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
                                 "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     simMarketData->swapIndices()["EUR-CMS-2Y"] = "EUR-EURIBOR-6M";
@@ -382,6 +415,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->swapVolCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
     simMarketData->swapVolDecayMode() = "ForwardVariance";
     simMarketData->simulateSwapVols() = true; // false;
+    simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
     simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
@@ -389,12 +423,14 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
-
+    simMarketData->setFxVolDayCounters("", "ACT/ACT");
+    
     simMarketData->fxCcyPairs() = { "EURUSD", "EURGBP", "EURCHF", "EURJPY" };
 
     simMarketData->simulateCapFloorVols() = true;
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->capFloorVolCcys() = {"EUR", "USD"};
+    simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
     simMarketData->setCapFloorVolExpiries(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
@@ -404,6 +440,8 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->simulateSurvivalProbabilities() = true;
     simMarketData->securities() = {"Bond1"};
+    simMarketData->setDefaultCurveDayCounters("", "ACT/ACT");
+    simMarketData->setDefaultCurveCalendars("", "TARGET");
 
     simMarketData->equityNames() = { "SP5", "Lufthansa" };
     simMarketData->setEquityDividendTenors("SP5", { 6 * Months, 1 * Years, 2 * Years });
@@ -421,14 +459,16 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->equityVolIsSurface() = false;
     simMarketData->simulateEquityVolATMOnly() = true;
     simMarketData->equityVolMoneyness() = {1};
-
+    simMarketData->setEquityVolDayCounters("", "ACT/ACT");
+    
     simMarketData->zeroInflationIndices() = { "UKRPI" };
     simMarketData->setZeroInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
-
+    simMarketData->setZeroInflationDayCounters("", "ACT/ACT");
     simMarketData->yoyInflationIndices() = { "UKRPI" };
     simMarketData->setYoyInflationTenors("UKRPI", { 1 * Years,  2 * Years,  3 * Years, 5 * Years,
         7 * Years,  10 * Years, 15 * Years, 20 * Years });
+    simMarketData->setYoyInflationDayCounters("", "ACT/ACT");
 
     return simMarketData;
 }

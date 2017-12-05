@@ -318,12 +318,11 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, floatFreq, cal, conv, conv, rule));
     ScheduleData cpiSchedule(ScheduleRules(startDate, endDate, cpiFreq, cal, conv, conv, rule));
     // float leg
-    FloatingLegData floatingLegData;
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy,
                         floatSchedule, floatDC, notionals);
     // fixed leg
     LegData cpiLeg(boost::make_shared<CPILegData>(cpiIndex, baseRate, observationLag, interpolated, cpiRates), isPayer,
-                   ccy, cpiSchedule, cpiDC, notionals);
+                   ccy, cpiSchedule, cpiDC, notionals, vector<string>(), "F", false, true);
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, cpiLeg));

@@ -1,6 +1,9 @@
 1) Portfolio:
 
-   CPI Swap
+   ore.xml: CPI Swap
+			YOY Swap
+	
+   ore_exposure.cml CPI Zero Swap
 
 2) Market
 
@@ -12,7 +15,7 @@
 
 4) Analytics
 
-   not yet
+   EPE and ENE, of CPI Swap
 
 5) Run Example
 

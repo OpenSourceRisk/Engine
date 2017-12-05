@@ -237,6 +237,21 @@ public:
                                            const Constraint& constraint = Constraint(),
                                            const std::vector<Real>& weights = std::vector<Real>());
 
+
+    /*! calibrate infdk volatilities globally to a sequence of cpi cap/floors */
+    void calibrateInfDkVolatilitiesGlobal(const Size index, 
+                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, 
+                                          OptimizationMethod& method, const EndCriteria& endCriteria, 
+                                          const Constraint& constraint = Constraint(), 
+                                          const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate infdk reversions globally to a sequence of cpi cap/floors */
+    void calibrateInfDkReversionsGlobal(const Size index,
+                                        const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                        OptimizationMethod& method, const EndCriteria& endCriteria,
+                                        const Constraint& constraint = Constraint(),
+                                        const std::vector<Real>& weights = std::vector<Real>());
+
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */
     void calibrateCrLgm1fVolatilitiesIterative(const Size index,

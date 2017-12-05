@@ -97,7 +97,7 @@ class SensitivityScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                 const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+                                 const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                  const bool overrideTenors);
     //! Default destructor

@@ -181,6 +181,7 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};
     parameters->additionalScenarioDataCcys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     // Config
 
@@ -194,35 +195,35 @@ void simulation(string dateGridString, bool checkFixings) {
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
 
-    std::vector<boost::shared_ptr<LgmData>> irConfigs;
+    std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
 
     vector<Real> hValues = {0.02};
     vector<Real> aValues = {0.008};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.03};
     aValues = {0.009};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "USD", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "GBP", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "CHF", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "JPY", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
