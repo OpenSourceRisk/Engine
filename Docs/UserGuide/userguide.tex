@@ -1419,14 +1419,17 @@ portfolio used in this example consists of
 \item a cross currency swap EUR-USD
 \item a resettable cross currency swap EUR-USD
 \item a FX forward EUR-USD
-\item a FX call option
-\item a FX put option
+\item a FX call option on USD/GBP % commented out?
+\item a FX put option on USD/EUR
 \item an European swaption
-\item a cap in USD
-\item a floor in USD
-\item a cap in EUR
-\item a floor in UER
+\item a Bermudan swaption 
+\item a cap and a floor in USD
+\item a cap and a floor in EUR
 \item a fixed rate bond
+\item an Equity call option, put option and forward on S\&P500
+\item an Equity call option, put option and forward on Lufthansa
+\item a CPI Swap referencing UKRPI
+\item a Year-on-Year inflation swap referencing EUHICPXT
 \item a USD CDS.
 \end{itemize}
 
@@ -1443,6 +1446,10 @@ The sensitivity configuration in {\tt sensitivity.xml} aims at computing the fol
 \item caplet vegas for EUR and USD on an expiry grid 1Y, 2Y, 3Y, 5Y, 7Y, 10Y and strikes 0.01, 0.02, 0.03, 0.04,
   0.05. (absolute shift of 0.0001)
 \item credit curve sensitivities on tenors 6M, 1Y, 2Y, 5Y, 10Y (absolute shift of 0.0001).
+\item Equity spots for S\&P500 and Lufthansa
+\item Equity vegas for S\&P500 and Lufthansa at expiries 6M, 1Y, 2Y, 3Y, 5Y
+\item Zero inflation curve deltas for UKRPI and EUHICPXT at tenors 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y
+\item Year on year inflation curve deltas for EUHICPXT at tenors 6M, 1Y, 2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y
 \end{itemize}
 
 Furthermore, mixed second order derivatives (``cross gammas'') are computed for discount-discount, discount-forward and
@@ -3553,8 +3560,6 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
 %--------------------------------------------------------
 
-\todo[inline]{Update and extend curve config section for release 3}
-
 The configuration of various term structures required to price a portfolio is covered in a single configuration file
 which we will label {\tt curveconfig.xml} in the following though the file name can be chosen by the user. This
 configuration determines the composition of 
@@ -3566,11 +3571,11 @@ configuration determines the composition of
 \item Swaption volatility structures % done
 \item Cap/Floor volatility structures % done
 \item FX Option volatility structures % done
-\item CDS volatility structures
+\item CDS volatility structures % done
 \item Inflation Cap/Floor price surfaces % done
 \item Equity volatility structures % done
 \item Security spreads and recovery rates % done
-\item Base correlation curves
+\item Base correlation curves % done
 \end{itemize}
 
 This file also contains other market objects such as FXSpots, Security Spreads and Security Rates which are necessary
