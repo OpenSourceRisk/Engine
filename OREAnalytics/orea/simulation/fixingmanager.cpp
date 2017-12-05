@@ -157,29 +157,31 @@ void FixingManager::applyFixings(Date start, Date end) {
             boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
             vector<Date> fixingDates = fixingMap_[qlIndexName];
             Date currentFixingDate;
+            Date fixStart = start;
+            Date fixEnd = end;
             if (zii) {// for inflation indices we just only add a fixing for the first date in the month
-                start = inflationPeriod(start - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
-                end = inflationPeriod(end - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
-                currentFixingDate = end;
+                fixStart = inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                currentFixingDate = fixEnd;
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
                     cout << "Fixing needed for " << fixingDates[i] << endl;
                 }
             }
             else if (yii) {
-                start = inflationPeriod(start - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
-                end = inflationPeriod(end - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
-                currentFixingDate = end;
+                fixStart = inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                currentFixingDate = fixEnd;
                 for (Size i = 0; i<fixingDates.size(); i++)
                     fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
             }
             else
-                currentFixingDate = index->fixingCalendar().adjust(end, Following);
+                currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
 
             // Add we have a coupon between start and asof.
             bool needFixings = false;
             for (Size i = 0; i < fixingDates.size(); i++) {
-                if (fixingDates[i] >= start && fixingDates[i] < end) {
+                if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
                     needFixings = true;
                     break;
                 }
@@ -190,12 +192,12 @@ void FixingManager::applyFixings(Date start, Date end) {
                 Rate currentFixing = index->fixing(currentFixingDate);
                 TimeSeries<Real> history;
                 for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end) {
+                    if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
                         history[fixingDates[i]] = currentFixing;
                         cout << "Fixing date " << fixingDates[i] << " fixing: " << currentFixing << " for index " << index->name() << endl;
                         modifiedFixingHistory_ = true;
                     }
-                    if (fixingDates[i] >= end)
+                    if (fixingDates[i] >= fixEnd)
                         break;
                 }
                 index->addFixings(history, true);
