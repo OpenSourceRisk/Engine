@@ -4707,26 +4707,25 @@ the underlying spot price changes.
       \hline
       Type & Init Mkt. Config. & Sim. Mkt Config. & Sensitivity Config. & Pricing & Sensitivities w.r.t. \\
       \hline
-      Swaption & ATM & Simulate ATM only & Shift ATM only & ATM curve & ATM shifts \\
-      Swaption & Cube & Simulate Cube & Shift smile strikes & Full Cube & smile strikes shifts\footnote{smile
+      Swaption & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      Swaption & Cube & Simulate Cube & Shift Smile Strikes & Full Cube & Smile Strike Shifts\footnote{smile
                                                                           strike spreads must match simulation market configuration} \\
-      Swaption & Cube & Simulate ATM only & Shift ATM only & Full Cube & ATM shifts\footnote{smile is shifted in parallel
-                                                                         with ATM\label{sensismileparallel}} \\
+      Swaption & Cube & Simulate ATM only & Shift ATM only & Full Cube & ATM Shifts\footnote{smile is shifted in parallel\label{sensismileparallel}} \\
       \hline
-      Cap/Floor & Surface & Simulate Surface & Shift smile strikes & Surface & smile strikes shifts \\
+      Cap/Floor & Surface & Simulate Surface & Shift Smile Strikes & Full Surface & Smile Strike Shifts \\
       \hline
-      Equity & ATM & Simulate ATM only & Shift ATM only & ATM curve & ATM shifts \\
-      Equity & ATM & Simulate Surface & Shift ATM only & ATM curve & smile strike shifts\footnote{result sensitivities
+      Equity & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      Equity & ATM & Simulate Surface & Shift ATM only & ATM Curve & Smile Strike Shifts\footnote{result sensitivities
                                                                      are aggregated on ATM\label{sensiaggatm}} \\
-      Equity & Surface & Simulate ATM only & Shift ATM only & Surface & ATM shifts\textsuperscript{\ref{sensismileparallel}} \\
-      Equity & Surface & Simulate Surface & Shift ATM only & Surface & smile strike shifts\textsuperscript{\ref{sensiaggatm}} \\
+      Equity & Surface & Simulate ATM only & Shift ATM only & Full Surface & ATM Shifts\textsuperscript{\ref{sensismileparallel}} \\
+      Equity & Surface & Simulate Surface & Shift ATM only & Full Surface & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
       \hline
-      FX & ATM & Simulate ATM only & Shift ATM only & ATM curve & ATM shifts \\
-      FX & ATM & Simulate Surface & Shift ATM only & ATM curve & smile strike shifts\textsuperscript{\ref{sensiaggatm}} \\
-      FX & Surface & Simulate ATM only & Shift ATM only & ATM curve & ATM shifts \\
-      FX & Surface & Simulate Surface & Shift ATM only & Surface & smile strike shifts\textsuperscript{\ref{sensiaggatm}} \\
+      FX & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      FX & ATM & Simulate Surface & Shift ATM only & ATM Curve & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
+      FX & Surface & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      FX & Surface & Simulate Surface & Shift ATM only & Full Surface & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
       \hline
-      CDS & ATM & Simulate ATM only & Shift ATM only & ATM curve & ATM shifts \\
+      CDS & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
     \end{tabular}
     \caption{Admissible configurations for Sensitivity computation in ORE}
     \label{sensi_config_overview}
