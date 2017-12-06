@@ -282,6 +282,18 @@
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
+      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>Benchmark</Type>
+      <DayCounter>A365</DayCounter>
+      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
+      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
+      <SpotLag>0</SpotLag>
+      <Calendar>TARGET</Calendar>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -1724,6 +1736,22 @@
           <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
           <ReferenceCurve>EUR1D</ReferenceCurve>
         </ZeroSpread>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>BOND_YIELD_EUR</CurveId>
+      <CurveDescription>Bond yield curve EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve></DiscountCurve>
+      <Segments>
+	    <Direct>
+	      <Type>Zero</Type>
+	      <Quotes>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/5Y</Quote>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/10Y</Quote>
+	      </Quotes>
+	      <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	    </Direct>
       </Segments>
     </YieldCurve>
     <YieldCurve>
