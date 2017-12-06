@@ -17,7 +17,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file ored/model/infdkbuilder.hpp
-    \brief
+    \brief Builder for a Lognormal INF model component
     \ingroup models
 */
 

@@ -181,8 +181,8 @@ Handle<Quote> MarketImpl::securitySpread(const string& key, const string& config
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
 }
 
-Handle<InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
-    return lookup<Handle<InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
+Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
+    return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {

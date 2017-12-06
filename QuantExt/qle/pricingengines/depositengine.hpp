@@ -18,6 +18,7 @@
 
 /*! \file depositengine.hpp
     \brief deposit engine
+    \ingroup engines
 */
 
 #ifndef quantext_deposit_engine_hpp
@@ -28,7 +29,8 @@
 #include <qle/instruments/deposit.hpp>
 
 namespace QuantExt {
-
+//! Deposit engine
+//! \ingroup engines
 class DepositEngine : public Deposit::engine {
 public:
     DepositEngine(const Handle<YieldTermStructure>& discountCurve = Handle<YieldTermStructure>(),

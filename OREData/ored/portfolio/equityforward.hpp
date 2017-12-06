@@ -18,7 +18,7 @@
 
 /*! \file portfolio/equityoption.hpp
 \brief Equity Option data model and serialization
-\ingroup openxva::portfolio
+\ingroup tradedata
 */
 
 #pragma once

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/sensitivityscenariogenerator.hpp
-    \brief Sensitivity scenario generation
+/*! \file scenario/stressscenariogenerator.hpp
+    \brief Stress scenario generation
     \ingroup scenario
 */
 

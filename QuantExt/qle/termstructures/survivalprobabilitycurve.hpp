@@ -34,7 +34,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! DefaultProbabilityTermStructure based on interpolation of survival probability quotes
-/*! \ingroup defaultprobabilitytermstructures */
+/*! \ingroup termstructures */
 template <class Interpolator>
 class SurvivalProbabilityCurve : public SurvivalProbabilityStructure,
                                  protected InterpolatedCurve<Interpolator>,

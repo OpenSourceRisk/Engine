@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/model/eqbsbuilder.hpp
-    \brief
+    \brief Builder for a Lognormal EQ model component
     \ingroup models
 */
 

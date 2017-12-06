@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/builders/cms.hpp
     \brief builder that returns an engine to price capped floored ibor legs
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -37,6 +37,7 @@ namespace data {
 
 //! CouponPricer Builder for CmsLeg
 /*! The coupon pricers are cached by currency
+ \ingroup builders
  */
 class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
 public:

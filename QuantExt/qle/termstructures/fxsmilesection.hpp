@@ -18,6 +18,7 @@
 
 /*! \file fxsmilesection.hpp
     \brief FX smile section assuming a strike/volatility space
+    \ingroup termstructures
 */
 
 #ifndef quantext_fx_smile_section_hpp
@@ -30,6 +31,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! FX SmileSection
+//! \ingroup termstructures
 class FxSmileSection {
 public:
     FxSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d)

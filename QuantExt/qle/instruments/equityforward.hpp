@@ -83,6 +83,7 @@ private:
     Real strike_;
 };
 
+//! \ingroup instruments
 class EquityForward::arguments : public virtual PricingEngine::arguments {
 public:
     std::string name;
@@ -94,6 +95,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class EquityForward::engine : public GenericEngine<EquityForward::arguments, Instrument::results> {};
 }
 

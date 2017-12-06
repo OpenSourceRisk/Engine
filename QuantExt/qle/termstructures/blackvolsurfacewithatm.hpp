@@ -46,6 +46,8 @@ namespace QuantExt {
     For Equity markets, one should set the spot to be the equity price, yield1 to be the discount curve and yield2 to
     be the dividend curve.
  */
+//!\ingroup termstructures
+ 
 class BlackVolatilityWithATM : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)

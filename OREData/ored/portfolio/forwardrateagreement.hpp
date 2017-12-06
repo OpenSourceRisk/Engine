@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/fxforward.hpp
+/*! \file portfolio/forwardrateagreement.hpp
     \brief ForwardRateAgreement data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once

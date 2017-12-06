@@ -41,7 +41,10 @@ namespace QuantExt {
     Usually the floating term structure will coincide with
     the first fixed at construction time. Also, the two fixed
     termstructures should have the same reference date and all three
-    termstructures should have the same day counter. */
+    termstructures should have the same day counter.
+ 
+    \ingroup termstructures
+ */
 class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {
 public:
     StaticallyCorrectedYieldTermStructure(const Handle<YieldTermStructure>& floatingTermStructure,

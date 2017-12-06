@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file blackvariancesurfacemoneyness.hpp
+ \brief Black volatility surface based on forward moneyness
+ \ingroup termstructures
+ */
+
 #ifndef quantext_black_variance_surface_moneyness_hpp
 #define quantext_black_variance_surface_moneyness_hpp
 
@@ -31,6 +36,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Abstract Black volatility surface based on moneyness (moneyness defined in subclasses)
+//!  \ingroup termstructures
 class BlackVarianceSurfaceMoneyness : public LazyObject, public BlackVarianceTermStructure {
 public:
     /*! Moneyness can be defined here as spot moneyness, i.e. K/S
@@ -90,6 +96,7 @@ inline void BlackVarianceSurfaceMoneyness::accept(AcyclicVisitor& v) {
 }
 
 //! Black volatility surface based on spot moneyness
+//!  \ingroup termstructures
 class BlackVarianceSurfaceMoneynessSpot : public BlackVarianceSurfaceMoneyness {
 public:
     /*! Moneyness is defined here as spot moneyness, i.e. K/S */
@@ -104,6 +111,7 @@ private:
 };
 
 //! Black volatility surface based on forward moneyness
+//! \ingroup termstructures
 class BlackVarianceSurfaceMoneynessForward : public BlackVarianceSurfaceMoneyness {
 public:
     /*! Moneyness is defined here as forward moneyness, ie K/F */

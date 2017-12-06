@@ -18,7 +18,7 @@
 
 /*! \file orea/app/reportwriter.hpp
   \brief A Class to write ORE outputs to reports
-  \ingroup cube
+  \ingroup app
  */
 
 #pragma once
@@ -38,7 +38,9 @@
 
 namespace ore {
 namespace analytics {
-
+//! Write ORE outputs to reports
+/*! \ingroup app
+*/
 class ReportWriter {
 public:
     static void writeNpv(ore::data::Report& report, const std::string& baseCurrency,

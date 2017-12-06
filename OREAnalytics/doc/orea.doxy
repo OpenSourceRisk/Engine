@@ -279,8 +279,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../../../QuantLib/Docs/html \
-                         ../../QuantExt/doc/quantext.tag=../../../QuantExt/doc/html \
+TAGFILES               = ../../QuantExt/doc/quantext.tag=../../../QuantExt/doc/html \
 						 ../../OREData/doc/ored.tag=../../../OREData/doc/html
 GENERATE_TAGFILE       = orea.tag
 ALLEXTERNALS           = NO

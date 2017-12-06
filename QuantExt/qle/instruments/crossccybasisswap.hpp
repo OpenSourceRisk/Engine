@@ -111,6 +111,7 @@ private:
     mutable Spread fairRecSpread_;
 };
 
+//! \ingroup instruments
 class CrossCcyBasisSwap::arguments : public CrossCcySwap::arguments {
 public:
     Spread paySpread;
@@ -118,6 +119,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class CrossCcyBasisSwap::results : public CrossCcySwap::results {
 public:
     Spread fairPaySpread;

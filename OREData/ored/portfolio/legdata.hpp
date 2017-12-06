@@ -18,7 +18,7 @@
 
 /*! \file portfolio/legdata.hpp
     \brief leg data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
@@ -38,7 +38,12 @@ using std::string;
 
 namespace ore {
 namespace data {
-
+    
+//! Serializable Additional Leg Data
+/*!
+\ingroup tradedata
+*/
+    
 // Really bad name....
 class LegAdditionalData : public XMLSerializable {
 public:
@@ -167,14 +172,23 @@ private:
     bool nakedOption_;
 };
 
+//! Serializable CPI Leg Data
+/*!
+\ingroup tradedata
+*/
+    
 class CPILegData : public LegAdditionalData {
 public:
+    //! Default constructor
     CPILegData() : LegAdditionalData("CPI") {}
+    //! Constructor
     CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates, 
                const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = true)
         : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), 
           rates_(rates), rateDates_(rateDates), subtractInflationNominal_(subtractInflationNominal){}
-
+    
+    //! \name Inspectors
+    //@{
     const string index() const { return index_; }
     double baseCPI() const { return baseCPI_; }
     const string observationLag() const { return observationLag_; }
@@ -182,10 +196,13 @@ public:
     const std::vector<double>& rates() const { return rates_; }
     const std::vector<string>& rateDates() const { return rateDates_; }
     bool subtractInflationNominal() const { return subtractInflationNominal_; }
-
+    //@}
+    
+    //! \name Serialisation
+    //@{
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
-
+    //@}
 private:
     string index_;
     double baseCPI_;
@@ -196,9 +213,15 @@ private:
     bool subtractInflationNominal_;
 };
 
+//! Serializable YoY Leg Data
+/*!
+\ingroup tradedata
+*/
 class YoYLegData : public LegAdditionalData {
 public:
+    //! Default constructor
     YoYLegData() : LegAdditionalData("YY") {}
+    //! Constructor
     YoYLegData(string index, string observationLag, bool interpolated, Size fixingDays,
                const vector<double>& gearings = std::vector<double>(),
                const vector<string>& gearingDates = std::vector<string>(),
@@ -207,6 +230,8 @@ public:
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated), fixingDays_(fixingDays),
           gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
 
+    //! \name Inspectors
+    //@{
     const string index() const { return index_; }
     const string observationLag() const { return observationLag_; }
     bool interpolated() const { return interpolated_; }
@@ -215,10 +240,14 @@ public:
     const std::vector<string>& gearingDates() const { return gearingDates_; }
     const std::vector<double>& spreads() const { return spreads_; }
     const std::vector<string>& spreadDates() const { return spreadDates_; }
-
+    //@}
+    
+    //! \name Serialisation
+    //@{
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
-
+    //@}
+    
 private:
     string index_;
     string observationLag_;
@@ -230,6 +259,10 @@ private:
     vector<string> spreadDates_;
 };
 
+//! Serializable CMS Leg Data
+/*!
+\ingroup tradedata
+*/
 class CMSLegData : public LegAdditionalData {
 public:
     //! Default constructor

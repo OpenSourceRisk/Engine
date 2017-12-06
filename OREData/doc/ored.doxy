@@ -279,8 +279,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../../../QuantLib/Docs/html \
-                         ../../QuantExt/doc/quantext.tag=../../../QuantExt/doc/html
+TAGFILES               =  ../../QuantExt/doc/quantext.tag=../../../QuantExt/doc/html
 GENERATE_TAGFILE       = ored.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

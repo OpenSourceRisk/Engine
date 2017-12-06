@@ -31,6 +31,7 @@
 namespace QuantExt {
 
 //! Overnight Indexed Cross Currency Basis Swap Engine
+//! \ingroup engines
 class OvernightIndexedCrossCcyBasisSwapEngine : public OvernightIndexedCrossCcyBasisSwap::engine {
 public:
     OvernightIndexedCrossCcyBasisSwapEngine(const Handle<YieldTermStructure>& ts1, const Currency& ccy1,

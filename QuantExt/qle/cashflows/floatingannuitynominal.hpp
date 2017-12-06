@@ -18,6 +18,7 @@
 
 /*! \file floatingannuitynominal.hpp
     \brief Nominal flow associated with a floating annuity coupon
+    \ingroup cashflows
 */
 
 #ifndef quantext_floating_annuity_nominal_hpp
@@ -30,7 +31,8 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Nominal flows associated with the FloatingAnnuityCoupon 
+    //! Nominal flows associated with the FloatingAnnuityCoupon
+    //! \ingroup cashflows
     class FloatingAnnuityNominal : public CashFlow {
       public:
         FloatingAnnuityNominal(const boost::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon) 

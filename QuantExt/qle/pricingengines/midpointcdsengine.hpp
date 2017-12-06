@@ -37,6 +37,7 @@
 
 /*! \file midpointcdsengine.hpp
     \brief Mid-point engine for credit default swaps
+    \ingroup engines
 */
 
 #ifndef quantext_mid_point_cds_engine_hpp
@@ -47,7 +48,8 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+//! Mid point CDS engine base
+//! \ingroup engines
 class MidPointCdsEngineBase {
 public:
     MidPointCdsEngineBase(const Handle<YieldTermStructure>& discountCurve,
@@ -66,6 +68,8 @@ protected:
     boost::optional<bool> includeSettlementDateFlows_;
 };
 
+//! Mid point CDS engine
+//! \ingroup engines
 class MidPointCdsEngine : public CreditDefaultSwap::engine, public MidPointCdsEngineBase {
 public:
     MidPointCdsEngine(const Handle<DefaultProbabilityTermStructure>&, Real recoveryRate,

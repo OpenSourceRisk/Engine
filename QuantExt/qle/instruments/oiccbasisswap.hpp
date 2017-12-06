@@ -110,6 +110,7 @@ inline Real OvernightIndexedCrossCcyBasisSwap::paySpread() const { return paySpr
 
 inline Real OvernightIndexedCrossCcyBasisSwap::recSpread() const { return recSpread_; }
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::arguments : public Swap::arguments {
 public:
     std::vector<Currency> currency;
@@ -117,6 +118,7 @@ public:
     Real recSpread;
 };
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::results : public Swap::results {
 public:
     Real fairPayLegSpread;
@@ -124,6 +126,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::engine
     : public GenericEngine<OvernightIndexedCrossCcyBasisSwap::arguments, OvernightIndexedCrossCcyBasisSwap::results> {};
 } // namespace QuantExt

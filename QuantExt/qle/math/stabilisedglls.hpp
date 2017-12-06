@@ -18,7 +18,7 @@
 
 /*! \file qle/math/stabilisedglls.hpp
     \brief Numerically stabilised general linear least squares
-    \ingroup termstructures
+    \ingroup math
 */
 
 #ifndef quantext_stabilised_glls_hpp
@@ -45,7 +45,9 @@ namespace QuantExt {
 //! Numerically stabilised general linear least squares
 /*! The input data is lineaerly transformed before performing the linear least squares fit.
   The linear least squares fit on the transformed data is done using the
-  GeneralLinearLeastSquares class. */
+  GeneralLinearLeastSquares class. 
+    \ingroup math
+ */
 
 class StabilisedGLLS {
 public:

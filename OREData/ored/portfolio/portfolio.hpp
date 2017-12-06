@@ -36,7 +36,7 @@ namespace data {
 
 //! Serializable portfolio
 /*!
-  \ingroup tradedata
+  \ingroup portfolio
 */
 class Portfolio {
 public:

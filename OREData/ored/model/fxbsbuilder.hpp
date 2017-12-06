@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/model/fxbsbuilder.hpp
-    \brief
+    \brief Builder for a Lognormal FX model component
     \ingroup models
 */
 

@@ -18,6 +18,7 @@
 
 /*! \file crlgm1fparametrization.hpp
     \brief Credit Linear Gaussian Markov 1 factor parametrization
+    \ingroup models
 */
 
 #ifndef quantextplus_crlgm1f_parametrization_hpp

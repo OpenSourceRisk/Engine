@@ -18,6 +18,7 @@
 
 /*! \file immfraratehelper.hpp
     \brief IMM FRA rate helper
+    \ingroup termstructures
 */
 
 #ifndef quantext_immfraratehelper_hpp
@@ -32,6 +33,7 @@ namespace QuantExt {
 typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 
 //! Rate helper for bootstrapping over %FRA rates
+//! \ingroup termstructures
 class ImmFraRateHelper : public RelativeDateRateHelper {
 public:
     ImmFraRateHelper(const Handle<Quote>& rate,
