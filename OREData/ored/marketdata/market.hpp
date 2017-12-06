@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/market.hpp
     \brief Base Market class
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -56,7 +56,7 @@ enum class YieldCurveType {
   Base class for central repositories containing all term structure objects
   needed in instrument pricing.
 
-  \ingroup curves
+  \ingroup marketdata
 */
 class Market {
 public:

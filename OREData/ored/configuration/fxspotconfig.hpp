@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/configuration/securityconfig.hpp
+/*! \file ored/configuration/fxspotconfig.hpp
     \brief security spread configuration classes
     \ingroup configuration
 */

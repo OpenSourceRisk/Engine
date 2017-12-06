@@ -30,10 +30,12 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/math/comparison.hpp>
 #include <ql/patterns/lazyobject.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Inflation term structure based on the interpolation of zero rates, with floating reference date
-/*! \ingroup inflationtermstructures */
+/*! \ingroup termstructures */
 template<class Interpolator>
 class ZeroInflationCurveObserverMoving
     : public ZeroInflationTermStructure,

@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/marketdata/fxspot.hpp
-    \brief
+    \brief a wrapper class for holding FX (spot) quotes
     \ingroup marketdata
 */
 

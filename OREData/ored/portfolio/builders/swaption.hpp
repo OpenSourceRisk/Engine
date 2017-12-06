@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/swap.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -42,7 +42,7 @@ namespace data {
  *
  *  Engines are cached based on currency
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
@@ -59,7 +59,7 @@ protected:
 /*! This defines the interface for Bermudan Swaption Builders
  *  Pricing Engines are cached by trade id
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class BermudanSwaptionEngineBuilder
     : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
@@ -75,7 +75,12 @@ protected:
         return id;
     }
 };
-
+    
+//! Abstract LGMBermudanSwaptionEngineBuilder class
+/*! This defines the interface for LGM Bermudan Swaption Builders
+     
+\ingroup builders
+*/
 class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
 public:
     LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
@@ -87,7 +92,7 @@ protected:
 };
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
-/*! \ingroup portfolio
+/*! \ingroup builders
  */
 class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
 public:

@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/optiondata.hpp
     \brief trade option data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once

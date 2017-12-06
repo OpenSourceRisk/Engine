@@ -34,6 +34,9 @@ using QuantLib::Size;
 namespace QuantExt {
 namespace detail {
 
+//! Regression impl
+/*! \ingroup math
+*/
 class RegressionImpl {
 public:
     virtual ~RegressionImpl() {}
@@ -41,7 +44,10 @@ public:
     virtual Real value(Real x) const = 0;
     virtual Real standardDeviation(Real x) const = 0;
 };
-
+    
+//! Nadaraya Watson impl
+/*! \ingroup math
+*/
 template <class I1, class I2, class Kernel> class NadarayaWatsonImpl : public RegressionImpl {
 public:
     /*! \pre the \f$ x \f$ values must be sorted.
@@ -86,14 +92,14 @@ private:
 };
 } // namespace detail
 
-//! Nadaraya Watgon regression
+//! Nadaraya Watson regression
 /*! This implements the estimator
 
     \f[
     m(x) = \frac{\sum_i y_i K(x-x_i)}{\sum_i K(x-x_i)}
     \f]
 
-    \ingroup interpolations
+    \ingroup math
 */
 class NadarayaWatson {
 public:

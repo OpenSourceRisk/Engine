@@ -18,7 +18,7 @@
 
 /*! \file portfolio/fxforward.hpp
     \brief FX Forward data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once

@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/marketimpl.hpp
     \brief An implementation of the Market class that stores the required objects in maps
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -48,7 +48,7 @@ namespace data {
   The MarketImpl class differs from the Market base class in that it contains concrete maps
   of term structures, and it implements the interface.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 class MarketImpl : public Market {
 public:
@@ -134,7 +134,7 @@ public:
                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Cpi Base Quotes
-    Handle<InflationIndexObserver> baseCpis(const string& index, const string& configuration = Market::defaultConfiguration) const;
+    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index, const string& configuration = Market::defaultConfiguration) const;
 
     //@}
 
@@ -168,7 +168,7 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
-    map<pair<string, string>, Handle<InflationIndexObserver>> baseCpis_;
+    map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
     Conventions conventions_;
 
     //! add a swap index to the market

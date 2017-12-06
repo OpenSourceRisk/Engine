@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/tradefactory.hpp
     \brief Trade Factory
-    \ingroup tradedata
+    \ingroup portfolio
 */
 
 #pragma once
@@ -31,7 +31,7 @@ namespace data {
 
 //! TradeBuilder base class
 /*!
-  \ingroup tradedata
+  \ingroup portfolio
 */
 class AbstractTradeBuilder {
 public:

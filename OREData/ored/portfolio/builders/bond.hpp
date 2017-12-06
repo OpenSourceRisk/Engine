@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/bond.hpp
 \brief
-\ingroup portfolio
+\ingroup builders
 */
 
 #pragma once
@@ -38,7 +38,7 @@ namespace data {
 
 //! Engine Builder base class for Bonds
 /*! Pricing engines are cached by security id
-\ingroup portfolio
+\ingroup builders
 */
 
 class BondEngineBuilder
@@ -54,7 +54,7 @@ protected:
 
 //! Discounting Engine Builder class for Bonds
 /*! This class creates a DiscountingRiskyBondEngine
-\ingroup portfolio
+\ingroup builders
 */
 
 class BondDiscountingEngineBuilder : public BondEngineBuilder {

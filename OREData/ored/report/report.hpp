@@ -60,6 +60,7 @@ namespace data {
  *   npv_report.next().add("t3").add(100.0).add("cp2");
  *   npv_report.end();
  *   </pre>
+  \ingroup report
  */
 class Report {
 public:

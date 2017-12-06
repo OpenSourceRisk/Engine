@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/creditdefaultswapdata.hpp
+ \brief A class to hold credit default swap data
+ \ingroup tradedata
+ */
+
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
@@ -23,7 +28,11 @@
 
 namespace ore {
 namespace data {
-
+    
+//! Serializable credit default swap data
+/*!
+\ingroup tradedata
+*/
 class CreditDefaultSwapData {
 public:
     //! Default constructor

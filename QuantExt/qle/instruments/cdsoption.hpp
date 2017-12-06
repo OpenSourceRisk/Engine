@@ -37,6 +37,7 @@
 /*! \file cdsoption.hpp
     \brief CDS option, removed requirements (rec must knock out,
     no upfront amount), that should be taken care of in pricing engines
+    \ingroup instruments
 */
 
 #ifndef quantext_cds_option_hpp
@@ -61,6 +62,8 @@ namespace QuantExt {
     selling protection and receiving a coupon. A payer CDS option
     is a right to buy an underlying CDS buying protection and
     paying coupon.
+ 
+    \ingroup instruments
 */
 class CdsOption : public Option {
 public:
@@ -109,6 +112,7 @@ public:
 };
 
 //! %Results from CDS-option calculation
+//! \ingroup instruments
 class CdsOption::results : public Option::results {
 public:
     Real riskyAnnuity;

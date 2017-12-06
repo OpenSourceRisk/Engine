@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/bond.hpp
-    \brief bond test
+/*! \file test/cds.hpp
+    \brief cds test
     \ingroup tests
 */
 

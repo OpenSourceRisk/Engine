@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/builders/capfloorediborleg.hpp
     \brief builder that returns an engine to price capped floored ibor legs
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -33,6 +33,7 @@ namespace data {
 
 //! CouponPricer Builder for CapFlooredIborLeg
 /*! The coupon pricers are cached by currency
+ \ingroup builders
  */
 class CapFlooredIborLegEngineBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
 public:

@@ -30,7 +30,12 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 namespace QuantExt {
-
+//! %CORRA rate
+/*!   
+    \remark Using Canada calendar
+     
+    \ingroup indexes
+*/
 class CORRA : public OvernightIndex {
 public:
     explicit CORRA(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())

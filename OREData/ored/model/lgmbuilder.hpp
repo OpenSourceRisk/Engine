@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/crossassetmodelbuilder.hpp
-    \brief Build a csross asset model
+/*! \file ored/model/lgmbuilder.hpp
+    \brief Build an lgm model
     \ingroup models
 */
 
