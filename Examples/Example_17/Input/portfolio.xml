@@ -1,6 +1,59 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="CPI_Swap">
+  <Trade id="CPI_Swap_1">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Cashflow</LegType>
+        <Payer>true</Payer>
+        <Currency>GBP</Currency>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Unadjusted</PaymentConvention>
+        <CashflowData>
+		  <Cashflow>
+            <Amount Date="2036-02-05">20000000</Amount>
+          </Cashflow>
+        </CashflowData>
+	  </LegData>
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+		  <Exchanges>
+		    <NotionalFinalExchange>true</NotionalFinalExchange>
+		  </Exchanges>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Dates>
+		    <Calendar>UK</Calendar>
+		    <Dates>
+			  <Date>2036-02-05</Date>
+			</Dates>
+          </Dates>
+        </ScheduleData>
+        <CPILegData>
+          <Index>UKRPI</Index>
+          <Rates>
+            <Rate>1</Rate>
+          </Rates>
+          <BaseCPI>210</BaseCPI>
+          <ObservationLag>2M</ObservationLag>
+          <Interpolated>false</Interpolated>
+		  <SubtractInflationNotional>false</SubtractInflationNotional>
+        </CPILegData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="CPI_Swap_2">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -93,13 +146,13 @@
         <PaymentConvention>F</PaymentConvention>
         <FixedLegData>
           <Rates>
-            <Rate>0.02</Rate>
+            <Rate>0.0085</Rate>
           </Rates>
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-07-18</StartDate>
-            <EndDate>2021-07-18</EndDate>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2021-02-05</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>F</Convention>
@@ -122,8 +175,8 @@
         <PaymentConvention>Following</PaymentConvention>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-07-18</StartDate>
-            <EndDate>2021-07-18</EndDate>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2021-02-05</EndDate>
             <Tenor>1Y</Tenor>
             <Calendar>UK</Calendar>
             <Convention>ModifiedFollowing</Convention>
