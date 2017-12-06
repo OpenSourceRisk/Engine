@@ -414,7 +414,8 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
-    Real eurExpected3 = pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
+    Real eurExpected3 = d.market->zeroInflationIndex("EUHICPXT")->fixing(d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->baseDate()) *
+                        pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
                         d.market->discountCurve("EUR")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(eur3 - eurExpected3) / eurExpected3 < relTolerance,
         "EUHICPXT CPI Rate mismatch: " << eur3 << " vs " << eurExpected3);

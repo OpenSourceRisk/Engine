@@ -57,6 +57,7 @@ XMLNode* InfDkData::toXML(XMLDocument& doc) {
 
     // capfloor calibration
     XMLNode* calibrationCapFloorNode = XMLUtils::addChild(doc, node, "CalibrationCapFloors");
+    XMLUtils::addChild(doc, calibrationCapFloorNode, "CapFloor", capfloor_);
     XMLUtils::addGenericChildAsList(doc, calibrationCapFloorNode, "Expiries", optionExpiries());
     XMLUtils::addGenericChildAsList(doc, calibrationCapFloorNode, "Strikes", optionStrikes());
 

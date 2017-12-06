@@ -161,6 +161,7 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
 
     infDkData1->optionExpiries() = expiries;
     infDkData1->optionStrikes() = strikes;
+    infDkData1->calibrationStrategy() = parseCalibrationStrategy("None");
     infDkData1->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
@@ -279,7 +280,7 @@ void CrossAssetModelDataTest::testToXMLFromXML() {
     newData.irConfigs() = {};
     BOOST_CHECK(data != newData);
 
-    remove("simulationtest.xml");
+    //remove("simulationtest.xml");
 }
 
 test_suite* CrossAssetModelDataTest::suite() {
