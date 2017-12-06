@@ -68,6 +68,9 @@
     <ClCompile Include="payment.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="deltagammavar.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -154,6 +157,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="utilities.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="deltagammavar.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

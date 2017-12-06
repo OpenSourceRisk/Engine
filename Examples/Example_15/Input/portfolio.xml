@@ -5,6 +5,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -76,6 +79,10 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields/>
     </Envelope>
     <SwapData>
       <LegData>
@@ -159,6 +166,10 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
+      <AdditionalFields/>
     </Envelope>
     <SwapData>
       <LegData>
@@ -246,6 +257,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <FxForwardData>
@@ -261,6 +275,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
@@ -286,7 +303,7 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
+      <PortfolioIds/>
     </Envelope>
     <FxOptionData>
       <OptionData>
@@ -311,6 +328,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <FxOptionData>
@@ -335,6 +355,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -414,6 +437,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <SwaptionData>
@@ -498,6 +524,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -549,6 +578,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -600,6 +632,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -651,6 +686,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <CapFloorData>
@@ -702,6 +740,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <BondData>
@@ -748,6 +789,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityOptionData>
@@ -772,6 +816,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityOptionData>
@@ -796,6 +843,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityForwardData>
@@ -812,6 +862,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityOptionData>
@@ -836,6 +889,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF2</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityOptionData>
@@ -860,6 +916,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <EquityForwardData>
@@ -876,6 +935,9 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <SwapData>
@@ -950,8 +1012,11 @@
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
+       <AdditionalFields/>
+   </Envelope>
     <SwapData>
       <LegData>
         <LegType>Floating</LegType>
@@ -1021,6 +1086,9 @@
     <Envelope>
       <CounterParty>CPTY_B</CounterParty>
       <NettingSetId>CPTY_B</NettingSetId>
+      <PortfolioIds>
+        <PortfolioId>PF1</PortfolioId>
+      </PortfolioIds>
       <AdditionalFields/>
     </Envelope>
     <CreditDefaultSwapData>
