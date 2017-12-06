@@ -17,7 +17,7 @@
 */
 
 /*!
-  \file oreap/simm/sensitivitydata.hpp
+  \file orea/engine/sensitivitydata.hpp
   \brief sensitivity data representations
  */
 
