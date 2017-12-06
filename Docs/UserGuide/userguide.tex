@@ -1620,10 +1620,10 @@ CMS structures can be included in sensitivity analysis, stress testing and expos
 \subsection{Option Sensitivity Analysis with Smile}% Example 22
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_22} demonstrates the calculation of sensitivities for European swaptions and equity options where the volatility surface has a smile. 
+The example in folder {\tt Examples/Example\_22} demonstrates the current state of sensitivity calculation for European options where the volatility surface has a smile. 
 
 \medskip
-The portfolio used in this example consists of:
+The portfolio used in this example consists of
 \begin{itemize}
 	\item an equity call option denominated in USD (``SP5'')
 	\item an equity put option denominated in USD (``SP5'')
@@ -1632,9 +1632,17 @@ The portfolio used in this example consists of:
 \end{itemize}
 
 \medskip
-ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml. The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile.  This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+Refer to appendix \ref{sec:app_sensi} for the current status of sensitivity implementation with smile. In this example the setup is as follows
+\begin{itemize}
+\item today's market is configured with volatility smile for all three products above
+\item simulation market has two configurations, to simulate ``ATM only'' or the ``full surface''; ``ATM only'' means that only ATM volatilities are to be simulated and shifts to ATM vols are propagated to the respective smile section (see appendix \ref{sec:app_sensi});  
+\item the sensitivity analysis has two corresponding configurations as well, ``ATM only'' and ``full surface''; note that the ``full surface'' configuration leads to explicit sensitivities by strike only in the case of Swaption volatilities, for FX and Equity volatilities only ATM sensitivity can be specified at the moment and sensitivity output is currently aggregated to the ATM bucket (to be extended in subsequent releases).
+\end{itemize}
 
-\todo[inline]{Update this section once example 22 has been reviewed}
+The respective output files end with ``{\tt\_fullSurface.csv}'' respectively ``{\tt\_atmOnly.csv}''.
+
+%ORE supports two methods of simulating equity volatility smile. The first method simulates the entire surface using specific moneyness levels configured in simulation.xml. The second method simulates only the ATM equity volatilities, the other strikes are shifted relative to this new ATM using the $t_{0}$ smile.  This example compares both methods using the same sensitivity configuration as in {\tt Examples/Example\_15}. For the first method {\tt simulation\_fullSurface.xml} is used and all output files are appended with ``\_fullSurface'', for the second method {\tt simulation\_atmOnly.xml} is used and all output files are appended with ``\_atmOnly''.
+
 
 %--------------------------------------------------------
 \subsection{FRA and Average OIS Exposure}% Example 23
