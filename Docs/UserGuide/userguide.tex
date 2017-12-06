@@ -3714,8 +3714,11 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
   <FXVolatility>
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
-    <Dimension>ATM</Dimension>
+    <Dimension>ATM</Dimension> <!-- ATM, Smile -->
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
+    <FXSpotID>FX/EUR/USD</FXSpotID>
+    <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
+    <FXDomesticCurveID>Yield/EUR/EUR1D</FXDomesticCurveID>
   </FXVolatility>
   <FXVolatility>
     ...
@@ -3725,8 +3728,6 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \caption{FX option volatility configuration}
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
-
-\todo[inline]{Add FX option with smile to example 22 and update the FX vol config section.}
 
 \subsubsection{Equity Curve Structures}
 
