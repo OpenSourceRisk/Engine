@@ -21,7 +21,8 @@ libOREAnalytics_la_SOURCES = \
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
-	orea.hpp
+	orea.hpp \
+	version.hpp
 
 EXTRA_DIST = auto_link.hpp
 

@@ -62,8 +62,6 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
 
 void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData& std,
                                           boost::shared_ptr<Scenario>& scenario) {
-    Date asof = baseScenario_->asof();
-
     for (auto d : std.fxShifts) {
         string ccypair = d.first; // foreign + domestic;
 
@@ -102,8 +100,6 @@ void StressScenarioGenerator::addFxShifts(StressTestScenarioData::StressTestData
 
 void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTestData& std,
                                               boost::shared_ptr<Scenario>& scenario) {
-    Date asof = baseScenario_->asof();
-
     for (auto d : std.equityShifts) {
         string equity = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;
@@ -292,9 +288,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        //FIXME: this is also hardcoded in todaysmarket
-        DayCounter dc = Actual365Fixed();
-        Real strike = 0.0; // FIXME
+        DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccypair));
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
 
@@ -344,8 +338,7 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
 
         StressTestScenarioData::VolShiftData data = d.second;
 
-        //FIXME: this is also hardcoded in todaysmarket
-        DayCounter dc = Actual365Fixed();
+        DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries()[j];
             

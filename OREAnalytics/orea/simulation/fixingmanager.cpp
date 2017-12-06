@@ -164,15 +164,17 @@ void FixingManager::applyFixings(Date start, Date end) {
                     currentFixingDate = index->fixingCalendar().adjust(end, Following);
                 }
                 Rate currentFixing = index->fixing(currentFixingDate);
+                TimeSeries<Real> history;
                 vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     if (fixingDates[i] >= start && fixingDates[i] < end) {
-                        index->addFixing(fixingDates[i], currentFixing, true);
+                        history[fixingDates[i]] = currentFixing;
                         modifiedFixingHistory_ = true;
                     }
                     if (fixingDates[i] >= end)
                         break;
                 }
+                index->addFixings(history, true);
             }
         }
     }
