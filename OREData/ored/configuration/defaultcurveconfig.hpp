@@ -48,13 +48,16 @@ namespace data {
 class DefaultCurveConfig : public CurveConfig {
 public:
     //! Supported default curve types
-    enum class Type { SpreadCDS, HazardRate, Yield };
+    enum class Type { SpreadCDS, HazardRate, Benchmark };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
     DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
-                       const string& conventionID, const vector<string>& quotes, bool extrapolation = true);
+                       const string& conventionID, const std::vector<string>& quotes, bool extrapolation = true,
+                       const string& benchmarkCurveID = "", const string& sourceCurveID = "",
+                       const std::vector<Period>& pillars = std::vector<Period>(),
+                       const Calendar& calendar = Calendar(), const Size spotLag = 0);
     //! Default constructor
     DefaultCurveConfig() {}
     //@}
@@ -71,9 +74,13 @@ public:
     const Type& type() const { return type_; }
     const string& discountCurveID() const { return discountCurveID_; }
     const string& benchmarkCurveID() const { return benchmarkCurveID_; }
+    const string& sourceCurveID() const { return benchmarkCurveID_; }
     const string& recoveryRateQuote() const { return recoveryRateQuote_; }
-    const DayCounter& dayCounter() const { return dayCounter_; }
     const string& conventionID() const { return conventionID_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const std::vector<Period>& pillars() const { return pillars_; }
+    const Calendar& calendar() const { return calendar_; }
+    const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
     const vector<string>& cdsQuotes() { return cdsQuotes_; }
 
@@ -85,9 +92,13 @@ public:
     Type& type() { return type_; }
     string& discountCurveID() { return discountCurveID_; }
     string& benchmarkCurveID() { return benchmarkCurveID_; }
+    string& sourceCurveID() { return sourceCurveID_; }
     string& recoveryRateQuote() { return recoveryRateQuote_; }
-    DayCounter& dayCounter() { return dayCounter_; }
     string& conventionID() { return conventionID_; }
+    DayCounter& dayCounter() { return dayCounter_; }
+    std::vector<Period> pillars() { return pillars_; }
+    Calendar calendar() { return calendar_; }
+    Size spotLag() { return spotLag_; }
     bool& extrapolation() { return extrapolation_; }
     //@}
 
@@ -96,11 +107,15 @@ private:
     string currency_;
     Type type_;
     string discountCurveID_;
-    string benchmarkCurveID_;
     string recoveryRateQuote_;
     DayCounter dayCounter_;
     string conventionID_;
     bool extrapolation_;
+    string benchmarkCurveID_;
+    string sourceCurveID_;
+    vector<Period> pillars_;
+    Calendar calendar_;
+    Size spotLag_;
 };
 } // namespace data
 } // namespace ore
