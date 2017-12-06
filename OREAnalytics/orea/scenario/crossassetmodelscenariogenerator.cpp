@@ -349,11 +349,15 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
 
             // update fixing manage with fixing for base date
-            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
-            Time relativeTime = dc.yearFraction(model_->infdk(j)->termStructure()->referenceDate(), dates_[i]);
-            std::pair<Real, Real> ii = model_->infdkI(j, relativeTime, relativeTime + t, z, y);
+            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());            
+            Date baseDate = index->zeroInflationTermStructure()->baseDate();
+            Time relativeTime = inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
+                index->zeroInflationTermStructure()->indexIsInterpolated(),
+                index->zeroInflationTermStructure()->dayCounter(), baseDate,
+                dates_[i] - index->zeroInflationTermStructure()->observationLag());
+            std::pair<Real, Real> ii = model_->infdkI(j, relativeTime, relativeTime, z, y);
 
-            Real baseCPI = index->fixing(index->zeroInflationTermStructure()->baseDate());
+            Real baseCPI = index->fixing(baseDate);
             scenarios[i]->add(cpiKeys_[j], baseCPI * ii.first);
         }
 
@@ -378,17 +382,20 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
             Real ir_z = sample.value[model_->pIdx(IR, ccy)][i + 1];
             yoyInfCurves[j]->move(dates_[i], z, y, ir_z);
-            for (Size k = 0; k < ten_yinf_[j].size(); k++) {
+            /*for (Size k = 0; k < ten_yinf_[j].size(); k++) {
                 Date d = dates_[i] + ten_yinf_[j][k];
                 Real yoy = yoyInfCurves[j]->yoyRate(d);
+                cout << "yoy for " << d << " is " << yoy << endl;
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + k], yoy);
+            }*/
+            vector<Date> d_yinf;
+            for (Size k = 0; k < ten_yinf_[j].size(); k++)
+                d_yinf.push_back(dates_[i] + ten_yinf_[j][k]);
+            map<Date, Real> yoyRates = yoyInfCurves[j]->yoyRates(d_yinf);
+            for (Size l = 0; l < d_yinf.size(); l++) {
+                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
+                cout << "yoy for " << d_yinf[l] << " is " << yoyRates[d_yinf[l]] << endl;
             }
-            //vector<Date> d_yinf;
-            //for (Size k = 0; k < ten_yinf_[j].size(); k++)
-            //    d_yinf.push_back(dates_[i] + ten_yinf_[j][k]);
-            //map<Date, Real> yoyRates = yoyInfCurves[j]->yoyRates(d_yinf);
-            //for(Size l = 0; l < d_yinf.size(); l++)
-            //    scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
         }
 
         // EquityForecastCurve

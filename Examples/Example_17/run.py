@@ -15,7 +15,7 @@ oreex.run("Input/ore_exposure.xml")
 
 oreex.print_headline("Plot results: Simulated exposures")
 
-oreex.setup_plot("CPI Swap")
-oreex.plot("exposure_trade_CPI_Swap.csv", 2, 3, 'b', "EPE Forward Swap")
+oreex.setup_plot("YoY Swap")
+oreex.plot("exposure_trade_YearOnYear_Swap.csv", 2, 3, 'b', "EPE Forward Swap")
 oreex.decorate_plot(title="Example 17", ylabel="Exposure")
 oreex.save_plot_to_file()

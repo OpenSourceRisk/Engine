@@ -161,16 +161,15 @@ void FixingManager::applyFixings(Date start, Date end) {
             Date fixEnd = end;
             if (zii) {// for inflation indices we just only add a fixing for the first date in the month
                 fixStart = inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
-                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first + 1;
                 currentFixingDate = fixEnd;
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
-                    cout << "Fixing needed for " << fixingDates[i] << endl;
                 }
             }
             else if (yii) {
                 fixStart = inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
-                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first + 1;
                 currentFixingDate = fixEnd;
                 for (Size i = 0; i<fixingDates.size(); i++)
                     fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
@@ -188,13 +187,11 @@ void FixingManager::applyFixings(Date start, Date end) {
             }
 
             if (needFixings) {
-                cout << "Current Fixing Date " << currentFixingDate << endl;
                 Rate currentFixing = index->fixing(currentFixingDate);
                 TimeSeries<Real> history;
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
                         history[fixingDates[i]] = currentFixing;
-                        cout << "Fixing date " << fixingDates[i] << " fixing: " << currentFixing << " for index " << index->name() << endl;
                         modifiedFixingHistory_ = true;
                     }
                     if (fixingDates[i] >= fixEnd)

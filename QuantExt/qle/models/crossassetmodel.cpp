@@ -724,7 +724,7 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
                                      irlgm1f(0)->termStructure()->dayCounter(), baseDate,
                                      infdk(i)->termStructure()->referenceDate());
     
-//    Period lag = infdk(i)->termStructure()->observationLag();
+    //    Period lag = infdk(i)->termStructure()->observationLag();
 
 
     // TODO account for seasonality ...

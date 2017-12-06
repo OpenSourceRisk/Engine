@@ -60,7 +60,7 @@ namespace QuantExt {
         void state(const Real s_z, const Real s_y, const Real s_irz);
         void move(const Date& d, const Real s_z, const Real s_y, const Real s_irz);
         Real yoyRate(const Date &d, const Period& instObsLag = Period(-1, Days)) const;
-        std::map<Date, Real>& yoyRates(const std::vector<Date> &dts, const Period& instObsLag = Period(-1, Days));
+        std::map<Date, Real> yoyRates(const std::vector<Date> &dts, const Period& instObsLag = Period(-1, Days));
 
         void update();
 
@@ -188,8 +188,8 @@ namespace QuantExt {
     }
 
 
-    inline std::map<Date, Real>& DkImpliedYoYInflationTermStructure::yoyRates(const std::vector<Date> &dts, const Period& instObsLag) {
-        std::map<Date, Real> yoys, yoyswaplet;
+    inline std::map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const std::vector<Date> &dts, const Period& instObsLag) {
+        std::map<Date, Real> yoys, yoyswaplet, yoydiscount;
 
         Period useLag = instObsLag;
         if (instObsLag == Period(-1, Days)) {
@@ -220,32 +220,32 @@ namespace QuantExt {
             Real fixedDiscounts = 0.0;
             for (Size i = 1; i < schedule.dates().size(); i++) {
                 std::map<Date, Real>::const_iterator it = yoyswaplet.find(schedule.dates()[i]);
-                Real swapletPrice;
+                Real swapletPrice, discount;
                 if (it == yoyswaplet.end()) {
                     if (schedule.dates()[i - 1] < baseDate()) {
-                        // fot the first YoY swaplet, I(T_i-1) is known, obtained from a fixing. I(T_i) comes from the model directly - I(t) * Itilde(t,T).
+                        // for the first YoY swaplet, I(T_i-1) is known, obtained from a fixing. I(T_i) comes from the model directly - I(t) * Itilde(t,T).
                         Time t1 = dayCounter().yearFraction(model_->infdk(index_)->termStructure()->baseDate(), schedule.dates()[i - 1]);
                         Real I1 = model_->infdkI(index_, t1, t1, state_z_, state_y_).first;
                         Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
                         std::pair<Real, Real> II2 = model_->infdkI(index_, relativeTime_, relativeTime_ + t2, state_z_, state_y_);
                         Real I2 = II2.first * II2.second;
-                        Real discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
-                        fixedDiscounts += discount;
+                        discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
                         swapletPrice = discount * ((I2 / I1) - 1);
-
                     }
                     else {
                         Time t1 = dc.yearFraction(baseDate(), schedule.dates()[i - 1]);
                         Time t2 = dc.yearFraction(baseDate(), schedule.dates()[i]);
-                        Real discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
-                        fixedDiscounts += discount;
+                        discount = model_->discountBond(model_->ccyIndex(model_->infdk(index_)->currency()), relativeTime_, relativeTime_ + t2, state_irz_);
                         swapletPrice = yoySwapletRate(t1, t2);
                     }
                     yoyswaplet[schedule.dates()[i]] = swapletPrice;
+                    yoydiscount[schedule.dates()[i]] = discount;
                 } else {
                     swapletPrice = yoyswaplet[schedule.dates()[i]];
+                    discount = yoydiscount[schedule.dates()[i]];
                 }
                 yoyLegRate += swapletPrice;
+                fixedDiscounts += discount;
             }
             Real yoyRate = (yoyLegRate / fixedDiscounts);
 
