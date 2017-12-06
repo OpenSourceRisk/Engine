@@ -4670,7 +4670,8 @@ Shifts at the left and right end of the shift curve are extrapolated flat, i.e. 
 The two-dimensional case is covered in an analogous way, applying flat extrapolation at the boundaries and ``pyramidal-shaped'' linear interpolation for the bulk of the points. 
 
 The details of the computation of sensitivities to implied volatilities in strike direction can be summarised as
-follows:
+follows, see also table \ref{sensi_config_overview} for an overview of the admissible configurations and the results
+that are obtained using them.
 
 \medskip
 For {\em Swaption Volatilities}, the initial market setup can be an ATM surface only or a full cube. The simulation
@@ -4707,6 +4708,38 @@ For {\em CDS Volatilities} only an ATM curve can be defined.
 \medskip
 In all cases the smile dynamics is ``sticky strike'', i.e. the implied vol used for pricing a deal does not change if
 the underlying spot price changes.
+
+\begin{table}[hbt]
+  \scriptsize
+  \begin{center}
+    \begin{tabular}{l | l | l | l | l | l}
+      \hline
+      Type & Init Mkt. Config. & Sim. Mkt Config. & Sensitivity Config. & Pricing & Sensitivities w.r.t. \\
+      \hline
+      Swaption & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      Swaption & Cube & Simulate Cube & Shift Smile Strikes & Full Cube & Smile Strike Shifts\footnote{smile
+                                                                          strike spreads must match simulation market configuration} \\
+      Swaption & Cube & Simulate ATM only & Shift ATM only & Full Cube & ATM Shifts\footnote{smile is shifted in parallel\label{sensismileparallel}} \\
+      \hline
+      Cap/Floor & Surface & Simulate Surface & Shift Smile Strikes & Full Surface & Smile Strike Shifts \\
+      \hline
+      Equity & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      Equity & ATM & Simulate Surface & Shift ATM only & ATM Curve & Smile Strike Shifts\footnote{result sensitivities
+                                                                     are aggregated on ATM\label{sensiaggatm}} \\
+      Equity & Surface & Simulate ATM only & Shift ATM only & Full Surface & ATM Shifts\textsuperscript{\ref{sensismileparallel}} \\
+      Equity & Surface & Simulate Surface & Shift ATM only & Full Surface & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
+      \hline
+      FX & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      FX & ATM & Simulate Surface & Shift ATM only & ATM Curve & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
+      FX & Surface & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+      FX & Surface & Simulate Surface & Shift ATM only & Full Surface & Smile Strike Shifts\textsuperscript{\ref{sensiaggatm}} \\
+      \hline
+      CDS & ATM & Simulate ATM only & Shift ATM only & ATM Curve & ATM Shifts \\
+    \end{tabular}
+    \caption{Admissible configurations for Sensitivity computation in ORE}
+    \label{sensi_config_overview}
+  \end{center}
+  \end{table}
 
 \subsection{Value at Risk}\label{sec:app_var}
 
