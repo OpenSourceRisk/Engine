@@ -83,7 +83,7 @@ void CurveConfigTest::testCurveConfigQuotes() {
     };
     boost::shared_ptr<DefaultCurveConfig> defaultConfig =
         boost::make_shared<DefaultCurveConfig>("BANK_SR_USD", "", "USD", DefaultCurveConfig::Type::SpreadCDS, 
-            "Yield/USD/USD3M", "RECOVERY_RATE/RATE/BANK/SR/USD", parseDayCounter("A365"), "CDS-STANDARD-CONVENTIONS", cdsQuotes, true);
+                                               "Yield/USD/USD3M", "RECOVERY_RATE/RATE/BANK/SR/USD", parseDayCounter("A365"), "CDS-STANDARD-CONVENTIONS", cdsQuotes, true);
 
     curveConfigs.defaultCurveConfig("BANK_SR_USD") = defaultConfig;
 
