@@ -35,6 +35,7 @@
 
 /*! \file swaptionvolcube2.hpp, with flat extrapolation in strike direction
     \brief Swaption volatility cube, fit-later-interpolate-early approach
+    \ingroup termstructures
 */
 
 #ifndef quantext_swaption_volcube_fit_later_interpolate_early_h

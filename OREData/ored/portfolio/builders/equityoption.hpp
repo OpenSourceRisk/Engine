@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/equityoption.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -37,7 +37,7 @@ namespace data {
 //! Engine Builder for European Equity Options
 /*! Pricing engines are cached by equity/currency
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class EquityOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:

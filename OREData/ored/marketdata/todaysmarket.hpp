@@ -18,7 +18,7 @@
 
 /*! \file marketdata/todaysmarket.hpp
     \brief An concerte implementation of the Market class that loads todays market and builds the required curves
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -48,7 +48,7 @@ namespace data {
   Today's market's purpose is t0 pricing, the Simulation Market's purpose is
   pricing under future scenarios.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 class TodaysMarket : public MarketImpl {
 public:

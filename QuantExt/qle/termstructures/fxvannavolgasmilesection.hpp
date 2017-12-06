@@ -18,6 +18,7 @@
 
 /*! \file fxvannavolgasmilesection.hpp
     \brief FX smile section assuming a strike/volatility space using vanna volga method
+    \ingroup termstructures
 */
 
 #ifndef quantext_fx_vanna_volga_smile_section_hpp
@@ -34,6 +35,7 @@ namespace QuantExt {
  *  Consistent Pricing of FX Options
  *  Castagna & Mercurio (2006)
  *  http://papers.ssrn.com/sol3/papers.cfm?abstract_id=873788
+ \ingroup termstructures
  */
 class VannaVolgaSmileSection : public FxSmileSection {
 public:

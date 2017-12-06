@@ -32,8 +32,10 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
-    //! %Coupon paying a Libor-type index on a variable nominal such that total flows are constant
+    //! floating annuity coupon
+    /*! %Coupon paying a Libor-type index on a variable nominal such that total flows are constant
+        \ingroup cashflows
+    */
     class FloatingAnnuityCoupon : public Coupon,
                                   public LazyObject {
       public:

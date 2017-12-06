@@ -31,7 +31,10 @@ namespace ore {
 namespace data {
 
 class ReportTypePrinter;
+/*! CSV Report class
 
+\ingroup report
+*/
 class CSVFileReport : public Report {
 public:
     /*! Create a report with the given filename, will throw if it cannot open the file.

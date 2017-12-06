@@ -48,6 +48,7 @@ using boost::unit_test::test_suite;
 #include "crossassetmodel2.hpp"
 #include "crossassetmodelparametrizations.hpp"
 #include "currency.hpp"
+#include "deltagammavar.hpp"
 #include "deposit.hpp"
 #include "discountcurve.hpp"
 #include "dynamicblackvoltermstructure.hpp"
@@ -116,6 +117,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::SwaptionVolConstantSpreadTest::suite());
     test->add(testsuite::FxVolSmileTest::suite());
     test->add(testsuite::PaymentTest::suite());
+    test->add(testsuite::DeltaGammaVarTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

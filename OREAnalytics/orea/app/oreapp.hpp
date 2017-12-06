@@ -31,6 +31,7 @@
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/engine/parametricvar.hpp>
 #include <ored/ored.hpp>
 
 using namespace ore::data;
@@ -100,6 +101,8 @@ public:
     virtual void runSensitivityAnalysis();
     //! run stress tests and write out report
     virtual void runStressTest();
+    //! run parametric var and write out report
+    void runParametricVar();
 
     //! write out initial (pre-cube) reports
     void writeInitialReports();
@@ -129,6 +132,15 @@ protected:
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
 
+    //! Get parametric var calculator
+    virtual boost::shared_ptr<ParametricVarCalculator>
+    buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
+                                 const std::string& portfolioFilter,
+                                 const boost::shared_ptr<SensitivityData>& sensitivities,
+                                 const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
+                                 const std::vector<Real>& p, const std::string& method, const Size mcSamples,
+                                 const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
+
     Size tab_, progressBarWidth_;
     Date asof_;
     //! ORE Input parameters
@@ -141,6 +153,7 @@ protected:
     bool writeDIMReport_;
     bool sensitivity_;
     bool stress_;
+    bool parametricVar_;
     bool writeBaseScenario_;
 
     boost::shared_ptr<Market> market_;

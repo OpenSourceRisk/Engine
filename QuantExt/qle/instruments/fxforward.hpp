@@ -136,6 +136,7 @@ private:
     mutable ExchangeRate fairForwardRate_;
 };
 
+//! \ingroup instruments
 class FxForward::arguments : public virtual PricingEngine::arguments {
 public:
     Real nominal1;
@@ -147,6 +148,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class FxForward::results : public Instrument::results {
 public:
     Money npv;
@@ -154,6 +156,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class FxForward::engine : public GenericEngine<FxForward::arguments, FxForward::results> {};
 }
 

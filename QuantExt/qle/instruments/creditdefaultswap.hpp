@@ -37,6 +37,7 @@
 
 /*! \file creditdefaultswap.hpp
     \brief Credit default swap
+    \ingroup instruments
 */
 
 #ifndef quantext_credit_default_swap_hpp
@@ -251,6 +252,7 @@ protected:
     mutable Real defaultLegNPV_, accrualRebateNPV_;
 };
 
+//! \ingroup instruments
 class CreditDefaultSwap::arguments : public virtual PricingEngine::arguments {
 public:
     arguments();
@@ -268,6 +270,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class CreditDefaultSwap::results : public Instrument::results {
 public:
     virtual ~results() {}
@@ -282,6 +285,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class CreditDefaultSwap::engine : public GenericEngine<CreditDefaultSwap::arguments, CreditDefaultSwap::results> {};
 
 } // namespace QuantExt

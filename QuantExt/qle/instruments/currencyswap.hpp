@@ -131,6 +131,7 @@ protected:
     mutable DiscountFactor npvDateDiscount_;
 };
 
+//! \ingroup instruments
 class CurrencySwap::arguments : public virtual PricingEngine::arguments {
 public:
     std::vector<Leg> legs;
@@ -139,6 +140,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class CurrencySwap::results : public Instrument::results {
 public:
     std::vector<Real> legNPV, inCcyLegNPV;
@@ -148,6 +150,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class CurrencySwap::engine : public GenericEngine<CurrencySwap::arguments, CurrencySwap::results> {};
 
 //! Vanilla cross currency interest rate swap

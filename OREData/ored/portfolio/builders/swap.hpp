@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/swap.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -36,7 +36,7 @@ namespace data {
 
 //! Engine Builder base class for Single Currency Swaps
 /*! Pricing engines are cached by currency
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
@@ -49,7 +49,7 @@ protected:
 
 //! Engine Builder for Single Currency Swaps
 /*! This builder uses QuantLib::DiscountingSwapEngine
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilder : public SwapEngineBuilderBase {
 public:
@@ -65,7 +65,7 @@ protected:
 
 //! Engine Builder for Single Currency Swaps
 /*! This builder uses QuantExt::DiscountingSwapEngineMultiCurve
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
 public:
@@ -82,7 +82,7 @@ protected:
 //! Engine Builder for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
-    \ingroup portfolio
+    \ingroup builders
 */
 class CrossCurrencySwapEngineBuilder
     : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {

@@ -36,6 +36,7 @@
 
 /*! \file makecds.hpp
     \brief Helper class to instantiate standard market cds.
+    \ingroup instruments
 */
 
 #ifndef quantext_makecds_hpp
@@ -52,6 +53,7 @@ namespace QuantExt {
 /*! This class provides a more comfortable way
     to instantiate standard cds.
     \bug support last period dc
+    \ingroup instruments
 */
 class MakeCreditDefaultSwap {
 public:

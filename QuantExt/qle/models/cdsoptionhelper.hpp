@@ -33,7 +33,10 @@
 using namespace QuantLib;
 
 namespace QuantExt {
-
+    //! CDS option helper
+    /*!
+     \ingroup models
+     */
 class CdsOptionHelper : public CalibrationHelper {
 public:
     CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,

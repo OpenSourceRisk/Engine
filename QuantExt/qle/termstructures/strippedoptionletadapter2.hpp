@@ -34,6 +34,7 @@ namespace QuantExt {
 
 /*! Adapter class for turning a StrippedOptionletBase object into an
     OptionletVolatilityStructure.
+    \ingroup termstructures
 */
 class StrippedOptionletAdapter2 : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 public:

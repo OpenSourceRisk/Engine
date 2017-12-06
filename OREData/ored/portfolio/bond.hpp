@@ -16,6 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/bond.hpp
+ \brief Bond trade data model and serialization
+ \ingroup tradedata
+ */
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
@@ -24,6 +28,10 @@
 namespace ore {
 namespace data {
 
+//! Serializable Bond
+/*!
+\ingroup tradedata
+*/
 class Bond : public Trade {
 public:
     //! Default constructor

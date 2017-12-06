@@ -28,7 +28,7 @@
 
 namespace QuantExt {
 
-/*! \addtogroup termstructues
+/*! \addtogroup termstructures
     @{
 */
 

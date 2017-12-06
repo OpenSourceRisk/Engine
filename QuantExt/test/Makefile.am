@@ -26,6 +26,7 @@ QLE_TESTS = \
 	swaptionvolconstantspread.hpp swaptionvolconstantspread.cpp \
 	fxvolsmile.hpp fxvolsmile.cpp \
 	payment.hpp payment.cpp \
+	deltagammavar.hpp deltagammavar.cpp
 	utilities.hpp
 
 dist-hook:

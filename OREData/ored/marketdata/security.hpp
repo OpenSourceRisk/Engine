@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/marketdata/security.hpp
-    \brief
+    \brief A  wrapper class for holding Bond Spread quotes
     \ingroup marketdata
 */
 
@@ -31,7 +31,7 @@
 namespace ore {
 namespace data {
 
-//! Wrapper class for holding Bond Spread quotes
+//! Wrapper class for holding Bond Spread and recovery rate quotes
 /*!
   \ingroup marketdata
 */

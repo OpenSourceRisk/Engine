@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file model/crossassetmodeldata.hpp
-    \brief Cross asset model data
+/*! \file model/lgmdata.hpp
+    \brief Linear Gauss Markov model data
     \ingroup models
 */
 
