@@ -25,19 +25,24 @@
 #define quantext_inflation_index_observer_hpp
 
 namespace QuantExt {
-    
+
 //! Inflation Index observer
 /*! \ingroup indexes */
-class InflationIndexObserver : public Observer, public Observable {
+class InflationIndexObserver : public TermStructure {
 public:
     InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
-                           const Date& baseDate, const Period& observationLag)
-        : index_(index), quote_(quote), baseDate_(baseDate), observationLag_(observationLag) {
-        registerWith(quote);
+                           const Period& observationLag, const DayCounter& dayCounter = DayCounter())
+        : TermStructure(dayCounter), index_(index), quote_(quote), observationLag_(observationLag) {
+        registerWith(quote_);
     }
 
     void update() { // called when the quote changes
         setFixing();
+    }
+
+    Date maxDate() const {
+       Date today = Settings::instance().evaluationDate();
+       return today;
     }
 
 private:
@@ -46,13 +51,11 @@ private:
         Date today = Settings::instance().evaluationDate();
         Date fixingDate = today - observationLag_;
         // overwrite the current fixing in the QuantLib::FixingManager
-        Real baseCPI = index_->fixing(baseDate_);
-        index_->addFixing(fixingDate, baseCPI * quote_->value(), true);
+        index_->addFixing(fixingDate, quote_->value(), true);
     }
 
     boost::shared_ptr<InflationIndex> index_;
     Handle<Quote> quote_;
-    Date baseDate_;
     Period observationLag_;
 };
 } // namespace QuantExt

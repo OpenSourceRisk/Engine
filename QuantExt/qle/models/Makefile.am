@@ -12,6 +12,7 @@ libModels_la_SOURCES = \
 	crossassetmodelimpliedeqvoltermstructure.cpp \
 	crossassetmodelimpliedfxvoltermstructure.cpp \
 	dkimpliedzeroinflationtermstructure.cpp \
+	dkimpliedyoyinflationtermstructure.cpp \
 	eqbsconstantparametrization.cpp \
 	fxbsconstantparametrization.cpp \
 	eqbsparametrization.cpp \
@@ -38,6 +39,7 @@ this_include_HEADERS = \
 	crossassetmodelimpliedeqvoltermstructure.hpp \
 	crossassetmodelimpliedfxvoltermstructure.hpp \
 	dkimpliedzeroinflationtermstructure.hpp \
+	dkimpliedyoyinflationtermstructure.hpp \
 	eqbsconstantparametrization.hpp \
 	fxbsconstantparametrization.hpp \
 	eqbsparametrization.hpp \

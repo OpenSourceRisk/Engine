@@ -34,12 +34,6 @@ void InfDkData::fromXML(XMLNode* node) {
 
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationCapFloors");
 
-    string calibrationStrategyStr = XMLUtils::getChildValue(optionsNode, "CalibrationStrategy", false);
-    if (calibrationStrategyStr != "") {
-        calibrationStrategy() = parseCalibrationStrategy(calibrationStrategyStr);
-        LOG("LGM Bermudan Calibration Strategy " << calibrationStrategy());
-    }
-
     capfloor_ = XMLUtils::getChildValue(optionsNode, "CapFloor");
     optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
@@ -63,7 +57,7 @@ XMLNode* InfDkData::toXML(XMLDocument& doc) {
 
     // capfloor calibration
     XMLNode* calibrationCapFloorNode = XMLUtils::addChild(doc, node, "CalibrationCapFloors");
-    XMLUtils::addGenericChild(doc, calibrationCapFloorNode, "CalibrationStrategy", calibrationStrategy());
+    XMLUtils::addChild(doc, calibrationCapFloorNode, "CapFloor", capfloor_);
     XMLUtils::addGenericChildAsList(doc, calibrationCapFloorNode, "Expiries", optionExpiries());
     XMLUtils::addGenericChildAsList(doc, calibrationCapFloorNode, "Strikes", optionStrikes());
 

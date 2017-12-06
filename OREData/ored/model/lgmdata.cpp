@@ -49,8 +49,7 @@ bool LgmData::operator==(const LgmData& rhs) {
         volType_ != rhs.volType_ || calibrateH_ != rhs.calibrateH_ || hType_ != rhs.hType_ || hTimes_ != rhs.hTimes_ ||
         hValues_ != rhs.hValues_ || calibrateA_ != rhs.calibrateA_ || aType_ != rhs.aType_ || aTimes_ != rhs.aTimes_ ||
         aValues_ != rhs.aValues_ || scaling_ != rhs.scaling_ || optionExpiries_ != rhs.optionExpiries_ ||
-        optionTerms_ != rhs.optionTerms_ || optionStrikes_ != rhs.optionStrikes_ ||
-        calibrationStrategy_ != rhs.calibrationStrategy_) {
+        optionTerms_ != rhs.optionTerms_ || optionStrikes_ != rhs.optionStrikes_ ) {
         return false;
     }
     return true;
