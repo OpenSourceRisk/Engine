@@ -3594,7 +3594,14 @@ for the construction of a market.
 
 \subsubsection{Default Curves}
 
-Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves.
+Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default curves built from CDS spread
+quotes. Alternatively default curves can be set up as a difference curve of two yield curves as shown in listing
+\ref{lst:defaultcurve_configuration_2}. If $P_B(0,t)$ and $P_S(0,t)$ denote the discount factors of the given benchmark
+and source curve respectively the resulting default term structures has survival probabilities
+
+$$S(0,t) = P_S(0,t) / P_B(0,t)$$
+
+on the given pillars, and w.r.t. a a zero recovery rate. The interpolation is backward flat in the hazard rate.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -3624,8 +3631,29 @@ Listing \ref{lst:defaultcurve_configuration} shows the configuration of Default 
   </DefaultCurve>
 </DefaultCurves>
 \end{minted}
-\caption{Default curve configuration}
+\caption{Default curve configuration based on CDS quotes}
 \label{lst:defaultcurve_configuration}
+\end{longlisting}
+
+\begin{longlisting}
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <DefaultCurve>
+      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
+      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>Benchmark</Type>
+      <DayCounter>A365</DayCounter>
+      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
+      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
+      <SpotLag>0</SpotLag>
+      <Calendar>TARGET</Calendar>
+    </DefaultCurve>
+  </DefaultCurves>
+\end{minted}
+\caption{Default curve as a difference of two yield curves}
+\label{lst:defaultcurve_configuration_2}
 \end{longlisting}
 
 \subsubsection{Swaption Volatility Structures}
