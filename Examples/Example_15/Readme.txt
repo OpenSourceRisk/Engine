@@ -21,7 +21,7 @@
 
 4) Analytics
 
-   Sensitivity analysis
+   Sensitivity analysis, Stress analysis, Parametric VaR
 
 5) Run Example
 

@@ -18,7 +18,7 @@
 
 /*! \file orea/cube/npvcube.hpp
     \brief The base NPV cube class
-    \ingroup Cube
+    \ingroup cube
 */
 
 #pragma once
@@ -39,6 +39,7 @@ namespace analytics {
  *
  *  This abstract base class is just used for the storage of a cube.
  *  This class also stores the tradeIds, dates and vector of T0 NPVs
+  \ingroup cube
  */
 class NPVCube {
 public:

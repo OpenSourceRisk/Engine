@@ -38,6 +38,8 @@ namespace QuantExt {
     If asked for any other strike it will pass it on to the cube.
 
     There is no calculation of ATM in this class.
+ 
+    \ingroup termstructures
  */
 class SwaptionVolCubeWithATM : public SwaptionVolatilityStructure {
 public:

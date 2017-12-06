@@ -17,12 +17,17 @@
 */
 
 /*! \file qle/indexes/inflationindexobserver.hpp
-    \brief
+    \brief inflation index observer class
+    \ingroup indexes
 */
 
 #ifndef quantext_inflation_index_observer_hpp
 #define quantext_inflation_index_observer_hpp
 
+namespace QuantExt {
+    
+//! Inflation Index observer
+/*! \ingroup indexes */
 class InflationIndexObserver : public Observer, public Observable {
 public:
     InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
@@ -50,5 +55,6 @@ private:
     Date baseDate_;
     Period observationLag_;
 };
+} // namespace QuantExt
 
 #endif

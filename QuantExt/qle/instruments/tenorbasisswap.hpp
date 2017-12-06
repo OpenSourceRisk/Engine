@@ -108,6 +108,7 @@ private:
 };
 
 //! %Results from tenor basis swap calculation
+//! \ingroup instruments
 class TenorBasisSwap::results : public Swap::results {
 public:
     Spread fairLongSpread;
@@ -115,6 +116,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class TenorBasisSwap::engine : public GenericEngine<Swap::arguments, TenorBasisSwap::results> {};
 
 // Inline definitions

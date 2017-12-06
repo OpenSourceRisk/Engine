@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/creditdefaultswap.hpp
 \brief
-\ingroup portfolio
+\ingroup builders
 */
 
 #pragma once
@@ -36,7 +36,7 @@ namespace data {
 
 //! Engine Builder base class for Credit Default Swaps
 /*! Pricing engines are cached by creditCurveId
-    \ingroup portfolio
+ \ingroup builders
 */
 
 class CreditDefaultSwapEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&> {
@@ -49,7 +49,7 @@ protected:
 
 //! Midpoint Engine Builder class for CreditDefaultSwaps
 /*! This class creates a MidPointCdsEngine
-    \ingroup portfolio
+ \ingroup builders
 */
 
 class MidPointCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {

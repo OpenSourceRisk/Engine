@@ -47,6 +47,7 @@ namespace data {
     - contain additional serializable data classes
     - implement a build() function that parses data and constructs QuantLib
       and QuantExt objects
+ \ingroup portfolio
 */
 class Trade : public XMLSerializable {
 public:

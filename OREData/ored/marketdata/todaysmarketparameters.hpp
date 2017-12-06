@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/todaysmarketparameters.hpp
     \brief A class to hold todays market configuration(s)
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -48,7 +48,7 @@ namespace data {
   Applications then need to specify the desired market configuration ID when making calls
   to any of the term structures provided by the market object.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 
 //! elements must be numbered 0...n, so we can iterate over them

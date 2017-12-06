@@ -18,6 +18,7 @@
 
 /*! \file qle/termstructures/zeroinflationcurveobserverstatic.hpp
     \brief Observable inflation term structure based on the interpolation of zero rate quotes.
+    \ingroup termstructures
 */
 
 #ifndef quantext_zero_inflation_curve_observer_static_hpp
@@ -29,10 +30,12 @@
 #include <ql/math/comparison.hpp>
 #include <ql/patterns/lazyobject.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Inflation term structure based on the interpolation of zero rates.
-/*! \ingroup inflationtermstructures */
+/*! \ingroup termstructures */
 template<class Interpolator>
 class ZeroInflationCurveObserverStatic
     : public ZeroInflationTermStructure,

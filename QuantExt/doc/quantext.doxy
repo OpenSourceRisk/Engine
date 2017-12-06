@@ -279,7 +279,7 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantLib/Docs/quantlib.tag=../../../QuantLib/Docs/html
+TAGFILES               = 
 GENERATE_TAGFILE       = quantext.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

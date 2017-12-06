@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/portfolio/builders/cachingenginebuilder.hpp
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -43,7 +43,7 @@ namespace data {
  *  The remaining variable arguments are to be passed to engine() and
  *  engineImpl(), these are the specific parameters required to build
  *  an engine or coupon pricer for this trade type.
-    \ingroup portfolio
+    \ingroup builders
  */
 template <class T, class U, typename... Args> class CachingEngineBuilder : public EngineBuilder {
 public:

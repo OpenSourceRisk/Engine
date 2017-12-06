@@ -4,4 +4,5 @@
 #include <qle/math/flatextrapolation.hpp>
 #include <qle/math/nadarayawatson.hpp>
 #include <qle/math/stabilisedglls.hpp>
+#include <qle/math/deltagammavar.hpp>
 

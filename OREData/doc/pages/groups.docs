@@ -25,9 +25,21 @@
     Grouping of all utility related classes, functions and files
 */
 
+/*! \defgroup report Report
+    Grouping of all report related classes, functions and files
+*/
+
 /*! \defgroup marketdata Market Data
     Grouping of all market data related classes, functions and files
+    @{
+
 */
+
+/*! \defgroup curves Curves
+    Grouping of all curve related classes, functions and files
+*/
+
+/*! @} */
 
 /*! \defgroup models Models
     Grouping of all model related classes, functions and files
@@ -35,14 +47,19 @@
 
 /*! \defgroup portfolio Portfolio
     Grouping of all portfolio related classes, functions and files
-*/
-
-
-/*! \defgroup curves Curves
-    Grouping of all curve related classes, functions and files
-*/ng of all curve related classes, functions and files
+    @{
 */
 
 /*! \defgroup tradedata Trade Data
     Grouping of all trade data related classes, functions and files
 */
+
+/*! \defgroup builders Builders
+    Grouping of all trade building related classes, functions and files
+*/
+
+/*! @} */
+
+*/
+
+

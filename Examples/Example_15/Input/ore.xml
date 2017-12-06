@@ -94,5 +94,22 @@
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
     </Analytic>
+    <Analytic type="parametricVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="sensitivityInputFile">../Output/sensitivity.csv,../Output/crossgamma.csv</Parameter>
+      <Parameter name="covarianceInputFile">covariance.csv</Parameter>
+      <Parameter name="salvageCovarianceMatrix">N</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <!-- Breakdown of risk classes and types -->
+      <Parameter name="breakdown">Y</Parameter>
+      <!-- Portfolio filter (regex), may be empty or not given -->
+      <Parameter name="portfolioFilter">PF1|PF2</Parameter>
+      <!-- VaR method (Delta, DeltaGammaNormal, MonteCarlo) -->
+      <Parameter name="method">DeltaGammaNormal</Parameter>
+      <!-- Only required for method = MonteCarlo -->
+      <!-- <Parameter name="mcSamples">100000</Parameter> -->
+      <!-- <Parameter name="mcSeed">42</Parameter> -->
+      <Parameter name="outputFile">var.csv</Parameter>
+    </Analytic>
   </Analytics>
 </ORE>

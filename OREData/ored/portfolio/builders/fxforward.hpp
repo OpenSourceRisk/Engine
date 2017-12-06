@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/fxforward.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -33,7 +33,7 @@ namespace data {
 
 //! Engine Builder for FX Forwards
 /*! Pricing engines are cached by currency pair
-    \ingroup portfolio
+    \ingroup builders
 */
 class FxForwardEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:

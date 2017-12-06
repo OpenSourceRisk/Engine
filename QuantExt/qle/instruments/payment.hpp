@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/instruments/deposit.hpp
-    \brief deposit instrument
+/*! \file qle/instruments/payment.hpp
+    \brief payment instrument
     \ingroup instruments
 */
 
@@ -77,11 +77,13 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class Payment::results : public Instrument::results {
 public:
     void reset();
 };
 
+//! \ingroup instruments
 class Payment::engine : public GenericEngine<Payment::arguments, Payment::results> {};
 } // namespace QuantExt
 
