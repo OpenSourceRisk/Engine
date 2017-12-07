@@ -680,22 +680,6 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
     Real HyT = Hy(i).eval(this, T);
 
     if (it == cache_infdkI_.end()) {
-        // compute V0 and V_tilde
-        //if (ccy == 0) {
-        //    // domestic inflation
-        //    Real Hzt = Hz(0).eval(this, t);
-        //    Real HzT = Hz(0).eval(this, T);
-        //    Real zetay0 = zetay(i).eval(this, t);
-        //    Real zetay1 = integral(this, P(Hy(i), ay(i), ay(i)), 0.0, t);
-        //    Real zetay2 = integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), 0.0, t);
-        //    Real zetany0 = integral(this, P(rzy(0, i), az(0), ay(i)), 0.0, t);
-        //    Real zetany1 = integral(this, P(rzy(0, i), Hy(i), az(0), ay(i)), 0.0, t);
-        //    V0 = 0.5 * Hyt * Hyt * zetay0 - Hyt * zetay1 + 0.5 * zetay2 - Hzt * Hyt * zetany0 + Hzt * zetany1;
-        //    V_tilde = -0.5 * (HyT * HyT - Hyt * Hyt) * zetay0 + (HyT - Hyt) * zetay1 +
-        //        (HzT * HyT - Hzt * Hyt) * zetany0 - (HzT - Hzt) * zetany1;
-        //}
-        //else {
-            // foreign inflation
         V0 = infV(i, ccy, 0, t);
         V_tilde = infV(i, ccy, t, T) - infV(i, ccy, 0, T) + infV(i, ccy, 0, t);
         cache_infdkI_.insert(std::make_pair(k, std::make_pair(V0, V_tilde)));
