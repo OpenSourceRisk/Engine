@@ -53,7 +53,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     if (legData_.legType() == "Floating") {
         builder = engineFactory->builder(tradeType_);
 
-        boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
+        boost::shared_ptr<FloatingLegData> floatData =
+            boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
         QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << legData_.legType());
         QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");

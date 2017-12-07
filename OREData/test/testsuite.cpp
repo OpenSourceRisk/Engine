@@ -26,8 +26,8 @@
 using namespace std;
 
 // Boost
-#include <boost/timer.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/timer.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -58,6 +58,7 @@ using boost::unit_test::test_suite;
 #include "cms.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
+#include "curveconfig.hpp"
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
 #include "fxoption.hpp"
@@ -66,13 +67,12 @@ using boost::unit_test::test_suite;
 #include "indices.hpp"
 #include "legdata.hpp"
 #include "parser.hpp"
+#include "portfolio.hpp"
 #include "schedule.hpp"
+#include "swaption.hpp"
 #include "todaysmarket.hpp"
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
-#include "swaption.hpp"
-#include "portfolio.hpp"
-#include "curveconfig.hpp"
 
 namespace {
 
@@ -95,7 +95,7 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
-    
+
     // Get command line arguments
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;

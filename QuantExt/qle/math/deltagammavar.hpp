@@ -119,7 +119,7 @@ Disposable<std::vector<Real> > deltaGammaVarMc(const Matrix& omega, const Array&
     }
 
     std::vector<Real> res;
-    BOOST_FOREACH(Real q, p) {
+    BOOST_FOREACH (Real q, p) {
         res.push_back(boost::accumulators::quantile(acc, boost::accumulators::quantile_probability = q));
     }
 

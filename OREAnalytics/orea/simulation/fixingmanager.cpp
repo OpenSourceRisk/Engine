@@ -18,11 +18,11 @@
 
 #include <orea/simulation/fixingmanager.hpp>
 #include <ored/utilities/flowanalysis.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -159,22 +159,28 @@ void FixingManager::applyFixings(Date start, Date end) {
             Date currentFixingDate;
             Date fixStart = start;
             Date fixEnd = end;
-            if (zii) {// for inflation indices we just only add a fixing for the first date in the month
-                fixStart = inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
-                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first + 1;
+            if (zii) { // for inflation indices we just only add a fixing for the first date in the month
+                fixStart =
+                    inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
+                        .first;
+                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
+                             .first +
+                         1;
                 currentFixingDate = fixEnd;
                 for (Size i = 0; i < fixingDates.size(); i++) {
                     fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
                 }
-            }
-            else if (yii) {
-                fixStart = inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
-                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first + 1;
+            } else if (yii) {
+                fixStart =
+                    inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
+                        .first;
+                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
+                             .first +
+                         1;
                 currentFixingDate = fixEnd;
-                for (Size i = 0; i<fixingDates.size(); i++)
+                for (Size i = 0; i < fixingDates.size(); i++)
                     fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
-            }
-            else
+            } else
                 currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
 
             // Add we have a coupon between start and asof.

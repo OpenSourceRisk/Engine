@@ -43,7 +43,7 @@ public:
                                            const Array& kappa, const std::string& name = std::string());
     Lgm1fPiecewiseConstantHullWhiteAdaptor(const Currency& currency, const Handle<TS>& termStructure,
                                            const std::vector<Date>& sigmaDates, const Array& sigma,
-                                           const std::vector<Date>& kappaDates, const Array& kappa, 
+                                           const std::vector<Date>& kappaDates, const Array& kappa,
                                            const std::string& name = std::string());
     Real zeta(const Time t) const;
     Real H(const Time t) const;

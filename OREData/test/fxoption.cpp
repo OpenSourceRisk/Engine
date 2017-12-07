@@ -77,8 +77,10 @@ void FXOptionTest::testFXOptionPrice() {
 
     // build FXOption - expiry in 1 Year
     OptionData optionData("Long", "Call", "European", true, vector<string>(1, "20170203"));
-    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0, "USD", "20170203");
-    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0, "EUR", "20170203");
+    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
+                                    "USD", "20170203");
+    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
+                                    "EUR", "20170203");
     Envelope env("CP1");
     FxOption fxOption(env, optionData, "EUR", 1000000, // bought
                       "USD", 1250000);                 // sold
@@ -86,7 +88,7 @@ void FXOptionTest::testFXOptionPrice() {
     FxOption fxOptionPremiumEUR(env, optionDataPremiumEUR, "EUR", 1000000, "USD", 1250000);
 
     // NPV currency = sold currency = USD
-    
+
     Real expectedNPV_USD = 29148.0;
     Real expectedNPV_EUR = 24290.0;
     Real expectedNPV_USD_Premium_USD = 19495.6;
@@ -111,7 +113,7 @@ void FXOptionTest::testFXOptionPrice() {
     BOOST_TEST_MESSAGE("NPV =                     " << npv);
     BOOST_TEST_MESSAGE("NPV with premium in USD = " << npv_prem_usd);
     BOOST_TEST_MESSAGE("NPV with premium in EUR = " << npv_prem_eur);
-        
+
     // Check NPV matches expected values. Expected value from Wystup is rounded at each step of
     // calculation so we get a difference of $50 here.
     QL_REQUIRE(fxOption.npvCurrency() == "USD", "unexpected NPV currency");
@@ -119,8 +121,8 @@ void FXOptionTest::testFXOptionPrice() {
         BOOST_CHECK_CLOSE(npv, expectedNPV_EUR, 0.2);
     } else if (fxOption.npvCurrency() == "USD") {
         BOOST_CHECK_CLOSE(npv, expectedNPV_USD, 0.2);
-	BOOST_CHECK_CLOSE(npv_prem_usd, expectedNPV_USD_Premium_USD, 0.001);
-	BOOST_CHECK_CLOSE(npv_prem_eur, expectedNPV_USD_Premium_EUR, 0.001);
+        BOOST_CHECK_CLOSE(npv_prem_usd, expectedNPV_USD_Premium_USD, 0.001);
+        BOOST_CHECK_CLOSE(npv_prem_eur, expectedNPV_USD_Premium_EUR, 0.001);
     } else {
         BOOST_FAIL("Unexpected FX Option npv currency " << fxOption.npvCurrency());
     }

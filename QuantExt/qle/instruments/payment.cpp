@@ -33,9 +33,7 @@ Payment::Payment(const Real amount, const Currency& currency, const Date& date) 
 
 bool Payment::isExpired() const { return cashflow_->hasOccurred(); }
 
-void Payment::setupExpired() const {
-    Instrument::setupExpired();
-}
+void Payment::setupExpired() const { Instrument::setupExpired(); }
 
 void Payment::setupArguments(PricingEngine::arguments* args) const {
     Payment::arguments* arguments = dynamic_cast<Payment::arguments*>(args);
@@ -51,10 +49,8 @@ void Payment::fetchResults(const PricingEngine::results* r) const {
 }
 
 void Payment::arguments::validate() const {
-  // always valid
+    // always valid
 }
 
-void Payment::results::reset() {
-    Instrument::results::reset();
-}
+void Payment::results::reset() { Instrument::results::reset(); }
 } // namespace QuantExt

@@ -43,7 +43,8 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
     notional_ = swap_.leg().notionals().front();
     DayCounter dc = parseDayCounter(swap_.leg().dayCounter());
 
-    boost::shared_ptr<FixedLegData> fixedData = boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
+    boost::shared_ptr<FixedLegData> fixedData =
+        boost::dynamic_pointer_cast<FixedLegData>(swap_.leg().concreteLegData());
     QL_REQUIRE(fixedData, "Wrong LegType, expected Fixed, got " << swap_.leg().legType());
 
     QL_REQUIRE(fixedData->rates().size() == 1, "CreditDefaultSwap requires single rate");
@@ -52,13 +53,13 @@ void CreditDefaultSwap::build(const boost::shared_ptr<EngineFactory>& engineFact
 
     if (swap_.upfrontDate() == Null<Date>())
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention,
-            dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart());
+            prot, swap_.leg().notionals().front(), fixedData->rates().front(), schedule, payConvention, dc,
+            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart());
     else {
         QL_REQUIRE(swap_.upfrontFee() != Null<Real>(), "CreditDefaultSwap: upfront date given, but no upfront fee");
         cds = boost::make_shared<QuantExt::CreditDefaultSwap>(
-            prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention,
-            dc, swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate());
+            prot, notional_, swap_.upfrontFee(), fixedData->rates().front(), schedule, payConvention, dc,
+            swap_.settlesAccrual(), swap_.paysAtDefaultTime(), swap_.protectionStart(), swap_.upfrontDate());
     }
 
     boost::shared_ptr<CreditDefaultSwapEngineBuilder> cdsBuilder =

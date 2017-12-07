@@ -45,8 +45,8 @@ namespace ore {
 namespace data {
 
 enum class YieldCurveType {
-    Discount = 0, //Chosen to match MarketObject::DiscountCurve
-    Yield = 1, //Chosen to match MarketObject::YieldCurve
+    Discount = 0, // Chosen to match MarketObject::DiscountCurve
+    Yield = 1,    // Chosen to match MarketObject::YieldCurve
     EquityDividend = 2,
     EquityForecast = 3
 };
@@ -126,11 +126,9 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName,
-                       const string& configuration = Market::defaultConfiguration) const = 0;
+    zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName,
-                      const string& configuration = Market::defaultConfiguration) const = 0;
+    yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>

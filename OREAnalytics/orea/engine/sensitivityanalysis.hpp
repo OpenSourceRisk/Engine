@@ -24,11 +24,11 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
-#include <orea/engine/sensitivitycube.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
@@ -122,7 +122,7 @@ public:
     //! override shift tenors with sim market tenors
     void overrideTenors(const bool b) { overrideTenors_ = b; }
 
-    //! the portfolio of trades 
+    //! the portfolio of trades
     boost::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
 
     //! a wrapper for the sensivity results cube

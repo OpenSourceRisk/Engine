@@ -72,8 +72,7 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
-          infConfigs_(std::vector<boost::shared_ptr<InfDkData>>()),
-          correlations_(c), bootstrapTolerance_(tolerance) {
+          infConfigs_(std::vector<boost::shared_ptr<InfDkData>>()), correlations_(c), bootstrapTolerance_(tolerance) {
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
@@ -91,8 +90,8 @@ public:
         const std::map<std::pair<std::string, std::string>, Real>& c,
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
-        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs),
-        correlations_(c), bootstrapTolerance_(tolerance) {
+        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), correlations_(c),
+          bootstrapTolerance_(tolerance) {
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)

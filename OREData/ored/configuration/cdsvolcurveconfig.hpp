@@ -48,7 +48,8 @@ public:
     //! Default constructor
     CDSVolatilityCurveConfig() {}
     //! Detailed constructor
-    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries, const DayCounter& dayCounter =  QuantLib::Actual365Fixed());
+    CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription, const vector<string>& expiries,
+                             const DayCounter& dayCounter = QuantLib::Actual365Fixed());
     //@}
 
     //! \name Serialisation

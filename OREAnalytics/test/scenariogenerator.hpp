@@ -62,7 +62,6 @@ public:
     //! Test consistency of FX Forward Exposure evolutions with FX Forward Option prices when IR vols vanish
     static void testFxForwardExposureZeroIrVol();
 
-
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite

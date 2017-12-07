@@ -30,8 +30,8 @@ void Envelope::fromXML(XMLNode* node) {
 
     portfolioIds_.clear();
     XMLNode* portfolioNode = XMLUtils::getChildNode(node, "PortfolioIds");
-    if(portfolioNode) {
-        for (auto const& c: XMLUtils::getChildrenNodes(portfolioNode, "PortfolioId"))
+    if (portfolioNode) {
+        for (auto const& c : XMLUtils::getChildrenNodes(portfolioNode, "PortfolioId"))
             portfolioIds_.insert(XMLUtils::getNodeValue(c));
     }
 
@@ -50,7 +50,7 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
     XMLNode* portfolioNode = doc.allocNode("PortfolioIds");
     XMLUtils::appendNode(node, portfolioNode);
-    for(const auto& p : portfolioIds_)
+    for (const auto& p : portfolioIds_)
         XMLUtils::addChild(doc, portfolioNode, "PortfolioId", p);
     XMLNode* additionalNode = doc.allocNode("AdditionalFields");
     XMLUtils::appendNode(node, additionalNode);

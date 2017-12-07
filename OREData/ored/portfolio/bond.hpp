@@ -42,8 +42,8 @@ public:
          string settlementDays, string calendar, string issueDate, LegData& coupons)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0), maturityDate_(), 
-          currency_(), zeroBond_(false) {}
+          issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0), maturityDate_(), currency_(),
+          zeroBond_(false) {}
 
     //! Constructor for coupon bonds with multiple phases (represented as legs)
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,

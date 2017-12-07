@@ -31,9 +31,9 @@
 
 namespace QuantExt {
 //! %CORRA rate
-/*!   
+/*!
     \remark Using Canada calendar
-     
+
     \ingroup indexes
 */
 class CORRA : public OvernightIndex {

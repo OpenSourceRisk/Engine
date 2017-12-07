@@ -43,10 +43,11 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote, const string& recoveryQuote):
-     CurveConfig(curveID, curveDescription) {
+    SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote,
+                   const string& recoveryQuote)
+        : CurveConfig(curveID, curveDescription) {
         quotes_ = {spreadQuote, recoveryQuote};
-     };
+    };
     //! Default constructor
     SecurityConfig() {}
     //@}

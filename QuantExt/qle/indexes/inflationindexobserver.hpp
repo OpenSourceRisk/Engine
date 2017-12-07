@@ -30,7 +30,7 @@ namespace QuantExt {
 /*! \ingroup indexes */
 class InflationIndexObserver : public TermStructure {
 public:
-    InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote, 
+    InflationIndexObserver(const boost::shared_ptr<InflationIndex>& index, const Handle<Quote>& quote,
                            const Period& observationLag, const DayCounter& dayCounter = DayCounter())
         : TermStructure(dayCounter), index_(index), quote_(quote), observationLag_(observationLag) {
         registerWith(quote_);
@@ -41,8 +41,8 @@ public:
     }
 
     Date maxDate() const {
-       Date today = Settings::instance().evaluationDate();
-       return today;
+        Date today = Settings::instance().evaluationDate();
+        return today;
     }
 
 private:

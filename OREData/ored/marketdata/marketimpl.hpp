@@ -66,7 +66,7 @@ public:
 
     //! Yield Curves
     Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,
-                                             const string& configuration = Market::defaultConfiguration) const;
+                                          const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> discountCurve(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> yieldCurve(const string& name,
@@ -124,9 +124,9 @@ public:
     //! Equity volatilities
     Handle<BlackVolTermStructure> equityVol(const string& eqName,
                                             const string& configuration = Market::defaultConfiguration) const;
-    
+
     //! Equity forecasting curves
-    Handle<YieldTermStructure> equityForecastCurve(const string& eqName, 
+    Handle<YieldTermStructure> equityForecastCurve(const string& eqName,
                                                    const string& configuration = Market::defaultConfiguration) const;
 
     //! Bond Spreads
@@ -134,7 +134,8 @@ public:
                                  const string& configuration = Market::defaultConfiguration) const;
 
     //! Cpi Base Quotes
-    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index, const string& configuration = Market::defaultConfiguration) const;
+    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
+                                                      const string& configuration = Market::defaultConfiguration) const;
 
     //@}
 

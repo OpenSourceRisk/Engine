@@ -21,6 +21,7 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <ql/math/interpolations/flatextrapolation2d.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
@@ -30,7 +31,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/math/interpolations/flatextrapolation2d.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;
@@ -80,17 +80,22 @@ private:
                                                       ModifiedFollowing, vol, ActualActual(), type, shift));
         return Handle<OptionletVolatilityStructure>(ts);
     }
-    Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex, const std::vector<Rate> cStrikes,
-        std::vector<Rate> fStrikes, std::vector<Period> cfMaturities, Matrix cPrice, Matrix fPrice) {
+    Handle<CPICapFloorTermPriceSurface> flatRateCps(Handle<ZeroInflationIndex> infIndex,
+                                                    const std::vector<Rate> cStrikes, std::vector<Rate> fStrikes,
+                                                    std::vector<Period> cfMaturities, Matrix cPrice, Matrix fPrice) {
         boost::shared_ptr<CPICapFloorTermPriceSurface> ts(
             new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
-                1.0, 0.0, infIndex->availabilityLag(), infIndex->zeroInflationTermStructure()->calendar(), 
-                Following, ActualActual(), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes,
-                cfMaturities, cPrice, fPrice));
+                1.0, 0.0, infIndex->availabilityLag(), infIndex->zeroInflationTermStructure()->calendar(), Following,
+                ActualActual(), infIndex, discountCurve(infIndex->currency().code()), cStrikes, fStrikes, cfMaturities,
+                cPrice, fPrice));
         return Handle<CPICapFloorTermPriceSurface>(ts);
     }
-    Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<ZeroInflationIndex> ii, Handle<YieldTermStructure> yts);
-    Handle<YoYInflationIndex> makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates, boost::shared_ptr<YoYInflationIndex> ii, Handle<YieldTermStructure> yts);
+    Handle<ZeroInflationIndex> makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
+                                                      boost::shared_ptr<ZeroInflationIndex> ii,
+                                                      Handle<YieldTermStructure> yts);
+    Handle<YoYInflationIndex> makeYoYInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
+                                                    boost::shared_ptr<YoYInflationIndex> ii,
+                                                    Handle<YieldTermStructure> yts);
 };
 
 //! Static class to allow for easy construction of configuration objects for use within tests

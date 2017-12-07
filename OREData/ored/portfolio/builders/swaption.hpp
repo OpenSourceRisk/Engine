@@ -75,10 +75,10 @@ protected:
         return id;
     }
 };
-    
+
 //! Abstract LGMBermudanSwaptionEngineBuilder class
 /*! This defines the interface for LGM Bermudan Swaption Builders
-     
+
 \ingroup builders
 */
 class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {

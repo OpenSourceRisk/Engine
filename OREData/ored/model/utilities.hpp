@@ -28,8 +28,8 @@
 #include <ql/models/calibrationhelper.hpp>
 #include <qle/models/eqbsparametrization.hpp>
 #include <qle/models/fxbsparametrization.hpp>
-#include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/infdkparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;

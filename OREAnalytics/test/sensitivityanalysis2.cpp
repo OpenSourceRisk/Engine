@@ -121,7 +121,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->fxVolIsSurface() = false;
     simMarketData->fxVolMoneyness() = {0};
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
-    
+
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
@@ -179,11 +179,16 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -1316,13 +1321,14 @@ void SensitivityAnalysis2Test::testSensitivities() {
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    for (auto p : portfolio->trades()) { 
-        for (auto f : sa->sensiCube()->upFactors()) { 
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-        } 
+    for (auto p : portfolio->trades()) {
+        for (auto f : sa->sensiCube()->upFactors()) {
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        }
     }
-    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
+    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =
+        sa->scenarioGenerator()->scenarioDescriptions();
 
     Real shiftSize = 1E-5; // shift size
 
@@ -1380,22 +1386,25 @@ void SensitivityAnalysis2Test::testSensitivities() {
     // check cross gammas
     BOOST_TEST_MESSAGE("Checking cross-gammas...");
     Size foundCrossGammas = 0, zeroCrossGammas = 0;
-    for (Size i=0; i<portfolio->size(); i++) {
+    for (Size i = 0; i < portfolio->size(); i++) {
         string id = portfolio->trades()[i]->id();
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                string key =  id + " " + s.factor1() + " " + s.factor2();
+                string key = id + " " + s.factor1() + " " + s.factor2();
                 Real scaledResult = sa->crossGamma(id, s.factor1(), s.factor2()) / (shiftSize * shiftSize);
                 // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
                 if (analyticalResultsCrossGamma.count(key) > 0) {
                     if (!check(analyticalResultsCrossGamma.at(key), scaledResult))
-                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << scaledResult
-                                                            << ") could not be verified against analytic result ("
-                                                            << analyticalResultsCrossGamma.at(key) << ")");
+                        BOOST_ERROR("Sensitivity analysis result "
+                                    << key << " (" << scaledResult
+                                    << ") could not be verified against analytic result ("
+                                    << analyticalResultsCrossGamma.at(key) << ")");
                     ++foundCrossGammas;
                 } else {
                     if (!check(sa->crossGamma(id, s.factor1(), s.factor2()), 0.0))
-                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << sa->crossGamma(id, s.factor1(), s.factor2()) << ") expected to be zero");
+                        BOOST_ERROR("Sensitivity analysis result " << key << " ("
+                                                                   << sa->crossGamma(id, s.factor1(), s.factor2())
+                                                                   << ") expected to be zero");
                     ++zeroCrossGammas;
                 }
             }

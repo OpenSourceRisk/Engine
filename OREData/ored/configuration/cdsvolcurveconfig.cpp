@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
-#include <ql/errors.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <boost/algorithm/string.hpp>
+#include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
 

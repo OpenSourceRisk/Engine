@@ -41,11 +41,10 @@ namespace data {
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
-    if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ ||
-        equities_ != rhs.equities_ || correlations_ != rhs.correlations_ ||
-        bootstrapTolerance_ != rhs.bootstrapTolerance_ || irConfigs_.size() != rhs.irConfigs_.size() ||
-        fxConfigs_.size() != rhs.fxConfigs_.size() || eqConfigs_.size() != rhs.eqConfigs_.size()
-		|| infConfigs_.size() != rhs.infConfigs_.size()) {
+    if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
+        correlations_ != rhs.correlations_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
+        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
+        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size()) {
         return false;
     }
 
@@ -67,7 +66,7 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
-    for (Size i = 0; i <infConfigs_.size(); i++) {
+    for (Size i = 0; i < infConfigs_.size(); i++) {
         if (*infConfigs_[i] != *(rhs.infConfigs_[i])) {
             return false;
         }
@@ -223,22 +222,21 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     XMLNode* infNode = XMLUtils::getChildNode(modelNode, "InflationIndexModels");
     if (infNode) {
         for (XMLNode* child = XMLUtils::getChildNode(infNode, "LGM"); child;
-            child = XMLUtils::getNextSibling(child, "LGM")) {
+             child = XMLUtils::getNextSibling(child, "LGM")) {
 
             boost::shared_ptr<InfDkData> config(new InfDkData());
             config->fromXML(child);
 
             for (Size i = 0; i < config->optionExpiries().size(); i++) {
                 LOG("Cross-Asset Inflation Index calibration option " << config->optionExpiries()[i] << " "
-                    << config->optionStrikes()[i]);
+                                                                      << config->optionStrikes()[i]);
             }
 
             infDataMap[config->infIndex()] = config;
 
             LOG("CrossAssetModelData: Inflation Index config built with key " << config->infIndex());
         }
-    }
-    else {
+    } else {
         LOG("No Inflation Index Models section found");
     }
 
@@ -377,9 +375,9 @@ void CrossAssetModelData::buildInfConfigs(std::map<std::string, boost::shared_pt
             boost::shared_ptr<InfDkData> def = infDataMap["default"];
             boost::shared_ptr<InfDkData> infData = boost::make_shared<InfDkData>(
                 index, def->currency(), def->calibrationType(), def->reversionType(), def->volatilityType(),
-                def->calibrateH(), def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(),
-                def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->capFloor(), def->optionExpiries(), 
-                def->optionTerms(), def->optionStrikes());
+                def->calibrateH(), def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(),
+                def->aParamType(), def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->capFloor(),
+                def->optionExpiries(), def->optionTerms(), def->optionStrikes());
 
             infConfigs_.push_back(infData);
         }

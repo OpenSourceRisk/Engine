@@ -24,8 +24,8 @@
 #include <ostream>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/errors.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <stdio.h>
 
 using std::string;
@@ -158,7 +158,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            if (fixingDate > asof) flowType = "InterestProjected";
+                            if (fixingDate > asof)
+                                flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
@@ -177,7 +178,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
-                            .add(j+1)
+                            .add(j + 1)
                             .add(i)
                             .add(payDate)
                             .add(flowType)
@@ -210,7 +211,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
     map<string, string> zeroInflationIndices, defaultCurves;
-    if(marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
+    if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);

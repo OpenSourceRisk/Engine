@@ -87,7 +87,8 @@ template <class TS>
 Lgm1fPiecewiseLinearParametrization<TS>::Lgm1fPiecewiseLinearParametrization(
     const Currency& currency, const Handle<TS>& termStructure, const std::vector<Date>& alphaDates, const Array& alpha,
     const std::vector<Date>& hDates, const Array& h, const std::string& name)
-    : Lgm1fParametrization<TS>(currency, termStructure, name), PiecewiseConstantHelper11(alphaDates, hDates, termStructure) {
+    : Lgm1fParametrization<TS>(currency, termStructure, name),
+      PiecewiseConstantHelper11(alphaDates, hDates, termStructure) {
     initialize(alpha, h);
 }
 

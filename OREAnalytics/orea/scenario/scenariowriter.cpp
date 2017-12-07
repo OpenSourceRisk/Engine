@@ -35,7 +35,7 @@ ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, cons
     open(filename, filemode);
 }
 
-void ScenarioWriter::open(const std::string& filename, const std::string& filemode){
+void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
     fp_ = fopen(filename.c_str(), filemode.c_str());
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
 }

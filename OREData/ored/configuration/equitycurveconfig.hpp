@@ -52,9 +52,10 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve, const string& currency, const Type& type,
-                      const string& equitySpotQuote, const vector<string>& quotes, const string& dayCountID = "",
-                      const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear", 
+    EquityCurveConfig(const string& curveID, const string& curveDescription, const string& forecastingCurve,
+                      const string& currency, const Type& type, const string& equitySpotQuote,
+                      const vector<string>& quotes, const string& dayCountID = "",
+                      const string& dividendInterpVariable = "Zero", const string& dividendInterpMethod = "Linear",
                       bool extrapolation = true);
     //! Default constructor
     EquityCurveConfig() {}

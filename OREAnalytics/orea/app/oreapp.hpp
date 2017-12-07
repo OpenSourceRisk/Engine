@@ -27,11 +27,11 @@
 #include <iostream>
 #include <orea/aggregation/all.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <orea/engine/parametricvar.hpp>
 #include <ored/ored.hpp>
 
 using namespace ore::data;
@@ -66,7 +66,8 @@ public:
     //! build today's market
     void buildMarket();
     //! build engine factory for a given market
-    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName = "setup");
+    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
+                                                                const string& groupName = "setup");
     //! build trade factory
     virtual boost::shared_ptr<TradeFactory> buildTradeFactory();
     //! build portfolio for a given market

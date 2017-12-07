@@ -121,10 +121,8 @@ Disposable<Matrix> CorrelationMatrixBuilder::extendMatrix(const Matrix& mat, Siz
     return newMat;
 }
 
-Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matrix& mat, 
-                                                                     const vector<string>& names, 
-                                                                     vector<string>& factors,
-                                                                     const string& prefix) {
+Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matrix& mat, const vector<string>& names,
+                                                                     vector<string>& factors, const string& prefix) {
     Size m = names.size();
 
     // build extra factors
@@ -147,7 +145,6 @@ Disposable<Matrix> CorrelationMatrixBuilder::extendCorrelationMatrix(const Matri
     checkMatrix(mat1);
 
     return mat1;
-
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
@@ -159,7 +156,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
 
     if (infIndices.size() == 0)
         return mat1;
-    
+
     Matrix mat2 = extendCorrelationMatrix(mat1, infIndices, factors, "INF:");
     return mat2;
 }
@@ -177,7 +174,6 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
 
     Matrix mat2 = extendCorrelationMatrix(mat1, names, factors, "CR:");
     return mat2;
-
 }
 
 Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<string>& ccys,
@@ -188,7 +184,7 @@ Disposable<Matrix> CorrelationMatrixBuilder::correlationMatrixImpl(const vector<
 
     // First, build the IR/FX/INF/CR matrix
     Matrix mat1 = correlationMatrixImpl(ccys, infIndices, names, factors);
-    
+
     if (equities.size() == 0)
         return mat1;
 

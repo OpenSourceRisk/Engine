@@ -107,7 +107,7 @@ void StressScenarioGenerator::addEquityShifts(StressTestScenarioData::StressTest
         bool relShift = (type == ShiftType::Relative);
         // QL_REQUIRE(type == ShiftType::Relative, "FX scenario type must be relative");
         Real size = data.shiftSize;
-        
+
         RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
         Real rate = baseScenario_->get(key);
 
@@ -135,13 +135,13 @@ void StressScenarioGenerator::addDiscountCurveShifts(StressTestScenarioData::Str
         StressTestScenarioData::CurveShiftData data = d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
-        
+
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
-            RiskFactorKey key (RiskFactorKey::KeyType::DiscountCurve, ccy, j);
+            RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
             Real quote = baseScenario_->get(key);
-            zeros[j] = -std::log(quote)/times[j];
+            zeros[j] = -std::log(quote) / times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -186,13 +186,12 @@ void StressScenarioGenerator::addIndexCurveShifts(StressTestScenarioData::Stress
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 
-
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
             times[j] = dc.yearFraction(asof, d);
-            RiskFactorKey key (RiskFactorKey::KeyType::IndexCurve, indexName, j);
+            RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, j);
             Real quote = baseScenario_->get(key);
-            zeros[j] = -std::log(quote)/times[j];
+            zeros[j] = -std::log(quote) / times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -239,9 +238,9 @@ void StressScenarioGenerator::addYieldCurveShifts(StressTestScenarioData::Stress
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
-            RiskFactorKey key (RiskFactorKey::KeyType::YieldCurve, name, j);
+            RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, j);
             Real quote = baseScenario_->get(key);
-            zeros[j] = -std::log(quote)/times[j];
+            zeros[j] = -std::log(quote) / times[j];
         }
 
         std::vector<Period> shiftTenors = data.shiftTenors;
@@ -292,7 +291,7 @@ void StressScenarioGenerator::addFxVolShifts(StressTestScenarioData::StressTestD
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
 
-            RiskFactorKey key (RiskFactorKey::KeyType::FXVolatility, ccypair, j);
+            RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, j);
             values[j] = baseScenario_->get(key);
 
             times[j] = dc.yearFraction(asof, d);
@@ -341,8 +340,8 @@ void StressScenarioGenerator::addEquityVolShifts(StressTestScenarioData::StressT
         DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries()[j];
-            
-            RiskFactorKey key (RiskFactorKey::KeyType::EquityVolatility, equity, j);
+
+            RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, j);
             values[j] = baseScenario_->get(key);
 
             times[j] = dc.yearFraction(asof, d);
@@ -409,14 +408,13 @@ void StressScenarioGenerator::addSwaptionVolShifts(StressTestScenarioData::Stres
                 Size idx = j * n_swvol_term + k;
 
                 RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx);
-                volData[j][k]  = baseScenario_->get(key);
+                volData[j][k] = baseScenario_->get(key);
             }
         }
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            shiftExpiryTimes[j] =
-                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
+            shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
             shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
@@ -491,8 +489,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
-            shiftExpiryTimes[j] =
-                dc.yearFraction(asof, asof + data.shiftExpiries[j]);
+            shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // loop over shift expiries, apply same shifts across all strikes
         vector<Real> shiftStrikes = volStrikes;

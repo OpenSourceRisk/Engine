@@ -24,8 +24,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
@@ -37,12 +37,12 @@ namespace analytics {
 class SensitivityCube {
 
 public:
-
     //! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
-    SensitivityCube(const boost::shared_ptr<NPVCube>& cube, boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions, 
-        const boost::shared_ptr<ore::data::Portfolio>& portfolio):
-            cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
-        for (Size i=0; i<scenarioDescriptions->size(); i++) {
+    SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
+                    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions,
+                    const boost::shared_ptr<ore::data::Portfolio>& portfolio)
+        : cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
+        for (Size i = 0; i < scenarioDescriptions->size(); i++) {
             ShiftScenarioGenerator::ScenarioDescription desc = (*scenarioDescriptions)[i];
 
             if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
@@ -55,47 +55,46 @@ public:
             } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
                 baseFactorIndices_[desc.factor1()] = i;
             }
-
         }
-        for (Size i=0; i<portfolio->size(); i++) {
+        for (Size i = 0; i < portfolio->size(); i++) {
             tradeIndices_[portfolio->trades()[i]->id()] = i;
         }
     }
 
-    Real baseNPV(Size tradeIdx) const { return cube_->getT0(tradeIdx, 0);}
+    Real baseNPV(Size tradeIdx) const { return cube_->getT0(tradeIdx, 0); }
     Real baseNPV(string tradeId) const {
         Size tradeIdx = getTradeIndex(tradeId);
         return cube_->getT0(tradeIdx, 0);
     }
-    
+
     Real upNPV(Size tradeIdx, string factor) const {
-       return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Up, factor, "");
+        return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Up, factor, "");
     }
 
     Real downNPV(Size tradeIdx, string factor) const {
-       return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Down, factor, "");
+        return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Down, factor, "");
     }
 
-    Real crossNPV(Size tradeIdx, string factor1, string factor2) const{
+    Real crossNPV(Size tradeIdx, string factor1, string factor2) const {
         return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Cross, factor1, factor2);
     }
 
-    Real getNPV(Size i, Size j) const { return cube_->get(i, 0, j, 0);}
+    Real getNPV(Size i, Size j) const { return cube_->get(i, 0, j, 0); }
 
-    //the scenarioDescriptions_ indices match the cube_ indices for a given type/factor
+    // the scenarioDescriptions_ indices match the cube_ indices for a given type/factor
     Size getFactorIndex(ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2) const {
-            if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-                return upFactorIndices_.find(factor1)->second;
-            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-                return downFactorIndices_.find(factor1)->second;
-            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                std::pair<string, string> pair(factor1, factor2);
-                return crossFactorIndices_.find(pair)->second;
-            } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
-                return baseFactorIndices_.find(factor1)->second;
-            } else {
-                QL_FAIL("Invalid type");
-            }
+        if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
+            return upFactorIndices_.find(factor1)->second;
+        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
+            return downFactorIndices_.find(factor1)->second;
+        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
+            std::pair<string, string> pair(factor1, factor2);
+            return crossFactorIndices_.find(pair)->second;
+        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
+            return baseFactorIndices_.find(factor1)->second;
+        } else {
+            QL_FAIL("Invalid type");
+        }
     }
 
     Size getTradeIndex(string tradeId) const {
@@ -104,26 +103,27 @@ public:
     }
 
     //! Accessors
-    const std::map<string, Size>& upFactors() const { return  upFactorIndices_; }
-    const std::map<string, Size>& downFactors() const { return  downFactorIndices_; }
-    const std::map<pair<string, string>, Size>& crossFactors() const { return  crossFactorIndices_; }
+    const std::map<string, Size>& upFactors() const { return upFactorIndices_; }
+    const std::map<string, Size>& downFactors() const { return downFactorIndices_; }
+    const std::map<pair<string, string>, Size>& crossFactors() const { return crossFactorIndices_; }
 
     const boost::shared_ptr<NPVCube>& npvCube() const { return cube_; }
-    const boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() const { return scenarioDescriptions_; }
-    
+    const boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() const {
+        return scenarioDescriptions_;
+    }
+
 private:
-    Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2 = "") const {
+    Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1,
+                 string factor2 = "") const {
         Size index = getFactorIndex(type, factor1, factor2);
         return cube_->get(tradeIdx, 0, index, 0);
     }
-
 
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;
 
     std::map<string, Size> tradeIndices_, upFactorIndices_, downFactorIndices_, baseFactorIndices_;
     std::map<pair<string, string>, Size> crossFactorIndices_;
-
 };
 } // namespace analytics
 } // namespace ore

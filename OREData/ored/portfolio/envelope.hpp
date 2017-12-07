@@ -24,8 +24,8 @@
 #pragma once
 
 #include <map>
-#include <set>
 #include <ored/utilities/xmlutils.hpp>
+#include <set>
 
 using std::string;
 using std::map;

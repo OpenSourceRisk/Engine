@@ -47,7 +47,7 @@ namespace QuantExt {
     be the dividend curve.
  */
 //!\ingroup termstructures
- 
+
 class BlackVolatilityWithATM : public BlackVolatilityTermStructure {
 public:
     //! Constructor. This is a floating term structure (settlement days is zero)

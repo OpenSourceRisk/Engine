@@ -46,13 +46,12 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    FXSpotConfig(const string& curveID, const string& curveDescription):
-     CurveConfig(curveID, curveDescription) {
+    FXSpotConfig(const string& curveID, const string& curveDescription) : CurveConfig(curveID, curveDescription) {
         QL_REQUIRE(curveID.size() == 6, "FXSpot curveID must be of the form Ccy1Ccy2");
-        Currency ccy1 = parseCurrency(curveID.substr(0,3));
-        Currency ccy2 = parseCurrency(curveID.substr(3,3));
+        Currency ccy1 = parseCurrency(curveID.substr(0, 3));
+        Currency ccy2 = parseCurrency(curveID.substr(3, 3));
         quotes_.push_back("FX/RATE/" + ccy1.code() + "/" + ccy2.code());
-     };
+    };
     //! Default constructor
     FXSpotConfig() {}
     //@}
@@ -61,10 +60,10 @@ public:
         XMLUtils::checkNode(node, "FXSpot");
         curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
         QL_REQUIRE(curveID_.size() == 6, "FXSpot curveID must be of the form Ccy1Ccy2");
-        Currency ccy1 = parseCurrency(curveID_.substr(0,3));
-        Currency ccy2 = parseCurrency(curveID_.substr(3,3));
+        Currency ccy1 = parseCurrency(curveID_.substr(0, 3));
+        Currency ccy2 = parseCurrency(curveID_.substr(3, 3));
         quotes_.push_back("FX/RATE/" + ccy1.code() + "/" + ccy2.code());
-        
+
         curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     }
 

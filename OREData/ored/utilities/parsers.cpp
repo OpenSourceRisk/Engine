@@ -215,9 +215,9 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
-                                        //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+                                      // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
                                       {"EUTA", TARGET()},
-                                      {"BEBR", TARGET()}, //Belgium, Brussels not in QL
+                                      {"BEBR", TARGET()}, // Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()}};
@@ -369,17 +369,15 @@ Currency parseCurrency(const string& s) {
 }
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
-    static map<string, DateGeneration::Rule> m = {
-        {"Backward", DateGeneration::Backward},
-        {"Forward", DateGeneration::Forward},
-        {"Zero", DateGeneration::Zero},
-        {"ThirdWednesday", DateGeneration::ThirdWednesday},
-        {"Twentieth", DateGeneration::Twentieth},
-        {"TwentiethIMM", DateGeneration::TwentiethIMM},
-        {"OldCDS", DateGeneration::OldCDS},
-        {"CDS2015", DateGeneration::CDS2015},
-        {"CDS", DateGeneration::CDS}
-    };
+    static map<string, DateGeneration::Rule> m = {{"Backward", DateGeneration::Backward},
+                                                  {"Forward", DateGeneration::Forward},
+                                                  {"Zero", DateGeneration::Zero},
+                                                  {"ThirdWednesday", DateGeneration::ThirdWednesday},
+                                                  {"Twentieth", DateGeneration::Twentieth},
+                                                  {"TwentiethIMM", DateGeneration::TwentiethIMM},
+                                                  {"OldCDS", DateGeneration::OldCDS},
+                                                  {"CDS2015", DateGeneration::CDS2015},
+                                                  {"CDS", DateGeneration::CDS}};
 
     auto it = m.find(s);
     if (it != m.end()) {

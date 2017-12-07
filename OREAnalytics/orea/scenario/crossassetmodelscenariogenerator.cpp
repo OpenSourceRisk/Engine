@@ -20,10 +20,10 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
-#include <qle/models/lgmimpliedyieldtermstructure.hpp>
-#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
-#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -134,7 +134,7 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
-        
+
     // Cache INF rate keys0
     Size n_inf = model_->components(INF);
     if (n_inf > 0) {
@@ -150,7 +150,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                 ten_zinf_.push_back(simMarketConfig_->zeroInflationTenors(simMarketConfig_->zeroInflationIndices()[j]));
                 Size n_ten = ten_zinf_.back().size();
                 for (Size k = 0; k < n_ten; ++k) {
-                    zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve, simMarketConfig_->zeroInflationIndices()[j], k);
+                    zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve,
+                                                    simMarketConfig_->zeroInflationIndices()[j], k);
                 }
             }
         }
@@ -162,7 +163,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
                 ten_yinf_.push_back(simMarketConfig_->yoyInflationTenors(simMarketConfig_->yoyInflationIndices()[j]));
                 Size n_ten = ten_yinf_.back().size();
                 for (Size k = 0; k < n_ten; ++k) {
-                    yoyInflationKeys_.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve, simMarketConfig_->yoyInflationIndices()[j], k);
+                    yoyInflationKeys_.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve,
+                                                   simMarketConfig_->yoyInflationIndices()[j], k);
                 }
             }
         }
@@ -174,7 +176,8 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         ten_efc_.push_back(simMarketConfig_->equityForecastTenors(simMarketConfig_->equityNames()[j]));
         Size n_ten = ten_efc_.back().size();
         for (Size k = 0; k < n_ten; k++)
-            equityForecastCurveKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve, simMarketConfig_->equityNames()[j], k); // j * n_ten + k
+            equityForecastCurveKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve,
+                                                  simMarketConfig_->equityNames()[j], k); // j * n_ten + k
     }
 }
 
@@ -230,7 +233,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     for (Size j = 0; j < n_yoyinf; ++j) {
         yoyInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedYoYInflationTermStructure>(model_, j));
     }
-  
+
     for (Size j = 0; j < n_eq; ++j) {
         std::string curveName = simMarketConfig_->equityNames()[j];
         Currency ccy = model_->eqbs(j)->currency();
@@ -349,18 +352,18 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
 
             // update fixing manage with fixing for base date
-            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());            
+            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
             Date baseDate = index->zeroInflationTermStructure()->baseDate();
-            Time relativeTime = inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
-                index->zeroInflationTermStructure()->indexIsInterpolated(),
-                index->zeroInflationTermStructure()->dayCounter(), baseDate,
-                dates_[i] - index->zeroInflationTermStructure()->observationLag());
+            Time relativeTime =
+                inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
+                                      index->zeroInflationTermStructure()->indexIsInterpolated(),
+                                      index->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                      dates_[i] - index->zeroInflationTermStructure()->observationLag());
             std::pair<Real, Real> ii = model_->infdkI(j, relativeTime, relativeTime, z, y);
 
             Real baseCPI = index->fixing(baseDate);
             scenarios[i]->add(cpiKeys_[j], baseCPI * ii.first);
         }
-
 
         for (Size j = 0; j < n_zeroinf; ++j) {
             std::string indexName = simMarketConfig_->zeroInflationIndices()[j];

@@ -36,13 +36,13 @@ InflationCurveConfig::InflationCurveConfig(const string& curveID, const string& 
                                            const Frequency& seasonalityFrequency,
                                            const vector<string>& seasonalityFactors)
     : CurveConfig(curveID, curveDescription), swapQuotes_(swapQuotes), nominalTermStructure_(nominalTermStructure),
-      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar),
-      dayCounter_(dayCounter), lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
+      type_(type), conventions_(conventions), extrapolate_(extrapolate), calendar_(calendar), dayCounter_(dayCounter),
+      lag_(lag), frequency_(frequency), baseRate_(baseRate), tolerance_(tolerance),
       seasonalityBaseDate_(seasonalityBaseDate), seasonalityFrequency_(seasonalityFrequency),
       seasonalityFactors_(seasonalityFactors) {
-        quotes_ = swapQuotes; 
- 		quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end()); 
-      }
+    quotes_ = swapQuotes;
+    quotes_.insert(quotes_.end(), seasonalityFactors.begin(), seasonalityFactors.end());
+}
 
 void InflationCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "InflationCurve");
@@ -88,12 +88,12 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
     seasonalityBaseDate_ = QuantLib::Null<Date>();
     seasonalityFrequency_ = QuantLib::NoFrequency;
     seasonalityFactors_.clear();
-    quotes_ = swapQuotes_; 
+    quotes_ = swapQuotes_;
     if (seasonalityNode != nullptr) {
         seasonalityBaseDate_ = parseDate(XMLUtils::getChildValue(seasonalityNode, "BaseDate", true));
         seasonalityFrequency_ = parseFrequency(XMLUtils::getChildValue(seasonalityNode, "Frequency", true));
         seasonalityFactors_ = XMLUtils::getChildrenValues(seasonalityNode, "Factors", "Factor", true);
- 		quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end()); 
+        quotes_.insert(quotes_.end(), seasonalityFactors_.begin(), seasonalityFactors_.end());
     }
 }
 

@@ -70,7 +70,7 @@ private:
 
  \warning the given atm vol structure should be strike independent, this is not checked
  \warning the given cube must provide smile sections that provide an ATM level
- 
+
  \ingroup termstructures
 */
 class SwaptionVolatilityConstantSpread : public SwaptionVolatilityStructure {

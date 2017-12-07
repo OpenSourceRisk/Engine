@@ -27,8 +27,7 @@ namespace ore {
 namespace data {
 
 // utility function for getting a value from a map, throwing if it is not present
-template<class T>
-const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
+template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
     auto it = m.find(id);
     QL_REQUIRE(it != m.end(), "no curve id for " << id);
     return it->second;
@@ -36,8 +35,8 @@ const boost::shared_ptr<T>& get(const string& id, const map<string, boost::share
 
 // utility function for parsing a node of name "parentName" and decoding all
 // child elements, storing the resulting config in the map
-template<class T>
-void parseNode(XMLNode *node, const char *parentName, const char *childName, map<string, boost::shared_ptr<T>>& m) {
+template <class T>
+void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m) {
 
     XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
     if (parentNode) {
@@ -57,8 +56,8 @@ void parseNode(XMLNode *node, const char *parentName, const char *childName, map
 }
 
 // utility function to add a set of nodes from a given map of curve configs
-template<class T>
-void addNodes(XMLDocument &doc, XMLNode *parent, const char *nodeName, map<string, boost::shared_ptr<T>>& m) {
+template <class T>
+void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<string, boost::shared_ptr<T>>& m) {
     XMLNode* node = doc.allocNode(nodeName);
     XMLUtils::appendNode(parent, node);
     for (auto it : m)
@@ -93,7 +92,7 @@ std::set<string> CurveConfigurations::quotes() const {
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : fxSpotConfigs_)
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
-        
+
     return std::set<string>(quotes.begin(), quotes.end());
 }
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
@@ -145,13 +144,11 @@ CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
     return get(curveID, equityVolCurveConfigs_);
 }
 
-const boost::shared_ptr<SecurityConfig>&
-CurveConfigurations::securityConfig(const string& curveID) const {
+const boost::shared_ptr<SecurityConfig>& CurveConfigurations::securityConfig(const string& curveID) const {
     return get(curveID, securityConfigs_);
 }
 
-const boost::shared_ptr<FXSpotConfig>&
-CurveConfigurations::fxSpotConfig(const string& curveID) const {
+const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const string& curveID) const {
     return get(curveID, fxSpotConfigs_);
 }
 
@@ -170,7 +167,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "EquityVolatilities", "EquityVolatility", equityVolCurveConfigs_);
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
     parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
-        inflationCapFloorPriceSurfaceConfigs_);
+              inflationCapFloorPriceSurfaceConfigs_);
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
 }

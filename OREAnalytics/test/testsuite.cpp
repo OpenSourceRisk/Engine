@@ -26,8 +26,8 @@
 using namespace std;
 
 // Boost
-#include <boost/timer.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/timer.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -92,7 +92,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     // Get command line arguments
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
-    
+
     bool enablePerformanceTests = false;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)

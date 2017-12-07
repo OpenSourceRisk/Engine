@@ -154,4 +154,4 @@ void loadMappingTableFromCsv(std::map<string, string>& data, const std::string& 
 } // loadMappingTableFromCsv
 
 } // namespace analytics
-} // namespace oreplus
+} // namespace ore

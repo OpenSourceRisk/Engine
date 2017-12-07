@@ -119,10 +119,10 @@ public:
             Real scaling = 1.0, std::vector<std::string> optionExpiries = std::vector<std::string>(),
             std::vector<std::string> optionTerms = std::vector<std::string>(),
             std::vector<std::string> optionStrikes = std::vector<std::string>())
-        : qualifier_(qualifier), calibrationType_(calibrationType), revType_(revType), volType_(volType), calibrateH_(calibrateH),
-          hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA), aType_(aType), aTimes_(aTimes),
-          aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling), optionExpiries_(optionExpiries),
-          optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
+        : qualifier_(qualifier), calibrationType_(calibrationType), revType_(revType), volType_(volType),
+          calibrateH_(calibrateH), hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA),
+          aType_(aType), aTimes_(aTimes), aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling),
+          optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
     void clear();

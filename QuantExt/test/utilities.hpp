@@ -24,6 +24,6 @@
 #define quantext_test_utilities_hpp
 
 // This makes it easier to use array literals (alas, no std::vector literals)
-#define LENGTH(a) (sizeof(a)/sizeof(a[0]))
+#define LENGTH(a) (sizeof(a) / sizeof(a[0]))
 
 #endif

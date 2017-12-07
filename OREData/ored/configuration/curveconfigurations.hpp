@@ -23,20 +23,20 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
-#include <ored/configuration/securityconfig.hpp>
-#include <ored/configuration/fxspotconfig.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
@@ -110,16 +110,12 @@ public:
     };
     const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
 
-    boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) {
-        return securityConfigs_[curveID];
-    };
+    boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) { return securityConfigs_[curveID]; };
     const boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) const;
-    
-    boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) {
-        return fxSpotConfigs_[curveID];
-    };
+
+    boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) { return fxSpotConfigs_[curveID]; };
     const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
-    
+
     std::set<string> quotes() const;
     //@}
 

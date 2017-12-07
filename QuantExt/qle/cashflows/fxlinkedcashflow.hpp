@@ -87,7 +87,6 @@ private:
     Real foreignAmount_;
     boost::shared_ptr<FxIndex> fxIndex_;
     bool invertIndex_;
-
 };
 
 inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {

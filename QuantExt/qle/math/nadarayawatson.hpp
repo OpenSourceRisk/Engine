@@ -36,7 +36,7 @@ namespace detail {
 
 //! Regression impl
 /*! \ingroup math
-*/
+ */
 class RegressionImpl {
 public:
     virtual ~RegressionImpl() {}
@@ -44,10 +44,10 @@ public:
     virtual Real value(Real x) const = 0;
     virtual Real standardDeviation(Real x) const = 0;
 };
-    
+
 //! Nadaraya Watson impl
 /*! \ingroup math
-*/
+ */
 template <class I1, class I2, class Kernel> class NadarayaWatsonImpl : public RegressionImpl {
 public:
     /*! \pre the \f$ x \f$ values must be sorted.

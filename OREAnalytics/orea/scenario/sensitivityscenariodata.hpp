@@ -53,7 +53,7 @@ public:
         string shiftType;
         Real shiftSize;
     };
-    
+
     struct CurveShiftData : ShiftData {
         virtual ~CurveShiftData() {}
         vector<Period> shiftTenors;
@@ -88,12 +88,14 @@ public:
     };
 
     //! Default constructor
-    SensitivityScenarioData() {};
+    SensitivityScenarioData(){};
 
     //! \name Inspectors
     //@{
     const vector<string>& discountCurrencies() const { return discountCurrencies_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() const { return discountCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() const {
+        return discountCurveShiftData_;
+    }
 
     const vector<string>& indexNames() const { return indexNames_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
@@ -120,10 +122,14 @@ public:
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
 
     const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() const { return zeroInflationCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() const {
+        return zeroInflationCurveShiftData_;
+    }
 
     const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const { return yoyInflationCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const {
+        return yoyInflationCurveShiftData_;
+    }
 
     const vector<string>& creditNames() const { return creditNames_; }
     const map<string, string>& creditCcys() const { return creditCcys_; }
@@ -133,7 +139,9 @@ public:
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
 
     const vector<string>& dividendYieldNames() const { return dividendYieldNames_; }
-    const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const { return dividendYieldShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const {
+        return dividendYieldShiftData_;
+    }
 
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
@@ -154,7 +162,9 @@ public:
     map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
 
     vector<string>& equityForecastCurveNames() { return equityForecastCurveNames_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& equityForecastCurveShiftData() { return equityForecastCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& equityForecastCurveShiftData() {
+        return equityForecastCurveShiftData_;
+    }
 
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
@@ -175,7 +185,9 @@ public:
     map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
 
     vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
-    map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() { return zeroInflationCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() {
+        return zeroInflationCurveShiftData_;
+    }
 
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
     map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }

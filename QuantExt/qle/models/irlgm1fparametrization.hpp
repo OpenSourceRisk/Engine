@@ -35,7 +35,8 @@ namespace QuantExt {
  */
 template <class TS> class Lgm1fParametrization : public Parametrization {
 public:
-    Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure, const std::string& name = std::string());
+    Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure,
+                         const std::string& name = std::string());
     /*! zeta must satisfy zeta(0) = 0, zeta'(t) >= 0 */
     virtual Real zeta(const Time t) const = 0;
     /*! H must be such that H' does not change its sign */
@@ -69,7 +70,8 @@ private:
 // implementation
 
 template <class TS>
-Lgm1fParametrization<TS>::Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure, const std::string& name)
+Lgm1fParametrization<TS>::Lgm1fParametrization(const Currency& currency, const Handle<TS>& termStructure,
+                                               const std::string& name)
     : Parametrization(currency), shift_(0.0), scaling_(1.0), termStructure_(termStructure) {
     name_ = name.empty() ? currency.code() : name;
 }

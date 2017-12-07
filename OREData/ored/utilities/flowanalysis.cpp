@@ -25,9 +25,9 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/indexes/interestrateindex.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <qle/cashflows/averageonindexedcoupon.hpp>
 using namespace std;
 using QuantLib::Real;
 using QuantLib::Date;
@@ -100,7 +100,7 @@ void AnalysisGenerator::visit(QuantLib::FloatingRateCoupon& c) {
     flowAnalysis_.back()[FIXING_DATE] = to_string(c.fixingDate());
     flowAnalysis_.back()[INDEX] = c.index()->name();
 }
-    
+
 void AnalysisGenerator::visit(QuantExt::AverageONIndexedCoupon& c) {
     for (auto& d : c.fixingDates()) {
         visit(static_cast<QuantLib::Coupon&>(c));

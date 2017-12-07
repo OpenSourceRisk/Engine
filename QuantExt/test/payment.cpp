@@ -21,11 +21,11 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 
+#include <ql/currencies/europe.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/currencies/europe.hpp>
-#include <ql/quotes/simplequote.hpp>
 
 #include <boost/make_shared.hpp>
 

@@ -38,7 +38,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"MM", MarketDatum::InstrumentType::MM},
         {"MM_FUTURE", MarketDatum::InstrumentType::MM_FUTURE},
         {"FRA", MarketDatum::InstrumentType::FRA},
-        {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA },
+        {"IMM_FRA", MarketDatum::InstrumentType::IMM_FRA},
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},

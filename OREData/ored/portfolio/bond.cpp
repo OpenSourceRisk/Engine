@@ -18,17 +18,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/legdata.hpp>
+#include <boost/lexical_cast.hpp>
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -93,7 +93,8 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             if (coupons_[i].legType() == "Fixed")
                 leg = makeFixedLeg(coupons_[i]);
             else if (coupons_[i].legType() == "Floating") {
-                boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(coupons_[i].concreteLegData());
+                boost::shared_ptr<FloatingLegData> floatData =
+                    boost::dynamic_pointer_cast<FloatingLegData>(coupons_[i].concreteLegData());
                 QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << coupons_[i].legType());
 
                 string indexName = floatData->index();
@@ -116,9 +117,9 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Leg leg = joinLegs(legs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
         // workaround, QL doesn't register a bond with its leg's cashflows
-        for(auto const& i : indexes)
+        for (auto const& i : indexes)
             bond->registerWith(i);
-        for(auto const& o : ovses)
+        for (auto const& o : ovses)
             bond->registerWith(o);
     }
 

@@ -17,22 +17,21 @@
 */
 
 #include "portfolio.hpp"
-#include <ored/portfolio/portfolio.hpp>
 #include <boost/make_shared.hpp>
-#include <test/portfolio.hpp>
 #include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <test/portfolio.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-
 namespace testsuite {
 
 void PortfolioTest::testConstructor() {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    //BOOST_CHECK_EQUAL(portfolio, true);
+    // BOOST_CHECK_EQUAL(portfolio, true);
 }
 
 void PortfolioTest::testAddTrades() {

@@ -49,11 +49,12 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}), 
-          capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false), 
-          equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
-          fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false), 
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), baseCorrelationSimulate_(false) {
+        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
+          swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false), survivalProbabilitySimulate_(false),
+          recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
+          dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
+          equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
+          baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -210,7 +211,7 @@ public:
     vector<string>& equityNames() { return equityNames_; }
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
     void setEquityForecastTenors(const string& key, const vector<Period>& p);
-    
+
     bool& simulateFXVols() { return fxVolSimulate_; }
     bool& fxVolIsSurface() { return fxVolIsSurface_; }
     vector<Period>& fxVolExpiries() { return fxVolExpiries_; }
@@ -267,7 +268,7 @@ public:
 private:
     void setDefaults();
     string baseCcy_;
-    map<string, string>  yieldCurveDayCounters_;
+    map<string, string> yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;
     vector<string> yieldCurveNames_;
     vector<string> yieldCurveCurrencies_;
@@ -284,14 +285,14 @@ private:
     bool swapVolSimulateATMOnly_;
     vector<Period> swapVolTerms_;
     vector<string> swapVolCcys_;
-    map<string, string>  swapVolDayCounters_;
+    map<string, string> swapVolDayCounters_;
     vector<Period> swapVolExpiries_;
     vector<Real> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
 
     bool capFloorVolSimulate_;
     vector<string> capFloorVolCcys_;
-    map<string, string>  capFloorVolDayCounters_;
+    map<string, string> capFloorVolDayCounters_;
     map<string, vector<Period>> capFloorVolExpiries_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
@@ -299,14 +300,14 @@ private:
     bool survivalProbabilitySimulate_;
     bool recoveryRateSimulate_;
     vector<string> defaultNames_;
-    map<string, string>  defaultCurveDayCounters_;
-    map<string, string>  defaultCurveCalendars_;
+    map<string, string> defaultCurveDayCounters_;
+    map<string, string> defaultCurveCalendars_;
     map<string, vector<Period>> defaultTenors_;
 
     bool cdsVolSimulate_;
     vector<string> cdsVolNames_;
     vector<Period> cdsVolExpiries_;
-    map<string, string>  cdsVolDayCounters_;
+    map<string, string> cdsVolDayCounters_;
     string cdsVolDecayMode_;
 
     vector<string> equityNames_;
@@ -318,7 +319,7 @@ private:
     bool fxVolSimulate_;
     bool fxVolIsSurface_;
     vector<Period> fxVolExpiries_;
-    map<string, string>  fxVolDayCounters_;
+    map<string, string> fxVolDayCounters_;
     string fxVolDecayMode_;
     vector<string> fxVolCcyPairs_;
     vector<Real> fxMoneyness_;
@@ -327,7 +328,7 @@ private:
     bool equityIsSurface_;
     bool equityVolSimulateATMOnly_;
     vector<Period> equityVolExpiries_;
-    map<string, string>  equityVolDayCounters_;
+    map<string, string> equityVolDayCounters_;
     string equityVolDecayMode_;
     vector<string> equityVolNames_;
     vector<Real> equityMoneyness_;
@@ -340,15 +341,15 @@ private:
     bool baseCorrelationSimulate_;
     vector<string> baseCorrelationNames_;
     vector<Period> baseCorrelationTerms_;
-    map<string, string>  baseCorrelationDayCounters_;
+    map<string, string> baseCorrelationDayCounters_;
     vector<Real> baseCorrelationDetachmentPoints_;
-    
+
     vector<string> cpiIndices_;
     vector<string> zeroInflationIndices_;
-    map<string, string>  zeroInflationDayCounters_;
+    map<string, string> zeroInflationDayCounters_;
     map<string, vector<Period>> zeroInflationTenors_;
     vector<string> yoyInflationIndices_;
-    map<string, string>  yoyInflationDayCounters_;
+    map<string, string> yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
 };
 } // namespace analytics

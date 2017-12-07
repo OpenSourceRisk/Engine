@@ -21,6 +21,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <boost/make_shared.hpp>
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
@@ -29,12 +30,11 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <ql/errors.hpp>
+#include <ql/experimental/coupons/strippedcapflooredcoupon.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
-#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
@@ -72,7 +72,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
     if (arrNode)
         isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
     else
-        isInArrears_ = false;                                       // default to fixing-in-advance
+        isInArrears_ = false; // default to fixing-in-advance
     XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged");
     if (avgNode)
         isAveraged_ = XMLUtils::getChildValueAsBool(node, "IsAveraged", true);
@@ -83,7 +83,7 @@ void FloatingLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
-    if(XMLUtils::getChildNode(node, "NakedOption"))
+    if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
@@ -178,7 +178,7 @@ void CMSLegData::fromXML(XMLNode* node) {
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
-    if(XMLUtils::getChildNode(node, "NakedOption"))
+    if (XMLUtils::getChildNode(node, "NakedOption"))
         nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
     else
         nakedOption_ = false;
@@ -208,14 +208,14 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
 }
 
 LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bool isPayer, const string& currency,
-                 const ScheduleData& scheduleData, const string& dayCounter,
-                 const std::vector<double>& notionals, const std::vector<string>& notionalDates,
-                 const string& paymentConvention, const bool notionalInitialExchange, const bool notionalFinalExchange,
+                 const ScheduleData& scheduleData, const string& dayCounter, const std::vector<double>& notionals,
+                 const std::vector<string>& notionalDates, const string& paymentConvention,
+                 const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex, int fixingDays,
                  const std::vector<AmortizationData>& amortizationData)
-    : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), 
-      schedule_(scheduleData), dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
+    : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
+      dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
@@ -301,8 +301,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     XMLUtils::addChildrenWithAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
-    
-    if(!isNotResetXCCY_) {
+
+    if (!isNotResetXCCY_) {
         XMLNode* resetNode = doc.allocNode("FXReset");
         XMLUtils::addChild(doc, resetNode, "ForeignCurrency", foreignCurrency_);
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
@@ -354,8 +354,9 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
         if (!amort.initialized())
             continue;
         Date startDate = parseDate(amort.startDate());
-        QL_REQUIRE(startDate >= lastEndDate,
-                   "Amortization start date (" << startDate << ") is earlier than last end date (" << lastEndDate << ")");
+        QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
+                                                 << startDate << ") is earlier than last end date (" << lastEndDate
+                                                 << ")");
         lastEndDate = parseDate(amort.endDate());
         AmortizationType amortizationType = parseAmortizationType(amort.type());
         if (amortizationType == AmortizationType::FixedAmount)
@@ -488,7 +489,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
 
     // build naked option leg if required
-    if(floatData->nakedOption()) {
+    if (floatData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
     }
     return tmpLeg;
@@ -608,7 +609,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                   .withSubtractInflationNominal(cpiLegData->subtractInflationNominal());
     Size n = leg.size();
     QL_REQUIRE(n > 0, "Empty CPI Leg");
-    
+
     // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
     // If Notional Exchange set to false, remove the final cashflow.
 
@@ -630,10 +631,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Period observationLag = parsePeriod(yoyLegData->observationLag());
-    vector<double> gearings =
-        buildScheduledVector(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule);
-    vector<double> spreads =
-        buildScheduledVector(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule);
+    vector<double> gearings = buildScheduledVector(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule);
+    vector<double> spreads = buildScheduledVector(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule);
 
     // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
@@ -703,7 +702,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     QuantLib::setCouponPricer(tmpLeg, couponPricer);
 
     // build naked option leg if required
-    if(cmsData->nakedOption()) {
+    if (cmsData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
     }
     return tmpLeg;

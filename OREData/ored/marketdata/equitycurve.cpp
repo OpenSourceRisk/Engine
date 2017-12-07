@@ -19,10 +19,10 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
-#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 
 #include <ored/utilities/parsers.hpp>
@@ -36,7 +36,7 @@ namespace ore {
 namespace data {
 
 EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                         const Conventions& conventions, 
+                         const Conventions& conventions,
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {
@@ -131,10 +131,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         }
         curveType_ = config->type();
         YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
-        // at this stage we should have built the curve already 
-        //  (consider building curve on fly if not? Would need to work around fact that requiredYieldCurves is currently const ref)
+        // at this stage we should have built the curve already
+        //  (consider building curve on fly if not? Would need to work around fact that requiredYieldCurves is currently
+        //  const ref)
         auto itr = requiredYieldCurves.find(ycspec.name());
-        QL_REQUIRE(itr != requiredYieldCurves.end(), "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
+        QL_REQUIRE(itr != requiredYieldCurves.end(),
+                   "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
         boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
         forecastYieldTermStructure_ = yieldCurve->handle();
 
@@ -147,8 +149,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
     }
 }
 
-boost::shared_ptr<YieldTermStructure>
-EquityCurve::divYieldTermStructure(const Date& asof) const {
+boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const Date& asof) const {
 
     try {
         vector<Rate> dividendRates;
@@ -201,7 +202,8 @@ EquityCurve::divYieldTermStructure(const Date& asof) const {
                 dates.push_back(forecastYieldTermStructure_->maxDate());
                 rates.push_back(rates.back());
                 Time maxTime = dc_.yearFraction(asof, forecastYieldTermStructure_->maxDate());
-                discounts.push_back(std::exp(-rates.back()*maxTime)); // flat zero extrapolation used to imply dividend DF
+                discounts.push_back(
+                    std::exp(-rates.back() * maxTime)); // flat zero extrapolation used to imply dividend DF
             }
             if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Zero) {
                 switch (dividendInterpMethod_) {
@@ -209,47 +211,54 @@ EquityCurve::divYieldTermStructure(const Date& asof) const {
                     divCurve.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, dc_, QuantLib::Linear()));
                     break;
                 case YieldCurve::InterpolationMethod::LogLinear:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, rates, dc_, QuantLib::LogLinear()));
+                    divCurve.reset(
+                        new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, rates, dc_, QuantLib::LogLinear()));
                     break;
                 case YieldCurve::InterpolationMethod::NaturalCubic:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_, Cubic(CubicInterpolation::Kruger, true)));
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_,
+                                                                              Cubic(CubicInterpolation::Kruger, true)));
                     break;
                 case YieldCurve::InterpolationMethod::FinancialCubic:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_, 
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(
+                        dates, rates, dc_,
                         Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
+                              CubicInterpolation::FirstDerivative)));
                     break;
                 case YieldCurve::InterpolationMethod::ConvexMonotone:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, rates, dc_, QuantLib::ConvexMonotone()));
+                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, rates, dc_,
+                                                                                       QuantLib::ConvexMonotone()));
                     break;
                 default:
                     QL_FAIL("Interpolation method not recognised.");
                 }
-            }
-            else if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Discount) {
+            } else if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Discount) {
                 switch (dividendInterpMethod_) {
                 case YieldCurve::InterpolationMethod::Linear:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Linear>(dates, discounts, dc_, QuantLib::Linear()));
+                    divCurve.reset(
+                        new InterpolatedDiscountCurve<QuantLib::Linear>(dates, discounts, dc_, QuantLib::Linear()));
                     break;
                 case YieldCurve::InterpolationMethod::LogLinear:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, discounts, dc_, QuantLib::LogLinear()));
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, discounts, dc_,
+                                                                                      QuantLib::LogLinear()));
                     break;
                 case YieldCurve::InterpolationMethod::NaturalCubic:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(dates, discounts, dc_, Cubic(CubicInterpolation::Kruger, true)));
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
+                        dates, discounts, dc_, Cubic(CubicInterpolation::Kruger, true)));
                     break;
                 case YieldCurve::InterpolationMethod::FinancialCubic:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(dates, discounts, dc_,
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
+                        dates, discounts, dc_,
                         Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
+                              CubicInterpolation::FirstDerivative)));
                     break;
                 case YieldCurve::InterpolationMethod::ConvexMonotone:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, discounts, dc_, QuantLib::ConvexMonotone()));
+                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, discounts, dc_,
+                                                                                           QuantLib::ConvexMonotone()));
                     break;
                 default:
                     QL_FAIL("Interpolation method not recognised.");
                 }
-            }
-            else {
+            } else {
                 QL_FAIL("Unsupported interpolation variable for dividend yield curve");
             }
             divCurve->enableExtrapolation();

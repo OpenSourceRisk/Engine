@@ -150,11 +150,13 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             for (Size i = 0; i < strQuotes.size(); ++i) {
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
                 Date maturity = asof + terms[i];
-                boost::shared_ptr<ZeroInflationTraits::helper> instrument = boost::make_shared<ZeroCouponInflationSwapHelper>(
-                    quotes[i], conv->observationLag(), maturity, conv->fixCalendar(), conv->fixConvention(),
-                    conv->dayCounter(), index);
-                // The instrument gets registered to update on change of evaluation date. This triggers a rebootstrapping of the curve.
-                // In order to avoid this during simulation we unregister from the evaluationDate.
+                boost::shared_ptr<ZeroInflationTraits::helper> instrument =
+                    boost::make_shared<ZeroCouponInflationSwapHelper>(quotes[i], conv->observationLag(), maturity,
+                                                                      conv->fixCalendar(), conv->fixConvention(),
+                                                                      conv->dayCounter(), index);
+                // The instrument gets registered to update on change of evaluation date. This triggers a
+                // rebootstrapping of the curve. In order to avoid this during simulation we unregister from the
+                // evaluationDate.
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }
@@ -207,9 +209,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                                    << quotes[i]->value());
                 }
                 // QL conventions do not incorporate settlement delay => patch here once QL is patched
-                boost::shared_ptr<YoYInflationTraits::helper> instrument = boost::make_shared<YearOnYearInflationSwapHelper>(
-                    Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(), maturity,
-                    conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index);
+                boost::shared_ptr<YoYInflationTraits::helper> instrument =
+                    boost::make_shared<YearOnYearInflationSwapHelper>(
+                        Handle<Quote>(boost::make_shared<SimpleQuote>(effectiveQuote)), conv->observationLag(),
+                        maturity, conv->fixCalendar(), conv->fixConvention(), conv->dayCounter(), index);
                 instrument->unregisterWith(Settings::instance().evaluationDate());
                 instruments.push_back(instrument);
             }

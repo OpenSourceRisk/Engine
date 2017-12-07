@@ -40,18 +40,17 @@ void IrLgmData::fromXML(XMLNode* node) {
     optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionTerms() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Terms", false);
     QL_REQUIRE(optionExpiries().size() == optionTerms().size(),
-        "vector size mismatch in swaption expiries/terms for ccy " << ccy_);
+               "vector size mismatch in swaption expiries/terms for ccy " << ccy_);
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
     if (optionStrikes().size() > 0) {
         QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
-            "vector size mismatch in swaption expiries/strikes for ccy " << ccy_);
-    }
-    else // Default: ATM
+                   "vector size mismatch in swaption expiries/strikes for ccy " << ccy_);
+    } else // Default: ATM
         optionStrikes().resize(optionExpiries().size(), "ATM");
 
     for (Size i = 0; i < optionExpiries().size(); i++) {
         LOG("LGM calibration swaption " << optionExpiries()[i] << " x " << optionTerms()[i] << " "
-            << optionStrikes()[i]);
+                                        << optionStrikes()[i]);
     }
 
     LgmData::fromXML(node);
@@ -67,7 +66,6 @@ XMLNode* IrLgmData::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Expiries", optionExpiries());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Terms", optionTerms());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes());
-
 
     return node;
 }

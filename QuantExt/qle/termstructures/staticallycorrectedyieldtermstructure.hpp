@@ -42,7 +42,7 @@ namespace QuantExt {
     the first fixed at construction time. Also, the two fixed
     termstructures should have the same reference date and all three
     termstructures should have the same day counter.
- 
+
     \ingroup termstructures
  */
 class StaticallyCorrectedYieldTermStructure : public YieldTermStructure {

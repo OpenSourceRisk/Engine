@@ -37,7 +37,7 @@ namespace QuantExt {
 
 /*! Cumulative normal distribution
     This implementation relies on std::erf if c++11 is supported,
-    otherwise falls back on boost::math::erf. 
+    otherwise falls back on boost::math::erf.
  \ingroup math
 */
 class CumulativeNormalDistribution {

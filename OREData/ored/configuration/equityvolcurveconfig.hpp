@@ -69,8 +69,10 @@ public:
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
-    const vector<string>& strikes() const { return strikes_; } // Really these should be Reals, but we want to match the type of
-                                                               // The equity option market datum (which is string for "ATMF"
+    const vector<string>& strikes() const {
+        return strikes_;
+    } // Really these should be Reals, but we want to match the type of
+      // The equity option market datum (which is string for "ATMF"
     const vector<string>& quotes() override;
     //@}
 

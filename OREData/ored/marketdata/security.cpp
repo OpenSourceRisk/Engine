@@ -39,20 +39,20 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
                 spread_ = q->quote();
             }
         }
-        
+
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
-            
+
             boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to RecoveryRateQuote");
             if (q->underlyingName() == spec.securityID()) {
                 recoveryRate_ = q->quote();
             }
         }
-        
+
         if (!spread_.empty() && !recoveryRate_.empty())
             return;
     }
-    
+
     QL_FAIL("Failed to find a quote for " << spec);
 }
 } // namespace data

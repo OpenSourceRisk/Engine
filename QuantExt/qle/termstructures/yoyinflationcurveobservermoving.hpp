@@ -25,11 +25,11 @@
 #ifndef quantext_yoy_inflation_curve_observer_moving_hpp
 #define quantext_yoy_inflation_curve_observer_moving_hpp
 
+#include <ql/math/comparison.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/math/comparison.hpp>
-#include <ql/patterns/lazyobject.hpp>
 
 using namespace QuantLib;
 
@@ -37,23 +37,17 @@ namespace QuantExt {
 
 //! Inflation term structure based on the interpolation of zero rates.
 /*! \ingroup inflationtermstructures */
-template<class Interpolator>
-class YoYInflationCurveObserverMoving
-    : public YoYInflationTermStructure,
-    protected InterpolatedCurve<Interpolator>,
-    public LazyObject {
+template <class Interpolator>
+class YoYInflationCurveObserverMoving : public YoYInflationTermStructure,
+                                        protected InterpolatedCurve<Interpolator>,
+                                        public LazyObject {
 public:
-    YoYInflationCurveObserverMoving(Natural settlementDays,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        const Period& lag,
-        Frequency frequency,
-        bool indexIsInterpolated,
-        const Handle<YieldTermStructure>& yTS,
-        const std::vector<Time>& times,
-        const std::vector<Handle<Quote> >& rates,
-        const boost::shared_ptr<Seasonality> &seasonality = boost::shared_ptr<Seasonality>(),
-        const Interpolator &interpolator = Interpolator());
+    YoYInflationCurveObserverMoving(
+        Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
+        Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
+        const std::vector<Time>& times, const std::vector<Handle<Quote> >& rates,
+        const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
+        const Interpolator& interpolator = Interpolator());
 
     //! \name InflationTermStructure interface
     //@{
@@ -67,7 +61,7 @@ public:
     const std::vector<Time>& times() const;
     const std::vector<Real>& data() const;
     const std::vector<Rate>& rates() const;
-    //std::vector<std::pair<Date, Rate> > nodes() const;
+    // std::vector<std::pair<Date, Rate> > nodes() const;
     const std::vector<Handle<Quote> >& quotes() const { return quotes_; };
     //@}
 
@@ -82,7 +76,6 @@ private:
     void performCalculations() const;
     //@}
 
-
 protected:
     //! \name YoYInflationTermStructure Interface
     //@{
@@ -90,28 +83,19 @@ protected:
     //@}
     std::vector<Handle<Quote> > quotes_;
     mutable Date baseDate_;
-
 };
 
 // template definitions
 
 template <class Interpolator>
-YoYInflationCurveObserverMoving<Interpolator>::
-    YoYInflationCurveObserverMoving(Natural settlementDays,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        const Period& lag,
-        Frequency frequency,
-        bool indexIsInterpolated,
-        const Handle<YieldTermStructure>& yTS,
-        const std::vector<Time>& times,
-        const std::vector<Handle<Quote> >& rates,
-        const boost::shared_ptr<Seasonality> &seasonality,
-        const Interpolator& interpolator)
-    : YoYInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(),
-        lag, frequency, indexIsInterpolated, yTS, seasonality),
-    InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator),
-    quotes_(rates) {
+YoYInflationCurveObserverMoving<Interpolator>::YoYInflationCurveObserverMoving(
+    Natural settlementDays, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
+    Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
+    const std::vector<Time>& times, const std::vector<Handle<Quote> >& rates,
+    const boost::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    : YoYInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(), lag, frequency,
+                                indexIsInterpolated, yTS, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), quotes_(rates) {
 
     QL_REQUIRE(times.size() > 1, "too few times: " << times.size());
     this->times_.resize(times.size());
@@ -122,8 +106,7 @@ YoYInflationCurveObserverMoving<Interpolator>::
     }
 
     QL_REQUIRE(this->quotes_.size() == this->times_.size(),
-        "quotes/times count mismatch: "
-        << this->quotes_.size() << " vs " << this->times_.size());
+               "quotes/times count mismatch: " << this->quotes_.size() << " vs " << this->times_.size());
 
     // initalise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(this->times_.size());
@@ -131,9 +114,7 @@ YoYInflationCurveObserverMoving<Interpolator>::
         this->data_[0] = 0.0;
 
     this->interpolation_ =
-        this->interpolator_.interpolate(this->times_.begin(),
-            this->times_.end(),
-            this->data_.begin());
+        this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 
     // register with each of the quotes
@@ -141,58 +122,41 @@ YoYInflationCurveObserverMoving<Interpolator>::
         registerWith(this->quotes_[i]);
 }
 
-template <class T>
-Date YoYInflationCurveObserverMoving<T>::baseDate() const {
+template <class T> Date YoYInflationCurveObserverMoving<T>::baseDate() const {
     // if indexIsInterpolated we fixed the dates in the constructor
     calculate();
     return baseDate_;
 }
 
-template <class T>
-Time YoYInflationCurveObserverMoving<T>::maxTime() const {
-    return this->times_.back();
-}
+template <class T> Time YoYInflationCurveObserverMoving<T>::maxTime() const { return this->times_.back(); }
 
-template <class T>
-Date YoYInflationCurveObserverMoving<T>::maxDate() const {
-    return this->maxDate_;
-}
+template <class T> Date YoYInflationCurveObserverMoving<T>::maxDate() const { return this->maxDate_; }
 
-
-template <class T>
-inline Rate YoYInflationCurveObserverMoving<T>::yoyRateImpl(Time t) const {
+template <class T> inline Rate YoYInflationCurveObserverMoving<T>::yoyRateImpl(Time t) const {
     calculate();
     return this->interpolation_(t, true);
 }
 
-template <class T>
-inline const std::vector<Time>&
-    YoYInflationCurveObserverMoving<T>::times() const {
+template <class T> inline const std::vector<Time>& YoYInflationCurveObserverMoving<T>::times() const {
     return this->times_;
 }
 
-template <class T>
-inline const std::vector<Rate>&
-    YoYInflationCurveObserverMoving<T>::rates() const {
+template <class T> inline const std::vector<Rate>& YoYInflationCurveObserverMoving<T>::rates() const {
     calculate();
     return this->data_;
 }
 
-template <class T>
-inline const std::vector<Real>&
-    YoYInflationCurveObserverMoving<T>::data() const {
+template <class T> inline const std::vector<Real>& YoYInflationCurveObserverMoving<T>::data() const {
     calculate();
     return this->data_;
 }
 
-template <class T>
-inline void YoYInflationCurveObserverMoving<T>::update() {
+template <class T> inline void YoYInflationCurveObserverMoving<T>::update() {
     LazyObject::update();
     YoYInflationTermStructure::update();
 }
 
-template <class T>
-inline void YoYInflationCurveObserverMoving<T>::performCalculations() const {
+template <class T> inline void YoYInflationCurveObserverMoving<T>::performCalculations() const {
     Date d = Settings::instance().evaluationDate();
     Date d0 = d - this->observationLag();
     if (!indexIsInterpolated_) {
@@ -201,14 +165,12 @@ inline void YoYInflationCurveObserverMoving<T>::performCalculations() const {
         baseDate_ = d0;
     }
 
-    for (Size i = 0; i<this->times_.size(); ++i)
+    for (Size i = 0; i < this->times_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =
-        this->interpolator_.interpolate(this->times_.begin(),
-            this->times_.end(),
-            this->data_.begin());
+        this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 }
-}
+} // namespace QuantExt
 
 #endif

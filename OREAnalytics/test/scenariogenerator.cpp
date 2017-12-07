@@ -29,10 +29,10 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/portfolio/builders/swap.hpp>
 
 #include <qle/instruments/fxforward.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -40,10 +40,10 @@
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/lgm.hpp>
 #include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
 
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/currencies/america.hpp>
@@ -51,9 +51,9 @@
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/indexes/swap/euriborswap.hpp>
 #include <ql/indexes/swap/usdliborswap.hpp>
+#include <ql/instruments/cpicapfloor.hpp>
 #include <ql/instruments/makeswaption.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
-#include <ql/instruments/cpicapfloor.hpp>
 #include <ql/math/statistics/incrementalstatistics.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -145,20 +145,22 @@ struct TestData {
         std::vector<boost::shared_ptr<EqBsData>> eqConfigs;
         std::vector<boost::shared_ptr<InfDkData>> infConfigs;
 
-        vector<std::string> infExpiries = { "5Y" };
-        vector<std::string> infStrikes = { "0.0" };
-        hTimes = { 1.0 };
-        hValues = { 0.5, 0.5 };
-        aTimes = { };
-        aValues = { 0.1 };
+        vector<std::string> infExpiries = {"5Y"};
+        vector<std::string> infStrikes = {"0.0"};
+        hTimes = {1.0};
+        hValues = {0.5, 0.5};
+        aTimes = {};
+        aValues = {0.1};
 
         revType = LgmData::ReversionType::Hagan;
         infConfigs.push_back(boost::make_shared<InfDkData>("UKRPI", "GBP", calibrationType, revType, volType, true,
-            ParamType::Piecewise, hTimes, hValues, false, ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Cap", infExpiries,
-            std::vector<std::string>(), infStrikes));
+                                                           ParamType::Piecewise, hTimes, hValues, false,
+                                                           ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Cap",
+                                                           infExpiries, std::vector<std::string>(), infStrikes));
         infConfigs.push_back(boost::make_shared<InfDkData>("EUHICPXT", "EUR", calibrationType, revType, volType, true,
-            ParamType::Piecewise, hTimes, hValues, false, ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Floor", infExpiries,
-            std::vector<std::string>(), infStrikes));
+                                                           ParamType::Piecewise, hTimes, hValues, false,
+                                                           ParamType::Constant, aTimes, aValues, 0.0, 1.0, "Floor",
+                                                           infExpiries, std::vector<std::string>(), infStrikes));
 
         std::map<std::pair<std::string, std::string>, Real> corr;
         corr[std::make_pair("IR:EUR", "IR:USD")] = 0.6;
@@ -320,9 +322,9 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
-    simMarketConfig->setZeroInflationTenors("", { 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                                  5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
-                                                  30 * Years, 40 * Years, 50 * Years });
+    simMarketConfig->setZeroInflationTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                                 5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                                 30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
 
     // Multi path generator
@@ -414,11 +416,13 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
-    Real eurExpected3 = d.market->zeroInflationIndex("EUHICPXT")->fixing(d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->baseDate()) *
-                        pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
-                        d.market->discountCurve("EUR")->discount(10.);
+    Real eurExpected3 =
+        d.market->zeroInflationIndex("EUHICPXT")
+            ->fixing(d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->baseDate()) *
+        pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
+        d.market->discountCurve("EUR")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(eur3 - eurExpected3) / eurExpected3 < relTolerance,
-        "EUHICPXT CPI Rate mismatch: " << eur3 << " vs " << eurExpected3);
+                        "EUHICPXT CPI Rate mismatch: " << eur3 << " vs " << eurExpected3);
 
     BOOST_TEST_MESSAGE("CrossAssetModel " << (sobol ? "Sobol " : "MersenneTwister ") << (antithetic ? "Antithetic" : "")
                                           << (brownianBridge ? "BrownianBridge" : ""));
@@ -487,7 +491,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -634,7 +638,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -778,7 +782,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -924,7 +928,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1053,7 +1057,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1144,7 +1148,7 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
 
     // Simulation date grid
     Date today = d.referenceDate;
-    std::vector<Period> tenorGrid = { 5 * Years };
+    std::vector<Period> tenorGrid = {5 * Years};
     boost::shared_ptr<ore::analytics::DateGrid> grid = boost::make_shared<ore::analytics::DateGrid>(tenorGrid);
 
     // Model
@@ -1171,24 +1175,24 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     // Simulation market parameters
     BOOST_TEST_MESSAGE("set up sim market parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig(new ScenarioSimMarketParameters);
-    simMarketConfig->setYieldCurveTenors("", { 3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-        5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
-        30 * Years, 40 * Years, 50 * Years });
+    simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
+                                              5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
+                                              30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = { "EUR", "USD", "GBP" };
-    simMarketConfig->indices() = { "EUR-EURIBOR-6M" };
-    simMarketConfig->swapVolExpiries() = { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years };
-    simMarketConfig->swapVolTerms() = { 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years };
+    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
+    simMarketConfig->indices() = {"EUR-EURIBOR-6M"};
+    simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = { "USDEUR", "GBPEUR" };
-    simMarketConfig->zeroInflationIndices() = { "UKRPI", "EUHICPXT" };
-    simMarketConfig->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-        5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years });
+    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->zeroInflationIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
+                                                 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years});
     simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
-    simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
+    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1209,23 +1213,23 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     Size samples = 5000;
 
     Date maturity = grid->dates().back() + 1; // make sure the option is live on last grid date
-   
+
     Handle<ZeroInflationIndex> infIndex = simMarket->zeroInflationIndex("EUHICPXT");
     Real baseCPI = infIndex->fixing(infIndex->zeroInflationTermStructure()->baseDate());
-    
-    Schedule cpiSchedule(vector<Date> { maturity });
+
+    Schedule cpiSchedule(vector<Date>{maturity});
     Leg cpiLeg = QuantLib::CPILeg(cpiSchedule, infIndex.currentLink(), baseCPI, 2 * Months)
-        .withFixedRates(1)
-        .withNotionals(1)
-        .withObservationInterpolation(CPI::Flat)
-        .withPaymentDayCounter(ActualActual())
-        .withPaymentAdjustment(Following)
-        .withSubtractInflationNominal(true);
+                     .withFixedRates(1)
+                     .withNotionals(1)
+                     .withObservationInterpolation(CPI::Flat)
+                     .withPaymentDayCounter(ActualActual())
+                     .withPaymentAdjustment(Following)
+                     .withSubtractInflationNominal(true);
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
 
     boost::shared_ptr<QuantLib::Swap> cpiSwap =
-        boost::make_shared<QuantLib::Swap>(vector<Leg> {cpiLeg}, vector<bool> {false});
+        boost::make_shared<QuantLib::Swap>(vector<Leg>{cpiLeg}, vector<bool>{false});
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(simMarket->discountCurve("EUR"));
     cpiSwap->setPricingEngine(dscEngine);
 
@@ -1235,9 +1239,9 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     boost::shared_ptr<AnalyticDkCpiCapFloorEngine> modelEngine =
         boost::make_shared<AnalyticDkCpiCapFloorEngine>(model, 1, baseCPI);
 
-    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(Option::Type::Call, 1.0, today, baseCPI,
-        maturity, infIndex->fixingCalendar(), ModifiedFollowing, infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex,
-        2 * Months, CPI::Flat);
+    boost::shared_ptr<CPICapFloor> cap = boost::make_shared<CPICapFloor>(
+        Option::Type::Call, 1.0, today, baseCPI, maturity, infIndex->fixingCalendar(), ModifiedFollowing,
+        infIndex->fixingCalendar(), ModifiedFollowing, 0.0, infIndex, 2 * Months, CPI::Flat);
     cap->setPricingEngine(modelEngine);
     Real capNpv = cap->NPV();
 
@@ -1262,12 +1266,11 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     // compute summary statistics for swap
     Real tol = 3.0E-4;
     cpiSwap_epe /= samples;
-    BOOST_TEST_MESSAGE("CPI Swap at t=" << grid->dates().back() << " epe = " << cpiSwap_epe << " CPI Cap epe = "
-        << capNpv << " difference is " << (cpiSwap_epe - capNpv));
+    BOOST_TEST_MESSAGE("CPI Swap at t=" << grid->dates().back() << " epe = " << cpiSwap_epe
+                                        << " CPI Cap epe = " << capNpv << " difference is " << (cpiSwap_epe - capNpv));
     BOOST_CHECK_MESSAGE(fabs(cpiSwap_epe - capNpv) < tol,
-        "discounted CPI Swap epe ("
-        << cpiSwap_epe << ") inconsistent to analytical CPI Cap premium (" << capNpv
-        << "), tolerance is " << tol);
+                        "discounted CPI Swap epe (" << cpiSwap_epe << ") inconsistent to analytical CPI Cap premium ("
+                                                    << capNpv << "), tolerance is " << tol);
 }
 
 test_suite* ScenarioGeneratorTest::suite() {

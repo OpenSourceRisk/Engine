@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <boost/make_shared.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -38,16 +38,17 @@ using std::string;
 
 namespace ore {
 namespace data {
-    
+
 //! Serializable Additional Leg Data
 /*!
 \ingroup tradedata
 */
-    
+
 // Really bad name....
 class LegAdditionalData : public XMLSerializable {
 public:
-    LegAdditionalData(const string& legType, const string& legNodeName) : legType_(legType), legNodeName_(legNodeName) {}
+    LegAdditionalData(const string& legType, const string& legNodeName)
+        : legType_(legType), legNodeName_(legNodeName) {}
     LegAdditionalData(const string& legType) : legType_(legType), legNodeName_(legType + "LegData") {}
 
     const string& legType() const { return legType_; }
@@ -57,7 +58,6 @@ private:
     string legType_;
     string legNodeName_; // the XML node name
 };
-
 
 //! Serializable Cashflow Leg Data
 /*!
@@ -69,7 +69,8 @@ public:
     //! Default constructor
     CashflowData() : LegAdditionalData("Cashflow", "CashflowData") {}
     //! Constructor
-    CashflowData(const vector<double>& amounts, const vector<string>& dates) : LegAdditionalData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
+    CashflowData(const vector<double>& amounts, const vector<string>& dates)
+        : LegAdditionalData("Cashflow", "CashflowData"), amounts_(amounts), dates_(dates) {}
 
     //! \name Inspectors
     //@{
@@ -129,10 +130,12 @@ public:
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
-                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false, bool nakedOption = false)
-        : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears), isAveraged_(isAveraged), spreads_(spreads),
-          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
+                    const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
+                    bool nakedOption = false)
+        : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears),
+          isAveraged_(isAveraged), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
+          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
+          nakedOption_(nakedOption) {}
 
     //! \name Inspectors
     //@{
@@ -176,17 +179,18 @@ private:
 /*!
 \ingroup tradedata
 */
-    
+
 class CPILegData : public LegAdditionalData {
 public:
     //! Default constructor
     CPILegData() : LegAdditionalData("CPI") {}
     //! Constructor
-    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates, 
+    CPILegData(string index, double baseCPI, string observationLag, bool interpolated, const vector<double>& rates,
                const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = true)
-        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag), interpolated_(interpolated), 
-          rates_(rates), rateDates_(rateDates), subtractInflationNominal_(subtractInflationNominal){}
-    
+        : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag),
+          interpolated_(interpolated), rates_(rates), rateDates_(rateDates),
+          subtractInflationNominal_(subtractInflationNominal) {}
+
     //! \name Inspectors
     //@{
     const string index() const { return index_; }
@@ -197,7 +201,7 @@ public:
     const std::vector<string>& rateDates() const { return rateDates_; }
     bool subtractInflationNominal() const { return subtractInflationNominal_; }
     //@}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -227,8 +231,9 @@ public:
                const vector<string>& gearingDates = std::vector<string>(),
                const vector<double>& spreads = std::vector<double>(),
                const vector<string>& spreadDates = std::vector<string>())
-        : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated), fixingDays_(fixingDays),
-          gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads), spreadDates_(spreadDates) {}
+        : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated),
+          fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads),
+          spreadDates_(spreadDates) {}
 
     //! \name Inspectors
     //@{
@@ -241,13 +246,13 @@ public:
     const std::vector<double>& spreads() const { return spreads_; }
     const std::vector<string>& spreadDates() const { return spreadDates_; }
     //@}
-    
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
     //@}
-    
+
 private:
     string index_;
     string observationLag_;
@@ -272,10 +277,10 @@ public:
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
-               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false )
-        : LegAdditionalData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears), spreads_(spreads),
-          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
-          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
+               const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
+        : LegAdditionalData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears),
+          spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
+          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
 
     //! \name Inspectors
     //@{

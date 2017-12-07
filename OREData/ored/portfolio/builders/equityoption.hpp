@@ -26,10 +26,10 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/version.hpp>
-#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -55,14 +55,13 @@ protected:
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName,
                                          configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->equityForecastCurve(equityName,configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
             market_->equityVol(equityName, configuration(MarketContext::pricing)));
         // separate IR curves required for "discounting" and "forward price estimation"
         Handle<YieldTermStructure> discountCurve =
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
 
         return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
-        
     }
 };
 

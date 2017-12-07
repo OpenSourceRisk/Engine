@@ -20,10 +20,10 @@
 
 #include <qle/math/deltagammavar.hpp>
 
+#include <boost/foreach.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/math/distributions/chi_squared.hpp>
 #include <boost/timer.hpp>
-#include <boost/foreach.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -115,7 +115,7 @@ void test(const Size dim, const bool nonzeroDelta, const bool nonzeroGamma, cons
     BOOST_TEST_MESSAGE("========================================================");
 
     Size i = 0;
-    BOOST_FOREACH(Real q, quantiles) {
+    BOOST_FOREACH (Real q, quantiles) {
 
         Real mc1 = mc1All[i];
         Real mc2 = mc2All[i++];

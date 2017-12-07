@@ -191,12 +191,12 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     Real foreignAmount = 10000000;
     string fxIndex = "FX-ECB-EUR-USD";
     auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
-    LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(),
-                    paymentConvention, notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL,
-                    foreignCCY, foreignAmount, fxIndex, days);
-    LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(),
-                    paymentConvention, notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY,
+    LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+                    notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
                     foreignAmount, fxIndex, days);
+    LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+                    notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
+                    fxIndex, days);
 
     // USD Leg without notional resets
     bool isPayerUSD = false;
@@ -204,8 +204,8 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     vector<Real> spreadUSD(1, 0);
     vector<Real> notionalUSD(1, 10000000);
     auto legdataUSD = boost::make_shared<FloatingLegData>(indexUSD, days, isInArrears, spreadUSD);
-    LegData legUSD(legdataUSD, isPayerUSD, "USD", scheduleUSD, dc, notionalUSD, vector<string>(),
-                   paymentConvention, notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL);
+    LegData legUSD(legdataUSD, isPayerUSD, "USD", scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
+                   notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL);
 
     // Build swap trades
     boost::shared_ptr<Trade> swap1(new ore::data::Swap(env, legUSD, legEUR1));

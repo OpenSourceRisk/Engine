@@ -122,7 +122,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->simulateFXVols() = true; // false;
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
-    
+
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
@@ -132,7 +132,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
     simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
-    
+
     return simMarketData;
 }
 
@@ -196,7 +196,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
     simMarketData->simulateFXVols() = true; // false;
     simMarketData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     simMarketData->setFxVolDayCounters("", "ACT/ACT");
-    
+
     simMarketData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
 
     simMarketData->simulateCapFloorVols() = true;
@@ -213,7 +213,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
              91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years});
     simMarketData->capFloorVolStrikes() = {0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06};
     simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
-    
+
     return simMarketData;
 }
 
@@ -301,15 +301,20 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -382,15 +387,20 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
-    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["USD-LIBOR-3M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["GBP-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["JPY-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
+    sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
+        boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
@@ -708,7 +718,7 @@ test_suite* SensitivityPerformanceTest::suite() {
 
     suite->add(
         BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs));
-    
+
     return suite;
 }
 } // namespace testsuite

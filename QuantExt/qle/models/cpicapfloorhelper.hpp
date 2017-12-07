@@ -33,10 +33,10 @@ namespace QuantExt {
 
 /* Note that calibration helpers that are not based on a implied volatility but directly on
    a premium are part of QL PR 18 */
-    //! CPI cap floor helper
-    /*!
-     \ingroup models
-    */
+//! CPI cap floor helper
+/*!
+ \ingroup models
+*/
 class CpiCapFloorHelper : public CalibrationHelper {
 public:
     CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date& maturity, const Calendar& fixCalendar,

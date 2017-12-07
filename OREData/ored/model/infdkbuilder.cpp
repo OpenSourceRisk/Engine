@@ -19,8 +19,8 @@
 #include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-#include <qle/models/infdkparametrization.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/infdkparametrization.hpp>
 
 #include <ored/model/infdkbuilder.hpp>
 #include <ored/utilities/log.hpp>
@@ -35,8 +35,8 @@ namespace ore {
 namespace data {
 
 InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<InfDkData>& data,
-        const std::string& configuration)
-        : market_(market), configuration_(configuration), data_(data) {
+                           const std::string& configuration)
+    : market_(market), configuration_(configuration), data_(data) {
 
     LOG("DkBuilder for " << data_->infIndex());
 
@@ -53,7 +53,8 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     Array h(data_->hValues().begin(), data_->hValues().end());
 
     // TODO, support other param types
-  //  QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported currently");
+    //  QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported
+    //  currently");
 
     if (data_->aParamType() == ParamType::Constant) {
         QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
@@ -95,17 +96,18 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {
         LOG("INF parametrization: InfDkPiecewiseConstantHullWhiteAdaptor");
-        parametrization_ = boost::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
-    }
-    else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
+        parametrization_ = boost::make_shared<InfDkPiecewiseConstantHullWhiteAdaptor>(
+            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
+            data_->infIndex());
+    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
         LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseConstant");
-        parametrization_ = boost::make_shared<InfDkPiecewiseConstantParametrization>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
-    }
-    else {
-        parametrization_ = boost::make_shared<InfDkPiecewiseLinearParametrization>
-            (inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h, data_->infIndex());
+        parametrization_ = boost::make_shared<InfDkPiecewiseConstantParametrization>(
+            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
+            data_->infIndex());
+    } else {
+        parametrization_ = boost::make_shared<InfDkPiecewiseLinearParametrization>(
+            inflationIndex_->currency(), inflationIndex_->zeroInflationTermStructure(), aTimes, alpha, hTimes, h,
+            data_->infIndex());
         LOG("INF parametrization for " << data_->infIndex() << ": InfDkPiecewiseLinear");
     }
 
@@ -126,7 +128,6 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
         LOG("Apply scaling " << data_->scaling() << " to the " << data_->infIndex() << " DK model");
         parametrization_->scaling() = data_->scaling();
     }
-
 }
 
 void InfDkBuilder::buildCapFloorBasket() {
@@ -149,8 +150,8 @@ void InfDkBuilder::buildCapFloorBasket() {
         Strike strike = parseStrike(data_->optionStrikes()[j]);
 
         Real strikeValue;
-        QL_REQUIRE(strike.type == Strike::Type::Absolute, "DkBuilder: only fixed strikes supported, got "
-            << data_->optionStrikes()[j]);
+        QL_REQUIRE(strike.type == Strike::Type::Absolute,
+                   "DkBuilder: only fixed strikes supported, got " << data_->optionStrikes()[j]);
         strikeValue = strike.value;
 
         Handle<ZeroInflationIndex> zInfIndex = market_->zeroInflationIndex(infIndex, configuration_);
@@ -168,16 +169,15 @@ void InfDkBuilder::buildCapFloorBasket() {
             marketPrem = infVol->floorPrice(expiry, strikeValue);
         }
 
-        boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper =
-            boost::make_shared<QuantExt::CpiCapFloorHelper>(capfloor, baseCPI, expiryDate, fixCalendar, 
-                infVol->businessDayConvention(), fixCalendar, infVol->businessDayConvention(), strikeValue, 
-                zInfIndex, infVol->observationLag(), marketPrem);
+        boost::shared_ptr<QuantExt::CpiCapFloorHelper> helper = boost::make_shared<QuantExt::CpiCapFloorHelper>(
+            capfloor, baseCPI, expiryDate, fixCalendar, infVol->businessDayConvention(), fixCalendar,
+            infVol->businessDayConvention(), strikeValue, zInfIndex, infVol->observationLag(), marketPrem);
 
         optionBasket_.push_back(helper);
         helper->performCalculations();
         expiryTimes[j] = inflationYearFraction(zInfIndex->frequency(), zInfIndex->interpolated(),
-            zInfIndex->zeroInflationTermStructure()->dayCounter(), baseDate, 
-            helper->instrument()->fixingDate());
+                                               zInfIndex->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                               helper->instrument()->fixingDate());
         LOG("Added InflationOptionHelper " << infIndex << " " << expiry);
     }
 

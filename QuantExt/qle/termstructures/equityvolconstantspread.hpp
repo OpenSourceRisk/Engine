@@ -24,10 +24,10 @@
 #ifndef quantext_equityvolatilityconstantspread_hpp
 #define quantext_equityvolatilityconstantspread_hpp
 
+#include <boost/shared_ptr.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <boost/shared_ptr.hpp>
 
 using namespace QuantLib;
 
@@ -42,7 +42,7 @@ namespace QuantExt {
 class EquityVolatilityConstantSpread : public BlackVolTermStructure {
 public:
     EquityVolatilityConstantSpread(const Handle<BlackVolTermStructure>& atm,
-                                     const Handle<BlackVolTermStructure>& surface)
+                                   const Handle<BlackVolTermStructure>& surface)
         : BlackVolTermStructure(0, atm->calendar(), atm->businessDayConvention(), atm->dayCounter()), atm_(atm),
           surface_(surface) {
         enableExtrapolation(atm->allowsExtrapolation());
@@ -68,13 +68,13 @@ public:
 protected:
     Volatility blackVolImpl(Time t, Rate strike) const {
         Real s = surface_->blackVol(t, strike, true) - surface_->blackVol(t, Null<Real>(), true);
-        Real v = atm_->blackVol(t,  Null<Real>(), true);
+        Real v = atm_->blackVol(t, Null<Real>(), true);
         return v + s;
     }
 
     Real blackVarianceImpl(Time t, Real strike) const {
         Real vol = blackVolImpl(t, strike);
-        return vol*vol*t;
+        return vol * vol * t;
     }
 
 private:

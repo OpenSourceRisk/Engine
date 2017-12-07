@@ -40,10 +40,10 @@
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
+#include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
@@ -55,7 +55,6 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/indexes/inflationindexobserver.hpp>
 
 #include <boost/timer.hpp>
 
@@ -110,7 +109,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 
     // constructing yield curves
     DayCounter dc = ore::data::parseDayCounter(dayCounter); // used to convert YieldCurve Periods to Times
-    vector<Time> yieldCurveTimes(1, 0.0);  // include today
+    vector<Time> yieldCurveTimes(1, 0.0);                   // include today
     vector<Date> yieldCurveDates(1, asof_);
     for (auto& tenor : tenors) {
         yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
@@ -202,7 +201,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     for (const auto& ccy : parameters->ccys()) {
         LOG("building " << ccy << " discount yield curve..");
         vector<Period> tenors = parameters->yieldCurveTenors(ccy);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Discount, ccy, tenors, parameters->yieldCurveDayCounter(ccy));
+        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Discount, ccy, tenors,
+                      parameters->yieldCurveDayCounter(ccy));
         LOG("building " << ccy << " discount yield curve done");
     }
     LOG("discount yield curves done");
@@ -211,7 +211,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     for (const auto& name : parameters->yieldCurveNames()) {
         LOG("building benchmark yield curve name " << name);
         vector<Period> tenors = parameters->yieldCurveTenors(name);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Yield, name, tenors, parameters->yieldCurveDayCounter(name));
+        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Yield, name, tenors,
+                      parameters->yieldCurveDayCounter(name));
         LOG("building benchmark yield curve " << name << " done");
     }
     LOG("benchmark yield curves done");
@@ -221,11 +222,13 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     for (const auto& eqName : parameters->equityNames()) {
         LOG("building " << eqName << " equity dividend yield curve..");
         vector<Period> divTenors = parameters->equityDividendTenors(eqName);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityDividend, eqName, divTenors, parameters->yieldCurveDayCounter(eqName));
+        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityDividend, eqName, divTenors,
+                      parameters->yieldCurveDayCounter(eqName));
         LOG("building " << eqName << " equity dividend yield curve done");
         LOG("building " << eqName << " equity forecast curve..");
         vector<Period> foreTenors = parameters->equityForecastTenors(eqName);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityForecast, eqName, foreTenors, parameters->yieldCurveDayCounter(eqName));
+        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityForecast, eqName, foreTenors,
+                      parameters->yieldCurveDayCounter(eqName));
         LOG("building " << eqName << " forecast curve done");
     }
     LOG("equity yield curves done");
@@ -248,7 +251,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
         vector<string> keys(parameters->yieldCurveTenors(ind).size());
 
-        DayCounter dc = ore::data::parseDayCounter(parameters->yieldCurveDayCounter(ind));// used to convert YieldCurve Periods to Times
+        DayCounter dc = ore::data::parseDayCounter(
+            parameters->yieldCurveDayCounter(ind)); // used to convert YieldCurve Periods to Times
         vector<Time> yieldCurveTimes(1, 0.0);       // include today
         vector<Date> yieldCurveDates(1, asof_);
         QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
@@ -276,8 +280,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         // FIXME interpolation fixed to linear, added to xml??
         boost::shared_ptr<YieldTermStructure> indexCurve;
         if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
+            indexCurve = boost::shared_ptr<YieldTermStructure>(
+                new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
         } else {
             indexCurve = boost::shared_ptr<YieldTermStructure>(
                 new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
@@ -402,8 +406,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             VolatilityType volType = wrapper->volatilityType();
             DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(ccy));
             Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
-                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, atmQuotes,
-                dc, flatExtrapolation, volType, shift));
+                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, atmQuotes, dc,
+                flatExtrapolation, volType, shift));
             if (atmOnly) {
                 // floating reference date matrix in sim market
                 // if we have a cube, we keep the vol spreads constant under scenarios
@@ -488,8 +492,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 0, // FIXME: settlement days
                 wrapper->calendar(), wrapper->businessDayConvention(),
                 boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
-                optionDates, strikes, quotes, dc, wrapper->volatilityType(),
-                wrapper->displacement());
+                optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
             boost::shared_ptr<StrippedOptionletAdapter2> adapter =
                 boost::make_shared<StrippedOptionletAdapter2>(optionlet);
             hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
@@ -583,10 +586,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 quotes.emplace_back(q);
             }
-            
+
             DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
-            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(new BlackVarianceCurve3(
-                0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
+            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(
+                new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
 
             cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
         } else {
@@ -626,7 +629,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             Size m = parameters->fxVolMoneyness().size();
             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
             Calendar cal = wrapper->calendar();
-            //FIXME hardcoded in todaysmarket
+            // FIXME hardcoded in todaysmarket
             DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(ccyPair));
             vector<Time> times;
 
@@ -656,8 +659,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessForward(
                     cal, spot, times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
             } else {
-                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
-                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
             }
             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 
@@ -748,8 +751,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 eqVolCurve->enableExtrapolation();
             } else {
                 LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
-                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
-                    0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(
+                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
             }
 
             // if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0 surface
@@ -843,12 +846,14 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(baseCPI));
         Handle<Quote> qh(q);
 
-        boost::shared_ptr<InflationIndex> inflationIndex = boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
-        Handle<InflationIndexObserver> inflObserver(boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
+        boost::shared_ptr<InflationIndex> inflationIndex =
+            boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
+        Handle<InflationIndexObserver> inflObserver(
+            boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
 
-        baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(make_pair(Market::defaultConfiguration, ci), inflObserver));
-        simData_.emplace(std::piecewise_construct, 
-                         std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, ci),
+        baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(
+            make_pair(Market::defaultConfiguration, ci), inflObserver));
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, ci),
                          std::forward_as_tuple(q));
     }
     LOG("CPI Indices done");
@@ -896,11 +901,10 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         // FIXME: Settlement days set to zero - needed for floating term structure implementation
         boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
         dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
-        zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
-            0, inflationIndex->fixingCalendar(), 
-            dc, inflationTs->observationLag(), inflationTs->frequency(), 
-            inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes,
-            inflationTs->seasonality()));
+        zeroCurve =
+            boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
+                0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(), inflationTs->frequency(),
+                inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes, inflationTs->seasonality()));
 
         Handle<ZeroInflationTermStructure> its(zeroCurve);
         its->enableExtrapolation();
@@ -927,10 +931,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         Date date0 = asof_ - yoyInflationTs->observationLag();
         DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));
         vector<Date> quoteDates;
-        vector<Time> yoyCurveTimes(1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
+        vector<Time> yoyCurveTimes(1,
+                                   -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
         vector<Handle<Quote>> quotes;
         QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days,
-            "zero inflation tenors must not include t=0");
+                   "zero inflation tenors must not include t=0");
 
         for (auto& tenor : parameters->yoyInflationTenors(yic)) {
             Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
@@ -948,18 +953,19 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             }
             quotes.push_back(qh);
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
-                std::forward_as_tuple(q));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
+                             std::forward_as_tuple(q));
             LOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
         // Note this is *not* a floating term structure, it is only suitable for sensi runs
         // TODO: floating
-        yoyCurve = boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
-            0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
-            yoyInflationTs->seasonality()));
+        yoyCurve =
+            boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
+                0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
+                yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
+                yoyInflationTs->seasonality()));
 
         Handle<YoYInflationTermStructure> its(yoyCurve);
         its->enableExtrapolation();

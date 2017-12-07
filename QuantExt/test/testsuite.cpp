@@ -57,13 +57,13 @@ using boost::unit_test::test_suite;
 #include "index.hpp"
 #include "logquote.hpp"
 #include "optionletstripper.hpp"
+#include "payment.hpp"
 #include "ratehelpers.hpp"
 #include "stabilisedglls.hpp"
 #include "staticallycorrectedyieldtermstructure.hpp"
 #include "survivalprobabilitycurve.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
-#include "payment.hpp"
 
 namespace {
 

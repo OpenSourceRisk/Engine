@@ -59,7 +59,7 @@ public:
     //@{
     Currency currency() const { return currency_; }
     boost::shared_ptr<SimpleCashFlow> cashFlow() const { return cashflow_; }
-  //@}
+    //@}
 
 private:
     //! \name Instrument interface

@@ -198,7 +198,7 @@ private:
 
     Specific data comprise currency, IMM 1 and IMM 2
 
-    IMM 1 & 2 are strings representing the IMM dates - 1 is the next date, 
+    IMM 1 & 2 are strings representing the IMM dates - 1 is the next date,
     up to 9, and then A, B, C, D
 
 \ingroup marketdata
@@ -206,10 +206,8 @@ private:
 class ImmFraQuote : public MarketDatum {
 public:
     //! Constructor
-    ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1,
-        Size imm2)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1),
-        imm2_(imm2) {}
+    ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1, Size imm2)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1), imm2_(imm2) {}
 
     //! \name Inspectors
     //@{

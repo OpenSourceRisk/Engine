@@ -30,9 +30,9 @@
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
-#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
+#include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
@@ -978,9 +978,9 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
     }
 
     vector<string> averageOisQuoteIDs = averageOisSegment->quotes();
-    for (Size i = 0; i < averageOisQuoteIDs.size(); i+=2) {
-        //we are assuming i = spread, i+1 = rate
-        QL_REQUIRE(i%2==0, "i is not even");
+    for (Size i = 0; i < averageOisQuoteIDs.size(); i += 2) {
+        // we are assuming i = spread, i+1 = rate
+        QL_REQUIRE(i % 2 == 0, "i is not even");
         /* An average OIS quote is a composite of a swap quote and a basis
            spread quote. Check first that we have these. */
         // Firstly, the rate quote.
@@ -995,14 +995,14 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
                                                    << io::iso_date(asofDate_) << ".");
         }
         // Secondly, the basis spread quote.
-        marketQuote = loader_.get(averageOisQuoteIDs[i+1], asofDate_);
+        marketQuote = loader_.get(averageOisQuoteIDs[i + 1], asofDate_);
         boost::shared_ptr<BasisSwapQuote> basisQuote;
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BASIS_SWAP,
                        "Market quote not of type basis swap.");
             basisQuote = boost::dynamic_pointer_cast<BasisSwapQuote>(marketQuote);
         } else {
-            QL_FAIL("Could not find quote for ID " << averageOisQuoteIDs[i+1] << " with as of date "
+            QL_FAIL("Could not find quote for ID " << averageOisQuoteIDs[i + 1] << " with as of date "
                                                    << io::iso_date(asofDate_) << ".");
         }
 

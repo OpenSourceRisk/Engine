@@ -86,7 +86,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->fxCcyPairs() = {"USDEUR"};
 
     parameters->zeroInflationIndices() = {"EUHICPXT"};
-    parameters->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years });
+    parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
     return parameters;
@@ -209,7 +209,8 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     for (const auto& spec : parameters->zeroInflationIndices()) {
 
         Handle<ZeroInflationTermStructure> simCurve = simMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
-        Handle<ZeroInflationTermStructure> initCurve = initMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
+        Handle<ZeroInflationTermStructure> initCurve =
+            initMarket->zeroInflationIndex(spec)->zeroInflationTermStructure();
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();
@@ -218,8 +219,7 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
         }
 
         for (const auto& date : dates) {
-            BOOST_CHECK_CLOSE(simCurve->zeroRate(date), initCurve->zeroRate(date),
-                1e-12);
+            BOOST_CHECK_CLOSE(simCurve->zeroRate(date), initCurve->zeroRate(date), 1e-12);
         }
     }
 }
@@ -264,7 +264,7 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket(
         new analytics::ScenarioSimMarket(initMarket, parameters, conventions));
     simMarket->scenarioGenerator() = scenarioGenerator;
-    
+
     // test
     testFxSpot(initMarket, simMarket, parameters);
     testDiscountCurve(initMarket, simMarket, parameters);

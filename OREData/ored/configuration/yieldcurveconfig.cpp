@@ -286,7 +286,8 @@ void YieldCurveConfig::populateRequiredYieldCurveIDs() {
     }
 }
 
-YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes = vector<string>())
+YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
+                                     const vector<string>& quotes = vector<string>())
     : quotes_(quotes), type_(parseYieldCurveSegement(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
@@ -364,8 +365,7 @@ void SimpleYieldCurveSegment::accept(AcyclicVisitor& v) {
 }
 
 AverageOISYieldCurveSegment::AverageOISYieldCurveSegment(const string& typeID, const string& conventionsID,
-                                                         const vector<string>& quotes,
-                                                         const string& projectionCurveID)
+                                                         const vector<string>& quotes, const string& projectionCurveID)
     : YieldCurveSegment(typeID, conventionsID, quotes), projectionCurveID_(projectionCurveID) {}
 
 void AverageOISYieldCurveSegment::fromXML(XMLNode* node) {

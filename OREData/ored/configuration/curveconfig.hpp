@@ -41,7 +41,7 @@ public:
     //@{
     //! Detailed constructor
     CurveConfig(const string& curveID, const string& curveDescription, const vector<string>& quotes = vector<string>())
-    : curveID_(curveID), curveDescription_(curveDescription), quotes_(quotes) {}
+        : curveID_(curveID), curveDescription_(curveDescription), quotes_(quotes) {}
     //! Default constructor
     CurveConfig() {}
     //@}

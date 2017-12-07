@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/configuration/fxvolcurveconfig.hpp>
-#include <ored/utilities/to_string.hpp>
 #include <boost/algorithm/string.hpp>
+#include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
@@ -30,13 +30,12 @@ namespace data {
 FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                  const Dimension& dimension, const vector<Period>& expiries,
                                                  const string& fxSpotID, const string& fxForeignCurveID,
-                                                 const string& fxDomesticCurveID,
-                                                 const DayCounter& dayCounter, const Calendar& calendar)
+                                                 const string& fxDomesticCurveID, const DayCounter& dayCounter,
+                                                 const Calendar& calendar)
 
-    : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter), calendar_(calendar), fxSpotID_(fxSpotID),
-        fxForeignYieldCurveID_(fxForeignCurveID), fxDomesticYieldCurveID_(fxDomesticCurveID)
-        {}
-
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
+      calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
+      fxDomesticYieldCurveID_(fxDomesticCurveID) {}
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -69,7 +68,7 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     if (dc == "")
         dc = "A365";
     dayCounter_ = parseDayCounter(dc);
-    
+
     if (dim == "ATM") {
         dimension_ = Dimension::ATM;
     } else if (dim == "Smile") {

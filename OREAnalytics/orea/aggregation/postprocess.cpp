@@ -91,10 +91,9 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve),
-      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
-      dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
-      dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimQuantile_(dimQuantile),
+      dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
+      dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
       dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
       fullInitialCollateralisation_(fullInitialCollateralisation) {
 
@@ -355,7 +354,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
-        if ((fullInitialCollateralisation_) &  (netting->activeCsaFlag())) {
+        if ((fullInitialCollateralisation_) & (netting->activeCsaFlag())) {
             // This assumes that the collateral at t=0 is the same as the npv at t=0.
             epe[0] = 0;
             ene[0] = 0;
@@ -365,8 +364,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             ene[0] = std::max(-npv, 0.0);
             pfe[0] = std::max(npv, 0.0);
         }
-        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral" column
-        // of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
+        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
+        // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
@@ -397,8 +396,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples; // dim here represents the held IM, and is expressed as a positive number
-                ene[j + 1] += std::max(-exposure - dim, 0.0) / samples; // dim here represents the posted IM, and is expressed as a positive number
+                epe[j + 1] += std::max(exposure - dim, 0.0) /
+                              samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) /
+                              samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 

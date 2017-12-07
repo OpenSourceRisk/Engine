@@ -24,11 +24,11 @@
 #ifndef quantext_zero_inflation_curve_observer_static_hpp
 #define quantext_zero_inflation_curve_observer_static_hpp
 
+#include <ql/math/comparison.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/math/comparison.hpp>
-#include <ql/patterns/lazyobject.hpp>
 
 using namespace QuantLib;
 
@@ -36,23 +36,17 @@ namespace QuantExt {
 
 //! Inflation term structure based on the interpolation of zero rates.
 /*! \ingroup termstructures */
-template<class Interpolator>
-class ZeroInflationCurveObserverStatic
-    : public ZeroInflationTermStructure,
-    protected InterpolatedCurve<Interpolator>,
-    public LazyObject {
+template <class Interpolator>
+class ZeroInflationCurveObserverStatic : public ZeroInflationTermStructure,
+                                         protected InterpolatedCurve<Interpolator>,
+                                         public LazyObject {
 public:
-    ZeroInflationCurveObserverStatic(const Date& referenceDate,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        const Period& lag,
-        Frequency frequency,
-        bool indexIsInterpolated,
-        const Handle<YieldTermStructure>& yTS,
-        const std::vector<Date>& dates,
-        const std::vector<Handle<Quote> >& rates,
-        const boost::shared_ptr<Seasonality> &seasonality = boost::shared_ptr<Seasonality>(),
-        const Interpolator &interpolator = Interpolator());
+    ZeroInflationCurveObserverStatic(
+        const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
+        Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
+        const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
+        const boost::shared_ptr<Seasonality>& seasonality = boost::shared_ptr<Seasonality>(),
+        const Interpolator& interpolator = Interpolator());
 
     //! \name InflationTermStructure interface
     //@{
@@ -81,7 +75,6 @@ private:
     void performCalculations() const;
     //@}
 
-
 protected:
     //! \name ZeroInflationTermStructure Interface
     //@{
@@ -89,29 +82,20 @@ protected:
     //@}
     mutable std::vector<Date> dates_;
     std::vector<Handle<Quote> > quotes_;
-
 };
 
 // template definitions
 
 template <class Interpolator>
-ZeroInflationCurveObserverStatic<Interpolator>::
-ZeroInflationCurveObserverStatic(const Date& referenceDate,
-        const Calendar& calendar,
-        const DayCounter& dayCounter,
-        const Period& lag,
-        Frequency frequency,
-        bool indexIsInterpolated,
-        const Handle<YieldTermStructure>& yTS,
-        const std::vector<Date>& dates,
-        const std::vector<Handle<Quote> >& rates,
-        const boost::shared_ptr<Seasonality> &seasonality,
-        const Interpolator& interpolator)
-    : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(),
-        lag, frequency, indexIsInterpolated, yTS, seasonality),
-    InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator),
-    dates_(dates),
-    quotes_(rates) {
+ZeroInflationCurveObserverStatic<Interpolator>::ZeroInflationCurveObserverStatic(
+    const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter, const Period& lag,
+    Frequency frequency, bool indexIsInterpolated, const Handle<YieldTermStructure>& yTS,
+    const std::vector<Date>& dates, const std::vector<Handle<Quote> >& rates,
+    const boost::shared_ptr<Seasonality>& seasonality, const Interpolator& interpolator)
+    : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(), lag, frequency,
+                                 indexIsInterpolated, yTS, seasonality),
+      InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator), dates_(dates),
+      quotes_(rates) {
 
     QL_REQUIRE(dates_.size() > 1, "too few dates: " << dates_.size());
 
@@ -136,8 +120,7 @@ ZeroInflationCurveObserverStatic(const Date& referenceDate,
     }
 
     QL_REQUIRE(this->quotes_.size() == dates_.size(),
-        "quotes/dates count mismatch: "
-        << this->quotes_.size() << " vs " << dates_.size());
+               "quotes/dates count mismatch: " << this->quotes_.size() << " vs " << dates_.size());
 
     // initalise data vector, values are copied from quotes in performCalculations()
     this->data_.resize(dates_.size());
@@ -147,23 +130,19 @@ ZeroInflationCurveObserverStatic(const Date& referenceDate,
     this->times_.resize(dates_.size());
     this->times_[0] = timeFromReference(dates_[0]);
     for (Size i = 1; i < dates_.size(); i++) {
-        QL_REQUIRE(dates_[i] > dates_[i - 1],
-            "dates not sorted");
+        QL_REQUIRE(dates_[i] > dates_[i - 1], "dates not sorted");
 
         // but must be greater than -1
         QL_REQUIRE(this->data_[i] > -1.0, "zero inflation data < -100 %");
 
         // this can be negative
         this->times_[i] = timeFromReference(dates_[i]);
-        QL_REQUIRE(!close(this->times_[i], this->times_[i - 1]),
-            "two dates correspond to the same time "
-            "under this curve's day count convention");
+        QL_REQUIRE(!close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time "
+                                                                 "under this curve's day count convention");
     }
 
     this->interpolation_ =
-        this->interpolator_.interpolate(this->times_.begin(),
-            this->times_.end(),
-            this->data_.begin());
+        this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 
     // register with each of the quotes
@@ -171,85 +150,63 @@ ZeroInflationCurveObserverStatic(const Date& referenceDate,
         registerWith(quotes_[i]);
 }
 
-template <class T>
-Date ZeroInflationCurveObserverStatic<T>::baseDate() const {
+template <class T> Date ZeroInflationCurveObserverStatic<T>::baseDate() const {
     // if indexIsInterpolated we fixed the dates in the constructor
     calculate();
     return dates_.front();
 }
 
-template <class T>
-Date ZeroInflationCurveObserverStatic<T>::maxDate() const {
+template <class T> Date ZeroInflationCurveObserverStatic<T>::maxDate() const {
     Date d;
     if (indexIsInterpolated()) {
         d = dates_.back();
-    }
-    else {
+    } else {
         d = inflationPeriod(dates_.back(), frequency()).second;
     }
     return d;
 }
 
-
-template <class T>
-inline Rate ZeroInflationCurveObserverStatic<T>::zeroRateImpl(Time t) const {
+template <class T> inline Rate ZeroInflationCurveObserverStatic<T>::zeroRateImpl(Time t) const {
     calculate();
     return this->interpolation_(t, true);
 }
 
-template <class T>
-inline const std::vector<Time>&
-    ZeroInflationCurveObserverStatic<T>::times() const {
+template <class T> inline const std::vector<Time>& ZeroInflationCurveObserverStatic<T>::times() const {
     return this->times_;
 }
 
-template <class T>
-inline const std::vector<Date>&
-    ZeroInflationCurveObserverStatic<T>::dates() const {
-    return dates_;
-}
+template <class T> inline const std::vector<Date>& ZeroInflationCurveObserverStatic<T>::dates() const { return dates_; }
 
-template <class T>
-inline const std::vector<Rate>&
-    ZeroInflationCurveObserverStatic<T>::rates() const {
+template <class T> inline const std::vector<Rate>& ZeroInflationCurveObserverStatic<T>::rates() const {
     calculate();
     return this->data_;
 }
 
-template <class T>
-inline const std::vector<Real>&
-    ZeroInflationCurveObserverStatic<T>::data() const {
+template <class T> inline const std::vector<Real>& ZeroInflationCurveObserverStatic<T>::data() const {
     calculate();
     return this->data_;
 }
 
-template <class T>
-inline std::vector<std::pair<Date, Rate> >
-    ZeroInflationCurveObserverStatic<T>::nodes() const {
+template <class T> inline std::vector<std::pair<Date, Rate> > ZeroInflationCurveObserverStatic<T>::nodes() const {
     calculate();
     std::vector<std::pair<Date, Rate> > results(dates_.size());
-    for (Size i = 0; i<dates_.size(); ++i)
+    for (Size i = 0; i < dates_.size(); ++i)
         results[i] = std::make_pair(dates_[i], this->data_[i]);
     return results;
 }
 
-template <class T>
-inline void ZeroInflationCurveObserverStatic<T>::update() {
+template <class T> inline void ZeroInflationCurveObserverStatic<T>::update() {
     LazyObject::update();
     ZeroInflationTermStructure::update();
 }
 
-template <class T>
-inline void ZeroInflationCurveObserverStatic<T>::performCalculations() const {
-    for (Size i = 0; i<dates_.size(); ++i)
+template <class T> inline void ZeroInflationCurveObserverStatic<T>::performCalculations() const {
+    for (Size i = 0; i < dates_.size(); ++i)
         this->data_[i] = quotes_[i]->value();
     this->interpolation_ =
-        this->interpolator_.interpolate(this->times_.begin(),
-            this->times_.end(),
-            this->data_.begin());
+        this->interpolator_.interpolate(this->times_.begin(), this->times_.end(), this->data_.begin());
     this->interpolation_.update();
 }
-}
-
+} // namespace QuantExt
 
 #endif

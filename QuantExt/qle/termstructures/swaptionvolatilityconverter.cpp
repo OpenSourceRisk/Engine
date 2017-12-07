@@ -20,13 +20,13 @@
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 
-#include <ql/version.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/instruments/swaption.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/pricingengines/swaption/blackswaptionengine.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/version.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -181,8 +181,8 @@ boost::shared_ptr<SwaptionVolatilityStructure> SwaptionVolatilityConverter::conv
 
     // Build and return cube, note that we hardcode flat extrapolation
     boost::shared_ptr<SwaptionVolatilityCube> cubeOut = boost::shared_ptr<QuantExt::SwaptionVolCube2>(
-            new QuantExt::SwaptionVolCube2(atmStructure, optionTenors, swapTenors, strikeSpreads, volSpreads,
-                                           swapIndexBase, shortSwapIndexBase, false, true, false));
+        new QuantExt::SwaptionVolCube2(atmStructure, optionTenors, swapTenors, strikeSpreads, volSpreads, swapIndexBase,
+                                       shortSwapIndexBase, false, true, false));
     cubeOut->enableExtrapolation(cube->allowsExtrapolation());
     return boost::make_shared<SwaptionVolCubeWithATM>(cubeOut);
 
@@ -280,14 +280,14 @@ Real SwaptionVolatilityConverter::convert(const Date& expiry, const Period& swap
                 guess = inVol * (atmRate + inShift);
         }
 
-        // Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
-	#if QL_HEX_VERSION < 0x011000f0
-	impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
+// Note: In implying the volatility the volatility day counter is hardcoded to Actual365Fixed
+#if QL_HEX_VERSION < 0x011000f0
+        impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outShift, outType);
-	#else
+#else
         impliedVol = swaption->impliedVolatility(npv, discount_, guess, accuracy_, maxEvaluations_, minVol_, maxVol_,
                                                  outType, outShift);
-	#endif
+#endif
 
     } catch (std::exception& e) {
         // couldn't find implied volatility

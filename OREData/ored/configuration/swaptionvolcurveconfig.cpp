@@ -28,14 +28,14 @@ namespace data {
 
 std::ostream& operator<<(std::ostream& out, SwaptionVolatilityCurveConfig::VolatilityType t) {
     switch (t) {
-        case SwaptionVolatilityCurveConfig::VolatilityType::Lognormal:
-            return out << "RATE_LNVOL";
-        case SwaptionVolatilityCurveConfig::VolatilityType::Normal:
-            return out << "RATE_NVOL";
-        case SwaptionVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-            return out << "RATE_SLNVOL";
-        default:
-            QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
+    case SwaptionVolatilityCurveConfig::VolatilityType::Lognormal:
+        return out << "RATE_LNVOL";
+    case SwaptionVolatilityCurveConfig::VolatilityType::Normal:
+        return out << "RATE_NVOL";
+    case SwaptionVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+        return out << "RATE_SLNVOL";
+    default:
+        QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
     }
 }
 
@@ -68,7 +68,7 @@ const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
         split(tokens, swapIndexBase_, boost::is_any_of("-"));
 
         Currency ccy = parseCurrency(tokens[0]);
-       
+
         std::stringstream ssBase;
         ssBase << "SWAPTION/" << volatilityType_ << "/" << ccy.code() << "/";
         string base = ssBase.str();

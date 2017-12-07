@@ -34,42 +34,42 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 using namespace QuantLib;
 
 namespace ore {
-    namespace data {
+namespace data {
 
-        //! Builder for a Lognormal INF model component
-        /*!
-        This class is a utility to turn an INF model component's description
-        into an INF model parametrization which can be used to ultimately
-        instanciate a CrossAssetModel.
+//! Builder for a Lognormal INF model component
+/*!
+This class is a utility to turn an INF model component's description
+into an INF model parametrization which can be used to ultimately
+instanciate a CrossAssetModel.
 
-        \ingroup models
-        */
-        class InfDkBuilder {
-        public:
-            //! Constructor
-            InfDkBuilder( //! Market object
-                const boost::shared_ptr<ore::data::Market>& market,
-                //! INF model parameters/dscription
-                const boost::shared_ptr<InfDkData>& data,
-                //! Market configuration to use
-                const std::string& configuration = Market::defaultConfiguration);
+\ingroup models
+*/
+class InfDkBuilder {
+public:
+    //! Constructor
+    InfDkBuilder( //! Market object
+        const boost::shared_ptr<ore::data::Market>& market,
+        //! INF model parameters/dscription
+        const boost::shared_ptr<InfDkData>& data,
+        //! Market configuration to use
+        const std::string& configuration = Market::defaultConfiguration);
 
-            //! \name Inspectors
-            //@{
-            std::string infIndex() { return data_->infIndex(); }
-            boost::shared_ptr<QuantExt::InfDkParametrization>& parametrization() { return parametrization_; }
-            std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
-            //@}
-        private:
-            void buildCapFloorBasket();
+    //! \name Inspectors
+    //@{
+    std::string infIndex() { return data_->infIndex(); }
+    boost::shared_ptr<QuantExt::InfDkParametrization>& parametrization() { return parametrization_; }
+    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
+    //@}
+private:
+    void buildCapFloorBasket();
 
-            boost::shared_ptr<ore::data::Market> market_;
-            const std::string configuration_;
-            boost::shared_ptr<InfDkData> data_;
-            boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
-            boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
-            std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
-            Array optionExpiries_;
-        };
-    } // namespace data
+    boost::shared_ptr<ore::data::Market> market_;
+    const std::string configuration_;
+    boost::shared_ptr<InfDkData> data_;
+    boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
+    boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
+    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
+    Array optionExpiries_;
+};
+} // namespace data
 } // namespace ore

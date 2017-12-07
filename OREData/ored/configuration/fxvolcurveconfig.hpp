@@ -24,10 +24,10 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/time/calendars/target.hpp>
 
 using std::string;
 using std::vector;
@@ -58,9 +58,8 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries,
-                            const string& fxSpotID = "", const string& fxForeignCurveID = "",
-                            const string& fxDomesticCurveID = "",
+                            const vector<Period>& expiries, const string& fxSpotID = "",
+                            const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET());
     //@}

@@ -49,12 +49,12 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     const string& model = engineData_->model(tradeType);
     const string& engine = engineData_->engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
-    auto it = std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType] (const map_type &v) -> bool {
-        const set<string>& types = std::get<2>(v.first);
-        return std::get<0>(v.first) == model &&
-               std::get<1>(v.first) == engine &&
-               std::find(types.begin(), types.end(), tradeType) != types.end();
-    });
+    auto it =
+        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType](const map_type& v) -> bool {
+            const set<string>& types = std::get<2>(v.first);
+            return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
+                   std::find(types.begin(), types.end(), tradeType) != types.end();
+        });
     QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
@@ -66,7 +66,7 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
 }
 
 Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> EngineFactory::modelBuilders() const {
-    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res; 
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res;
     for (auto const& b : builders_) {
         res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
     }

@@ -237,8 +237,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                             spreadQuotesRead++;
                             // Assume quotes are absolute vols by strike so construct the vol spreads here
                             Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
-                            volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(
-                                boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
+                            volSpreadHandles[i * smileSwapTenors.size() + j][k] =
+                                Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
                             found[i * smileSwapTenors.size() + j][k] = true;
                             zero[i * smileSwapTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
                         }

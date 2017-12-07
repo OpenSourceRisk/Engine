@@ -19,27 +19,27 @@
 #include <ored/utilities/osutils.hpp>
 #include <ored/version.hpp>
 
-#include <iomanip>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
-#include <ql/version.hpp>
 #include <boost/version.hpp>
+#include <ql/version.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
-#include <psapi.h>
 #include <intrin.h>
+#include <psapi.h>
+#include <windows.h>
 #elif __APPLE__
-#include <unistd.h>
 #include <sys/sysctl.h>
-#else
-#include <stdio.h>
 #include <unistd.h>
+#else
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <stdio.h>
 #include <sys/resource.h> // getrusage()
 #include <sys/utsname.h>  // uname()
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/algorithm/string/predicate.hpp>
+#include <unistd.h>
 #endif
 
 using namespace std;
@@ -58,7 +58,7 @@ string memoryString(unsigned long long m) {
         oss << m / (double)(1024 * 1024 * 1024) << "GB";
     return oss.str();
 }
-}
+} // namespace
 
 namespace ore {
 namespace data {

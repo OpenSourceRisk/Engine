@@ -40,7 +40,7 @@ namespace ore {
 namespace analytics {
 //! Write ORE outputs to reports
 /*! \ingroup app
-*/
+ */
 class ReportWriter {
 public:
     static void writeNpv(ore::data::Report& report, const std::string& baseCurrency,

@@ -28,8 +28,8 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
@@ -40,8 +40,8 @@ namespace QuantExt {
 class BlackVarianceSurfaceMoneyness : public LazyObject, public BlackVarianceTermStructure {
 public:
     /*! Moneyness can be defined here as spot moneyness, i.e. K/S
-    * or forward moneyness, ie K/F
-    */
+     * or forward moneyness, ie K/F
+     */
     BlackVarianceSurfaceMoneyness(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
                                   const std::vector<Real>& moneyness,
                                   const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
@@ -74,6 +74,7 @@ protected:
     bool stickyStrike_;
     Handle<Quote> spot_;
     std::vector<Time> times_;
+
 private:
     Real blackVarianceMoneyness(Time t, Real moneyness) const;
     virtual Real blackVarianceImpl(Time t, Real strike) const;
@@ -102,10 +103,10 @@ public:
     /*! Moneyness is defined here as spot moneyness, i.e. K/S */
 
     BlackVarianceSurfaceMoneynessSpot(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
-                                  const std::vector<Real>& moneyness,
-                                  const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter, bool stickyStrike = false);
-    
+                                      const std::vector<Real>& moneyness,
+                                      const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                      const DayCounter& dayCounter, bool stickyStrike = false);
+
 private:
     virtual Real moneyness(Time t, Real strike) const;
 };
@@ -116,19 +117,16 @@ class BlackVarianceSurfaceMoneynessForward : public BlackVarianceSurfaceMoneynes
 public:
     /*! Moneyness is defined here as forward moneyness, ie K/F */
     BlackVarianceSurfaceMoneynessForward(const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times,
-                                  const std::vector<Real>& moneyness,
-                                  const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
-                                  const DayCounter& dayCounter,
-                                  const Handle<YieldTermStructure>& forTS,
-                                  const Handle<YieldTermStructure>& domTS,
-                                  bool stickyStrike = false);
-    
+                                         const std::vector<Real>& moneyness,
+                                         const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix,
+                                         const DayCounter& dayCounter, const Handle<YieldTermStructure>& forTS,
+                                         const Handle<YieldTermStructure>& domTS, bool stickyStrike = false);
 
 private:
     virtual Real moneyness(Time t, Real strike) const;
-    Handle<YieldTermStructure> forTS_; //calculates fwd if StickyStrike==false
+    Handle<YieldTermStructure> forTS_; // calculates fwd if StickyStrike==false
     Handle<YieldTermStructure> domTS_;
-    std::vector<Real> forwards_; //cache fwd values if StickyStrike==true
+    std::vector<Real> forwards_; // cache fwd values if StickyStrike==true
     Interpolation forwardCurve_;
 };
 

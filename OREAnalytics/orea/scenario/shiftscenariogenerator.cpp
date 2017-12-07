@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
-#include <boost/algorithm/string/split.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -28,7 +28,7 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
-string ShiftScenarioGenerator::ScenarioDescription::keyName( RiskFactorKey key) const {
+string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) const {
     string keyName;
     RiskFactorKey::KeyType keyType = key.keytype;
     if (keyType != RiskFactorKey::KeyType::IndexCurve)

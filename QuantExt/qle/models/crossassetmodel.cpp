@@ -102,8 +102,7 @@ Size CrossAssetModel::infIndex(const std::string& index) const {
         while (infdk(i)->name() != index)
             ++i;
         return i;
-    }
-    catch (...) {
+    } catch (...) {
         QL_FAIL("inflation index " << index << " not present in cross asset model");
     }
 }
@@ -638,15 +637,16 @@ void CrossAssetModel::calibrateInfDkReversionsIterative(
 }
 
 void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
-    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method, 
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
     update();
 }
 
-void CrossAssetModel::calibrateInfDkReversionsGlobal(
-    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+void CrossAssetModel::calibrateInfDkReversionsGlobal(const Size index,
+                                                     const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
+                                                     const Constraint& constraint, const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
     update();
 }
@@ -683,13 +683,12 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
         V0 = infV(i, ccy, 0, t);
         V_tilde = infV(i, ccy, t, T) - infV(i, ccy, 0, T) + infV(i, ccy, 0, t);
         cache_infdkI_.insert(std::make_pair(k, std::make_pair(V0, V_tilde)));
-    }
-    else {
+    } else {
         // take V0 and V_tilde from cache
         V0 = it->second.first;
         V_tilde = it->second.second;
     }
-    return std::make_pair(V0,V_tilde);
+    return std::make_pair(V0, V_tilde);
 }
 
 std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
@@ -707,9 +706,8 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     Real lag = inflationYearFraction(freq, infdk(i)->termStructure()->indexIsInterpolated(),
                                      irlgm1f(0)->termStructure()->dayCounter(), baseDate,
                                      infdk(i)->termStructure()->referenceDate());
-    
-    //    Period lag = infdk(i)->termStructure()->observationLag();
 
+    //    Period lag = infdk(i)->termStructure()->observationLag();
 
     // TODO account for seasonality ...
     // compute final results depending on z and y
@@ -725,19 +723,20 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     return std::make_pair(It, Itilde_t_T);
 }
 
-Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Time T, const Real z, const Real y, const Real irz) {
+Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Time T, const Real z, const Real y,
+                              const Real irz) {
     Size ccy = ccyIndex(infdk(i)->currency());
     Real Hyt = Hy(i).eval(this, t);
     Real HyS = Hy(i).eval(this, S);
     Real HyT = Hy(i).eval(this, T);
     Real HdS = irlgm1f(0)->H(S);
     Real HdT = irlgm1f(0)->H(T);
-    
+
     Real C_tilde;
     Real V_tilde = infdkV(i, S, T).second;
     Real rho = correlation(IR, 0, INF, i);
 
-    // Set Convexity adjustment set to 1. 
+    // Set Convexity adjustment set to 1.
     // TODO: Add calculation for DK convexity adjustment
     C_tilde = 1;
 
@@ -801,26 +800,24 @@ Real CrossAssetModel::infV(const Size i, const Size ccy, const Time t, const Tim
     Real V;
     if (ccy == 0) {
         V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
-            2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
-            integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
-            rhody * HdT *(HyT * integral(this, P(az(0), ay(i)), t, T) -
-                integral(this, P(az(0), Hy(i), ay(i)), t, T));
-    }
-    else {
+                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+            rhody * HdT * (HyT * integral(this, P(az(0), ay(i)), t, T) - integral(this, P(az(0), Hy(i), ay(i)), t, T));
+    } else {
         Real HfT = irlgm1f(ccy)->H(T);
         Real rhofy = correlation(IR, ccy, INF, i, 0, 0);
         Real rhoxy = correlation(FX, ccy - 1, INF, i, 0, 0);
         V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
-            2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
-            integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
             rhody * (HyT * integral(this, P(Hz(0), az(0), ay(i)), t, T) -
-                integral(this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
+                     integral(this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
             rhofy * (HfT * HyT * integral(this, P(az(ccy), ay(i)), t, T) -
-                HfT * integral(this, P(az(ccy), Hy(i), ay(i)), t, T) -
-                HyT * integral(this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
-                integral(this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
-            rhoxy *
-            (HyT * integral(this, P(sx(ccy - 1), ay(i)), t, T) - integral(this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
+                     HfT * integral(this, P(az(ccy), Hy(i), ay(i)), t, T) -
+                     HyT * integral(this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
+                     integral(this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
+            rhoxy * (HyT * integral(this, P(sx(ccy - 1), ay(i)), t, T) -
+                     integral(this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
     }
     return V;
 }

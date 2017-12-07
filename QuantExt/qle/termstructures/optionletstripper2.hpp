@@ -36,7 +36,7 @@ namespace QuantExt {
     additional optionlet (i.e. caplet/floorlet) volatilities (a.k.a.
     forward-forward volatilities) from the (cap/floor) At-The-Money
     term volatilities of a CapFloorTermVolCurve.
- 
+
     \ingroup termstructures
 */
 class OptionletStripper2 : public OptionletStripper {

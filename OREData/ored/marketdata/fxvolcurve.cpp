@@ -21,9 +21,9 @@
 #include <ored/utilities/log.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
-#include <ql/time/calendars/target.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -31,21 +31,19 @@ using namespace std;
 namespace {
 
 // utility to get a handle out of a Curve object
-template<class T, class K>
-Handle<T> getHandle(const string& spec, const map<string, boost::shared_ptr<K>>& m) {
+template <class T, class K> Handle<T> getHandle(const string& spec, const map<string, boost::shared_ptr<K>>& m) {
     auto it = m.find(spec);
     QL_REQUIRE(it != m.end(), "FXVolCurve: Can't find spec " << spec);
     return it->second->handle();
 }
 
-}
+} // namespace
 
 namespace ore {
 namespace data {
 
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
-                       const CurveConfigurations& curveConfigs,
-                       const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
+                       const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
 
     try {
@@ -53,7 +51,7 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == FXVolatilityCurveConfig::Dimension::ATM ||
-                   config->dimension() == FXVolatilityCurveConfig::Dimension::Smile,
+                       config->dimension() == FXVolatilityCurveConfig::Dimension::Smile,
                    "Unkown FX curve building dimension");
 
         bool isATM = config->dimension() == FXVolatilityCurveConfig::Dimension::ATM;
@@ -92,11 +90,9 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
                         // check if we are done
                         // for ATM we just check expiries[0], otherwise we check all 3
-                        if (expiries[0].empty() &&
-                            (isATM || (expiries[1].empty() && expiries[2].empty())))
+                        if (expiries[0].empty() && (isATM || (expiries[1].empty() && expiries[2].empty())))
                             break;
                     }
-
                 }
             }
         }
@@ -104,14 +100,16 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
         // Check ATM first
         // Check that we have all the expiries we need
         LOG("FXVolCurve: read " << quotes[0].size() << " ATM vols");
-        QL_REQUIRE(expiries[0].size() == 0, "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
+        QL_REQUIRE(expiries[0].size() == 0,
+                   "No ATM quote found for spec " << spec << " with expiry " << expiries[0].front());
         QL_REQUIRE(quotes[0].size() > 0, "No ATM quotes found for spec " << spec);
         // No check the rest
         if (!isATM) {
             LOG("FXVolCurve: read " << quotes[1].size() << " RR and " << quotes[2].size() << " BF quotes");
-            QL_REQUIRE(expiries[1].size() == 0, "No RR quote found for spec " << spec << " with expiry " << expiries[1].front());
-            QL_REQUIRE(expiries[2].size() == 0, "No BF quote found for spec " << spec << " with expiry " << expiries[2].front());
-
+            QL_REQUIRE(expiries[1].size() == 0,
+                       "No RR quote found for spec " << spec << " with expiry " << expiries[1].front());
+            QL_REQUIRE(expiries[2].size() == 0,
+                       "No BF quote found for spec " << spec << " with expiry " << expiries[2].front());
         }
 
         // daycounter used for interpolation in time.
@@ -139,7 +137,7 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
             for (Size i = 0; i < numExpiries; i++) {
                 dates[i] = asof + quotes[0][i]->expiry();
-                for (Size idx = 0; idx < n; idx++) 
+                for (Size idx = 0; idx < n; idx++)
                     vols[idx][i] = quotes[idx][i]->quote()->value();
             }
 
@@ -152,10 +150,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                 auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
                 auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
-                vol_ = boost::shared_ptr<BlackVolTermStructure>(
-                    new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                        asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS));
-
+                vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
+                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS));
             }
         }
         vol_->enableExtrapolation();

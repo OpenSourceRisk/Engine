@@ -42,7 +42,7 @@ public:
                                           const Array& kappa, const std::string& name = std::string());
     Lgm1fPiecewiseConstantParametrization(const Currency& currency, const Handle<TS>& termStructure,
                                           const std::vector<Date>& alphaDates, const Array& alpha,
-                                          const std::vector<Date>& kappaDates, const Array& kappa, 
+                                          const std::vector<Date>& kappaDates, const Array& kappa,
                                           const std::string& name = std::string());
     Real zeta(const Time t) const;
     Real H(const Time t) const;

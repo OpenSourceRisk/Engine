@@ -34,7 +34,7 @@ namespace data {
 
 /*! InMemoryReport just stores report information in local vectors and provides an interface to access
  *  the values. It could be used as a backend to a GUI
- \ingroup report 
+ \ingroup report
  */
 class InMemoryReport : public Report {
 public:

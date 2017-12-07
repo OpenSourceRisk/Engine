@@ -159,15 +159,14 @@ void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
     trades_.push_back(trade);
 }
 
-bool Portfolio::has(const string &id) {
-    return find_if(trades_.begin(),
-                   trades_.end(),
-                   [id](const boost::shared_ptr<Trade>& trade) {return trade->id() == id; }) != trades_.end();
+bool Portfolio::has(const string& id) {
+    return find_if(trades_.begin(), trades_.end(),
+                   [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; }) != trades_.end();
 }
 
 std::set<std::string> Portfolio::portfolioIds() const {
     std::set<std::string> portfolioIds;
-    for(auto const& t: trades_)
+    for (auto const& t : trades_)
         portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
     return portfolioIds;
 }

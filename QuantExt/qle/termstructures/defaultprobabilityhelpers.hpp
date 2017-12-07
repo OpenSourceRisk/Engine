@@ -46,8 +46,8 @@
 
 #include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
-#include <qle/instruments/creditdefaultswap.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
 using namespace QuantExt;
 

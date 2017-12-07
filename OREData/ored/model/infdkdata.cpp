@@ -39,9 +39,8 @@ void InfDkData::fromXML(XMLNode* node) {
     optionStrikes() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Strikes", false);
     if (optionStrikes().size() > 0) {
         QL_REQUIRE(optionStrikes().size() == optionExpiries().size(),
-            "vector size mismatch in cap floor expiries/strikes for inflation index " << index_);
-    }
-    else // Default: ATM
+                   "vector size mismatch in cap floor expiries/strikes for inflation index " << index_);
+    } else // Default: ATM
         optionStrikes().resize(optionExpiries().size(), "ATM");
 
     for (Size i = 0; i < optionExpiries().size(); i++) {

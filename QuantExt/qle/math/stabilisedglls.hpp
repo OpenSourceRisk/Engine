@@ -45,7 +45,7 @@ namespace QuantExt {
 //! Numerically stabilised general linear least squares
 /*! The input data is lineaerly transformed before performing the linear least squares fit.
   The linear least squares fit on the transformed data is done using the
-  GeneralLinearLeastSquares class. 
+  GeneralLinearLeastSquares class.
     \ingroup math
  */
 

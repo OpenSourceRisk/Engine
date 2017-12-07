@@ -62,7 +62,7 @@ namespace QuantExt {
     selling protection and receiving a coupon. A payer CDS option
     is a right to buy an underlying CDS buying protection and
     paying coupon.
- 
+
     \ingroup instruments
 */
 class CdsOption : public Option {

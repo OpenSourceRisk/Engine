@@ -116,8 +116,8 @@ void test(string nearDate, string farDate, string nearBoughtCurrency, double nea
 
 namespace testsuite {
 
-void FXSwapTest::testFXSwap() { 
-BOOST_TEST_MESSAGE("Testing FXSwap..."); 
+void FXSwapTest::testFXSwap() {
+    BOOST_TEST_MESSAGE("Testing FXSwap...");
     string nearDate = "2015-10-27";
     string farDate = "2015-11-03";
     string nearBoughtCurrency = "EUR";
@@ -153,7 +153,6 @@ BOOST_TEST_MESSAGE("Testing FXSwap...");
 
     test(nearDate, farDate, nearBoughtCurrency, nearBoughtAmount, nearSoldCurrency, nearSoldAmount, farBoughtAmount,
          farSoldAmount);
-
 }
 
 test_suite* FXSwapTest::suite() {

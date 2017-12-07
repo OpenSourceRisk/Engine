@@ -130,7 +130,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(equitySpots, "EquitySpots node not found");
         test.equityShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity " << equity);
             SpotShiftData data;
@@ -144,7 +144,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(equityVols, "FxVols node not found");
         test.equityVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity vols " << equity);
             VolShiftData data;

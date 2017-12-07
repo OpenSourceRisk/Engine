@@ -48,8 +48,7 @@ public:
     EquityCurve() {}
     //! Detailed constructor
     EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                const Conventions& conventions,
-                const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves);
+                const Conventions& conventions, const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves);
     //@}
     //! \name Inspectors
     //@{

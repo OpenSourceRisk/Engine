@@ -34,7 +34,7 @@ namespace QuantExt {
 
 //! Wrapper that changes the interpolation of an underlying ZC inflation index
 /*! The (possible) change in the interpolation is _not_ reflected in the index class itself,
-  only the fixing methods behave consistently 
+  only the fixing methods behave consistently
  \ingroup indexes
  */
 class ZeroInflationIndexWrapper : public ZeroInflationIndex {
@@ -75,7 +75,7 @@ private:
 };
 
 //! YY coupon pricer that takes the nominal ts directly instead of reading it from the yoy ts
-/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper 
+/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper
 \ingroup indexes
 */
 class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {

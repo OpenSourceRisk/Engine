@@ -35,10 +35,10 @@ InflationCapFloorPriceSurfaceConfig::InflationCapFloorPriceSurfaceConfig(
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const DayCounter& dayCounter,
     const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<Real>& capStrikes,
     const vector<Real>& floorStrikes, const vector<Period>& maturities)
-    : CurveConfig(curveID, curveDescription), type_(type), observationLag_(observationLag),
-      calendar_(calendar), businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index),
-      indexCurve_(indexCurve), yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes),
-      floorStrikes_(floorStrikes), maturities_(maturities) {}
+    : CurveConfig(curveID, curveDescription), type_(type), observationLag_(observationLag), calendar_(calendar),
+      businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index), indexCurve_(indexCurve),
+      yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
+      maturities_(maturities) {}
 
 const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -98,7 +98,6 @@ void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
     capStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "CapStrikes", true);
     floorStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "FloorStrikes", true);
     maturities_ = XMLUtils::getChildrenValuesAsPeriods(node, "Maturities", true);
-
 }
 
 XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {

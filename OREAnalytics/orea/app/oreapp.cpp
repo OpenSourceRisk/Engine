@@ -302,7 +302,8 @@ void OREApp::getMarketParameters() {
     }
 }
 
-boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName) {
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
+                                                            const string& groupName) {
     map<MarketContext, string> configurations;
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     string inputPath = params_->get("setup", "inputPath");
@@ -648,7 +649,6 @@ void OREApp::writeBaseScenario() {
     sw.writeScenario(scenario, writeHeader);
 
     DLOG("Base scenario written to file " << outputFile);
-  
 }
 
 void OREApp::initAggregationScenarioData() {
@@ -702,8 +702,8 @@ void OREApp::generateNPVCube() {
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
                                                            params_->get("markets", "simulation"));
         simMarket_->scenarioGenerator() = sg;
-	
-	string groupName = "simulation";
+
+        string groupName = "simulation";
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");

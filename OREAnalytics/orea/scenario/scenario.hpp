@@ -82,7 +82,7 @@ public:
     std::string name;
     //! Index
     Size index;
-    
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {

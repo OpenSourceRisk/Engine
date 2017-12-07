@@ -27,8 +27,8 @@
 #include <boost/optional.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/configuration/curveconfig.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <ql/types.hpp>
 #include <set>
@@ -84,7 +84,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
-    virtual vector<string> quotes() const  { return quotes_; }
+    virtual vector<string> quotes() const { return quotes_; }
     //@}
 
     //! \name Visitability
@@ -138,7 +138,6 @@ public:
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
-
 };
 
 //! Simple yield curve segment
@@ -407,6 +406,7 @@ public:
     //@}
 
     const vector<string>& quotes() override;
+
 private:
     void populateRequiredYieldCurveIDs();
 

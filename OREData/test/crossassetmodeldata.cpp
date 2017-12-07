@@ -142,10 +142,10 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
     infDkData1->calibrationType() = parseCalibrationType("BOOTSTRAP");
     infDkData1->reversionType() = parseReversionType("HULLWHITE");
     infDkData1->volatilityType() = parseVolatilityType("HAGAN");
-    std::vector<Time> hTimes = { 1.0, 2.0, 3.0, 4.0 };
-    std::vector<Real> hValues = { 1.0, 2.0, 3.0, 4.0 };
-    std::vector<Time> aTimes = { 1.0, 2.0, 3.0, 4.0 };
-    std::vector<Real> aValues = { 1.0, 2.0, 3.0, 4.0 };
+    std::vector<Time> hTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> hValues = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Time> aTimes = {1.0, 2.0, 3.0, 4.0};
+    std::vector<Real> aValues = {1.0, 2.0, 3.0, 4.0};
 
     infDkData1->calibrateH() = false;
     infDkData1->hParamType() = parseParamType("PIECEWISE");
@@ -165,7 +165,7 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
     infDkData1->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
-    *infDkDataVector = { infDkData1 };
+    *infDkDataVector = {infDkData1};
     return infDkDataVector;
 }
 
@@ -175,9 +175,9 @@ boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxConfigsData() {
     boost::shared_ptr<FxBsData> fxBsData1(new data::FxBsData());
     boost::shared_ptr<FxBsData> fxBsData2(new data::FxBsData());
 
-    vector<std::string> expiries = { "1Y", "2Y", "36M" };
-    vector<std::string> strikes = { "ATMF", "ATMF", "ATMF" };
-    std::vector<Time> times = { 1.0, 2.0, 3.0, 4.0 };
+    vector<std::string> expiries = {"1Y", "2Y", "36M"};
+    vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"};
+    std::vector<Time> times = {1.0, 2.0, 3.0, 4.0};
 
     // First instance
     fxBsData1->foreignCcy() = "USD";
@@ -200,7 +200,7 @@ boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxConfigsData() {
     fxBsData2->optionStrikes() = strikes;
 
     boost::shared_ptr<vector<boost::shared_ptr<FxBsData>>> fxBsDataVector(new vector<boost::shared_ptr<FxBsData>>);
-    *fxBsDataVector = { fxBsData1, fxBsData2 };
+    *fxBsDataVector = {fxBsData1, fxBsData2};
     return fxBsDataVector;
 }
 
@@ -209,9 +209,9 @@ boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
     // Create two instances
     boost::shared_ptr<EqBsData> eqBsData1(new data::EqBsData());
 
-    vector<std::string> expiries = { "1Y", "2Y", "36M" };
-    vector<std::string> strikes = { "ATMF", "ATMF", "ATMF" };
-    std::vector<Time> times = { 1.0, 2.0, 3.0, 4.0 };
+    vector<std::string> expiries = {"1Y", "2Y", "36M"};
+    vector<std::string> strikes = {"ATMF", "ATMF", "ATMF"};
+    std::vector<Time> times = {1.0, 2.0, 3.0, 4.0};
 
     // First instance
     eqBsData1->eqName() = "SP5";
@@ -224,7 +224,7 @@ boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqConfigsData() {
     eqBsData1->optionStrikes() = strikes;
 
     boost::shared_ptr<vector<boost::shared_ptr<EqBsData>>> eqBsDataVector(new vector<boost::shared_ptr<EqBsData>>);
-    *eqBsDataVector = { eqBsData1 };
+    *eqBsDataVector = {eqBsData1};
     return eqBsDataVector;
 }
 
@@ -233,9 +233,9 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
     boost::shared_ptr<data::CrossAssetModelData> crossAssetData(new data::CrossAssetModelData());
 
     crossAssetData->domesticCurrency() = "EUR";
-    crossAssetData->currencies() = { "EUR", "USD", "JPY" }; // need to check how to set this up
-    crossAssetData->equities() = { "SP5" };
-    crossAssetData->infIndices() = { "EUHICPXT" };
+    crossAssetData->currencies() = {"EUR", "USD", "JPY"}; // need to check how to set this up
+    crossAssetData->equities() = {"SP5"};
+    crossAssetData->infIndices() = {"EUHICPXT"};
     crossAssetData->irConfigs() = *irConfigsData();
     crossAssetData->fxConfigs() = *fxConfigsData();
     crossAssetData->eqConfigs() = *eqConfigsData();

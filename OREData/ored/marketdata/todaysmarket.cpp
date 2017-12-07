@@ -456,8 +456,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredEquityCurves.end()) {
                     // build the curve
                     LOG("Building EquityCurve for asof " << asof);
-                    boost::shared_ptr<EquityCurve> equityCurve =
-                        boost::make_shared<EquityCurve>(asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
+                    boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
+                        asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 
@@ -522,10 +522,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             }
 
             case CurveSpec::CurveType::Security: {
-                boost::shared_ptr<SecuritySpec> securityspec =
-                    boost::dynamic_pointer_cast<SecuritySpec>(spec);
+                boost::shared_ptr<SecuritySpec> securityspec = boost::dynamic_pointer_cast<SecuritySpec>(spec);
                 QL_REQUIRE(securityspec, "Failed to convert spec " << *spec << " to security spec");
-                
+
                 auto check = requiredDefaultCurves.find(securityspec->securityID());
                 if (check != requiredDefaultCurves.end())
                     QL_FAIL("securities cannot have the same name as a default curve");
@@ -536,17 +535,15 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredSecurities.end()) {
                     // build the curve
                     LOG("Building Securities for asof " << asof);
-                    boost::shared_ptr<Security> security =
-                        boost::make_shared<Security>(asof, *securityspec, loader);
-                    itr = requiredSecurities.insert(make_pair(securityspec->securityID(), security))
-                              .first;
+                    boost::shared_ptr<Security> security = boost::make_shared<Security>(asof, *securityspec, loader);
+                    itr = requiredSecurities.insert(make_pair(securityspec->securityID(), security)).first;
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
                 for (const auto& it : params.mapping(MarketObject::Security, configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding Security (" << it.first << ") with spec " << *securityspec
-                                                      << " to configuration " << configuration.first);
+                        LOG("Adding Security (" << it.first << ") with spec " << *securityspec << " to configuration "
+                                                << configuration.first);
                         securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
                         recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
                     }

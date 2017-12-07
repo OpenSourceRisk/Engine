@@ -669,13 +669,13 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     sa->generateSensitivities();
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    std::set<string> sensiTrades; 
-    for (auto p : portfolio->trades()) { 
+    std::set<string> sensiTrades;
+    for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) { 
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-        } 
+        for (auto f : sa->sensiCube()->upFactors()) {
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        }
     }
 
     std::vector<Results> cachedResults2 = {
@@ -1062,16 +1062,16 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
         boost::make_shared<SensitivityAnalysis>(portfolio, initMarket, Market::defaultConfiguration, data,
                                                 simMarketData, sensiData, conventions, recalibrateModels);
     sa->generateSensitivities();
-    
+
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    std::set<string> sensiTrades; 
-    for (auto p : portfolio->trades()) { 
+    std::set<string> sensiTrades;
+    for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) { 
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-        } 
+        for (auto f : sa->sensiCube()->upFactors()) {
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        }
     }
 
     struct SensiResults {
@@ -1280,15 +1280,14 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
 
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
-    std::set<string> sensiTrades; 
-    for (auto p : portfolio->trades()) { 
+    std::set<string> sensiTrades;
+    for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) { 
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first); 
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first); 
-        } 
+        for (auto f : sa->sensiCube()->upFactors()) {
+            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
+            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        }
     }
-
 
     struct SensiResults {
         string id;
@@ -1621,7 +1620,8 @@ void SensitivityAnalysisTest::testCrossGamma() {
                                                 simMarketData, sensiData, conventions, useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
-    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc = sa->scenarioGenerator()->scenarioDescriptions();
+    std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =
+        sa->scenarioGenerator()->scenarioDescriptions();
 
     struct GammaResult {
         string id;
@@ -1855,7 +1855,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
     Real rel_tol = 0.005;
     Real threshold = 1.e-6;
     Size count = 0;
-    for (Size i=0; i<portfolio->size(); i++) {
+    for (Size i = 0; i < portfolio->size(); i++) {
         string id = portfolio->trades()[i]->id();
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
@@ -1864,10 +1864,11 @@ void SensitivityAnalysisTest::testCrossGamma() {
                 ostringstream os;
                 os << id << "_" << factor1 << "_" << factor2;
                 string keyStr = os.str();
-                tuple<string, string, string> key = make_tuple(id,factor1,factor2);
+                tuple<string, string, string> key = make_tuple(id, factor1, factor2);
                 Real crossgamma = sa->crossGamma(id, factor1, factor2);
                 if (fabs(crossgamma) >= threshold) {
-                    // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" << factor2 <<
+                    // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" <<
+                    // factor2 <<
                     // "\", " << crossgamma << " },");
                     auto cached_it = cachedMap.find(key);
                     BOOST_CHECK_MESSAGE(cached_it != cachedMap.end(), keyStr << " not found in cached results");
