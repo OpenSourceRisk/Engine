@@ -2,8 +2,8 @@
 
 \usepackage[urlcolor=blue]{hyperref}
 
-%\usepackage[disable]{todonotes}
-\usepackage{todonotes}
+\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
 
 \usepackage{amsmath}%
 \usepackage{amsfonts}%
@@ -718,7 +718,6 @@ Example & Description \\
 \end{center}
 \end{table}
 
-\todo[inline]{Revise examples overview table when examples are complete, inflation is done}
 All example results can be produced with the Python scripts {\tt run.py} in the ORE release's {\tt Examples/Example\_\#}
 folders which work on both Windows and Unix platforms. In a nutshell, all scripts call ORE's command line application
 with a single input XML file
@@ -1525,33 +1524,40 @@ and \ref{sec:fxoption}.
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{Inflation Swaps}
+\subsection{Inflation Swap Exposures}% Example 17
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_17} computes the NPV of a CPI Swap and a Year on Year Swap. The terms of
-the two deals are as follows, CPI Swap:
+The example portfolio in folder {\tt Examples/Example\_17} contains two CPI Swaps and one Year-on-Year Inflation Swap.
+The terms of the three trades are as follows:
 
 \begin{itemize}
-\item Start 2016-07-18, Maturity 2021-07-18
-\item GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
-\item CPI-Factor = UKRPI fixing with an observation lag of 2M divided by the base CPI value 210, inflation fixing is not
-  interpolated
+\item CPI Swap 1: Exchanges on 2036-02-05 a fixed amount of 20m GBP for a 10m GBP notional inflated with UKRPI with base CPI 210
+\item CPI Swap 2: Notional 10m GBP, maturity 2021-07-18, exchanging GBP Libor for GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
+\item YOY Swap: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons
 \end{itemize}
 
-Year on Year Swap:
+The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as two exposure graphs for CPI Swap 1 respectively the YOY Swap. Figure \ref{fig_cpi_swap} shows the CPI Swap exposure evolution.
 
-\begin{itemize}
-\item Start 2016-07-18, Maturity 2021-07-18
-\item EUR Euribor 6M vs. Year on Year payoff (Act/Act) on EUHICPXT, inflation fixings are observed with a lag of 2M,
-  include 2 fixing days, and are interpolated
-\end{itemize}
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[scale=0.45]{mpl_cpi_swap.pdf}
+	\end{center}
+	\caption{CPI Swap 1 exposure evolution. Simulation with 1000 paths and quarterly time steps.}
+	\label{fig_cpi_swap}
+\end{figure}
 
-After running the example, the results of the computation can be found in the output file {\tt npv.csv}.
-
-\todo[inline]{Merge new inflation exposure example 24 into example 17}
+Figure \ref{fig_yoy_swap} shows the evolution of the 5Y maturity Year-on-Year inflation swap for comparison. Note that the inflation simulation model (Dodgson-Kainth, see appendix \ref{sec:app_rfe}) yields the evolution of inflation indices and inflation zero bonds which allows spanning future inflation zero curves and the pricing of CPI swaps. To price Year-on-Year inflation Swaps under future scenarios, we imply Year-on-Year inflation curves from zero inflation curves\footnote{Currently we discard the required (small) convexity adjustment. This will be supplemented in a subsequent release.}. Note that for pricing Year-on-Year Swaps as of today we use a separate inflation curve bootstrapped from quoted Year-on-Year inflation Swaps.
+ 
+\begin{figure}[h!]
+	\begin{center}
+		\includegraphics[scale=0.45]{mpl_yoy_swap.pdf}
+	\end{center}
+	\caption{Year-on-Year Inflation Swap exposure evolution. Simulation with 1000 paths and quarterly time steps.}
+	\label{fig_yoy_swap}
+\end{figure}
 
 %--------------------------------------------------------
-\subsection{Bonds and Amortisation Structures}
+\subsection{Bonds and Amortisation Structures}% Example 18
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_18} computes NPVs and cash flow projections for a vanilla bond portfolio
