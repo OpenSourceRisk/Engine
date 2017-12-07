@@ -737,24 +737,15 @@ Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Ti
     Real V_tilde = infdkV(i, S, T).second;
     Real rho = correlation(IR, 0, INF, i);
 
-    // TODO: For foeign currency inflation do we extra terms here?
-    cache_key k = { i, ccy, S, T };
-    boost::unordered_map<cache_key, Real >::const_iterator it = cache_infdkC_.find(k);
-
-    if (it == cache_infdkC_.end()) {
-        C_tilde = V_tilde + 0.5 * (HdT*HdT - HdS*HdS) * zetaz(ccy).eval(this, S)
-            + 0.5 * pow(HyT - HyS, 2) * zetay(i).eval(this, S)
-            - rho * (HyT - HyS) * HdT * integral(this, P(az(ccy), ay(i)), 0.0, S);
-        cache_infdkC_.insert(std::make_pair(k, C_tilde));
-    } else {
-         C_tilde = it->second;
-    }
+    // Set Convexity adjustment set to 1. 
+    // TODO: Add calculation for DK convexity adjustment
+    C_tilde = 1;
 
     Real I_tildeS = infdkI(i, t, S, z, y).second;
     Real I_tildeT = infdkI(i, t, T, z, y).second;
     Real Pn_t_T = lgm(ccy)->discountBond(t, T, irz);
 
-    Real yySwaplet = (I_tildeT / I_tildeS) * Pn_t_T *exp(C_tilde) - Pn_t_T;
+    Real yySwaplet = (I_tildeT / I_tildeS) * Pn_t_T * C_tilde - Pn_t_T;
 
     return yySwaplet;
 }
