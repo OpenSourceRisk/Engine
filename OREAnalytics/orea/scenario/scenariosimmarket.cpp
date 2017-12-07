@@ -53,7 +53,7 @@
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
-#include <qle/termstructures/yoyinflationcurveobserver.hpp>
+#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 
@@ -864,8 +864,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         string ccy = inflationIndex->currency().code();
         Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
-        Date date0 = asof_ - inflationTs->observationLag(); 
-        DayCounter dc = inflationTs->dayCounter();
+        Date date0 = asof_ - inflationTs->observationLag();
+        DayCounter dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
         vector<Date> quoteDates;
         vector<Time> zeroCurveTimes(1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
         vector<Handle<Quote>> quotes;
@@ -925,17 +925,20 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         Handle<YieldTermStructure> yts = initMarket->discountCurve(ccy, configuration);
 
         Date date0 = asof_ - yoyInflationTs->observationLag();
-        vector<Date> yoyCurveDates, quoteDates;
-        yoyCurveDates.push_back(date0);
+        DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));
+        vector<Date> quoteDates;
+        vector<Time> yoyCurveTimes(1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
         vector<Handle<Quote>> quotes;
-        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() >= 1 * Years,
-                   "yoy inflation tenors must be greater than 1Y");
+        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days,
+            "zero inflation tenors must not include t=0");
+
         for (auto& tenor : parameters->yoyInflationTenors(yic)) {
-            yoyCurveDates.push_back(date0 + tenor);
+            Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
+            yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
             quoteDates.push_back(asof_ + tenor);
         }
 
-        for (Size i = 1; i < yoyCurveDates.size(); i++) {
+        for (Size i = 1; i < yoyCurveTimes.size(); i++) {
             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i - 1])));
             Handle<Quote> qh(q);
             if (i == 1) {
@@ -945,19 +948,17 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             }
             quotes.push_back(qh);
             simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
-                             std::forward_as_tuple(q));
-
-            LOG("ScenarioSimMarket yoy inflation index curve " << yic << " yoyRate[" << i << "]=" << q->value());
+                std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
+                std::forward_as_tuple(q));
+            LOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
-        DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));
         // Note this is *not* a floating term structure, it is only suitable for sensi runs
         // TODO: floating
-        yoyCurve = boost::shared_ptr<YoYInflationCurveObserver<Linear>>(new YoYInflationCurveObserver<Linear>(
-            asof_, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveDates, quotes,
+        yoyCurve = boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
+            0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
+            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
             yoyInflationTs->seasonality()));
 
         Handle<YoYInflationTermStructure> its(yoyCurve);

@@ -16,13 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/yoyinflationcurveobserver.hpp
-    \brief Observable inflation term structure based on the interpolation of zero rate quotes.
+/*! \file qle/termstructures/yoyinflationcurveobserverstatic.hpp
+    \brief Observable inflation term structure with fixed refernece date based on the 
+           interpolation of yoy rate quotes.
     \ingroup termstructures
 */
 
-#ifndef quantext_yoy_inflation_curve_observer_hpp
-#define quantext_yoy_inflation_curve_observer_hpp
+#ifndef quantext_yoy_inflation_curve_observer_static_hpp
+#define quantext_yoy_inflation_curve_observer_static_hpp
 
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
@@ -37,12 +38,12 @@ namespace QuantExt {
     //! Inflation term structure based on the interpolation of zero rates.
     /*! \ingroup inflationtermstructures */
     template<class Interpolator>
-    class YoYInflationCurveObserver
+    class YoYInflationCurveObserverStatic
         : public YoYInflationTermStructure,
         protected InterpolatedCurve<Interpolator>,
         public LazyObject {
     public:
-        YoYInflationCurveObserver(const Date& referenceDate,
+        YoYInflationCurveObserverStatic(const Date& referenceDate,
             const Calendar& calendar,
             const DayCounter& dayCounter,
             const Period& lag,
@@ -95,8 +96,8 @@ namespace QuantExt {
     // template definitions
 
     template <class Interpolator>
-    YoYInflationCurveObserver<Interpolator>::
-        YoYInflationCurveObserver(const Date& referenceDate,
+    YoYInflationCurveObserverStatic<Interpolator>::
+        YoYInflationCurveObserverStatic(const Date& referenceDate,
             const Calendar& calendar,
             const DayCounter& dayCounter,
             const Period& lag,
@@ -172,14 +173,14 @@ namespace QuantExt {
     }
 
     template <class T>
-    Date YoYInflationCurveObserver<T>::baseDate() const {
+    Date YoYInflationCurveObserverStatic<T>::baseDate() const {
         // if indexIsInterpolated we fixed the dates in the constructor
         calculate();
         return dates_.front();
     }
 
     template <class T>
-    Date YoYInflationCurveObserver<T>::maxDate() const {
+    Date YoYInflationCurveObserverStatic<T>::maxDate() const {
         Date d;
         if (indexIsInterpolated()) {
             d = dates_.back();
@@ -192,40 +193,40 @@ namespace QuantExt {
 
 
     template <class T>
-    inline Rate YoYInflationCurveObserver<T>::yoyRateImpl(Time t) const {
+    inline Rate YoYInflationCurveObserverStatic<T>::yoyRateImpl(Time t) const {
         calculate();
         return this->interpolation_(t, true);
     }
 
     template <class T>
     inline const std::vector<Time>&
-        YoYInflationCurveObserver<T>::times() const {
+        YoYInflationCurveObserverStatic<T>::times() const {
         return this->times_;
     }
 
     template <class T>
     inline const std::vector<Date>&
-        YoYInflationCurveObserver<T>::dates() const {
+        YoYInflationCurveObserverStatic<T>::dates() const {
         return dates_;
     }
 
     template <class T>
     inline const std::vector<Rate>&
-        YoYInflationCurveObserver<T>::rates() const {
+        YoYInflationCurveObserverStatic<T>::rates() const {
         calculate();
         return this->data_;
     }
 
     template <class T>
     inline const std::vector<Real>&
-        YoYInflationCurveObserver<T>::data() const {
+        YoYInflationCurveObserverStatic<T>::data() const {
         calculate();
         return this->data_;
     }
 
     template <class T>
     inline std::vector<std::pair<Date, Rate> >
-        YoYInflationCurveObserver<T>::nodes() const {
+        YoYInflationCurveObserverStatic<T>::nodes() const {
         calculate();
         std::vector<std::pair<Date, Rate> > results(dates_.size());
         for (Size i = 0; i<dates_.size(); ++i)
@@ -234,13 +235,13 @@ namespace QuantExt {
     }
 
     template <class T>
-    inline void YoYInflationCurveObserver<T>::update() {
+    inline void YoYInflationCurveObserverStatic<T>::update() {
         LazyObject::update();
         YoYInflationTermStructure::update();
     }
 
     template <class T>
-    inline void YoYInflationCurveObserver<T>::performCalculations() const {
+    inline void YoYInflationCurveObserverStatic<T>::performCalculations() const {
         for (Size i = 0; i<dates_.size(); ++i)
             this->data_[i] = quotes_[i]->value();
         this->interpolation_ =

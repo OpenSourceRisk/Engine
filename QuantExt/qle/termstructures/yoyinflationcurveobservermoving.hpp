@@ -17,7 +17,8 @@
 */
 
 /*! \file qle/termstructures/yoyinflationcurveobservermoving.hpp
-    \brief Observable inflation term structure based on the interpolation of zero rate quotes.
+    \brief Observable inflation term structure with floating reference date
+           based on the interpolation of zero rate quotes.
     \ingroup termstructures
 */
 
@@ -57,6 +58,7 @@ public:
     //! \name InflationTermStructure interface
     //@{
     Date baseDate() const;
+    Time maxTime() const;
     Date maxDate() const;
     //@}
 
@@ -106,7 +108,7 @@ YoYInflationCurveObserverMoving<Interpolator>::
         const std::vector<Handle<Quote> >& rates,
         const boost::shared_ptr<Seasonality> &seasonality,
         const Interpolator& interpolator)
-    : YoYInflationTermStructure(referenceDate, calendar, dayCounter, rates[0]->value(),
+    : YoYInflationTermStructure(settlementDays, calendar, dayCounter, rates[0]->value(),
         lag, frequency, indexIsInterpolated, yTS, seasonality),
     InterpolatedCurve<Interpolator>(std::vector<Time>(), std::vector<Real>(), interpolator),
     quotes_(rates) {
@@ -147,7 +149,7 @@ Date YoYInflationCurveObserverMoving<T>::baseDate() const {
 }
 
 template <class T>
-Time ZeroInflationCurveObserverMoving<T>::maxTime() const {
+Time YoYInflationCurveObserverMoving<T>::maxTime() const {
     return this->times_.back();
 }
 
@@ -167,12 +169,6 @@ template <class T>
 inline const std::vector<Time>&
     YoYInflationCurveObserverMoving<T>::times() const {
     return this->times_;
-}
-
-template <class T>
-inline const std::vector<Date>&
-    YoYInflationCurveObserverMoving<T>::dates() const {
-    return dates_;
 }
 
 template <class T>
