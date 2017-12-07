@@ -83,7 +83,7 @@ Real deltaVar(const Matrix& omega, const Array& delta, const Real p) {
 Real deltaGammaVarNormal(const Matrix& omega, const Array& delta, const Matrix& gamma, const Real p) {
     detail::check(p);
     Real s = QuantLib::InverseCumulativeNormal()(p);
-    Real num, mu, variance;
+    Real num = 0.0, mu = 0.0, variance = 0.0;
     moments(omega, delta, gamma, num, mu, variance);
     if (close_enough(num, 0.0) || close_enough(variance, 0.0))
         return 0.0;
