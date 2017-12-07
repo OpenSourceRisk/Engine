@@ -291,9 +291,6 @@
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\indexes\fxindex.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
@@ -511,6 +508,12 @@
       <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
   </ItemGroup>

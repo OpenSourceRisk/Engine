@@ -654,7 +654,8 @@
     <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
-    <ClInclude Include="qle\termstructures\yoyinflationcurveobserver.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
