@@ -902,6 +902,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes,
             inflationTs->seasonality()));
 
+        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+            for (auto q : quotes)
+                zeroCurve->unregisterWith(q);
+        }
+
         Handle<ZeroInflationTermStructure> its(zeroCurve);
         its->enableExtrapolation();
         boost::shared_ptr<ZeroInflationIndex> i =
@@ -960,6 +965,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
             yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
             yoyInflationTs->seasonality()));
+
+        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+            for (auto q : quotes)
+                yoyCurve->unregisterWith(q);
+        }
 
         Handle<YoYInflationTermStructure> its(yoyCurve);
         its->enableExtrapolation();
