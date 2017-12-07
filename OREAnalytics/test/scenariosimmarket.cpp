@@ -89,12 +89,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years });
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
-    parameters->simulateCpiCapFloorVols() = false;
-    parameters->cpiCapFloorVolIndices() = { "EUHICPXT" };
-    parameters->setCpiCapFloorVolExpiries("", { 1 * Years, 2 * Years });
-    parameters->cpiCapFloorVolStrikes() = { 0.03, 0.03 };
-    parameters->cpiCapFloorVolDecayMode() = "ConstantVariance";
-
     return parameters;
 }
 } // namespace

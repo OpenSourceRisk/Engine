@@ -325,9 +325,6 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                                                   30 * Years, 40 * Years, 50 * Years });
     simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
 
-    simMarketConfig->simulateCpiCapFloorVols() = false;
-
-
     // Multi path generator
     BigNatural seed = 42;
     // bool antithetic = true;
@@ -417,7 +414,8 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_CHECK_MESSAGE(fabs(usd2 - usdExpected2) / usdExpected2 < relTolerance,
                         "USD 10Y Discount mismatch: " << usd2 << " vs " << usdExpected2);
 
-    Real eurExpected3 = pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
+    Real eurExpected3 = d.market->zeroInflationIndex("EUHICPXT")->fixing(d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->baseDate()) *
+                        pow(1 + d.market->zeroInflationIndex("EUHICPXT")->zeroInflationTermStructure()->zeroRate(10.), 10) *
                         d.market->discountCurve("EUR")->discount(10.);
     BOOST_CHECK_MESSAGE(fabs(eur3 - eurExpected3) / eurExpected3 < relTolerance,
         "EUHICPXT CPI Rate mismatch: " << eur3 << " vs " << eurExpected3);
@@ -1190,11 +1188,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
     simMarketConfig->setZeroInflationTenors("", { 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
         5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years });
     simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateCpiCapFloorVols() = false;
-    simMarketConfig->cpiCapFloorVolDecayMode() = ConstantVariance;
-    simMarketConfig->cpiCapFloorVolIndices() = { "EUHICPXT" };
-    simMarketConfig->setCpiCapFloorVolExpiries("", { 5 * Years});
-    simMarketConfig->cpiCapFloorVolStrikes() = { 0.00 };
     simMarketConfig->cpiIndices() = { "UKRPI", "EUHICPXT" };
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");

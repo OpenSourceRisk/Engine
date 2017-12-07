@@ -371,8 +371,8 @@ void CrossAssetModelData::buildInfConfigs(std::map<std::string, boost::shared_pt
         else { // copy from default
             LOG("Inflation configuration missing for index " << index << ", using default");
             if (infDataMap.find("default") == infDataMap.end()) {
-                ALOG("Both default INF and " << index << " EQ configuration missing");
-                QL_FAIL("Both default INF and " << index << " EQ configuration missing");
+                ALOG("Both default INF and " << index << " INF configuration missing");
+                QL_FAIL("Both default INF and " << index << " INF configuration missing");
             }
             boost::shared_ptr<InfDkData> def = infDataMap["default"];
             boost::shared_ptr<InfDkData> infData = boost::make_shared<InfDkData>(

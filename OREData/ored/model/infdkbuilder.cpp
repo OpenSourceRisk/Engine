@@ -55,33 +55,42 @@ InfDkBuilder::InfDkBuilder(const boost::shared_ptr<ore::data::Market>& market, c
     // TODO, support other param types
   //  QL_REQUIRE(data_->aParamType() == ParamType::Piecewise, "DkBuilder, only piecewise volatility is supported currently");
 
-    if (data_->calibrateA()) { // override
-        if (data_->aTimes().size() > 0) {
-            LOG("overriding alpha time grid with option expiries");
+    if (data_->aParamType() == ParamType::Constant) {
+        QL_REQUIRE(data_->aTimes().size() == 0, "empty alpha times expected");
+        QL_REQUIRE(data_->aValues().size() == 1, "initial alpha array should have size 1");
+    } else if (data_->aParamType() == ParamType::Piecewise) {
+        if (data_->calibrateA() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
+            if (data_->aTimes().size() > 0) {
+                LOG("overriding alpha time grid with option expiries");
+            }
+            QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
+            aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+            alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
+        } else { // use input time grid and input alpha array otherwise
+            QL_REQUIRE(alpha.size() == aTimes.size() + 1, "alpha grids do not match");
         }
-        QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
-        aTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-        alpha = Array(aTimes.size() + 1, data_->aValues()[0]);
-    }
-    else { // use input time grid and input alpha array otherwise
-        aTimes = Array(data_->aTimes().begin(), data_->aTimes().end());
-        alpha = Array(data_->aValues().begin(), data_->aValues().end());
-        QL_REQUIRE(alpha.size() == aTimes.size() + 1, "alpha grids do not match");
-    }
+    } else
+        QL_FAIL("Alpha type case not covered");
 
-    if (data_->calibrateH()) { // override
-        if (data_->hTimes().size() > 0) {
-            LOG("overriding H time grid with option expiries");
+    if (data_->hParamType() == ParamType::Constant) {
+        QL_REQUIRE(data_->hValues().size() == 1, "reversion grid size 1 expected");
+        QL_REQUIRE(data_->hTimes().size() == 0, "empty reversion time grid expected");
+    } else if (data_->hParamType() == ParamType::Piecewise) {
+        if (data_->calibrateH() && data_->calibrationType() == CalibrationType::Bootstrap) { // override
+            if (data_->hTimes().size() > 0) {
+                LOG("overriding H time grid with option expiries");
+            }
+            QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
+            hTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
+            h = Array(hTimes.size() + 1, data_->hValues()[0]);
+        } else { // use input time grid and input alpha array otherwise
+            QL_REQUIRE(h.size() == hTimes.size() + 1, "H grids do not match");
         }
-        QL_REQUIRE(optionExpiries_.size() > 0, "empty option expiries");
-        hTimes = Array(optionExpiries_.begin(), optionExpiries_.end() - 1);
-        h = Array(hTimes.size() + 1, data_->hValues()[0]);
-    }
-    else { // use input time grid and input alpha array otherwise
-        hTimes = Array(data_->hTimes().begin(), data_->hTimes().end());
-        h = Array(data_->hValues().begin(), data_->hValues().end());
-        QL_REQUIRE(h.size() == hTimes.size() + 1, "H grids do not match");
-    }
+    } else
+        QL_FAIL("H type case not covered");
+
+    LOG("before calibration: alpha times = " << aTimes << " values = " << alpha);
+    LOG("before calibration:     h times = " << hTimes << " values = " << h)
 
     if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
         data_->volatilityType() == LgmData::VolatilityType::HullWhite) {

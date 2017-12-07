@@ -65,9 +65,9 @@ namespace QuantExt {
         Real zeroRateImpl(Time t) const;
 
         const boost::shared_ptr<CrossAssetModel> model_;
+        Size index_;
         Date referenceDate_;
         Real relativeTime_, state_z_, state_y_;
-        Size index_;
     };
 
 

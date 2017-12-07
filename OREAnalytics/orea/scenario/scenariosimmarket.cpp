@@ -837,14 +837,14 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         DLOG("adding " << ci << " base CPI price");
         Handle<ZeroInflationIndex> zeroInflationIndex = initMarket->zeroInflationIndex(ci, configuration);
         Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
-        Date today = Settings::instance().evaluationDate();
-        Date fixingDate = today - obsLag;
+        Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
+        Real baseCPI = zeroInflationIndex->fixing(fixingDate);
 
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(baseCPI));
         Handle<Quote> qh(q);
 
         boost::shared_ptr<InflationIndex> inflationIndex = boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
-        Handle<InflationIndexObserver> inflObserver(boost::make_shared<InflationIndexObserver>(inflationIndex, qh, fixingDate, obsLag));
+        Handle<InflationIndexObserver> inflObserver(boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
 
         baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(make_pair(Market::defaultConfiguration, ci), inflObserver));
         simData_.emplace(std::piecewise_construct, 

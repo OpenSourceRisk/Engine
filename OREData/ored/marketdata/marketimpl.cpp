@@ -284,6 +284,10 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : baseCpis_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
 
     }
 

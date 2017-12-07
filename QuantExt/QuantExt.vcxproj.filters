@@ -507,6 +507,9 @@
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\models\dkimpliedyoyinflationtermstructure.hpp">
+      <Filter>models</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -854,6 +857,9 @@
       <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp">
+      <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\models\dkimpliedyoyinflationtermstructure.cpp">
       <Filter>models</Filter>
     </ClCompile>
   </ItemGroup>

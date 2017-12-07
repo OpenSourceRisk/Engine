@@ -7,6 +7,7 @@
 #include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 #include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
 #include <qle/models/eqbsconstantparametrization.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/eqbsparametrization.hpp>

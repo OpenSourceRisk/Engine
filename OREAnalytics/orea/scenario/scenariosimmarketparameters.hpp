@@ -53,16 +53,13 @@ public:
           capFloorVolSimulate_(false),  survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false), 
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false),
           fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false), 
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), baseCorrelationSimulate_(false), cpiCapFloorVolSimulate_(false),
-          yoyCapFloorVolSimulate_(false) {
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
         equityDividendTenors_[""];
         equityForecastTenors_[""];
         zeroInflationTenors_[""];
-        cpiCapFloorVolExpiries_[""];
-        yoyCapFloorVolExpiries_[""];
         yoyInflationTenors_[""];
         // set default dayCounters
         setDefaults();
@@ -160,20 +157,6 @@ public:
     const vector<Period>& yoyInflationTenors(const string& key) const;
     bool hasYoyInflationTenors(const string& key) const { return yoyInflationTenors_.count(key) > 0; }
 
-    bool simulateCpiCapFloorVols() const { return cpiCapFloorVolSimulate_; }
-    const vector<string>& cpiCapFloorVolIndices() const { return cpiCapFloorVolIndices_; }
-    const vector<Period>& cpiCapFloorVolExpiries(const string& key) const;
-    bool hasCpiCapFloorVolExpiries(const string& key) const { return cpiCapFloorVolExpiries_.count(key) > 0; }
-    const vector<Real>& cpiCapFloorVolStrikes() const { return cpiCapFloorVolStrikes_; }
-    const string& cpiCapFloorVolDecayMode() const { return cpiCapFloorVolDecayMode_; }
-
-    bool simulateYoyCapFloorVols() const { return yoyCapFloorVolSimulate_; }
-    const vector<string>& yoyCapFloorVolIndices() const { return yoyCapFloorVolIndices_; }
-    const vector<Period>& yoyCapFloorVolExpiries(const string& key) const;
-    bool hasYoyCapFloorVolExpiries(const string& key) const { return yoyCapFloorVolExpiries_.count(key) > 0; }
-    const vector<Real>& yoyCapFloorVolStrikes() const { return yoyCapFloorVolStrikes_; }
-    const string& yoyCapFloorVolDecayMode() const { return yoyCapFloorVolDecayMode_; }
-
     bool simulateEquityForecastCurve() const { return equityForecastCurveSimulate_; }
     bool simulateDividendYield() const { return dividendYieldSimulate_; }
 
@@ -263,18 +246,6 @@ public:
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
     void setYoyInflationTenors(const string& key, const vector<Period>& p);
     void setYoyInflationDayCounters(const string& key, const string& p);
-
-    bool& simulateCpiCapFloorVols() { return cpiCapFloorVolSimulate_; }
-    vector<string>& cpiCapFloorVolIndices() { return cpiCapFloorVolIndices_; }
-    void setCpiCapFloorVolExpiries(const string& key, const vector<Period>& p);
-    vector<Real>& cpiCapFloorVolStrikes() { return cpiCapFloorVolStrikes_; }
-    string& cpiCapFloorVolDecayMode() { return cpiCapFloorVolDecayMode_; }
-
-    bool& simulateYoyCapFloorVols() { return yoyCapFloorVolSimulate_; }
-    vector<string>& yoyCapFloorVolIndices() { return yoyCapFloorVolIndices_; }
-    void setYoyCapFloorVolExpiries(const string& key, const vector<Period>& p);
-    vector<Real>& yoyCapFloorVolStrikes() { return yoyCapFloorVolStrikes_; }
-    string& yoyCapFloorVolDecayMode() { return yoyCapFloorVolDecayMode_; }
 
     bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
     bool& simulateDividendYield() { return dividendYieldSimulate_; }
@@ -379,18 +350,6 @@ private:
     vector<string> yoyInflationIndices_;
     map<string, string>  yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
-
-    bool cpiCapFloorVolSimulate_;
-    vector<string> cpiCapFloorVolIndices_;
-    map<string, vector<Period>> cpiCapFloorVolExpiries_;
-    vector<Real> cpiCapFloorVolStrikes_;
-    string cpiCapFloorVolDecayMode_;
-
-    bool yoyCapFloorVolSimulate_;
-    vector<string> yoyCapFloorVolIndices_;
-    map<string, vector<Period>> yoyCapFloorVolExpiries_;
-    vector<Real> yoyCapFloorVolStrikes_;
-    string yoyCapFloorVolDecayMode_;
 };
 } // namespace analytics
 } // namespace ore
