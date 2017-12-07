@@ -26,6 +26,10 @@ An example of a {\tt portfolio.xml} file with one Swap trade including the full 
     <Envelope>
       <CounterParty> Counterparty#1 </CounterParty>
       <NettingSetId> NettingSet#2 </NettingSetId>
+      <PortfolioIds>
+          <PortoliodId> PF#1 </PortfolioId>
+          <PortoliodId> PF#2 </PortfolioId>
+      </PortfolioIds>
       <AdditionalFields>
         <Sector> SectorA </Sector>
         <Book> BookB </Book>
@@ -49,19 +53,19 @@ allowable values follows below. There are two XML elements directly under the to
 
 \begin{itemize}
 \item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
-  portfolio. Trade ids should be unique within a portfolio.  The {\tt Trade id} element is entered twice in the
-  instrument file, firstly with an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
-  in the beginning closed by {\tt </Trade>} at the end of the trade data, and secondly with a {\tt Id} element in the
-  envelope node.  Both Trade id entries should be identical.
+  portfolio. Trade ids should be unique within a portfolio.  The {\tt
+    Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
+  in the beginning closed by {\tt </Trade>} at the end of the trade data.
 
 Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 
 
-\item {\tt TradeType}: The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in
-  the envelope. The two Trade type entries should be identical. ORE currently supports 5 trade types.
+\item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
+ORE currently supports 11 trade types.
 
-Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
-
+%Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
+Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
+EquityForward, EquityOption, CreditDefaultSwap, Bond}
 
 \end{itemize}
 
@@ -69,16 +73,16 @@ Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, Cr
 \subsection{Envelope}\label{ss:envelope}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 The envelope node contains basic identifying details of a trade ({\tt
-  Id}, {\tt Type}, {\tt Counterparty}, {\tt Rating}, {\tt
-  NettingSetId}), plus an {\tt AdditionalFields} node where custom
+  Id}, {\tt Type}, {\tt Counterparty}, {\tt NettingSetId}), a 
+{\tt PortfolioIds} node containing a list of portfolio assignments, 
+plus an {\tt AdditionalFields} node where custom
 elements can be added for informational purposes such as {\tt Book} or
 {\tt Sector}. Beside the custom elements within the {\tt
   AdditionalFields} node, the envelope contains the same elements for
 all Trade types.  The {\tt Id}, {\tt Type}, {\tt Counterparty} and
 {\tt NettingSetId} elements must have non-blank entries for ORE to
-run, whereas ORE will run without a {\tt Rating} element but fail to
-produce a CVA. \\
-
+run. 
+%, whereas ORE will run without a {\tt Rating} element but fail to produce a CVA. \\
 The meanings and allowable values of the various elements in the \lstinline!Envelope!  node follow below.
 
 \begin{itemize}
@@ -87,25 +91,26 @@ The meanings and allowable values of the various elements in the \lstinline!Enve
 
   Allowable values: Any alphanumeric string. The underscore (\_) sign may be used as well.
 
-\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
-  element in the envelope. Both elements should have the same entry.
-
-Allowable values: \emph{Swap, CapFloor, Swaption, FxForward, FxOption }
+%\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
+%  element in the envelope. Both elements should have the same entry.
+%
+%Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
+%EquityForward, EquityOption, CreditDefaultSwap, Bond}
 
 \item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by
   counterparty.
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
 
-\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
-  calculations.  No CVA will be calculated if omitted or left blank.
+%\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
+% calculations.  No CVA will be calculated if omitted or left blank.
 
-Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
+%Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
 
 \item {\tt NettingSetId} [Optional]: The {\tt NettingSetId} element specifies the identifier for a netting set. If a
   \lstinline!NettingSetId! is specified, the trade is eligible for close-out netting under the terms of an associated
   ISDA agreement. The specified {\tt NettingSetId} must be defined within the netting set definitions file
-  (\ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
+  (see section \ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
   eligible for netting.
 
 Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
@@ -114,10 +119,20 @@ Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may
 % netting groups. Total netting
 % group %-- exposures and exposures from transactions not belonging to a netting group are then combined without offsetting.
 
+\item \lstinline!PortfolioIds! [Optional]: The PortfolioIds node
+  allows the assignment of a given trade to several portfolios, each
+  enclosed in its own pair of tags {\tt <PortfolioId>} and {\tt
+    </PortfolioId>} . Note that ORE does not assume a hierarchical 
+ organisation of such portfolios. If present, the portfolio IDs will be used in the
+  generation of some ORE reports such as the VaR report which provides
+  breakdown by any portfolio id that occurs in the trades' envelopes.
+
+Allowable values for each PortfolioId: Any string.
+
 \item \lstinline!AdditionalFields! [Optional]: The AdditionalFields node allows the insertion of additional trade
   information using custom XML elements.  For example, elements such as Sector, Desk or Folder can be used. The elements
-  within the \lstinline!AdditionalFields! node are used for informational purposes only, and do not affect pricing or
-  exposure calculations and analytics.
+  within the \lstinline!AdditionalFields! node are used for
+  informational purposes only, and do not affect any analytics in ORE.
 
 Allowable values: Any custom element.
 
@@ -127,8 +142,9 @@ Allowable values: Any custom element.
 \subsection{Trade Specific Data}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-After the envelope node, the {\tt instruments.xml} file includes trade-specific data for each trade type supported by
-ORE. Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
+After the envelope node, trade-specific data for each trade type supported by
+ORE is included. 
+Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
 configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
 sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
 
@@ -140,7 +156,7 @@ Details of  trade-specific data for all trade types follow below.
 
 The \lstinline!SwapData! node is the trade data container for the Swap trade type. A Swap must have at least one leg,
 and can have an unlimited number of legs. Each leg is represented by a \lstinline!LegData! trade component sub-node,
-described in section \ref{ss:leg_data} Leg Data and Notionals. An example structure of a two-legged \lstinline!SwapData!
+described in section \ref{ss:leg_data}. An example structure of a two-legged \lstinline!SwapData!
 node is shown in Listing \ref{lst:swap_data}.
 
 \begin{listing}[H]
@@ -166,7 +182,7 @@ The \lstinline!CapFloorData! node is the trade data container for trade type Cap
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
 is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating}, plus
 elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
-\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!CapRates! or \lstinline!FloorRates!
+\ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both.
 
 \begin{listing}[H]
@@ -179,9 +195,9 @@ elements, or both.
     <LegType>Floating</LegType>
      ...
   </LegData>
-  <CapRates>
+  <Caps>
     <Rate>0.05</Rate>
-  </CapRates>
+  </Caps>
 </CapFloorData>
 \end{minted}
 \caption{Cap/Floor data}
@@ -195,10 +211,10 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 \item LongShort: This node defines the position in the cap (floor, collar) and can take values \lstinline!Long! or
   \lstinline!Short!
 
-\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data} Leg Data and Notionals. Exactly
+\item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. Exactly
   one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
 
-\item CapRates: This node has child elements of type \lstinline!Rate!
+\item Caps: This node has child elements of type \lstinline!Rate!
   capping the floating leg. The first rate value corresponds to the
   first coupon, the second rate value corresponds to the second
   coupon, etc. If the number of coupons exceeds the number of rate
@@ -210,7 +226,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   Allowable values for each \lstinline!Rate! element: Any real number. The rate is expressed in decimal form, eg 0.05 is
   a rate of 5\%
 
-\item FloorRates: This node has child elements of type
+\item Floors: This node has child elements of type
   \lstinline!Rate! flooring the floating leg.  The first rate value
   corresponds to the first coupon, the second rate value corresponds
   to the second coupon, etc. If the number of coupons exceeds the
@@ -228,8 +244,8 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
 
 The \lstinline!SwaptionData!  node is the trade data container for the Swaption trade type. The \lstinline!SwaptionData!
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
-component sub-node.  These trade components are outlined in section \ref{ss:option_data} Option Data and section
-\ref{ss:leg_data} Leg Data and Notionals.\\
+component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
+\ref{ss:leg_data}.\\
 
 Supported swaption exercise styles are European and Bermudan. European swaptions can have unlimited number of legs, with
 each leg represented by a \lstinline!LegData! sub-node. Bermudan swaptions must have two legs, i.e. two
@@ -319,7 +335,7 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \subsubsection{FX Option}
 
 The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
-supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount.The
+supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount. The
 \lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
 specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
 \ref{lst:fxoption_data}.
@@ -344,7 +360,7 @@ specific to the FX Option. The structure of an example \lstinline!FXOptionData! 
 The meanings and allowable values of the elements in the \lstinline!FXOptionData!  node follow below.
 
 \begin{itemize}
-\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note that the
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. Note that the
   FX option type allows for \emph{European} option style only.
 
 \item BoughtCurrency: The bought currency of the FX option.  
@@ -377,13 +393,13 @@ an example \lstinline!EquityOptionData! node for an equity option is shown in Li
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
 <EquityOptionData>
-	<OptionData>
-	...
-	</OptionData>
-	<Name>SP5</Name>
-	<Currency>USD</Currency>
-	<Strike>2147.56</Strike>
-	<Quantity>17000</Quantity>
+    <OptionData>
+      ...
+    </OptionData>
+    <Name>SP5</Name>
+    <Currency>USD</Currency>
+    <Strike>2147.56</Strike>
+    <Quantity>17000</Quantity>
 </EquityOptionData>
 \end{minted}
 \caption{FX Option data}
@@ -395,13 +411,13 @@ The meanings and allowable values of the elements in the \lstinline!EquityOption
 \begin{itemize}
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
 	that the FX option type allows for \emph{European} option style only.	
-	\item Name: The name of the underlying equity 	
+	\item Name: The name of the underlying equity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option.  	
+	\item Currency: The bought currency of the equity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The option strike price.  
+	\item Strike: The option strike price.\\
 	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying covered by the transaction  
+	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values:  Any positive real number.
 \end{itemize}
 
@@ -430,17 +446,17 @@ Listing \ref{lst:eqfwd_data}.
 The meanings and allowable values of the elements in the \lstinline!EquityForwardData!  node follow below.
 
 \begin{itemize}
-	\item LongShort: Defines whether the trade is long or short the underlying equity
+	\item LongShort: Defines whether the trade is long or short the underlying equity. \\
 	Allowable values: Long, Short.
-	\item Maturity: The maturity date of the forward contract
+	\item Maturity: The maturity date of the forward contract. \\
 	Allowable values: Any date string.
-	\item Name: The name of the underlying equity 	
+	\item Name: The name of the underlying equity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option.  	
+	\item Currency: The bought currency of the equity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The option strike price.  
+	\item Strike: The option strike price. \\
 	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying covered by the transaction  
+	\item Quantity: The number of units of the underlying covered by the transaction. \\
 	Allowable values:  Any positive real number.
 \end{itemize}
 
@@ -512,11 +528,11 @@ are
     todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
 \item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for
-  pricing, see section \ref{sssec:securityspreads}
+  pricing.
 \item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a curve in the yield
-  curves block in {\tt todaysmarket.xml}
-\item SettlementDays: The settlement delay applicable to the security
-\item Calendar: The calendar associated to the settlement lag
+  curves block in {\tt todaysmarket.xml}.
+\item SettlementDays: The settlement delay applicable to the security.
+\item Calendar: The calendar associated to the settlement lag.
 \item IssueDate: The issue date of the security.
 \end{itemize}
 
@@ -544,7 +560,7 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \label{lst:bonddata}
 \end{listing}
 
-The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
+The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sec:curveconfig} and \ref{md:sec_rec_rates}. 
 
 \subsubsection{Credit Default Swap}
 
@@ -593,15 +609,16 @@ A forward rate agreement is set up using a {\tt ForwardRateAgreementData} block 
 are
 
 \begin{itemize}
-\item StartDate: A FRA expires/settles on the startDate . \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
-    todaysmarket.xml}
-\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit
-\item Currency: The currency of the FRA notional.  	
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-\item Index: The name of the interest rate index the FRA is benchmarked against
+\item StartDate: A FRA expires/settles on the startDate. \\
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt todaysmarket.xml}.
+\item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
+\item Currency: The currency of the FRA notional. \\
+Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+\item Index: The name of the interest rate index the FRA is benchmarked against.
 \item LongShort: Specifies whether the option position is long  or
   short.
-\item Strike: The agreed forward interest rate
+\item Strike: The agreed forward interest rate.
 \item Notional: No accretion or amortisation, just a constant notional.
 \end{itemize}
 
@@ -623,8 +640,6 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \caption{Forward Rate Agreement Data}
 \label{lst:ForwardRateAgreementdata}
 \end{listing}
-
-The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sssec:securityrecoveryrates} and \ref{md:sec_rec_rates}. 
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
@@ -677,7 +692,7 @@ turn include further trade components such as \lstinline!FixedLegData!, \lstinli
 \label{lst:trade_component}
 \end{listing}
 
-Descriptions of all trade components supported in ORE follow below:
+Descriptions of all trade components supported in ORE follow below.
 
 \subsubsection{Option Data}
 \label{ss:option_data} 
@@ -802,13 +817,13 @@ Allowable values:  \emph{true, false}
 
 Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
-\item DayCounter: The day count convention of the leg coupons. 
-
-Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
-
 \item PaymentConvention: The payment convention of the leg coupons. 
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
+
+\item DayCounter: The day count convention of the leg coupons. 
+
+Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
 
 \item Notionals: This node contains child elements of type
   \lstinline!Notional!. If the notional is fixed over the life of the
@@ -823,15 +838,6 @@ Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_
   exceed the number of coupons.
 
 Allowable values: Each child element can take any positive real number.
-
-In case of exchange of currencies an initial exchange, a final exchange
-and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
-\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
-\lstinline!NotionalAmortizingExchange! as subelements.
-
-FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
-\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
-\lstinline!FixingDays! (integer) subelements.
 
 \vspace{1em}
 
@@ -867,9 +873,16 @@ Another allowable specification of the notional schedule is shown in Listing \re
 The first notional must not have a start date, it will be associated
 with the schedule's start, The subsequent notionals can have a start
 date specified from which date onwards the new notional is applied. This allows
-specifying notionals only for dates where the notional changes.
+specifying notionals only for dates where the notional changes. 
 
-An example for a cross currency exchange leg is shown in Listing \ref{lst:notional_exchange}.
+\vspace{1em} 
+
+In case of exchange of currencies an initial exchange, a final exchange
+and an amortising exchange can be specified using an \lstinline!Exchanges! child element with \break
+\lstinline!NotionalInitialExchange!, \lstinline!NotionalFinalExchange! and \break
+\lstinline!NotionalAmortizingExchange! as subelements, see Listing
+\ref{lst:notional_exchange}.
+
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -878,6 +891,7 @@ An example for a cross currency exchange leg is shown in Listing \ref{lst:notion
                     <Exchanges>
                       <NotionalInitialExchange>true</NotionalInitialExchange>
                       <NotionalFinalExchange>true</NotionalFinalExchange>
+                      <NotionalAmortizingExchange>true</NotionalAmortizingExchange>
                     </Exchanges>
                 </Notionals>
 \end{minted}
@@ -885,17 +899,40 @@ An example for a cross currency exchange leg is shown in Listing \ref{lst:notion
 \label{lst:notional_exchange}
 \end{listing}
 
+FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
+\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
+\lstinline!FixingDays! (integer) subelements, see Listing
+\ref{lst:notional_fxreset} for an example
+
+ \begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+                <Currency>USD</Currency>
+                <Notionals>
+                    <Notional>65000000</Notional> <!-- in USD -->
+                    <FXReset>
+                      <ForeignCurrency> EUR </ForeignCurrency>
+                      <ForeignAmount> 60000000 </ForeignAmount>
+                      <FXIndex> FX-SOURCE-USD-EUR </FXIndex>
+                      <FixingDays> 2 </FixingDays>
+                    </FXReset>
+                </Notionals>
+\end{minted}
+\caption{Notional list with exchange}
+\label{lst:notional_fxreset}
+\end{listing}
+
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.
 \item FixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{fixed} It is
-outlined in section \ref{ss:fixedleg_data} Fixed Leg Data and Rates.
+outlined in section \ref{ss:fixedleg_data}.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
 outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
 \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
-  outlined in section \ref{ss:cpilegdata} CPI Leg Data.
+  outlined in section \ref{ss:cpilegdata}.
 \item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
-  outlined in section \ref{ss:yylegdata} YY Leg Data.
+  outlined in section \ref{ss:yylegdata}.
 \end{itemize}
 
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
@@ -1050,7 +1087,7 @@ The meanings and allowable values of the elements in the \lstinline!FixedLegData
 
 \item Rates: This node contains child elements of type
   \lstinline!Rate!. If the rate is constant over the life of the fixed
-  leg only one rate value should be entered. If two or more coupons
+  leg, only one rate value should be entered. If two or more coupons
   have different rates, multiple rate values are required, each
   represented by a \lstinline!Rate! child element. The first rate
   value corresponds to the first coupon, the second rate value
@@ -1111,6 +1148,7 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                         <Floor>0.01</Floor>
                     </Floors>
                 </FloatingLegData>
+                <NakedOption>N</NakedOption>
 \end{minted}
 \caption{Floating leg data}
 \label{lst:floatingleg_data}
@@ -1122,7 +1160,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item Index:  The combination of currency, index and term that
   identifies the relevant fixings and yield curve of the floating leg.  
 
-  Allowable values: An alphanumeric string on the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
     simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
@@ -1141,7 +1179,7 @@ Allowable values:  Positive integers.
 
 \item Spreads: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
-  floating leg only one spread value should be entered. If two or more
+  floating leg, only one spread value should be entered. If two or more
   coupons have different spreads, multiple spread values are required,
   each represented by a \lstinline!Spread! child element. The first
   spread value corresponds to the first coupon, the second spread
@@ -1177,9 +1215,157 @@ in Listing \ref{lst:spreads_dates}.
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
-  the given rate(after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
+\item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
+
+\end{itemize}
+
+\subsubsection{Leg Data with Amortisation Structures}
+\label{ss:amortisationdata}
+
+Amortisation structures can (optionally) be added to a leg as
+indicated in the following listing \ref{lst:amortisations}, within a
+block of information enclosed by {\tt <Amortizations>} and {\tt
+  </Amortizations>} tags.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType> ... </LegType>
+        <Payer> ... </Payer>
+        <Currency> ... </Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <Amortizations>
+          <AmortizationData>
+            <Type>FixedAmount</Type>
+            <Value>1000000</Value>
+            <StartDate>20170203</StartDate>
+            <Frequency>1Y</Frequency>
+            <Underflow>false</Underflow>
+          </AmortizationData>
+          <AmortizationData>
+            ...
+          </AmortizationData>
+        </Amortizations>
+        ...
+      </LegData>
+\end{minted}
+\caption{Amortisation data}
+\label{lst:amortisations}
+\end{listing}
+
+The user can specify a sequence of {\tt AmortizationData} items in
+order to switch from one kind of amortisation to another etc.  
+Within each {\tt AmortisationData} block the meaning of elements is
+
+\begin{itemize}
+\item Type: Amortisation type with allowable values {\em FixedAmount,
+  RelativeToInitialNotional, RelativeToPreviousNotional, Annuity.}
+\item Value: Interpreted depending on {\tt Type}, see below.
+\item StartDate: Amortisation starts on first schedule date on or
+  beyond StartDate.
+\item Frequency, entered as a period: Frequency of amortisations.
+\item Underflow:  Allow amortisation below zero notional if {\tt true},
+  otherwise amortisation stops at zero notional.
+\end{itemize}
+
+The amortisation data block's {\tt Value} element  is interpreted
+depending on the chosen {\tt Type}:
+\begin{itemize}
+\item FixedAmount: The value is interpreted as a notional amount to be
+  subtracted from the current notional on each amortisation date.
+\item RelativeToInitialNotional: The value is interpreted as a
+  fraction of the {\bf initial} notional to be subtraced from the current
+  notional on each amortisation date.
+\item RelativeToPreviousNotional: The value is interpreted as a
+  fraction of the {\bf previous} notional to be subtraced from the current
+  notional on each amortisation date.
+\item Annuity: The value is interpreted as annuity amount (redemption
+  plus coupon).
+\end{itemize}
+
+Annuity type amortisation is supported for fixed rate legs as well as
+floating (ibor) legs. 
+
+Note:
+\begin{itemize}
+\item Floating annuities require at least one previous vanilla coupon
+  in order to work out the first amortisation amount. 
+\item Floating legs with annuity amortisation currently do not allow
+  switching the amortisation type, i.e. only a  single block of {\tt
+    AmortizationData}.
+\end{itemize}
+
+\subsubsection{CMS Leg Data}
+\label{ss:cmslegdata}
+
+Listing \ref{lst:cmslegdata} shows an example for a leg of type CMS. 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>CMS</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+        <CMSLegData>
+          <Index>EUR-CMS-10Y</Index>
+          <Spreads>
+            <Spread>0.0010</Spread>
+          </Spreads>
+          <Gearings>
+            <Gearing>2.0</Gearing>
+          </Gearings>
+          <Caps>
+            <Cap>0.05</Cap>
+          </Caps>
+          <Floors>
+            <Floor>0.01</Floor>
+          </Floors>
+        </CMSLegData>
+        <NakedOption>N</NakedOption>
+      </LegData>
+\end{minted}
+\caption{CMS leg data}
+\label{lst:cmslegdata}
+\end{listing}
+ 
+The CMSLegData block contains the following elements:
+
+\begin{itemize}
+\item Index: The underlying CMS index.
+\item Spreads: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
+  values.
+\item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
+  i.e. the fixing gap is calculated in relation to the current period
+  end date.\\ \emph{false} indicates that  fixing is in advance,
+  i.e. the fixing gap is calculated in relation to the previous period
+  end date.  
+\item FixingDays: This is the fixing gap, i.e. the number of days
+  before the period end date an index fixing is taken.   
+\item Gearings: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+  multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+  given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
+\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+  the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
+  above.
+\item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 \end{itemize}
 
 \subsubsection{CPI Leg Data}
@@ -1189,10 +1375,10 @@ Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI. The CPILegD
 elements:
 
 \begin{itemize}
-\item Index: The underlying zero inflation index
+\item Index: The underlying zero inflation index.
 \item Rates: The fixed rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
   values.
-\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons
+\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons.
 \item ObservationLag: The observation lag to be applied.
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 \end{itemize}
@@ -1245,8 +1431,8 @@ Listing \ref{lst:yylegdata} shows an example for a leg of type YY. The YYLegData
 elements:
 
 \begin{itemize}
-\item Index: The underlying zero inflation index
-\item FixingDays: The number of fixing days
+\item Index: The underlying zero inflation index.
+\item FixingDays: The number of fixing days.
 \item ObservationLag: The observation lag to be applied.
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 \end{itemize}
