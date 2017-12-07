@@ -226,12 +226,12 @@
       <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription> 
       <Currency>EUR</Currency> 
       <Type>Benchmark</Type> 
-      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve> 
+      <DayCounter>A365</DayCounter> 
       <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve> 
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve> 
       <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars> 
       <SpotLag>0</SpotLag> 
       <Calendar>TARGET</Calendar> 
-      <DayCounter>A365</DayCounter> 
     </DefaultCurve> 
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
