@@ -135,9 +135,12 @@ ZeroInflationCurveObserverMoving<Interpolator>::
             this->data_.begin());
     this->interpolation_.update();
 
-    // register with each of the quotes
-    for (Size i = 0; i < this->quotes_.size(); i++)
-        registerWith(this->quotes_[i]);
+    // If observationmode is not unregister, then register with each quote
+    if (ObservationMode::instance().mode() != ObservationMode::Mode::Unregister) {
+        // register with each of the quotes
+        for (Size i = 0; i < this->quotes_.size(); i++)
+            registerWith(this->quotes_[i]);
+    }
 }
 
 template <class T>
