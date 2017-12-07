@@ -280,7 +280,7 @@ void CrossAssetModelDataTest::testToXMLFromXML() {
     newData.irConfigs() = {};
     BOOST_CHECK(data != newData);
 
-    //remove("simulationtest.xml");
+    remove("simulationtest.xml");
 }
 
 test_suite* CrossAssetModelDataTest::suite() {

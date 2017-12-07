@@ -36,7 +36,7 @@ using FlowList = std::vector<std::vector<std::string>>;
 namespace ore {
 namespace analytics {
 
-//! Initialise the manager-		[4]	{px=0x000002b074c35030 {yoyIndex_={px=0x000002b074c324a0 {ratio_=true yoyInflation_={link_={px=0x000002b07526f190 {...} ...} } } ...} ...} ...}	boost::shared_ptr<QuantLib::CashFlow>
+//! Initialise the manager-
 
 void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 
