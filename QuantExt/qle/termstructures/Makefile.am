@@ -75,6 +75,7 @@ this_include_HEADERS = \
     equityvolconstantspread.hpp
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserver.hpp \
+	yoyinflationcurveobservermoving.hpp \
 	zeroinflationcurveobserverstatic.hpp \
     zeroinflationcurveobservermoving.hpp \
 	fxvannavolgasmilesection.hpp \

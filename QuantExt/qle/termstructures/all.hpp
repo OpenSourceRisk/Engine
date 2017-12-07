@@ -38,3 +38,4 @@
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/yoyinflationcurveobserver.hpp>
+#include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
