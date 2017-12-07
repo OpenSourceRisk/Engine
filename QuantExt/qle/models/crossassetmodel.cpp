@@ -676,8 +676,6 @@ std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const 
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_infdkI_.find(k);
     Real V0, V_tilde;
-    Real Hyt = Hy(i).eval(this, t);
-    Real HyT = Hy(i).eval(this, T);
 
     if (it == cache_infdkI_.end()) {
         V0 = infV(i, ccy, 0, t);
@@ -726,19 +724,10 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
 Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Time T, const Real z, const Real y,
                               const Real irz) {
     Size ccy = ccyIndex(infdk(i)->currency());
-    Real Hyt = Hy(i).eval(this, t);
-    Real HyS = Hy(i).eval(this, S);
-    Real HyT = Hy(i).eval(this, T);
-    Real HdS = irlgm1f(0)->H(S);
-    Real HdT = irlgm1f(0)->H(T);
-
-    Real C_tilde;
-    Real V_tilde = infdkV(i, S, T).second;
-    Real rho = correlation(IR, 0, INF, i);
 
     // Set Convexity adjustment set to 1.
     // TODO: Add calculation for DK convexity adjustment
-    C_tilde = 1;
+    Real C_tilde = 1;
 
     Real I_tildeS = infdkI(i, t, S, z, y).second;
     Real I_tildeT = infdkI(i, t, T, z, y).second;

@@ -27,8 +27,8 @@ DkImpliedZeroInflationTermStructure::DkImpliedZeroInflationTermStructure(
           model->infdk(index)->termStructure()->observationLag(), model->infdk(index)->termStructure()->frequency(),
           model->infdk(index)->termStructure()->indexIsInterpolated(),
           model->infdk(index)->termStructure()->nominalTermStructure()),
-      model_(model), referenceDate_(model_->infdk(index)->termStructure()->referenceDate()), state_z_(0.0),
-      state_y_(0.0), index_(index) {
+      model_(model), index_(index), referenceDate_(model_->infdk(index)->termStructure()->referenceDate()),
+      state_z_(0.0), state_y_(0.0) {
     registerWith(model_);
     update();
 }

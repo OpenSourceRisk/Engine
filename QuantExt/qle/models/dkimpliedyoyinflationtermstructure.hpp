@@ -197,11 +197,11 @@ inline std::map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const s
     DayCounter dc = model_->infdk(index_)->termStructure()->dayCounter();
     Date maturity;
 
-    for (Size i = 0; i < dts.size(); i++) {
+    for (Size j = 0; j < dts.size(); j++) {
         if (model_->infdk(index_)->termStructure()->indexIsInterpolated()) {
-            maturity = dts[i] - useLag;
+            maturity = dts[j] - useLag;
         } else {
-            maturity = inflationPeriod(dts[i] - useLag, frequency()).first;
+            maturity = inflationPeriod(dts[j] - useLag, frequency()).first;
         }
 
         Schedule schedule = MakeSchedule()
@@ -250,9 +250,9 @@ inline std::map<Date, Real> DkImpliedYoYInflationTermStructure::yoyRates(const s
         Real yoyRate = (yoyLegRate / fixedDiscounts);
 
         if (hasSeasonality()) {
-            yoyRate = seasonality()->correctYoYRate(dts[i] - useLag, yoyRate, *this);
+            yoyRate = seasonality()->correctYoYRate(dts[j] - useLag, yoyRate, *this);
         }
-        yoys[dts[i]] = yoyRate;
+        yoys[dts[j]] = yoyRate;
     }
     return yoys;
 }
