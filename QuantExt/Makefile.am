@@ -8,11 +8,9 @@ m4datadir = $(datadir)/aclocal
 
 EXTRA_DIST = \
 	autogen.sh \
-	QuantExt_vc12.sln \
-	QuantExt_vc14.sln \
+	QuantExt.sln \
 	QuantExt.vcxproj \
-	QuantExt.vcxproj.filters \
-	QuantExt.props
+	QuantExt.vcxproj.filters
 
 .PHONY: docs docs-man docs-online docs-dist docs-clean
 BASEPATH = @abs_top_srcdir@
