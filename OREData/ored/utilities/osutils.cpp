@@ -28,6 +28,7 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <intrin.h>
+// windows.h must be included before psapi.h
 // clang-format off
 #include <windows.h>
 #include <psapi.h>
