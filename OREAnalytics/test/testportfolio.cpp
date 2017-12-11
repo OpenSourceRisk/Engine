@@ -39,7 +39,7 @@ boost::shared_ptr<Trade> buildSwap(string id, string ccy, bool isPayer, Real not
                                    string index) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
@@ -78,7 +78,7 @@ boost::shared_ptr<Trade> buildEuropeanSwaption(string id, string longShort, stri
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
@@ -124,7 +124,7 @@ boost::shared_ptr<Trade> buildBermudanSwaption(string id, string longShort, stri
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
@@ -251,7 +251,7 @@ boost::shared_ptr<Trade> buildCapFloor(string id, string ccy, string longShort, 
                                        string floatDC, string index) {
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
@@ -308,7 +308,7 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
@@ -348,7 +348,7 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
-    Size days = 2;
+    int days = 2;
     string cal = "TARGET";
     string conv = "MF";
     string rule = "Forward";
