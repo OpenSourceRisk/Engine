@@ -20,9 +20,7 @@ LDADD =
 
 EXTRA_DIST = \
 	autogen.sh \
-	ore_vc12.sln \
-	ore_vc14.sln \
-	ore.vcxproj \
-	ore.props
+	ore.sln \
+	ore.vcxproj
 
 ore_SOURCES = ore.cpp
