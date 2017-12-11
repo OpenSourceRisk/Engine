@@ -18,7 +18,7 @@
 
 /*! \file qle/termstructures/dynamicoptionletvolatilitystructure.hpp
     \brief dynamic optionlet volatility structure
-    \ingroup termstructues
+    \ingroup termstructures
 */
 
 #pragma once
@@ -85,4 +85,4 @@ private:
 inline VolatilityType DynamicOptionletVolatilityStructure::volatilityType() const { return volatilityType_; }
 
 inline Real DynamicOptionletVolatilityStructure::displacement() const { return displacement_; }
-}
+} // namespace QuantExt

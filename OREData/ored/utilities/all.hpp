@@ -14,3 +14,6 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/serializationdate.hpp>
 #include <ored/utilities/vectorutils.hpp>
+#include <ored/utilities/csvfilereader.hpp>
+#include <ored/utilities/timeperiod.hpp>
+

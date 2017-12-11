@@ -32,24 +32,24 @@
 #define ORE_DEBUG 32   // 00100000  63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
 
-#include <string>
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <string>
 #include <time.h>
 
-#include <ql/qldefines.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
-#include <queue>
+#include <boost/shared_ptr.hpp>
 #include <map>
+#include <ql/qldefines.hpp>
+#include <queue>
 
 #ifndef BOOST_MSVC
 #include <unistd.h>
 #endif
 
+#include <iomanip>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
-#include <iomanip>
 
 using std::string;
 
@@ -166,7 +166,7 @@ public:
     //! the name "BufferLogger"
     static const string name;
     //! Constructor
-    BufferLogger() : Logger(name) {}
+    BufferLogger(unsigned minLevel = ORE_DATA) : Logger(name), minLevel_(minLevel) {}
     //! Desctructor
     virtual ~BufferLogger() {}
     //! The log callback
@@ -187,6 +187,7 @@ public:
 
 private:
     std::queue<string> buffer_;
+    unsigned minLevel_;
 };
 
 //! Global static Log class
@@ -326,16 +327,16 @@ private:
     The proper usage is to use the macro LOGGERSTREAM and DLOGGERSTREAM, if a function takes
     a std::ostream& as a parameter, use the macro instead.
 
-    <code>
+    \code{.cpp}
     void function(int x, int y, std::ostream& out);
 
     void main () {
 
       // call function
       function (3, 4, LOGGERSTREAM);
-      // All logging will be completed before this line.
+      // All logging will be completed before this line
     }
-    </code>
+    \endcode
  */
 class LoggerStream {
 public:
@@ -356,5 +357,5 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
-}
-}
+} // namespace data
+} // namespace ore

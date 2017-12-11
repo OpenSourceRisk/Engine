@@ -27,8 +27,15 @@ void Envelope::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Envelope");
     counterparty_ = XMLUtils::getChildValue(node, "CounterParty", true);
     nettingSetId_ = XMLUtils::getChildValue(node, "NettingSetId", false);
-    additionalFields_.clear();
 
+    portfolioIds_.clear();
+    XMLNode* portfolioNode = XMLUtils::getChildNode(node, "PortfolioIds");
+    if (portfolioNode) {
+        for (auto const& c : XMLUtils::getChildrenNodes(portfolioNode, "PortfolioId"))
+            portfolioIds_.insert(XMLUtils::getNodeValue(c));
+    }
+
+    additionalFields_.clear();
     XMLNode* additionalNode = XMLUtils::getChildNode(node, "AdditionalFields");
     if (additionalNode) {
         for (XMLNode* child = XMLUtils::getChildNode(additionalNode); child; child = XMLUtils::getNextSibling(child)) {
@@ -41,11 +48,15 @@ XMLNode* Envelope::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Envelope");
     XMLUtils::addChild(doc, node, "CounterParty", counterparty_);
     XMLUtils::addChild(doc, node, "NettingSetId", nettingSetId_);
+    XMLNode* portfolioNode = doc.allocNode("PortfolioIds");
+    XMLUtils::appendNode(node, portfolioNode);
+    for (const auto& p : portfolioIds_)
+        XMLUtils::addChild(doc, portfolioNode, "PortfolioId", p);
     XMLNode* additionalNode = doc.allocNode("AdditionalFields");
     XMLUtils::appendNode(node, additionalNode);
     for (const auto& it : additionalFields_)
         XMLUtils::addChild(doc, additionalNode, it.first, it.second);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

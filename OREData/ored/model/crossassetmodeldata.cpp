@@ -17,20 +17,20 @@
 */
 
 #include <ored/model/crossassetmodeldata.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
-#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <qle/models/irlgm1fconstantparametrization.hpp>
-#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/fxbsconstantparametrization.hpp>
 #include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 
 #include <ql/math/optimization/levenbergmarquardt.hpp>
-#include <ql/quotes/simplequote.hpp>
 #include <ql/models/shortrate/calibrationhelpers/swaptionhelper.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -41,9 +41,10 @@ namespace data {
 
 bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
 
-    if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ ||
+    if (domesticCurrency_ != rhs.domesticCurrency_ || currencies_ != rhs.currencies_ || equities_ != rhs.equities_ ||
         correlations_ != rhs.correlations_ || bootstrapTolerance_ != rhs.bootstrapTolerance_ ||
-        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size()) {
+        irConfigs_.size() != rhs.irConfigs_.size() || fxConfigs_.size() != rhs.fxConfigs_.size() ||
+        eqConfigs_.size() != rhs.eqConfigs_.size() || infConfigs_.size() != rhs.infConfigs_.size()) {
         return false;
     }
 
@@ -59,6 +60,18 @@ bool CrossAssetModelData::operator==(const CrossAssetModelData& rhs) {
         }
     }
 
+    for (Size i = 0; i < eqConfigs_.size(); i++) {
+        if (*eqConfigs_[i] != *(rhs.eqConfigs_[i])) {
+            return false;
+        }
+    }
+
+    for (Size i = 0; i < infConfigs_.size(); i++) {
+        if (*infConfigs_[i] != *(rhs.infConfigs_[i])) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -66,8 +79,11 @@ bool CrossAssetModelData::operator!=(const CrossAssetModelData& rhs) { return !(
 
 void CrossAssetModelData::clear() {
     currencies_.clear();
+    equities_.clear();
     irConfigs_.clear();
     fxConfigs_.clear();
+    eqConfigs_.clear();
+    infConfigs_.clear();
     correlations_.clear();
 }
 
@@ -81,13 +97,6 @@ void CrossAssetModelData::validate() {
 
 std::vector<std::string> pairToStrings(std::pair<std::string, std::string> p) {
     std::vector<std::string> pair = {p.first, p.second};
-    for (int i = 0; i < 2; i++) {
-        if (pair[i].substr(0, 4) == "INF:") {
-            vector<string> tmp;
-            boost::split(tmp, pair[i], boost::is_any_of(":/"));
-            pair[i] = tmp[0] + ":" + tmp[1] + "/Index/" + tmp[2];
-        }
-    }
     return pair;
 }
 
@@ -111,23 +120,28 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
         LOG("CrossAssetModelData equity " << eq);
     }
 
+    infindices_ = XMLUtils::getChildrenValues(modelNode, "InflationIndices", "InflationIndex");
+    for (auto inf : infindices_) {
+        LOG("CrossAssetModelData inflation index " << inf);
+    }
+
     bootstrapTolerance_ = XMLUtils::getChildValueAsDouble(modelNode, "BootstrapTolerance", true);
     LOG("CrossAssetModelData: bootstrap tolerance = " << bootstrapTolerance_);
 
     // Configure IR model components
 
-    std::map<std::string, boost::shared_ptr<LgmData>> irDataMap;
+    std::map<std::string, boost::shared_ptr<IrLgmData>> irDataMap;
     XMLNode* irNode = XMLUtils::getChildNode(modelNode, "InterestRateModels");
     if (irNode) {
         for (XMLNode* child = XMLUtils::getChildNode(irNode, "LGM"); child;
              child = XMLUtils::getNextSibling(child, "LGM")) {
 
-            boost::shared_ptr<LgmData> config(new LgmData());
+            boost::shared_ptr<IrLgmData> config(new IrLgmData());
             config->fromXML(child);
 
-            for (Size i = 0; i < config->swaptionExpiries().size(); i++) {
-                LOG("LGM calibration swaption " << config->swaptionExpiries()[i] << " x " << config->swaptionTerms()[i]
-                                                << " " << config->swaptionStrikes()[i]);
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("LGM calibration swaption " << config->optionExpiries()[i] << " x " << config->optionTerms()[i]
+                                                << " " << config->optionStrikes()[i]);
             }
 
             irDataMap[config->ccy()] = config;
@@ -202,6 +216,35 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     for (Size i = 0; i < eqConfigs_.size(); i++)
         LOG("CrossAssetModelData: EQ config name " << i << " = " << eqConfigs_[i]->eqName());
 
+    // Configure INF model components
+
+    std::map<std::string, boost::shared_ptr<InfDkData>> infDataMap;
+    XMLNode* infNode = XMLUtils::getChildNode(modelNode, "InflationIndexModels");
+    if (infNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(infNode, "LGM"); child;
+             child = XMLUtils::getNextSibling(child, "LGM")) {
+
+            boost::shared_ptr<InfDkData> config(new InfDkData());
+            config->fromXML(child);
+
+            for (Size i = 0; i < config->optionExpiries().size(); i++) {
+                LOG("Cross-Asset Inflation Index calibration option " << config->optionExpiries()[i] << " "
+                                                                      << config->optionStrikes()[i]);
+            }
+
+            infDataMap[config->infIndex()] = config;
+
+            LOG("CrossAssetModelData: Inflation Index config built with key " << config->infIndex());
+        }
+    } else {
+        LOG("No Inflation Index Models section found");
+    }
+
+    buildInfConfigs(infDataMap);
+
+    for (Size i = 0; i < infConfigs_.size(); i++)
+        LOG("CrossAssetModelData: INF config name " << i << " = " << infConfigs_[i]->infIndex());
+
     // Configure correlation structure
 
     XMLNode* correlationNode = XMLUtils::getChildNode(modelNode, "InstantaneousCorrelations");
@@ -228,7 +271,7 @@ void CrossAssetModelData::fromXML(XMLNode* root) {
     LOG("CrossAssetModelData loading from XML done");
 }
 
-void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<LgmData>>& irDataMap) {
+void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr<IrLgmData>>& irDataMap) {
     // Append IR configurations into the irConfigs vector in the order of the currencies
     // in the currencies vector.
     // If there is an IR configuration for any of the currencies missing, then we will
@@ -245,13 +288,13 @@ void CrossAssetModelData::buildIrConfigs(std::map<std::string, boost::shared_ptr
                 ALOG("Both default IR and " << ccy << " IR configuration missing");
                 QL_FAIL("Both default IR and " << ccy << " IR configuration missing");
             }
-            boost::shared_ptr<LgmData> def = irDataMap["default"];
-            irConfigs_[i] = boost::make_shared<LgmData>(
+            boost::shared_ptr<IrLgmData> def = irDataMap["default"];
+            irConfigs_[i] = boost::make_shared<IrLgmData>(
                 ccy, // overwrite this and keep the others
                 def->calibrationType(), def->reversionType(), def->volatilityType(), def->calibrateH(),
                 def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(), def->aParamType(), def->aTimes(),
-                def->aValues(), def->shiftHorizon(), def->scaling(), def->swaptionExpiries(), def->swaptionTerms(),
-                def->swaptionStrikes());
+                def->aValues(), def->shiftHorizon(), def->scaling(), def->optionExpiries(), def->optionTerms(),
+                def->optionStrikes());
         }
         LOG("CrossAssetModelData: IR config added for ccy " << ccy << " " << irConfigs_[i]->ccy());
     }
@@ -313,6 +356,35 @@ void CrossAssetModelData::buildEqConfigs(std::map<std::string, boost::shared_ptr
     }
 }
 
+void CrossAssetModelData::buildInfConfigs(std::map<std::string, boost::shared_ptr<InfDkData>>& infDataMap) {
+    // Append Inf configurations into the infConfigs vector in the order of the inflation
+    // indices in the infindices_ vector.
+    // If there is an Inf configuration for any of the names missing,
+    // then we will look up the configuration with key "default" and use this instead.
+    // If this is not provided either we will throw an exception.
+    for (Size i = 0; i < infindices_.size(); i++) {
+        string index = infindices_[i];
+        if (infDataMap.find(index) != infDataMap.end())
+            infConfigs_.push_back(infDataMap[index]);
+        else { // copy from default
+            LOG("Inflation configuration missing for index " << index << ", using default");
+            if (infDataMap.find("default") == infDataMap.end()) {
+                ALOG("Both default INF and " << index << " INF configuration missing");
+                QL_FAIL("Both default INF and " << index << " INF configuration missing");
+            }
+            boost::shared_ptr<InfDkData> def = infDataMap["default"];
+            boost::shared_ptr<InfDkData> infData = boost::make_shared<InfDkData>(
+                index, def->currency(), def->calibrationType(), def->reversionType(), def->volatilityType(),
+                def->calibrateH(), def->hParamType(), def->hTimes(), def->hValues(), def->calibrateA(),
+                def->aParamType(), def->aTimes(), def->aValues(), def->shiftHorizon(), def->scaling(), def->capFloor(),
+                def->optionExpiries(), def->optionTerms(), def->optionStrikes());
+
+            infConfigs_.push_back(infData);
+        }
+        LOG("CrossAssetModelData: INF config added for name " << index);
+    }
+}
+
 XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     XMLNode* crossAssetModelNode = doc.allocNode("CrossAssetModel");
@@ -320,6 +392,7 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, crossAssetModelNode, "DomesticCcy", domesticCurrency_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Currencies", "Currency", currencies_);
     XMLUtils::addChildren(doc, crossAssetModelNode, "Equities", "Equity", equities_);
+    XMLUtils::addChildren(doc, crossAssetModelNode, "InflationIndices", "InflationIndex", infindices_);
     XMLUtils::addChild(doc, crossAssetModelNode, "BootstrapTolerance", bootstrapTolerance_);
 
     XMLNode* interestRateModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InterestRateModels");
@@ -340,6 +413,12 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(eqModelsNode, crossAssetEqNode);
     }
 
+    XMLNode* infModelsNode = XMLUtils::addChild(doc, crossAssetModelNode, "InflationIndexModels");
+    for (Size infConfigs_Iterator = 0; infConfigs_Iterator < infConfigs_.size(); infConfigs_Iterator++) {
+        XMLNode* crossAssetInfNode = infConfigs_[infConfigs_Iterator]->toXML(doc);
+        XMLUtils::appendNode(infModelsNode, crossAssetInfNode);
+    }
+
     XMLNode* instantaneousCorrelationsNode = doc.allocNode("InstantaneousCorrelations");
     XMLUtils::appendNode(crossAssetModelNode, instantaneousCorrelationsNode);
 
@@ -354,5 +433,5 @@ XMLNode* CrossAssetModelData::toXML(XMLDocument& doc) {
 
     return crossAssetModelNode;
 }
-}
-}
+} // namespace data
+} // namespace ore

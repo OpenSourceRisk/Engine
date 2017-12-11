@@ -18,6 +18,7 @@
 
 /*! \file lgmimpliedyieldtermstructure.hpp
     \brief yield term structure implied by a LGM model
+    \ingroup models
 */
 
 #ifndef quantext_lgm_implied_survivalprob_ts_hpp
@@ -38,6 +39,8 @@ namespace QuantExt {
     perfomance reasons, note that it does not provide the
     full term structure interface and does not send
     notifications on reference time updates.
+
+    \ingroup models
  */
 
 class LgmImpliedDefaultTermStructure : public SurvivalProbabilityStructure {

@@ -21,6 +21,7 @@
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
     <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="sensitivity">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -45,7 +46,7 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="xva">
       <Parameter name="active">N</Parameter>
@@ -66,7 +67,6 @@
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
@@ -83,7 +83,6 @@
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
       <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
-      <Parameter name="parRateSensitivityOutputFile">parsensi.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
@@ -94,6 +93,23 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">stresstest.csv</Parameter>
       <Parameter name="outputThreshold">0.000001</Parameter>
+    </Analytic>
+    <Analytic type="parametricVar">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="sensitivityInputFile">../Output/sensitivity.csv,../Output/crossgamma.csv</Parameter>
+      <Parameter name="covarianceInputFile">covariance.csv</Parameter>
+      <Parameter name="salvageCovarianceMatrix">N</Parameter>
+      <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>
+      <!-- Breakdown of risk classes and types -->
+      <Parameter name="breakdown">Y</Parameter>
+      <!-- Portfolio filter (regex), may be empty or not given -->
+      <Parameter name="portfolioFilter">PF1|PF2</Parameter>
+      <!-- VaR method (Delta, DeltaGammaNormal, MonteCarlo) -->
+      <Parameter name="method">DeltaGammaNormal</Parameter>
+      <!-- Only required for method = MonteCarlo -->
+      <!-- <Parameter name="mcSamples">100000</Parameter> -->
+      <!-- <Parameter name="mcSeed">42</Parameter> -->
+      <Parameter name="outputFile">var.csv</Parameter>
     </Analytic>
   </Analytics>
 </ORE>

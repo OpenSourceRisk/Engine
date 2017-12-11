@@ -23,11 +23,11 @@
 
 #pragma once
 
+#include <ored/configuration/conventions.hpp>
 #include <ql/index.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using std::string;
@@ -77,6 +77,6 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
 /*!
     \ingroup utilities
 */
-boost::shared_ptr<Index> parseIndex(const string& s);
-}
-}
+boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
+} // namespace data
+} // namespace ore

@@ -18,26 +18,27 @@
 
 /*! \file portfolio/builders/fxforward.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 namespace ore {
 namespace data {
 
 //! Engine Builder for FX Forwards
 /*! Pricing engines are cached by currency pair
-    \ingroup portfolio
+    \ingroup builders
 */
 class FxForwardEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
-    FxForwardEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingFxForwardEngine") {}
+    FxForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingFxForwardEngine", {"FxForward"}) {}
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {

@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
@@ -24,69 +26,115 @@
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& out, SwaptionVolatilityCurveConfig::VolatilityType t) {
+    switch (t) {
+    case SwaptionVolatilityCurveConfig::VolatilityType::Lognormal:
+        return out << "RATE_LNVOL";
+    case SwaptionVolatilityCurveConfig::VolatilityType::Normal:
+        return out << "RATE_NVOL";
+    case SwaptionVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+        return out << "RATE_SLNVOL";
+    default:
+        QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
+    }
+}
+
 SwaptionVolatilityCurveConfig::SwaptionVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Dimension& dimension,
     const VolatilityType& volatilityType, const bool extrapolate, const bool flatExtrapolation,
     const vector<Period>& optionTenors, const vector<Period>& swapTenors, const DayCounter& dayCounter,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
-    const string& swapIndexBase)
-    : curveID_(curveID), curveDescription_(curveDescription), dimension_(dimension), volatilityType_(volatilityType),
+    const string& swapIndexBase, const vector<Period>& smileOptionTenors, const vector<Period>& smileSwapTenors,
+    const vector<Real>& smileSpreads)
+    : CurveConfig(curveID, curveDescription), dimension_(dimension), volatilityType_(volatilityType),
       extrapolate_(extrapolate), flatExtrapolation_(flatExtrapolation), optionTenors_(optionTenors),
       swapTenors_(swapTenors), dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
-      swapIndexBase_(swapIndexBase) {}
+      swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors), smileSwapTenors_(smileSwapTenors),
+      smileSpreads_(smileSpreads) {
+
+    QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Smile, "Invalid dimension");
+
+    if (dimension != Dimension::Smile) {
+        QL_REQUIRE(smileOptionTenors.size() == 0 && smileSwapTenors.size() == 0 && smileSpreads.size() == 0,
+                   "Smile tenors/strikes/spreads should only be set when dim=Smile");
+    }
+}
+
+const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
+
+    if (quotes_.size() == 0) {
+        std::vector<string> tokens;
+        split(tokens, swapIndexBase_, boost::is_any_of("-"));
+
+        Currency ccy = parseCurrency(tokens[0]);
+
+        std::stringstream ssBase;
+        ssBase << "SWAPTION/" << volatilityType_ << "/" << ccy.code() << "/";
+        string base = ssBase.str();
+
+        if (dimension_ == Dimension::ATM) {
+            for (auto o : optionTenors_) {
+                for (auto s : swapTenors_) {
+                    std::stringstream ss;
+                    ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
+                    quotes_.push_back(ss.str());
+                }
+            }
+
+        } else {
+            for (auto o : smileOptionTenors_) {
+                for (auto s : smileSwapTenors_) {
+                    for (auto sp : smileSpreads_) {
+                        std::stringstream ss;
+                        ss << base << to_string(o) << "/" << to_string(s) << "/Smile/" << to_string(sp);
+                        quotes_.push_back(ss.str());
+                    }
+                }
+            }
+        }
+    }
+    return quotes_;
+}
 
 void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "SwaptionVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    bool rec = false;
 
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
     if (dim == "ATM") {
         dimension_ = Dimension::ATM;
-        rec = true;
-    }
-    if (dim == "Smile") {
+    } else if (dim == "Smile") {
         dimension_ = Dimension::Smile;
-        rec = true;
+    } else {
+        QL_FAIL("Dimension " << dim << " not recognized");
     }
-    QL_REQUIRE(rec, "Dimension " << dim << " not recognized");
 
     string volType = XMLUtils::getChildValue(node, "VolatilityType", true);
-    rec = false;
     if (volType == "Normal") {
         volatilityType_ = VolatilityType::Normal;
-        rec = true;
-    }
-    if (volType == "Lognormal") {
+    } else if (volType == "Lognormal") {
         volatilityType_ = VolatilityType::Lognormal;
-        rec = true;
-    }
-    if (volType == "ShiftedLognormal") {
+    } else if (volType == "ShiftedLognormal") {
         volatilityType_ = VolatilityType::ShiftedLognormal;
-        rec = true;
+    } else {
+        QL_FAIL("Volatility type " << volType << " not recognized");
     }
-    QL_REQUIRE(rec, "Volatility type " << volType << " not recognized");
 
     string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
-    rec = false;
     extrapolate_ = true;
     flatExtrapolation_ = true;
     if (extr == "Linear") {
         flatExtrapolation_ = false;
-        rec = true;
-    }
-    if (extr == "Flat") {
+    } else if (extr == "Flat") {
         flatExtrapolation_ = true;
-        rec = true;
-    }
-    if (extr == "None") {
+    } else if (extr == "None") {
         extrapolate_ = false;
-        rec = true;
+    } else {
+        QL_FAIL("Extrapolation " << extr << " not recognized");
     }
-    QL_REQUIRE(rec, "Extrapolation " << extr << " not recognized");
 
     optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
     swapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwapTenors", true);
@@ -102,6 +150,11 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", true);
     swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", true);
+
+    // optional smile stuff
+    smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
+    smileSwapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileSwapTenors");
+    smileSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SmileSpreads");
 }
 
 XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -109,28 +162,24 @@ XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    bool rec = false;
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
-        rec = true;
+    } else if (dimension_ == Dimension::Smile) {
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
+    } else {
+        QL_FAIL("Unkown Dimension in SwaptionVolatilityCurveConfig::toXML()");
     }
-    QL_REQUIRE(rec, "Unkown Dimension in SwaptionVolatilityCurveConfig::toXML()");
 
-    rec = false;
     if (volatilityType_ == VolatilityType::Normal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
-        rec = true;
-    }
-    if (volatilityType_ == VolatilityType::Lognormal) {
+    } else if (volatilityType_ == VolatilityType::Lognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
-        rec = true;
-    }
-    if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+    } else if (volatilityType_ == VolatilityType::ShiftedLognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
-        rec = true;
+    } else {
+        QL_FAIL("Unknown VolatilityType in SwaptionVolatilityCurveConfig::toXML()");
     }
-    QL_REQUIRE(rec, "Unknown VolatilityType in SwaptionVolatilityCurveConfig::toXML()");
 
     string extr_str = flatExtrapolation_ ? "Flat" : "Linear";
     if (!extrapolate_)
@@ -145,7 +194,13 @@ XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ShortSwapIndexBase", shortSwapIndexBase_);
     XMLUtils::addChild(doc, node, "SwapIndexBase", swapIndexBase_);
 
+    if (dimension_ == Dimension::Smile) {
+        XMLUtils::addGenericChildAsList(doc, node, "SmileOptionTenors", smileOptionTenors_);
+        XMLUtils::addGenericChildAsList(doc, node, "SmileSwapTenors", smileSwapTenors_);
+        XMLUtils::addGenericChildAsList(doc, node, "SmileSpreads", smileSpreads_);
+    }
+
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

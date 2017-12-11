@@ -16,19 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/sensitivityscenariogenerator.hpp
-    \brief Sensitivity scenario generation
+/*! \file scenario/stressscenariogenerator.hpp
+    \brief Stress scenario generation
     \ingroup scenario
 */
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <orea/scenario/stressscenariodata.hpp>
+#include <ored/marketdata/market.hpp>
 
 namespace ore {
 using namespace data;
@@ -70,10 +70,8 @@ class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                            const QuantLib::Date& today, const boost::shared_ptr<ore::data::Market>& initMarket,
-                            const std::string& configuration = Market::defaultConfiguration,
-                            boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
+                            const boost::shared_ptr<Scenario>& baseScenario,
+                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
     //! Default destructor
     ~StressScenarioGenerator(){};
 
@@ -82,14 +80,16 @@ public:
 
 private:
     void addFxShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addEquityShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addIndexCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addYieldCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addFxVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addEquityVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
-    boost::shared_ptr<StressTestScenarioData> stressData_;
+    const boost::shared_ptr<StressTestScenarioData> stressData_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

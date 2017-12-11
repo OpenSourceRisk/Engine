@@ -25,8 +25,8 @@
 #ifndef quantext_cross_ccy_basis_swap_hpp
 #define quantext_cross_ccy_basis_swap_hpp
 
-#include <ql/time/schedule.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/time/schedule.hpp>
 
 #include <qle/instruments/crossccyswap.hpp>
 
@@ -111,6 +111,7 @@ private:
     mutable Spread fairRecSpread_;
 };
 
+//! \ingroup instruments
 class CrossCcyBasisSwap::arguments : public CrossCcySwap::arguments {
 public:
     Spread paySpread;
@@ -118,12 +119,13 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class CrossCcyBasisSwap::results : public CrossCcySwap::results {
 public:
     Spread fairPaySpread;
     Spread fairRecSpread;
     void reset();
 };
-}
+} // namespace QuantExt
 
 #endif

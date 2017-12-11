@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 using QuantLib::Period;
@@ -42,7 +42,7 @@ namespace analytics {
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
-*/
+ */
 class StressTestScenarioData : public XMLSerializable {
 public:
     struct CurveShiftData {
@@ -51,12 +51,12 @@ public:
         vector<Period> shiftTenors;
     };
 
-    struct FxShiftData {
+    struct SpotShiftData {
         string shiftType;
         Real shiftSize;
     };
 
-    struct FxVolShiftData {
+    struct VolShiftData {
         string shiftType;
         vector<Period> shiftExpiries;
         vector<Real> shifts;
@@ -81,8 +81,10 @@ public:
         map<string, CurveShiftData> discountCurveShifts;     // by currency code
         map<string, CurveShiftData> indexCurveShifts;        // by index name
         map<string, CurveShiftData> yieldCurveShifts;        // by yield curve name
-        map<string, FxShiftData> fxShifts;                   // by currency pair
-        map<string, FxVolShiftData> fxVolShifts;             // by currency pair
+        map<string, SpotShiftData> fxShifts;                 // by currency pair
+        map<string, VolShiftData> fxVolShifts;               // by currency pair
+        map<string, SpotShiftData> equityShifts;             // by equity
+        map<string, VolShiftData> equityVolShifts;           // by equity
         map<string, CapFloorVolShiftData> capVolShifts;      // by currency
         map<string, SwaptionVolShiftData> swaptionVolShifts; // by currency
     };
@@ -116,5 +118,5 @@ public:
 private:
     vector<StressTestData> data_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

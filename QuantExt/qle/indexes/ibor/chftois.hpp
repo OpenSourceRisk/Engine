@@ -24,10 +24,10 @@
 #ifndef quantext_chftois_hpp
 #define quantext_chftois_hpp
 
-#include <ql/indexes/iborindex.hpp>
 #include <ql/currencies/europe.hpp>
-#include <ql/time/daycounters/actual360.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/time/calendars/switzerland.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
@@ -46,6 +46,6 @@ public:
     CHFTois(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
         : OvernightIndex("CHF-TOIS", 1, CHFCurrency(), Switzerland(), Actual360(), h) {}
 };
-}
+} // namespace QuantExt
 
 #endif

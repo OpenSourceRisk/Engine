@@ -25,9 +25,18 @@ namespace ore {
 namespace analytics {
 
 ScenarioWriter::ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename,
-                               const char sep)
+                               const char sep, const string& filemode)
     : src_(src), fp_(nullptr), i_(0), sep_(sep) {
-    fp_ = fopen(filename.c_str(), "w+");
+    open(filename, filemode);
+}
+
+ScenarioWriter::ScenarioWriter(const std::string& filename, const char sep, const string& filemode)
+    : fp_(nullptr), i_(0), sep_(sep) {
+    open(filename, filemode);
+}
+
+void ScenarioWriter::open(const std::string& filename, const std::string& filemode) {
+    fp_ = fopen(filename.c_str(), filemode.c_str());
     QL_REQUIRE(fp_, "Error opening file " << filename << " for scenarios");
 }
 
@@ -47,15 +56,19 @@ void ScenarioWriter::close() {
 }
 
 boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
+    QL_REQUIRE(src_, "No ScenarioGenerator found.");
     boost::shared_ptr<Scenario> s = src_->next(d);
+    writeScenario(s, i_ == 0);
+    return s;
+}
+
+void ScenarioWriter::writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader) {
     if (fp_) {
-        if (i_ == 0) {
-            // write header
-
-            // take a copy of the keys here to ensure the order is preseved
-            keys_ = s->keys();
-            std::sort(keys_.begin(), keys_.end());
-
+        const Date d = s->asof();
+        // take a copy of the keys here to ensure the order is preseved
+        keys_ = s->keys();
+        std::sort(keys_.begin(), keys_.end());
+        if (writeHeader) {
             QL_REQUIRE(keys_.size() > 0, "No keys in scenario");
             fprintf(fp_, "Date%cScenario%cNumeraire%c%s", sep_, sep_, sep_, to_string(keys_[0]).c_str());
             for (Size i = 1; i < keys_.size(); i++)
@@ -74,7 +87,7 @@ boost::shared_ptr<Scenario> ScenarioWriter::next(const Date& d) {
         fprintf(fp_, "\n");
         fflush(fp_);
     }
-    return s;
 }
-}
-}
+
+} // namespace analytics
+} // namespace ore

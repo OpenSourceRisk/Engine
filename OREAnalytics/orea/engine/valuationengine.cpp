@@ -16,17 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/simulation/simmarket.hpp>
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/optionwrapper.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/progressbar.hpp>
 
-#include <ql/errors.hpp>
 #include <boost/timer.hpp>
+#include <ql/errors.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -38,7 +38,7 @@ namespace analytics {
 
 ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<DateGrid>& dg,
                                  const boost::shared_ptr<SimMarket>& simMarket,
-                                 const set<boost::shared_ptr<ModelBuilder>>& modelBuilders)
+                                 const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders)
     : today_(today), dg_(dg), simMarket_(simMarket), modelBuilders_(modelBuilders) {
 
     QL_REQUIRE(dg_->size() > 0, "Error, DateGrid size must be > 0");
@@ -130,8 +130,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
             // recalibrate models
             for (auto const& b : modelBuilders_) {
                 if (om == ObservationMode::Mode::Disable)
-                    b->recalculate();
-                b->recalibrate();
+                    b.second->recalculate();
+                b.second->recalibrate();
             }
 
             updateTime += timer.elapsed();
@@ -156,11 +156,12 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
         fixingTime += timer.elapsed();
     }
 
+    simMarket_->reset();
     updateProgress(outputCube->samples(), outputCube->samples());
     LOG("ValuationEngine completed: loop " << setprecision(2) << loopTimer.elapsed() << " sec, "
                                            << "pricing " << pricingTime << " sec, "
                                            << "update " << updateTime << " sec "
                                            << "fixing " << fixingTime);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

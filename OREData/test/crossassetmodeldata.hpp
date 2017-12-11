@@ -7,9 +7,8 @@
 
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
- copy of the license along with this program; if not, please email
- <users@opensourcerisk.org>. The license is also available online at
- <http://opensourcerisk.org/license.shtml>.
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
@@ -38,5 +37,5 @@ public:
     static void testToXMLFromXML();
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite
 #pragma once

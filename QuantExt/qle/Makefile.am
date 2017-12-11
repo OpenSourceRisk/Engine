@@ -15,7 +15,8 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
-	quantext.hpp
+	quantext.hpp \
+	version.hpp
 
 libQuantExt_la_SOURCES = \
 	quantext.hpp
@@ -28,6 +29,7 @@ libQuantExt_la_LIBADD = \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
 	indexes/libIndexes.la \
+	math/libMath.la \
 	methods/libMethods.la \
 	models/libModels.la \
 	pricingengines/libPricingEngines.la \

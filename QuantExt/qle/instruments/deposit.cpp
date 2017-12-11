@@ -18,8 +18,8 @@
 
 #include <qle/instruments/deposit.hpp>
 
-#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -70,8 +70,8 @@ void Deposit::fetchResults(const PricingEngine::results* r) const {
 }
 
 void Deposit::arguments::validate() const {
-    QL_REQUIRE(leg.size() == 3, "deposit arugments: unexpected number of cash flows (" << leg.size()
-                                                                                       << "), should be 3");
+    QL_REQUIRE(leg.size() == 3,
+               "deposit arugments: unexpected number of cash flows (" << leg.size() << "), should be 3");
 }
 
 void Deposit::results::reset() {

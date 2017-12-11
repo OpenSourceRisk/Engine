@@ -164,5 +164,5 @@ Schedule makeSchedule(const ScheduleData& data) {
                         std::vector<bool>(dates.size() - 1, true));
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

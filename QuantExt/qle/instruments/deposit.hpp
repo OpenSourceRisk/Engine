@@ -82,6 +82,7 @@ private:
     mutable Real fairRate_;
 };
 
+//! \ingroup instruments
 class Deposit::arguments : public virtual PricingEngine::arguments {
 public:
     boost::shared_ptr<IborIndex> index;
@@ -89,13 +90,15 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class Deposit::results : public Instrument::results {
 public:
     Real fairRate;
     void reset();
 };
 
+//! \ingroup instruments
 class Deposit::engine : public GenericEngine<Deposit::arguments, Deposit::results> {};
-}
+} // namespace QuantExt
 
 #endif

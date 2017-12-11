@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
-#include <ql/time/date.hpp>
-#include <ql/errors.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ql/errors.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -45,6 +45,19 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
     XMLDocument doc(fileName);
     LOG("Loaded XML file");
 
+    load(doc, factory);
+}
+
+void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_ptr<TradeFactory>& factory) {
+    LOG("Parsing XML string");
+    XMLDocument doc;
+    doc.fromXMLString(xmlString);
+    LOG("Loaded XML string");
+
+    load(doc, factory);
+}
+
+void Portfolio::load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& factory) {
     XMLNode* node = doc.getFirstNode("Portfolio");
     if (node) {
         vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
@@ -62,14 +75,15 @@ void Portfolio::load(const string& fileName, const boost::shared_ptr<TradeFactor
                 try {
                     trade->fromXML(nodes[i]);
                     trade->id() = id;
-                    trades_.push_back(trade);
+                    add(trade);
 
                     DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                         << " class:" << tradeType);
                 } catch (std::exception& ex) {
-                    ALOG("Exception parsing Trade XML Node (id=" << id << ") "
-                                                                          "(class=" << tradeType
-                                                                 << ") : " << ex.what());
+                    ALOG("Exception parsing Trade XML Node (id=" << id
+                                                                 << ") "
+                                                                    "(class="
+                                                                 << tradeType << ") : " << ex.what());
                 }
             } else {
                 WLOG("Unable to build Trade for tradeType=" << tradeType);
@@ -139,5 +153,23 @@ map<string, string> Portfolio::nettingSetMap() const {
         nettingSetMap[t->id()] = t->envelope().nettingSetId();
     return nettingSetMap;
 }
+
+void Portfolio::add(const boost::shared_ptr<Trade>& trade) {
+    QL_REQUIRE(!has(trade->id()), "Attempted to add a trade to the portfolio with an id, which already exists.");
+    trades_.push_back(trade);
 }
+
+bool Portfolio::has(const string& id) {
+    return find_if(trades_.begin(), trades_.end(),
+                   [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; }) != trades_.end();
 }
+
+std::set<std::string> Portfolio::portfolioIds() const {
+    std::set<std::string> portfolioIds;
+    for (auto const& t : trades_)
+        portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
+    return portfolioIds;
+}
+
+} // namespace data
+} // namespace ore

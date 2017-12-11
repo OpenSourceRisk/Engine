@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/marketdata/fxspot.hpp
-    \brief
+    \brief a wrapper class for holding FX (spot) quotes
     \ingroup marketdata
 */
 
@@ -25,8 +25,8 @@
 
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
-#include <ql/quote.hpp>
 #include <ql/handle.hpp>
+#include <ql/quote.hpp>
 
 namespace ore {
 namespace data {
@@ -41,10 +41,10 @@ public:
     FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader);
 
     //! Inspector
-    Handle<Quote> spot() const { return spot_; }
+    Handle<Quote> handle() const { return spot_; }
 
 private:
     Handle<Quote> spot_;
 };
-}
-}
+} // namespace data
+} // namespace ore

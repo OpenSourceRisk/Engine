@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="headers">
@@ -60,6 +60,21 @@
     <ClInclude Include="cpiswap.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="cms.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="swaption.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="portfolio.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="curveconfig.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cds.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -112,6 +127,21 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="cpiswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cms.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="swaption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="portfolio.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="curveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cds.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

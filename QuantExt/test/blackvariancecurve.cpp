@@ -17,12 +17,12 @@
 */
 
 #include "blackvariancecurve.hpp"
-#include <qle/termstructures/blackvariancecurve3.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/termstructures/blackvariancecurve3.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -99,4 +99,4 @@ test_suite* BlackVarianceCurveTest::suite() {
     suite->add(BOOST_TEST_CASE(&BlackVarianceCurveTest::testBlackVarianceCurve));
     return suite;
 }
-}
+} // namespace testsuite

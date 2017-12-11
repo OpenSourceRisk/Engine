@@ -18,7 +18,7 @@
 
 /*! \file portfolio/fxforward.hpp
     \brief FX Forward data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
@@ -66,5 +66,5 @@ private:
     string soldCurrency_;
     double soldAmount_;
 };
-}
-}
+} // namespace data
+} // namespace ore

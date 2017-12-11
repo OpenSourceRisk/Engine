@@ -50,7 +50,7 @@
       <Parameter name="baseCurrency">EUR</Parameter>
       <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
       <Parameter name="cubeFile">cube.dat</Parameter>
-      <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
+      <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
 
     <Analytic type="xva">
@@ -72,7 +72,6 @@
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
       <Parameter name="colva">N</Parameter>
-      <Parameter name="collateralSpread">0.0000</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>

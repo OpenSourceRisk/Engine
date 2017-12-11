@@ -18,7 +18,7 @@
 
 /*! \file portfolio/fxswap.hpp
     \brief FX Swap data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
@@ -80,5 +80,5 @@ private:
     double farBoughtAmount_;
     double farSoldAmount_;
 };
-}
-}
+} // namespace data
+} // namespace ore

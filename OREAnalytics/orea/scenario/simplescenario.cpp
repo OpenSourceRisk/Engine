@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
 
 namespace ore {
 namespace analytics {
@@ -41,5 +41,5 @@ Real SimpleScenario::get(const RiskFactorKey& key) const {
 }
 
 boost::shared_ptr<Scenario> SimpleScenario::clone() const { return boost::make_shared<SimpleScenario>(*this); }
-}
-}
+} // namespace analytics
+} // namespace ore

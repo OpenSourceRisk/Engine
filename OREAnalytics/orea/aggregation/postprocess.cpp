@@ -28,8 +28,8 @@
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <qle/math/stabilisedglls.hpp>
 #include <qle/math/nadarayawatson.hpp>
+#include <qle/math/stabilisedglls.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/error_of_mean.hpp>
@@ -85,17 +85,17 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
                          Real marginalAllocationLimit, Real quantile, const string& calculationType,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
-                         Real collateralSpread, Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
+                         Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling)
+                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), collateralSpread_(collateralSpread),
-      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
-      dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
-      dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
-      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling) {
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimQuantile_(dimQuantile),
+      dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
+      dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
+      dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
+      fullInitialCollateralisation_(fullInitialCollateralisation) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -354,12 +354,21 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
-        epe[0] = std::max(npv, 0.0);
-        ene[0] = std::max(-npv, 0.0);
+        if ((fullInitialCollateralisation_) & (netting->activeCsaFlag())) {
+            // This assumes that the collateral at t=0 is the same as the npv at t=0.
+            epe[0] = 0;
+            ene[0] = 0;
+            pfe[0] = 0;
+        } else {
+            epe[0] = std::max(npv, 0.0);
+            ene[0] = std::max(-npv, 0.0);
+            pfe[0] = std::max(npv, 0.0);
+        }
+        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
+        // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
+        eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
-        eab[0] = -npv;
-        pfe[0] = std::max(npv, 0.0);
         nettedCube_->setT0(nettingSetValueToday[nettingSetId], nettingSetCount);
 
         for (Size j = 0; j < dates; ++j) {
@@ -387,8 +396,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples;
-                ene[j + 1] += std::max(-exposure + dim, 0.0) / samples;
+                epe[j + 1] += std::max(exposure - dim, 0.0) /
+                              samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) /
+                              samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
@@ -400,7 +411,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
-                    Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
+                    Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
+                    Real colvaDelta = -balance * collateralSpread * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
@@ -673,7 +685,6 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
-        vector<Real> ec = expectedCollateral_[nettingSetId];
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
@@ -1013,44 +1024,44 @@ const vector<Real>& PostProcess::tradePFE(const string& tradeId) {
 }
 
 const vector<Real>& PostProcess::netEPE(const string& nettingSetId) {
-    QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in exposure map");
+    QL_REQUIRE(netEPE_.find(nettingSetId) != netEPE_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEPE_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netENE(const string& nettingSetId) {
-    QL_REQUIRE(netENE_.find(nettingSetId) != netENE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in exposure map");
+    QL_REQUIRE(netENE_.find(nettingSetId) != netENE_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netENE_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEE_B_.find(nettingSetId) != netEE_B_.end(), "Netting set " << nettingSetId
-                                                                             << " not found in exposure map");
+    QL_REQUIRE(netEE_B_.find(nettingSetId) != netEE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEE_B_[nettingSetId];
 }
 
 const Real& PostProcess::netEPE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEPE_B_.find(nettingSetId) != netEPE_B_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in exposure map");
+    QL_REQUIRE(netEPE_B_.find(nettingSetId) != netEPE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEPE_B_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netEEE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEEE_B_.find(nettingSetId) != netEEE_B_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in exposure map");
+    QL_REQUIRE(netEEE_B_.find(nettingSetId) != netEEE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEEE_B_[nettingSetId];
 }
 
 const Real& PostProcess::netEEPE_B(const string& nettingSetId) {
-    QL_REQUIRE(netEEPE_B_.find(nettingSetId) != netEEPE_B_.end(), "Netting set " << nettingSetId
-                                                                                 << " not found in exposure map");
+    QL_REQUIRE(netEEPE_B_.find(nettingSetId) != netEEPE_B_.end(),
+               "Netting set " << nettingSetId << " not found in exposure map");
     return netEEPE_B_[nettingSetId];
 }
 
 const vector<Real>& PostProcess::netPFE(const string& nettingSetId) {
-    QL_REQUIRE(netPFE_.find(nettingSetId) != netPFE_.end(), "Netting set " << nettingSetId
-                                                                           << " not found in net PFE map");
+    QL_REQUIRE(netPFE_.find(nettingSetId) != netPFE_.end(),
+               "Netting set " << nettingSetId << " not found in net PFE map");
     return netPFE_[nettingSetId];
 }
 
@@ -1061,8 +1072,8 @@ const vector<Real>& PostProcess::expectedCollateral(const string& nettingSetId) 
 }
 
 const vector<Real>& PostProcess::colvaIncrements(const string& nettingSetId) {
-    QL_REQUIRE(colvaInc_.find(nettingSetId) != colvaInc_.end(), "Netting set " << nettingSetId
-                                                                               << " not found in colvaInc map");
+    QL_REQUIRE(colvaInc_.find(nettingSetId) != colvaInc_.end(),
+               "Netting set " << nettingSetId << " not found in colvaInc map");
     return colvaInc_[nettingSetId];
 }
 
@@ -1073,14 +1084,14 @@ const vector<Real>& PostProcess::collateralFloorIncrements(const string& netting
 }
 
 const vector<Real>& PostProcess::allocatedTradeEPE(const string& tradeId) {
-    QL_REQUIRE(allocatedTradeEPE_.find(tradeId) != allocatedTradeEPE_.end(), "Trade " << tradeId
-                                                                                      << " not found in exposure map");
+    QL_REQUIRE(allocatedTradeEPE_.find(tradeId) != allocatedTradeEPE_.end(),
+               "Trade " << tradeId << " not found in exposure map");
     return allocatedTradeEPE_[tradeId];
 }
 
 const vector<Real>& PostProcess::allocatedTradeENE(const string& tradeId) {
-    QL_REQUIRE(allocatedTradeENE_.find(tradeId) != allocatedTradeENE_.end(), "Trade " << tradeId
-                                                                                      << " not found in exposure map");
+    QL_REQUIRE(allocatedTradeENE_.find(tradeId) != allocatedTradeENE_.end(),
+               "Trade " << tradeId << " not found in exposure map");
     return allocatedTradeENE_[tradeId];
 }
 
@@ -1186,8 +1197,9 @@ void PostProcess::performT0DimCalc() {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
-                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            int daysFromT0CloseOut = daysFromT0 - dimHorizonCalendarDays_;
+            int prevDaysFromT0CloseOut = lastDaysFromT0 - dimHorizonCalendarDays_;
+            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
             } else {
@@ -1212,8 +1224,8 @@ void PostProcess::performT0DimCalc() {
         boost::shared_ptr<NettingSetDefinition> nettingObj = nettingSetManager_->get(key);
         vector<Real> t0_dist = it_map->second[relevantDateIdx];
         Size dist_size = t0_dist.size();
-        QL_REQUIRE(dist_size == cube_->samples(), "T0 IM - cube samples size mismatch - " << dist_size << ", "
-                                                                                          << cube_->samples());
+        QL_REQUIRE(dist_size == cube_->samples(),
+                   "T0 IM - cube samples size mismatch - " << dist_size << ", " << cube_->samples());
         Real mean_t0_dist = std::accumulate(t0_dist.begin(), t0_dist.end(), 0.0);
         mean_t0_dist /= dist_size;
         vector<Real> t0_delMtM_dist(dist_size, 0.0);
@@ -1361,5 +1373,5 @@ void PostProcess::exportDimRegression(const std::string& nettingSet, const std::
         LOG("Exporting DIM by Sample done for");
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

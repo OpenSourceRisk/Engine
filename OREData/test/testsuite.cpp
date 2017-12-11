@@ -21,25 +21,27 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
+#include <boost/make_shared.hpp>
 #include <boost/timer.hpp>
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 using boost::unit_test::test_suite;
 
+#include <oret/oret.hpp>
+
 #ifdef BOOST_MSVC
+#include <ored/auto_link.hpp>
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
-#include <ored/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
@@ -49,23 +51,28 @@ using boost::unit_test::test_suite;
 #endif
 
 // Lib test suites
+#include "bond.hpp"
 #include "calendars.hpp"
-#include "fxoption.hpp"
-#include "cpiswap.hpp"
 #include "ccyswapwithresets.hpp"
-#include "fxtriangulation.hpp"
-#include "indices.hpp"
-#include "parser.hpp"
-#include "xmlmanipulation.hpp"
-#include "schedule.hpp"
-#include "legdata.hpp"
-#include "todaysmarket.hpp"
-#include "fxswap.hpp"
-#include "yieldcurve.hpp"
+#include "cds.hpp"
+#include "cms.hpp"
+#include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
+#include "curveconfig.hpp"
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
-#include "bond.hpp"
+#include "fxoption.hpp"
+#include "fxswap.hpp"
+#include "fxtriangulation.hpp"
+#include "indices.hpp"
+#include "legdata.hpp"
+#include "parser.hpp"
+#include "portfolio.hpp"
+#include "schedule.hpp"
+#include "swaption.hpp"
+#include "todaysmarket.hpp"
+#include "xmlmanipulation.hpp"
+#include "yieldcurve.hpp"
 
 namespace {
 
@@ -85,9 +92,16 @@ void stopTimer() {
         cout << minutes << " m ";
     cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
 }
-}
+} // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
+
+    // Get command line arguments
+    int argc = boost::unit_test::framework::master_test_suite().argc;
+    char** argv = boost::unit_test::framework::master_test_suite().argv;
+
+    // Set up test logging
+    ore::test::setupTestLogging(argc, argv);
 
     test_suite* test = BOOST_TEST_SUITE("OREDataTestSuite");
 
@@ -110,8 +124,12 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::EquityMarketDataTest::suite());
     test->add(testsuite::EquityTradesTest::suite());
     test->add(testsuite::BondTest::suite());
+    test->add(testsuite::CmsTest::suite());
+    test->add(testsuite::SwaptionTest::suite());
+    test->add(testsuite::PortfolioTest::suite());
+    test->add(testsuite::CurveConfigTest::suite());
+    test->add(testsuite::CreditDefaultSwapTest::suite());
 
-    // test->add(FXSwapTest::suite());
     test->add(BOOST_TEST_CASE(stopTimer));
 
     return test;

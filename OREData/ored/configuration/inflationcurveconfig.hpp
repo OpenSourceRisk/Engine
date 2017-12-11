@@ -24,16 +24,15 @@
 
 #pragma once
 
+#include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/frequency.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -45,7 +44,7 @@ using QuantLib::Frequency;
 namespace ore {
 namespace data {
 
-class InflationCurveConfig : public XMLSerializable {
+class InflationCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
 
@@ -56,17 +55,13 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
                          const vector<string>& seasonalityFactors);
-    virtual ~InflationCurveConfig() {}
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     // Inspectors
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const string& nominalTermStructure() const { return nominalTermStructure_; }
     const Type& type() const { return type_; }
-    const vector<string>& quotes() const { return quotes_; }
     const string& conventions() const { return conventions_; }
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
@@ -78,13 +73,11 @@ public:
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
+    const vector<string>& swapQuotes() { return swapQuotes_; }
 
     // Setters
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     string& nominalTermStructure() { return nominalTermStructure_; }
     Type& type() { return type_; }
-    vector<string>& quotes() { return quotes_; }
     string& conventions() { return conventions_; }
     bool& extrapolate() { return extrapolate_; }
     Calendar& calendar() { return calendar_; }
@@ -98,11 +91,9 @@ public:
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
-    string curveID_;
-    string curveDescription_;
+    vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
-    vector<string> quotes_;
     string conventions_;
     string interpolationMethod_;
     bool extrapolate_;
@@ -116,5 +107,5 @@ private:
     Frequency seasonalityFrequency_;
     vector<string> seasonalityFactors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -18,13 +18,13 @@
 
 /*! \file portfolio/swap.hpp
     \brief Swap trade data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
@@ -60,5 +60,5 @@ public:
 private:
     vector<LegData> legData_;
 };
-}
-}
+} // namespace data
+} // namespace ore

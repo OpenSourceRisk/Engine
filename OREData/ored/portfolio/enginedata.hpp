@@ -23,14 +23,13 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 using std::vector;
 using std::string;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
@@ -39,7 +38,7 @@ namespace data {
 
 //! Pricing engine description
 /*! \ingroup tradedata
-*/
+ */
 class EngineData : public XMLSerializable {
 public:
     //! Default constructor
@@ -79,5 +78,5 @@ private:
     map<string, string> engine_;
     map<string, map<string, string>> engineParams_;
 };
-}
-}
+} // namespace data
+} // namespace ore

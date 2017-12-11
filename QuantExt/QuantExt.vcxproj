@@ -40,7 +40,7 @@
     <RootNamespace>QuantExt</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="QuantExt.props" />
+  <Import Project="..\ore.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (static runtime)|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
@@ -163,6 +163,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -207,6 +208,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -249,6 +251,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -291,6 +294,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -335,6 +339,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -379,6 +384,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -421,6 +427,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -463,6 +470,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>Default</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>$(additionalWarning) %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -486,6 +494,8 @@
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\floatingannuitycoupon.hpp" />
+    <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
@@ -500,6 +510,7 @@
     <ClInclude Include="qle\indexes\ibor\all.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\chftois.hpp" />
+    <ClInclude Include="qle\indexes\ibor\corra.hpp" />
     <ClInclude Include="qle\indexes\ibor\czkpribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\dkkcibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
@@ -518,10 +529,12 @@
     <ClInclude Include="qle\indexes\ibor\skkbribor.hpp" />
     <ClInclude Include="qle\indexes\ibor\tonar.hpp" />
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
+    <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
+    <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
@@ -529,15 +542,19 @@
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
+    <ClInclude Include="qle\instruments\makecds.hpp" />
     <ClInclude Include="qle\instruments\oibasisswap.hpp" />
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp" />
+    <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
     <ClInclude Include="qle\math\all.hpp" />
     <ClInclude Include="qle\math\cumulativenormaldistribution.hpp" />
+    <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
+    <ClInclude Include="qle\math\trace.hpp" />
     <ClInclude Include="qle\methods\all.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
     <ClInclude Include="qle\models\all.hpp" />
@@ -549,6 +566,8 @@
     <ClInclude Include="qle\models\crossassetmodel.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedeqvoltermstructure.hpp" />
     <ClInclude Include="qle\models\crossassetmodelimpliedfxvoltermstructure.hpp" />
+    <ClInclude Include="qle\models\dkimpliedyoyinflationtermstructure.hpp" />
+    <ClInclude Include="qle\models\dkimpliedzeroinflationtermstructure.hpp" />
     <ClInclude Include="qle\models\eqbsconstantparametrization.hpp" />
     <ClInclude Include="qle\models\eqbsparametrization.hpp" />
     <ClInclude Include="qle\models\eqbspiecewiseconstantparametrization.hpp" />
@@ -584,8 +603,10 @@
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
+    <ClInclude Include="qle\pricingengines\midpointcdsengine.hpp" />
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
+    <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
     <ClInclude Include="qle\processes\all.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
@@ -597,14 +618,22 @@
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
+    <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
+    <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionletbase.hpp" />
+    <ClInclude Include="qle\termstructures\defaultprobabilityhelpers.hpp" />
     <ClInclude Include="qle\termstructures\dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicoptionletvolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\dynamicstype.hpp" />
     <ClInclude Include="qle\termstructures\dynamicswaptionvolmatrix.hpp" />
+    <ClInclude Include="qle\termstructures\equityvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\immfraratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\fxblackvolsurface.hpp" />
+    <ClInclude Include="qle\termstructures\fxsmilesection.hpp" />
+    <ClInclude Include="qle\termstructures\fxvannavolgasmilesection.hpp" />
     <ClInclude Include="qle\termstructures\hazardspreadeddefaulttermstructure.hpp" />
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve2.hpp" />
@@ -619,13 +648,23 @@
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp" />
     <ClInclude Include="qle\termstructures\swaptionvolatilityconverter.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolconstantspread.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolcube2.hpp" />
+    <ClInclude Include="qle\termstructures\swaptionvolcubewithatm.hpp" />
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
+    <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
+    <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />
@@ -636,6 +675,7 @@
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
+    <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
@@ -643,10 +683,13 @@
     <ClCompile Include="qle\instruments\equityforward.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
+    <ClCompile Include="qle\instruments\makecds.cpp" />
     <ClCompile Include="qle\instruments\oibasisswap.cpp" />
     <ClCompile Include="qle\instruments\oiccbasisswap.cpp" />
+    <ClCompile Include="qle\instruments\payment.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
+    <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cpicapfloorhelper.cpp" />
@@ -654,6 +697,8 @@
     <ClCompile Include="qle\models\crossassetmodel.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedeqvoltermstructure.cpp" />
     <ClCompile Include="qle\models\crossassetmodelimpliedfxvoltermstructure.cpp" />
+    <ClCompile Include="qle\models\dkimpliedyoyinflationtermstructure.cpp" />
+    <ClCompile Include="qle\models\dkimpliedzeroinflationtermstructure.cpp" />
     <ClCompile Include="qle\models\eqbsconstantparametrization.cpp" />
     <ClCompile Include="qle\models\eqbsparametrization.cpp" />
     <ClCompile Include="qle\models\eqbspiecewiseconstantparametrization.cpp" />
@@ -681,19 +726,27 @@
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />
+    <ClCompile Include="qle\pricingengines\midpointcdsengine.cpp" />
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
+    <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />
     <ClCompile Include="qle\termstructures\averageoisratehelper.cpp" />
     <ClCompile Include="qle\termstructures\basistwoswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
+    <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
+    <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionletadapter.cpp" />
+    <ClCompile Include="qle\termstructures\defaultprobabilityhelpers.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />
+    <ClCompile Include="qle\termstructures\fxvannavolgasmilesection.cpp" />
     <ClCompile Include="qle\termstructures\hazardspreadeddefaulttermstructure.cpp" />
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
@@ -706,6 +759,7 @@
     <ClCompile Include="qle\termstructures\strippedoptionletadapter2.cpp" />
     <ClCompile Include="qle\termstructures\subperiodsswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
+    <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

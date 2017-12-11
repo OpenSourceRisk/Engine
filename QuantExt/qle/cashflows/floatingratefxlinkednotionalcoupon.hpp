@@ -79,6 +79,6 @@ inline void FloatingRateFXLinkedNotionalCoupon::accept(AcyclicVisitor& v) {
     else
         FloatingRateCoupon::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

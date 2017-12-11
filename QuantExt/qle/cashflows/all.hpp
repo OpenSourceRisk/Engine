@@ -8,4 +8,6 @@
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
+#include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/floatingannuitynominal.hpp>
 

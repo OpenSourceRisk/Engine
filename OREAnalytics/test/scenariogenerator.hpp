@@ -33,6 +33,8 @@ namespace testsuite {
 */
 class ScenarioGeneratorTest {
 public:
+    //! Test consistency of CPI Swap Exposure evolutions with Cpi Floor prices
+    static void testCpiSwapExposure();
     //! Test Martingale properties for single currency LGM scenarios with Pseudo Random numbers
     static void testLgmMersenneTwister();
     //! Test Martingale properties for single currency LGM scenarios with Pseudo Random numbers and antithetic sampling
@@ -62,4 +64,4 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite

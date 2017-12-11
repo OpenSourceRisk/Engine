@@ -8,11 +8,13 @@ libOREDataMarketData_la_LIBADD =
 
 libOREDataMarketData_la_SOURCES = \
 	capfloorvolcurve.cpp \
+    cdsvolcurve.cpp \
 	csvloader.cpp \
 	curveloader.cpp \
 	curvespec.cpp \
 	curvespecparser.cpp \
 	defaultcurve.cpp \
+	basecorrelationcurve.cpp \
 	equitycurve.cpp \
 	equityvolcurve.cpp \
 	fixings.cpp \
@@ -26,8 +28,7 @@ libOREDataMarketData_la_SOURCES = \
 	marketdatumparser.cpp \
 	marketimpl.cpp \
 	swaptionvolcurve.cpp \
-	securityspread.cpp \
-	securityrecoveryrate.cpp \
+	security.cpp \
 	todaysmarket.cpp \
 	todaysmarketparameters.cpp \
 	yieldcurve.cpp
@@ -36,11 +37,13 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	capfloorvolcurve.hpp \
+    cdsvolcurve.hpp \
 	csvloader.hpp \
 	curveloader.hpp \
 	curvespec.hpp \
 	curvespecparser.hpp \
 	defaultcurve.hpp \
+	basecorrelationcurve.hpp \
 	equitycurve.hpp \
 	equityvolcurve.hpp \
 	fixings.hpp \
@@ -55,8 +58,7 @@ this_include_HEADERS = \
 	marketdatumparser.hpp \
 	marketimpl.hpp \
 	swaptionvolcurve.hpp \
-	securityspread.hpp \
-	securityrecoveryrate.hpp \
+	security.hpp \
 	todaysmarket.hpp \
 	todaysmarketparameters.hpp \
 	yieldcurve.hpp

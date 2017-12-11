@@ -3,7 +3,7 @@
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
-# for transparent pricing and risk analysis - http://opensourcerisk.org
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
@@ -37,20 +37,22 @@
 /*! \file cdsoption.hpp
     \brief CDS option, removed requirements (rec must knock out,
     no upfront amount), that should be taken care of in pricing engines
+    \ingroup instruments
 */
 
 #ifndef quantext_cds_option_hpp
 #define quantext_cds_option_hpp
 
+#include <qle/instruments/creditdefaultswap.hpp>
+
 #include <ql/option.hpp>
-#include <ql/instruments/creditdefaultswap.hpp>
 
 using namespace QuantLib;
 
 namespace QuantLib {
 class Quote;
 class YieldTermStructure;
-}
+} // namespace QuantLib
 
 namespace QuantExt {
 
@@ -60,6 +62,8 @@ namespace QuantExt {
     selling protection and receiving a coupon. A payer CDS option
     is a right to buy an underlying CDS buying protection and
     paying coupon.
+
+    \ingroup instruments
 */
 class CdsOption : public Option {
 public:
@@ -108,6 +112,7 @@ public:
 };
 
 //! %Results from CDS-option calculation
+//! \ingroup instruments
 class CdsOption::results : public Option::results {
 public:
     Real riskyAnnuity;
@@ -116,6 +121,6 @@ public:
 
 //! base class for swaption engines
 class CdsOption::engine : public GenericEngine<CdsOption::arguments, CdsOption::results> {};
-}
+} // namespace QuantExt
 
 #endif

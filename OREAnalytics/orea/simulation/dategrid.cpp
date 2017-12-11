@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/settings.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <boost/algorithm/string.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -105,6 +105,27 @@ DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridC
         buildDates(gridCalendar, dayCounter);
 }
 
+DateGrid::DateGrid(const vector<Date>& dates, const DayCounter& dayCounter) : dates_(dates) {
+    QL_REQUIRE(!dates_.empty(), "Construction of DateGrid requires a non-empty vector of dates");
+    QL_REQUIRE(is_sorted(dates_.begin(), dates_.end()),
+               "Construction of DateGrid requires a sorted vector of unique dates");
+    Date today = Settings::instance().evaluationDate();
+    QL_REQUIRE(today < dates_.front(),
+               "Construction of DateGrid requires first element to be strictly greater than today");
+
+    // Populate the tenors, times and timegrid
+    tenors_.resize(dates_.size());
+    times_.resize(dates_.size());
+    for (Size i = 0; i < dates_.size(); i++) {
+        tenors_[i] = (dates_[i] - today) * Days;
+        times_[i] = dayCounter.yearFraction(today, dates_[i]);
+    }
+    timeGrid_ = TimeGrid(times_.begin(), times_.end());
+
+    // Log the date grid
+    log();
+}
+
 void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCounter& dc) {
     // build dates from tenors
     // this is called by both constructors
@@ -126,6 +147,10 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
     timeGrid_ = TimeGrid(times_.begin(), times_.end());
 
     // Log the date grid
+    log();
+}
+
+void DateGrid::log() {
     DLOG("DateGrid constructed, size = " << size());
     for (Size i = 0; i < tenors_.size(); i++)
         DLOG("[" << setw(2) << i << "] Tenor:" << tenors_[i] << ", Date:" << io::iso_date(dates_[i]));
@@ -156,5 +181,5 @@ void DateGrid::truncate(Size len) {
         DLOG("DateGrid size now " << dates_.size());
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

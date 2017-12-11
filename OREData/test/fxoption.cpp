@@ -16,15 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/fxoption.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/fxoption.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -42,8 +42,8 @@ public:
         asof_ = Date(3, Feb, 2016);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.025);
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.03);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.025);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
 
         // add fx rates
         fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
@@ -62,7 +62,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -77,12 +77,22 @@ void FXOptionTest::testFXOptionPrice() {
 
     // build FXOption - expiry in 1 Year
     OptionData optionData("Long", "Call", "European", true, vector<string>(1, "20170203"));
+    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
+                                    "USD", "20170203");
+    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
+                                    "EUR", "20170203");
     Envelope env("CP1");
     FxOption fxOption(env, optionData, "EUR", 1000000, // bought
                       "USD", 1250000);                 // sold
+    FxOption fxOptionPremiumUSD(env, optionDataPremiumUSD, "EUR", 1000000, "USD", 1250000);
+    FxOption fxOptionPremiumEUR(env, optionDataPremiumEUR, "EUR", 1000000, "USD", 1250000);
+
+    // NPV currency = sold currency = USD
 
     Real expectedNPV_USD = 29148.0;
     Real expectedNPV_EUR = 24290.0;
+    Real expectedNPV_USD_Premium_USD = 19495.6;
+    Real expectedNPV_USD_Premium_EUR = 17496.4;
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -92,15 +102,27 @@ void FXOptionTest::testFXOptionPrice() {
     engineFactory->registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
 
     fxOption.build(engineFactory);
+    fxOptionPremiumUSD.build(engineFactory);
+    fxOptionPremiumEUR.build(engineFactory);
 
     Real npv = fxOption.instrument()->NPV();
+    Real npv_prem_usd = fxOptionPremiumUSD.instrument()->NPV();
+    Real npv_prem_eur = fxOptionPremiumEUR.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("FX Option, NPV Currency " << fxOption.npvCurrency());
+    BOOST_TEST_MESSAGE("NPV =                     " << npv);
+    BOOST_TEST_MESSAGE("NPV with premium in USD = " << npv_prem_usd);
+    BOOST_TEST_MESSAGE("NPV with premium in EUR = " << npv_prem_eur);
 
     // Check NPV matches expected values. Expected value from Wystup is rounded at each step of
     // calculation so we get a difference of $50 here.
+    QL_REQUIRE(fxOption.npvCurrency() == "USD", "unexpected NPV currency");
     if (fxOption.npvCurrency() == "EUR") {
         BOOST_CHECK_CLOSE(npv, expectedNPV_EUR, 0.2);
     } else if (fxOption.npvCurrency() == "USD") {
         BOOST_CHECK_CLOSE(npv, expectedNPV_USD, 0.2);
+        BOOST_CHECK_CLOSE(npv_prem_usd, expectedNPV_USD_Premium_USD, 0.001);
+        BOOST_CHECK_CLOSE(npv_prem_eur, expectedNPV_USD_Premium_EUR, 0.001);
     } else {
         BOOST_FAIL("Unexpected FX Option npv currency " << fxOption.npvCurrency());
     }
@@ -113,4 +135,4 @@ test_suite* FXOptionTest::suite() {
     suite->add(BOOST_TEST_CASE(&FXOptionTest::testFXOptionPrice));
     return suite;
 }
-}
+} // namespace testsuite

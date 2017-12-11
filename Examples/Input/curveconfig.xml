@@ -282,6 +282,18 @@
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
+      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>Benchmark</Type>
+      <DayCounter>A365</DayCounter>
+      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
+      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
+      <SpotLag>0</SpotLag>
+      <Calendar>TARGET</Calendar>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -1727,6 +1739,22 @@
       </Segments>
     </YieldCurve>
     <YieldCurve>
+      <CurveId>BOND_YIELD_EUR</CurveId>
+      <CurveDescription>Bond yield curve EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve></DiscountCurve>
+      <Segments>
+	    <Direct>
+	      <Type>Zero</Type>
+	      <Quotes>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/5Y</Quote>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/10Y</Quote>
+	      </Quotes>
+	      <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	    </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
       <Currency>EUR</Currency>
@@ -2082,7 +2110,8 @@
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2101,7 +2130,8 @@
           <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2120,7 +2150,8 @@
           <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2132,6 +2163,7 @@
             <CurveId>SP5</CurveId>
             <CurveDescription>SP 500 equity price projection curve</CurveDescription>
             <Currency>USD</Currency>
+            <ForecastingCurve>USD1D</ForecastingCurve>
             <Type>DividendYield</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
@@ -2141,11 +2173,16 @@
                 <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
+            <DividendInterpolation>
+                <InterpolationVariable>Zero</InterpolationVariable>
+                <InterpolationMethod>Linear</InterpolationMethod>
+            </DividendInterpolation>
         </EquityCurve>
         <EquityCurve>
             <CurveId>Lufthansa</CurveId>
             <CurveDescription>Lufthansa equity price projection curve</CurveDescription>
             <Currency>EUR</Currency>
+            <ForecastingCurve>EUR1D</ForecastingCurve>
             <Type>ForwardPrice</Type> <!-- {DividendYield, ForwardPrice} -->
             <SpotQuote>EQUITY/PRICE/Lufthansa/EUR</SpotQuote> <!--  the spot quote from the market data file -->
             <Quotes>
@@ -2177,14 +2214,13 @@
             </Expiries>
         </EquityVolatility>
   </EquityVolatilities>
-  <SecuritySpreads>
-    <SecuritySpread>
+  <Securities>
+    <Security>
       <CurveId>SECURITY_1</CurveId>
-      <CurveDescription>Security Spread</CurveDescription>
-      <Quotes>
-        <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
-      </Quotes>
-    </SecuritySpread>
-  </SecuritySpreads>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    </Security>
+  </Securities>
 </CurveConfiguration>
 

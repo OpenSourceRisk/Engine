@@ -23,19 +23,18 @@
 
 #pragma once
 
-#include <ored/utilities/parsers.hpp>
-#include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/instrumentwrapper.hpp>
 #include <ored/portfolio/tradeactions.hpp>
-#include <ql/time/date.hpp>
-#include <ql/instrument.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <ql/cashflow.hpp>
+#include <ql/instrument.hpp>
+#include <ql/time/date.hpp>
 
 using std::string;
 using ore::data::XMLSerializable;
-;
-using ore::data::XMLDocument;
+
 using ore::data::XMLNode;
 using QuantLib::Date;
 
@@ -48,6 +47,7 @@ namespace data {
     - contain additional serializable data classes
     - implement a build() function that parses data and constructs QuantLib
       and QuantExt objects
+ \ingroup portfolio
 */
 class Trade : public XMLSerializable {
 public:
@@ -91,7 +91,9 @@ public:
 
     const string& tradeType() const { return tradeType_; }
 
-    const Envelope& envelope() { return envelope_; }
+    const Envelope& envelope() const { return envelope_; }
+
+    const set<string>& portfolioIds() const { return envelope().portfolioIds(); }
 
     const TradeActions& tradeActions() { return tradeActions_; }
 
@@ -123,10 +125,20 @@ protected:
     QuantLib::Real notional_;
     Date maturity_;
 
+    // Utility to add a single (fee, option premium, etc.) payment such that it is taken into account in pricing and
+    // cash flow projection. For example, an option premium flow is not covered by the underlying option instrument in
+    // QuantLib and needs to be represented separately. This is done by inserting it as an additional instrument
+    // into the InstrumentWrapper. This utility creates the additional instrument. The actual insertion into the
+    // instrument wrapper is done in the individual trade builders when they instantiate the InstrumentWrapper.
+    void addPayment(std::vector<boost::shared_ptr<Instrument>>& instruments, std::vector<Real>& multipliers,
+                    const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
+                    const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                    const string& configuration);
+
 private:
     string id_;
     Envelope envelope_;
     TradeActions tradeActions_;
 };
-}
-}
+} // namespace data
+} // namespace ore

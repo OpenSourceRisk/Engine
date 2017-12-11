@@ -21,26 +21,28 @@
     \ingroup
 */
 
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 using namespace std;
 
 // Boost
+#include <boost/make_shared.hpp>
 #include <boost/timer.hpp>
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/parameterized_test.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/test/parameterized_test.hpp>
 using boost::unit_test::test_suite;
 
+#include <oret/oret.hpp>
+
 #ifdef BOOST_MSVC
-#include <ql/auto_link.hpp>
-#include <qle/auto_link.hpp>
 #include <orea/auto_link.hpp>
 #include <ored/auto_link.hpp>
+#include <ql/auto_link.hpp>
+#include <qle/auto_link.hpp>
 #define BOOST_LIB_NAME boost_date_time
 #include <boost/config/auto_link.hpp>
 #define BOOST_LIB_NAME boost_serialization
@@ -56,14 +58,14 @@ using boost::unit_test::test_suite;
 // Lib test suites
 #include "aggregationscenariodata.hpp"
 #include "cube.hpp"
-#include "scenariosimmarket.hpp"
+#include "observationmode.hpp"
 #include "scenariogenerator.hpp"
-#include "swapperformance.hpp"
+#include "scenariosimmarket.hpp"
 #include "sensitivityanalysis.hpp"
 #include "sensitivityanalysis2.hpp"
 #include "sensitivityperformance.hpp"
 #include "stresstest.hpp"
-#include "observationmode.hpp"
+#include "swapperformance.hpp"
 
 namespace {
 
@@ -83,26 +85,22 @@ void stopTimer() {
         cout << minutes << " m ";
     cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
 }
-}
+} // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
 
+    // Get command line arguments
     int argc = boost::unit_test::framework::master_test_suite().argc;
     char** argv = boost::unit_test::framework::master_test_suite().argv;
+
     bool enablePerformanceTests = false;
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--enable_performance_tests") == 0)
             enablePerformanceTests = true;
     }
-    string name(argv[0]);
-    string baseName = name.substr(name.find_last_of("/\\") + 1);
-    BOOST_TEST_MESSAGE("Enable performance tests:  " << baseName
-                                                     << " [Boost.Test arguments] -- --enable_performance_tests");
 
-    if (enablePerformanceTests)
-        BOOST_TEST_MESSAGE("Performance tests ENABLED");
-    else
-        BOOST_TEST_MESSAGE("Performance tests DISABLED");
+    // Set up test logging
+    ore::test::setupTestLogging(argc, argv);
 
     test_suite* test = BOOST_TEST_SUITE("OREAnalyticsTestSuite");
 

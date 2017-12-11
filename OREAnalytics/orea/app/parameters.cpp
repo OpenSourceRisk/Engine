@@ -1,4 +1,3 @@
-
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
@@ -107,5 +106,5 @@ void Parameters::log() {
         for (auto pp : p.second)
             LOG("group = " << p.first << " : " << pp.first << " = " << pp.second);
 }
-}
-}
+} // namespace analytics
+} // namespace ore

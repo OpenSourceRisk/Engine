@@ -22,12 +22,12 @@
   \ingroup portfolio
 */
 
-#include <ored/portfolio/equityforward.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <qle/instruments/equityforward.hpp>
+#include <ored/portfolio/equityforward.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/instruments/equityforward.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -84,5 +84,5 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

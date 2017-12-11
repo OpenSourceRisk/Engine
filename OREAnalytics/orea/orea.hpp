@@ -5,6 +5,7 @@
 #  include <orea/auto_link.hpp>
 #endif
 
+#include <orea/version.hpp>
 
 #include <orea/aggregation/all.hpp>
 #include <orea/cube/all.hpp>

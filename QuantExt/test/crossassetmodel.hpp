@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016, 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -129,6 +129,6 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite
 
 #endif

@@ -25,15 +25,15 @@
 
 #include <ql/time/date.hpp>
 
-#include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
 
 namespace boost {
 namespace serialization {
 
 //! Allow for serialization of QuantLib::Date without amending its class (non-intrusive)
-/*! \ingroup cube
-*/
+/*! \ingroup utilities
+ */
 template <class Archive> void serialize(Archive& ar, QuantLib::Date& d, const unsigned int) {
     QuantLib::BigInteger big;
     if (Archive::is_saving::value) {
@@ -46,5 +46,5 @@ template <class Archive> void serialize(Archive& ar, QuantLib::Date& d, const un
         d = QuantLib::Date(big);
     }
 }
-}
-}
+} // namespace serialization
+} // namespace boost

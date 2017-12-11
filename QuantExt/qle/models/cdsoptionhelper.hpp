@@ -25,15 +25,18 @@
 #define quantext_cdsoptionhelper_hpp
 
 #include <qle/instruments/cdsoption.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
-#include <ql/instruments/creditdefaultswap.hpp>
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
-
+//! CDS option helper
+/*!
+ \ingroup models
+ */
 class CdsOptionHelper : public CalibrationHelper {
 public:
     CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,

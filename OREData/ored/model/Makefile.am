@@ -13,6 +13,9 @@ libOREDataModel_la_SOURCES = \
 	eqbsdata.cpp \
 	fxbsdata.cpp \
 	fxbsbuilder.cpp \
+    infdkbuilder.cpp \
+    infdkdata.cpp \
+    irlgmdata.cpp \
 	lgmdata.cpp \
 	lgmbuilder.cpp \
 	utilities.cpp
@@ -26,6 +29,9 @@ this_include_HEADERS = \
 	eqbsdata.hpp \
 	fxbsdata.hpp \
 	fxbsbuilder.hpp \
+    infdkbuilder.hpp \
+    infdkdata.hpp \
+    irlgmdata.hpp \
 	lgmdata.hpp \
 	lgmbuilder.hpp \
 	modelbuilder.hpp \

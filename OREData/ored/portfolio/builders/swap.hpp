@@ -18,29 +18,30 @@
 
 /*! \file portfolio/builders/swap.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/utilities/log.hpp>
-#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
-#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
-#include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
+#include <ored/utilities/log.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
+#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
 
 namespace ore {
 namespace data {
 
 //! Engine Builder base class for Single Currency Swaps
 /*! Pricing engines are cached by currency
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    SwapEngineBuilderBase(const std::string& model, const std::string& engine) : CachingEngineBuilder(model, engine) {}
+    SwapEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"Swap"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -48,7 +49,7 @@ protected:
 
 //! Engine Builder for Single Currency Swaps
 /*! This builder uses QuantLib::DiscountingSwapEngine
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilder : public SwapEngineBuilderBase {
 public:
@@ -64,7 +65,7 @@ protected:
 
 //! Engine Builder for Single Currency Swaps
 /*! This builder uses QuantExt::DiscountingSwapEngineMultiCurve
-    \ingroup portfolio
+    \ingroup builders
 */
 class SwapEngineBuilderOptimised : public SwapEngineBuilderBase {
 public:
@@ -81,13 +82,13 @@ protected:
 //! Engine Builder for Cross Currency Swaps
 /*! Pricing engines are cached by currencies (represented as a string list)
 
-    \ingroup portfolio
+    \ingroup builders
 */
 class CrossCurrencySwapEngineBuilder
     : public CachingPricingEngineBuilder<string, const std::vector<Currency>&, const Currency&> {
 public:
     CrossCurrencySwapEngineBuilder()
-        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine") {}
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingCrossCurrencySwapEngine", {"CrossCurrencySwap"}) {}
 
 protected:
     virtual string keyImpl(const std::vector<Currency>& ccys, const Currency& base) override {

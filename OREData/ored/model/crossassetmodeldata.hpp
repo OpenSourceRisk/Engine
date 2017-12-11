@@ -25,17 +25,18 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
-#include <ored/marketdata/market.hpp>
 #include <ored/configuration/conventions.hpp>
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <ored/model/fxbsdata.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/model/eqbsdata.hpp>
+#include <ored/model/fxbsdata.hpp>
+#include <ored/model/infdkdata.hpp>
+#include <ored/model/irlgmdata.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -63,7 +64,7 @@ public:
     CrossAssetModelData() {}
     //! Detailed constructor (IR/FX only)
     CrossAssetModelData( //! Vector of IR model specifications
-        const vector<boost::shared_ptr<LgmData>>& irConfigs,
+        const vector<boost::shared_ptr<IrLgmData>>& irConfigs,
         //! Vector of FX model specifications
         const vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, FX:USDEUR,
@@ -71,16 +72,16 @@ public:
         //! Bootstrap tolerance used in model calibration
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(std::vector<boost::shared_ptr<EqBsData>>()),
-          correlations_(c), bootstrapTolerance_(tolerance) {
+          infConfigs_(std::vector<boost::shared_ptr<InfDkData>>()), correlations_(c), bootstrapTolerance_(tolerance) {
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
             currencies_.push_back(irConfigs_[i]->ccy());
         validate();
     }
-    //! Detailed constructor (all asset classes) - TODO: add inflation, credit, commodity
+    //! Detailed constructor (IR/FX/EQ only)
     CrossAssetModelData( //! Vector of IR model specifications
-        const std::vector<boost::shared_ptr<LgmData>>& irConfigs,
+        const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
         //! Vector of FX model specifications
         const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
         //! Vector of EQ model specifications
@@ -91,6 +92,27 @@ public:
         Real tolerance = 1e-4)
         : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), correlations_(c),
           bootstrapTolerance_(tolerance) {
+        domesticCurrency_ = irConfigs_[0]->ccy();
+        currencies_.clear();
+        for (Size i = 0; i < irConfigs_.size(); ++i)
+            currencies_.push_back(irConfigs_[i]->ccy());
+        validate();
+    }
+    //! Detailed constructor (all asset classes) - TODO: add inflation, credit, commodity
+    CrossAssetModelData( //! Vector of IR model specifications
+        const std::vector<boost::shared_ptr<IrLgmData>>& irConfigs,
+        //! Vector of FX model specifications
+        const std::vector<boost::shared_ptr<FxBsData>>& fxConfigs,
+        //! Vector of EQ model specifications
+        const std::vector<boost::shared_ptr<EqBsData>>& eqConfigs,
+        //! Vector of INF model specifications
+        const std::vector<boost::shared_ptr<InfDkData>>& infConfigs,
+        //! Correlation map, key is a pair of factors labeled as IR:EUR, IR:GBP, FX:GBPEUR, EQ:Apple,
+        const std::map<std::pair<std::string, std::string>, Real>& c,
+        //! Bootstrap tolerance used in model calibration
+        Real tolerance = 1e-4)
+        : irConfigs_(irConfigs), fxConfigs_(fxConfigs), eqConfigs_(eqConfigs), infConfigs_(infConfigs),
+          correlations_(c), bootstrapTolerance_(tolerance) {
         domesticCurrency_ = irConfigs_[0]->ccy();
         currencies_.clear();
         for (Size i = 0; i < irConfigs_.size(); ++i)
@@ -110,9 +132,11 @@ public:
     const string& domesticCurrency() const { return domesticCurrency_; }
     const vector<string>& currencies() const { return currencies_; }
     const vector<string>& equities() const { return equities_; }
-    const vector<boost::shared_ptr<LgmData>>& irConfigs() const { return irConfigs_; }
+    const vector<string>& infIndices() const { return infindices_; }
+    const vector<boost::shared_ptr<IrLgmData>>& irConfigs() const { return irConfigs_; }
     const vector<boost::shared_ptr<FxBsData>>& fxConfigs() const { return fxConfigs_; }
     const vector<boost::shared_ptr<EqBsData>>& eqConfigs() const { return eqConfigs_; }
+    const vector<boost::shared_ptr<InfDkData>>& infConfigs() const { return infConfigs_; }
     const map<pair<string, string>, Real>& correlations() const { return correlations_; }
     Real bootstrapTolerance() const { return bootstrapTolerance_; }
     //@}
@@ -122,16 +146,18 @@ public:
     string& domesticCurrency() { return domesticCurrency_; }
     vector<string>& currencies() { return currencies_; }
     vector<string>& equities() { return equities_; }
-    vector<boost::shared_ptr<LgmData>>& irConfigs() { return irConfigs_; }
+    vector<string>& infIndices() { return infindices_; }
+    vector<boost::shared_ptr<IrLgmData>>& irConfigs() { return irConfigs_; }
     vector<boost::shared_ptr<FxBsData>>& fxConfigs() { return fxConfigs_; }
     vector<boost::shared_ptr<EqBsData>>& eqConfigs() { return eqConfigs_; }
+    vector<boost::shared_ptr<InfDkData>>& infConfigs() { return infConfigs_; }
     map<pair<string, string>, Real>& correlations() { return correlations_; }
     Real& bootstrapTolerance() { return bootstrapTolerance_; }
     //@}
 
     //! \name Serialisation
     //@{
-    //!Populate members from XML
+    //! Populate members from XML
     virtual void fromXML(XMLNode* node);
     //! Write class mambers to XML
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -145,20 +171,24 @@ public:
 
 private:
     //! helper to convert LGM data, possibly including defaults, into an IR config vector
-    void buildIrConfigs(map<string, boost::shared_ptr<LgmData>>& irMap);
+    void buildIrConfigs(map<string, boost::shared_ptr<IrLgmData>>& irMap);
     //! helper to convert FX data, possibly including defaults, into an FX config vector
     void buildFxConfigs(std::map<std::string, boost::shared_ptr<FxBsData>>& fxMap);
     //! helper to convert EQ data, possibly including defaults, into an EQ config vector
     void buildEqConfigs(std::map<std::string, boost::shared_ptr<EqBsData>>& eqMap);
+    //! helper to convert INF data, possibly including defaults, into an EQ config vector
+    void buildInfConfigs(std::map<std::string, boost::shared_ptr<InfDkData>>& infMap);
 
     string domesticCurrency_;
     vector<std::string> currencies_;
     vector<std::string> equities_;
-    vector<boost::shared_ptr<LgmData>> irConfigs_;
+    vector<std::string> infindices_;
+    vector<boost::shared_ptr<IrLgmData>> irConfigs_;
     vector<boost::shared_ptr<FxBsData>> fxConfigs_;
     vector<boost::shared_ptr<EqBsData>> eqConfigs_;
+    vector<boost::shared_ptr<InfDkData>> infConfigs_;
     map<pair<string, string>, Real> correlations_;
     Real bootstrapTolerance_;
 };
-}
-}
+} // namespace data
+} // namespace ore

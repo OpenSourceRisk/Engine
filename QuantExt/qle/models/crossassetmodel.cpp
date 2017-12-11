@@ -95,6 +95,18 @@ Size CrossAssetModel::eqIndex(const std::string& name) const {
     }
 }
 
+Size CrossAssetModel::infIndex(const std::string& index) const {
+    Size i = 0;
+    // FIXME: remove try/catch
+    try {
+        while (infdk(i)->name() != index)
+            ++i;
+        return i;
+    } catch (...) {
+        QL_FAIL("inflation index " << index << " not present in cross asset model");
+    }
+}
+
 void CrossAssetModel::update() {
     cache_crlgm1fS_.clear();
     cache_infdkI_.clear();
@@ -347,6 +359,10 @@ void CrossAssetModel::setIntegrationPolicy(const boost::shared_ptr<Integrator> i
         allTimes.insert(allTimes.end(), p_[idx(CR, i)]->parameterTimes(1).begin(),
                         p_[idx(CR, i)]->parameterTimes(1).end());
     }
+    for (Size i = 0; i < nEqBs_; ++i) {
+        allTimes.insert(allTimes.end(), p_[idx(EQ, i)]->parameterTimes(0).begin(),
+                        p_[idx(EQ, i)]->parameterTimes(0).end());
+    }
 
     // use piecewise integrator avoiding the step points
     integrator_ = boost::make_shared<PiecewiseIntegral>(integrator, allTimes, true);
@@ -479,11 +495,12 @@ void CrossAssetModel::checkCorrelationMatrix() const {
     QL_REQUIRE(rho_.columns() == n, "correlation matrix (" << n << " x " << m << " must be square");
     for (Size i = 0; i < n; ++i) {
         for (Size j = 0; j < m; ++j) {
-            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is no symmetric, for (i,j)=("
+            QL_REQUIRE(close_enough(rho_[i][j], rho_[j][i]), "correlation matrix is not symmetric, for (i,j)=("
                                                                  << i << "," << j << ") rho(i,j)=" << rho_[i][j]
                                                                  << " but rho(j,i)=" << rho_[j][i]);
-            QL_REQUIRE(rho_[i][j] >= -1.0 && rho_[i][j] <= 1.0, "correlation matrix has invalid entry at (i,j)=("
-                                                                    << i << "," << j << ") equal to " << rho_[i][j]);
+            QL_REQUIRE(close_enough(std::abs(rho_[i][j]), 1.0) || (rho_[i][j] > -1.0 && rho_[i][j] < 1.0),
+                       "correlation matrix has invalid entry at (i,j)=(" << i << "," << j << ") equal to "
+                                                                         << rho_[i][j]);
         }
         QL_REQUIRE(close_enough(rho_[i][i], 1.0), "correlation matrix must have unit diagonal elements, "
                                                   "but rho(i,i)="
@@ -492,8 +509,8 @@ void CrossAssetModel::checkCorrelationMatrix() const {
 
     SymmetricSchurDecomposition ssd(rho_);
     for (Size i = 0; i < ssd.eigenvalues().size(); ++i) {
-        QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0, "correlation matrix has negative eigenvalue at "
-                                                    << i << " (" << ssd.eigenvalues()[i] << ")");
+        QL_REQUIRE(ssd.eigenvalues()[i] >= 0.0,
+                   "correlation matrix has negative eigenvalue at " << i << " (" << ssd.eigenvalues()[i] << ")");
     }
 }
 
@@ -595,10 +612,7 @@ void CrossAssetModel::calibrateBsVolatilitiesGlobal(const AssetType& assetType, 
                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
                                                     const Constraint& constraint, const std::vector<Real>& weights) {
     QL_REQUIRE(assetType == FX || assetType == EQ, "Unsupported AssetType for BS calibration");
-    for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
-        calibrate(h, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, aIdx, Null<Size>()));
-    }
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, aIdx, Null<Size>()));
     update();
 }
 
@@ -622,6 +636,21 @@ void CrossAssetModel::calibrateInfDkReversionsIterative(
     update();
 }
 
+void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
+    const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
+    update();
+}
+
+void CrossAssetModel::calibrateInfDkReversionsGlobal(const Size index,
+                                                     const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
+                                                     const Constraint& constraint, const std::vector<Real>& weights) {
+    calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
+    update();
+}
+
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
     const Size index, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
@@ -642,46 +671,42 @@ void CrossAssetModel::calibrateCrLgm1fReversionsIterative(
     update();
 }
 
-std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
+std::pair<Real, Real> CrossAssetModel::infdkV(const Size i, const Time t, const Time T) {
     Size ccy = ccyIndex(infdk(i)->currency());
-    QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
     cache_key k = { i, ccy, t, T };
     boost::unordered_map<cache_key, std::pair<Real, Real> >::const_iterator it = cache_infdkI_.find(k);
     Real V0, V_tilde;
-    Real Hyt = Hy(i).eval(this, t);
-    Real HyT = Hy(i).eval(this, T);
 
     if (it == cache_infdkI_.end()) {
-        // compute V0 and V_tilde
-        if (ccy == 0) {
-            // domestic inflation
-            Real Hzt = Hz(0).eval(this, t);
-            Real HzT = Hz(0).eval(this, T);
-            Real zetay0 = zetay(i).eval(this, t);
-            Real zetay1 = integral(this, P(Hy(i), ay(i), ay(i)), 0.0, t);
-            Real zetay2 = integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), 0.0, t);
-            Real zetany0 = integral(this, P(rzy(0, i), az(0), ay(i)), 0.0, t);
-            Real zetany1 = integral(this, P(rzy(0, i), Hy(i), az(0), ay(i)), 0.0, t);
-            V0 = 0.5 * Hyt * Hyt * zetay0 - Hyt * zetay1 + 0.5 * zetay2 - Hzt * Hyt * zetany0 + Hzt * zetany1;
-            V_tilde = -0.5 * (HyT * HyT - Hyt * Hyt) * zetay0 + (HyT - Hyt) * zetay1 +
-                      (HzT * HyT - Hzt * Hyt) * zetany0 - (HzT - Hzt) * zetany1;
-        } else {
-            // foreign inflation
-            V0 = infV(i, ccy, 0, t);
-            V_tilde = infV(i, ccy, t, T) - infV(i, ccy, 0, T) + infV(i, ccy, 0, t);
-        }
+        V0 = infV(i, ccy, 0, t);
+        V_tilde = infV(i, ccy, t, T) - infV(i, ccy, 0, T) + infV(i, ccy, 0, t);
         cache_infdkI_.insert(std::make_pair(k, std::make_pair(V0, V_tilde)));
     } else {
         // take V0 and V_tilde from cache
         V0 = it->second.first;
         V_tilde = it->second.second;
     }
+    return std::make_pair(V0, V_tilde);
+}
+
+std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const Time T, const Real z, const Real y) {
+    QL_REQUIRE(t < T || close_enough(t, T), "infdkI: t (" << t << ") <= T (" << T << ") required");
+    Real V0, V_tilde;
+    std::pair<Real, Real> Vs = infdkV(i, t, T);
+    V0 = Vs.first;
+    V_tilde = Vs.second;
+    Real Hyt = Hy(i).eval(this, t);
+    Real HyT = Hy(i).eval(this, T);
+
     // lag computation
     Date baseDate = infdk(i)->termStructure()->baseDate();
     Frequency freq = infdk(i)->termStructure()->frequency();
     Real lag = inflationYearFraction(freq, infdk(i)->termStructure()->indexIsInterpolated(),
                                      irlgm1f(0)->termStructure()->dayCounter(), baseDate,
                                      infdk(i)->termStructure()->referenceDate());
+
+    //    Period lag = infdk(i)->termStructure()->observationLag();
+
     // TODO account for seasonality ...
     // compute final results depending on z and y
     Real It = std::pow(1.0 + infdk(i)->termStructure()->zeroRate(t - lag), t) * std::exp(Hyt * z - y - V0);
@@ -694,6 +719,23 @@ std::pair<Real, Real> CrossAssetModel::infdkI(const Size i, const Time t, const 
     // the last actual publication time of the index => is the approximation
     // here in this sense good enough that we can tolerate this?
     return std::make_pair(It, Itilde_t_T);
+}
+
+Real CrossAssetModel::infdkYY(const Size i, const Time t, const Time S, const Time T, const Real z, const Real y,
+                              const Real irz) {
+    Size ccy = ccyIndex(infdk(i)->currency());
+
+    // Set Convexity adjustment set to 1.
+    // TODO: Add calculation for DK convexity adjustment
+    Real C_tilde = 1;
+
+    Real I_tildeS = infdkI(i, t, S, z, y).second;
+    Real I_tildeT = infdkI(i, t, T, z, y).second;
+    Real Pn_t_T = lgm(ccy)->discountBond(t, T, irz);
+
+    Real yySwaplet = (I_tildeT / I_tildeS) * Pn_t_T * C_tilde - Pn_t_T;
+
+    return yySwaplet;
 }
 
 std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
@@ -742,21 +784,31 @@ std::pair<Real, Real> CrossAssetModel::crlgm1fS(const Size i, const Size ccy, co
 
 Real CrossAssetModel::infV(const Size i, const Size ccy, const Time t, const Time T) const {
     Real HyT = Hy(i).eval(this, T);
-    Real HfT = irlgm1f(ccy)->H(T);
+    Real HdT = irlgm1f(0)->H(T);
     Real rhody = correlation(IR, 0, INF, i, 0, 0);
-    Real rhofy = correlation(IR, ccy, INF, i, 0, 0);
-    Real rhoxy = correlation(FX, ccy - 1, INF, i, 0, 0);
-    return 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
-                  2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
-                  integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
-           rhody * (HyT * integral(this, P(Hz(0), az(0), ay(i)), t, T) -
-                    integral(this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
-           rhofy * (HfT * HyT * integral(this, P(az(ccy), ay(i)), t, T) -
-                    HfT * integral(this, P(az(ccy), Hy(i), ay(i)), t, T) -
-                    HyT * integral(this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
-                    integral(this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
-           rhoxy *
-               (HyT * integral(this, P(sx(ccy - 1), ay(i)), t, T) - integral(this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
+    Real V;
+    if (ccy == 0) {
+        V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
+                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+            rhody * HdT * (HyT * integral(this, P(az(0), ay(i)), t, T) - integral(this, P(az(0), Hy(i), ay(i)), t, T));
+    } else {
+        Real HfT = irlgm1f(ccy)->H(T);
+        Real rhofy = correlation(IR, ccy, INF, i, 0, 0);
+        Real rhoxy = correlation(FX, ccy - 1, INF, i, 0, 0);
+        V = 0.5 * (HyT * HyT * (zetay(i).eval(this, T) - zetay(i).eval(this, t)) -
+                   2.0 * HyT * integral(this, P(Hy(i), ay(i), ay(i)), t, T) +
+                   integral(this, P(Hy(i), Hy(i), ay(i), ay(i)), t, T)) -
+            rhody * (HyT * integral(this, P(Hz(0), az(0), ay(i)), t, T) -
+                     integral(this, P(Hz(0), az(0), Hy(i), ay(i)), t, T)) -
+            rhofy * (HfT * HyT * integral(this, P(az(ccy), ay(i)), t, T) -
+                     HfT * integral(this, P(az(ccy), Hy(i), ay(i)), t, T) -
+                     HyT * integral(this, P(Hz(ccy), az(ccy), ay(i)), t, T) +
+                     integral(this, P(Hz(ccy), az(ccy), Hy(i), ay(i)), t, T)) +
+            rhoxy * (HyT * integral(this, P(sx(ccy - 1), ay(i)), t, T) -
+                     integral(this, P(sx(ccy - 1), Hy(i), ay(i)), t, T));
+    }
+    return V;
 }
 
 Real CrossAssetModel::crV(const Size i, const Size ccy, const Time t, const Time T) const {

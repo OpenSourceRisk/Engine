@@ -35,7 +35,7 @@ namespace QuantExt {
 
 //! Pricer for average overnight indexed coupons
 /*! \ingroup cashflows
-*/
+ */
 class AverageONIndexedCouponPricer : public FloatingRateCouponPricer {
 public:
     enum Approximation { Takada, None };

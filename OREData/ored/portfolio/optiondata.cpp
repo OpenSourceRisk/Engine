@@ -55,5 +55,5 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, node, "ExercisePrices", "ExerciseFee", exercisePrices_);
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

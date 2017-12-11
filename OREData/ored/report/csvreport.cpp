@@ -65,8 +65,8 @@ private:
     const string null_;
 };
 
-CSVFileReport::CSVFileReport(const string& filename, const char sep)
-    : filename_(filename), sep_(sep), i_(0), fp_(NULL) {
+CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter)
+    : filename_(filename), sep_(sep), commentCharacter_(commentCharacter), i_(0), fp_(NULL) {
     fp_ = fopen(filename_.c_str(), "w+");
     QL_REQUIRE(fp_, "Error opening file " << filename_);
 }
@@ -76,7 +76,11 @@ CSVFileReport::~CSVFileReport() { end(); }
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);
     printers_.push_back(ReportTypePrinter(fp_, precision));
-    fprintf(fp_, "%c%s", (i_ == 0 ? '#' : sep_), name.c_str());
+    if (i_ == 0 && commentCharacter_)
+        fprintf(fp_, "#");
+    if (i_ > 0)
+        fprintf(fp_, "%c", sep_);
+    fprintf(fp_, "%s", name.c_str());
     i_++;
     return *this;
 }
@@ -107,5 +111,5 @@ void CSVFileReport::end() {
         fp_ = NULL;
     }
 }
-}
-}
+} // namespace data
+} // namespace ore

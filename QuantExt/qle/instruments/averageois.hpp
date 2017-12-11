@@ -27,10 +27,10 @@
 
 #include <boost/make_shared.hpp>
 
-#include <ql/time/schedule.hpp>
-#include <ql/time/daycounter.hpp>
-#include <ql/instruments/swap.hpp>
 #include <ql/indexes/iborindex.hpp>
+#include <ql/instruments/swap.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/time/schedule.hpp>
 
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
@@ -128,6 +128,6 @@ private:
     DayCounter onDayCounter_;
     boost::shared_ptr<AverageONIndexedCouponPricer> onCouponPricer_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -24,8 +24,8 @@
 #ifndef quantext_calibrationhelper_fxeqoption_hpp
 #define quantext_calibrationhelper_fxeqoption_hpp
 
-#include <ql/models/calibrationhelper.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/models/calibrationhelper.hpp>
 
 using namespace QuantLib;
 
@@ -33,7 +33,7 @@ namespace QuantExt {
 
 //! FxEq Option Helper
 /*! \ingroup models
-*/
+ */
 class FxEqOptionHelper : public CalibrationHelper {
 public:
     /*! the spot is interpreted as of today (or discounted spot)
@@ -54,6 +54,10 @@ public:
     Real modelValue() const;
     Real blackPrice(Real volatility) const;
     boost::shared_ptr<VanillaOption> option() const { return option_; }
+    Real strike() const {
+        calculate();
+        return effStrike_;
+    }
 
 private:
     const bool hasMaturity_;
@@ -70,6 +74,6 @@ private:
     mutable Real effStrike_;
 };
 
-} // namespace QuantLib
+} // namespace QuantExt
 
 #endif

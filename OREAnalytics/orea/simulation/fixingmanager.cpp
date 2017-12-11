@@ -17,22 +17,27 @@
 */
 
 #include <orea/simulation/fixingmanager.hpp>
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/flowanalysis.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
+using namespace ore::data;
 using FlowList = std::vector<std::vector<std::string>>;
 
 namespace ore {
 namespace analytics {
 
-//! Initialise the manager
+//! Initialise the manager-
+
 void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 
     // Get the flow list and required indices from the portfolio.
@@ -57,6 +62,18 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                 boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
                 if (flcf)
                     setIndices.insert(flcf->index());
+
+                boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
+                if (cpc)
+                    setIndices.insert(cpc->index());
+
+                boost::shared_ptr<InflationCoupon> ic = boost::dynamic_pointer_cast<InflationCoupon>(cf);
+                if (ic)
+                    setIndices.insert(ic->index());
+
+                boost::shared_ptr<CPICashFlow> cpcf = boost::dynamic_pointer_cast<CPICashFlow>(cf);
+                if (cpcf)
+                    setIndices.insert(cpcf->index());
 
                 // add more coupon types here ...
             }
@@ -136,27 +153,54 @@ void FixingManager::applyFixings(Date start, Date end) {
         // Only need to apply fixings if the index is in fixingMap
         if (fixingMap_.find(qlIndexName) != fixingMap_.end()) {
 
+            boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
+            boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
+            vector<Date> fixingDates = fixingMap_[qlIndexName];
+            Date currentFixingDate;
+            Date fixStart = start;
+            Date fixEnd = end;
+            if (zii) { // for inflation indices we just only add a fixing for the first date in the month
+                fixStart =
+                    inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
+                        .first;
+                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
+                             .first +
+                         1;
+                currentFixingDate = fixEnd;
+                for (Size i = 0; i < fixingDates.size(); i++) {
+                    fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
+                }
+            } else if (yii) {
+                fixStart =
+                    inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
+                        .first;
+                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
+                             .first +
+                         1;
+                currentFixingDate = fixEnd;
+                for (Size i = 0; i < fixingDates.size(); i++)
+                    fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
+            } else
+                currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
+
             // Add we have a coupon between start and asof.
             bool needFixings = false;
-            vector<Date>& fixingDates = fixingMap_[qlIndexName];
             for (Size i = 0; i < fixingDates.size(); i++) {
-                if (fixingDates[i] >= start && fixingDates[i] < end) {
+                if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
                     needFixings = true;
                     break;
                 }
             }
 
             if (needFixings) {
-                Date currentFixingDate = index->fixingCalendar().adjust(end, Following);
                 Rate currentFixing = index->fixing(currentFixingDate);
                 TimeSeries<Real> history;
-                vector<Date>& fixingDates = fixingMap_[qlIndexName];
                 for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= start && fixingDates[i] < end) {
+                    if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
                         history[fixingDates[i]] = currentFixing;
                         modifiedFixingHistory_ = true;
                     }
-                    if (fixingDates[i] >= end)
+                    if (fixingDates[i] >= fixEnd)
                         break;
                 }
                 index->addFixings(history, true);
@@ -164,5 +208,5 @@ void FixingManager::applyFixings(Date start, Date end) {
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

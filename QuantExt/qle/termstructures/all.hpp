@@ -29,4 +29,13 @@
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
-
+#include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/survivalprobabilitycurve.hpp>
+#include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <qle/termstructures/equityvolconstantspread.hpp>
+#include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
+#include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
+#include <qle/termstructures/yoyinflationcurveobserverstatic.hpp>
+#include <qle/termstructures/yoyinflationcurveobservermoving.hpp>

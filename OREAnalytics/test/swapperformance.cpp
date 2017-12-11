@@ -16,29 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/swapperformance.hpp>
-#include <test/testmarket.hpp>
-#include <ored/utilities/osutils.hpp>
-#include <ored/utilities/log.hpp>
-#include <orea/cube/npvcube.hpp>
+#include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <ored/model/lgmdata.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
-#include <ored/model/crossassetmodelbuilder.hpp>
-#include <orea/scenario/scenariosimmarket.hpp>
-#include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
-#include <qle/methods/multipathgeneratorbase.hpp>
-#include <ql/time/date.hpp>
-#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
+#include <orea/cube/npvcube.hpp>
 #include <orea/engine/all.hpp>
-#include <ored/portfolio/swap.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/scenario/crossassetmodelscenariogenerator.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
+#include <orea/scenario/simplescenariofactory.hpp>
+#include <ored/model/crossassetmodelbuilder.hpp>
+#include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <orea/engine/observationmode.hpp>
-#include <boost/timer.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/log.hpp>
+#include <ored/utilities/osutils.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/date.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/methods/multipathgeneratorbase.hpp>
+#include <test/swapperformance.hpp>
+#include <test/testmarket.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -131,8 +131,12 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         string index = portfolioSize == 1 ? "EUR-EURIBOR-6M" : randString(rng, indices[ccy]);
         string floatFreq = portfolioSize == 1 ? "6M" : index.substr(index.find('-', 4) + 1);
 
-        // fixed details
+        // This variable is not used and only here to ensure that the random numbers generated in
+        // subsequent blocks produce a swap portfolio, which is compatible with the archived values.
         string fixedTenor = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
+        fixedTenor = fixedTenor + "_";
+
+        // fixed details
         Real fixedRate = portfolioSize == 1 ? 0.02 : randInt(rng, minFixedBps, maxFixedBps) / 100.0;
         string fixFreq = portfolioSize == 1 ? "1Y" : randString(rng, fixedTenors);
 
@@ -146,13 +150,13 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
         bool isPayer = randBoolean(rng);
 
         // fixed Leg - with dummy rate
-        FixedLegData fixedLegData(vector<double>(1, fixedRate));
-        LegData fixedLeg(isPayer, ccy, fixedLegData, fixedSchedule, fixDC, notional);
+        LegData fixedLeg(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy, fixedSchedule,
+                         fixDC, notional);
 
         // float Leg
         vector<double> spreads(1, 0);
-        FloatingLegData floatingLegData(index, days, false, spread);
-        LegData floatingLeg(!isPayer, ccy, floatingLegData, floatSchedule, floatDC, notional);
+        LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spread), !isPayer, ccy,
+                            floatSchedule, floatDC, notional);
 
         boost::shared_ptr<Trade> swap(new data::Swap(env, floatingLeg, fixedLeg));
 
@@ -264,8 +268,11 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
     parameters->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
-    parameters->yieldCurveTenors() = {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years};
+    parameters->setYieldCurveTenors("",
+                                    {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
     parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    parameters->setYieldCurveDayCounters("", "ACT/ACT");
+
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
@@ -274,17 +281,20 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
     parameters->swapVolCcys() = ccys;
     parameters->swapVolDecayMode() = "ForwardVariance";
+    parameters->setSwapVolDayCounters("", "ACT/ACT");
 
     parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
+    parameters->setFxVolDayCounters("", "ACT/ACT");
     parameters->simulateFXVols() = false;
 
     parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
     parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
 
-    parameters->eqVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
-    parameters->eqVolDecayMode() = "ConstantVariance";
-    parameters->simulateEQVols() = false;
+    parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
+    parameters->equityVolDecayMode() = "ConstantVariance";
+    parameters->setEquityVolDayCounters("", "ACT/ACT");
+    parameters->simulateEquityVols() = false;
 
     // Config
 
@@ -297,38 +307,36 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     vector<string> swaptionStrikes(swaptionExpiries.size(), "ATM");
     vector<Time> hTimes = {};
     vector<Time> aTimes = {};
-    vector<Real> hValues = {};
-    vector<Real> aValues = {};
 
-    std::vector<boost::shared_ptr<LgmData>> irConfigs;
+    std::vector<boost::shared_ptr<IrLgmData>> irConfigs;
 
-    hValues = {0.02};
-    aValues = {0.008};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    vector<Real> hValues = {0.02};
+    vector<Real> aValues = {0.008};
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "EUR", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.03};
     aValues = {0.009};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "USD", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "GBP", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "CHF", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
     hValues = {0.04};
     aValues = {0.01};
-    irConfigs.push_back(boost::make_shared<LgmData>(
+    irConfigs.push_back(boost::make_shared<IrLgmData>(
         "JPY", calibrationType, revType, volType, false, ParamType::Constant, hTimes, hValues, true,
         ParamType::Piecewise, aTimes, aValues, 0.0, 1.0, swaptionExpiries, swaptionTerms, swaptionStrikes));
 
@@ -336,10 +344,10 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     vector<string> optionExpiries = {"1Y", "2Y", "3Y", "5Y", "7Y", "10Y"};
     vector<string> optionStrikes(optionExpiries.size(), "ATMF");
     vector<Time> sigmaTimes = {};
-    vector<Real> sigmaValues = {};
 
     std::vector<boost::shared_ptr<FxBsData>> fxConfigs;
-    sigmaValues = {0.15};
+
+    vector<Real> sigmaValues = {0.15};
     fxConfigs.push_back(boost::make_shared<FxBsData>("USD", "EUR", calibrationType, true, ParamType::Piecewise,
                                                      sigmaTimes, sigmaValues, optionExpiries, optionStrikes));
 
@@ -379,8 +387,8 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
 
     // build scenario sim market
     Conventions conventions = *convs();
-    boost::shared_ptr<analytics::SimMarket> simMarket =
-        boost::make_shared<analytics::ScenarioSimMarket>(scenarioGenerator, initMarket, parameters, conventions);
+    auto simMarket = boost::make_shared<analytics::ScenarioSimMarket>(initMarket, parameters, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // Build Porfolio
     boost::shared_ptr<EngineData> data = boost::make_shared<EngineData>();
@@ -719,15 +727,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
 }
 
 test_suite* SwapPerformanceTest::suite() {
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-      boost::shared_ptr<ore::data::FileLogger> logger
-          = boost::make_shared<ore::data::FileLogger>("swapperformace_test.log");
-      ore::data::Log::instance().removeAllLoggers();
-      ore::data::Log::instance().registerLogger(logger);
-      ore::data::Log::instance().switchOn();
-      ore::data::Log::instance().setMask(255);
-    */
     test_suite* suite = BOOST_TEST_SUITE("SwapPerformanceTest");
     // (2017-03-28) The single swap performance tests should each complete within 20-25 seconds
     // The portfolio swap performance tests should completed within 400-700 seconds
@@ -744,4 +743,4 @@ test_suite* SwapPerformanceTest::suite() {
     suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceUnregisterObs));
     return suite;
 }
-}
+} // namespace testsuite

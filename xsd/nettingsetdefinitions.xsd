@@ -2,8 +2,7 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="NettingSetDefinitions">
-    <xs:complexType>
+  <xs:complexType name="nettingsetdefinitions">
       <xs:sequence>
         <xs:element name="NettingSet" maxOccurs="unbounded" minOccurs="0">
           <xs:complexType>
@@ -61,7 +60,6 @@
         </xs:element>
       </xs:sequence>
     </xs:complexType>
-  </xs:element>
   
   <xs:simpleType name="csaType">
     <xs:restriction base="xs:string">

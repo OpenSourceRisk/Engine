@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -27,6 +28,21 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) const {
+    string keyName;
+    RiskFactorKey::KeyType keyType = key.keytype;
+    if (keyType != RiskFactorKey::KeyType::IndexCurve)
+        keyName = key.name;
+    else {
+        std::vector<string> tokens;
+        boost::split(tokens, key.name, boost::is_any_of("-"));
+        keyName = tokens[0];
+    }
+
+    std::ostringstream o;
+    o << keyType << "/" << keyName;
+    return o.str();
+}
 string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
@@ -71,170 +87,13 @@ string ShiftScenarioGenerator::ScenarioDescription::text() const {
     return ret;
 }
 
-ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                               const Date& today,
-                                               const boost::shared_ptr<ore::data::Market>& initMarket,
-                                               const std::string& configuration,
-                                               boost::shared_ptr<ScenarioFactory> baseScenarioFactory)
-    : baseScenarioFactory_(baseScenarioFactory), simMarketData_(simMarketData), today_(today), initMarket_(initMarket),
-      configuration_(configuration), counter_(0) {
-    QL_REQUIRE(initMarket_ != NULL, "ShiftScenarioGenerator: initMarket is null");
-    if (baseScenarioFactory_ == NULL)
-        baseScenarioFactory_ = boost::make_shared<SimpleScenarioFactory>();
-    init(initMarket);
-}
-
-void ShiftScenarioGenerator::clear() {
-    discountCurveKeys_.clear();
-    discountCurveCache_.clear();
-    indexCurveKeys_.clear();
-    indexCurveCache_.clear();
-    yieldCurveKeys_.clear();
-    yieldCurveCache_.clear();
-    fxKeys_.clear();
-    fxCache_.clear();
-    swaptionVolKeys_.clear();
-    swaptionVolCache_.clear();
-    fxVolKeys_.clear();
-    fxVolCache_.clear();
-    optionletVolKeys_.clear();
-    optionletVolCache_.clear();
-}
-
-void ShiftScenarioGenerator::init(boost::shared_ptr<Market> market) {
-    clear();
-
-    numeraireCache_ = 1.0; // assumption that the init numeraire is 1.0
-    // Cache discount curve keys and discount factors
-    Size n_ccy = simMarketData_->ccys().size();
-    Size n_ten = simMarketData_->yieldCurveTenors().size();
-    discountCurveKeys_.reserve(n_ccy * n_ten);
-    for (Size j = 0; j < n_ccy; j++) {
-        std::string ccy = simMarketData_->ccys()[j];
-        Handle<YieldTermStructure> ts = market->discountCurve(ccy, configuration_);
-        for (Size k = 0; k < n_ten; k++) {
-            discountCurveKeys_.emplace_back(RiskFactorKey::KeyType::DiscountCurve, ccy, k); // j * n_ten + k
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            discountCurveCache_[discountCurveKeys_[j * n_ten + k]] = disc;
-            LOG("cache discount " << disc << " for key " << discountCurveKeys_[j * n_ten + k]);
-        }
-    }
-
-    // Cache index curve keys
-    Size n_indices = simMarketData_->indices().size();
-    indexCurveKeys_.reserve(n_indices * n_ten);
-    for (Size j = 0; j < n_indices; ++j) {
-        Handle<IborIndex> index = market->iborIndex(simMarketData_->indices()[j], configuration_);
-        Handle<YieldTermStructure> ts = index->forwardingTermStructure();
-        for (Size k = 0; k < n_ten; ++k) {
-            indexCurveKeys_.emplace_back(RiskFactorKey::KeyType::IndexCurve, simMarketData_->indices()[j], k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            indexCurveCache_[indexCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
-            LOG("cache discount " << disc << " for key " << indexCurveKeys_[j * n_ten + k]);
-        }
-    }
-
-    // Cache yield curve keys
-    Size n_ycnames = simMarketData_->yieldCurveNames().size();
-    yieldCurveKeys_.reserve(n_ycnames * n_ten);
-    for (Size j = 0; j < n_ycnames; ++j) {
-        std::string ycname = simMarketData_->yieldCurveNames()[j];
-        Handle<YieldTermStructure> ts = market->yieldCurve(ycname, configuration_);
-        for (Size k = 0; k < n_ten; ++k) {
-            yieldCurveKeys_.emplace_back(RiskFactorKey::KeyType::YieldCurve, ycname, k);
-            Period tenor = simMarketData_->yieldCurveTenors()[k];
-            Real disc = ts->discount(today_ + tenor);
-            yieldCurveCache_[yieldCurveKeys_[j * n_ten + k]] = ts->discount(today_ + tenor);
-            LOG("cache discount " << disc << " for key " << yieldCurveKeys_[j * n_ten + k]);
-        }
-    }
-
-    // Cache FX rate keys
-    fxKeys_.reserve(simMarketData_->fxCcyPairs().size());
-    for (Size k = 0; k < simMarketData_->fxCcyPairs().size(); k++) {
-        // const string& foreign = simMarketData_->ccys()[k + 1];
-        // const string& domestic = simMarketData_->ccys()[0];
-        string ccypair = simMarketData_->fxCcyPairs()[k];
-        fxKeys_.emplace_back(RiskFactorKey::KeyType::FXSpot, ccypair); // k
-        Real fx = market->fxSpot(ccypair, configuration_)->value();
-        fxCache_[fxKeys_[k]] = fx;
-        LOG("cache FX spot " << fx << " for key " << fxKeys_[k]);
-    }
-
-    // Cache Swaption (ATM) vol keys
-    Size n_swvol_ccy = simMarketData_->swapVolCcys().size();
-    Size n_swvol_term = simMarketData_->swapVolTerms().size();
-    Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
-    fxKeys_.reserve(n_swvol_ccy * n_swvol_term * n_swvol_exp);
-    Size count = 0;
-    for (Size i = 0; i < n_swvol_ccy; ++i) {
-        std::string ccy = simMarketData_->swapVolCcys()[i];
-        Handle<SwaptionVolatilityStructure> ts = market->swaptionVol(ccy, configuration_);
-        Real strike = 0.0; // FIXME
-        for (Size j = 0; j < n_swvol_exp; ++j) {
-            Period expiry = simMarketData_->swapVolExpiries()[j];
-            for (Size k = 0; k < n_swvol_term; ++k) {
-                swaptionVolKeys_.emplace_back(RiskFactorKey::KeyType::SwaptionVolatility, ccy, j * n_swvol_term + k);
-                Period term = simMarketData_->swapVolTerms()[k];
-                Real swvol = ts->volatility(expiry, term, strike);
-                swaptionVolCache_[swaptionVolKeys_[count]] = swvol;
-                LOG("cache swaption vol " << swvol << " for key " << swaptionVolKeys_[count]);
-                count++;
-            }
-        }
-    }
-
-    // Cache FX (ATM) vol keys
-    Size n_fxvol_pairs = simMarketData_->fxVolCcyPairs().size();
-    Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
-    fxVolKeys_.reserve(n_fxvol_pairs * n_fxvol_exp);
-    count = 0;
-    for (Size j = 0; j < n_fxvol_pairs; ++j) {
-        string ccypair = simMarketData_->fxVolCcyPairs()[j];
-        Real strike = 0.0; // FIXME
-        Handle<BlackVolTermStructure> ts = market->fxVol(ccypair, configuration_);
-        for (Size k = 0; k < n_fxvol_exp; ++k) {
-            fxVolKeys_.emplace_back(RiskFactorKey::KeyType::FXVolatility, ccypair, k);
-            Period expiry = simMarketData_->fxVolExpiries()[k];
-            Real fxvol = ts->blackVol(today_ + expiry, strike);
-            fxVolCache_[fxVolKeys_[count]] = fxvol;
-            LOG("cache FX vol " << fxvol << " for key " << fxVolKeys_[count]);
-            count++;
-        }
-    }
-
-    // Cache CapFloor (Optionlet) vol keys
-    Size n_cfvol_ccy = simMarketData_->capFloorVolCcys().size();
-    Size n_cfvol_exp = simMarketData_->capFloorVolExpiries().size();
-    Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
-    optionletVolKeys_.reserve(n_cfvol_ccy * n_cfvol_strikes * n_cfvol_exp);
-    count = 0;
-    for (Size i = 0; i < n_cfvol_ccy; ++i) {
-        std::string ccy = simMarketData_->capFloorVolCcys()[i];
-        Handle<OptionletVolatilityStructure> ts = market->capFloorVol(ccy, configuration_);
-        for (Size j = 0; j < n_cfvol_exp; ++j) {
-            Period expiry = simMarketData_->capFloorVolExpiries()[j];
-            for (Size k = 0; k < n_cfvol_strikes; ++k) {
-                optionletVolKeys_.emplace_back(RiskFactorKey::KeyType::OptionletVolatility, ccy,
-                                               j * n_cfvol_strikes + k);
-                Real strike = simMarketData_->capFloorVolStrikes()[k];
-                Real vol = ts->volatility(expiry, strike);
-                optionletVolCache_[optionletVolKeys_[count]] = vol;
-                LOG("cache optionlet vol " << vol << " for key " << optionletVolKeys_[count]);
-                count++;
-            }
-        }
-    }
-
-    LOG("generate base scenario");
-    baseScenario_ = baseScenarioFactory_->buildScenario(today_, "BASE");
-    addCacheTo(baseScenario_);
+ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
+                                               const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData)
+    : baseScenario_(baseScenario), simMarketData_(simMarketData), counter_(0) {
+    QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
+    QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
     scenarios_.push_back(baseScenario_);
     scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));
-
-    LOG("shift scenario generator, base class initialisation done");
 }
 
 boost::shared_ptr<Scenario> ShiftScenarioGenerator::next(const Date& d) {
@@ -254,101 +113,6 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     }
 }
 
-void ShiftScenarioGenerator::addCacheTo(boost::shared_ptr<Scenario> scenario) {
-    if (scenario->getNumeraire() == 0.0) // assume zero means numeraire has not been set or updated
-        scenario->setNumeraire(numeraireCache_);
-    for (auto key : discountCurveKeys_) {
-        if (!scenario->has(key))
-            scenario->add(key, discountCurveCache_[key]);
-    }
-    for (auto key : indexCurveKeys_) {
-        if (!scenario->has(key))
-            scenario->add(key, indexCurveCache_[key]);
-    }
-    for (auto key : yieldCurveKeys_) {
-        if (!scenario->has(key))
-            scenario->add(key, yieldCurveCache_[key]);
-    }
-    for (auto key : fxKeys_) {
-        if (!scenario->has(key))
-            scenario->add(key, fxCache_[key]);
-    }
-    if (simMarketData_->simulateFXVols()) {
-        for (auto key : fxVolKeys_) {
-            if (!scenario->has(key))
-                scenario->add(key, fxVolCache_[key]);
-        }
-    }
-    if (simMarketData_->simulateSwapVols()) {
-        for (auto key : swaptionVolKeys_) {
-            if (!scenario->has(key))
-                scenario->add(key, swaptionVolCache_[key]);
-        }
-    }
-    if (simMarketData_->simulateCapFloorVols()) {
-        for (auto key : optionletVolKeys_) {
-            if (!scenario->has(key))
-                scenario->add(key, optionletVolCache_[key]);
-        }
-    }
-}
-
-RiskFactorKey ShiftScenarioGenerator::getFxKey(const std::string& key) {
-    for (Size i = 0; i < fxKeys_.size(); ++i) {
-        if (fxKeys_[i].name == key)
-            return fxKeys_[i];
-    }
-    QL_FAIL("error locating FX RiskFactorKey for ccy pair " << key);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getDiscountKey(const std::string& ccy, Size index) {
-    for (Size i = 0; i < discountCurveKeys_.size(); ++i) {
-        if (discountCurveKeys_[i].name == ccy && discountCurveKeys_[i].index == index)
-            return discountCurveKeys_[i];
-    }
-    QL_FAIL("error locating Discount RiskFactorKey for " << ccy << ", index " << index);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getIndexKey(const std::string& indexName, Size index) {
-    for (Size i = 0; i < indexCurveKeys_.size(); ++i) {
-        if (indexCurveKeys_[i].name == indexName && indexCurveKeys_[i].index == index)
-            return indexCurveKeys_[i];
-    }
-    QL_FAIL("error locating Index RiskFactorKey for " << indexName << ", index " << index);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getYieldKey(const std::string& curveName, Size index) {
-    for (Size i = 0; i < yieldCurveKeys_.size(); ++i) {
-        if (yieldCurveKeys_[i].name == curveName && yieldCurveKeys_[i].index == index)
-            return yieldCurveKeys_[i];
-    }
-    QL_FAIL("error locating YieldCurve RiskFactorKey for " << curveName << ", index " << index);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getSwaptionVolKey(const std::string& ccy, Size index) {
-    for (Size i = 0; i < swaptionVolKeys_.size(); ++i) {
-        if (swaptionVolKeys_[i].name == ccy && swaptionVolKeys_[i].index == index)
-            return swaptionVolKeys_[i];
-    }
-    QL_FAIL("error locating SwaptionVol RiskFactorKey for " << ccy << ", index " << index);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getOptionletVolKey(const std::string& ccy, Size index) {
-    for (Size i = 0; i < optionletVolKeys_.size(); ++i) {
-        if (optionletVolKeys_[i].name == ccy && optionletVolKeys_[i].index == index)
-            return optionletVolKeys_[i];
-    }
-    QL_FAIL("error locating OptionletVol RiskFactorKey for " << ccy << ", index " << index);
-}
-
-RiskFactorKey ShiftScenarioGenerator::getFxVolKey(const std::string& ccypair, Size index) {
-    for (Size i = 0; i < fxVolKeys_.size(); ++i) {
-        if (fxVolKeys_[i].name == ccypair && fxVolKeys_[i].index == index)
-            return fxVolKeys_[i];
-    }
-    QL_FAIL("error locating FxVol RiskFactorKey for " << ccypair << ", index " << index);
-}
-
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& tenors, const vector<Real>& values,
                                         const vector<Real>& times, vector<Real>& shiftedValues, bool initialise) {
@@ -359,22 +123,23 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
 
     Time t1 = tenors[j];
     // FIXME: Handle case where the shift curve is more granular than the original
-    ostringstream o_tenors;
-    o_tenors << "{";
-    for (auto it_tenor : tenors)
-        o_tenors << it_tenor << ",";
-    o_tenors << "}";
-    ostringstream o_times;
-    o_times << "{";
-    for (auto it_time : times)
-        o_times << it_time << ",";
-    o_times << "}";
-    QL_REQUIRE(tenors.size() <= times.size(),
-               "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor vector "
-                                       << o_times.str());
-    auto it = std::find(times.begin(), times.end(), t1);
-    QL_REQUIRE(it != times.end(), "shifted tenor node (" << t1 << ") not found in base curve tenor vector "
-                                                         << o_times.str());
+    // ostringstream o_tenors;
+    // o_tenors << "{";
+    // for (auto it_tenor : tenors)
+    //     o_tenors << it_tenor << ",";
+    // o_tenors << "}";
+    // ostringstream o_times;
+    // o_times << "{";
+    // for (auto it_time : times)
+    //     o_times << it_time << ",";
+    // o_times << "}";
+    // QL_REQUIRE(tenors.size() <= times.size(),
+    //            "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor
+    //            vector "
+    //                                    << o_times.str());
+    // auto it = std::find(times.begin(), times.end(), t1);
+    // QL_REQUIRE(it != times.end(),
+    //            "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)
@@ -524,5 +289,5 @@ void ShiftScenarioGenerator::applyShift(Size i, Size j, Real shiftSize, bool up,
         }
     }
 }
-}
-}
+} // namespace analytics
+} // namespace ore

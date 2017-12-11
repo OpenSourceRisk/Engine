@@ -17,19 +17,19 @@
 */
 
 /*! \file ored/model/eqbsbuilder.hpp
-    \brief
+    \brief Builder for a Lognormal EQ model component
     \ingroup models
 */
 
 #pragma once
 
-#include <vector>
 #include <map>
 #include <ostream>
+#include <vector>
 
-#include <qle/models/crossassetmodel.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/model/eqbsdata.hpp>
+#include <qle/models/crossassetmodel.hpp>
 
 using namespace QuantLib;
 
@@ -80,5 +80,5 @@ private:
     std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
-}
-}
+} // namespace data
+} // namespace ore

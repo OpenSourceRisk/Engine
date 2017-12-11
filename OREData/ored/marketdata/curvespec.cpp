@@ -26,7 +26,10 @@ bool operator<(const CurveSpec& lhs, const CurveSpec& rhs) {
         /* If CurveSpecs are equal (i.e. have same name), return false. */
         return false;
     } else if (lhs.baseType() != rhs.baseType()) {
-        /* If types are not the same, use the enum value for ordering along type. */
+        /* If types are not the same, use the enum value for ordering along type.
+         * The enum order in the header file is deliberate, it ensures that FX comes before FXVol
+         * this property is used in data::order() (see curveloader.hpp)
+         */
         return lhs.baseType() < rhs.baseType();
     } else {
         /* If types are the same and CurveSpecs are different, use default < for string */
@@ -46,5 +49,5 @@ bool operator==(const boost::shared_ptr<CurveSpec>& lhs, const boost::shared_ptr
 }
 
 std::ostream& operator<<(std::ostream& os, const CurveSpec& spec) { return os << spec.name(); }
-}
-}
+} // namespace data
+} // namespace ore

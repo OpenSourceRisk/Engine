@@ -18,9 +18,8 @@
 
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
-#include <orea/scenario/scenariogeneratorbuilder.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp>
@@ -39,36 +38,6 @@ namespace analytics {
 void ScenarioGeneratorData::clear() {
     if (grid_)
         grid_->truncate(0);
-}
-
-ScenarioGeneratorData::SequenceType parseSequenceType(const string& s) {
-    static map<string, ScenarioGeneratorData::SequenceType> m = {
-        {"MersenneTwister", ScenarioGeneratorData::SequenceType::MersenneTwister},
-        {"MersenneTwisterAntithetic", ScenarioGeneratorData::SequenceType::MersenneTwisterAntithetic},
-        {"Sobol", ScenarioGeneratorData::SequenceType::Sobol},
-        {"SobolBrownianBridge", ScenarioGeneratorData::SequenceType::SobolBrownianBridge}};
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Cannot convert " << s << " to ScenarioGeneratorData::SequenceType");
-    }
-}
-
-std::ostream& operator<<(std::ostream& out, const ScenarioGeneratorData::SequenceType& type) {
-    switch (type) {
-    case ScenarioGeneratorData::SequenceType::MersenneTwister:
-        return out << "MersenneTwister";
-    case ScenarioGeneratorData::SequenceType::MersenneTwisterAntithetic:
-        return out << "MersenneTwisterAntithetic";
-    case ScenarioGeneratorData::SequenceType::Sobol:
-        return out << "Sobol";
-    case ScenarioGeneratorData::SequenceType::SobolBrownianBridge:
-        return out << "SobolBrownianBridge";
-    default:
-        return out << "?";
-    }
 }
 
 CrossAssetStateProcess::discretization parseDiscretization(const string& s) {
@@ -134,5 +103,5 @@ XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Simlation");
     return node;
 }
-}
-}
+} // namespace analytics
+} // namespace ore

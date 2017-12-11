@@ -16,19 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/ccyswapwithresets.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/swap.hpp>
-#include <ored/utilities/indexparser.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/portfolio.hpp>
+#include <ored/portfolio/swap.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <boost/make_shared.hpp>
-#include <ored/utilities/log.hpp>
+#include <test/ccyswapwithresets.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -46,14 +46,38 @@ public:
         asof_ = Date(22, Aug, 2016);
 
         // build vectors with dates and discount factors
-        vector<Date> datesEUR = {asof_, asof_ + 6 * Months, asof_ + 7 * Months, asof_ + 8 * Months, asof_ + 9 * Months,
-                                 asof_ + 10 * Months, asof_ + 11 * Months, asof_ + 12 * Months, asof_ + 13 * Months,
-                                 asof_ + 14 * Months, asof_ + 15 * Months, asof_ + 16 * Months, asof_ + 17 * Months,
-                                 asof_ + 18 * Months, asof_ + 2 * Years, asof_ + 3 * Years, asof_ + 4 * Years,
-                                 asof_ + 5 * Years, asof_ + 6 * Years};
-        vector<Date> datesUSD = {asof_, asof_ + 3 * Months, asof_ + 4 * Months, asof_ + 7 * Months, asof_ + 10 * Months,
-                                 asof_ + 13 * Months, asof_ + 16 * Months, asof_ + 19 * Months, asof_ + 2 * Years,
-                                 asof_ + 3 * Years, asof_ + 4 * Years, asof_ + 5 * Years, asof_ + 6 * Years};
+        vector<Date> datesEUR = {asof_,
+                                 asof_ + 6 * Months,
+                                 asof_ + 7 * Months,
+                                 asof_ + 8 * Months,
+                                 asof_ + 9 * Months,
+                                 asof_ + 10 * Months,
+                                 asof_ + 11 * Months,
+                                 asof_ + 12 * Months,
+                                 asof_ + 13 * Months,
+                                 asof_ + 14 * Months,
+                                 asof_ + 15 * Months,
+                                 asof_ + 16 * Months,
+                                 asof_ + 17 * Months,
+                                 asof_ + 18 * Months,
+                                 asof_ + 2 * Years,
+                                 asof_ + 3 * Years,
+                                 asof_ + 4 * Years,
+                                 asof_ + 5 * Years,
+                                 asof_ + 6 * Years};
+        vector<Date> datesUSD = {asof_,
+                                 asof_ + 3 * Months,
+                                 asof_ + 4 * Months,
+                                 asof_ + 7 * Months,
+                                 asof_ + 10 * Months,
+                                 asof_ + 13 * Months,
+                                 asof_ + 16 * Months,
+                                 asof_ + 19 * Months,
+                                 asof_ + 2 * Years,
+                                 asof_ + 3 * Years,
+                                 asof_ + 4 * Years,
+                                 asof_ + 5 * Years,
+                                 asof_ + 6 * Years};
         vector<DiscountFactor> dfsEUR = {1.0,      1.000972, 1.001138, 1.001309, 1.001452, 1.001663, 1.001826,
                                          1.002005, 1.002196, 1.002369, 1.002554, 1.00275,  1.002918, 1.003114,
                                          1.004134, 1.006005, 1.007114, 1.006773, 1.004282};
@@ -61,9 +85,9 @@ public:
                                          0.984774, 0.980358, 0.96908,  0.95704, 0.944041, 0.93004};
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] =
             intDiscCurve(datesEUR, dfsEUR, Actual360(), TARGET());
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] =
             intDiscCurve(datesUSD, dfsUSD, Actual360(), UnitedStates());
 
         // build ibor index
@@ -92,7 +116,7 @@ private:
         return Handle<YieldTermStructure>(idc);
     }
 };
-}
+} // namespace
 
 namespace testsuite {
 
@@ -166,11 +190,11 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     string foreignCCY = "USD";
     Real foreignAmount = 10000000;
     string fxIndex = "FX-ECB-EUR-USD";
-    FloatingLegData legdataEUR(indexEUR, days, isInArrears, spreadEUR);
-    LegData legEUR1(isPayerEUR, "EUR", legdataEUR, scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+    auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
+    LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
                     foreignAmount, fxIndex, days);
-    LegData legEUR2(isPayerEUR, "EUR", legdataEUR, scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+    LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
                     fxIndex, days);
 
@@ -179,8 +203,8 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     string indexUSD = "USD-LIBOR-3M";
     vector<Real> spreadUSD(1, 0);
     vector<Real> notionalUSD(1, 10000000);
-    FloatingLegData legdataUSD(indexUSD, days, isInArrears, spreadUSD);
-    LegData legUSD(isPayerUSD, "USD", legdataUSD, scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
+    auto legdataUSD = boost::make_shared<FloatingLegData>(indexUSD, days, isInArrears, spreadUSD);
+    LegData legUSD(legdataUSD, isPayerUSD, "USD", scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
                    notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL);
 
     // Build swap trades
@@ -296,16 +320,8 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
 
 test_suite* CcySwapWithResetsTest::suite() {
     // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    /*
-      boost::shared_ptr<ore::data::FileLogger> logger =
-      boost::make_shared<ore::data::FileLogger>("CcySwapWithResets_test.log");
-      ore::data::Log::instance().removeAllLoggers();
-      ore::data::Log::instance().registerLogger(logger);
-      ore::data::Log::instance().switchOn();
-      ore::data::Log::instance().setMask(255);
-    */
     test_suite* suite = BOOST_TEST_SUITE("CcySwapWithResetsTest");
     suite->add(BOOST_TEST_CASE(&CcySwapWithResetsTest::testCcySwapWithResetsPrice));
     return suite;
 }
-}
+} // namespace testsuite

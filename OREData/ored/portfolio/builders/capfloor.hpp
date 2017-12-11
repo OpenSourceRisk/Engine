@@ -18,29 +18,29 @@
 
 /*! \file portfolio/builders/capfloor.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 namespace ore {
 namespace data {
 
 //! Engine Builder for Caps, Floors and Collars on an IborIndex
 /*! Pricing engines are cached by currency
-    \ingroup portfolio
+    \ingroup builders
 */
 class CapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    CapFloorEngineBuilder() : CachingEngineBuilder("IborCapModel", "IborCapEngine") {}
+    CapFloorEngineBuilder() : CachingEngineBuilder("IborCapModel", "IborCapEngine", {"CapFloor"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy) override;
 };
-}
-}
+} // namespace data
+} // namespace ore

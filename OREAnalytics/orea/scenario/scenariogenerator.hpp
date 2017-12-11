@@ -25,11 +25,11 @@
 
 #include <vector>
 
+#include <boost/shared_ptr.hpp>
 #include <orea/scenario/scenario.hpp>
 #include <ql/time/date.hpp>
-#include <ql/timegrid.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <boost/shared_ptr.hpp>
+#include <ql/timegrid.hpp>
 
 using std::vector;
 using QuantLib::TimeGrid;
@@ -39,7 +39,7 @@ namespace analytics {
 
 //! Scenario generator base class
 /*! \ingroup scenario
-*/
+ */
 class ScenarioGenerator {
 public:
     //! Default destructor
@@ -55,7 +55,7 @@ public:
 
 //! Scenario generator that generates an entire path
 /*! \ingroup scenario
-*/
+ */
 class ScenarioPathGenerator : public ScenarioGenerator {
 public:
     // TODO: Why dates AND timegrid, why not DateGrid???
@@ -65,10 +65,8 @@ public:
         //! Future evaluation dates
         const vector<Date>& dates,
         //! Associated time grid
-        TimeGrid timeGrid) // DayCounter dayCounter = ActualActual())
-        : today_(today),
-          dates_(dates),
-          timeGrid_(timeGrid) { // dayCounter_(dayCounter) {
+        TimeGrid timeGrid)                                    // DayCounter dayCounter = ActualActual())
+        : today_(today), dates_(dates), timeGrid_(timeGrid) { // dayCounter_(dayCounter) {
         QL_REQUIRE(dates.size() > 0, "empty date vector passed");
         QL_REQUIRE(dates.front() > today, "date grid must start in the future");
     }
@@ -92,5 +90,5 @@ protected:
     TimeGrid timeGrid_;
     std::vector<boost::shared_ptr<Scenario>> path_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

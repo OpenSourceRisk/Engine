@@ -18,6 +18,7 @@
 
 /*! \file analyticdkcpicapfloorengine.hpp
     \brief analytic dk cpi cap floor engine
+ \ingroup engines
 */
 
 #ifndef quantext_dk_cpicapfloorengine_hpp
@@ -27,7 +28,9 @@
 #include <qle/models/crossassetmodel.hpp>
 
 namespace QuantExt {
-
+//! Analytic dk cpi cap floor engine
+/*! \ingroup engines
+ */
 class AnalyticDkCpiCapFloorEngine : public CPICapFloor::engine {
 public:
     AnalyticDkCpiCapFloorEngine(const boost::shared_ptr<CrossAssetModel>& model, const Size index, const Real baseCPI);

@@ -16,21 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file engine/sensitivityanalysis.hpp
-    \brief Perfrom sensitivity analysis for a given portfolio
+/*! \file engine/stresstest.hpp
+    \brief  perform a stress testing analysis for a given portfolio.
     \ingroup simulation
 */
 
 #pragma once
 
-#include <ored/portfolio/portfolio.hpp>
-#include <ored/marketdata/market.hpp>
-#include <ored/report/report.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
+#include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/stressscenariodata.hpp>
 #include <orea/scenario/stressscenariogenerator.hpp>
+#include <ored/marketdata/market.hpp>
+#include <ored/portfolio/portfolio.hpp>
+#include <ored/report/report.hpp>
 
 #include <map>
 #include <set>
@@ -84,5 +84,5 @@ private:
     // scenario labels
     std::set<std::string> labels_, trades_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

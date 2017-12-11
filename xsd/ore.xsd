@@ -2,15 +2,13 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="ORE">
-    <xs:complexType>
+  <xs:complexType name="ore">
       <xs:sequence>
         <xs:element type="parameterListType" name="Setup"/>
         <xs:element type="parameterListType" name="Markets"/>
         <xs:element type="analyticsType" name="Analytics"/>
       </xs:sequence>
     </xs:complexType>
-  </xs:element>
 
   <xs:complexType name="analyticsType">
     <xs:sequence>

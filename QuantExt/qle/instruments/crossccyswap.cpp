@@ -70,7 +70,7 @@ void CrossCcySwap::fetchResults(const PricingEngine::results* r) const {
     if (!results->inCcyLegBPS.empty()) {
         QL_REQUIRE(results->inCcyLegBPS.size() == inCcyLegBPS_.size(),
                    "Wrong number of in currency leg BPSs returned by engine");
-        legBPS_ = results->legBPS;
+        inCcyLegBPS_ = results->inCcyLegBPS;
     } else {
         std::fill(inCcyLegBPS_.begin(), inCcyLegBPS_.end(), Null<Real>());
     }
@@ -102,4 +102,4 @@ void CrossCcySwap::results::reset() {
     inCcyLegBPS.clear();
     npvDateDiscounts.clear();
 }
-}
+} // namespace QuantExt

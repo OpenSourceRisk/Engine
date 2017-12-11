@@ -149,6 +149,15 @@
     <ClInclude Include="orea\scenario\clonescenariofactory.hpp">
       <Filter>scenario</Filter>
     </ClInclude>
+    <ClInclude Include="orea\engine\parametricvar.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\riskfilter.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivitydata.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -237,6 +246,15 @@
     </ClCompile>
     <ClCompile Include="orea\scenario\clonescenariofactory.cpp">
       <Filter>scenario</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\parametricvar.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\riskfilter.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivitydata.cpp">
+      <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

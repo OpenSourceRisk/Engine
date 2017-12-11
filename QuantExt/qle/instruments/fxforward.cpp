@@ -98,4 +98,4 @@ void FxForward::results::reset() {
     npv = Money(0.0, Currency());
     fairForwardRate = ExchangeRate();
 }
-}
+} // namespace QuantExt
