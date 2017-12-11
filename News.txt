@@ -1,4 +1,35 @@
 
+Changes for the third ORE release (1.8.3.0):
+============================================
+
+ORE 1.8.3.0 includes the following notable changes, details can be
+found in the commits between 5 May and 11 Dec.
+
+INSTRUMENTS
+
+- Credit Default Swaps and FRAs added
+
+MONTE CARLO FRAMEWORK
+
+- Simulation of inflation added
+
+ANALYTICS
+
+- Sensitivity and stress framework extended to Equity, Inflation and Credit
+
+UNIT TESTS
+
+- Unit tests suites extended to 175 cases
+
+EXAMPLES
+
+- ORE has 23 examples now
+
+USER GUIDE
+
+- Extended accordingly, 170 pages
+
+
 Changes for the second ORE release (1.8.2.0):
 =============================================
 
