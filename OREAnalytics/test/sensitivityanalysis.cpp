@@ -480,7 +480,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         // sensi to up shift d=+1bp: exp(-(z+d)*T)*USDEUR - exp(-z*T)*USDEUR
         // = -0.000505139329666004
         {"12_ZeroBond_USD", "Up:YieldCurve/BondCurve1/6/10Y", 0.505492, -0.00050514}, // OK, diff < 1e-8
-        // sensi to down shit d=-1bp: 0.000505644620973689
+        // sensi to down shift d=-1bp: 0.000505644620973689
         {"12_ZeroBond_USD", "Down:YieldCurve/BondCurve1/6/10Y", 0.505492, 0.000505645}, // OK, diff < 1e-9
         // A relative shift in yield curve is equivalent to a relative shift in default curve
         {"12_ZeroBond_USD", "Up:SurvivalProbability/BondIssuer1/6/10Y", 0.505492, -0.00050514},
