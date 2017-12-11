@@ -28,10 +28,10 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <intrin.h>
-// clang-format off  
+// clang-format off
 #include <windows.h>
 #include <psapi.h>
-// clang-format on 
+// clang-format on
 #elif __APPLE__
 #include <sys/sysctl.h>
 #include <unistd.h>
