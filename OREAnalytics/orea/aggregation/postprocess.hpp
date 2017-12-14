@@ -146,7 +146,15 @@ public:
         //! Scaling factor applied to all DIM values
         Real dimScaling = 1.0,
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
-        bool fullInitialCollateralisation = false);
+        bool fullInitialCollateralisation = false,
+		// own capital discounting rate for discounting expected capital for KVA
+		Real kvaCapitalDiscountRate = 0.10,
+		// alpha to adjust EEPE to give EAD for risk capital
+		Real kvaAlpha = 1.4, 
+		// regulatory adjustment, 1/min cap requirement
+		Real kvaRegAdjustment = 12.5,
+		// Cost of Capital for KVA = regulatory adjustment x capital hurdle
+		Real kvaCapitalHurdle = 0.012);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -207,6 +215,14 @@ public:
     Real tradeFBA(const string& tradeId);
     //! Return trade (stand-alone) FCA (Funding Cost Adjustment)
     Real tradeFCA(const string& tradeId);
+	//! Return trade (stand-alone) FBA (Funding Benefit Adjustment) excluding own survival probability
+	Real tradeFBA_exOwnSP(const string& tradeId);
+	//! Return trade (stand-alone) FCA (Funding Cost Adjustment) excluding own survival probability
+	Real tradeFCA_exOwnSP(const string& tradeId);
+	//! Return trade (stand-alone) FBA (Funding Benefit Adjustment) excluding both survival probabilities
+	Real tradeFBA_exAllSP(const string& tradeId);
+	//! Return trade (stand-alone) FCA (Funding Cost Adjustment) excluding both survival probabilities
+	Real tradeFCA_exAllSP(const string& tradeId);
     //! Return allocated trade CVA (trade CVAs add up to netting set CVA)
     Real allocatedTradeCVA(const string& tradeId);
     //! Return allocated trade DVA (trade DVAs add up to netting set DVA)
@@ -221,6 +237,16 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
+	//! Return netting set FBA excluding own survival probability
+	Real nettingSetFBA_exOwnSP(const string& nettingSetId);
+	//! Return netting set FCA excluding own survival probability
+	Real nettingSetFCA_exOwnSP(const string& nettingSetId);
+	//! Return netting set FBA excluding both survival probabilities
+	Real nettingSetFBA_exAllSP(const string& nettingSetId);
+	//! Return netting set FCA excluding both survival probabilities
+	Real nettingSetFCA_exAllSP(const string& nettingSetId);
+	//! Return netting set KVA
+	Real nettingSetKVA(const string& nettingSetId);
     //! Return netting set COLVA
     Real nettingSetCOLVA(const string& nettingSetId);
     //! Return netting set Collateral Floor value
@@ -276,12 +302,13 @@ private:
     map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
-    map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_;
+    map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_, tradeFBA_exAllSP_, tradeFCA_exAllSP_;
     map<string, Real> sumTradeCVA_, sumTradeDVA_; // per netting set
     map<string, Real> allocatedTradeCVA_, allocatedTradeDVA_;
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
-    map<string, Real> nettingSetFCA_, nettingSetFBA_;
+    map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_, nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
+	map<string, Real> cptyTTMTotal_, cptyTTMWeight_, nettingSetKVA_;
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
     map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
@@ -303,6 +330,10 @@ private:
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
     bool fullInitialCollateralisation_;
+	Real kvaCapitalDiscountRate_;
+	Real kvaAlpha_;
+	Real kvaRegAdjustment_;
+	Real kvaCapitalHurdle_;
 };
 } // namespace analytics
 } // namespace ore
