@@ -246,7 +246,7 @@ public:
 	//! Return netting set FCA excluding both survival probabilities
 	Real nettingSetFCA_exAllSP(const string& nettingSetId);
 	//! Return netting set KVA
-	Real nettingSetKVA(const string& nettingSetId);
+	Real nettingSetKVACCR(const string& nettingSetId);
     //! Return netting set COLVA
     Real nettingSetCOLVA(const string& nettingSetId);
     //! Return netting set Collateral Floor value
@@ -299,7 +299,7 @@ private:
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
-    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
+    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_, netEEE_B_kva_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_, tradeFBA_exAllSP_, tradeFCA_exAllSP_;
@@ -308,7 +308,7 @@ private:
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_, nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
-	map<string, Real> cptyTTMTotal_, cptyTTMWeight_, nettingSetKVA_;
+	map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
     map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
