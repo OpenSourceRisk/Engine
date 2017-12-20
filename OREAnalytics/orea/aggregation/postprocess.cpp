@@ -87,8 +87,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
                          Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation, 
-						 Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle)
+                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -96,8 +95,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
       dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
       dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
       dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
-      fullInitialCollateralisation_(fullInitialCollateralisation),
-	  kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment), kvaCapitalHurdle_(kvaCapitalHurdle) {
+      fullInitialCollateralisation_(fullInitialCollateralisation) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -352,7 +350,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> ene(dates + 1, 0.0);
         vector<Real> ee_b(dates + 1, 0.0);
         vector<Real> eee_b(dates + 1, 0.0);
-		vector<Real> eee_b_kva(dates + 1, 0.0);
         vector<Real> eab(dates + 1, 0.0);
         vector<Real> pfe(dates + 1, 0.0);
         vector<Real> colvaInc(dates + 1, 0.0);
@@ -451,25 +448,12 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             std::sort(distribution.begin(), distribution.end());
             Size index = Size(floor(quantile_ * (samples - 1) + 0.5));
             pfe[j + 1] = std::max(distribution[index], 0.0);
-
-			// for KVA maturity adjustment, calculate the effective maturity from effective expected exposure as of that time ...
-			// ... more accuracy may be achieved by using a longstaff-schwartz method / regression
-			Real eepe_kva = 0;
-			for (Size k = j; k < dates; ++k) {
-				eepe_kva = std::max(eepe_kva, epe[k + 1]);
-			}
-			eee_b_kva[j + 1] = eepe_kva;
-			if (dc.yearFraction(today, date) > 1.0) {
-				effMatNumer_[nettingSetId] += epe[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
-				effMatDenom_[nettingSetId]  += eee_b_kva[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
-			}
         }
         expectedCollateral_[nettingSetId] = eab;
         netEPE_[nettingSetId] = epe;
         netENE_[nettingSetId] = ene;
         netEE_B_[nettingSetId] = ee_b;
         netEEE_B_[nettingSetId] = eee_b;
-		netEEE_B_kva_[nettingSetId] = eee_b_kva;
         netPFE_[nettingSetId] = pfe;
         colvaInc_[nettingSetId] = colvaInc;
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
@@ -711,8 +695,6 @@ void PostProcess::updateStandAloneXVA() {
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
 
-		vector<Real> eepe = netEEE_B_kva_[nettingSetId]; // needed for KVA CCR Risk capital (EAD = alpha x eepe(t))
-
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
@@ -728,24 +710,6 @@ void PostProcess::updateStandAloneXVA() {
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
         }
 
-		// KVA CCR using the IRB risk weighted asset method and IMM:
-		// KVA effective maturity of nettingSet, capped at 5
-		Real kvaNWMaturity = std::min(1 + effMatNumer_[nettingSetId] / effMatDenom_[nettingSetId], 5.0);
-		Real lgd = (1 - cvaRR);
-		// PD from counterparty Dts, floored to avoid 0 ...  // 0.05; //
-		Real PD = std::max(cvaDts->defaultProbability(today), 0.000000000001);
-		// granularity adjustment, Gordy (2004):
-		Real rho = 0.12 * (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)) + 0.24 * (1 - (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)));
-		InverseCumulativeNormal icn; CumulativeNormalDistribution cnd;
-		// Basel II internal rating based (IRB) estimate of worst case PD: large homogeneous pool (LHP) approximation of Vasicek (1997) //0.05; // 
-		Real PD99 = cnd((icn(PD) + std::sqrt(rho) * icn(0.999)) / (std::sqrt(1 - rho))) - PD;
-		// KVA regulatory PD (worst case PD floored at 0.03)
-		Real kva99PD = std::max(PD99, 0.03);
-		// for maturity adjustment factor, B(PD) = (0.11852 - 0.05478 * ln(PD)) ^ 2
-		Real kvaMatAdjB = std::pow((0.11852 - 0.05478 * std::log(PD)), 2.0);
-		// maturity adjustment factor for RWA method: MA(PD, M) = (1 + (M - 2.5) * B(PD)) / (1 - 1.5 * B(PD)), capped at 5, floored at 1, M = effective maturity
-		Real kvaMatAdj = std::max(std::min((1 + (kvaNWMaturity - 2.5) * kvaMatAdjB) / (1 - 1.5 * kvaMatAdjB), 5.0), 1.0);
-		LOG("rho:" << rho << ";PD99:" << PD99 << ";kva99PD:" << kva99PD << ";B(PD):" << kvaMatAdjB << ";MA(PD,M):" << kvaMatAdj << ";WMat:" << kvaNWMaturity);
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -758,7 +722,6 @@ void PostProcess::updateStandAloneXVA() {
         nettingSetFBA_[nettingSetId] = 0.0;
         nettingSetFCA_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
-		nettingSetKVACCR_[nettingSetId] = 0.0;
 
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
@@ -794,24 +757,12 @@ void PostProcess::updateStandAloneXVA() {
 			nettingSetFBA_exOwnSP_[nettingSetId] += fbaIncrement_exOwnSP;
 			nettingSetFBA_exAllSP_[nettingSetId] += fbaIncrement_exAllSP;
 
-			// Risk Capital: RC = EAD x LGD x PD99.9 x MA(PD, M); EAD = alpha x EEPE(t) (approximated by EPE here);
-			Real kvaRC = kvaAlpha_ * eepe[j + 1] * lgd * kva99PD * kvaMatAdj;
-
-			// expected risk capital discounted at capital discount rate
-			Real kvaCapitalDiscount = 1 / std::pow(1 + kvaCapitalDiscountRate_, ActualActual().yearFraction(today, d0));
-			Real kvaCCRIncrement = kvaRC * kvaCapitalDiscount * ActualActual().yearFraction(d0, d1);
-			LOG("d0:" << d0 << ";eepe[j + 1]:" << eepe[j + 1] << ";RC:" << kvaRC << ";CapDisc:" << kvaCapitalDiscount << ";t1-t0:" << ActualActual().yearFraction(d0, d1) << ";kvaCCRsummand:" << kvaCCRIncrement);
-			nettingSetKVACCR_[nettingSetId] += kvaCCRIncrement;
-
             // FIXME: Subtract the spread received on posted IM in MVA calculation
             if (applyMVA) {
                 Real mvaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * edim[j];
                 nettingSetMVA_[nettingSetId] += mvaIncrement;
             }
         }
-		LOG("Sum before CC:" << nettingSetKVACCR_[nettingSetId] << ";CapitalHurdle:" << kvaCapitalHurdle_ << ";RegAdjustment:" << kvaRegAdjustment_);
-		// Total KVA CCR: Sum of discounted RC x cost of capital (= capital hurdle x regulatory adjustment (12.5))
-		nettingSetKVACCR_[nettingSetId] *= (kvaCapitalHurdle_ * kvaRegAdjustment_);
     }
 }
 
@@ -1262,12 +1213,6 @@ Real PostProcess::nettingSetFCA_exAllSP(const string& nettingSetId) {
 	QL_REQUIRE(nettingSetFCA_exAllSP_.find(nettingSetId) != nettingSetFCA_exAllSP_.end(),
 		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exAllSP map");
 	return nettingSetFCA_exAllSP_[nettingSetId];
-}
-
-Real PostProcess::nettingSetKVACCR(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetKVACCR_.find(nettingSetId) != nettingSetKVACCR_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet KVACCR map");
-	return nettingSetKVACCR_[nettingSetId];
 }
 
 Real PostProcess::allocatedTradeCVA(const string& allocatedTradeId) {

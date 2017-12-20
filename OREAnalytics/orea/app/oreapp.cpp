@@ -810,7 +810,6 @@ void OREApp::runPostProcessor() {
 	analytics["fva"] = parseBool(params_->get("xva", "fva"));
 	analytics["colva"] = parseBool(params_->get("xva", "colva"));
 	analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
-	analytics["kva"] = parseBool(params_->get("xva", "kva"));
 	if (params_->has("xva", "mva"))
 		analytics["mva"] = parseBool(params_->get("xva", "mva"));
 	else
@@ -837,18 +836,6 @@ void OREApp::runPostProcessor() {
 	Size dimLocalRegressionEvaluations = 0;
 	Real dimLocalRegressionBandwidth = 0.25;
 
-	Real kvaCapitalDiscountRate = 0.10;
-	Real kvaAlpha = 1.4;
-	Real kvaRegAdjustment = 12.5;
-	Real kvaCapitalHurdle = 0.012;
-
-	if (analytics["kva"]) {
-		kvaCapitalDiscountRate = parseReal(params_->get("xva", "kvaCapitalDiscountRate"));
-		kvaAlpha = parseReal(params_->get("xva", "kvaAlpha")); 
-		kvaRegAdjustment = parseReal(params_->get("xva", "kvaRegAdjustment"));
-		kvaCapitalHurdle = parseReal(params_->get("xva", "kvaCapitalHurdle"));
-	}
-
     if (analytics["mva"] || analytics["dim"]) {
         dimQuantile = parseReal(params_->get("xva", "dimQuantile"));
         dimHorizonCalendarDays = parseInteger(params_->get("xva", "dimHorizonCalendarDays"));
@@ -871,8 +858,7 @@ void OREApp::runPostProcessor() {
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation, 
-		kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
 void OREApp::writeXVAReports() {
