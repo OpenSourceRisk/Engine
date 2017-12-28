@@ -703,7 +703,6 @@ void PostProcess::updateStandAloneXVA() {
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
 		vector<Real> eepe = netEEE_B_kva_[nettingSetId]; // needed for KVA CCR Risk capital (EAD = alpha x eepe(t))
-
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
@@ -736,7 +735,6 @@ void PostProcess::updateStandAloneXVA() {
 		Real kvaMatAdjB = std::pow((0.11852 - 0.05478 * std::log(PD)), 2.0);
 		// maturity adjustment factor for RWA method: MA(PD, M) = (1 + (M - 2.5) * B(PD)) / (1 - 1.5 * B(PD)), capped at 5, floored at 1, M = effective maturity
 		Real kvaMatAdj = std::max(std::min((1 + (kvaNWMaturity - 2.5) * kvaMatAdjB) / (1 - 1.5 * kvaMatAdjB), 5.0), 1.0);
-		LOG("rho:" << rho << ";PD99:" << PD99 << ";kva99PD:" << kva99PD << ";B(PD):" << kvaMatAdjB << ";MA(PD,M):" << kvaMatAdj << ";WMat:" << kvaNWMaturity);
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -750,7 +748,6 @@ void PostProcess::updateStandAloneXVA() {
         nettingSetFCA_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
 		nettingSetKVACCR_[nettingSetId] = 0.0;
-
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
@@ -779,11 +776,9 @@ void PostProcess::updateStandAloneXVA() {
 
 			// Risk Capital: RC = EAD x LGD x PD99.9 x MA(PD, M); EAD = alpha x EEPE(t) (approximated by EPE here);
 			Real kvaRC = kvaAlpha_ * eepe[j + 1] * lgd * kva99PD * kvaMatAdj;
-
 			// expected risk capital discounted at capital discount rate
 			Real kvaCapitalDiscount = 1 / std::pow(1 + kvaCapitalDiscountRate_, ActualActual().yearFraction(today, d0));
 			Real kvaCCRIncrement = kvaRC * kvaCapitalDiscount * ActualActual().yearFraction(d0, d1);
-			LOG("d0:" << d0 << ";eepe[j + 1]:" << eepe[j + 1] << ";RC:" << kvaRC << ";CapDisc:" << kvaCapitalDiscount << ";t1-t0:" << ActualActual().yearFraction(d0, d1) << ";kvaCCRsummand:" << kvaCCRIncrement);
 			nettingSetKVACCR_[nettingSetId] += kvaCCRIncrement;
 
             // FIXME: Subtract the spread received on posted IM in MVA calculation
@@ -792,7 +787,6 @@ void PostProcess::updateStandAloneXVA() {
                 nettingSetMVA_[nettingSetId] += mvaIncrement;
             }
         }
-		LOG("Sum before CC:" << nettingSetKVACCR_[nettingSetId] << ";CapitalHurdle:" << kvaCapitalHurdle_ << ";RegAdjustment:" << kvaRegAdjustment_);
 		// Total KVA CCR: Sum of discounted RC x cost of capital (= capital hurdle x regulatory adjustment (12.5))
 		nettingSetKVACCR_[nettingSetId] *= (kvaCapitalHurdle_ * kvaRegAdjustment_);
     }
