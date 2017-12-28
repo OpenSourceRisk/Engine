@@ -146,8 +146,7 @@ public:
         //! Scaling factor applied to all DIM values
         Real dimScaling = 1.0,
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
-        bool fullInitialCollateralisation = false
-	);
+        bool fullInitialCollateralisation = false);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }

@@ -185,7 +185,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     for (Size i = 0; i < portfolio->size(); ++i) {
         string tradeId = portfolio->trades()[i]->id();
         string nettingSetId = portfolio->trades()[i]->envelope().nettingSetId();
-
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
             nettingSetValue[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
@@ -694,7 +693,6 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
-
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
@@ -709,7 +707,6 @@ void PostProcess::updateStandAloneXVA() {
             dvaDts = market_->defaultCurve(dvaName_, configuration_);
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
         }
-
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -722,7 +719,6 @@ void PostProcess::updateStandAloneXVA() {
         nettingSetFBA_[nettingSetId] = 0.0;
         nettingSetFCA_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
-
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
