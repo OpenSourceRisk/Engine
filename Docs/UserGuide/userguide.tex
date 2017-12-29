@@ -1962,8 +1962,8 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-    <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="aggregationScenarioDataDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -2014,6 +2014,11 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
     <Parameter name="colva">Y</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="kva">Y</Parameter>
+    <Parameter name="kvaCapitalDiscountRate">0.10</Parameter>
+    <Parameter name="kvaAlpha">1.4</Parameter>
+    <Parameter name="kvaRegAdjustment">12.5</Parameter>
+    <Parameter name="kvaCapitalHurdle">0.012</Parameter>
     <Parameter name="dim">Y</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
@@ -2065,7 +2070,9 @@ collateral rates floor to the collateral model file (netting.xml)}
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
 %\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one
-%basis point is 0.0001) assuming the day count convention of the collateral rate. 
+%basis point is 0.0001) assuming the day count convention of the collateral rate.
+\item {\tt kva:} Flag to enable setting the kva ccr parameters.
+\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle:} the kva ccr parameters (see \ref{sec:app_kva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
@@ -4562,6 +4569,38 @@ Given the DIM estimate along all paths, we can next work out the Margin Value Ad
 with borrowing spread $f_b$ as in the FVA section \ref{sec:fva} and spread $s_I$ received on initial margin, both
 spreads relative to the cash collateral rate.
 
+\subsection{KVA (CCR)}\label{sec:app_kva}
+
+The KVA is calculated for the Counterparty Credit Risk Capital charge (CCR) following the IRB method concisely described in \cite{Gregory15}, Appendix 8A.
+It is following the Basel rules by computing risk capital as the product of alpha weighted exposure at default, worst case probability of default at 99.9 and a maturity adjustment factor also described in the Basel annex 4.
+The risk capital charges are discounted with a capital discount factor and summed up to give the total CCR KVA after being multiplied with the risk weight and a capital charge (following the RWA method).
+
+\medskip Basel II internal rating based (IRB) estimate of worst case probability of default: large homogeneous pool (LHP) approximation of Vasicek (1997), KVA regulatory probability of default is the worst case probability of default floored at 0.03:
+$$PD_{99.9\%} = \max(0.03, N (\frac{N^{-1}(PD) + \sqrt{\rho} N^{-1}(0.999)}{\sqrt{1 - \rho}}) - PD)$$
+$N$ is the cumulative standard normal distribution,
+
+$$\rho = 0.12 \frac{1 - e^{-50 PD}}{1 - e^{-50}} + 0.24 (1 - \frac{1 - e^{-50 PD}}{1 - e^{-50}})$$
+
+\medskip Maturity adjustment factor for RWA method capped at 5, floored at 1:
+$$MA(PD, M) = \min(5, \max(1, \frac{1 + (M - 2.5) B(PD)}{1 - 1.5 B(PD)}))$$
+\medskip where $B(PD) = (0.11852 - 0.05478 \ln(PD))^2$ and M is the effective maturity of the portfolio (capped at 5):
+
+$$M = \min(5, 1 + \frac{\sum\limits_{t_k > 1yr} EE(t_k)\Delta t_k B(0,t_k)}{\sum\limits_{t_k \leq 1yr} EEE(t_k)\Delta t_k B(0,t_k)})$$
+
+\medskip where $B(0,t_k)$ is the risk-free discount factor from the simulation date $t_k$ to today, $\Delta t_k$ is the difference between time points, 
+$EE(t_k)$ is the expected exposure at time $t_k$ and $EEE(t_k)$ is the effective expected exposure.
+
+\medskip (expected) risk capital at $t_i$:
+$$RC_{t_i} = EAD_{t_i} \times LGD \times PD_{99.9\%} \times MA(PD, M)$$
+
+$$EAD_{t_i} = \alpha \times EEPE_{t_i}$$
+
+\medskip $EEPE_{t_i}$ being approximated by $EPE$ at point $t_i$ and $\alpha$ the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+
+\medskip $KVA_{CCR}$ is the sum of the expected risk capitals discounted at capital discount rate and factored with the capital hurdle and the regulatory adjustment:
+$$KVA_{CCR} = \sum_i RC_{t_i} \frac{1}{ (1 + capDiscRate)^{t_i-t_0}} (t_i - t_{i-1}) \times (capHurdle \times regAdj)$$
+
+
 \subsection{Collateral Model}\label{sec:app_collateral}
 
 The collateral model implemented in ORE is based on the evolution of collateral account balances along each Monte Carlo
@@ -4878,6 +4917,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 \bibitem{Gregory12} Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}, Wiley Finance,
   2013.
 
+\bibitem{Gregory15} Jon Gregory, {\em The xVA Challenge, 3rd Ed.}, Wiley Finance, 2015.
+  
 \bibitem{Lichters} Roland Lichters, Roland Stamm, Donal Gallagher, {\em Modern Derivatives Pricing and Credit Exposure
     Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, Palgrave Macmillan,
   2015.

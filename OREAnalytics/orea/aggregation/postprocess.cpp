@@ -461,8 +461,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
 			eee_b_kva[j + 1] = eepe_kva;
 			if (dc.yearFraction(today, date) > 1.0) {
 				effMatNumer_[nettingSetId] += epe[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
-				effMatDenom_[nettingSetId]  += eee_b_kva[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
 			}
+            if (dc.yearFraction(today, date) <= 1.0) {
+                effMatDenom_[nettingSetId] += eee_b_kva[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
+            }
         }
         expectedCollateral_[nettingSetId] = eab;
         netEPE_[nettingSetId] = epe;
@@ -722,12 +724,12 @@ void PostProcess::updateStandAloneXVA() {
 		// KVA effective maturity of nettingSet, capped at 5
 		Real kvaNWMaturity = std::min(1 + effMatNumer_[nettingSetId] / effMatDenom_[nettingSetId], 5.0);
 		Real lgd = (1 - cvaRR);
-		// PD from counterparty Dts, floored to avoid 0 ...  // 0.05; //
+		// PD from counterparty Dts, floored to avoid 0 ...
 		Real PD = std::max(cvaDts->defaultProbability(today), 0.000000000001);
 		// granularity adjustment, Gordy (2004):
 		Real rho = 0.12 * (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)) + 0.24 * (1 - (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)));
 		InverseCumulativeNormal icn; CumulativeNormalDistribution cnd;
-		// Basel II internal rating based (IRB) estimate of worst case PD: large homogeneous pool (LHP) approximation of Vasicek (1997) //0.05; // 
+		// Basel II internal rating based (IRB) estimate of worst case PD: large homogeneous pool (LHP) approximation of Vasicek (1997)
 		Real PD99 = cnd((icn(PD) + std::sqrt(rho) * icn(0.999)) / (std::sqrt(1 - rho))) - PD;
 		// KVA regulatory PD (worst case PD floored at 0.03)
 		Real kva99PD = std::max(PD99, 0.03);
