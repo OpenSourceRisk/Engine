@@ -801,53 +801,40 @@ boost::shared_ptr<NettingSetManager> OREApp::initNettingSetManager() {
 }
 
 void OREApp::runPostProcessor() {
-	boost::shared_ptr<NettingSetManager> netting = initNettingSetManager();
-	map<string, bool> analytics;
-	analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
-	analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
-	analytics["cva"] = parseBool(params_->get("xva", "cva"));
-	analytics["dva"] = parseBool(params_->get("xva", "dva"));
-	analytics["fva"] = parseBool(params_->get("xva", "fva"));
-	analytics["colva"] = parseBool(params_->get("xva", "colva"));
-	analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
-	analytics["kva"] = parseBool(params_->get("xva", "kva"));
-	if (params_->has("xva", "mva"))
-		analytics["mva"] = parseBool(params_->get("xva", "mva"));
-	else
-		analytics["mva"] = false;
-	if (params_->has("xva", "dim"))
-		analytics["dim"] = parseBool(params_->get("xva", "dim"));
-	else
-		analytics["dim"] = false;
+    boost::shared_ptr<NettingSetManager> netting = initNettingSetManager();
+    map<string, bool> analytics;
+    analytics["exerciseNextBreak"] = parseBool(params_->get("xva", "exerciseNextBreak"));
+    analytics["exposureProfiles"] = parseBool(params_->get("xva", "exposureProfiles"));
+    analytics["cva"] = parseBool(params_->get("xva", "cva"));
+    analytics["dva"] = parseBool(params_->get("xva", "dva"));
+    analytics["fva"] = parseBool(params_->get("xva", "fva"));
+    analytics["colva"] = parseBool(params_->get("xva", "colva"));
+    analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
+    if (params_->has("xva", "mva"))
+        analytics["mva"] = parseBool(params_->get("xva", "mva"));
+    else
+        analytics["mva"] = false;
+    if (params_->has("xva", "dim"))
+        analytics["dim"] = parseBool(params_->get("xva", "dim"));
+    else
+        analytics["dim"] = false;
 
-	string baseCurrency = params_->get("xva", "baseCurrency");
-	string calculationType = params_->get("xva", "calculationType");
-	string allocationMethod = params_->get("xva", "allocationMethod");
-	Real marginalAllocationLimit = parseReal(params_->get("xva", "marginalAllocationLimit"));
-	Real quantile = parseReal(params_->get("xva", "quantile"));
-	string dvaName = params_->get("xva", "dvaName");
-	string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
-	string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
+    string baseCurrency = params_->get("xva", "baseCurrency");
+    string calculationType = params_->get("xva", "calculationType");
+    string allocationMethod = params_->get("xva", "allocationMethod");
+    Real marginalAllocationLimit = parseReal(params_->get("xva", "marginalAllocationLimit"));
+    Real quantile = parseReal(params_->get("xva", "quantile"));
+    string dvaName = params_->get("xva", "dvaName");
+    string fvaLendingCurve = params_->get("xva", "fvaLendingCurve");
+    string fvaBorrowingCurve = params_->get("xva", "fvaBorrowingCurve");
 
-	Real dimQuantile = 0.99;
-	Size dimHorizonCalendarDays = 14;
-	Size dimRegressionOrder = 0;
-	vector<string> dimRegressors;
-	Real dimScaling = 1.0;
-	Size dimLocalRegressionEvaluations = 0;
-	Real dimLocalRegressionBandwidth = 0.25;
-
-	Real kvaCapitalDiscountRate = 0.10;
-	Real kvaAlpha = 1.4;
-	Real kvaRegAdjustment = 12.5;
-	Real kvaCapitalHurdle = 0.012;
-
-	if (analytics["kva"]) {
-		kvaCapitalDiscountRate = parseReal(params_->get("xva", "kvaCapitalDiscountRate"));
-		kvaAlpha = parseReal(params_->get("xva", "kvaAlpha")); 
-		kvaRegAdjustment = parseReal(params_->get("xva", "kvaRegAdjustment"));
-		kvaCapitalHurdle = parseReal(params_->get("xva", "kvaCapitalHurdle"));
-	}
+    Real dimQuantile = 0.99;
+    Size dimHorizonCalendarDays = 14;
+    Size dimRegressionOrder = 0;
+    vector<string> dimRegressors;
+    Real dimScaling = 1.0;
+    Size dimLocalRegressionEvaluations = 0;
+    Real dimLocalRegressionBandwidth = 0.25;
 
     if (analytics["mva"] || analytics["dim"]) {
         dimQuantile = parseReal(params_->get("xva", "dimQuantile"));
@@ -871,8 +858,7 @@ void OREApp::runPostProcessor() {
         portfolio_, netting, market_, marketConfiguration, cube_, scenarioData_, analytics, baseCurrency,
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
-        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation, 
-		kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
+        dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation);
 }
 
 void OREApp::writeXVAReports() {
