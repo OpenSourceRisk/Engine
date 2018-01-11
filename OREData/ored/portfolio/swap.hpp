@@ -39,10 +39,10 @@ public:
     Swap() : Trade("Swap") {}
 
     //! Constructor with vector of LegData
-    Swap(Envelope env, vector<LegData>& legData) : Trade("Swap", env), legData_(legData) {}
+    Swap(const Envelope& env, const vector<LegData>& legData) : Trade("Swap", env), legData_(legData) {}
 
     //! Constructor with two legs
-    Swap(Envelope env, LegData leg0, LegData leg1) : Trade("Swap", env), legData_({leg0, leg1}) {}
+    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1) : Trade("Swap", env), legData_({leg0, leg1}) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
