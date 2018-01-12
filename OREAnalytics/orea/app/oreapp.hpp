@@ -158,6 +158,7 @@ protected:
     bool writeBaseScenario_;
 
     boost::shared_ptr<Market> market_;
+    boost::shared_ptr<EngineFactory> engineFactory_;
     boost::shared_ptr<Portfolio> portfolio_;
     Conventions conventions_;
     TodaysMarketParameters marketParameters_;
