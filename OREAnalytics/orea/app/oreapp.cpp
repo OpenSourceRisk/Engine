@@ -73,14 +73,14 @@ int OREApp::run() {
          *Build Pricing Engine Factory
          */
         out_ << setw(tab_) << left << "Engine factory... " << flush;
-        boost::shared_ptr<EngineFactory> factory = buildEngineFactory(market_);
+        engineFactory_ = buildEngineFactory(market_);
         out_ << "OK" << endl;
 
         /******************************
          * Load and Build the Portfolio
          */
         out_ << setw(tab_) << left << "Portfolio... " << flush;
-        portfolio_ = buildPortfolio(factory);
+        portfolio_ = buildPortfolio(engineFactory_);
         out_ << "OK" << endl;
 
         /******************************
