@@ -722,7 +722,7 @@ void PostProcess::updateStandAloneXVA() {
 
 		// KVA CCR using the IRB risk weighted asset method and IMM:
 		// KVA effective maturity of nettingSet, capped at 5
-		Real kvaNWMaturity = std::min(1 + effMatNumer_[nettingSetId] / effMatDenom_[nettingSetId], 5.0);
+		Real kvaNWMaturity = std::min(1 + (effMatDenom_[nettingSetId] == 0.0 ? 0 : effMatNumer_[nettingSetId] / effMatDenom_[nettingSetId]), 5.0);
 		Real lgd = (1 - cvaRR);
 		// PD from counterparty Dts, floored to avoid 0 ...
 		Real PD = std::max(cvaDts->defaultProbability(today), 0.000000000001);
