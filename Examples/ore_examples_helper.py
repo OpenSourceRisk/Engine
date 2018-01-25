@@ -66,7 +66,7 @@ class OreExample(object):
                 data.append(line.split(',')[colidx])
             else:
                 data.append("Error")
-        return data[offset:]
+        return [float(i) for i in data[offset:]]
 
     def save_output_to_subdir(self, subdir, files):
         if not os.path.exists(os.path.join("Output", subdir)):
