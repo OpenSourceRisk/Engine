@@ -46,16 +46,25 @@ public:
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
     void operator()(const Date& d) const {
         if (d == QuantLib::Null<Date>()) {
-            fprintNull();
-        } else {
-            string s = to_string(d);
-            fprintf(fp_, "%s", s.c_str());
-        }
+			if (fieldName_ == "Maturity") {
+				string s = "open";
+				fprintf(fp_, "%s", s.c_str());
+			} else {
+				fprintNull();
+			}
+		} else {
+			string s = to_string(d);
+			fprintf(fp_, "%s", s.c_str());
+		}
     }
     void operator()(const Period& p) const {
         string s = to_string(p);
         fprintf(fp_, "%s", s.c_str());
     }
+
+	void setFieldName(string aFieldName) { 
+		fieldName_ = aFieldName;
+	}
 
 private:
     void fprintNull() const { fprintf(fp_, "%s", null_.c_str()); }
@@ -63,6 +72,7 @@ private:
     FILE* fp_;
     int prec_;
     const string null_;
+	string fieldName_;
 };
 
 CSVFileReport::CSVFileReport(const string& filename, const char sep, const bool commentCharacter)
@@ -75,7 +85,9 @@ CSVFileReport::~CSVFileReport() { end(); }
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);
-    printers_.push_back(ReportTypePrinter(fp_, precision));
+	ReportTypePrinter printer(fp_, precision);
+	printer.setFieldName(name);
+    printers_.push_back(printer);
     if (i_ == 0 && commentCharacter_)
         fprintf(fp_, "#");
     if (i_ > 0)
