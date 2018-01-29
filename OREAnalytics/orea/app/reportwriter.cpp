@@ -60,11 +60,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
             Real npv = trade->instrument()->NPV();
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-                .add(trade->maturity())
-                .add(dc.yearFraction(today, trade->maturity()))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(npv)
                 .add(npvCcy)
                 .add(npv * fx)
@@ -75,11 +76,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-                .add(trade->maturity())
-                .add(dc.yearFraction(today, trade->maturity()))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
