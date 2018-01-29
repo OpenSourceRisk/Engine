@@ -44,7 +44,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     report.addColumn("TradeId", string())
         .addColumn("TradeType", string())
         .addColumn("Maturity", Date())
-		.addColumn("MaturityTime", double(), 6)
+        .addColumn("MaturityTime", double(), 6)
         .addColumn("NPV", double(), 6)
         .addColumn("NpvCurrency", string())
         .addColumn("NPV(Base)", double(), 6)
@@ -60,12 +60,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
             Real npv = trade->instrument()->NPV();
-			Date maturity = trade->maturity();
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-				.add(maturity)
-				.add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(npv)
                 .add(npvCcy)
                 .add(npv * fx)
@@ -76,12 +76,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
-			Date maturity = trade->maturity();
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-				.add(maturity)
-				.add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())

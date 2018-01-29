@@ -46,11 +46,11 @@ public:
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
     void operator()(const Date& d) const {
         if (d == QuantLib::Null<Date>()) {
-			fprintNull();
-		} else {
-			string s = to_string(d);
-			fprintf(fp_, "%s", s.c_str());
-		}
+            fprintNull();
+        } else {
+            string s = to_string(d);
+            fprintf(fp_, "%s", s.c_str());
+        }
     }
     void operator()(const Period& p) const {
         string s = to_string(p);
@@ -75,7 +75,7 @@ CSVFileReport::~CSVFileReport() { end(); }
 
 Report& CSVFileReport::addColumn(const string& name, const ReportType& rt, Size precision) {
     columnTypes_.push_back(rt);
-	printers_.push_back(ReportTypePrinter(fp_, precision));
+    printers_.push_back(ReportTypePrinter(fp_, precision));
     if (i_ == 0 && commentCharacter_)
         fprintf(fp_, "#");
     if (i_ > 0)
