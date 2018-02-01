@@ -1979,7 +1979,9 @@ cube for post processing in the context of Dynamic Initial Margin and Variation 
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
-file.
+file. Only those currencies or indices are written here that are stated in the AggregationScenarioDataCurrencies and 
+AggregationScenarioDataIndices subsections of the simulation files market section, see also section
+\ref{sec:sim_market}.
  
 \medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
 individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
