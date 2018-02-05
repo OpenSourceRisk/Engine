@@ -71,8 +71,9 @@ this_include_HEADERS = \
 	defaultprobabilityhelpers.hpp \
 	survivalprobabilitycurve.hpp \
 	swaptionvolcubewithatm.hpp \
+	swaptionvolconstantspread.hpp \
 	blackvariancesurfacemoneyness.hpp \
-    equityvolconstantspread.hpp
+    equityvolconstantspread.hpp \
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserverstatic.hpp \
 	yoyinflationcurveobservermoving.hpp \
