@@ -139,6 +139,7 @@ inline void LgmImpliedYieldTermStructure::referenceTime(const Time t) {
     QL_REQUIRE(purelyTimeBased_, "reference time can only be set for purely "
                                  "time based term structure");
     relativeTime_ = t;
+    notifyObservers();
 }
 
 inline void LgmImpliedYieldTermStructure::state(const Real s) {
@@ -147,13 +148,14 @@ inline void LgmImpliedYieldTermStructure::state(const Real s) {
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Date& d, const Real s) {
-    state(s);
+    state_ = s;
     referenceDate(d);
 }
 
 inline void LgmImpliedYieldTermStructure::move(const Time t, const Real s) {
-    state(s);
-    referenceTime(t);
+    state_ = s;
+    relativeTime_ = t;
+    notifyObservers();
 }
 
 inline void LgmImpliedYieldTermStructure::update() {
