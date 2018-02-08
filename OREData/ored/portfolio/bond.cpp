@@ -144,7 +144,7 @@ void Bond::fromXML(XMLNode* node) {
     XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
     QL_REQUIRE(bondNode, "No BondData Node");
     issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
-    creditCurveId_ = XMLUtils::getChildValue(bondNode, "CreditCurveId", true);
+    creditCurveId_ = XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
