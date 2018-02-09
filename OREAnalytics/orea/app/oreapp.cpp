@@ -200,6 +200,7 @@ int OREApp::run() {
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
+    Log::instance().removeAllLoggers();
     return 0;
 }
 
