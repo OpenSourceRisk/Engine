@@ -129,7 +129,7 @@
     </BenchmarkCurves>
 
     <Securities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <Names>
         <Name>SECURITY_1</Name>
       </Names>

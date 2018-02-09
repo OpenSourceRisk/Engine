@@ -53,6 +53,8 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
             addSwaptionVolShifts(data, scenario);
         if (simMarketData_->simulateCapFloorVols())
             addCapFloorVolShifts(data, scenario);
+        if (simMarketData_->securitySpreadsSimulate())
+            addSecuritySpreadShifts(data, scenario);
 
         scenarios_.push_back(scenario);
     }
@@ -509,5 +511,24 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
     }
     LOG("Optionlet vol scenarios done");
 }
+
+void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
+    boost::shared_ptr<Scenario>& scenario) {
+    for (auto d : std.securitySpreadShifts) {
+        string bond = d.first;
+        StressTestScenarioData::SpotShiftData data = d.second;
+        ShiftType type = parseShiftType(data.shiftType);
+        bool relShift = (type == ShiftType::Relative);
+        Real size = data.shiftSize;
+
+        RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
+        Real base_spread = baseScenario_->get(key);
+
+        Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
+        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SecuritySpread, bond), newSpread);
+    }
+    LOG("Security spread scenarios done");
+}
+
 } // namespace analytics
 } // namespace ore

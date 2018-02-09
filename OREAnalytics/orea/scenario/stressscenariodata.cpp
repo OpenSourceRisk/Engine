@@ -199,6 +199,20 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             test.capVolShifts[ccy] = data;
         }
 
+        LOG("Get Security spread stress parameters");
+        XMLNode* securitySpreads = XMLUtils::getChildNode(testCase, "SecuritySpreads");
+        QL_REQUIRE(securitySpreads, "SecuritySpreads node not found");
+        test.securitySpreadShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string bond = XMLUtils::getAttribute(child, "security");
+            LOG("Loading stress parameters for Security spreads " << bond);
+            SpotShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            test.securitySpreadShifts[bond] = data;
+        }
+
         data_.push_back(test);
 
         LOG("Loading stress test label " << test.label << " done");
