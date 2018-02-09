@@ -312,6 +312,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
+    XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
 
     if (!isNotResetXCCY_) {
         XMLNode* resetNode = doc.allocNode("FXReset");
@@ -319,14 +320,14 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
         XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
         XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
-        XMLUtils::appendNode(node, resetNode);
+        XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
     XMLNode* exchangeNode = doc.allocNode("Exchanges");
     XMLUtils::addChild(doc, exchangeNode, "NotionalInitialExchange", notionalInitialExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalFinalExchange", notionalFinalExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalAmortizingExchange", notionalAmortizingExchange_);
-    XMLUtils::appendNode(node, exchangeNode);
+    XMLUtils::appendNode(notionalsNodePtr, exchangeNode);
 
     XMLUtils::appendNode(node, schedule_.toXML(doc));
 
