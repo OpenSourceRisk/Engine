@@ -1251,21 +1251,10 @@ void PostProcess::performT0DimCalc() {
     LOG("T0 IM Calculations Completed");
 }
 
-void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport) {
-    LOG("Export DIM evolution for netting set " << nettingSet);
+void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
 
     Size dates = dimCube_->dates().size();
     Size samples = dimCube_->samples();
-    const std::vector<std::string>& ids = dimCube_->ids();
-
-    int index = -1;
-    for (Size i = 0; i < ids.size(); ++i) {
-        if (ids[i] == nettingSet) {
-            index = i;
-            break;
-        }
-    }
-    QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
     dimEvolutionReport.addColumn("TimeStep", Size())
         .addColumn("Date", Date())
@@ -1273,25 +1262,31 @@ void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::R
         .addColumn("ZeroOrderDIM", Real(), 6)
         .addColumn("AverageDIM", Real(), 6)
         .addColumn("AverageFLOW", Real(), 6)
-        .addColumn("SimpleDIM", Real(), 6);
+        .addColumn("SimpleDIM", Real(), 6)
+        .addColumn("NettingSet", string());
 
-    for (Size i = 0; i < dates - 1; ++i) {
-        Real expectedFlow = 0.0;
-        for (Size j = 0; j < samples; ++j) {
-            expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+    for (auto nettingSet : dimCube_->ids()) {
+
+        LOG("Export DIM evolution for netting set " << nettingSet);
+        for (Size i = 0; i < dates - 1; ++i) {
+            Real expectedFlow = 0.0;
+            for (Size j = 0; j < samples; ++j) {
+                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+            }
+
+            Date d1 = dimCube_->dates()[i];
+            Date d2 = dimCube_->dates()[i + 1];
+            Size days = d2 - d1;
+            dimEvolutionReport.next()
+                .add(i)
+                .add(d1)
+                .add(days)
+                .add(nettingSetZeroOrderDIM_[nettingSet][i])
+                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(expectedFlow)
+                .add(nettingSetSimpleDIMh_[nettingSet][i])
+                .add(nettingSet);
         }
-
-        Date d1 = dimCube_->dates()[i];
-        Date d2 = dimCube_->dates()[i + 1];
-        Size days = d2 - d1;
-        dimEvolutionReport.next()
-            .add(i)
-            .add(d1)
-            .add(days)
-            .add(nettingSetZeroOrderDIM_[nettingSet][i])
-            .add(nettingSetExpectedDIM_[nettingSet][i])
-            .add(expectedFlow)
-            .add(nettingSetSimpleDIMh_[nettingSet][i]);
     }
     dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");

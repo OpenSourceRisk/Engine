@@ -407,7 +407,7 @@ void OREApp::writeInitialReports() {
         string fileName = outputPath + "/" + params_->get("curves", "outputFileName");
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
-        ReportWriter::writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
+        getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
                                   market_);
         out_ << "OK" << endl;
     } else {
@@ -422,7 +422,7 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("npv") && params_->get("npv", "active") == "Y") {
         string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
-        ReportWriter::writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
+        getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
                                params_->get("markets", "pricing"), portfolio_);
         out_ << "OK" << endl;
     } else {
@@ -437,13 +437,15 @@ void OREApp::writeInitialReports() {
     if (params_->hasGroup("cashflow") && params_->get("cashflow", "active") == "Y") {
         string fileName = outputPath + "/" + params_->get("cashflow", "outputFileName");
         CSVFileReport cashflowReport(fileName);
-        ReportWriter::writeCashflow(cashflowReport, portfolio_);
+        getReportWriter()->writeCashflow(cashflowReport, portfolio_);
         out_ << "OK" << endl;
     } else {
         LOG("skip cashflow generation");
         out_ << "SKIP" << endl;
     }
 }
+
+boost::shared_ptr<ReportWriter> OREApp::getReportWriter() { return boost::make_shared<ReportWriter>(); }
 
 void OREApp::runSensitivityAnalysis() {
 
@@ -762,7 +764,7 @@ void OREApp::writeScenarioData() {
         // csv output
         string outputFileNameAddScenData = outputPath + "/" + params_->get("simulation", "aggregationScenarioDataDump");
         CSVFileReport report(outputFileNameAddScenData);
-        ReportWriter::writeAggregationScenarioData(report, *scenarioData_);
+        getReportWriter()->writeAggregationScenarioData(report, *scenarioData_);
         skipped = false;
     }
     if (skipped)
@@ -868,25 +870,25 @@ void OREApp::writeXVAReports() {
         o << outputPath << "/exposure_trade_" << t << ".csv";
         string tradeExposureFile = o.str();
         CSVFileReport tradeExposureReport(tradeExposureFile);
-        ReportWriter::writeTradeExposures(tradeExposureReport, postProcess_, t);
+        getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
     }
     for (auto n : postProcess_->nettingSetIds()) {
         ostringstream o1;
         o1 << outputPath << "/exposure_nettingset_" << n << ".csv";
         string nettingSetExposureFile = o1.str();
         CSVFileReport nettingSetExposureReport(nettingSetExposureFile);
-        ReportWriter::writeNettingSetExposures(nettingSetExposureReport, postProcess_, n);
+        getReportWriter()->writeNettingSetExposures(nettingSetExposureReport, postProcess_, n);
 
         ostringstream o2;
         o2 << outputPath << "/colva_nettingset_" << n << ".csv";
         string nettingSetColvaFile = o2.str();
         CSVFileReport nettingSetColvaReport(nettingSetColvaFile);
-        ReportWriter::writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
+        getReportWriter()->writeNettingSetColva(nettingSetColvaReport, postProcess_, n);
     }
 
     string XvaFile = outputPath + "/xva.csv";
     CSVFileReport xvaReport(XvaFile);
-    ReportWriter::writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
+    getReportWriter()->writeXVA(xvaReport, params_->get("xva", "allocationMethod"), portfolio_, postProcess_);
 
     string rawCubeOutputFile = params_->get("xva", "rawCubeOutputFile");
     CubeWriter cw1(outputPath + "/" + rawCubeOutputFile);
@@ -908,7 +910,7 @@ void OREApp::writeDIMReport() {
     std::vector<Size> dimOutputGridPoints =
         parseListOfValues<Size>(params_->get("xva", "dimOutputGridPoints"), &parseInteger);
     ore::data::CSVFileReport dimEvolutionReport(dimFile1);
-    postProcess_->exportDimEvolution(nettingSet, dimEvolutionReport);
+    postProcess_->exportDimEvolution(dimEvolutionReport);
     vector<boost::shared_ptr<ore::data::Report>> reportVec;
     for (Size i = 0; i < dimOutputGridPoints.size(); ++i)
         reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
