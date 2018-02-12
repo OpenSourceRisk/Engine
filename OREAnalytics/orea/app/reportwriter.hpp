@@ -43,34 +43,30 @@ namespace analytics {
  */
 class ReportWriter {
 public:
-    static void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+    virtual ~ReportWriter(){};
+
+    virtual void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
                          boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                          boost::shared_ptr<Portfolio> portfolio);
 
-    static void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
 
-    static void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+    virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                             const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
 
-    static void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    virtual void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                     const std::string& tradeId);
 
-    static void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                          const std::string& nettingSetId);
 
-    static void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    virtual void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                      const std::string& nettingSetId);
 
-    static void writeXVA(ore::data::Report& report, const string& allocationMethod,
+    virtual void writeXVA(ore::data::Report& report, const string& allocationMethod,
                          boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
 
-    static void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
-
-private:
-    //! ctor
-    ReportWriter(){};
-    ReportWriter(const ReportWriter&);
-    ReportWriter& operator=(const ReportWriter&);
+    virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
 };
 } // namespace analytics
 } // namespace ore
