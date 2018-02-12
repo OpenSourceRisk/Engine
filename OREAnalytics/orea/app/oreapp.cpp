@@ -200,7 +200,7 @@ int OREApp::run() {
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
-    Log::instance().removeAllLoggers();
+    closeLog();
     return 0;
 }
 
@@ -248,6 +248,10 @@ void OREApp::setupLog() {
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
     Log::instance().setMask(logMask);
     Log::instance().switchOn();
+}
+
+void OREApp::closeLog() {
+    Log::instance().removeAllLoggers();
 }
 
 void OREApp::getConventions() {
