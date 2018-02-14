@@ -211,7 +211,8 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Value", value_);
     XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    XMLUtils::addChild(doc, node, "EndDate", startDate_);
+    if(endDate_ != "")
+        XMLUtils::addChild(doc, node, "EndDate", endDate_);
     if (frequency_ != "")
         XMLUtils::addChild(doc, node, "Frequency", frequency_);
     XMLUtils::addChild(doc, node, "Underflow", underflow_);
@@ -330,10 +331,14 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
 
     XMLUtils::appendNode(node, schedule_.toXML(doc));
 
-    for (auto& amort : amortizationData_) {
-        if (amort.initialized()) {
-            XMLUtils::appendNode(node, amort.toXML(doc));
+    if (!amortizationData_.empty()) {
+        XMLNode* amortisationsParentNode = doc.allocNode("Amortizations");
+        for (auto& amort : amortizationData_) {
+            if (amort.initialized()) {
+                XMLUtils::appendNode(amortisationsParentNode, amort.toXML(doc));
+            }
         }
+        XMLUtils::appendNode(node, amortisationsParentNode);
     }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));
