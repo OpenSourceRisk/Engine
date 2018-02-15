@@ -23,6 +23,7 @@
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
+#include <ql/termstructures/credit/flathazardrate.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
 using namespace std;
@@ -42,6 +43,17 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
     registerWith(discountCurve_);
     registerWith(defaultCurve_);
     registerWith(recoveryRate_);
+    registerWith(securitySpread_);
+}
+
+DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
+    const Handle<Quote>& securitySpread, Period timestepPeriod,
+    boost::optional<bool> includeSettlementDateFlows)
+    : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod), 
+    includeSettlementDateFlows_(includeSettlementDateFlows) {
+    discountCurve_ =
+        Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
+    registerWith(discountCurve_);
     registerWith(securitySpread_);
 }
 
@@ -67,6 +79,14 @@ void DiscountingRiskyBondEngine::calculate() const {
 Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     Real npvValue = 0;
 
+    // handle case where we wish to price simply with benchmark curve and scalar security spread
+        // i.e. credit curve term structure (and recovery) have not been specified
+        // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already captured within security spread)
+    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr = defaultCurve_.empty() ?
+        boost::make_shared<QuantLib::FlatHazardRate>(results_.valuationDate, 0.0, discountCurve_->dayCounter()) :
+        defaultCurve_.currentLink(); 
+    Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
+
     Size numCoupons = 0;
     for (Size i = 0; i < arguments_.cashflows.size(); i++) {
         boost::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
@@ -74,7 +94,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
             continue;
 
         // Coupon value is discounted future payment times the survival probability
-        Probability S = defaultCurve_->survivalProbability(cf->date());
+        Probability S = creditCurvePtr->survivalProbability(cf->date());
         npvValue += cf->amount() * S * discountCurve_->discount(cf->date());
 
         /* The amount recovered in the case of default is the recoveryrate*Notional*Probability of
@@ -88,9 +108,9 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
             Date endDate = coupon->accrualEndDate();
             Date effectiveStartDate = (startDate <= npvDate && npvDate <= endDate) ? npvDate : startDate;
             Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
-            Probability P = defaultCurve_->defaultProbability(effectiveStartDate, endDate);
+            Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, endDate);
 
-            npvValue += cf->amount() * recoveryRate_->value() * P * discountCurve_->discount(defaultDate);
+            npvValue += cf->amount() * recoveryVal * P * discountCurve_->discount(defaultDate);
         }
     }
 
@@ -109,9 +129,9 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
                 Date stepDate = startDate + timestepPeriod_;
                 Date endDate = (stepDate > redemption->date()) ? redemption->date() : stepDate;
                 Date defaultDate = startDate + (endDate - startDate) / 2;
-                Probability P = defaultCurve_->defaultProbability(startDate, endDate);
+                Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
-                npvValue += redemption->amount() * recoveryRate_->value() * P * discountCurve_->discount(defaultDate);
+                npvValue += redemption->amount() * recoveryVal * P * discountCurve_->discount(defaultDate);
                 startDate = stepDate;
             }
         }
