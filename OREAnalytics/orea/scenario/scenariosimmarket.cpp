@@ -180,6 +180,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     if (!parameters->simulateDividendYield()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
     }
+    if (!parameters->securitySpreadsSimulate()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SecuritySpread);
+    }
+    if (!parameters->simulateFxSpots()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::FXSpot);
+    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
@@ -191,8 +197,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(initMarket->fxSpot(ccyPair, configuration)->value()));
         Handle<Quote> qh(q);
         fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::FXSpot, ccyPair),
-                         std::forward_as_tuple(q));
+        // Check if the risk factor is simulated before adding it
+        RiskFactorKey::KeyType rf = RiskFactorKey::KeyType::FXSpot;
+        if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
+            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, ccyPair),
+                std::forward_as_tuple(q));
+        }
     }
     LOG("FX triangulation done");
 

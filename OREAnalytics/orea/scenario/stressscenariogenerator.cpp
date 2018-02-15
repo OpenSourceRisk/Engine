@@ -40,7 +40,8 @@ void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<Scenario
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
         boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(asof, data.label);
 
-        addFxShifts(data, scenario);
+        if (simMarketData_->simulateFxSpots())
+            addFxShifts(data, scenario);
         addEquityShifts(data, scenario);
         addDiscountCurveShifts(data, scenario);
         addIndexCurveShifts(data, scenario);
