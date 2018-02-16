@@ -110,7 +110,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
         .addColumn("fixingDate", Date())
-        .addColumn("fixingValue", double(), 10);
+        .addColumn("fixingValue", double(), 10)
+        .addColumn("Notional", double(), 4);
 
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
@@ -138,13 +139,16 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                         Real coupon;
                         Real accrual;
+                        Real notional;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
+                            notional = ptrCoupon->nominal();
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
+                            notional = Null<Real>();
                             flowType = "Notional";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
@@ -189,7 +193,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(coupon)
                             .add(accrual)
                             .add(fixingDate)
-                            .add(fixingValue);
+                            .add(fixingValue)
+                            .add(notional);
                     }
                 }
             }
