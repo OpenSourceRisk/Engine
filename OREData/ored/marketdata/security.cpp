@@ -23,6 +23,7 @@
 
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/marketdata/security.hpp>
+#include <ored/utilities/log.hpp>
 
 namespace ore {
 namespace data {
@@ -52,8 +53,12 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
         if (!spread_.empty() && !recoveryRate_.empty())
             return;
     }
+    if (recoveryRate_.empty())
+        WLOG("No security-specific recovery rate found for " << spec);
+    if (spread_.empty())
+        QL_FAIL("Failed to find a spread quote for " << spec);
 
-    QL_FAIL("Failed to find a quote for " << spec);
+    return;
 }
 } // namespace data
 } // namespace ore
