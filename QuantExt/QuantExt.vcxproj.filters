@@ -516,6 +516,18 @@
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\pricecurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\pricetermstructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\commodityforward.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -864,6 +876,15 @@
     </ClCompile>
     <ClCompile Include="qle\models\dkimpliedyoyinflationtermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\commodityforward.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\pricetermstructure.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

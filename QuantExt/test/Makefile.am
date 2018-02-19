@@ -27,6 +27,9 @@ QLE_TESTS = \
 	fxvolsmile.hpp fxvolsmile.cpp \
 	payment.hpp payment.cpp \
 	deltagammavar.hpp deltagammavar.cpp \
+	pricecurve.hpp pricecurve.cpp \
+	commodityforward.hpp commodityforward.cpp \
+	discountingcommodityforwardengine.hpp discountingcommodityforwardengine.cpp \
 	utilities.hpp
 
 dist-hook:

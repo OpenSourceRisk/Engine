@@ -639,6 +639,7 @@
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
+    <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
@@ -646,6 +647,7 @@
     <ClCompile Include="deltagammavar.cpp" />
     <ClCompile Include="deposit.cpp" />
     <ClCompile Include="discountcurve.cpp" />
+    <ClCompile Include="discountingcommodityforwardengine.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
@@ -653,6 +655,7 @@
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
+    <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
@@ -666,6 +669,7 @@
     <ClInclude Include="blackvariancecurve.hpp" />
     <ClInclude Include="capfloormarketdata.hpp" />
     <ClInclude Include="cashflow.hpp" />
+    <ClInclude Include="commodityforward.hpp" />
     <ClInclude Include="crossassetmodel.hpp" />
     <ClInclude Include="crossassetmodel2.hpp" />
     <ClInclude Include="crossassetmodelparametrizations.hpp" />
@@ -673,6 +677,7 @@
     <ClInclude Include="deltagammavar.hpp" />
     <ClInclude Include="deposit.hpp" />
     <ClInclude Include="discountcurve.hpp" />
+    <ClInclude Include="discountingcommodityforwardengine.hpp" />
     <ClInclude Include="dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="fxvolsmile.hpp" />
@@ -680,6 +685,7 @@
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="payment.hpp" />
+    <ClInclude Include="pricecurve.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
