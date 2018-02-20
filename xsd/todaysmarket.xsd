@@ -22,6 +22,7 @@
         <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="baseCorrelationsType" name="BaseCorrelations" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="commodityCurvesType" name="CommodityCurves" maxOccurs="unbounded" minOccurs="0"/>
      </xs:sequence>
     </xs:complexType>
 
@@ -43,6 +44,7 @@
       <xs:element type="xs:string" name="EquityCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SecuritiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CommodityCurvesId" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
   </xs:complexType>
@@ -289,6 +291,21 @@
 <xs:complexType name="baseCorrelationsType">
     <xs:sequence>
       <xs:element name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+  
+  <xs:complexType name="commodityCurvesType">
+    <xs:sequence>
+      <xs:element name="CommodityCurve" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">

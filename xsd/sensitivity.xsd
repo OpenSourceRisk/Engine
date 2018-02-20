@@ -20,6 +20,7 @@
       <xs:element type="yyinflationindexcurves" name="YYInflationIndexCurves" minOccurs="0"/>
       <xs:element type="dividendyields" name="DividendYieldCurves" minOccurs="0"/>
       <xs:element type="basecorrelations" name="BaseCorrelations"  minOccurs="0"/>
+      <xs:element type="commodityCurves" name="CommodityCurves"  minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -133,6 +134,12 @@
   <xs:complexType name="dividendyields">
     <xs:sequence>
       <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="commodityCurves">
+    <xs:sequence>
+      <xs:element type="commodityCurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -373,6 +380,20 @@
     <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
 
+  <xs:complexType name="commodityCurve">
+    <xs:sequence>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="shifttype" name="ShiftType"/>
+        <xs:choice>
+         <xs:element type="xs:float" name="ShiftSize"/>
+         <xs:element type="xs:string" name="Shifts"/>
+        </xs:choice>
+      <xs:element type="xs:string" name="ShiftTenors"/>
+      <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="name" use="required"/>
+  </xs:complexType>
+  
   <xs:simpleType name="shifttype">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Absolute"/>
