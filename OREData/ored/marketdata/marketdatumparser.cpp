@@ -63,7 +63,9 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
-        {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION}};
+        {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
+        {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
+        {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -412,6 +414,21 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& indexName = tokens[2];
         const string& expiry = tokens[3];
         return boost::make_shared<IndexCDSOptionQuote>(value, asof, datumName, indexName, expiry);
+    }
+
+    case MarketDatum::InstrumentType::COMMODITY_SPOT: {
+        QL_REQUIRE(tokens.size() == 4, "4 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
+
+        return boost::make_shared<CommoditySpotQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3]);
+    }
+
+    case MarketDatum::InstrumentType::COMMODITY_FWD: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::PRICE, "Invalid quote type for " << datumName);
+
+        Date expiryDate = getDateFromDateOrPeriod(tokens[4], asof);
+        return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3], expiryDate);
     }
 
     default:

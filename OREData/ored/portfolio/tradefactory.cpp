@@ -27,6 +27,7 @@
 #include <ored/portfolio/fxswap.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
 using namespace std;
@@ -46,6 +47,7 @@ TradeFactory::TradeFactory() {
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
+    addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
 }
 
 void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>& b) {

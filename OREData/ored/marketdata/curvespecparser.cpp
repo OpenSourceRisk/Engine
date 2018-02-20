@@ -45,7 +45,8 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"InflationCapFloorPrice", CurveSpec::CurveType::InflationCapFloorPrice},
         {"Equity", CurveSpec::CurveType::Equity},
         {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
-        {"Security", CurveSpec::CurveType::Security}};
+        {"Security", CurveSpec::CurveType::Security},
+        {"Commodity", CurveSpec::CurveType::Commodity}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -194,6 +195,12 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
                                            << s);
         const string& securityID = tokens[1];
         return boost::make_shared<SecuritySpec>(securityID);
+    }
+
+    case CurveSpec::CurveType::Commodity: {
+        // Commodity/CCY/CommodityCurveConfigId
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in default curve spec " << s);
+        return boost::make_shared<CommodityCurveSpec>(tokens[1], tokens[2]);
     }
 
         // TODO: the rest...

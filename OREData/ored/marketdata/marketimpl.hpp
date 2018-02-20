@@ -137,6 +137,9 @@ public:
     Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
                                                       const string& configuration = Market::defaultConfiguration) const;
 
+    //! Commodity curves
+    QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying
@@ -170,6 +173,7 @@ protected:
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     Conventions conventions_;
 
     //! add a swap index to the market

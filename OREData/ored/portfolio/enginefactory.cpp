@@ -97,6 +97,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
+
 }
 
 } // namespace data

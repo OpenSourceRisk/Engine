@@ -53,7 +53,8 @@ public:
         Equity,
         EquityVolatility,
         Security,
-        BaseCorrelation
+        BaseCorrelation,
+        Commodity
     };
     //! Default destructor
     virtual ~CurveSpec() {}
@@ -94,6 +95,8 @@ public:
             return "EquityVolatility";
         case CurveType::BaseCorrelation:
             return "BaseCorrelation";
+        case CurveType::Commodity:
+            return "Commodity";
         default:
             return "N/A";
         }
@@ -422,5 +425,35 @@ public:
 protected:
     string securityID_;
 };
+
+//! Commodity curve description
+/*! \ingroup curves
+*/
+class CommodityCurveSpec : public CurveSpec {
+
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CommodityCurveSpec() {}
+
+    //! Detailed constructor
+    CommodityCurveSpec(const std::string& currency, const std::string& curveConfigId)
+        : currency_(currency), curveConfigId_(curveConfigId) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::Commodity; }
+    const std::string& currency() const { return currency_; }
+    const std::string& curveConfigId() const { return curveConfigId_; }
+    std::string subName() const { return currency_ + "/" + curveConfigId_; }
+    //@}
+
+private:
+    std::string currency_;
+    std::string curveConfigId_;
+};
+
 } // namespace data
 } // namespace ore

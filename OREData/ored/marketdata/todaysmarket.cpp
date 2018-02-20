@@ -24,6 +24,7 @@
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
@@ -44,6 +45,8 @@
 
 using namespace std;
 using namespace QuantLib;
+
+using QuantExt::PriceTermStructure;
 
 namespace ore {
 namespace data {
@@ -74,6 +77,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
     map<string, boost::shared_ptr<Security>> requiredSecurities;
+    map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves;
+
     for (const auto& configuration : params.configurations()) {
 
         LOG("Build objects in TodaysMarket configuration " << configuration.first);
@@ -549,6 +554,31 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     }
                 }
 
+                break;
+            }
+
+            case CurveSpec::CurveType::Commodity: {
+                boost::shared_ptr<CommodityCurveSpec> commodityCurveSpec = boost::dynamic_pointer_cast<CommodityCurveSpec>(spec);
+                QL_REQUIRE(commodityCurveSpec, "Failed to convert spec, " << *spec << ", to CommodityCurveSpec");
+
+                // Have we built the curve already?
+                auto itr = requiredCommodityCurves.find(commodityCurveSpec->name());
+                if (itr == requiredCommodityCurves.end()) {
+                    // build the curve
+                    LOG("Building CommodityCurve for asof " << asof);
+                    boost::shared_ptr<CommodityCurve> commodityCurve = boost::make_shared<CommodityCurve>(
+                        asof, *commodityCurveSpec, loader, curveConfigs, conventions);
+                    itr = requiredCommodityCurves.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
+                }
+
+                for (const auto it : params.mapping(MarketObject::CommodityCurve, configuration.first)) {
+                    if (it.second == commodityCurveSpec->name()) {
+                        LOG("Adding CommodityCurve, " << it.first << ", with spec " << 
+                            *commodityCurveSpec << " to configuration " << configuration.first);
+                        commodityCurves_[make_pair(configuration.first, it.first)] = 
+                            Handle<PriceTermStructure>(itr->second->commodityPriceCurve());
+                    }
+                }
                 break;
             }
 

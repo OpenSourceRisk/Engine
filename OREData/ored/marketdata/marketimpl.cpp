@@ -24,11 +24,14 @@
 #include <ored/utilities/parsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
-using namespace QuantLib;
 using namespace std;
 using std::string;
 using std::map;
 using std::make_pair;
+
+using namespace QuantLib;
+
+using QuantExt::PriceTermStructure;
 
 namespace ore {
 namespace data {
@@ -189,6 +192,10 @@ Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key,
     return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
 }
 
+Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName, const string& configuration) const {
+    return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
@@ -289,6 +296,10 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second);
         }
         for (auto& x : baseCpis_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : commodityCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

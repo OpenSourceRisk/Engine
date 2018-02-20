@@ -91,7 +91,9 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
-        INDEX_CDS_OPTION
+        INDEX_CDS_OPTION,
+        COMMODITY_SPOT,
+        COMMODITY_FWD
     };
 
     //! Supported market quote types
@@ -1034,5 +1036,58 @@ private:
     string indexName_;
     string expiry_;
 };
+
+//! Commodity spot quote class
+/*! This class holds a spot price for a commodity in a given currency
+    \ingroup marketdata
+*/
+class CommoditySpotQuote : public MarketDatum {
+public:
+    //! Constructor
+    CommoditySpotQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_SPOT), 
+          commodityName_(commodityName), quoteCurrency_(quoteCurrency) {
+        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity spot quote must be of type 'PRICE'");
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+};
+
+//! Commodity forward quote class
+/*! This class holds a forward price for a commodity in a given currency
+    \ingroup marketdata
+*/
+class CommodityForwardQuote : public MarketDatum {
+public:
+    //! Constructor
+    CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name, QuoteType quoteType,
+        const std::string& commodityName, const std::string& quoteCurrency, const QuantLib::Date& expiryDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), 
+          commodityName_(commodityName), quoteCurrency_(quoteCurrency), expiryDate_(expiryDate) {
+        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+    QuantLib::Date expiryDate_;
+};
+
 } // namespace data
 } // namespace ore

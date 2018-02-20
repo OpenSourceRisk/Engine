@@ -36,6 +36,8 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
+#include <qle/termstructures/pricetermstructure.hpp>
+
 using namespace QuantLib;
 using std::string;
 
@@ -165,6 +167,12 @@ public:
     //@{
     virtual Handle<Quote> securitySpread(const string& securityID,
                                          const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Commodity price curves
+    //@{
+    virtual QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(
+        const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
 } // namespace data
