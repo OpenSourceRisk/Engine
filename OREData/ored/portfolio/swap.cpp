@@ -62,6 +62,59 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<EngineBuilder> builder =
         isXCCY ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
 
+    bool isQuanto = false;
+
+    std::vector<string> indexCurrencies(numLegs);
+    for (Size i = 0; i < numLegs; ++i) {
+        if (legData_[i].legType() == "Floating") {
+            boost::shared_ptr<FloatingLegData> floatData =
+                boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
+            string iborIndexName = floatData->index();
+            Handle<IborIndex> hIndex =
+                engineFactory->market()->iborIndex(iborIndexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << iborIndexName << " in market.");
+            indexCurrencies[i] = hIndex->currency().code();
+            if (legData_[i].currency() != indexCurrencies[i])
+                isQuanto = true;
+        } else if (legData_[i].legType() == "CMS") {
+            boost::shared_ptr<CMSLegData> cmsData =
+                boost::dynamic_pointer_cast<CMSLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cmsData, "Wrong LegType, expected Floating");
+            string swapIndexName = cmsData->swapIndex();
+            Handle<SwapIndex> hIndex =
+                engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << swapIndexName << " in market.");
+            indexCurrencies[i] = hIndex->currency().code();
+            if (legData_[i].currency() != indexCurrencies[i])
+                isQuanto = true;
+        } else if (legData_[i].legType() == "CPI") {
+            boost::shared_ptr<CPILegData> cpiData =
+                boost::dynamic_pointer_cast<CPILegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
+            string inflationIndexName = cpiData->index();
+            Handle<ZeroInflationIndex> hIndex = engineFactory->market()->zeroInflationIndex(inflationIndexName);
+            QL_REQUIRE(!hIndex.empty(), "zero inflation index not found for index " << inflationIndexName);
+            indexCurrencies[i] = hIndex->currency().code();
+            if (legData_[i].currency() != indexCurrencies[i])
+                isQuanto = true;
+        } else if (legData_[i].legType() == "YY") {
+            boost::shared_ptr<YoYLegData> yyData =
+                boost::dynamic_pointer_cast<YoYLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(yyData, "Wrong LegType, expected Floating");
+            string inflationIndexName = yyData->index();
+            Handle<YoYInflationIndex> hIndex = engineFactory->market()->yoyInflationIndex(inflationIndexName);
+            QL_REQUIRE(!hIndex.empty(), "YoY inflation index not found for index " << inflationIndexName);
+            indexCurrencies[i] = hIndex->currency().code();
+            if (legData_[i].currency() != indexCurrencies[i])
+                isQuanto = true;
+        }
+    }
+    if (isQuanto) {
+        DLOG("Trade " << id() << " is quanto.");
+        engineFactory->builder("QuantoSwap");
+    }
+
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
 
