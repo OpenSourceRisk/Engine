@@ -60,6 +60,8 @@ public:
     virtual void readSetup();
     //! set up logging
     void setupLog();
+    //! remove logs
+    void closeLog();
     //! load market conventions
     void getConventions();
     //! load market parameters

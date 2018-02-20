@@ -54,6 +54,10 @@ public:
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+    //! alternative constructor (does not require default curve or recovery rate)
+    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
+        const Handle<Quote>& securitySpread, Period timestepPeriod, 
+        boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
     Real calculateNpv(Date npvDate) const;

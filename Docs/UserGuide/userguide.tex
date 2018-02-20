@@ -1914,13 +1914,13 @@ a typical output for a vanilla swap.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
-  \begin{tabular}{l|l|l|l|r|l|r|r|l|r}
+  \begin{tabular}{l|l|l|l|r|l|r|r|l|r|r}
 \hline
-\#ID & Type & LegNo & PayDate & Amount & Currency & Coupon & Accrual & fixingDate & fixingValue \\
+\#ID & Type & LegNo & PayDate & Amount & Currency & Coupon & Accrual & fixingDate & fixingValue & Notional \\
 \hline
 \hline
-tr123 & Swap & 0 & 13/03/17 & -76212.5 & EUR & -0.00201 & 0.50556 & 08/09/16 & -0.00201 \\
-tr123 & Swap & 0 & 12/09/17 & -90683.9212 & EUR & -0.002379 & 0.50833 & 09/03/17 & -0.002381 \\
+tr123 & Swap & 0 & 13/03/17 & -111273.76 & EUR & -0.00201 & 0.50556 & 08/09/16 & -0.00201 & 100000000.00 \\
+tr123 & Swap & 0 & 12/09/17 & -120931.71 & EUR & -0.002379 & 0.50833 & 09/03/17 & -0.002381 & 100000000.00 \\
 \ldots
 \end{tabular}
 \caption{Cashflow Report}
@@ -1937,6 +1937,9 @@ compiled {\em without} the flag \verb+QL_USE_INDEXED_COUPON+ (which is the defau
 uses a par approximation for the forward rate assuming the index estimation period to be identical to the accrual
 period, while the fixing value is the actual forward rate for the index estimation period, i.e. whenever the index estimation
 period differs from the accrual period the values will be slightly different.
+
+The Notional column contains the underlying notional used to compute the amount of each coupon. It contains \verb+#NA+
+if a payment is not a coupon payment.
 
 The curves analytic exports all yield curves that have been built according to the specification in {\tt
   todaysmarket.xml}. Key {\tt configuration} selects the curve set to be used (see explanation in the previous Markets
