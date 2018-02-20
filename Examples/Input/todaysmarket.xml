@@ -189,4 +189,8 @@
    <Securities id="default">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
+  <CommodityCurves id="default">
+    <CommodityCurve name="COMDTY_GOLD_USD">Commodity/USD/GOLD_USD</CommodityCurve>
+    <CommodityCurve name="COMDTY_WTI_USD">Commodity/USD/WTI_USD</CommodityCurve>
+  </CommodityCurves>
 </TodaysMarket>
