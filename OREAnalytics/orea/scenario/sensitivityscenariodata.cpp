@@ -271,7 +271,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     }
 }
 
-XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
+XMLNode* SensitivityScenarioData::toXML(ore::data::XMLDocument& doc) {
     XMLNode* node = doc.allocNode("SensitivityAnalysis");
     // TODO
     return node;

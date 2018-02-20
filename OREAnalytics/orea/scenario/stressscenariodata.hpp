@@ -105,7 +105,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
     //@}
 
     //! \name Equality Operators
