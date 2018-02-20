@@ -39,6 +39,9 @@ using namespace ore::data;
 
 namespace {
 
+// testTolerance for Real comparison
+Real testTolerance = 1e-10;
+
 class TestMarket : public MarketImpl {
 public:
     TestMarket() {
@@ -62,9 +65,6 @@ public:
 }
 
 namespace testsuite {
-
-// tolerance for Real comparison
-Real tolerance = 1e-10;
 
 void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     
@@ -105,12 +105,12 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Long);
     BOOST_CHECK_EQUAL(commodityForward->name(), "GOLD_USD");
     BOOST_CHECK_EQUAL(commodityForward->currency(), USDCurrency());
-    BOOST_CHECK_CLOSE(commodityForward->quantity(), 100.0, tolerance);
+    BOOST_CHECK_CLOSE(commodityForward->quantity(), 100.0, testTolerance);
     BOOST_CHECK_EQUAL(commodityForward->maturityDate(), Date(19, Feb, 2019));
-    BOOST_CHECK_CLOSE(commodityForward->strike(), 1340.0, tolerance);
+    BOOST_CHECK_CLOSE(commodityForward->strike(), 1340.0, testTolerance);
 
     // Check the price (simple because DF = 1.0, 100 * (1348 - 1340))
-    BOOST_CHECK_CLOSE(commodityForward->NPV(), 800.0, tolerance);
+    BOOST_CHECK_CLOSE(commodityForward->NPV(), 800.0, testTolerance);
 
     // Check short
     forward = boost::make_shared<ore::data::CommodityForward>(
@@ -120,7 +120,7 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     commodityForward = boost::dynamic_pointer_cast<QuantExt::CommodityForward>(qlInstrument);
     BOOST_CHECK(commodityForward);
     BOOST_CHECK_EQUAL(commodityForward->position(), Position::Type::Short);
-    BOOST_CHECK_CLOSE(commodityForward->NPV(), -800.0, tolerance);
+    BOOST_CHECK_CLOSE(commodityForward->NPV(), -800.0, testTolerance);
 
     // Check that negative quantity throws an error
     forward = boost::make_shared<ore::data::CommodityForward>(
@@ -180,8 +180,8 @@ void CommodityForwardTest::testCommodityForwardFromXml() {
     BOOST_CHECK_EQUAL(commodityForward->maturityDate(), "2021-10-31");
     BOOST_CHECK_EQUAL(commodityForward->commodityName(), "COMDTY_WTI_USD");
     BOOST_CHECK_EQUAL(commodityForward->currency(), "USD");
-    BOOST_CHECK_CLOSE(commodityForward->strike(), 49.75, tolerance);
-    BOOST_CHECK_CLOSE(commodityForward->quantity(), 500000.0, tolerance);
+    BOOST_CHECK_CLOSE(commodityForward->strike(), 49.75, testTolerance);
+    BOOST_CHECK_CLOSE(commodityForward->quantity(), 500000.0, testTolerance);
 }
 
 test_suite* CommodityForwardTest::suite() {
