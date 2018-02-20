@@ -16,3 +16,5 @@
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
+

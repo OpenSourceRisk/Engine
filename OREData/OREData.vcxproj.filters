@@ -381,6 +381,18 @@
     <ClInclude Include="ored\model\irlgmdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\commoditycurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\commoditycurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\commodityforward.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\commodityforward.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -658,6 +670,15 @@
     </ClCompile>
     <ClCompile Include="ored\model\irlgmdata.cpp">
       <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\commoditycurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\commoditycurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\commodityforward.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

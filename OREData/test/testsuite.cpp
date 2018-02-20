@@ -56,6 +56,9 @@ using boost::unit_test::test_suite;
 #include "ccyswapwithresets.hpp"
 #include "cds.hpp"
 #include "cms.hpp"
+#include "commoditycurve.hpp"
+#include "commoditycurveconfig.hpp"
+#include "commodityforward.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
 #include "curveconfig.hpp"
@@ -129,6 +132,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::PortfolioTest::suite());
     test->add(testsuite::CurveConfigTest::suite());
     test->add(testsuite::CreditDefaultSwapTest::suite());
+    test->add(testsuite::CommodityForwardTest::suite());
+    test->add(testsuite::CommodityCurveConfigTest::suite());
+    test->add(testsuite::CommodityCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
