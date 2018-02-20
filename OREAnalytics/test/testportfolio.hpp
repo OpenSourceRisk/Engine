@@ -84,4 +84,7 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
                                               Real spread, string floatFreq, string floatDC, string index,
                                               string yyFreq, string yyDC, string yyIndex, string observationLag,
                                               bool interpolated, Size fixDays);
+
+boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term, 
+    const std::string& commodityName, const std::string& currency, Real strike, Real quantity);
 } // namespace testsuite

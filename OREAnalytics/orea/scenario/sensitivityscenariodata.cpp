@@ -260,6 +260,20 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
+    LOG("Get commodity curve sensitivity parameters");
+    XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
+    if (ccNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(ccNode, "CommodityCurve"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string name = XMLUtils::getAttribute(child, "name");
+            commodityCurrencies_[name] = XMLUtils::getChildValue(child, "Currency", true);
+            CurveShiftData data;
+            curveShiftDataFromXML(child, data);
+            commodityCurveShiftData_[name] = boost::make_shared<CurveShiftData>(data);
+            commodityNames_.push_back(name);
+        }
+    }
+
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
     for (Size i = 0; i < filter.size(); ++i) {
@@ -274,6 +288,17 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("SensitivityAnalysis");
     // TODO
+    
+    // Commodity curve parameters (add later)
+    //LOG("Write commodity curve sensitivity parameters");
+    //XMLNode* ccsNode = XMLUtils::addChild(doc, node, "CommodityCurves");
+    //for (const string& name : commodityNames_) {
+    //    XMLNode* ccNode = XMLUtils::addChild(doc, ccsNode, "CommodityCurve");
+    //    XMLUtils::addAttribute(doc, ccNode, "name", name);
+    //    XMLUtils::addChild(doc, ccNode, "Currency", commodityCurrencies_[name]);
+    //    // Need shift data to XML here
+    //}
+
     return node;
 }
 

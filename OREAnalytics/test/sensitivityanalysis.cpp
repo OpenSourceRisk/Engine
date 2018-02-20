@@ -23,12 +23,14 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -119,6 +121,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("EquityForward") = "DiscountingEquityForwardEngine";
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
+    data->model("CommodityForward") = "DiscountedCashflows";
+    data->engine("CommodityForward") = "DiscountingCommodityForwardEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
@@ -128,6 +132,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -160,6 +165,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          0.005));
     portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
+    portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+    portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -621,7 +628,23 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/2/3Y", 7005.96, 16.3788},
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/3/5Y", 7005.96, 20.4522},
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/4/7Y", 7005.96, 23.3381},
-        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/5/10Y", 7005.96, 17.2056}};
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/5/10Y", 7005.96, 17.2056},
+        {"17_CommodityForward_GOLD", "Up:DiscountCurve/USD/1/1Y", -735.964496751649, 0.073448445224},
+        {"17_CommodityForward_GOLD", "Down:DiscountCurve/USD/1/1Y", -735.964496751649, -0.073455776029},
+        {"17_CommodityForward_GOLD", "Up:FXSpot/EURUSD/0/spot", -735.964496751649, 7.286777195561},
+        {"17_CommodityForward_GOLD", "Down:FXSpot/EURUSD/0/spot", -735.964496751649, -7.433984815673},
+        {"17_CommodityForward_GOLD", "Up:CommodityCurve/COMDTY_GOLD_USD/1/1Y", -735.964496751649, 938.880422284606},
+        {"17_CommodityForward_GOLD", "Down:CommodityCurve/COMDTY_GOLD_USD/1/1Y", -735.964496751649, -938.880422284606},
+        {"18_CommodityForward_OIL", "Up:DiscountCurve/USD/3/3Y", -118575.997564574063, 23.666326609469},
+        {"18_CommodityForward_OIL", "Up:DiscountCurve/USD/4/5Y", -118575.997564574063, 23.759329674402},
+        {"18_CommodityForward_OIL", "Down:DiscountCurve/USD/3/3Y", -118575.997564574063, -23.671051063342},
+        {"18_CommodityForward_OIL", "Down:DiscountCurve/USD/4/5Y", -118575.997564574063, -23.764091336881},
+        {"18_CommodityForward_OIL", "Up:FXSpot/EURUSD/0/spot", -118575.997564574063, 1174.019777867070},
+        {"18_CommodityForward_OIL", "Down:FXSpot/EURUSD/0/spot", -118575.997564574063, -1197.737349137125},
+        {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063, -10938.550513848924},
+        {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063, -24245.826202620548},
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063, 10938.550513849448},
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063, 24245.826202621072}};
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {

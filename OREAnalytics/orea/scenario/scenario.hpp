@@ -64,7 +64,8 @@ public:
         BaseCorrelation,
         CPIIndex,
         ZeroInflationCurve,
-        YoYInflationCurve
+        YoYInflationCurve,
+        CommodityCurve
     };
 
     //! Constructor

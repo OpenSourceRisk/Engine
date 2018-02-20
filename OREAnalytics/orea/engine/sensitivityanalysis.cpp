@@ -548,6 +548,17 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftMult = yoyRate;
         }
     } break;
+    case RiskFactorKey::KeyType::CommodityCurve: {
+        auto it = sensitivityData_->commodityCurveShiftData().find(keylabel);
+        QL_REQUIRE(it != sensitivityData_->commodityCurveShiftData().end(), "shiftData not found for " << keylabel);
+        shiftSize = it->second->shiftSize;
+        if (parseShiftType(it->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            Period p = it->second->shiftTenors[key.index];
+            Handle<PriceTermStructure> priceCurve = simMarket_->commodityPriceCurve(keylabel, marketConfiguration_);
+            Time t = priceCurve->dayCounter().yearFraction(asof_, asof_ + p);
+            shiftMult = priceCurve->price(t);
+        }
+    } break;
     default:
         // KeyType::CPIIndex does not get shifted
         QL_FAIL("KeyType not supported yet - " << keytype);

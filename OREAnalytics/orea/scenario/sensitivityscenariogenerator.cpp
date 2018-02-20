@@ -125,6 +125,11 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateBaseCorrelationScenarios(sensiScenarioFactory, false);
     }
 
+    if (simMarketData_->commodityCurveSimulate()) {
+        generateCommodityCurveScenarios(sensiScenarioFactory, true);
+        generateCommodityCurveScenarios(sensiScenarioFactory, false);
+    }
+
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
     // store base scenario values
@@ -1455,6 +1460,88 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
     LOG("Base correlation scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateCommodityCurveScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    
+    Date asof = baseScenario_->asof();
+
+    // Commodity curves that will be shifted. If a list of names are provided in the 
+    // sensitivity data parameters, use them. If not, use all commodity names in the 
+    // simulation market
+    vector<string> names;
+    if (sensitivityData_->equityNames().empty()) {
+        names = simMarketData_->commodityNames();
+    } else {
+        names = sensitivityData_->commodityNames();
+        // Log an ALERT if some commodity curves in simulation market are not in the list
+        for (const string& name : simMarketData_->commodityNames()) {
+            if (find(names.begin(), names.end(), name) == names.end()) {
+                ALOG("Commodity " << name << " in simulation market is not "
+                    "included in commodity sensitivity analysis");
+            }
+        }
+    }
+    
+
+    for (Size i = 0; i < names.size(); ++i) {
+        // Tenors for this name in simulation market
+        vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(names[i]);
+        DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(names[i]));
+        vector<Real> times(simMarketTenors.size());
+        vector<Real> basePrices(times.size());
+        vector<Real> shiftedPrices(times.size());
+
+        // Get the base prices for this name from the base scenario
+        for (Size j = 0; j < times.size(); ++j) {
+            times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, names[i], j);
+            basePrices[j] = baseScenario_->get(key);
+        }
+
+        // Get the sensitivity data for this name
+        auto it = sensitivityData_->commodityCurveShiftData().find(names[i]);
+        QL_REQUIRE(it != sensitivityData_->commodityCurveShiftData().end(),
+            "Commodity curve CurveShiftData not found for " << names[i]);
+        SensitivityScenarioData::CurveShiftData data = *it->second;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+
+        // Get the times at which we want to apply the shifts
+        vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasCommodityCurveTenors(names[i])
+            ? simMarketTenors : data.shiftTenors;
+
+        QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+            << shiftTenors.size() << ") and shift tenors (" << data.shiftTenors.size() << ")");
+
+        vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+            shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + shiftTenors[j]);
+        }
+        
+        // Generate the scenarios for each shift
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
+            scenarioDescriptions_.push_back(commodityCurveScenarioDescription(names[i], j, up));
+
+            // Apply shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
+
+            // store shifted commodity price curve in the scenario
+            for (Size k = 0; k < times.size(); ++k) {
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityCurve, names[i], k), shiftedPrices[k]);
+            }
+
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+
+        }
+    }
+    LOG("Commodity curve scenarios done");
+}
+
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
                                                                                                       bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
@@ -1721,6 +1808,22 @@ SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexNam
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
     return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& commodityName, Size bucket, bool up) {
+
+    QL_REQUIRE(sensitivityData_->commodityCurveShiftData().count(commodityName) > 0,
+        "Name " << commodityName << " not found in commodity curve shift data");
+    vector<Period>& shiftTenors = sensitivityData_->commodityCurveShiftData()[commodityName]->shiftTenors;
+    QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
+    
+    RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);
+    ostringstream oss;
+    oss << shiftTenors[bucket];
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+
+    return ScenarioDescription(type, key, oss.str());
 }
 
 } // namespace analytics

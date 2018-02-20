@@ -146,6 +146,10 @@ public:
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
 
+    const std::vector<std::string>& commodityNames() const { return commodityNames_; }
+    const std::map<std::string, std::string>& commodityCurrencies() const { return commodityCurrencies_; }
+    const std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const { return commodityCurveShiftData_; }
+
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
     //@}
@@ -204,6 +208,10 @@ public:
 
     vector<string>& equityVolNames() { return equityVolNames_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
+
+    std::vector<std::string>& commodityNames() { return commodityNames_; }
+    std::map<std::string, std::string>& commodityCurrencies() { return commodityCurrencies_; }
+    std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -279,6 +287,10 @@ protected:
 
     vector<string> baseCorrelationNames_;
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
+
+    std::vector<std::string> commodityNames_;
+    std::map<std::string, std::string> commodityCurrencies_;
+    std::map<std::string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
 };

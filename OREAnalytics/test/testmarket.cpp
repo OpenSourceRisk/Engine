@@ -24,7 +24,13 @@
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+
 #include <test/testmarket.hpp>
+
+using QuantExt::InterpolatedPriceCurve;
+using QuantExt::PriceTermStructure;
+
 namespace testsuite {
 
 TestMarket::TestMarket(Date asof) {
@@ -259,6 +265,22 @@ TestMarket::TestMarket(Date asof) {
     inflationCapFloorPriceSurfaces_[make_pair(Market::defaultConfiguration, "UKRPI")] = flatRateCps(
         zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")], vector<Real>{0.0, 0.01, 0.02},
         vector<Real>{-1.0, -0.99}, vector<Period>{5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
+
+    // Commodity price curves
+    Actual365Fixed ccDayCounter;
+    vector<Time> times = { 0.0, 1.0, 2.0, 5.0 };
+
+    // Gold curve
+    vector<Real> prices = { 1155.593, 1160.9, 1168.1, 1210 };
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
+
+    // WTI Oil curve
+    prices = { 30.89, 41.23, 44.44, 49.18 };
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<PriceTermStructure>(
+        boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
+    commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
@@ -471,6 +493,11 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
         "UKRPI", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->setYoyInflationDayCounters("", "ACT/ACT");
 
+    simMarketData->commodityCurveSimulate() = true;
+    simMarketData->commodityNames() = {"COMDTY_GOLD_USD", "COMDTY_WTI_USD"};
+    simMarketData->setCommodityCurveDayCounter("", "A365");
+    simMarketData->setCommodityCurveTenors("", { 0 * Days, 1 * Years, 2 * Years, 5 * Years });
+
     return simMarketData;
 }
 
@@ -667,6 +694,11 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     zinfData.shiftSize = 0.0001;
     zinfData.shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
 
+    auto commodityShiftData = boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>();
+    commodityShiftData->shiftType = "Relative";
+    commodityShiftData->shiftSize = 0.01;
+    commodityShiftData->shiftTenors = { 0 * Days, 1 * Years, 2 * Years, 5 * Years };
+
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
@@ -753,6 +785,12 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->yoyInflationIndices() = {"UKRPI"};
     sensiData->yoyInflationCurveShiftData()["UKRPI"] =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
+
+    sensiData->commodityNames() = {"COMDTY_GOLD_USD", "COMDTY_WTI_USD"};
+    sensiData->commodityCurveShiftData()["COMDTY_GOLD_USD"] = commodityShiftData;
+    sensiData->commodityCurrencies()["COMDTY_GOLD_USD"] = "USD";
+    sensiData->commodityCurveShiftData()["COMDTY_WTI_USD"] = commodityShiftData;
+    sensiData->commodityCurrencies()["COMDTY_WTI_USD"] = "USD";
 
     return sensiData;
 }

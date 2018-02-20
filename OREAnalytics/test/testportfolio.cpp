@@ -19,10 +19,12 @@
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/capfloor.hpp>
+#include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -375,6 +377,20 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
 
     // trade
     boost::shared_ptr<Trade> trade(new ore::data::Swap(env, floatingLeg, yyLeg));
+    trade->id() = id;
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
+    const std::string& commodityName, const std::string& currency, Real strike, Real quantity) {
+
+    Date today = Settings::instance().evaluationDate();
+    string maturity = ore::data::to_string(today + term * Years);
+
+    Envelope env("CP");
+    boost::shared_ptr<Trade> trade = boost::make_shared<ore::data::CommodityForward>(
+        env, position, commodityName, currency, quantity, maturity, strike);
     trade->id() = id;
 
     return trade;

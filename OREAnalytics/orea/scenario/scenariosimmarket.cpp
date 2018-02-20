@@ -47,6 +47,7 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
@@ -63,6 +64,7 @@
 
 using namespace QuantLib;
 using namespace QuantExt;
+using namespace ore::data;
 using namespace std;
 
 typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
@@ -179,6 +181,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     }
     if (!parameters->simulateDividendYield()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
+    }
+    if (!parameters->commodityCurveSimulate()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityCurve);
     }
 
     // Build fixing manager
@@ -975,6 +980,49 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             pair<pair<string, string>, Handle<YoYInflationIndex>>(make_pair(Market::defaultConfiguration, yic), zh));
     }
     LOG("yoy inflation curves done");
+    
+    // building commodity curves
+    LOG("building commodity curves");
+    for (const string& name : parameters->commodityNames()) {
+        
+        LOG("building commodity curve for " << name);
+        
+        // Time zero initial market commodity curve
+        Handle<PriceTermStructure> initialCommodityCurve = 
+            initMarket->commodityPriceCurve(name, configuration);
+        bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
+
+        // Get prices at specified simulation tenors from time 0 market curve and place in quotes
+        vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
+        DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
+        vector<Time> times(simulationTenors.size());
+        vector<Handle<Quote>> quotes(simulationTenors.size());
+
+        for (Size i = 0; i < simulationTenors.size(); i++) {
+            times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
+            Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
+            boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
+            quotes[i] = Handle<Quote>(quote);
+            
+            // If we are simulating commodities, add the quote to simData_
+            if (parameters->commodityCurveSimulate()) {
+                simData_.emplace(piecewise_construct,
+                    forward_as_tuple(RiskFactorKey::KeyType::CommodityCurve, name, i),
+                    forward_as_tuple(quote));
+            }
+        }
+
+        // Create a commodity price curve with simulation tenors as pillars and store
+        // Hard-coded linear interpolation here - may need to make this more dynamic
+        Handle<PriceTermStructure> simCommodityCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
+            times, quotes, commodityCurveDayCounter));
+        simCommodityCurve->enableExtrapolation(allowsExtrapolation);
+
+        commodityCurves_.emplace(piecewise_construct,
+            forward_as_tuple(Market::defaultConfiguration, name),
+            forward_as_tuple(simCommodityCurve));
+    }
+    LOG("commodity curves done");
 
     LOG("building base scenario");
     baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
