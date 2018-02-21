@@ -211,7 +211,8 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Value", value_);
     XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    XMLUtils::addChild(doc, node, "EndDate", startDate_);
+    if(endDate_ != "")
+        XMLUtils::addChild(doc, node, "EndDate", endDate_);
     if (frequency_ != "")
         XMLUtils::addChild(doc, node, "Frequency", frequency_);
     XMLUtils::addChild(doc, node, "Underflow", underflow_);
@@ -312,6 +313,7 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
+    XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
 
     if (!isNotResetXCCY_) {
         XMLNode* resetNode = doc.allocNode("FXReset");
@@ -319,21 +321,25 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, resetNode, "ForeignAmount", foreignAmount_);
         XMLUtils::addChild(doc, resetNode, "FXIndex", fxIndex_);
         XMLUtils::addChild(doc, resetNode, "FixingDays", fixingDays_);
-        XMLUtils::appendNode(node, resetNode);
+        XMLUtils::appendNode(notionalsNodePtr, resetNode);
     }
 
     XMLNode* exchangeNode = doc.allocNode("Exchanges");
     XMLUtils::addChild(doc, exchangeNode, "NotionalInitialExchange", notionalInitialExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalFinalExchange", notionalFinalExchange_);
     XMLUtils::addChild(doc, exchangeNode, "NotionalAmortizingExchange", notionalAmortizingExchange_);
-    XMLUtils::appendNode(node, exchangeNode);
+    XMLUtils::appendNode(notionalsNodePtr, exchangeNode);
 
     XMLUtils::appendNode(node, schedule_.toXML(doc));
 
-    for (auto& amort : amortizationData_) {
-        if (amort.initialized()) {
-            XMLUtils::appendNode(node, amort.toXML(doc));
+    if (!amortizationData_.empty()) {
+        XMLNode* amortisationsParentNode = doc.allocNode("Amortizations");
+        for (auto& amort : amortizationData_) {
+            if (amort.initialized()) {
+                XMLUtils::appendNode(amortisationsParentNode, amort.toXML(doc));
+            }
         }
+        XMLUtils::appendNode(node, amortisationsParentNode);
     }
 
     XMLUtils::appendNode(node, concreteLegData_->toXML(doc));

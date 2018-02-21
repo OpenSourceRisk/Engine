@@ -27,6 +27,7 @@
 #include <iostream>
 #include <orea/aggregation/all.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -59,6 +60,8 @@ public:
     virtual void readSetup();
     //! set up logging
     void setupLog();
+    //! remove logs
+    void closeLog();
     //! load market conventions
     void getConventions();
     //! load market parameters
@@ -124,6 +127,9 @@ public:
     virtual void writeAdditionalReports() {}
 
 protected:
+    //! Get report writer
+    virtual boost::shared_ptr<ReportWriter> getReportWriter();
+
     //! Initialize input parameters to the sensitivities analysis
     void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                               boost::shared_ptr<SensitivityScenarioData>& sensiData,

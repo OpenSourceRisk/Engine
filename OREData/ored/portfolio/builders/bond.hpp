@@ -69,8 +69,10 @@ protected:
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
-        Handle<DefaultProbabilityTermStructure> dpts =
-            market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
+        Handle<DefaultProbabilityTermStructure> dpts;
+        // credit curve may not always be used. If credit curve ID is empty proceed without it
+        if (!creditCurveId.empty())
+            dpts = market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> recovery;
         try {
             // try security recovery first
@@ -79,7 +81,8 @@ protected:
             // otherwise fall back on curve recovery
             ALOG("security specific recovery rate not found for security ID "
                  << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
-            recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+            if (!creditCurveId.empty())
+                recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
