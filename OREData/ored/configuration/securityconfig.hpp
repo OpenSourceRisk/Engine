@@ -29,7 +29,6 @@
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 
 namespace ore {
 namespace data {
