@@ -15,12 +15,12 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
+#include <qle/pricingengines/crossccyswapengine.hpp>
 #ifdef QL_USE_INDEXED_COUPON
 #include <ql/cashflows/floatingratecoupon.hpp>
 #endif
 
-#include <qle/pricingengines/crossccyswapengine.hpp>
+
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 
 #include <boost/make_shared.hpp>
