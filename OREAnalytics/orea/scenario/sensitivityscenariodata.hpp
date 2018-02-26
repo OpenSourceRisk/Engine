@@ -147,8 +147,12 @@ public:
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
 
     const std::vector<std::string>& commodityNames() const { return commodityNames_; }
+    const std::map<std::string, SpotShiftData>& commodityShiftData() const { return commodityShiftData_; }
     const std::map<std::string, std::string>& commodityCurrencies() const { return commodityCurrencies_; }
     const std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const { return commodityCurveShiftData_; }
+
+    const std::vector<std::string>& commodityVolNames() const { return commodityVolNames_; }
+    const std::map<std::string, VolShiftData>& commodityVolShiftData() const { return commodityVolShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
@@ -210,8 +214,12 @@ public:
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
 
     std::vector<std::string>& commodityNames() { return commodityNames_; }
+    std::map<std::string, SpotShiftData>& commodityShiftData() { return commodityShiftData_; }
     std::map<std::string, std::string>& commodityCurrencies() { return commodityCurrencies_; }
     std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+
+    std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
+    std::map<std::string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -289,8 +297,12 @@ protected:
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
 
     std::vector<std::string> commodityNames_;
+    std::map<std::string, SpotShiftData> commodityShiftData_;
     std::map<std::string, std::string> commodityCurrencies_;
     std::map<std::string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+
+    std::vector<std::string> commodityVolNames_;
+    std::map<std::string, VolShiftData> commodityVolShiftData_;
 
     vector<pair<string, string>> crossGammaFilter_;
 };

@@ -18,6 +18,7 @@
         <xs:element type="securities" name="Securities" minOccurs="0" />
         <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
         <xs:element type="simCommodityCurves" name="CommodityCurves" minOccurs="0" />
+        <xs:element type="commodityVolatilities" name="CommodityVolatilities" minOccurs="0" />
       </xs:sequence>
   </xs:complexType>
 
@@ -325,6 +326,38 @@
         </xs:simpleType>
       </xs:element>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="commodityVolatilities">
+    <xs:sequence>
+      <xs:element type="commodityVolatility" name="CommodityVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="commodityVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="commodityVolatilityType" name="Type"/>
+      <xs:choice>
+        <xs:element type="xs:string" name="Quote"/>
+        <xs:element type="quoteType" name="Quotes"/>
+        <xs:element name="Surface">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="Expiries"/>
+              <xs:element type="xs:string" name="Strikes" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="LowerStrikeConstantExtrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="UpperStrikeConstantExtrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

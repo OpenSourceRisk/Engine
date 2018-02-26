@@ -185,6 +185,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     if (!parameters->commodityCurveSimulate()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityCurve);
     }
+    if (!parameters->commodityVolSimulate()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityVolatility);
+    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
@@ -981,7 +984,18 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     }
     LOG("yoy inflation curves done");
     
-    // building commodity curves
+    LOG("building commodity spots");
+    for (const auto& name : parameters->commodityNames()) {
+        Real spot = initMarket->commoditySpot(name, configuration)->value();
+        DLOG("adding " << name << " commodity spot price");
+        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
+        commoditySpots_.emplace(piecewise_construct, 
+            forward_as_tuple(Market::defaultConfiguration, name), forward_as_tuple(q));
+        simData_.emplace(piecewise_construct, 
+            forward_as_tuple(RiskFactorKey::KeyType::CommoditySpot, name), forward_as_tuple(q));
+    }
+    LOG("commodity spots done");
+
     LOG("building commodity curves");
     for (const string& name : parameters->commodityNames()) {
         
@@ -1023,6 +1037,71 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             forward_as_tuple(simCommodityCurve));
     }
     LOG("commodity curves done");
+
+    LOG("building commodity volatilities");
+    for (const auto& name : parameters->commodityVolNames()) {
+        // Get initial base volatility structure
+        Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
+
+        Handle<BlackVolTermStructure> newVol;
+        if (parameters->commodityVolSimulate()) {
+            Handle<Quote> spot = commoditySpot(name, configuration);
+            const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
+            QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for " << name << " should have at least one element");
+            const vector<Period>& expiries = parameters->commodityVolExpiries(name);
+            QL_REQUIRE(!expiries.empty(), "Commodity volatility expiries for " << name << " should have at least one element");
+
+            // Create surface of quotes
+            vector<vector<Handle<Quote>>> quotes(moneyness.size(), vector<Handle<Quote>>(expiries.size()));
+            vector<Time> expiryTimes(expiries.size());
+            Size index = 0;
+            DayCounter dayCounter = baseVol->dayCounter();
+
+            for (Size i = 0; i < quotes.size(); i++) {
+                Real strike = moneyness[i] * spot->value();
+                for (Size j = 0; j < quotes[0].size(); j++) {
+                    if (i == 0) expiryTimes[j] = dayCounter.yearFraction(asof_, asof_ + expiries[j]);
+                    boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(
+                        baseVol->blackVol(asof_ + expiries[j], strike));
+                    simData_.emplace(piecewise_construct, 
+                        forward_as_tuple(RiskFactorKey::KeyType::CommodityVolatility, name, index++),
+                        forward_as_tuple(quote));
+                    quotes[i][j] = Handle<Quote>(quote);
+                }
+            }
+
+            // Create volatility structure
+            if (moneyness.size() == 1) {
+                // We have a term structure of volatilities with no strike dependence
+                LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
+                newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                    0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes, quotes[0]));
+            } else {
+                // We have a volatility surface
+                LOG("Simulating commodity volatilites for " << name << " using BlackVarianceSurfaceMoneynessSpot.");
+                bool stickyStrike = true;
+                newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                    baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, stickyStrike));
+            }
+
+        } else {
+            string decayModeString = parameters->equityVolDecayMode();
+            DLOG("Deterministic commodity volatilities with decay mode " << decayModeString << " for " << name);
+            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+            // Copy what was done for equity here
+            // May need to revisit when looking at commodity RFE
+            newVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
+                baseVol, 0, NullCalendar(), decayMode, StickyStrike));
+        }
+
+        newVol->enableExtrapolation(baseVol->allowsExtrapolation());
+
+        commodityVols_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
+            forward_as_tuple(newVol));
+        
+        DLOG("Commodity volatility curve built for " << name);
+    }
+    LOG("commodity volatilities done");
 
     LOG("building base scenario");
     baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);

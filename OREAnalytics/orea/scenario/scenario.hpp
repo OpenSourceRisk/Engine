@@ -65,7 +65,9 @@ public:
         CPIIndex,
         ZeroInflationCurve,
         YoYInflationCurve,
-        CommodityCurve
+        CommoditySpot,
+        CommodityCurve,
+        CommodityVolatility
     };
 
     //! Constructor

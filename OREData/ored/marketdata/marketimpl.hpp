@@ -138,7 +138,13 @@ public:
                                                       const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
+    QuantLib::Handle<QuantLib::Quote> commoditySpot(const std::string& commodityName, 
+        const std::string& configuration = Market::defaultConfiguration) const;
+
     QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(const std::string& commodityName,
         const std::string& configuration = Market::defaultConfiguration) const;
     //@}
 
@@ -173,7 +179,9 @@ protected:
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     Conventions conventions_;
 
     //! add a swap index to the market

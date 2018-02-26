@@ -54,7 +54,8 @@ public:
         EquityVolatility,
         Security,
         BaseCorrelation,
-        Commodity
+        Commodity,
+        CommodityVolatility
     };
     //! Default destructor
     virtual ~CurveSpec() {}
@@ -97,6 +98,8 @@ public:
             return "BaseCorrelation";
         case CurveType::Commodity:
             return "Commodity";
+        case CurveType::CommodityVolatility:
+            return "CommodityVolatility";
         default:
             return "N/A";
         }
@@ -445,6 +448,34 @@ public:
     //! \name Inspectors
     //@{
     CurveType baseType() const { return CurveType::Commodity; }
+    const std::string& currency() const { return currency_; }
+    const std::string& curveConfigId() const { return curveConfigId_; }
+    std::string subName() const { return currency_ + "/" + curveConfigId_; }
+    //@}
+
+private:
+    std::string currency_;
+    std::string curveConfigId_;
+};
+
+//! Commodity volatility description
+/*! \ingroup curves
+*/
+class CommodityVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CommodityVolatilityCurveSpec() {}
+
+    //! Detailed constructor
+    CommodityVolatilityCurveSpec(const std::string& currency, const std::string& curveConfigId)
+        : currency_(currency), curveConfigId_(curveConfigId) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::CommodityVolatility; }
     const std::string& currency() const { return currency_; }
     const std::string& curveConfigId() const { return curveConfigId_; }
     std::string subName() const { return currency_ + "/" + curveConfigId_; }

@@ -25,13 +25,14 @@ namespace ore {
 namespace data {
 
 namespace {
-static const Size numberOfMarketObjects = 18;
+static const Size numberOfMarketObjects = 19;
 // clang-format off
 static const vector<string> marketObjectStrings = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
                                                    "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
                                                    "BaseCorrelation", "CapFloorVol", "ZeroInflationCurve",
                                                    "YoYInflationCurve", "InflationCapFloorPriceSurface",
-                                                   "EquityCurves", "EquityVols", "Securities", "CommodityCurves"};
+                                                   "EquityCurves", "EquityVols", "Securities", "CommodityCurves",
+                                                   "CommodityVolatilities"};
 static const vector<string> marketObjectXMLNames = {"DiscountingCurves", "YieldCurves", "IndexForwardingCurves",
                                                     "SwapIndexCurves",
                                                     "FxSpots", "FxVolatilities", "SwaptionVolatilities",
@@ -40,7 +41,7 @@ static const vector<string> marketObjectXMLNames = {"DiscountingCurves", "YieldC
                                                     "ZeroInflationIndexCurves", "YYInflationIndexCurves",
                                                     "InflationCapFloorPriceSurfaces",
                                                     "EquityCurves", "EquityVolatilities",
-                                                    "Securities", "CommodityCurves"};
+                                                    "Securities", "CommodityCurves", "CommodityVolatilities"};
 static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
     {"DiscountingCurve", "currency"}, {"YieldCurve", "name"}, {"Index", "name"}, {"SwapIndex", "name"},
     {"FxSpot", "pair"}, {"FxVolatility", "pair"}, {"SwaptionVolatility", "currency"},
@@ -48,7 +49,7 @@ static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
     {"CapFloorVolatility", "currency"}, {"ZeroInflationIndexCurve", "name"},
     {"YYInflationIndexCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
-    {"CommodityCurve", "name"}};
+    {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}};
 // clang-format on
 } // anonymous namespace
 

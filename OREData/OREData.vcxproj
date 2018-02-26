@@ -41,6 +41,7 @@
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\commoditycurveconfig.hpp" />
+    <ClInclude Include="ored\configuration\commodityvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\conventions.hpp" />
     <ClInclude Include="ored\configuration\curveconfig.hpp" />
     <ClInclude Include="ored\configuration\curveconfigurations.hpp" />
@@ -59,6 +60,7 @@
     <ClInclude Include="ored\marketdata\capfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\cdsvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\commoditycurve.hpp" />
+    <ClInclude Include="ored\marketdata\commodityvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\csvloader.hpp" />
     <ClInclude Include="ored\marketdata\curveloader.hpp" />
     <ClInclude Include="ored\marketdata\curvespec.hpp" />
@@ -106,6 +108,7 @@
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\cms.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityforward.hpp" />
+    <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
@@ -115,6 +118,7 @@
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\commodityforward.hpp" />
+    <ClInclude Include="ored\portfolio\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswap.hpp" />
     <ClInclude Include="ored\portfolio\creditdefaultswapdata.hpp" />
     <ClInclude Include="ored\portfolio\enginedata.hpp" />
@@ -166,6 +170,7 @@
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\cdsvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\commoditycurveconfig.cpp" />
+    <ClCompile Include="ored\configuration\commodityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\conventions.cpp" />
     <ClCompile Include="ored\configuration\curveconfigurations.cpp" />
     <ClCompile Include="ored\configuration\defaultcurveconfig.cpp" />
@@ -180,6 +185,7 @@
     <ClCompile Include="ored\marketdata\capfloorvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\cdsvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\commoditycurve.cpp" />
+    <ClCompile Include="ored\marketdata\commodityvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\csvloader.cpp" />
     <ClCompile Include="ored\marketdata\curveloader.cpp" />
     <ClCompile Include="ored\marketdata\curvespec.cpp" />
@@ -218,9 +224,11 @@
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
+    <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
+    <ClCompile Include="ored\portfolio\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswap.cpp" />
     <ClCompile Include="ored\portfolio\creditdefaultswapdata.cpp" />
     <ClCompile Include="ored\portfolio\enginedata.cpp" />

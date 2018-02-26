@@ -2343,5 +2343,36 @@
       <Extrapolation>true</Extrapolation>
     </CommodityCurve>
   </CommodityCurves>
+  <CommodityVolatilities>
+    <CommodityVolatility>
+      <CurveId>GOLD_USD_VOLS</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <Type>Curve</Type>
+      <Quotes>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF</Quote>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <Calendar>USD</Calendar>
+      <Extrapolation>true</Extrapolation>
+    </CommodityVolatility>
+    <CommodityVolatility>
+      <CurveId>WTI_USD_VOLS</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <Type>Surface</Type>
+      <Surface>
+        <Expiries>1Y,5Y,10Y</Expiries>
+        <Strikes>30.0,35.0,40.0,45.0,50.0,55.0,60.0</Strikes>
+      </Surface>
+      <DayCounter>A365</DayCounter>
+      <Calendar>USD</Calendar>
+      <Extrapolation>true</Extrapolation>
+      <LowerStrikeConstantExtrapolation>false</LowerStrikeConstantExtrapolation>
+      <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
+    </CommodityVolatility>
+  </CommodityVolatilities>
 </CurveConfiguration>
 

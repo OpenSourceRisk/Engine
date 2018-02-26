@@ -16,6 +16,7 @@
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
+      <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
   </xs:group>
 
@@ -352,6 +353,7 @@
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="CommodityForward"/>
+      <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
       <xs:enumeration value="CMS"/>
@@ -452,6 +454,16 @@
   </xs:complexType>
 
   <xs:complexType name="equityOptionData">
+    <xs:sequence>
+      <xs:element type="optionData" name="OptionData"/>
+      <xs:element type="xs:string" name="Name"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="xs:float" name="Quantity"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="commodityOptionData">
     <xs:sequence>
       <xs:element type="optionData" name="OptionData"/>
       <xs:element type="xs:string" name="Name"/>

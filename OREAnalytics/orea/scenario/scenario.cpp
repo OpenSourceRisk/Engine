@@ -65,8 +65,12 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "ZeroInflationCurve";
     case RiskFactorKey::KeyType::YoYInflationCurve:
         return out << "YoYInflationCurve";
+    case RiskFactorKey::KeyType::CommoditySpot:
+        return out << "CommoditySpot";
     case RiskFactorKey::KeyType::CommodityCurve:
         return out << "CommodityCurve";
+    case RiskFactorKey::KeyType::CommodityVolatility:
+        return out << "CommodityVolatility";
     default:
         return out << "?";
     }

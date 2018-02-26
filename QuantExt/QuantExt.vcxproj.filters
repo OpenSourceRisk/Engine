@@ -528,6 +528,9 @@
     <ClInclude Include="qle\instruments\commodityforward.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -884,6 +887,9 @@
       <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

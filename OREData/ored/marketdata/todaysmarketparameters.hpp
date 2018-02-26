@@ -70,7 +70,8 @@ enum class MarketObject {
     EquityCurve = 14,
     EquityVol = 15,
     Security = 16,
-    CommodityCurve = 17
+    CommodityCurve = 17,
+    CommodityVolatility = 18
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);

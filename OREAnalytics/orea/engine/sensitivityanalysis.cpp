@@ -559,6 +559,23 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftMult = priceCurve->price(t);
         }
     } break;
+    case RiskFactorKey::KeyType::CommodityVolatility: {
+        auto it = sensitivityData_->commodityVolShiftData().find(keylabel);
+        QL_REQUIRE(it != sensitivityData_->commodityVolShiftData().end(), "shiftData not found for " << keylabel);
+        
+        shiftSize = it->second.shiftSize;
+        if (parseShiftType(it->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            Size moneynessIndex = key.index / it->second.shiftExpiries.size();
+            Size expiryIndex = key.index % it->second.shiftExpiries.size();
+            Real moneyness = it->second.shiftStrikes[moneynessIndex];
+            Period expiry = it->second.shiftExpiries[expiryIndex];
+            Real spotValue = simMarket_->commoditySpot(keylabel, marketConfiguration_)->value();
+            Handle<BlackVolTermStructure> vts = simMarket_->commodityVolatility(keylabel, marketConfiguration_);
+            Time t = vts->dayCounter().yearFraction(asof_, asof_ + expiry);
+            Real vol = vts->blackVol(t, moneyness * spotValue);
+            shiftMult = vol;
+        }
+    } break;
     default:
         // KeyType::CPIIndex does not get shifted
         QL_FAIL("KeyType not supported yet - " << keytype);

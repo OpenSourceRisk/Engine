@@ -93,7 +93,8 @@ public:
         BOND,
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
-        COMMODITY_FWD
+        COMMODITY_FWD,
+        COMMODITY_OPTION
     };
 
     //! Supported market quote types
@@ -1087,6 +1088,41 @@ private:
     std::string commodityName_;
     std::string quoteCurrency_;
     QuantLib::Date expiryDate_;
+};
+
+//! Commodity option data class
+/*! This class holds single market points of type COMMODITY_OPTION
+    \ingroup marketdata
+*/
+class CommodityOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    /*! \param commodityName The name of the underlying commodity
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATMF 
+    */
+    CommodityOptionQuote(QuantLib::Real value, 
+        const QuantLib::Date& asof, 
+        const std::string& name, 
+        QuoteType quoteType, 
+        const std::string& commodityName,
+        const std::string& quoteCurrency,
+        const std::string& expiry,
+        const std::string& strike);
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    const std::string& expiry() const { return expiry_; }
+    const std::string& strike() const { return strike_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+    std::string expiry_;
+    std::string strike_;
 };
 
 } // namespace data

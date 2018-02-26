@@ -65,7 +65,8 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
-        {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD}};
+        {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
+        {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -429,6 +430,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
 
         Date expiryDate = getDateFromDateOrPeriod(tokens[4], asof);
         return boost::make_shared<CommodityForwardQuote>(value, asof, datumName, quoteType, tokens[2], tokens[3], expiryDate);
+    }
+
+    case MarketDatum::InstrumentType::COMMODITY_OPTION: {
+        // Expects the following form:
+        // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<DATE/TENOR>/<STRIKE>
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
+        
+        return boost::make_shared<CommodityOptionQuote>(
+            value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
     }
 
     default:

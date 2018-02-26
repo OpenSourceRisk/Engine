@@ -53,7 +53,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
                     if (q->name() == config->commoditySpotQuoteId()) {
                         QL_REQUIRE(curveData.find(asof) == curveData.end(), "duplicate commodity spot quote " << q->name() << " found.");
-                        curveData[asof] = q->quote()->value();
+                        commoditySpot_ = q->quote()->value();
+                        curveData[asof] = commoditySpot_;
                     }
                 }
 

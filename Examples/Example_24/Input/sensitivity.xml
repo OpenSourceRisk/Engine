@@ -27,7 +27,7 @@
     </YieldCurve>
   </YieldCurves>
   <FxSpots>
-    <FxSpot ccypair="USDEUR">
+    <FxSpot ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
     </FxSpot>
@@ -46,20 +46,44 @@
       <ShiftStrikes/>
     </EquityVolatility>
   </EquityVolatilities>
+  <CommoditySpots>
+    <CommoditySpot name="COMDTY_GOLD_USD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </CommoditySpot>
+    <CommoditySpot name="COMDTY_WTI_USD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+    </CommoditySpot>
+  </CommoditySpots>
   <CommodityCurves>
     <CommodityCurve name="COMDTY_GOLD_USD">
       <Currency>USD</Currency>
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <ShiftTenors>0D,6M,1Y,2Y,5Y,10Y</ShiftTenors>
+      <ShiftTenors>1Y,5Y,10Y</ShiftTenors>
     </CommodityCurve>
     <CommodityCurve name="COMDTY_WTI_USD">
       <Currency>USD</Currency>
       <ShiftType>Relative</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <ShiftTenors>0D,6M,1Y,2Y,5Y,10Y</ShiftTenors>
+      <ShiftTenors>1Y,5Y,10Y</ShiftTenors>
     </CommodityCurve>
   </CommodityCurves>
+  <CommodityVolatilities>
+    <CommodityVolatility name="COMDTY_GOLD_USD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes/>
+    </CommodityVolatility>
+    <CommodityVolatility name="COMDTY_WTI_USD">
+      <ShiftType>Relative</ShiftType>
+      <ShiftSize>0.01</ShiftSize>
+      <ShiftExpiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftExpiries>
+      <ShiftStrikes>0.9,1.0,1.167,1.333,1.5,1.667,1.833,2.0</ShiftStrikes>
+    </CommodityVolatility>
+  </CommodityVolatilities>
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
     <Pair>IndexCurve/EUR,IndexCurve/EUR</Pair>

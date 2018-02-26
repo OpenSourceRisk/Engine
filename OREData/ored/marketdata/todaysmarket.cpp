@@ -25,6 +25,7 @@
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
+#include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
@@ -42,11 +43,13 @@
 #include <ored/utilities/log.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
 
 using namespace std;
 using namespace QuantLib;
 
 using QuantExt::PriceTermStructure;
+using QuantExt::PriceTermStructureAdapter;
 
 namespace ore {
 namespace data {
@@ -78,6 +81,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
     map<string, boost::shared_ptr<Security>> requiredSecurities;
     map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves;
+    map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -577,6 +581,46 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             *commodityCurveSpec << " to configuration " << configuration.first);
                         commodityCurves_[make_pair(configuration.first, it.first)] = 
                             Handle<PriceTermStructure>(itr->second->commodityPriceCurve());
+                        commoditySpots_[make_pair(configuration.first, it.first)] =
+                            Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->commoditySpot()));
+                    }
+                }
+                break;
+            }
+
+            case CurveSpec::CurveType::CommodityVolatility: {
+
+                boost::shared_ptr<CommodityVolatilityCurveSpec> commodityVolSpec =
+                    boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
+                QL_REQUIRE(commodityVolSpec, "Failed to convert spec " << *spec << " to commodity volatility spec");
+
+                // Build the volatility structure if we have not built it before
+                auto itr = requiredCommodityVolCurves.find(commodityVolSpec->name());
+                if (itr == requiredCommodityVolCurves.end()) {
+                    LOG("Building commodity volatility for asof " << asof);
+
+                    boost::shared_ptr<CommodityVolCurve> commodityVolCurve =
+                        boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader, curveConfigs);
+                    itr = requiredCommodityVolCurves.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
+                }
+
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.mapping(MarketObject::CommodityVolatility, configuration.first)) {
+                    if (it.second == spec->name()) {
+                        string commodityName = it.first;
+                        LOG("Adding commodity volatility (" << commodityName << ") with spec " << 
+                            *commodityVolSpec << " to configuration " << configuration.first);
+
+                        // Logic copied from Equity vol section of TodaysMarket for now
+                        boost::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
+                        Handle<Quote> spot = commoditySpot(commodityName, configuration.first);
+                        Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration.first);
+                        Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration.first);
+                        Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
+                            boost::make_shared<PriceTermStructureAdapter>(*spot, *priceCurve, *discount));
+
+                        bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, discount, yield);
+                        commodityVols_[make_pair(configuration.first, it.first)] = Handle<BlackVolTermStructure>(bvts);
                     }
                 }
                 break;

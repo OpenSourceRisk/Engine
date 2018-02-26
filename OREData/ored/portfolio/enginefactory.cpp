@@ -98,6 +98,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
 
 }
 

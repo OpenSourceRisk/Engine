@@ -107,6 +107,16 @@ Real parseReal(const string& s) {
     return atof(s.c_str());
 }
 
+bool tryParseReal(const string& s, QuantLib::Real& result) {
+    try {
+        result = std::stod(s);
+    } catch (...) {
+        result = Null<Real>();
+        return false;
+    }
+    return true;
+}
+
 Integer parseInteger(const string& s) {
     try {
         return io::to_integer(s);
