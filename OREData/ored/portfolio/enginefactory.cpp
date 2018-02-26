@@ -19,6 +19,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/all.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
 
 namespace ore {
@@ -65,6 +66,17 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     return builder;
 }
 
+void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder) {
+    LOG("EngineFactory registering builder for leg type " << legBuilder->legType());
+    legBuilders_[legBuilder->legType()] = legBuilder;
+}
+
+boost::shared_ptr<LegBuilder> EngineFactory::legBuilder(const string& legType) {
+    auto it = legBuilders_.find(legType);
+    QL_REQUIRE(it != legBuilders_.end(), "No LegBuilder for " << legType);
+    return it->second;
+}
+
 Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> EngineFactory::modelBuilders() const {
     set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res;
     for (auto const& b : builders_) {
@@ -97,6 +109,13 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+
+    registerLegBuilder(boost::make_shared<FixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
+    registerLegBuilder(boost::make_shared<CashflowLegBuilder>());
+    registerLegBuilder(boost::make_shared<CPILegBuilder>());
+    registerLegBuilder(boost::make_shared<YYLegBuilder>());
+    registerLegBuilder(boost::make_shared<CMSLegBuilder>());
 }
 
 } // namespace data
