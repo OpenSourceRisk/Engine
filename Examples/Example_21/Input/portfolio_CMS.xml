@@ -113,7 +113,7 @@
         </ScheduleData>
       </LegData>
 	  <Caps>
-        <Cap>0.40</Cap>
+        <Cap>0.04</Cap>
       </Caps>
     </CapFloorData>
   </Trade>
