@@ -216,7 +216,7 @@ private:
 //! Leg builder
 class LegBuilder {
 public:
-    LegBuilder(const string& legType) {}
+    LegBuilder(const string& legType) : legType_(legType) {}
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&,
                          const string& configuration) const = 0;
