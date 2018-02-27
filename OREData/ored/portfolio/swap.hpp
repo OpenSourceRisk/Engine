@@ -57,6 +57,10 @@ public:
     //@{
     const vector<LegData>& legData() { return legData_; }
     //@}
+
+protected:
+    virtual boost::shared_ptr<LegData> createLegData() const;
+
 private:
     vector<LegData> legData_;
 };

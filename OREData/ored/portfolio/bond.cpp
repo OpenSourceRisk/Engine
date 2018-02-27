@@ -133,11 +133,14 @@ void Bond::fromXML(XMLNode* node) {
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
-        coupons_.push_back(LegData());
-        coupons_.back().fromXML(legNode);
+        auto ld = createLegData();
+        ld->fromXML(legNode);
+        coupons_.push_back(*boost::static_pointer_cast<LegData>(ld));
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 }
+
+boost::shared_ptr<LegData> Bond::createLegData() const { return boost::make_shared<LegData>(); }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);

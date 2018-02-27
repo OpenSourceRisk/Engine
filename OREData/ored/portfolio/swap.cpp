@@ -230,11 +230,13 @@ void Swap::fromXML(XMLNode* node) {
     XMLNode* swapNode = XMLUtils::getChildNode(node, "SwapData");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        LegData ld;
-        ld.fromXML(nodes[i]);
-        legData_.push_back(ld);
+        auto ld = createLegData();
+        ld->fromXML(nodes[i]);
+        legData_.push_back(*boost::static_pointer_cast<LegData>(ld));
     }
 }
+
+boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
