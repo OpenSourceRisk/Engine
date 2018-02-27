@@ -27,12 +27,17 @@ PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<Quo
     const boost::shared_ptr<PriceTermStructure>& priceCurve, const boost::shared_ptr<YieldTermStructure>& discount)
     : spotQuote_(spotQuote), priceCurve_(priceCurve), discount_(discount) {
 
+    QL_REQUIRE(priceCurve_->referenceDate() == discount_->referenceDate(),
+        "PriceTermStructureAdapter: The reference date of the discount curve and price curve should be the same");
+
     registerWith(spotQuote_);
     registerWith(priceCurve_);
     registerWith(discount_);
 }
 
 Date PriceTermStructureAdapter::maxDate() const {
+    // Take the max of the two underlying curves' max date
+    // Extrapolation will be determined by each underlying curve individually
     return max(priceCurve_->maxDate(), discount_->maxDate());
 }
 

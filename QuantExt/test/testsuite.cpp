@@ -67,6 +67,7 @@ using boost::unit_test::test_suite;
 #include "survivalprobabilitycurve.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
+#include "pricetermstructureadapter.hpp"
 
 namespace {
 
@@ -124,6 +125,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::PriceCurveTest::suite());
     test->add(testsuite::CommodityForwardTest::suite());
     test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
+    test->add(testsuite::PriceTermStructureAdapterTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

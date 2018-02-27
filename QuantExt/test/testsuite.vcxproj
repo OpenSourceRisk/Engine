@@ -656,6 +656,7 @@
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="pricecurve.cpp" />
+    <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
@@ -686,6 +687,7 @@
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="payment.hpp" />
     <ClInclude Include="pricecurve.hpp" />
+    <ClInclude Include="pricetermstructureadapter.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
