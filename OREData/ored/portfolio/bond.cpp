@@ -70,8 +70,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
     boost::shared_ptr<QuantLib::Bond> bond;
-    std::vector<boost::shared_ptr<IborIndex>> indexes;
-    std::vector<boost::shared_ptr<OptionletVolatilityStructure>> ovses;
 
     Real mult = 1.0; // to be overwritten depending upon pay/receive flag
     if (zeroBond_) { // Zero coupon bond
@@ -93,9 +91,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                                         << coupons_[0].currency());
             }
             Leg leg;
-            Handle<IborIndex> hIndex;
-            Handle<OptionletVolatilityStructure> ovs;
-
             auto configuration = builder->configuration(MarketContext::pricing);
             auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
             leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
