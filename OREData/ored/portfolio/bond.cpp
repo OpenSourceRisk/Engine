@@ -73,12 +73,18 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<boost::shared_ptr<IborIndex>> indexes;
     std::vector<boost::shared_ptr<OptionletVolatilityStructure>> ovses;
 
+    Real mult = 1.0; // to be overwritten depending upon pay/receive flag
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
+        //FIXME: zero bonds are always long (mult = 1.0)
     } else { // Coupon bond
 
         std::vector<Leg> legs;
+        bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
+        mult = firstLegIsPayer ? -1.0 : 1.0;
         for (Size i = 0; i < coupons_.size(); ++i) {
+            bool legIsPayer = coupons_[i].isPayer();
+            QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
             if (i == 0)
                 currency_ = coupons_[i].currency();
             else {
@@ -127,7 +133,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
     QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
     bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
-    instrument_.reset(new VanillaInstrument(bond));
+    instrument_.reset(new VanillaInstrument(bond, mult));
 
     npvCurrency_ = currency_;
     maturity_ = bond->cashflows().back()->date();
@@ -144,7 +150,7 @@ void Bond::fromXML(XMLNode* node) {
     XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
     QL_REQUIRE(bondNode, "No BondData Node");
     issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
-    creditCurveId_ = XMLUtils::getChildValue(bondNode, "CreditCurveId", true);
+    creditCurveId_ = XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);

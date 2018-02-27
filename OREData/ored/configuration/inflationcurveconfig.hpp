@@ -34,7 +34,6 @@
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
 using QuantLib::Date;
 using QuantLib::DayCounter;
