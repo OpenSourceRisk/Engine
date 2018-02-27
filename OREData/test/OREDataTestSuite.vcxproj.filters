@@ -84,6 +84,9 @@
     <ClInclude Include="commoditycurve.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="commodityoption.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -160,6 +163,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="commoditycurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

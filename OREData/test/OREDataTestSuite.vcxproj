@@ -652,6 +652,7 @@
     <ClInclude Include="fxoption.hpp" />
     <ClInclude Include="fxswap.hpp" />
     <ClInclude Include="fxtriangulation.hpp" />
+    <ClInclude Include="commodityoption.hpp" />
     <ClInclude Include="indices.hpp" />
     <ClInclude Include="legdata.hpp" />
     <ClInclude Include="parser.hpp" />
@@ -671,6 +672,7 @@
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
     <ClCompile Include="commodityforward.cpp" />
+    <ClCompile Include="commodityoption.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />
