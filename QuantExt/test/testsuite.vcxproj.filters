@@ -71,6 +71,9 @@
     <ClCompile Include="deltagammavar.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="bonds.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -160,6 +163,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="deltagammavar.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="bonds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
