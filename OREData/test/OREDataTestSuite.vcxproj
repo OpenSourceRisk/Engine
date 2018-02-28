@@ -644,6 +644,7 @@
     <ClInclude Include="commoditycurve.hpp" />
     <ClInclude Include="commoditycurveconfig.hpp" />
     <ClInclude Include="commodityforward.hpp" />
+    <ClInclude Include="commodityvolcurveconfig.hpp" />
     <ClInclude Include="cpiswap.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
     <ClInclude Include="curveconfig.hpp" />
@@ -673,6 +674,7 @@
     <ClCompile Include="commoditycurveconfig.cpp" />
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="commodityoption.cpp" />
+    <ClCompile Include="commodityvolcurveconfig.cpp" />
     <ClCompile Include="cpiswap.cpp" />
     <ClCompile Include="crossassetmodeldata.cpp" />
     <ClCompile Include="curveconfig.cpp" />

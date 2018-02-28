@@ -26,6 +26,7 @@ OREDATA_TESTS = \
 	commoditycurveconfig.hpp commoditycurveconfig.cpp \
 	commoditycurve.hpp commoditycurve.cpp \
 	commodityoption.hpp commodityoption.cpp \
+	commodityvolcurveconfig.hpp commodityvolcurveconfig.cpp \
 	cds.hpp cds.cpp
 
 dist-hook:
