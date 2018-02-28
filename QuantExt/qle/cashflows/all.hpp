@@ -10,4 +10,5 @@
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/cashflows/floatingannuitynominal.hpp>
+#include <qle/cashflows/quantocouponpricer.hpp>
 
