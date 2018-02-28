@@ -20,11 +20,13 @@
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
+#include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/commodityforward.hpp>
+#include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -391,6 +393,22 @@ boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std:
     Envelope env("CP");
     boost::shared_ptr<Trade> trade = boost::make_shared<ore::data::CommodityForward>(
         env, position, commodityName, currency, quantity, maturity, strike);
+    trade->id() = id;
+
+    return trade;
+}
+
+boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, 
+    const string& putCall, Size term, const string& commodityName, const string& currency, 
+    Real strike, Real quantity, Real premium, const string& premiumCcy, const string& premiumDate) {
+
+    Date today = Settings::instance().evaluationDate();
+    vector<string> expiryDate{ ore::data::to_string(today + term * Years) };
+
+    Envelope env("CP");
+    OptionData option(longShort, putCall, "European", false, expiryDate, "Cash", premium, premiumCcy, premiumDate);
+    boost::shared_ptr<Trade> trade = boost::make_shared<ore::data::CommodityOption>(
+        env, option, commodityName, currency, strike, quantity);
     trade->id() = id;
 
     return trade;

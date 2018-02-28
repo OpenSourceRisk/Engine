@@ -266,7 +266,7 @@ TestMarket::TestMarket(Date asof) {
         zeroInflationIndices_[make_pair(Market::defaultConfiguration, "UKRPI")], vector<Real>{0.0, 0.01, 0.02},
         vector<Real>{-1.0, -0.99}, vector<Period>{5 * Years, 10 * Years}, Matrix(3, 2, 0.15), Matrix(2, 2, 0.15));
 
-    // Commodity price curves
+    // Commodity price curves and spots
     Actual365Fixed ccDayCounter;
     vector<Time> times = { 0.0, 1.0, 2.0, 5.0 };
 
@@ -275,12 +275,20 @@ TestMarket::TestMarket(Date asof) {
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<PriceTermStructure>(
         boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")]->enableExtrapolation();
+    commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = Handle<Quote>(
+        boost::make_shared<SimpleQuote>(1155.593));
 
     // WTI Oil curve
     prices = { 30.89, 41.23, 44.44, 49.18 };
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<PriceTermStructure>(
         boost::make_shared<InterpolatedPriceCurve<Linear>>(times, prices, ccDayCounter));
     commodityCurves_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")]->enableExtrapolation();
+    commoditySpots_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = Handle<Quote>(
+        boost::make_shared<SimpleQuote>(30.89));
+
+    // Commodity volatilities
+    commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = flatRateFxv(0.15);
+    commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = flatRateFxv(0.20);
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,
@@ -498,6 +506,14 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setCommodityCurveDayCounter("", "A365");
     simMarketData->setCommodityCurveTenors("", { 0 * Days, 1 * Years, 2 * Years, 5 * Years });
 
+    simMarketData->commodityVolSimulate() = true;
+    simMarketData->commodityVolDecayMode() = "ForwardVariance";
+    simMarketData->commodityVolNames() = { "COMDTY_GOLD_USD", "COMDTY_WTI_USD" };
+    simMarketData->commodityVolExpiries("COMDTY_GOLD_USD") = { 1 * Years, 2 * Years, 5 * Years };
+    simMarketData->commodityVolMoneyness("COMDTY_GOLD_USD") = { 1.0 };
+    simMarketData->commodityVolExpiries("COMDTY_WTI_USD") = { 1 * Years, 5 * Years };
+    simMarketData->commodityVolMoneyness("COMDTY_WTI_USD") = { 0.9, 0.95, 1.0, 1.05, 1.1 };
+
     return simMarketData;
 }
 
@@ -694,10 +710,20 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     zinfData.shiftSize = 0.0001;
     zinfData.shiftTenors = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years};
 
+    ore::analytics::SensitivityScenarioData::SpotShiftData commoditySpotShiftData;
+    commoditySpotShiftData.shiftType = "Relative";
+    commoditySpotShiftData.shiftSize = 0.01;
+
     auto commodityShiftData = boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>();
     commodityShiftData->shiftType = "Relative";
     commodityShiftData->shiftSize = 0.01;
     commodityShiftData->shiftTenors = { 0 * Days, 1 * Years, 2 * Years, 5 * Years };
+
+    ore::analytics::SensitivityScenarioData::VolShiftData commodityVolShiftData;
+    commodityVolShiftData.shiftType = "Relative";
+    commodityVolShiftData.shiftSize = 0.01;
+    commodityVolShiftData.shiftExpiries = { 1 * Years, 2 * Years, 5 * Years };
+    commodityVolShiftData.shiftStrikes = { 0.9, 0.95, 1.0, 1.05, 1.1 };
 
     sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] =
@@ -787,10 +813,16 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 
     sensiData->commodityNames() = {"COMDTY_GOLD_USD", "COMDTY_WTI_USD"};
+    sensiData->commodityShiftData()["COMDTY_GOLD_USD"] = commoditySpotShiftData;
+    sensiData->commodityShiftData()["COMDTY_WTI_USD"] = commoditySpotShiftData;
     sensiData->commodityCurveShiftData()["COMDTY_GOLD_USD"] = commodityShiftData;
     sensiData->commodityCurrencies()["COMDTY_GOLD_USD"] = "USD";
     sensiData->commodityCurveShiftData()["COMDTY_WTI_USD"] = commodityShiftData;
     sensiData->commodityCurrencies()["COMDTY_WTI_USD"] = "USD";
+    
+    sensiData->commodityVolNames() = { "COMDTY_GOLD_USD", "COMDTY_WTI_USD" };
+    sensiData->commodityVolShiftData()["COMDTY_GOLD_USD"] = commodityVolShiftData;
+    sensiData->commodityVolShiftData()["COMDTY_WTI_USD"] = commodityVolShiftData;
 
     return sensiData;
 }
