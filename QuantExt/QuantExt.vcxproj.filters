@@ -531,6 +531,9 @@
     <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -891,6 +894,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\pricetermstructureadapter.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
