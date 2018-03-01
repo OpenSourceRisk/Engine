@@ -238,7 +238,7 @@ namespace QuantExt {
         for (QuantLib::Size i = 1; i < this->dates_.size(); ++i) {
             QL_REQUIRE(this->dates_[i] > this->dates_[i - 1], "invalid date (" << this->dates_[i] << ", vs " << this->dates_[i - 1] << ")");
             this->times_[i] = dayCounter().yearFraction(this->dates_[0], this->dates_[i]);
-            QL_REQUIRE(!close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time " 
+            QL_REQUIRE(!QuantLib::close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time " 
                 "under this curve's day count convention");
         }
     }
