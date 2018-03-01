@@ -97,8 +97,8 @@ namespace QuantExt {
 
         //! \name Inspectors
         //@{
-        const std::vector<QuantLib::Time>& times() const { return times_; }
-        const std::vector<QuantLib::Real>& prices() const { return data_; }
+        const std::vector<QuantLib::Time>& times() const { return this->times_; }
+        const std::vector<QuantLib::Real>& prices() const { return this->data_; }
         //@}
         
     protected:
@@ -184,18 +184,18 @@ namespace QuantExt {
         // Calculations only need to be performed if the curve depends on quotes
         if (!quotes_.empty()) {
             getPricesFromQuotes();
-            interpolation_.update();
+            this->interpolation_.update();
         }
     }
 
     template <class Interpolator>
     QuantLib::Time InterpolatedPriceCurve<Interpolator>::maxTime() const {
-        return times_.back();
+        return this->times_.back();
     }
 
     template <class Interpolator>
     QuantLib::Time InterpolatedPriceCurve<Interpolator>::minTime() const {
-        return times_.front();
+        return this->times_.front();
     }
 
     template <class Interpolator>
@@ -205,16 +205,16 @@ namespace QuantExt {
         QuantLib::LazyObject::calculate();
 
         // Return interpolated/extrapolated price
-        return interpolation_(t, true);
+        return this->interpolation_(t, true);
     }
 
     template <class Interpolator>
     void InterpolatedPriceCurve<Interpolator>::initialise() {
 
-        QL_REQUIRE(data_.size() >= Interpolator::requiredPoints, "not enough times for the interpolation method");
+        QL_REQUIRE(this->data_.size() >= Interpolator::requiredPoints, "not enough times for the interpolation method");
 
         // If we are dates based, populate times_ from dates_
-        if (!dates_.empty()) {
+        if (!this->dates_.empty()) {
             convertDatesToTimes();
         }
 
@@ -223,21 +223,21 @@ namespace QuantExt {
             getPricesFromQuotes();
         }
 
-        QL_REQUIRE(data_.size() == times_.size(), "Number of times must equal number of prices");
-        QL_REQUIRE(std::is_sorted(times_.begin(), times_.end()), "Times must be sorted");
-        QL_REQUIRE(*std::min_element(data_.begin(), data_.end()) >= 0.0, "Prices must be positive");
+        QL_REQUIRE(this->data_.size() == this->times_.size(), "Number of times must equal number of prices");
+        QL_REQUIRE(std::is_sorted(this->times_.begin(), this->times_.end()), "Times must be sorted");
+        QL_REQUIRE(*std::min_element(this->data_.begin(), this->data_.end()) >= 0.0, "Prices must be positive");
 
         InterpolatedCurve<Interpolator>::setupInterpolation();
-        interpolation_.update();
+        this->interpolation_.update();
     }
 
     template <class Interpolator>
     void InterpolatedPriceCurve<Interpolator>::convertDatesToTimes() {
 
-        times_[0] = 0.0;
-        for (Size i = 1; i < dates_.size(); ++i) {
-            QL_REQUIRE(dates_[i] > dates_[i - 1], "invalid date (" << dates_[i] << ", vs " << dates_[i - 1] << ")");
-            times_[i] = dayCounter().yearFraction(dates_[0], dates_[i]);
+        this->times_[0] = 0.0;
+        for (Size i = 1; i < this->dates_.size(); ++i) {
+            QL_REQUIRE(this->dates_[i] > this->dates_[i - 1], "invalid date (" << this->dates_[i] << ", vs " << this->dates_[i - 1] << ")");
+            this->times_[i] = dayCounter().yearFraction(this->dates_[0], this->dates_[i]);
             QL_REQUIRE(!close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time " 
                 "under this curve's day count convention");
         }
@@ -247,8 +247,8 @@ namespace QuantExt {
     void InterpolatedPriceCurve<Interpolator>::getPricesFromQuotes() const {
 
         for (Size i = 0; i < quotes_.size(); ++i) {
-            QL_REQUIRE(!quotes_[i].empty(), "price quote at index " << i << " is empty");
-            data_[i] = quotes_[i]->value();
+            QL_REQUIRE(!this->quotes_[i].empty(), "price quote at index " << i << " is empty");
+            this->data_[i] = quotes_[i]->value();
         }
     }
 
