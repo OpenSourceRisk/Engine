@@ -31,6 +31,7 @@
 #include <ql/math/comparison.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/patterns/lazyobject.hpp>
 
 namespace QuantExt {
 
