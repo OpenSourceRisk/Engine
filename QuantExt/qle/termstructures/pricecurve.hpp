@@ -227,7 +227,7 @@ namespace QuantExt {
         QL_REQUIRE(boost::algorithm::is_sorted(this->times_.begin(), this->times_.end()), "Times must be sorted");
         QL_REQUIRE(*std::min_element(this->data_.begin(), this->data_.end()) >= 0.0, "Prices must be positive");
 
-        InterpolatedCurve<Interpolator>::setupInterpolation();
+        QuantLib::InterpolatedCurve<Interpolator>::setupInterpolation();
         this->interpolation_.update();
     }
 
