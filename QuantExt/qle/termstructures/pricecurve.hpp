@@ -23,7 +23,7 @@
 #ifndef quantext_price_curve_hpp
 #define quantext_price_curve_hpp
 
-#include <algorithm>
+#include <boost\algorithm\cxx11\is_sorted.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
 
@@ -224,7 +224,7 @@ namespace QuantExt {
         }
 
         QL_REQUIRE(this->data_.size() == this->times_.size(), "Number of times must equal number of prices");
-        QL_REQUIRE(std::is_sorted(this->times_.begin(), this->times_.end()), "Times must be sorted");
+        QL_REQUIRE(boost::algorithm::is_sorted(this->times_.begin(), this->times_.end()), "Times must be sorted");
         QL_REQUIRE(*std::min_element(this->data_.begin(), this->data_.end()) >= 0.0, "Prices must be positive");
 
         InterpolatedCurve<Interpolator>::setupInterpolation();
