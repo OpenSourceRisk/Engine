@@ -20,6 +20,8 @@
     \brief risk class and type filter
 */
 
+#pragma once
+
 #include <orea/scenario/scenario.hpp>
 
 #include <ql/types.hpp>

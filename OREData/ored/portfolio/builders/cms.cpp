@@ -47,10 +47,10 @@ boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder:
     string ycmstr = engineParameters_.at("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
-    Handle<Quote> zeroMeanRev(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
 
-    boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<AnalyticHaganPricer>(vol, ycm, zeroMeanRev);
+    boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<AnalyticHaganPricer>(vol, ycm, revQuote);
 
     // Return the cached pricer
     return pricer;
@@ -66,11 +66,11 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
     Rate ulim = parseReal(engineParameters_.at("UpperLimit"));
     Real prec = parseReal(engineParameters_.at("Precision"));
 
-    Handle<Quote> zeroMeanRev(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
 
     boost::shared_ptr<FloatingRateCouponPricer> pricer =
-        boost::make_shared<NumericHaganPricer>(vol, ycm, zeroMeanRev, llim, ulim, prec);
+        boost::make_shared<NumericHaganPricer>(vol, ycm, revQuote, llim, ulim, prec);
 
     // Return the cached pricer
     return pricer;
@@ -82,7 +82,7 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
     Real rev = parseReal(engineParameters_.at("MeanReversion"));
     string policy = engineParameters_.at("Policy");
 
-    Handle<Quote> zeroMeanRev(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
+    Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
     Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
 
@@ -115,7 +115,7 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
         QL_FAIL("unknown string for policy parameter");
 
     boost::shared_ptr<FloatingRateCouponPricer> pricer =
-        boost::make_shared<LinearTsrPricer>(vol, zeroMeanRev, yts, settings);
+        boost::make_shared<LinearTsrPricer>(vol, revQuote, yts, settings);
 
     // Return the cached pricer
     return pricer;

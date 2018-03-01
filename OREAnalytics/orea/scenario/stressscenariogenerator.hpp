@@ -88,6 +88,7 @@ private:
     void addEquityVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
     const boost::shared_ptr<StressTestScenarioData> stressData_;
 };

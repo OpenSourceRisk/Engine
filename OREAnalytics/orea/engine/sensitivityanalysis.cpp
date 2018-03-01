@@ -548,6 +548,14 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             shiftMult = yoyRate;
         }
     } break;
+    case RiskFactorKey::KeyType::SecuritySpread: {
+        auto itr = sensitivityData_->securityShiftData().find(keylabel);
+        QL_REQUIRE(itr != sensitivityData_->securityShiftData().end(), "shiftData not found for " << keylabel);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftMult = simMarket_->securitySpread(keylabel, marketConfiguration_)->value();
+        }
+    } break;
     default:
         // KeyType::CPIIndex does not get shifted
         QL_FAIL("KeyType not supported yet - " << keytype);

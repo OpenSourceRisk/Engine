@@ -40,7 +40,6 @@
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 
 namespace ore {
 namespace data {

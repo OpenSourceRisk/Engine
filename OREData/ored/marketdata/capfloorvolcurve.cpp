@@ -139,7 +139,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                         m << endl;
                 }
             }
-            LOG(m.str());
+            DLOGGERSTREAM << m.str() << endl;
             QL_FAIL("could not build cap/floor vol curve");
         }
 

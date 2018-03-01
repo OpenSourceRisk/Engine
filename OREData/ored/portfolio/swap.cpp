@@ -61,6 +61,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     boost::shared_ptr<EngineBuilder> builder =
         isXCCY ? engineFactory->builder("CrossCurrencySwap") : engineFactory->builder("Swap");
+    auto configuration = builder->configuration(MarketContext::pricing);
 
     for (Size i = 0; i < numLegs; ++i) {
         legPayers_[i] = legData_[i].isPayer();
@@ -97,38 +98,21 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
 
-        if (legData_[i].legType() == "Fixed") {
-            legs_[i] = makeFixedLeg(legData_[i]);
-        } else if (legData_[i].legType() == "Floating") {
-            boost::shared_ptr<FloatingLegData> floatData =
-                boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData());
-            QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
-            string indexName = floatData->index();
+        // build the leg
 
-            Handle<IborIndex> hIndex =
-                engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
-            QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
-            boost::shared_ptr<IborIndex> index = hIndex.currentLink();
+        auto legBuilder = engineFactory->legBuilder(legData_[i].legType());
+        legs_[i] = legBuilder->buildLeg(legData_[i], engineFactory, configuration);
 
-            // Do we have an overnight index?
-            boost::shared_ptr<OvernightIndex> ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
-            if (ois) {
-                legs_[i] = makeOISLeg(legData_[i], ois);
-            } else if (!legData_[i].isNotResetXCCY()) {
+        // handle fx resetting Ibor leg
+
+        if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
                 // this is the reseting leg...
                 Real foreignNotional = legData_[i].foreignAmount();
-                // build a temp leg
-                Leg tempLeg = makeIborLeg(legData_[i], index, engineFactory);
-                QL_REQUIRE(tempLeg.size() > 0, "At least one coupon needed for leg " << i);
-
-                // and then copy everything into a vector of new FloatingRateFXLinkedNotionalCoupons
-                legs_[i].resize(tempLeg.size());
                 // First coupon is the same (no reset or FX link)
-                legs_[i][0] = tempLeg[0];
                 // The reset are FX Linked
-                for (Size j = 1; j < tempLeg.size(); ++j) {
+                for (Size j = 1; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
-                        boost::dynamic_pointer_cast<FloatingRateCoupon>(tempLeg[j]);
+                        boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
                         new FloatingRateFXLinkedNotionalCoupon(
                             foreignNotional,
@@ -137,52 +121,12 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                             coupon->accrualEndDate(), legData_[i].fixingDays(), coupon->index(), coupon->gearing(),
                             coupon->spread(), coupon->referencePeriodStart(), coupon->referencePeriodEnd(),
                             coupon->dayCounter(), coupon->isInArrears()));
-
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
-
                     legs_[i][j] = fxLinkedCoupon;
                 }
-            } else {
-                legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
-            }
-        } else if (legData_[i].legType() == "CPI") {
-            boost::shared_ptr<CPILegData> cpiData =
-                boost::dynamic_pointer_cast<CPILegData>(legData_[i].concreteLegData());
-            QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
-            string inflationIndexName = cpiData->index();
-            boost::shared_ptr<ZeroInflationIndex> index = *market->zeroInflationIndex(inflationIndexName);
-            QL_REQUIRE(index, "zero inflation index not found for index " << inflationIndexName);
-            legs_[i] = makeCPILeg(legData_[i], index);
-            // legTypes[i] = Inflation;
-            // legTypes_[i] = "INFLATION";
-        } else if (legData_[i].legType() == "YY") {
-            boost::shared_ptr<YoYLegData> yyData =
-                boost::dynamic_pointer_cast<YoYLegData>(legData_[i].concreteLegData());
-            QL_REQUIRE(yyData, "Wrong LegType, expected Floating");
-            string inflationIndexName = yyData->index();
-            boost::shared_ptr<YoYInflationIndex> index = *market->yoyInflationIndex(inflationIndexName);
-            legs_[i] = makeYoYLeg(legData_[i], index);
-            // legTypes[i] = Inflation;
-            // legTypes_[i] = "INFLATION_YOY";
-        } else if (legData_[i].legType() == "Cashflow") {
-            legs_[i] = makeSimpleLeg(legData_[i]);
-        } else if (legData_[i].legType() == "CMS") {
-            boost::shared_ptr<CMSLegData> cmsData =
-                boost::dynamic_pointer_cast<CMSLegData>(legData_[i].concreteLegData());
-            QL_REQUIRE(cmsData, "Wrong LegType, expected Floating");
-            string swapIndexName = cmsData->swapIndex();
-
-            Handle<SwapIndex> hIndex =
-                engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));
-            QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << swapIndexName << " in market.");
-
-            boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
-            legs_[i] = makeCMSLeg(legData_[i], index, engineFactory);
-
-        } else {
-            QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
+
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
 
         // Add notional legs (if required)
@@ -286,11 +230,13 @@ void Swap::fromXML(XMLNode* node) {
     XMLNode* swapNode = XMLUtils::getChildNode(node, "SwapData");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(swapNode, "LegData");
     for (Size i = 0; i < nodes.size(); i++) {
-        LegData ld;
-        ld.fromXML(nodes[i]);
-        legData_.push_back(ld);
+        auto ld = createLegData();
+        ld->fromXML(nodes[i]);
+        legData_.push_back(*boost::static_pointer_cast<LegData>(ld));
     }
 }
+
+boost::shared_ptr<LegData> Swap::createLegData() const { return boost::make_shared<LegData>(); }
 
 XMLNode* Swap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
