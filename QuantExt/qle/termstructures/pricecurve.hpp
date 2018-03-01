@@ -23,7 +23,7 @@
 #ifndef quantext_price_curve_hpp
 #define quantext_price_curve_hpp
 
-#include <boost\algorithm\cxx11\is_sorted.hpp>
+#include <boost/algorithm/cxx11/is_sorted.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
 
