@@ -67,7 +67,8 @@ public:
         YoYInflationCurve,
         CommoditySpot,
         CommodityCurve,
-        CommodityVolatility
+        CommodityVolatility,
+        SecuritySpread
     };
 
     //! Constructor

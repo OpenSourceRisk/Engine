@@ -307,6 +307,19 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
+    LOG("Get security spread sensitivity parameters");
+    XMLNode* securitySpreads = XMLUtils::getChildNode(node, "SecuritySpreads");
+    if (securitySpreads) {
+        for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string bond = XMLUtils::getAttribute(child, "security");
+            SpotShiftData data;
+            shiftDataFromXML(child, data);
+            securityShiftData_[bond] = data;
+            securityNames_.push_back(bond);
+        }
+    }
+
     LOG("Get cross gamma parameters");
     vector<string> filter = XMLUtils::getChildrenValues(node, "CrossGammaFilter", "Pair", true);
     for (Size i = 0; i < filter.size(); ++i) {

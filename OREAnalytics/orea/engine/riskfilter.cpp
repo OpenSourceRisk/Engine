@@ -44,7 +44,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         RiskFactorKey::KeyType::DividendYield,       RiskFactorKey::KeyType::SurvivalProbability,
         RiskFactorKey::KeyType::RecoveryRate,        RiskFactorKey::KeyType::CDSVolatility,
         RiskFactorKey::KeyType::BaseCorrelation,     RiskFactorKey::KeyType::CPIIndex,
-        RiskFactorKey::KeyType::ZeroInflationCurve,  RiskFactorKey::KeyType::YoYInflationCurve};
+        RiskFactorKey::KeyType::ZeroInflationCurve,  RiskFactorKey::KeyType::YoYInflationCurve,
+        RiskFactorKey::KeyType::SecuritySpread};
 
     std::set<RiskFactorKey::KeyType> allowed_type, allowed;
 
@@ -58,7 +59,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                             RiskFactorKey::KeyType::EquitySpot,         RiskFactorKey::KeyType::EquityForecastCurve,
                             RiskFactorKey::KeyType::DividendYield,      RiskFactorKey::KeyType::SurvivalProbability,
                             RiskFactorKey::KeyType::RecoveryRate,       RiskFactorKey::KeyType::CPIIndex,
-                            RiskFactorKey::KeyType::ZeroInflationCurve, RiskFactorKey::KeyType::YoYInflationCurve};
+                            RiskFactorKey::KeyType::ZeroInflationCurve, RiskFactorKey::KeyType::YoYInflationCurve,
+                            RiskFactorKey::KeyType::SecuritySpread};
             break;
         case 2:
             allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility, RiskFactorKey::KeyType::OptionletVolatility,
@@ -81,7 +83,7 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         case 1:
             allowed_class = {RiskFactorKey::KeyType::DiscountCurve, RiskFactorKey::KeyType::YieldCurve,
                              RiskFactorKey::KeyType::IndexCurve, RiskFactorKey::KeyType::SwaptionVolatility,
-                             RiskFactorKey::KeyType::OptionletVolatility};
+                             RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread};
             break;
         case 2:
             allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,

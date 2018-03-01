@@ -153,6 +153,9 @@ public:
     const std::vector<std::string>& commodityVolNames() const { return commodityVolNames_; }
     const std::map<std::string, VolShiftData>& commodityVolShiftData() const { return commodityVolShiftData_; }
 
+    const vector<string>& securityNames() const { return securityNames_; }
+    const map<string, SpotShiftData>& securityShiftData() const { return securityShiftData_; }
+
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
     //@}
@@ -219,6 +222,9 @@ public:
 
     std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
     std::map<std::string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
+
+    vector<string>& securityNames() { return securityNames_; }
+    map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -302,6 +308,9 @@ protected:
 
     std::vector<std::string> commodityVolNames_;
     std::map<std::string, VolShiftData> commodityVolShiftData_;
+
+    vector<string> securityNames_;
+    map<string, SpotShiftData> securityShiftData_; // key: security name
 
     vector<pair<string, string>> crossGammaFilter_;
 };

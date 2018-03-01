@@ -71,6 +71,8 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "CommodityCurve";
     case RiskFactorKey::KeyType::CommodityVolatility:
         return out << "CommodityVolatility";
+    case RiskFactorKey::KeyType::SecuritySpread:
+        return out << "SecuritySpread";
     default:
         return out << "?";
     }
@@ -119,6 +121,9 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::YoYInflationCurve;
     else if (str == "CommodityCurve")
         return RiskFactorKey::KeyType::CommodityCurve;
+    else if (str == "SecuritySpread")
+        return RiskFactorKey::KeyType::SecuritySpread;
+
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 

@@ -86,6 +86,7 @@ public:
         map<string, VolShiftData> equityVolShifts;           // by equity
         map<string, CapFloorVolShiftData> capVolShifts;      // by currency
         map<string, SwaptionVolShiftData> swaptionVolShifts; // by currency
+        map<string, SpotShiftData> securitySpreadShifts;     // by bond/security
     };
 
     //! Default constructor

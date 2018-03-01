@@ -182,11 +182,17 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     if (!parameters->simulateDividendYield()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
     }
+
     if (!parameters->commodityCurveSimulate()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityCurve);
     }
+
     if (!parameters->commodityVolSimulate()) {
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityVolatility);
+    }
+
+    if (!parameters->securitySpreadsSimulate()) {
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SecuritySpread);
     }
 
     // Build fixing manager
@@ -244,10 +250,17 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // building security spreads
     LOG("building security spreads...");
     for (const auto& name : parameters->securities()) {
-        boost::shared_ptr<Quote> spreadQuote(new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+        DLOG("Adding security spread " << name <<" from configuration " << configuration);
+        boost::shared_ptr<SimpleQuote> spreadQuote(new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+        if (parameters->securitySpreadsSimulate()) {
+            simData_.emplace(std::piecewise_construct,
+                std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
+                std::forward_as_tuple(spreadQuote));
+        }
         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                           Handle<Quote>(spreadQuote)));
     }
+    LOG("security spreads done...");
 
     // constructing index curves
     LOG("building index curves...");

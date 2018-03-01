@@ -125,6 +125,7 @@ private:
     void generateCommodityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCommodityCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateCommodityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateSecuritySpreadScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -148,6 +149,7 @@ private:
     ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket, bool up);
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName,
         QuantLib::Size expiryBucket, QuantLib::Size strikeBucket, bool up);
+    ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     const bool overrideTenors_;

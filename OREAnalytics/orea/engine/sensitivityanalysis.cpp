@@ -562,7 +562,7 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
     case RiskFactorKey::KeyType::CommodityVolatility: {
         auto it = sensitivityData_->commodityVolShiftData().find(keylabel);
         QL_REQUIRE(it != sensitivityData_->commodityVolShiftData().end(), "shiftData not found for " << keylabel);
-        
+
         shiftSize = it->second.shiftSize;
         if (parseShiftType(it->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             Size moneynessIndex = key.index / it->second.shiftExpiries.size();
@@ -574,6 +574,14 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
             Time t = vts->dayCounter().yearFraction(asof_, asof_ + expiry);
             Real vol = vts->blackVol(t, moneyness * spotValue);
             shiftMult = vol;
+        }
+    } break;
+    case RiskFactorKey::KeyType::SecuritySpread: {
+        auto itr = sensitivityData_->securityShiftData().find(keylabel);
+        QL_REQUIRE(itr != sensitivityData_->securityShiftData().end(), "shiftData not found for " << keylabel);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            shiftMult = simMarket_->securitySpread(keylabel, marketConfiguration_)->value();
         }
     } break;
     default:
