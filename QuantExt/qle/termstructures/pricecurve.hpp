@@ -136,7 +136,7 @@ namespace QuantExt {
         initialise();
 
         // Observe the quotes
-        for (Size i = 0; i < quotes_.size(); ++i) {
+        for (QuantLib::Size i = 0; i < quotes_.size(); ++i) {
             registerWith(quotes[i]);
         }
     }
@@ -163,7 +163,7 @@ namespace QuantExt {
         initialise();
 
         // Observe the quotes
-        for (Size i = 0; i < quotes_.size(); ++i) {
+        for (QuantLib::Size i = 0; i < quotes_.size(); ++i) {
             registerWith(quotes[i]);
         }
     }
@@ -235,7 +235,7 @@ namespace QuantExt {
     void InterpolatedPriceCurve<Interpolator>::convertDatesToTimes() {
 
         this->times_[0] = 0.0;
-        for (Size i = 1; i < this->dates_.size(); ++i) {
+        for (QuantLib::Size i = 1; i < this->dates_.size(); ++i) {
             QL_REQUIRE(this->dates_[i] > this->dates_[i - 1], "invalid date (" << this->dates_[i] << ", vs " << this->dates_[i - 1] << ")");
             this->times_[i] = dayCounter().yearFraction(this->dates_[0], this->dates_[i]);
             QL_REQUIRE(!close(this->times_[i], this->times_[i - 1]), "two dates correspond to the same time " 
@@ -246,7 +246,7 @@ namespace QuantExt {
     template <class Interpolator>
     void InterpolatedPriceCurve<Interpolator>::getPricesFromQuotes() const {
 
-        for (Size i = 0; i < quotes_.size(); ++i) {
+        for (QuantLib::Size i = 0; i < quotes_.size(); ++i) {
             QL_REQUIRE(!this->quotes_[i].empty(), "price quote at index " << i << " is empty");
             this->data_[i] = quotes_[i]->value();
         }
