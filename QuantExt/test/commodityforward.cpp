@@ -45,7 +45,7 @@ public:
     // Default constructor
     CommonData() : name("GOLD_USD"),
         currency(USDCurrency()),
-        position(Position::Type::Long),
+        position(Position::Long),
         quantity(100),
         maturity(19, Feb, 2019),
         strike(50.0) {}

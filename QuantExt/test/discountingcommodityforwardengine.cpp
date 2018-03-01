@@ -75,7 +75,7 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     Settings::instance().evaluationDate() = asof;
 
     // Long 100 units with strike 1380.0
-    Position::Type position = Position::Type::Long;
+    Position::Type position = Position::Long;
     Real quantity = 100;
     Real strike = 1380.0;
     boost::shared_ptr<CommodityForward> forward = boost::make_shared<CommodityForward>(
@@ -84,7 +84,7 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     BOOST_CHECK_CLOSE(forward->NPV(), quantity * (prices[1] - strike) * dfs[1], tolerance);
 
     // Short 100 units with strike 1380.0
-    position = Position::Type::Short;
+    position = Position::Short;
     forward = boost::make_shared<CommodityForward>(name, currency, position, quantity, maturity, strike);
     forward->setPricingEngine(engine);
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1], tolerance);
