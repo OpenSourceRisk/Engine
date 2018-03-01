@@ -220,7 +220,7 @@ public:
     virtual ~LegBuilder() {}
     virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&,
                          const string& configuration) const = 0;
-    string legType() const { return legType_; }
+    const string& legType() const { return legType_; }
 
 private:
     const string legType_;
