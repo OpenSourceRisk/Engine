@@ -120,7 +120,7 @@ namespace QuantExt {
     InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<QuantLib::Time>& times,
         const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dc, const Interpolator& interpolator)
         : PriceTermStructure(0, QuantLib::NullCalendar(), dc), 
-          InterpolatedCurve<Interpolator>(times, prices, interpolator) {
+          QuantLib::InterpolatedCurve<Interpolator>(times, prices, interpolator) {
 
         initialise();
     }
@@ -130,7 +130,7 @@ namespace QuantExt {
         const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes, 
         const QuantLib::DayCounter& dc, const Interpolator& interpolator)
         : PriceTermStructure(0, QuantLib::NullCalendar(), dc),
-          InterpolatedCurve<Interpolator>(times, std::vector<QuantLib::Real>(quotes.size()), interpolator),
+          QuantLib::InterpolatedCurve<Interpolator>(times, std::vector<QuantLib::Real>(quotes.size()), interpolator),
           quotes_(quotes) {
 
         initialise();
@@ -145,7 +145,7 @@ namespace QuantExt {
     InterpolatedPriceCurve<Interpolator>::InterpolatedPriceCurve(const std::vector<QuantLib::Date>& dates,
         const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dc, const Interpolator& interpolator)
         : PriceTermStructure(dates.at(0), QuantLib::NullCalendar(), dc),
-          InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(dates.size()), prices, interpolator), 
+          QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(dates.size()), prices, interpolator),
           dates_(dates) {
 
         initialise();
@@ -156,7 +156,7 @@ namespace QuantExt {
         const std::vector<QuantLib::Handle<QuantLib::Quote> >& quotes,
         const QuantLib::DayCounter& dc, const Interpolator& interpolator)
         : PriceTermStructure(dates.at(0), QuantLib::NullCalendar(), dc), 
-          InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(dates.size()), 
+          QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(dates.size()),
               std::vector<QuantLib::Real>(quotes.size()), interpolator),
           quotes_(quotes), dates_(dates) {
 
