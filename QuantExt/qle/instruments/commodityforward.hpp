@@ -66,7 +66,7 @@ public:
     //! \name Inspectors
     //@{
     const std::string& name() const { return name_; }
-    QuantLib::Currency currency() const { return currency_; }
+    const QuantLib::Currency& currency() const { return currency_; }
     QuantLib::Position::Type position() const { return position_; }
     QuantLib::Real quantity() const { return quantity_; }
     const QuantLib::Date& maturityDate() const { return maturityDate_; }
