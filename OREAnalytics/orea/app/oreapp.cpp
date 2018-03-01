@@ -345,7 +345,7 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);;
+    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);
     for (auto portfolioFile : portfolioFiles) {
         portfolio->load(portfolioFile, buildTradeFactory());
     }
