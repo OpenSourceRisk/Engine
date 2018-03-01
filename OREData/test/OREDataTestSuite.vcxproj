@@ -643,7 +643,7 @@
     <ClInclude Include="cms.hpp" />
     <ClInclude Include="commoditycurve.hpp" />
     <ClInclude Include="commoditycurveconfig.hpp" />
-    <ClInclude Include="oredCommodityforward.hpp" />
+    <ClInclude Include="ored_commodityforward.hpp" />
     <ClInclude Include="commodityvolcurve.hpp" />
     <ClInclude Include="commodityvolcurveconfig.hpp" />
     <ClInclude Include="cpiswap.hpp" />
@@ -673,7 +673,7 @@
     <ClCompile Include="cms.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
-    <ClCompile Include="oredCommodityforward.cpp" />
+    <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="commodityoption.cpp" />
     <ClCompile Include="commodityvolcurve.cpp" />
     <ClCompile Include="commodityvolcurveconfig.cpp" />

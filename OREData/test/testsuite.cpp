@@ -58,7 +58,7 @@ using boost::unit_test::test_suite;
 #include "cms.hpp"
 #include "commoditycurve.hpp"
 #include "commoditycurveconfig.hpp"
-#include "oredCommodityforward.hpp"
+#include "ored_commodityforward.hpp"
 #include "commodityoption.hpp"
 #include "commodityvolcurve.hpp"
 #include "commodityvolcurveconfig.hpp"

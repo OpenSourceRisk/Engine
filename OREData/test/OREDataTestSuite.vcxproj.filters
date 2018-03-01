@@ -90,7 +90,7 @@
     <ClInclude Include="commodityvolcurve.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="oredCommodityforward.hpp">
+    <ClInclude Include="ored_commodityforward.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -177,7 +177,7 @@
     <ClCompile Include="commodityvolcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="oredCommodityforward.cpp">
+    <ClCompile Include="ored_commodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

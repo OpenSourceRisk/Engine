@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/oredCommodityforward.hpp>
+#include <test/ored_commodityforward.hpp>
 
 #include <boost/make_shared.hpp>
 
