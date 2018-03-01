@@ -86,7 +86,7 @@ namespace QuantExt {
         //! \name TermStructure interface
         //@{
         //! This is not used by this class and returns the maximum date
-        QuantLib::Date maxDate() const { return Date::maxDate(); }
+        QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
         QuantLib::Time maxTime() const;
         //@}
 
