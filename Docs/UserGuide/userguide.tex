@@ -3215,9 +3215,6 @@ FX volatilities are taken to be a curve by default. To simulate an FX volatility
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
 If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
 
-For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}. 
-If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}.
-
 \begin{longlisting}
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
@@ -3304,6 +3301,21 @@ If no day counter is specified for a given riskfactor then the default Actual365
         <Moneyness>0.1,0.5,1.0,1.5,2.0,3.0</Moneyness><!-- omitted if SimulateATMOnly true -->
       </Surface>
   </EquityVolatilities>
+  ...
+  <BenchmarkCurves>
+	<BenchmarkCurve>
+      <Currency>EUR</Currency>
+      <Name>BENCHMARK_EUR</Name>
+	</BenchmarkCurve>
+	...
+  </BenchmarkCurves>
+  <Securities>
+    <Simulate>true</Simulate>
+    <Names>
+      <Name>SECURITY_1</Name>
+      ...
+    </Names>
+  </Securities>
   <ZeroInflationIndexCurves>
     <Names>
       <Name>EUHICP</Name>
@@ -3366,6 +3378,7 @@ ORE currently supports sensitivity analysis with respect to
 \item Zero inflation curves
 \item Year-on-Year inflation curves
 \item CDS volatilities
+\item Bond credit spreads
 \item Base correlation curves
 \end{itemize}
 
@@ -3476,6 +3489,12 @@ giving an example in each category:
       <Index>EUR-EURIBOR-6M</Index>
     </CapFloorVolatility>
   </CapFloorVolatilities>
+  <SecuritySpreads>
+    <SecuritySpread security="SECURITY_1">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </SecuritySpread>
+  </SecuritySpreads>
   ...
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>
