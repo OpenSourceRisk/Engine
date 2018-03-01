@@ -122,6 +122,7 @@ private:
     void generateZeroInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateYoYInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateBaseCorrelationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateSecuritySpreadScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -141,6 +142,7 @@ private:
     ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
+    ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     const bool overrideTenors_;

@@ -54,7 +54,7 @@ public:
           recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
           dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
           equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          baseCorrelationSimulate_(false) {
+          securitySpreadsSimulate_(false), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -140,6 +140,7 @@ public:
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
 
+    bool securitySpreadsSimulate() const { return securitySpreadsSimulate_; }
     const vector<string>& securities() const { return securities_; }
 
     bool simulateBaseCorrelations() const { return baseCorrelationSimulate_; }
@@ -232,6 +233,7 @@ public:
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
+    bool& securitySpreadsSimulate() { return securitySpreadsSimulate_;  }
     vector<string>& securities() { return securities_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
@@ -336,6 +338,7 @@ private:
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
 
+    bool securitySpreadsSimulate_;
     vector<string> securities_;
 
     bool baseCorrelationSimulate_;

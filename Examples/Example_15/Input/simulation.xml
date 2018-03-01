@@ -129,7 +129,10 @@
     </BenchmarkCurves>
 
     <Securities>
-      <Security>SECURITY_1</Security>
+      <Simulate>true</Simulate>
+      <Names>
+        <Name>SECURITY_1</Name>
+      </Names>
     </Securities>
 
     <ZeroInflationIndexCurves>

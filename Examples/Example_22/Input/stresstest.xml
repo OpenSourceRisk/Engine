@@ -178,6 +178,7 @@
     <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
       </EquityVolatility>
     </EquityVolatilities>
+    <SecuritySpreads />
     
   </StressTest><!-- end of stress test definition -->
 
@@ -217,6 +218,7 @@
 	</EquitySpots>
 	<EquityVolatilities>
 	</EquityVolatilities>
+    <SecuritySpreads />
   </StressTest>
 
 </StressTesting>
