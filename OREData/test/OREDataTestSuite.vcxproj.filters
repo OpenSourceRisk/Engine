@@ -75,9 +75,6 @@
     <ClInclude Include="cds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="commodityforward.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="commoditycurveconfig.hpp">
       <Filter>headers</Filter>
     </ClInclude>
@@ -91,6 +88,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="commodityvolcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="oredCommodityforward.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -162,9 +162,6 @@
     <ClCompile Include="cds.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="commodityforward.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="commoditycurveconfig.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -178,6 +175,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="commodityvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="oredCommodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
