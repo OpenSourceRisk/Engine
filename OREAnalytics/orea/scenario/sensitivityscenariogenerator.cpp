@@ -68,8 +68,10 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateYieldCurveScenarios(sensiScenarioFactory, true);
     generateYieldCurveScenarios(sensiScenarioFactory, false);
 
-    generateFxScenarios(sensiScenarioFactory, true);
-    generateFxScenarios(sensiScenarioFactory, false);
+    if (simMarketData_->simulateFxSpots()) {
+        generateFxScenarios(sensiScenarioFactory, true);
+        generateFxScenarios(sensiScenarioFactory, false);
+    }
 
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
@@ -204,7 +206,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
 void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                                        bool up) {
     Date asof = baseScenario_->asof();
-    // We can choose to shift fewer discount curves than listed in the market
+    // We can choose to shift fewer FX risk factors than listed in the market
     std::vector<string> fxCcyPairs;
     if (sensitivityData_->fxCcyPairs().size() > 0)
         fxCcyPairs = sensitivityData_->fxCcyPairs();

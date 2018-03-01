@@ -310,7 +310,8 @@
       <xs:element name="FxRates" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="CurrencyPairs" maxOccurs="1">
+            <xs:element type="bool" name="Simulate" maxOccurs="1" minOccurs="0"/>
+            <xs:element name="CurrencyPairs" maxOccurs="1" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="currencyPair" name="CurrencyPair" maxOccurs="unbounded" minOccurs="0"/>
