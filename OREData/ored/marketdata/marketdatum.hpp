@@ -1097,9 +1097,9 @@ private:
 class CommodityOptionQuote : public MarketDatum {
 public:
     //! Constructor
-    /*! \param commodityName The name of the underlying commodity
-        \param expiry        Expiry can be a period or a date
-        \param strike        Can be underlying commodity price or ATMF 
+    /*! \note
+        The \p expiry can be a tenor or date
+        The \p strike can be ATMF or a strike price
     */
     CommodityOptionQuote(QuantLib::Real value, 
         const QuantLib::Date& asof, 
