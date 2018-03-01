@@ -41,6 +41,20 @@ using namespace std;
 using namespace ore::data;
 using namespace ore::analytics;
 
+namespace {
+
+vector<string> getFilenames(const string& fileString, const string& path) {
+    vector<string> fileNames;
+    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
+        boost::trim(*it);
+        *it = path + "/" + *it;
+    }
+    return fileNames;
+}
+
+} // anonymous namespace
+
 namespace ore {
 namespace analytics {
 
@@ -272,19 +286,9 @@ void OREApp::buildMarket() {
         out_ << endl << setw(tab_) << left << "Market data loader... " << flush;
         string inputPath = params_->get("setup", "inputPath");
         string marketFileString = params_->get("setup", "marketDataFile");
-        vector<string> marketFiles;
-        boost::split(marketFiles, marketFileString, boost::is_any_of(",;"), boost::token_compress_on);
-        for (auto it = marketFiles.begin(); it < marketFiles.end(); it++) {
-            boost::trim(*it);
-            *it = inputPath + "/" + *it;
-        }
+        vector<string> marketFiles = getFilenames(marketFileString, inputPath);
         string fixingFileString = params_->get("setup", "fixingDataFile");
-        vector<string> fixingFiles;
-        boost::split(fixingFiles, fixingFileString, boost::is_any_of(",;"), boost::token_compress_on);
-        for (auto it = fixingFiles.begin(); it < fixingFiles.end(); it++) {
-            boost::trim(*it);
-            *it = inputPath + "/" + *it;
-        }
+        vector<string> fixingFiles = getFilenames(fixingFileString, inputPath);
         string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
         bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
         CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
@@ -341,11 +345,8 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
         return portfolio;
-    vector<string> portfolioFiles;
-    boost::split(portfolioFiles, portfoliosString, boost::is_any_of(",;"), boost::token_compress_on);
+    vector<string> portfolioFiles = getFilenames(portfoliosString, inputPath);;
     for (auto portfolioFile : portfolioFiles) {
-        boost::trim(portfolioFile);
-        portfolioFile = inputPath + "/" + portfolioFile;
         portfolio->load(portfolioFile, buildTradeFactory());
     }
     portfolio->build(factory);
