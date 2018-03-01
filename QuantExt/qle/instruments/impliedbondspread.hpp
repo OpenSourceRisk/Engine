@@ -25,7 +25,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantlib_implied_bond_spread_hpp
 #define quantlib_implied_bond_spread_hpp
 
-#include <ql/instrument.hpp>
+#include <ql/instruments/bond.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 namespace QuantExt {
@@ -33,8 +33,7 @@ namespace QuantExt {
     namespace detail {
 
         //! helper class for implied vanilla bond spread calculation
-        /*! The passed engine must be linked to the passed quote (see,
-             e.g., VanillaOption to see how this can be achieved.)
+        /*! The passed engine must be linked to the passed quote 
 
              \note this function is meant for developers of bond
                    classes so that they can compute a fair credit spread,
@@ -43,10 +42,11 @@ namespace QuantExt {
         class ImpliedBondSpreadHelper {
         public:
             static QuantLib::Real calculate(
-                const QuantLib::Instrument& instrument,
-                const QuantLib::PricingEngine& engine,
-                QuantLib::SimpleQuote& spreadQuote,
+                const boost::shared_ptr<QuantLib::Bond>& bond,
+                const boost::shared_ptr<QuantLib::PricingEngine>& engine,
+                const boost::shared_ptr<QuantLib::SimpleQuote>& spreadQuote,
                 QuantLib::Real targetValue,
+                bool isCleanPrice, // if false, assumes targetValue is based on dirty price
                 QuantLib::Real accuracy,
                 QuantLib::Natural maxEvaluations,
                 QuantLib::Real minSpread,

@@ -19,6 +19,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/instruments/impliedbondspread.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/math/solvers1d/brent.hpp>
+#include <boost/make_shared.hpp>
 
 using namespace QuantLib;
 
@@ -28,31 +29,29 @@ namespace QuantExt {
 
         class PriceError {
           public:
-            PriceError(const PricingEngine& engine,
+            PriceError(const Bond& engine,
                        SimpleQuote& spread,
-                       Real targetValue);
+                       Real targetValue,
+                       bool isCleanPrice);
             Real operator()(Real spread) const;
           private:
-            const PricingEngine& engine_;
+            const Bond& bond_;
             SimpleQuote& spread_;
             Real targetValue_;
-            const Instrument::results* results_;
+            bool isCleanPrice_;
         };
 
-        PriceError::PriceError(const PricingEngine& engine,
+        PriceError::PriceError(const Bond& bond,
                                SimpleQuote& spread,
-                               Real targetValue)
-        : engine_(engine), spread_(spread), targetValue_(targetValue) {
-            results_ =
-                dynamic_cast<const Instrument::results*>(engine_.getResults());
-            QL_REQUIRE(results_ != 0,
-                       "pricing engine does not supply needed results");
-        }
+                               Real targetValue,
+                               bool isCleanPrice)
+        : bond_(bond), spread_(spread),
+        targetValue_(targetValue), isCleanPrice_(isCleanPrice) { }
 
         Real PriceError::operator()(Real spread) const {
             spread_.setValue(spread);
-            engine_.calculate();
-            return results_->value-targetValue_;
+            Real guessValue = isCleanPrice_ ? bond_.cleanPrice() : bond_.dirtyPrice();
+            return guessValue-targetValue_;
         }
 
     }
@@ -61,23 +60,26 @@ namespace QuantExt {
     namespace detail {
 
         Real ImpliedBondSpreadHelper::calculate(
-            const Instrument& instrument,
-            const PricingEngine& engine,
-            SimpleQuote& spreadQuote,
+            const boost::shared_ptr<Bond>& bond,
+            const boost::shared_ptr<PricingEngine>& engine,
+            const boost::shared_ptr<SimpleQuote>& spreadQuote,
             Real targetValue,
+            bool isCleanPrice,
             Real accuracy,
             Natural maxEvaluations,
             Real minSpread,
             Real maxSpread) {
 
-            instrument.setupArguments(engine.getArguments());
-            engine.getArguments()->validate();
+            Bond clonedBond = *bond;
+            clonedBond.setPricingEngine(engine);
+            clonedBond.recalculate();
+            spreadQuote->setValue(0.005);
 
-            PriceError f(engine, spreadQuote, targetValue);
+            PriceError f(clonedBond, *spreadQuote, targetValue, isCleanPrice);
             Brent solver;
             solver.setMaxEvaluations(maxEvaluations);
-            Volatility guess = (minSpread + maxSpread)/2.0;
-            Volatility result = solver.solve(f, accuracy, guess,
+            Real guess = (minSpread + maxSpread)/2.0;
+            Real result = solver.solve(f, accuracy, guess,
                 minSpread, maxSpread);
             return result;
         }

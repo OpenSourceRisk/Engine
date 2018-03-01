@@ -67,36 +67,37 @@ void BondsTest::testBondSpreads() {
     Real couponRate = 0.04;
     Leg leg = FixedRateLeg(schedule).withNotionals(redemption).withCouponRates(couponRate, dc).withPaymentAdjustment(bdc);
 
-    boost::shared_ptr<QuantLib::Instrument> bond(boost::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
+    boost::shared_ptr<QuantLib::Bond> bond(boost::make_shared<QuantLib::Bond>(0, WeekendsOnly(), today, leg));
     Handle<Quote> recovery;
     boost::shared_ptr<PricingEngine> pricingEngine(boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, bondSpecificSpread, 1*Months));
     bond->setPricingEngine(pricingEngine);
 
-    Real npv = bond->NPV();
-    BOOST_TEST_MESSAGE("Bond price = " << npv);
+    Real price = bond->dirtyPrice();
+    BOOST_TEST_MESSAGE("Bond price = " << price);
 
     // now calculated the implied bond spread, given the price
     auto tmpSpread = boost::make_shared<SimpleQuote>(0.0);
     Handle<Quote> tmpSpreadH(tmpSpread);
-    boost::scoped_ptr<PricingEngine> tmpEngine;
+    boost::shared_ptr<PricingEngine> tmpEngine;
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));
 
-    Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(*bond, *tmpEngine, *tmpSpread, npv, 1.e-12, 10000, -0.02, 1.00);
+    Real impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, price, false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Implied spread = " << impliedSpread);
     BOOST_CHECK_CLOSE(impliedSpread, bondSpecificSpread->value(), 0.0001);
 
-    Real npv2 = bond->NPV();
-    BOOST_CHECK_EQUAL(npv, npv2);
+    Real price2 = bond->dirtyPrice();
+    BOOST_CHECK_EQUAL(price, price2);
 
     // which spread would mean the bond price is par?
     Real parRedemption = 100.0;
-    Real impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(*bond, *tmpEngine, *tmpSpread, parRedemption, 1.e-12, 10000, -0.02, 1.00);
+    Real impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Par bond price would require spread of " << impliedSpreadPar);
+    BOOST_CHECK_EQUAL(price, bond->dirtyPrice()); // ensure hypothetical impliedSpread calc has not affected the original position
 
     boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
-    Real npvPar = bond->NPV();
-    BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << npvPar);
-    BOOST_CHECK_CLOSE(npvPar, parRedemption, 0.0001);
+    Real pricePar = bond->dirtyPrice();
+    BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << pricePar);
+    BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);
 
     // now check that bond pricing works even if no credit curve exists
 
@@ -104,20 +105,20 @@ void BondsTest::testBondSpreads() {
     pricingEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, bondSpecificSpread, 1 * Months));
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));
     bond->setPricingEngine(pricingEngine);
-    Real npvNoIssuerCurve = bond->NPV();
-    BOOST_TEST_MESSAGE("Bond price (ignoring issuer spread) = " << npvNoIssuerCurve);
-    impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(*bond, *tmpEngine, *tmpSpread, npvNoIssuerCurve, 1.e-12, 10000, -0.02, 1.00);
+    Real priceNoIssuerCurve = bond->dirtyPrice();
+    BOOST_TEST_MESSAGE("Bond price (ignoring issuer spread) = " << priceNoIssuerCurve);
+    impliedSpread = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, priceNoIssuerCurve, false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Bond spread (ignoring issuer spread) = " << impliedSpread);
     BOOST_CHECK_CLOSE(impliedSpread, bondSpecificSpread->value(), 0.0001);
 
     // which spread would mean the bond price is par?
-    impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(*bond, *tmpEngine, *tmpSpread, parRedemption, 1.e-12, 10000, -0.02, 1.00);
+    impliedSpreadPar = QuantExt::detail::ImpliedBondSpreadHelper::calculate(bond, tmpEngine, tmpSpread, parRedemption, false, 1.e-12, 10000, -0.02, 1.00);
     BOOST_TEST_MESSAGE("Par bond price would require spread of " << impliedSpreadPar);
     BOOST_CHECK_CLOSE(impliedSpreadPar, bondSpecificSpread->value() + issuerSpreadQuote->value(), 0.0001);
     boost::dynamic_pointer_cast<SimpleQuote>(*bondSpecificSpread)->setValue(impliedSpreadPar);
-    npvPar = bond->NPV();
-    BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << npvPar);
-    BOOST_CHECK_CLOSE(npvPar, parRedemption, 0.0001);
+    pricePar = bond->dirtyPrice();
+    BOOST_TEST_MESSAGE("Bond spread of " << bondSpecificSpread->value() << " means price of " << pricePar);
+    BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);
 
 }
 
