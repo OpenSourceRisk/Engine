@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/oredCommodityforward.hpp
+/*! \file test/ored_commodityforward.hpp
     \brief Commodity forward trade and engine builder test
     \ingroup tests
 */
