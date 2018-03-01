@@ -66,9 +66,17 @@ public:
         bool extrapolate = true);
 
     //! Constructor for volatility surface i.e. Type is Surface
-    /*! \note
-        The \p expiries can be period or date strings denoting option expiries
-        The \p strike can be strike price or ATMF denoting ATM forward quote
+    /*! Quotes are built up from the expiries and strikes strings
+        \param curveId                          Curve id
+        \param curveDescription                 Curve description
+        \param currency                         Currency
+        \param expiries                         Can be period or date strings denoting option expiries
+        \param strikes                          Can be strike price or ATMF denoting ATM forward quote
+        \param dayCounter                       Day counter for converting dates to times
+        \param calendar                         Business day calendar
+        \param extrapolate                      Allow extrapolation or not
+        \param lowerStrikeConstantExtrapolation Constant extrapolation below lower strike or not
+        \param upperStrikeConstantExtrapolation Constant extrapolation above upper strike or not
     */
     CommodityVolatilityCurveConfig(const std::string& curveId, 
         const std::string& curveDescription,

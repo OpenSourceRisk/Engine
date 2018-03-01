@@ -1097,9 +1097,14 @@ private:
 class CommodityOptionQuote : public MarketDatum {
 public:
     //! Constructor
-    /*! \note
-        The \p expiry can be a tenor or date
-        The \p strike can be ATMF or a strike price
+    /*! \param value         The volatility value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE_NVOL
+        \param commodityName The name of the underlying commodity
+        \param quoteCurrency The quote currency
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATMF 
     */
     CommodityOptionQuote(QuantLib::Real value, 
         const QuantLib::Date& asof, 
