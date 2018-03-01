@@ -46,6 +46,13 @@ public:
         //! Enable/disable implying today's fixings
         bool implyTodaysFixings = false);
 
+    CSVLoader( //! Quote file name
+        const vector<string>& marketFiles,
+        //! Fixing file name
+        const vector<string>& fixingFiles,
+        //! Enable/disable implying today's fixings
+        bool implyTodaysFixings = false);
+
     //! \name Inspectors
     //@{
     //! Load market quotes

@@ -265,18 +265,29 @@ void OREApp::getConventions() {
 }
 
 void OREApp::buildMarket() {
-
     if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
         /*******************************
          * Market and fixing data loader
          */
         out_ << endl << setw(tab_) << left << "Market data loader... " << flush;
         string inputPath = params_->get("setup", "inputPath");
-        string marketFile = inputPath + "/" + params_->get("setup", "marketDataFile");
-        string fixingFile = inputPath + "/" + params_->get("setup", "fixingDataFile");
+        string marketFileString = params_->get("setup", "marketDataFile");
+        vector<string> marketFiles;
+        boost::split(marketFiles, marketFileString, boost::is_any_of(",;"), boost::token_compress_on);
+        for (auto it = marketFiles.begin(); it < marketFiles.end(); it++) {
+            boost::trim(*it);
+            *it = inputPath + "/" + *it;
+        }
+        string fixingFileString = params_->get("setup", "fixingDataFile");
+        vector<string> fixingFiles;
+        boost::split(fixingFiles, fixingFileString, boost::is_any_of(",;"), boost::token_compress_on);
+        for (auto it = fixingFiles.begin(); it < fixingFiles.end(); it++) {
+            boost::trim(*it);
+            *it = inputPath + "/" + *it;
+        }
         string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
         bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
-        CSVLoader loader(marketFile, fixingFile, implyTodaysFixings);
+        CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
         out_ << "OK" << endl;
 
         /**********************
