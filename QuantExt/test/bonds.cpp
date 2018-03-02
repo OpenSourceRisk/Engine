@@ -76,7 +76,7 @@ void BondsTest::testBondSpreads() {
     BOOST_TEST_MESSAGE("Bond price = " << price);
 
     // now calculated the implied bond spread, given the price
-    auto tmpSpread = boost::make_shared<SimpleQuote>(0.0);
+    boost::shared_ptr<SimpleQuote> tmpSpread = boost::make_shared<SimpleQuote>(0.0);
     Handle<Quote> tmpSpreadH(tmpSpread);
     boost::shared_ptr<PricingEngine> tmpEngine;
     tmpEngine.reset(new QuantExt::DiscountingRiskyBondEngine(yts, dpts, recovery, tmpSpreadH, 1 * Months));

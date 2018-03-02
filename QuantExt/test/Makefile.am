@@ -27,6 +27,7 @@ QLE_TESTS = \
 	fxvolsmile.hpp fxvolsmile.cpp \
 	payment.hpp payment.cpp \
 	deltagammavar.hpp deltagammavar.cpp \
+	bonds.hpp bonds.cpp \
 	utilities.hpp
 
 dist-hook:
