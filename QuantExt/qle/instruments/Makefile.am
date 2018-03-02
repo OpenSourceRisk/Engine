@@ -21,7 +21,7 @@ libInstruments_la_SOURCES = \
 	makecds.cpp \
 	cdsoption.cpp \
 	payment.cpp \
-    impliedbondspread.cpp
+	impliedbondspread.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -42,7 +42,7 @@ this_include_HEADERS = \
 	makecds.hpp \
 	cdsoption.hpp \
 	payment.hpp \
-    impliedbondspread.hpp
+	impliedbondspread.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 
