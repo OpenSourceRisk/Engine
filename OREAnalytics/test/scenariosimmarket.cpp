@@ -243,6 +243,8 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 
     newParams->baseCcy() = "JPY";
     BOOST_CHECK(*params != *newParams);
+
+    remove("simtest.xml");
 }
 
 void ScenarioSimMarketTest::testScenarioSimMarket() {

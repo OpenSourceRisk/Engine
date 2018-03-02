@@ -638,6 +638,7 @@
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
+    <ClCompile Include="bonds.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
@@ -668,6 +669,7 @@
   <ItemGroup>
     <ClInclude Include="analyticlgmswaptionengine.hpp" />
     <ClInclude Include="blackvariancecurve.hpp" />
+    <ClInclude Include="bonds.hpp" />
     <ClInclude Include="capfloormarketdata.hpp" />
     <ClInclude Include="cashflow.hpp" />
     <ClInclude Include="commodityforward.hpp" />
