@@ -16,74 +16,61 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/instruments/impliedbondspread.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/math/solvers1d/brent.hpp>
 #include <boost/make_shared.hpp>
+#include <ql/math/solvers1d/brent.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/instruments/impliedbondspread.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-    namespace {
+namespace {
 
-        class PriceError {
-          public:
-            PriceError(const Bond& engine,
-                       SimpleQuote& spread,
-                       Real targetValue,
-                       bool isCleanPrice);
-            Real operator()(Real spread) const;
-          private:
-            const Bond& bond_;
-            SimpleQuote& spread_;
-            Real targetValue_;
-            bool isCleanPrice_;
-        };
+class PriceError {
+public:
+    PriceError(const Bond& engine, SimpleQuote& spread, Real targetValue, bool isCleanPrice);
+    Real operator()(Real spread) const;
 
-        PriceError::PriceError(const Bond& bond,
-                               SimpleQuote& spread,
-                               Real targetValue,
-                               bool isCleanPrice)
-        : bond_(bond), spread_(spread),
-        targetValue_(targetValue), isCleanPrice_(isCleanPrice) { }
+private:
+    const Bond& bond_;
+    SimpleQuote& spread_;
+    Real targetValue_;
+    bool isCleanPrice_;
+};
 
-        Real PriceError::operator()(Real spread) const {
-            spread_.setValue(spread);
-            Real guessValue = isCleanPrice_ ? bond_.cleanPrice() : bond_.dirtyPrice();
-            return guessValue-targetValue_;
-        }
+PriceError::PriceError(const Bond& bond, SimpleQuote& spread, Real targetValue, bool isCleanPrice)
+    : bond_(bond), spread_(spread), targetValue_(targetValue), isCleanPrice_(isCleanPrice) {}
 
-    }
-
-
-    namespace detail {
-
-        Real ImpliedBondSpreadHelper::calculate(
-            const boost::shared_ptr<Bond>& bond,
-            const boost::shared_ptr<PricingEngine>& engine,
-            const boost::shared_ptr<SimpleQuote>& spreadQuote,
-            Real targetValue,
-            bool isCleanPrice,
-            Real accuracy,
-            Natural maxEvaluations,
-            Real minSpread,
-            Real maxSpread) {
-
-            Bond clonedBond = *bond;
-            clonedBond.setPricingEngine(engine);
-            clonedBond.recalculate();
-            spreadQuote->setValue(0.005);
-
-            PriceError f(clonedBond, *spreadQuote, targetValue, isCleanPrice);
-            Brent solver;
-            solver.setMaxEvaluations(maxEvaluations);
-            Real guess = (minSpread + maxSpread)/2.0;
-            Real result = solver.solve(f, accuracy, guess,
-                minSpread, maxSpread);
-            return result;
-        }
-
-    }
-
+Real PriceError::operator()(Real spread) const {
+    spread_.setValue(spread);
+    Real guessValue = isCleanPrice_ ? bond_.cleanPrice() : bond_.dirtyPrice();
+    return guessValue - targetValue_;
 }
+
+} // namespace
+
+namespace detail {
+
+Real ImpliedBondSpreadHelper::calculate(const boost::shared_ptr<Bond>& bond,
+                                        const boost::shared_ptr<PricingEngine>& engine,
+                                        const boost::shared_ptr<SimpleQuote>& spreadQuote, Real targetValue,
+                                        bool isCleanPrice, Real accuracy, Natural maxEvaluations, Real minSpread,
+                                        Real maxSpread) {
+
+    Bond clonedBond = *bond;
+    clonedBond.setPricingEngine(engine);
+    clonedBond.recalculate();
+    spreadQuote->setValue(0.005);
+
+    PriceError f(clonedBond, *spreadQuote, targetValue, isCleanPrice);
+    Brent solver;
+    solver.setMaxEvaluations(maxEvaluations);
+    Real guess = (minSpread + maxSpread) / 2.0;
+    Real result = solver.solve(f, accuracy, guess, minSpread, maxSpread);
+    return result;
+}
+
+} // namespace detail
+
+} // namespace QuantExt
