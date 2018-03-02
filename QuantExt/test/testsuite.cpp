@@ -43,6 +43,7 @@ using boost::unit_test::test_suite;
 // Lib test suites
 #include "analyticlgmswaptionengine.hpp"
 #include "blackvariancecurve.hpp"
+#include "bonds.hpp"
 #include "cashflow.hpp"
 #include "crossassetmodel.hpp"
 #include "crossassetmodel2.hpp"
@@ -118,6 +119,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::FxVolSmileTest::suite());
     test->add(testsuite::PaymentTest::suite());
     test->add(testsuite::DeltaGammaVarTest::suite());
+    test->add(testsuite::BondsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

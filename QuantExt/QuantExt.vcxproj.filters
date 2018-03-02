@@ -516,6 +516,9 @@
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\impliedbondspread.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -864,6 +867,9 @@
     </ClCompile>
     <ClCompile Include="qle\models\dkimpliedyoyinflationtermstructure.cpp">
       <Filter>models</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\impliedbondspread.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
