@@ -123,6 +123,7 @@
     <ClInclude Include="ored\portfolio\fxoption.hpp" />
     <ClInclude Include="ored\portfolio\fxswap.hpp" />
     <ClInclude Include="ored\portfolio\instrumentwrapper.hpp" />
+    <ClInclude Include="ored\portfolio\legbuilders.hpp" />
     <ClInclude Include="ored\portfolio\legdata.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetdefinition.hpp" />
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp" />
@@ -225,6 +226,7 @@
     <ClCompile Include="ored\portfolio\fxforward.cpp" />
     <ClCompile Include="ored\portfolio\fxoption.cpp" />
     <ClCompile Include="ored\portfolio\fxswap.cpp" />
+    <ClCompile Include="ored\portfolio\legbuilders.cpp" />
     <ClCompile Include="ored\portfolio\legdata.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetdefinition.cpp" />
     <ClCompile Include="ored\portfolio\nettingsetmanager.cpp" />
