@@ -73,15 +73,13 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     std::vector<boost::shared_ptr<IborIndex>> indexes;
     std::vector<boost::shared_ptr<OptionletVolatilityStructure>> ovses;
 
-    Real mult = 1.0; // to be overwritten depending upon pay/receive flag
+    // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
+    bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
+    Real mult = firstLegIsPayer ? 1.0 : -1.0;
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
-        //FIXME: zero bonds are always long (mult = 1.0)
     } else { // Coupon bond
-
         std::vector<Leg> legs;
-        bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
-        mult = firstLegIsPayer ? -1.0 : 1.0;
         for (Size i = 0; i < coupons_.size(); ++i) {
             bool legIsPayer = coupons_[i].isPayer();
             QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
@@ -142,7 +140,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // Add legs (only 1)
     legs_ = {bond->cashflows()};
     legCurrencies_ = {npvCurrency_};
-    legPayers_ = {false}; // We own the bond => we receive the flows
+    legPayers_ = {firstLegIsPayer};
 }
 
 void Bond::fromXML(XMLNode* node) {
