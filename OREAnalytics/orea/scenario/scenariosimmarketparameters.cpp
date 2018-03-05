@@ -225,14 +225,14 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         equityForecastCurveSimulate_ != rhs.equityForecastCurveSimulate_ ||
         dividendYieldSimulate_ != rhs.dividendYieldSimulate_ || fxVolSimulate_ != rhs.fxVolSimulate_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
-        fxVolCcyPairs_ != rhs.fxVolCcyPairs_ || fxCcyPairs_ != rhs.fxCcyPairs_ ||
+        fxVolCcyPairs_ != rhs.fxVolCcyPairs_ || fxSpotSimulate_ != rhs.fxSpotSimulate_ || fxCcyPairs_ != rhs.fxCcyPairs_ ||
         equityVolSimulate_ != rhs.equityVolSimulate_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDecayMode_ != rhs.equityVolDecayMode_ || equityVolNames_ != rhs.equityVolNames_ ||
         equityIsSurface_ != rhs.equityIsSurface_ || equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
         equityMoneyness_ != rhs.equityMoneyness_ ||
         additionalScenarioDataIndices_ != rhs.additionalScenarioDataIndices_ ||
-        additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securities_ != rhs.securities_ ||
-        baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
+        additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securitySpreadsSimulate_ != rhs.securitySpreadsSimulate_ || 
+        securities_ != rhs.securities_ || baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
         baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
         baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
         zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationTenors_ != rhs.zeroInflationTenors_ ||
@@ -330,9 +330,25 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading FX Rates");
 
     nodeChild = XMLUtils::getChildNode(node, "FxRates");
-    if (nodeChild)
-        fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+    if (nodeChild) {
+        XMLNode* fxSpotSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (fxSpotSimNode)
+            fxSpotSimulate_ = ore::data::parseBool(XMLUtils::getNodeValue(fxSpotSimNode));
+        // if currency pairs are specified load these, otherwise infer from currencies list and base currency
+        XMLNode* ccyPairsNode = XMLUtils::getChildNode(nodeChild, "CurrencyPairs");
+        if (ccyPairsNode)
+            fxCcyPairs_ = XMLUtils::getChildrenValues(nodeChild, "CurrencyPairs", "CurrencyPair", true);
+        else {
+            fxCcyPairs_.resize(0);
+            for (auto ccy : ccys_) {
+                if (ccy != baseCcy_)
+                    fxCcyPairs_.push_back(ccy + baseCcy_);
+            }
+        }
+    }
     else {
+        // spot simulation turned on by default
+        fxSpotSimulate_ = true;
         fxCcyPairs_.resize(0);
         for (auto ccy : ccys_) {
             if (ccy != baseCcy_)
@@ -611,8 +627,14 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         XMLUtils::getChildrenValues(node, "AggregationScenarioDataCurrencies", "Currency", true);
 
     nodeChild = XMLUtils::getChildNode(node, "Securities");
-    if (nodeChild)
-        securities_ = XMLUtils::getChildrenValues(node, "Securities", "Security");
+    if (nodeChild) {
+        securitySpreadsSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false);
+        securities_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
+    }
+    else {
+        securitySpreadsSimulate_ = false;
+        securities_.clear();
+    }
 
     nodeChild = XMLUtils::getChildNode(node, "BaseCorrelations");
     if (nodeChild) {
@@ -788,7 +810,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index", additionalScenarioDataIndices_);
 
     // securities
-    XMLUtils::addChildren(doc, marketNode, "Securities", "Security", securities_);
+    XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
+    XMLUtils::addChild(doc, secNode, "Simulate", securitySpreadsSimulate_);
+    XMLUtils::addChildren(doc, secNode, "Securities", "Security", securities_);
 
     // base correlations
     XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");

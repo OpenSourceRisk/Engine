@@ -20,6 +20,7 @@
       <xs:element type="yyinflationindexcurves" name="YYInflationIndexCurves" minOccurs="0"/>
       <xs:element type="dividendyields" name="DividendYieldCurves" minOccurs="0"/>
       <xs:element type="basecorrelations" name="BaseCorrelations"  minOccurs="0"/>
+      <xs:element type="securityspreads" name="SecuritySpreads"  minOccurs="0"/>
       <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
@@ -127,6 +128,12 @@
   <xs:complexType name="basecorrelations">
     <xs:sequence>
      <xs:element type="basecorrelation" name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="securityspreads">
+    <xs:sequence>
+      <xs:element type="securityspread" name="SecuritySpread" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -359,6 +366,17 @@
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="indexName" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="securityspread">
+    <xs:sequence>
+      <xs:element type="shifttype" name="ShiftType"/>
+        <xs:choice>
+         <xs:element type="xs:float" name="ShiftSize"/>
+         <xs:element type="xs:string" name="Shifts"/>
+        </xs:choice>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="security" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="dividendyield">

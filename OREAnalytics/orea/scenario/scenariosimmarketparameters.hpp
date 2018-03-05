@@ -49,12 +49,12 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
+        : extrapolate_(false), fxSpotSimulate_(true), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
           swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false), survivalProbabilitySimulate_(false),
           recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
           dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
           equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          baseCorrelationSimulate_(false) {
+          securitySpreadsSimulate_(false), baseCorrelationSimulate_(false) {
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -80,6 +80,7 @@ public:
     const string& interpolation() const { return interpolation_; }
     bool extrapolate() const { return extrapolate_; }
 
+    bool simulateFxSpots() const { return fxSpotSimulate_; }
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
     bool simulateSwapVols() const { return swapVolSimulate_; }
@@ -140,6 +141,7 @@ public:
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
 
+    bool securitySpreadsSimulate() const { return securitySpreadsSimulate_; }
     const vector<string>& securities() const { return securities_; }
 
     bool simulateBaseCorrelations() const { return baseCorrelationSimulate_; }
@@ -176,6 +178,7 @@ public:
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
+    bool& simulateFxSpots() { return fxSpotSimulate_; }
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
 
     bool& simulateSwapVols() { return swapVolSimulate_; }
@@ -232,6 +235,7 @@ public:
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
+    bool& securitySpreadsSimulate() { return securitySpreadsSimulate_;  }
     vector<string>& securities() { return securities_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
@@ -278,6 +282,7 @@ private:
     string interpolation_;
     bool extrapolate_;
 
+    bool fxSpotSimulate_;
     vector<string> fxCcyPairs_;
 
     bool swapVolSimulate_;
@@ -336,6 +341,7 @@ private:
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
 
+    bool securitySpreadsSimulate_;
     vector<string> securities_;
 
     bool baseCorrelationSimulate_;

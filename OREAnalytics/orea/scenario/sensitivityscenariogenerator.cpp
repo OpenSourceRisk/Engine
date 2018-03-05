@@ -68,8 +68,10 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     generateYieldCurveScenarios(sensiScenarioFactory, true);
     generateYieldCurveScenarios(sensiScenarioFactory, false);
 
-    generateFxScenarios(sensiScenarioFactory, true);
-    generateFxScenarios(sensiScenarioFactory, false);
+    if (simMarketData_->simulateFxSpots()) {
+        generateFxScenarios(sensiScenarioFactory, true);
+        generateFxScenarios(sensiScenarioFactory, false);
+    }
 
     generateEquityScenarios(sensiScenarioFactory, true);
     generateEquityScenarios(sensiScenarioFactory, false);
@@ -123,6 +125,11 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
     if (simMarketData_->simulateBaseCorrelations()) {
         generateBaseCorrelationScenarios(sensiScenarioFactory, true);
         generateBaseCorrelationScenarios(sensiScenarioFactory, false);
+    }
+
+    if (simMarketData_->securitySpreadsSimulate()) {
+        generateSecuritySpreadScenarios(sensiScenarioFactory, true);
+        generateSecuritySpreadScenarios(sensiScenarioFactory, false);
     }
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
@@ -199,7 +206,7 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
 void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                                        bool up) {
     Date asof = baseScenario_->asof();
-    // We can choose to shift fewer discount curves than listed in the market
+    // We can choose to shift fewer FX risk factors than listed in the market
     std::vector<string> fxCcyPairs;
     if (sensitivityData_->fxCcyPairs().size() > 0)
         fxCcyPairs = sensitivityData_->fxCcyPairs();
@@ -1455,6 +1462,46 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
     LOG("Base correlation scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    // We can choose to shift fewer discount curves than listed in the market
+    Date asof = baseScenario_->asof();
+    std::vector<string> securityNames;
+    if (sensitivityData_->securityNames().size() > 0)
+        securityNames = sensitivityData_->securityNames();
+    else
+        securityNames = simMarketData_->securities();
+
+    // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
+    for (auto sim_security : simMarketData_->securities()) {
+        if (std::find(securityNames.begin(), securityNames.end(), sim_security) == securityNames.end()) {
+            ALOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
+        }
+    }
+    for (Size k = 0; k < securityNames.size(); k++) {
+        string bond = securityNames[k];
+        auto itr = sensitivityData_->securityShiftData().find(bond);
+        QL_REQUIRE(itr != sensitivityData_->securityShiftData().end(), "securityShiftData not found for " << bond);
+        SensitivityScenarioData::SpotShiftData data = itr->second;
+        ShiftType type = parseShiftType(data.shiftType);
+        Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
+        bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
+
+        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
+
+        scenarioDescriptions_.push_back(securitySpreadScenarioDescription(bond, up));
+        RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
+        Real base_spread = baseScenario_->get(key);
+        Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
+        // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
+        scenario->add(key, newSpread);
+        scenarios_.push_back(scenario);
+        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+            << " created: " << newSpread);
+    }
+    LOG("Security scenarios done");
+}
+
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::fxScenarioDescription(string ccypair,
                                                                                                       bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
@@ -1720,6 +1767,14 @@ SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexNam
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::securitySpreadScenarioDescription(
+    string bond, bool up) {
+    RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, "spread");
     return desc;
 }
 

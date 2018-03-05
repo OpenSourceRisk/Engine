@@ -70,8 +70,6 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Calendar calendar = parseCalendar(calendar_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
     boost::shared_ptr<QuantLib::Bond> bond;
-    std::vector<boost::shared_ptr<IborIndex>> indexes;
-    std::vector<boost::shared_ptr<OptionletVolatilityStructure>> ovses;
 
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
@@ -91,40 +89,16 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                                         << coupons_[0].currency());
             }
             Leg leg;
-            Handle<IborIndex> hIndex;
-            Handle<OptionletVolatilityStructure> ovs;
-
-            if (coupons_[i].legType() == "Fixed")
-                leg = makeFixedLeg(coupons_[i]);
-            else if (coupons_[i].legType() == "Floating") {
-                boost::shared_ptr<FloatingLegData> floatData =
-                    boost::dynamic_pointer_cast<FloatingLegData>(coupons_[i].concreteLegData());
-                QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << coupons_[i].legType());
-
-                string indexName = floatData->index();
-                hIndex = engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
-                indexes.push_back(*hIndex); // for registration below
-                QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
-                boost::shared_ptr<IborIndex> index = hIndex.currentLink();
-                leg = makeIborLeg(coupons_[i], index, engineFactory);
-                if (!floatData->floors().empty() || !floatData->caps().empty()) {
-                    ovs =
-                        engineFactory->market()->capFloorVol(currency_, builder->configuration(MarketContext::pricing));
-                    ovses.push_back(*ovs); // for registration below
-                }
-
-            } else {
-                QL_FAIL("Unknown leg type " << coupons_[i].legType());
-            }
+            auto configuration = builder->configuration(MarketContext::pricing);
+            auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
+            leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
             legs.push_back(leg);
         } // for coupons_
         Leg leg = joinLegs(legs);
         bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
         // workaround, QL doesn't register a bond with its leg's cashflows
-        for (auto const& i : indexes)
-            bond->registerWith(i);
-        for (auto const& o : ovses)
-            bond->registerWith(o);
+        for (auto const& c : leg)
+            bond->registerWith(c);
     }
 
     Currency currency = parseCurrency(currency_);
@@ -148,7 +122,8 @@ void Bond::fromXML(XMLNode* node) {
     XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
     QL_REQUIRE(bondNode, "No BondData Node");
     issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", true);
-    creditCurveId_ = XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
+    creditCurveId_ =
+        XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
     referenceCurveId_ = XMLUtils::getChildValue(bondNode, "ReferenceCurveId", true);
     settlementDays_ = XMLUtils::getChildValue(bondNode, "SettlementDays", true);
@@ -156,11 +131,14 @@ void Bond::fromXML(XMLNode* node) {
     issueDate_ = XMLUtils::getChildValue(bondNode, "IssueDate", true);
     XMLNode* legNode = XMLUtils::getChildNode(bondNode, "LegData");
     while (legNode != nullptr) {
-        coupons_.push_back(LegData());
-        coupons_.back().fromXML(legNode);
+        auto ld = createLegData();
+        ld->fromXML(legNode);
+        coupons_.push_back(*boost::static_pointer_cast<LegData>(ld));
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 }
+
+boost::shared_ptr<LegData> Bond::createLegData() const { return boost::make_shared<LegData>(); }
 
 XMLNode* Bond::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);

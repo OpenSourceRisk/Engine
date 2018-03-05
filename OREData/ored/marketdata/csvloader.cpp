@@ -52,6 +52,25 @@ CSVLoader::CSVLoader(const string& marketFilename, const string& fixingFilename,
     LOG("CSVLoader complete.");
 }
 
+CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fixingFiles, bool implyTodaysFixings)
+    : implyTodaysFixings_(implyTodaysFixings) {
+
+    for (auto marketFile : marketFiles)
+        // load market data
+        loadFile(marketFile, true);
+    
+    // log
+    for (auto it : data_)
+        LOG("CSVLoader loaded " << it.second.size() << " market data points for " << it.first);
+    
+    for (auto fixingFile : fixingFiles)
+        // load fixings
+        loadFile(fixingFile, false);
+    LOG("CSVLoader loaded " << fixings_.size() << " fixings");
+
+    LOG("CSVLoader complete.");
+}
+
 void CSVLoader::loadFile(const string& filename, bool isMarket) {
     LOG("CSVLoader loading from " << filename);
 

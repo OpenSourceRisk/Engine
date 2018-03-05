@@ -145,6 +145,9 @@ public:
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
 
+    const vector<string>& securityNames() const { return securityNames_; }
+    const map<string, SpotShiftData>& securityShiftData() const { return securityShiftData_; }
+
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
     //@}
@@ -203,6 +206,9 @@ public:
 
     vector<string>& equityVolNames() { return equityVolNames_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
+
+    vector<string>& securityNames() { return securityNames_; }
+    map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -278,6 +284,9 @@ protected:
 
     vector<string> baseCorrelationNames_;
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
+
+    vector<string> securityNames_;
+    map<string, SpotShiftData> securityShiftData_; // key: security name
 
     vector<pair<string, string>> crossGammaFilter_;
 };

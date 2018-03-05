@@ -17,4 +17,5 @@
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/payment.hpp>
+#include <qle/instruments/impliedbondspread.hpp>
 
