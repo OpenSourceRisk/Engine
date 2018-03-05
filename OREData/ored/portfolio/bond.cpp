@@ -73,7 +73,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
-    Real mult = firstLegIsPayer ? 1.0 : -1.0;
+    Real mult = firstLegIsPayer ? -1.0 : 1.0;
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
     } else { // Coupon bond
