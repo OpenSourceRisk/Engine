@@ -31,6 +31,7 @@ QLE_TESTS = \
 	commodityforward.hpp commodityforward.cpp \
 	discountingcommodityforwardengine.hpp discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
+	bonds.hpp bonds.cpp \
 	utilities.hpp
 
 dist-hook:

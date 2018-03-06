@@ -83,6 +83,9 @@
     <ClCompile Include="pricetermstructureadapter.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="bonds.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -184,6 +187,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="pricetermstructureadapter.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="bonds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

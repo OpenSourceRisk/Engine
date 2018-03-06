@@ -52,7 +52,7 @@ static struct test_daycounter_data daycounter_data[] = {
     {"ActActISDA", ActualActual(ActualActual::ISDA)},
     {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
     {"ACT/ACT", ActualActual(ActualActual::ISDA)},
-    {"ACT29", ActualActual(ActualActual::ISDA)},
+    {"ACT29", ActualActual(ActualActual::AFB)},
     {"ACT", ActualActual(ActualActual::ISDA)},
     {"ActActISMA", ActualActual(ActualActual::ISMA)},
     {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},

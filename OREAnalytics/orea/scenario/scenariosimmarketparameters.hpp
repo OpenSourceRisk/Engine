@@ -49,7 +49,7 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
+        : extrapolate_(false), fxSpotSimulate_(true), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
           swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false), survivalProbabilitySimulate_(false),
           recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
           dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
@@ -82,6 +82,7 @@ public:
     const string& interpolation() const { return interpolation_; }
     bool extrapolate() const { return extrapolate_; }
 
+    bool simulateFxSpots() const { return fxSpotSimulate_; }
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
     bool simulateSwapVols() const { return swapVolSimulate_; }
@@ -193,6 +194,7 @@ public:
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
+    bool& simulateFxSpots() { return fxSpotSimulate_; }
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
 
     bool& simulateSwapVols() { return swapVolSimulate_; }
@@ -309,6 +311,7 @@ private:
     string interpolation_;
     bool extrapolate_;
 
+    bool fxSpotSimulate_;
     vector<string> fxCcyPairs_;
 
     bool swapVolSimulate_;
