@@ -16,6 +16,7 @@
 #include <qle/indexes/ibor/myrklibor.hpp>
 #include <qle/indexes/ibor/noknibor.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
+#include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
