@@ -54,6 +54,7 @@
     <ClInclude Include="orea\engine\parametricvar.hpp" />
     <ClInclude Include="orea\engine\riskfilter.hpp" />
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
+    <ClInclude Include="orea\engine\sensitivitycube.hpp" />
     <ClInclude Include="orea\engine\sensitivitydata.hpp" />
     <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
