@@ -57,8 +57,8 @@
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
-    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
-    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF1D</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY1D</DiscountingCurve>
   </DiscountingCurves>
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
