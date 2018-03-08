@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/sensitivityrunner.hpp
+/*! \file orea/app/sensitivityrunner.hpp
     \brief A class to run the sensitivity analysis
     \ingroup app
 */
