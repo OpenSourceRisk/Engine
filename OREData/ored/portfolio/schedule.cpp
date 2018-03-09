@@ -57,13 +57,14 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
 void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
-    dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
+    dates_ = XMLUtils::getChildrenValues(node, "Date");
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
-    XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
+    for (auto& d : dates_)
+        XMLUtils::addChild(doc, node, "Date", d);
     return node;
 }
 
@@ -89,11 +90,12 @@ XMLNode* ScheduleData::toXML(XMLDocument& doc) {
 
 Schedule makeSchedule(const ScheduleDates& data) {
     QL_REQUIRE(data.dates().size() > 0, "Must provide at least 1 date for Schedule");
-    Calendar calendar = parseCalendar(data.calendar());
+    Calendar calendar = NullCalendar();
+    if (!data.calendar().empty()) calendar = parseCalendar(data.calendar());
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
         scheduleDates[i] = parseDate(data.dates()[i]);
-    return Schedule(scheduleDates, calendar);
+    return Schedule(scheduleDates, calendar, Unadjusted, Unadjusted, boost::none, boost::none, boost::none, std::vector<bool>(scheduleDates.size() - 1, true));
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {

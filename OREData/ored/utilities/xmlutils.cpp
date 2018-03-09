@@ -243,6 +243,18 @@ vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names,
     return vec;
 }
 
+vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& name, bool mandatory) {
+    vector<string> vec;
+    if (mandatory) {
+        QL_REQUIRE(parent, "Error: No XML Node " << name << " found.");
+    }
+    if (parent) {
+        for (xml_node<>* child = parent->first_node(name.c_str()); child; child = child->next_sibling(name.c_str()))
+            vec.push_back(child->value());
+    }
+    return vec;
+}
+
 vector<Real> XMLUtils::getChildrenValuesAsDoubles(XMLNode* node, const string& names, const string& name,
                                                   bool mandatory) {
     vector<string> vecS = getChildrenValues(node, names, name, mandatory);

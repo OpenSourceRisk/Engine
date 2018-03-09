@@ -157,6 +157,8 @@ public:
     static bool getChildValueAsBool(XMLNode* node, const string& name, bool mandatory = false); // default is true
     static vector<string> getChildrenValues(XMLNode* node, const string& names, const string& name,
                                             bool mandatory = false);
+    static vector<string> getChildrenValues(XMLNode* node, const string& name,
+                                            bool mandatory = false);
 
     static vector<Real> getChildrenValuesAsDoubles(XMLNode* node, const string& names, const string& name,
                                                    bool mandatory = false);
