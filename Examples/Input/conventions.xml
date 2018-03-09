@@ -648,6 +648,77 @@
     <FixedDayCounter>ACT/360</FixedDayCounter>
     <Index>MXN-TIIE-28D</Index>
   </Swap>
+  <Swap>
+    <Id>HKD-3M-SWAP</Id>
+    <FixedCalendar>HKD</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>HKD-HIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>INR-3M-SWAP</Id>
+    <FixedCalendar>INR</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>INR-MIFOR-3M</Index>
+  </Swap>
+   <Swap>
+    <Id>INR-6M-SWAP</Id>
+    <FixedCalendar>INR</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>INR-MIFOR-6M</Index>
+  </Swap> 
+  <Swap>
+    <Id>KRW-3M-SWAP</Id>
+    <FixedCalendar>KRW</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>KRW-KORIBOR-3M</Index>
+  <Swap>
+    <Id>MYR-3M-SWAP</Id>
+    <FixedCalendar>MYR</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>MYR-KLIBOR-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>RUB-3M-SWAP</Id>
+    <FixedCalendar>RUB</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/ACT</FixedDayCounter>
+    <Index>RUB-MOSPRIME-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>THB-6M-SWAP</Id>
+    <FixedCalendar>THB</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>THB-BIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>TWD-3M-SWAP</Id>
+    <FixedCalendar>TWD</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>TWD-TAIBOR-3M</Index>
+  </Swap>  
+  <Swap>
+    <Id>ZAR-3M-SWAP</Id>
+    <FixedCalendar>ZAR</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>ZAR-JIBAR-3M</Index>
+  </Swap>  
   <!-- Overnight Index linked Swap Legs -->
   <OIS>
     <Id>EUR-OIS-CONVENTIONS</Id>

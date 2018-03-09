@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -34,7 +34,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! RUB-MOSPRIME index
-//! RUB-MOSPRIME ratei
+//! RUB-MOSPRIME rate
 
 class RUBMosprime : public IborIndex {
 public:
