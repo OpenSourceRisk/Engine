@@ -18,18 +18,19 @@
 
 /*! \file crlgm1fparametrization.hpp
     \brief Credit Linear Gaussian Markov 1 factor parametrization
+    \ingroup models
 */
 
 #ifndef quantextplus_crlgm1f_parametrization_hpp
 #define quantextplus_crlgm1f_parametrization_hpp
 
-#include <qle/models/irlgm1fparametrization.hpp>
+#include <ql/handle.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
 #include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
-#include <ql/handle.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -47,6 +48,6 @@ typedef Lgm1fPiecewiseConstantParametrization<DefaultProbabilityTermStructure> C
 
 typedef Lgm1fPiecewiseLinearParametrization<DefaultProbabilityTermStructure> CrLgm1fPiecewiseLinearParametrization;
 
-} // namespace QuantExtPlus
+} // namespace QuantExt
 
 #endif

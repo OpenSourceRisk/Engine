@@ -39,9 +39,10 @@ public:
     static void testNormalShiftsIgnored();
     static void testConstructionFromSwapIndex();
     static void testConstructionFromSwapIndexNoDiscount();
+    static void testCube();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite
 
 #endif

@@ -18,20 +18,20 @@
 
 /*! \file ored/portfolio/tradefactory.hpp
     \brief Trade Factory
-    \ingroup tradedata
+    \ingroup portfolio
 */
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
 
 //! TradeBuilder base class
 /*!
-  \ingroup tradedata
+  \ingroup portfolio
 */
 class AbstractTradeBuilder {
 public:
@@ -66,5 +66,5 @@ public:
 private:
     map<string, boost::shared_ptr<AbstractTradeBuilder>> builders_;
 };
-}
-}
+} // namespace data
+} // namespace ore

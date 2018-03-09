@@ -19,8 +19,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/valuationengine.hpp>
 #include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
@@ -32,11 +32,11 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/yield/oisratehelper.hpp>
-#include <qle/instruments/deposit.hpp>
-#include <qle/pricingengines/depositengine.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/instruments/deposit.hpp>
 #include <qle/instruments/fxforward.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 
 #include <iomanip>
@@ -57,20 +57,20 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                        boost::shared_ptr<ScenarioFactory> scenarioFactory) {
 
+    LOG("Build Simulation Market");
+    boost::shared_ptr<ScenarioSimMarket> simMarket =
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions);
+
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
     boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
-        boost::make_shared<StressScenarioGenerator>(stressData, simMarketData, asof, market);
+        boost::make_shared<StressScenarioGenerator>(stressData, simMarket->baseScenario(), simMarketData);
     boost::shared_ptr<Scenario> baseScenario = scenarioGenerator->baseScenario();
     if (scenarioFactory == NULL) {
         scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
     }
     scenarioGenerator->generateScenarios(scenarioFactory);
-
-    LOG("Build Simulation Market");
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-    boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(sgen, market, simMarketData, conventions);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     LOG("Build Engine Factory");
     map<MarketContext, string> configurations;
@@ -151,5 +151,5 @@ void StressTest::writeReport(const boost::shared_ptr<ore::data::Report>& report,
 
     report->end();
 }
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -25,14 +25,14 @@
 
 #include <vector>
 
-#include <ql/types.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <ql/types.hpp>
 
 #include <qle/models/crossassetmodel.hpp>
 
 #include <ored/marketdata/market.hpp>
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/model/crossassetmodeldata.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
 
@@ -62,6 +62,8 @@ public:
         const std::string& configurationFxCalibration = Market::defaultConfiguration,
         //! Market configuration for EQ model calibration
         const std::string& configurationEqCalibration = Market::defaultConfiguration,
+        //! Market configuration for INF model calibration
+        const std::string& configurationInfCalibration = Market::defaultConfiguration,
         //! Market configuration for simulation
         const std::string& configurationFinalModel = Market::defaultConfiguration,
         //! Daycounter for date/time conversions
@@ -78,27 +80,31 @@ public:
     const std::vector<Real>& swaptionCalibrationErrors() { return swaptionCalibrationErrors_; }
     const std::vector<Real>& fxOptionCalibrationErrors() { return fxOptionCalibrationErrors_; }
     const std::vector<Real>& eqOptionCalibrationErrors() { return eqOptionCalibrationErrors_; }
+    const std::vector<Real>& infCapFloorCalibrationErrors() { return infCapFloorCalibrationErrors_; }
     //@}
 
 private:
     std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> swaptionBaskets_;
     std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> fxOptionBaskets_;
     std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> eqOptionBaskets_;
-    std::vector<Array> swaptionExpiries_;
+    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> infCapFloorBaskets_;
+    std::vector<Array> optionExpiries_;
     std::vector<Array> swaptionMaturities_;
     std::vector<Array> fxOptionExpiries_;
     std::vector<Array> eqOptionExpiries_;
+    std::vector<Array> infCapFloorExpiries_;
     std::vector<Real> swaptionCalibrationErrors_;
     std::vector<Real> fxOptionCalibrationErrors_;
     std::vector<Real> eqOptionCalibrationErrors_;
+    std::vector<Real> infCapFloorCalibrationErrors_;
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configurationLgmCalibration_, configurationFxCalibration_, configurationEqCalibration_,
-        configurationFinalModel_;
+        configurationInfCalibration_, configurationFinalModel_;
     const DayCounter dayCounter_;
 
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
 };
-}
-}
+} // namespace data
+} // namespace ore

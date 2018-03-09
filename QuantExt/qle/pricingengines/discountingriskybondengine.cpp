@@ -17,13 +17,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <boost/date_time.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/date_time.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -119,4 +119,4 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
     return npvValue;
 }
-}
+} // namespace QuantExt

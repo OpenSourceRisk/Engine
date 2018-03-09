@@ -49,7 +49,8 @@ boost::shared_ptr<PricingEngine> EuropeanSwaptionEngineBuilder::engineImpl(const
 boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const string& id, bool isNonStandard,
                                                                          const string& ccy,
                                                                          const std::vector<Date>& expiries,
-                                                                         const Date& maturity) {
+                                                                         const Date& maturity,
+                                                                         const std::vector<Real>& strikes) {
 
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameters_.at("Calibration"));
@@ -66,20 +67,28 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto reversionType = parseReversionType(modelParameters_.at("ReversionType"));
     auto volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));
 
-    auto data = boost::make_shared<LgmData>();
+    auto data = boost::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
-    QL_REQUIRE((calibration == CalibrationType::None && calibrationStrategy == LgmData::CalibrationStrategy::None) ||
-                   (calibration == CalibrationType::Bootstrap &&
-                    calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM) ||
-                   (calibration == CalibrationType::BestFit &&
-                    calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM),
+    std::vector<std::pair<CalibrationType, LgmData::CalibrationStrategy>> validCalPairs = {
+        {CalibrationType::None, LgmData::CalibrationStrategy::None},
+        {CalibrationType::Bootstrap, LgmData::CalibrationStrategy::CoterminalATM},
+        {CalibrationType::Bootstrap, LgmData::CalibrationStrategy::CoterminalDealStrike},
+        {CalibrationType::BestFit, LgmData::CalibrationStrategy::CoterminalATM},
+        {CalibrationType::BestFit, LgmData::CalibrationStrategy::CoterminalDealStrike}};
+
+    QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
+                         std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
                "Calibration (" << calibration << ") and CalibrationStrategy (" << calibrationStrategy
                                << ") are not allowed in this combination");
 
     // compute horizon shift
+    Real shiftHorizon = 0.5; // default value
+    if (modelParameters_.find("ShiftHorizon") != modelParameters_.end()) {
+        shiftHorizon = parseReal(modelParameters_.at("ShiftHorizon"));
+    }
     Date today = Settings::instance().evaluationDate();
-    Real shiftHorizon = ActualActual().yearFraction(today, maturity) / 2.0;
+    shiftHorizon = ActualActual().yearFraction(today, maturity) * shiftHorizon;
 
     // Default: no calibration, constant lambda and sigma from engine configuration
     data->reset();
@@ -97,16 +106,23 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     data->calibrationType() = calibration;
     data->shiftHorizon() = shiftHorizon;
 
-    if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM) {
+    if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM ||
+        calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < expiries.size(); ++i) {
             expiryDates.push_back(to_string(expiries[i]));
             termDates.push_back(to_string(maturity));
         }
-        data->swaptionExpiries() = expiryDates;
-        data->swaptionTerms() = termDates;
-        data->swaptionStrikes().resize(expiryDates.size(), "ATM");
+        data->optionExpiries() = expiryDates;
+        data->optionTerms() = termDates;
+        data->optionStrikes().resize(expiryDates.size(), "ATM");
+        if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
+            for (Size i = 0; i < expiries.size(); ++i) {
+                if (strikes[i] != Null<Real>())
+                    data->optionStrikes()[i] = std::to_string(strikes[i]);
+            }
+        }
         if (calibration == CalibrationType::Bootstrap) {
             DLOG("Calibrate piecewise alpha");
             data->calibrationType() = CalibrationType::Bootstrap;
@@ -134,18 +150,19 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     boost::shared_ptr<LgmBuilder> calib =
         boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
     DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-    modelBuilders_.insert(calib);
+    calib->recalibrate();
+    modelBuilders_.insert(std::make_pair(id, calib));
     return calib->model();
 }
 
-boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engine(const string& id, bool isNonStandard,
-                                                                              const string& ccy,
-                                                                              const std::vector<Date>& expiries,
-                                                                              const Date& maturity,
-                                                                              Real) { // fixedRate is unused
+boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImpl(const string& id, bool isNonStandard,
+                                                                                  const string& ccy,
+                                                                                  const std::vector<Date>& expiries,
+                                                                                  const Date& maturity,
+                                                                                  const std::vector<Real>& strikes) {
     DLOG("Building Bermudan Swaption engine for trade " << id);
 
-    boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity);
+    boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
     Real sy = parseReal(engineParameters_.at("sy"));

@@ -26,275 +26,171 @@
 namespace ore {
 namespace data {
 
-const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
-    auto it = yieldCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != yieldCurveConfigs_.end(), "No curve id for " << curveID);
+// utility function for getting a value from a map, throwing if it is not present
+template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
+    auto it = m.find(id);
+    QL_REQUIRE(it != m.end(), "no curve id for " << id);
     return it->second;
 }
 
+// utility function for parsing a node of name "parentName" and decoding all
+// child elements, storing the resulting config in the map
+template <class T>
+void parseNode(XMLNode* node, const char* parentName, const char* childName, map<string, boost::shared_ptr<T>>& m) {
+
+    XMLNode* parentNode = XMLUtils::getChildNode(node, parentName);
+    if (parentNode) {
+        for (XMLNode* child = XMLUtils::getChildNode(parentNode, childName); child;
+             child = XMLUtils::getNextSibling(child, childName)) {
+            boost::shared_ptr<T> curveConfig(new T());
+            try {
+                curveConfig->fromXML(child);
+                const string& id = curveConfig->curveID();
+                m[id] = curveConfig;
+                DLOG("Added curve config with ID = " << id);
+            } catch (std::exception& ex) {
+                ALOG("Exception parsing curve config: " << ex.what());
+            }
+        }
+    }
+}
+
+// utility function to add a set of nodes from a given map of curve configs
+template <class T>
+void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<string, boost::shared_ptr<T>>& m) {
+    XMLNode* node = doc.allocNode(nodeName);
+    XMLUtils::appendNode(parent, node);
+    for (auto it : m)
+        XMLUtils::appendNode(node, it.second->toXML(doc));
+}
+
+std::set<string> CurveConfigurations::quotes() const {
+    vector<string> quotes;
+    for (auto m : yieldCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : fxVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : swaptionVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : capFloorVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : defaultCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : cdsVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : baseCorrelationCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : inflationCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : inflationCapFloorPriceSurfaceConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : equityCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : equityVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : securityConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : fxSpotConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+
+    return std::set<string>(quotes.begin(), quotes.end());
+}
+const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
+    return get(curveID, yieldCurveConfigs_);
+}
+
 const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::fxVolCurveConfig(const string& curveID) const {
-    auto it = fxVolCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != fxVolCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, fxVolCurveConfigs_);
 }
 
 const boost::shared_ptr<SwaptionVolatilityCurveConfig>&
 CurveConfigurations::swaptionVolCurveConfig(const string& curveID) const {
-    auto it = swaptionVolCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != swaptionVolCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, swaptionVolCurveConfigs_);
 }
 
 const boost::shared_ptr<CapFloorVolatilityCurveConfig>&
 CurveConfigurations::capFloorVolCurveConfig(const string& curveID) const {
-    auto it = capFloorVolCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != capFloorVolCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, capFloorVolCurveConfigs_);
 }
 
 const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveConfig(const string& curveID) const {
-    auto it = defaultCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != defaultCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, defaultCurveConfigs_);
+}
+
+const boost::shared_ptr<CDSVolatilityCurveConfig>& CurveConfigurations::cdsVolCurveConfig(const string& curveID) const {
+    return get(curveID, cdsVolCurveConfigs_);
+}
+
+const boost::shared_ptr<BaseCorrelationCurveConfig>&
+CurveConfigurations::baseCorrelationCurveConfig(const string& curveID) const {
+    return get(curveID, baseCorrelationCurveConfigs_);
 }
 
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
-    auto it = inflationCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != inflationCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, inflationCurveConfigs_);
 }
 
 const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
 CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) const {
-    auto it = inflationCapFloorPriceSurfaceConfigs_.find(curveID);
-    QL_REQUIRE(it != inflationCapFloorPriceSurfaceConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, inflationCapFloorPriceSurfaceConfigs_);
 }
 
 const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
-    auto it = equityCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != equityCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, equityCurveConfigs_);
 }
 
 const boost::shared_ptr<EquityVolatilityCurveConfig>&
 CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
-    auto it = equityVolCurveConfigs_.find(curveID);
-    QL_REQUIRE(it != equityVolCurveConfigs_.end(), "No curve id for " << curveID);
-    return it->second;
+    return get(curveID, equityVolCurveConfigs_);
+}
+
+const boost::shared_ptr<SecurityConfig>& CurveConfigurations::securityConfig(const string& curveID) const {
+    return get(curveID, securityConfigs_);
+}
+
+const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const string& curveID) const {
+    return get(curveID, fxSpotConfigs_);
 }
 
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
-    // Load YieldCurves
-    XMLNode* yieldCurvesNode = XMLUtils::getChildNode(node, "YieldCurves");
-    if (yieldCurvesNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(yieldCurvesNode, "YieldCurve"); child;
-             child = XMLUtils::getNextSibling(child, "YieldCurve")) {
-            boost::shared_ptr<YieldCurveConfig> yieldCurveConfig(new YieldCurveConfig());
-            try {
-                yieldCurveConfig->fromXML(child);
-                const string& id = yieldCurveConfig->curveID();
-                yieldCurveConfigs_[id] = yieldCurveConfig;
-                DLOG("Added yield curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing yield curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load FXVols
-    XMLNode* fxVolsNode = XMLUtils::getChildNode(node, "FXVolatilities");
-    if (fxVolsNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(fxVolsNode, "FXVolatility"); child;
-             child = XMLUtils::getNextSibling(child, "FXVolatility")) {
-            boost::shared_ptr<FXVolatilityCurveConfig> fxVolCurveConfig(new FXVolatilityCurveConfig());
-            try {
-                fxVolCurveConfig->fromXML(child);
-                const string& id = fxVolCurveConfig->curveID();
-                fxVolCurveConfigs_[id] = fxVolCurveConfig;
-                DLOG("Added fxVol curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing fxVol curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load SwaptionVols
-    XMLNode* swaptionVolsNode = XMLUtils::getChildNode(node, "SwaptionVolatilities");
-    if (swaptionVolsNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(swaptionVolsNode, "SwaptionVolatility"); child;
-             child = XMLUtils::getNextSibling(child, "SwaptionVolatility")) {
-            boost::shared_ptr<SwaptionVolatilityCurveConfig> swaptionVolCurveConfig(
-                new SwaptionVolatilityCurveConfig());
-            try {
-                swaptionVolCurveConfig->fromXML(child);
-                const string& id = swaptionVolCurveConfig->curveID();
-                swaptionVolCurveConfigs_[id] = swaptionVolCurveConfig;
-                DLOG("Added swaptionVol curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing swaptionVol curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load CapFloor volatilities curve configuration
-    XMLNode* capFloorVolsNode = XMLUtils::getChildNode(node, "CapFloorVolatilities");
-    if (capFloorVolsNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(capFloorVolsNode, "CapFloorVolatility"); child;
-             child = XMLUtils::getNextSibling(child, "CapFloorVolatility")) {
-            boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolCurveConfig =
-                boost::make_shared<CapFloorVolatilityCurveConfig>();
-            try {
-                capFloorVolCurveConfig->fromXML(child);
-                const string& id = capFloorVolCurveConfig->curveID();
-                capFloorVolCurveConfigs_[id] = capFloorVolCurveConfig;
-                DLOG("Added capFloor volatility curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing capFloor volatility curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load DefaultCurves
-    XMLNode* defaultCurvesNode = XMLUtils::getChildNode(node, "DefaultCurves");
-    if (defaultCurvesNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(defaultCurvesNode, "DefaultCurve"); child;
-             child = XMLUtils::getNextSibling(child, "DefaultCurve")) {
-            boost::shared_ptr<DefaultCurveConfig> defaultCurveConfig(new DefaultCurveConfig());
-            try {
-                defaultCurveConfig->fromXML(child);
-                const string& id = defaultCurveConfig->curveID();
-                defaultCurveConfigs_[id] = defaultCurveConfig;
-                DLOG("Added default curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing default curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load EquityCurves
-    XMLNode* equityCurvesNode = XMLUtils::getChildNode(node, "EquityCurves");
-    if (equityCurvesNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(equityCurvesNode, "EquityCurve"); child;
-             child = XMLUtils::getNextSibling(child, "EquityCurve")) {
-            boost::shared_ptr<EquityCurveConfig> equityCurveConfig(new EquityCurveConfig());
-            try {
-                equityCurveConfig->fromXML(child);
-                const string& id = equityCurveConfig->curveID();
-                equityCurveConfigs_[id] = equityCurveConfig;
-                DLOG("Added equity curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing equity curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load EquityVolCurves
-    XMLNode* equityVolsNode = XMLUtils::getChildNode(node, "EquityVolatilities");
-    if (equityVolsNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(equityVolsNode, "EquityVolatility"); child;
-             child = XMLUtils::getNextSibling(child, "EquityVolatility")) {
-            boost::shared_ptr<EquityVolatilityCurveConfig> equityVolConfig(new EquityVolatilityCurveConfig());
-            try {
-                equityVolConfig->fromXML(child);
-                const string& id = equityVolConfig->curveID();
-                equityVolCurveConfigs_[id] = equityVolConfig;
-                DLOG("Added equity volatility config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing equity volatility config: " << ex.what());
-            }
-        }
-    }
-
-    // Load InflationCurves
-    XMLNode* inflationCurvesNode = XMLUtils::getChildNode(node, "InflationCurves");
-    if (inflationCurvesNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(inflationCurvesNode, "InflationCurve"); child;
-             child = XMLUtils::getNextSibling(child, "InflationCurve")) {
-            boost::shared_ptr<InflationCurveConfig> inflationCurveConfig(new InflationCurveConfig());
-            try {
-                inflationCurveConfig->fromXML(child);
-                const string& id = inflationCurveConfig->curveID();
-                inflationCurveConfigs_[id] = inflationCurveConfig;
-                DLOG("Added inflation curve config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing inflation curve config: " << ex.what());
-            }
-        }
-    }
-
-    // Load InflationCapFloorPriceSurfaces
-    XMLNode* inflationCapFloorPriceSurfaceNode = XMLUtils::getChildNode(node, "InflationCapFloorPriceSurfaces");
-    if (inflationCapFloorPriceSurfaceNode) {
-        for (XMLNode* child =
-                 XMLUtils::getChildNode(inflationCapFloorPriceSurfaceNode, "InflationCapFloorPriceSurface");
-             child; child = XMLUtils::getNextSibling(child, "InflationCapFloorPriceSurface")) {
-            boost::shared_ptr<InflationCapFloorPriceSurfaceConfig> inflationCapFloorPriceSurfaceConfig(
-                new InflationCapFloorPriceSurfaceConfig());
-            try {
-                inflationCapFloorPriceSurfaceConfig->fromXML(child);
-                const string& id = inflationCapFloorPriceSurfaceConfig->curveID();
-                inflationCapFloorPriceSurfaceConfigs_[id] = inflationCapFloorPriceSurfaceConfig;
-                DLOG("Added inflation cap floor price surface config with ID = " << id);
-            } catch (std::exception& ex) {
-                ALOG("Exception parsing inflation cap floor price surface config: " << ex.what());
-            }
-        }
-    }
+    // Load YieldCurves, FXVols, etc, etc
+    parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);
+    parseNode(node, "FXVolatilities", "FXVolatility", fxVolCurveConfigs_);
+    parseNode(node, "SwaptionVolatilities", "SwaptionVolatility", swaptionVolCurveConfigs_);
+    parseNode(node, "CapFloorVolatilities", "CapFloorVolatility", capFloorVolCurveConfigs_);
+    parseNode(node, "DefaultCurves", "DefaultCurve", defaultCurveConfigs_);
+    parseNode(node, "CDSVolatilities", "CDSVolatility", cdsVolCurveConfigs_);
+    parseNode(node, "BaseCorrelations", "BaseCorrelation", baseCorrelationCurveConfigs_);
+    parseNode(node, "EquityCurves", "EquityCurve", equityCurveConfigs_);
+    parseNode(node, "EquityVolatilities", "EquityVolatility", equityVolCurveConfigs_);
+    parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
+    parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
+              inflationCapFloorPriceSurfaceConfigs_);
+    parseNode(node, "Securities", "Security", securityConfigs_);
+    parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
     doc.appendNode(parent);
 
-    XMLNode* node = doc.allocNode("YieldCurves");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : yieldCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("FXVolatilities");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : fxVolCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("SwaptionVolatilities");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : swaptionVolCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("CapFloorVolatilities");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : capFloorVolCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("DefaultCurves");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : defaultCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("InflationCurves");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : inflationCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("InflationCapFloorPriceSurfaces");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : inflationCapFloorPriceSurfaceConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("EquityCurves");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : equityCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
-
-    node = doc.allocNode("EquityVolatilities");
-    XMLUtils::appendNode(parent, node);
-    for (auto it : equityVolCurveConfigs_)
-        XMLUtils::appendNode(node, it.second->toXML(doc));
+    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
+    addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
+    addNodes(doc, parent, "SwaptionVolatilities", swaptionVolCurveConfigs_);
+    addNodes(doc, parent, "CapFloorVolatilities", capFloorVolCurveConfigs_);
+    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
+    addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
+    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
+    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
+    addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
+    addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
+    addNodes(doc, parent, "Securities", securityConfigs_);
+    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
 
     return parent;
 }
-}
-}
+} // namespace data
+} // namespace ore

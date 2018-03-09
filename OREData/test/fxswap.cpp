@@ -16,16 +16,16 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/fxswap.hpp>
-#include <ored/portfolio/fxforward.hpp>
-#include <ored/portfolio/fxswap.hpp>
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/fxoption.hpp>
-#include <ored/portfolio/enginedata.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <boost/make_shared.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/portfolio/enginedata.hpp>
+#include <ored/portfolio/fxforward.hpp>
+#include <ored/portfolio/fxoption.hpp>
+#include <ored/portfolio/fxswap.hpp>
+#include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <test/fxswap.hpp>
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
@@ -42,10 +42,10 @@ public:
         asof_ = Date(3, Feb, 2015);
 
         // build discount
-        discountCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateYts(0.02);
-        discountCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateYts(0.03);
-        discountCurves_[make_pair(Market::defaultConfiguration, "CHF")] = flatRateYts(0.04);
-        discountCurves_[make_pair(Market::defaultConfiguration, "GBP")] = flatRateYts(0.05);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "EUR")] = flatRateYts(0.02);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = flatRateYts(0.03);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "CHF")] = flatRateYts(0.04);
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "GBP")] = flatRateYts(0.05);
 
         // add fx rates
         fxSpots_[Market::defaultConfiguration].addQuote("EURUSD", Handle<Quote>(boost::make_shared<SimpleQuote>(1.2)));
@@ -68,7 +68,7 @@ private:
         return Handle<BlackVolTermStructure>(fxv);
     }
 };
-}
+} // namespace
 
 namespace {
 
@@ -112,14 +112,12 @@ void test(string nearDate, string farDate, string nearBoughtCurrency, double nea
         BOOST_FAIL("The FxSwap has NPV: " << fxswap.instrument()->NPV()
                                           << ", which does not equal the sum of two Fxforwards: " << npvForward);
 }
-}
+} // namespace
 
 namespace testsuite {
 
-void FXSwapTest::testFXSwap() { BOOST_TEST_MESSAGE("Testing FXSwap..."); }
-
-test_suite* FXSwapTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FXSwapTest");
+void FXSwapTest::testFXSwap() {
+    BOOST_TEST_MESSAGE("Testing FXSwap...");
     string nearDate = "2015-10-27";
     string farDate = "2015-11-03";
     string nearBoughtCurrency = "EUR";
@@ -155,8 +153,12 @@ test_suite* FXSwapTest::suite() {
 
     test(nearDate, farDate, nearBoughtCurrency, nearBoughtAmount, nearSoldCurrency, nearSoldAmount, farBoughtAmount,
          farSoldAmount);
+}
+
+test_suite* FXSwapTest::suite() {
+    test_suite* suite = BOOST_TEST_SUITE("FXSwapTest");
 
     suite->add(BOOST_TEST_CASE(&FXSwapTest::testFXSwap));
     return suite;
 }
-}
+} // namespace testsuite

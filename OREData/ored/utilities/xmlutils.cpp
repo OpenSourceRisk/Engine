@@ -21,9 +21,9 @@
     \ingroup utilities
 */
 
-#include <ored/utilities/xmlutils.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <boost/algorithm/string/join.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 // we only want to include these here.
 #include <rapidxml.hpp>
@@ -124,14 +124,18 @@ void XMLSerializable::toFile(const string& filename) {
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
     QL_REQUIRE(node, "XML Node is NULL (expected " << expectedName << ")");
-    QL_REQUIRE(node->name() == expectedName, "XML Node name " << node->name() << " does not match expected name "
-                                                              << expectedName);
+    QL_REQUIRE(node->name() == expectedName,
+               "XML Node name " << node->name() << " does not match expected name " << expectedName);
 }
 
 XMLNode* XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& name) {
     XMLNode* node = doc.allocNode(name);
     parent->insert_node(0, node);
     return node;
+}
+
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const char* value) {
+    addChild(doc, n, name, string(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
@@ -384,5 +388,5 @@ XMLNode* XMLUtils::getNextSibling(XMLNode* node, const string& name) {
 }
 
 string XMLUtils::getNodeValue(XMLNode* node) { return node->value(); }
-}
-}
+} // namespace data
+} // namespace ore

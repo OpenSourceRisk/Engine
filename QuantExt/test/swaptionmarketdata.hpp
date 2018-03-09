@@ -23,12 +23,15 @@
 #ifndef quantext_test_swaptionmarketdata_hpp
 #define quantext_test_swaptionmarketdata_hpp
 
-#include <ql/math/matrix.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
+#include <ql/indexes/swap/euriborswap.hpp>
+#include <ql/math/matrix.hpp>
+#include <ql/math/randomnumbers/mt19937uniformrng.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/time/period.hpp>
-#include <boost/make_shared.hpp>
 
 #include <vector>
 
@@ -39,8 +42,11 @@ namespace QuantExt {
 struct SwaptionVolatilityEUR {
     // Constructor
     SwaptionVolatilityEUR()
-        : optionTenors(4), swapTenors(4), nVols(optionTenors.size(), swapTenors.size(), 0.0), lnVols(nVols),
-          slnVols_1(nVols), slnVols_2(nVols), shifts_1(nVols), shifts_2(nVols) {
+        : optionTenors(4), swapTenors(4), strikeSpreads(5), nVols(optionTenors.size(), swapTenors.size(), 0.0),
+          lnVols(nVols), slnVols_1(nVols), slnVols_2(nVols), shifts_1(nVols), shifts_2(nVols),
+          nVolSpreads(16, vector<Handle<Quote> >(5, Handle<Quote>())),
+          lnVolSpreads(16, vector<Handle<Quote> >(5, Handle<Quote>())),
+          slnVolSpreads(16, vector<Handle<Quote> >(5, Handle<Quote>())) {
 
         // Populate option tenors
         optionTenors[0] = Period(1, Years);
@@ -159,24 +165,64 @@ struct SwaptionVolatilityEUR {
         shifts_2[3][1] = 0.003750;
         shifts_2[3][2] = 0.004500;
         shifts_2[3][3] = 0.006000;
+
+        strikeSpreads[0] = -0.02;
+        strikeSpreads[1] = -0.01;
+        strikeSpreads[2] = 0.00;
+        strikeSpreads[3] = +0.01;
+        strikeSpreads[4] = +0.02;
+        Size atmStrikeIndex = 2;
+
+        // random smile
+        MersenneTwisterUniformRng rng(42);
+        Real nVolSpreadMin = 0.0010;
+        Real nVolSpreadMax = 0.0050;
+        Real lnVolSpreadMin = 0.1;
+        Real lnVolSpreadMax = 0.3;
+        Real slnVolSpreadMin = 0.05;
+        Real slnVolSpreadMax = 0.25;
+        for (Size i = 0; i < optionTenors.size(); ++i) {
+            for (Size j = 0; j < swapTenors.size(); ++j) {
+                for (Size k = 0; k < strikeSpreads.size(); ++k) {
+                    Size index = j * optionTenors.size() + i;
+                    Real nVolSpread =
+                        k == atmStrikeIndex ? 0.0 : nVolSpreadMin + rng.nextReal() * (nVolSpreadMax - nVolSpreadMin);
+                    nVolSpreads[index][k] = Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(nVolSpread)));
+                    Real lnVolSpread =
+                        k == atmStrikeIndex ? 0.0 : lnVolSpreadMin + rng.nextReal() * (lnVolSpreadMax - lnVolSpreadMin);
+                    lnVolSpreads[index][k] =
+                        Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(lnVolSpread)));
+                    Real slnVolSpread = k == atmStrikeIndex
+                                            ? 0.0
+                                            : slnVolSpreadMin + rng.nextReal() * (slnVolSpreadMax - slnVolSpreadMin);
+                    slnVolSpreads[index][k] =
+                        Handle<Quote>(boost::shared_ptr<SimpleQuote>(new SimpleQuote(slnVolSpread)));
+                }
+            }
+        }
     }
 
     // Members
     vector<Period> optionTenors;
     vector<Period> swapTenors;
+    vector<Real> strikeSpreads;
     Matrix nVols;
     Matrix lnVols;
     Matrix slnVols_1;
     Matrix slnVols_2;
     Matrix shifts_1;
     Matrix shifts_2;
+
+    vector<vector<Handle<Quote> > > nVolSpreads, lnVolSpreads, slnVolSpreads;
 };
 
 struct SwaptionConventionsEUR {
     // Constructor
     SwaptionConventionsEUR()
         : settlementDays(2), fixedTenor(Period(1, Years)), fixedCalendar(TARGET()), fixedConvention(ModifiedFollowing),
-          fixedDayCounter(Thirty360(Thirty360::BondBasis)), floatIndex(boost::make_shared<Euribor6M>()) {}
+          fixedDayCounter(Thirty360(Thirty360::BondBasis)), floatIndex(boost::make_shared<Euribor6M>()),
+          swapIndex(boost::make_shared<EuriborSwapIsdaFixA>(10 * Years)),
+          shortSwapIndex(boost::make_shared<EuriborSwapIsdaFixA>(2 * Years)) {}
 
     // Members
     Natural settlementDays;
@@ -185,7 +231,8 @@ struct SwaptionConventionsEUR {
     BusinessDayConvention fixedConvention;
     DayCounter fixedDayCounter;
     boost::shared_ptr<IborIndex> floatIndex;
+    boost::shared_ptr<SwapIndex> swapIndex, shortSwapIndex;
 };
-}
+} // namespace QuantExt
 
 #endif

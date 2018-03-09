@@ -100,7 +100,10 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (legData_[i].legType() == "Fixed") {
             legs_[i] = makeFixedLeg(legData_[i]);
         } else if (legData_[i].legType() == "Floating") {
-            string indexName = legData_[i].floatingLegData().index();
+            boost::shared_ptr<FloatingLegData> floatData =
+                boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(floatData, "Wrong LegType, expected Floating");
+            string indexName = floatData->index();
 
             Handle<IborIndex> hIndex =
                 engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
@@ -144,24 +147,39 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 legs_[i] = makeIborLeg(legData_[i], index, engineFactory);
             }
         } else if (legData_[i].legType() == "CPI") {
-            string inflationIndexName = legData_[i].cpiLegData().index();
-            bool inflationIndexInterpolated = legData_[i].cpiLegData().interpolated();
-            boost::shared_ptr<ZeroInflationIndex> index =
-                *market->zeroInflationIndex(inflationIndexName, inflationIndexInterpolated);
-            QL_REQUIRE(index, "zero inflation index not found for index " << legData_[i].cpiLegData().index());
+            boost::shared_ptr<CPILegData> cpiData =
+                boost::dynamic_pointer_cast<CPILegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
+            string inflationIndexName = cpiData->index();
+            boost::shared_ptr<ZeroInflationIndex> index = *market->zeroInflationIndex(inflationIndexName);
+            QL_REQUIRE(index, "zero inflation index not found for index " << inflationIndexName);
             legs_[i] = makeCPILeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION";
         } else if (legData_[i].legType() == "YY") {
-            string inflationIndexName = legData_[i].yoyLegData().index();
-            bool inflationIndexInterpolated = legData_[i].yoyLegData().interpolated();
-            boost::shared_ptr<YoYInflationIndex> index =
-                *market->yoyInflationIndex(inflationIndexName, inflationIndexInterpolated);
+            boost::shared_ptr<YoYLegData> yyData =
+                boost::dynamic_pointer_cast<YoYLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(yyData, "Wrong LegType, expected Floating");
+            string inflationIndexName = yyData->index();
+            boost::shared_ptr<YoYInflationIndex> index = *market->yoyInflationIndex(inflationIndexName);
             legs_[i] = makeYoYLeg(legData_[i], index);
             // legTypes[i] = Inflation;
             // legTypes_[i] = "INFLATION_YOY";
         } else if (legData_[i].legType() == "Cashflow") {
             legs_[i] = makeSimpleLeg(legData_[i]);
+        } else if (legData_[i].legType() == "CMS") {
+            boost::shared_ptr<CMSLegData> cmsData =
+                boost::dynamic_pointer_cast<CMSLegData>(legData_[i].concreteLegData());
+            QL_REQUIRE(cmsData, "Wrong LegType, expected Floating");
+            string swapIndexName = cmsData->swapIndex();
+
+            Handle<SwapIndex> hIndex =
+                engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));
+            QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << swapIndexName << " in market.");
+
+            boost::shared_ptr<SwapIndex> index = hIndex.currentLink();
+            legs_[i] = makeCMSLeg(legData_[i], index, engineFactory);
+
         } else {
             QL_FAIL("Unknown leg type " << legData_[i].legType());
         }
@@ -210,8 +228,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             }
         }
         // check for notional exchanges on non FX reseting trades
-        else if (legData_[i].notionalInitialExchange() || legData_[i].notionalFinalExchange() ||
-                 legData_[i].notionalAmortizingExchange()) {
+        else if ((legData_[i].notionalInitialExchange() || legData_[i].notionalFinalExchange() ||
+                  legData_[i].notionalAmortizingExchange()) &&
+                 (legData_[i].legType() != "CPI")) {
 
             legs_.push_back(makeNotionalLeg(legs_[i], legData_[i].notionalInitialExchange(),
                                             legData_[i].notionalFinalExchange(),
@@ -225,6 +244,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // that appears in the XML
     npvCurrency_ = ccy_str;
     notional_ = currentNotional(legs_[0]); // match npvCurrency_
+    DLOG("Notional is " << notional_ << " " << npvCurrency_);
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
@@ -232,7 +252,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currencies, currency));
-        DLOG("Swap::build(): XCCY Swap NPV = " << swap->NPV());
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -241,7 +260,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
         swap->setPricingEngine(swapBuilder->engine(currency));
-        DLOG("Swap::build(): Swap NPV = " << swap->NPV());
         instrument_.reset(new VanillaInstrument(swap));
     }
 
@@ -282,5 +300,5 @@ XMLNode* Swap::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(swapNode, legData_[i].toXML(doc));
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

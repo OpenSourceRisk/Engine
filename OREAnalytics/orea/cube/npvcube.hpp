@@ -18,14 +18,14 @@
 
 /*! \file orea/cube/npvcube.hpp
     \brief The base NPV cube class
-    \ingroup Cube
+    \ingroup cube
 */
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
 #include <vector>
 
 using QuantLib::Size;
@@ -39,6 +39,7 @@ namespace analytics {
  *
  *  This abstract base class is just used for the storage of a cube.
  *  This class also stores the tradeIds, dates and vector of T0 NPVs
+  \ingroup cube
  */
 class NPVCube {
 public:
@@ -80,5 +81,5 @@ public:
     //! Persist cube contents to disk
     virtual void save(const std::string& fileName) const = 0;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

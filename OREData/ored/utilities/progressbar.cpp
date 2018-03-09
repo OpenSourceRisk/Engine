@@ -33,12 +33,17 @@ void ProgressReporter::unregisterProgressIndicator(const boost::shared_ptr<Progr
 }
 
 void ProgressReporter::updateProgress(const unsigned long progress, const unsigned long total) {
-    for (auto i : indicators_)
+    for (const auto& i : indicators_)
         i->updateProgress(progress, total);
 }
 
-SimpleProgressBar::SimpleProgressBar(const std::string& message, const unsigned int messageWidth,
-                                     const unsigned int barWidth, const unsigned int numberOfScreenUpdates)
+void ProgressReporter::resetProgress() {
+    for (const auto& i : indicators_)
+        i->reset();
+}
+
+SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib::Size messageWidth,
+                                     const QuantLib::Size barWidth, const QuantLib::Size numberOfScreenUpdates)
     : message_(message), messageWidth_(messageWidth), barWidth_(barWidth),
       numberOfScreenUpdates_(numberOfScreenUpdates), updateCounter_(0), finalized_(false) {
     updateProgress(0, 1);
@@ -49,7 +54,7 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (finalized_)
         return;
     if (progress >= total) {
-        std::cout << std::setw(messageWidth_) << std::left << message_;
+        std::cout << "\r" << std::setw(messageWidth_) << std::left << message_;
         for (unsigned int i = 0; i < barWidth_; ++i)
             std::cout << " ";
         std::cout << "       \r";
@@ -61,7 +66,7 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     if (updateCounter_ > 0 && progress * numberOfScreenUpdates_ < updateCounter_ * total) {
         return;
     }
-    std::cout << std::setw(messageWidth_) << std::left << message_ << "[";
+    std::cout << "\r" << std::setw(messageWidth_) << std::left << message_ << "[";
     double ratio = static_cast<double>(progress) / static_cast<double>(total);
     unsigned int pos = static_cast<unsigned int>(static_cast<double>(barWidth_) * ratio);
     for (unsigned int i = 0; i < barWidth_; ++i) {
@@ -77,6 +82,11 @@ void SimpleProgressBar::updateProgress(const unsigned long progress, const unsig
     updateCounter_++;
 }
 
+void SimpleProgressBar::reset() {
+    updateCounter_ = 0;
+    finalized_ = false;
+}
+
 ProgressLog::ProgressLog(const std::string& message, const unsigned int numberOfMessages)
     : message_(message), numberOfMessages_(numberOfMessages), messageCounter_(0) {}
 
@@ -89,6 +99,8 @@ void ProgressLog::updateProgress(const unsigned long progress, const unsigned lo
                  << "%) completed");
     messageCounter_++;
 }
+
+void ProgressLog::reset() { messageCounter_ = 0; }
 
 NoProgressBar::NoProgressBar(const std::string& message, const unsigned int messageWidth) {
     std::cout << std::setw(messageWidth) << message << std::flush;

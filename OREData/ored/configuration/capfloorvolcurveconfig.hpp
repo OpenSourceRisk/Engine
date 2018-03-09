@@ -23,16 +23,14 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
-
-#include <ql/types.hpp>
+#include <ored/configuration/curveconfig.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/types.hpp>
 
 using std::string;
 using std::vector;
-using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLDocument;
 using QuantLib::Period;
@@ -46,8 +44,8 @@ namespace data {
 
 //! CapFloor volatility curve configuration class
 /*! \ingroup configuration
-*/
-class CapFloorVolatilityCurveConfig : public XMLSerializable {
+ */
+class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
@@ -58,18 +56,15 @@ public:
                                   const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
                                   const BusinessDayConvention& businessDayConvention, const string& iborIndex,
                                   const string& discountCurve);
-    virtual ~CapFloorVolatilityCurveConfig() {}
 
     //! \name XMLSerializable interface
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
-    const string& curveID() const { return curveID_; }
-    const string& curveDescription() const { return curveDescription_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
     const bool& includeAtm() const { return includeAtm_; }
@@ -81,12 +76,11 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& iborIndex() const { return iborIndex_; }
     const string& discountCurve() const { return discountCurve_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
-    string& curveID() { return curveID_; }
-    string& curveDescription() { return curveDescription_; }
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate() { return extrapolate_; }
     bool& includeAtm() { return includeAtm_; }
@@ -100,8 +94,6 @@ public:
     //@}
 
 private:
-    string curveID_;
-    string curveDescription_;
     VolatilityType volatilityType_;
     bool extrapolate_, includeAtm_;
     vector<Period> tenors_;
@@ -113,5 +105,7 @@ private:
     string iborIndex_;
     string discountCurve_;
 };
-}
-}
+
+std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);
+} // namespace data
+} // namespace ore

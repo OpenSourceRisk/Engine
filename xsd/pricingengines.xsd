@@ -2,13 +2,11 @@
 
 <xs:include schemaLocation="ore_types.xsd"/>
 
-  <xs:element name="PricingEngines">
-    <xs:complexType>
+  <xs:complexType name="pricingengines">
       <xs:sequence>
         <xs:element type="product" name="Product" maxOccurs="unbounded" minOccurs="0"/> <!-- FIXME: poor name -->
       </xs:sequence>
     </xs:complexType>
-  </xs:element>
 
   <xs:complexType name="product">
     <xs:sequence>

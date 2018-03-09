@@ -2,11 +2,13 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
+#include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/marketdata/fixings.hpp>
@@ -21,8 +23,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
-#include <ored/marketdata/securityspread.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
+#include <ored/marketdata/security.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>

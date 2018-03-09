@@ -34,7 +34,8 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Flat extrapolation given a base interpolation
-/*! \ingroup interpolations */
+/*! \ingroup math
+ */
 class FlatExtrapolation : public Interpolation {
 private:
     class FlatExtrapolationImpl : public Interpolation::Impl {

@@ -18,21 +18,20 @@
 
 /*! \file ored/configuration/conventions.hpp
     \brief Currency and instrument specific conventions/defaults
-    \ingroup marketdata
+    \ingroup configuration
 */
 
 #pragma once
 
-#include <ql/indexes/swapindex.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
-#include <ored/utilities/xmlutils.hpp>
 
 using std::string;
 using std::map;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 
 namespace ore {
@@ -40,7 +39,7 @@ namespace data {
 
 //! Abstract base class for convention objects
 /*!
-  \ingroup marketdata
+  \ingroup configuration
  */
 class Convention : public XMLSerializable {
 public:
@@ -169,7 +168,7 @@ public:
     DepositConvention(const string& id, const string& index);
     //! Detailed constructor
     DepositConvention(const string& id, const string& calendar, const string& convention, const string& eom,
-                      const string& dayCounter);
+                      const string& dayCounter, const string& settlementDays);
     //@}
 
     //! \name Inspectors
@@ -179,6 +178,7 @@ public:
     BusinessDayConvention convention() const { return convention_; }
     bool eom() { return eom_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
+    const Size settlementDays() const { return settlementDays_; }
     bool indexBased() { return indexBased_; }
     // @}
 
@@ -195,6 +195,7 @@ private:
     BusinessDayConvention convention_;
     bool eom_;
     DayCounter dayCounter_;
+    Size settlementDays_;
     bool indexBased_;
 
     // Strings to store the inputs
@@ -202,6 +203,7 @@ private:
     string strConvention_;
     string strEom_;
     string strDayCounter_;
+    string strSettlementDays_;
 };
 
 //! Container for storing Money Market Futures conventions
@@ -484,6 +486,8 @@ public:
     //@{
     const boost::shared_ptr<IborIndex>& longIndex() const { return longIndex_; }
     const boost::shared_ptr<IborIndex>& shortIndex() const { return shortIndex_; }
+    const string& longIndexName() const { return strLongIndex_; }
+    const string& shortIndexName() const { return strShortIndex_; }
     const Period& shortPayTenor() const { return shortPayTenor_; }
     bool spreadOnShort() const { return spreadOnShort_; }
     bool includeSpread() const { return includeSpread_; }
@@ -746,6 +750,7 @@ public:
     BusinessDayConvention fixConvention() const { return fixConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const boost::shared_ptr<ZeroInflationIndex> index() const { return index_; }
+    const string& indexName() const { return strIndex_; }
     bool interpolated() const { return interpolated_; }
     Period observationLag() const { return observationLag_; }
     bool adjustInfObsDates() const { return adjustInfObsDates_; }
@@ -875,5 +880,5 @@ private:
     string strRollConvention_;
     string strEom_;
 };
-}
-}
+} // namespace data
+} // namespace ore

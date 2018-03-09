@@ -1,3 +1,4 @@
+
 /*
  Copyright (C) 2016 Quaternion Risk Management Ltd
  All rights reserved.
@@ -48,6 +49,6 @@ public:
 
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite
 
 #endif

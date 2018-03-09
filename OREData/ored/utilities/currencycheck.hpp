@@ -17,7 +17,7 @@
 */
 
 /*! \file ored/utilities/currencycheck.hpp
-    \brief
+    \brief utility class to check whether string is ISO 4217 compliant
     \ingroup utilities
 */
 
@@ -34,5 +34,5 @@ namespace data {
     \ingroup utilities
 */
 bool checkCurrency(const string& s);
-}
-}
+} // namespace data
+} // namespace ore

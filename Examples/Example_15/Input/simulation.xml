@@ -38,7 +38,7 @@
       <Index>JPY-LIBOR-6M</Index>
       <Index>JPY-TONAR</Index>
     </Indices>
-
+		
     <SwapIndices>
       <SwapIndex>
         <Name>EUR-CMS-1Y</Name>
@@ -52,14 +52,25 @@
 
     <DefaultCurves>
       <Names>
-	<Name>CPTY_C</Name>
+	    <Name>CPTY_C</Name>
+		<Name>BANK</Name>
       </Names>
-      <Tenors>6M,1Y,2Y</Tenors>
+      <Tenors>6M,1Y,2Y,5Y,10Y</Tenors>
+      <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
 
+    <Equities>
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <DividendTenors>6M,1Y,2Y</DividendTenors>
+      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
+    </Equities>
+
     <!-- Even if we do not simulate them - option pricing needs vol
-	   surfaces, so we need to specify here how we propagate the
-	   vol structure and what its composition will be -->
+    surfaces, so we need to specify here how we propagate the
+    vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -73,7 +84,6 @@
       </Currencies>
       <Expiries>6M,1Y,2Y,3Y,5Y,10Y,12Y,15Y,20Y</Expiries>
       <Terms>1Y,2Y,3Y,4Y,5Y,7Y,10Y,15Y,20Y,30Y</Terms>
-      <Strikes/>
     </SwaptionVolatilities>
     
     <CapFloorVolatilities>
@@ -98,9 +108,19 @@
         <!--<CurrencyPair>GBPUSD</CurrencyPair>-->
       </CurrencyPairs>
       <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
-      <Strikes/>
     </FxVolatilities>
-    
+ 	
+	<EquityVolatilities>
+      <Simulate>true</Simulate>
+      <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
+      <!-- Alternative: ConstantVariance -->
+      <Names>
+        <Name>SP5</Name>
+        <Name>Lufthansa</Name>
+      </Names>
+      <Expiries>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</Expiries>
+    </EquityVolatilities>     
+	
     <BenchmarkCurves>
       <BenchmarkCurve>
         <Currency>EUR</Currency>
@@ -111,6 +131,25 @@
     <Securities>
       <Security>SECURITY_1</Security>
     </Securities>
+
+    <ZeroInflationIndexCurves>
+      <Names>
+      	<Name>EUHICP</Name>
+        <Name>EUHICPXT</Name>
+        <Name>FRHICP</Name>
+        <Name>UKRPI</Name>
+        <Name>USCPI</Name>
+      </Names>
+      <Tenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </ZeroInflationIndexCurves>
+
+    <YYInflationIndexCurves>
+	    <Names>
+          <Name>EUHICPXT</Name>
+		</Names>
+        <Tenors>1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+    </YYInflationIndexCurves>
+
     <!-- Additional data that is recorded during simulation for later
 	   use in the post processor -->
     <AggregationScenarioDataCurrencies>

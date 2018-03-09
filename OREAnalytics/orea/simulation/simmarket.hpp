@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ored/marketdata/marketimpl.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <orea/simulation/fixingmanager.hpp>
+#include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/marketimpl.hpp>
 
 namespace ore {
 namespace analytics {
@@ -50,11 +50,14 @@ public:
     //! Return current numeraire value
     Real numeraire() { return numeraire_; }
 
+    //! Reset sim market to initial state
+    virtual void reset() = 0;
+
     //! Get the fixing manager
     virtual const boost::shared_ptr<FixingManager>& fixingManager() const = 0;
 
 protected:
     Real numeraire_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

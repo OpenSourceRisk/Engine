@@ -36,61 +36,72 @@
 
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 
-#include <ql/pricingengines/blackformula.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/quote.hpp>
 #include <ql/exercise.hpp>
+#include <ql/pricingengines/blackformula.hpp>
+#include <ql/quote.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
 BlackCdsOptionEngine::BlackCdsOptionEngine(const Handle<DefaultProbabilityTermStructure>& probability,
                                            Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                                           const Handle<Quote>& volatility)
-    : probability_(probability), recoveryRate_(recoveryRate), termStructure_(termStructure), volatility_(volatility) {
-
+                                           const Handle<BlackVolTermStructure>& volatility)
+    : BlackCdsOptionEngineBase(termStructure, volatility), probability_(probability), recoveryRate_(recoveryRate) {
     registerWith(probability_);
     registerWith(termStructure_);
     registerWith(volatility_);
 }
 
-void BlackCdsOptionEngine::calculate() const {
+Real BlackCdsOptionEngine::recoveryRate() const { return recoveryRate_; }
 
-    Date maturityDate = arguments_.swap->coupons().front()->date();
-    Date exerciseDate = arguments_.exercise->date(0);
+Real BlackCdsOptionEngine::defaultProbability(const Date& d) const { return probability_->defaultProbability(d); }
+
+void BlackCdsOptionEngine::calculate() const {
+    BlackCdsOptionEngineBase::calculate(*arguments_.swap, arguments_.exercise->dates().front(), arguments_.knocksOut,
+                                        results_);
+}
+
+BlackCdsOptionEngineBase::BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure,
+                                                   const Handle<BlackVolTermStructure>& vol)
+    : termStructure_(termStructure), volatility_(vol) {}
+
+void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Date& exerciseDate, const bool knocksOut,
+                                         CdsOption::results& results) const {
+
+    Date maturityDate = swap.coupons().front()->date();
     QL_REQUIRE(maturityDate > exerciseDate, "Underlying CDS should start after option maturity");
     Date settlement = termStructure_->referenceDate();
 
-    Rate spotFwdSpread = arguments_.swap->fairSpread();
-    Rate swapSpread = arguments_.swap->runningSpread();
+    Rate spotFwdSpread = swap.fairSpread();
+    Rate swapSpread = swap.runningSpread();
 
     DayCounter tSDc = termStructure_->dayCounter();
 
     // The sense of the underlying/option has to be sent this way
     // to the Black formula, no sign.
-    Real riskyAnnuity = std::fabs(arguments_.swap->couponLegNPV() / swapSpread);
-    results_.riskyAnnuity = riskyAnnuity;
+    Real riskyAnnuity = std::fabs(swap.couponLegNPV() / swapSpread);
+    results.riskyAnnuity = riskyAnnuity;
 
     // incorporate upfront amount
     swapSpread -=
-        (arguments_.swap->side() == Protection::Buyer ? -1.0 : 1.0) * arguments_.swap->upfrontNPV() / riskyAnnuity;
+        (swap.side() == Protection::Buyer ? -1.0 : 1.0) * (swap.upfrontNPV() - swap.accrualRebateNPV()) / riskyAnnuity;
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
-    Real stdDev = volatility_->value() * std::sqrt(T);
-    Option::Type callPut = (arguments_.side == Protection::Buyer) ? Option::Call : Option::Put;
+    Real stdDev = volatility_->blackVol(exerciseDate, 1.0, true) * std::sqrt(T);
+    Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
-    results_.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
+    results.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
 
     // if a non knock-out payer option, add front end protection value
-    if (arguments_.side == Protection::Buyer && !arguments_.knocksOut) {
-        Real frontEndProtection = callPut * arguments_.swap->notional() * (1. - recoveryRate_) *
-                                  probability_->defaultProbability(exerciseDate) *
+    if (swap.side() == Protection::Buyer && !knocksOut) {
+        Real frontEndProtection = callPut * swap.notional() * (1. - recoveryRate()) * defaultProbability(exerciseDate) *
                                   termStructure_->discount(exerciseDate);
-        results_.value += frontEndProtection;
+        results.value += frontEndProtection;
     }
 }
 
-Handle<YieldTermStructure> BlackCdsOptionEngine::termStructure() { return termStructure_; }
+Handle<YieldTermStructure> BlackCdsOptionEngineBase::termStructure() { return termStructure_; }
 
-Handle<Quote> BlackCdsOptionEngine::volatility() { return volatility_; }
-}
+Handle<BlackVolTermStructure> BlackCdsOptionEngineBase::volatility() { return volatility_; }
+} // namespace QuantExt

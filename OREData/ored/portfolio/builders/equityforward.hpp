@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/equityforward.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -31,14 +31,15 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for European Equity Options
+//! Engine Builder for European Equity Forwards
 /*! Pricing engines are cached by equity/currency
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class EquityForwardEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
 public:
-    EquityForwardEngineBuilder() : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine") {}
+    EquityForwardEngineBuilder()
+        : CachingEngineBuilder("DiscountedCashflows", "DiscountingEquityForwardEngine", {"EquityForward"}) {}
 
 protected:
     virtual string keyImpl(const string& equityName, const Currency& ccy) override {
@@ -47,7 +48,7 @@ protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
         return boost::make_shared<QuantExt::DiscountingEquityForwardEngine>(
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)));

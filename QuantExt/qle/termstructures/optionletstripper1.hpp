@@ -40,6 +40,7 @@ typedef std::vector<std::vector<boost::shared_ptr<CapFloor> > > CapFloorMatrix;
 /*! Helper class to strip optionlet (i.e. caplet/floorlet) volatilities
     (a.k.a. forward-forward volatilities) from the (cap/floor) term
     volatilities of a CapFloorTermVolSurface.
+    \ingroup termstructures
 */
 class OptionletStripper1 : public OptionletStripper {
 public:
@@ -78,6 +79,6 @@ private:
     const VolatilityType inputVolatilityType_;
     const Real inputDisplacement_;
 };
-}
+} // namespace QuantExt
 
 #endif

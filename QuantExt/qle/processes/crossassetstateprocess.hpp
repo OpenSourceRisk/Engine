@@ -19,13 +19,14 @@
 /*! \file crossassetstateprocess.hpp
     \brief crossasset model state process
     \ingroup crossassetmodel
+    \ingroup processes
 */
 
 #ifndef quantext_crossasset_stateprocess_hpp
 #define quantext_crossasset_stateprocess_hpp
 
-#include <ql/stochasticprocess.hpp>
 #include <ql/math/matrixutilities/pseudosqrt.hpp>
+#include <ql/stochasticprocess.hpp>
 
 #include <boost/unordered_map.hpp>
 
@@ -37,7 +38,8 @@ class CrossAssetModel;
 
 //! Cross Asset Model State Process
 /*! \ingroup crossassetmodel
-*/
+ \ingroup processes
+ */
 class CrossAssetStateProcess : public StochasticProcess {
 public:
     enum discretization { exact, euler };
@@ -108,6 +110,6 @@ protected:
     mutable boost::unordered_map<double, Matrix, cache_hasher> cache_v_, cache_d_;
 }; // CrossAssetStateProcess
 
-} // namesapce QuantExt
+} // namespace QuantExt
 
 #endif

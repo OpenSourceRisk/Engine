@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/inflationcurve.hpp
     \brief inflation curve class
-    \ingroup marketdata
+    \ingroup curves
 */
 
 #pragma once
@@ -63,5 +63,5 @@ private:
     boost::shared_ptr<InflationTermStructure> curve_;
     bool interpolatedIndex_;
 };
-}
-}
+} // namespace data
+} // namespace ore

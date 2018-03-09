@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/optiondata.hpp
     \brief trade option data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
@@ -82,5 +82,5 @@ private:
     vector<double> exerciseFees_;
     vector<double> exercisePrices_;
 };
-}
-}
+} // namespace data
+} // namespace ore

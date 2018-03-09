@@ -18,19 +18,19 @@
 
 /*! \file marketdata/todaysmarket.hpp
     \brief An concerte implementation of the Market class that loads todays market and builds the required curves
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
 
-#include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ored/marketdata/todaysmarketparameters.hpp>
-#include <ored/configuration/curveconfigurations.hpp>
-#include <ored/configuration/conventions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <map>
+#include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/loader.hpp>
+#include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 
 namespace ore {
 namespace data {
@@ -48,7 +48,7 @@ namespace data {
   Today's market's purpose is t0 pricing, the Simulation Market's purpose is
   pricing under future scenarios.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 class TodaysMarket : public MarketImpl {
 public:
@@ -64,5 +64,5 @@ public:
         //! Repository of market conventions
         const Conventions& conventions);
 };
-}
-}
+} // namespace data
+} // namespace ore

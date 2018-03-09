@@ -1,4 +1,3 @@
-#pragma once
 /*
  Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
@@ -26,9 +25,9 @@
 #define quantext_discounting_riskybond_engine_hpp
 
 #include <ql/instruments/bond.hpp>
-#include <ql/time/period.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/period.hpp>
 
 using namespace QuantLib;
 
@@ -71,6 +70,6 @@ private:
     Period timestepPeriod_;
     boost::optional<bool> includeSettlementDateFlows_;
 };
-}
+} // namespace QuantExt
 
 #endif

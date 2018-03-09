@@ -25,11 +25,11 @@
 #ifndef quantlib_cc_ois_basis_swap_hpp
 #define quantlib_cc_ois_basis_swap_hpp
 
+#include <ql/currency.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/instruments/swap.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
-#include <ql/currency.hpp>
-#include <ql/indexes/iborindex.hpp>
 
 using namespace QuantLib;
 
@@ -41,7 +41,7 @@ namespace QuantExt {
 
 //! Basis swap: compounded overnight rate in ccy 1 vs. compounded overnight rate in ccy 2
 /*! \ingroup instruments
-*/
+ */
 class OvernightIndexedCrossCcyBasisSwap : public Swap {
 public:
     class arguments;
@@ -110,6 +110,7 @@ inline Real OvernightIndexedCrossCcyBasisSwap::paySpread() const { return paySpr
 
 inline Real OvernightIndexedCrossCcyBasisSwap::recSpread() const { return recSpread_; }
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::arguments : public Swap::arguments {
 public:
     std::vector<Currency> currency;
@@ -117,6 +118,7 @@ public:
     Real recSpread;
 };
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::results : public Swap::results {
 public:
     Real fairPayLegSpread;
@@ -124,8 +126,9 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class OvernightIndexedCrossCcyBasisSwap::engine
     : public GenericEngine<OvernightIndexedCrossCcyBasisSwap::arguments, OvernightIndexedCrossCcyBasisSwap::results> {};
-}
+} // namespace QuantExt
 
 #endif

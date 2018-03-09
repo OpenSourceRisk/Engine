@@ -16,18 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
-
 #ifdef QL_USE_INDEXED_COUPON
 #include <ql/cashflows/floatingratecoupon.hpp>
 #endif
+
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
+
+#include <boost/make_shared.hpp>
+
 namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX,
                                                  Natural settlementDays, const Calendar& settlementCalendar,
@@ -82,7 +84,12 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuot
 
 void CrossCcyBasisSwapHelper::initializeDates() {
 
-    Date settlementDate = settlementCalendar_.advance(evaluationDate_, settlementDays_, Days);
+    Date refDate = evaluationDate_;
+    // if the evaluation date is not a business day
+    // then move to the next business day
+    refDate = settlementCalendar_.adjust(refDate);
+
+    Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
     Period flatLegTenor = flatIndex_->tenor();
@@ -116,14 +123,13 @@ void CrossCcyBasisSwapHelper::initializeDates() {
         new CrossCcyBasisSwap(spreadLegNominal, spreadLegCurrency_, spreadLegSchedule, spreadIndex_, 0.0,
                               flatLegNominal, flatLegCurrency_, flatLegSchedule, flatIndex_, 0.0));
 
-    Handle<Quote> spotFX(*spotFX_);
     boost::shared_ptr<PricingEngine> engine;
     if (flatIsDomestic_) {
         engine.reset(new CrossCcySwapEngine(flatLegCurrency_, flatDiscountRLH_, spreadLegCurrency_, spreadDiscountRLH_,
-                                            spotFX, boost::none, settlementDate, settlementDate));
+                                            spotFX_));
     } else {
         engine.reset(new CrossCcySwapEngine(spreadLegCurrency_, spreadDiscountRLH_, flatLegCurrency_, flatDiscountRLH_,
-                                            spotFX, boost::none, settlementDate, settlementDate));
+                                            spotFX_));
     }
     swap_->setPricingEngine(engine);
 
@@ -189,4 +195,4 @@ void CrossCcyBasisSwapHelper::accept(AcyclicVisitor& v) {
     else
         RateHelper::accept(v);
 }
-}
+} // namespace QuantExt

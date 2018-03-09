@@ -24,12 +24,12 @@
 #pragma once
 
 #include <ql/patterns/lazyobject.hpp>
-#include <ql/time/businessdayconvention.hpp>
-#include <ql/types.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
+#include <ql/time/businessdayconvention.hpp>
+#include <ql/time/calendar.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/types.hpp>
 
 #include <vector>
 
@@ -41,7 +41,7 @@ namespace QuantExt {
 /*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet
     (i.e. caplet/floorlet) volatilities with a fixed reference date.
 
-            \ingroup termstructues
+            \ingroup termstructures
 */
 class DatedStrippedOptionletBase : public LazyObject {
 public:
@@ -61,4 +61,4 @@ public:
     virtual VolatilityType volatilityType() const = 0;
     virtual Real displacement() const = 0;
 };
-}
+} // namespace QuantExt

@@ -23,11 +23,11 @@
 
 #pragma once
 
-#include <string>
 #include <boost/variant.hpp>
-#include <ql/types.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/period.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Size;
@@ -60,6 +60,7 @@ namespace data {
  *   npv_report.next().add("t3").add(100.0).add("cp2");
  *   npv_report.end();
  *   </pre>
+  \ingroup report
  */
 class Report {
 public:
@@ -71,5 +72,5 @@ public:
     virtual Report& add(const ReportType& rt) = 0;
     virtual void end() = 0;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -209,5 +209,5 @@ void NettingSetDefinition::build() {
 
     isBuilt_ = true;
 }
-}
-}
+} // namespace data
+} // namespace ore

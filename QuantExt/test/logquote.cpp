@@ -17,8 +17,8 @@
 */
 
 #include "logquote.hpp"
-#include <qle/quotes/logquote.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <qle/quotes/logquote.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -53,4 +53,4 @@ test_suite* LogQuoteTest::suite() {
     suite->add(BOOST_TEST_CASE(&LogQuoteTest::testLogQuote));
     return suite;
 }
-}
+} // namespace testsuite

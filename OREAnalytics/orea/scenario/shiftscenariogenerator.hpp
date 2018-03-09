@@ -16,18 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/sensitivityscenariogenerator.hpp
-    \brief Sensitivity scenario generation
+/*! \file scenario/shiftscenariogenerator.hpp
+    \brief Shift scenario generation
     \ingroup scenario
 */
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
+#include <ored/marketdata/market.hpp>
 
 namespace ore {
 using namespace data;
@@ -60,6 +60,8 @@ public:
         RiskFactorKey key2() const { return key2_; }
         string indexDesc1() const { return indexDesc1_; }
         string indexDesc2() const { return indexDesc2_; }
+        string keyName1() const { return keyName(key1_); }
+        string keyName2() const { return keyName(key2_); }
         //@}
         //! Return type as string
         string typeString() const;
@@ -71,6 +73,7 @@ public:
         string text() const;
 
     private:
+        string keyName(RiskFactorKey key) const;
         Type type_;
         RiskFactorKey key1_;
         string indexDesc1_;
@@ -79,10 +82,8 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData, const Date& today,
-                           const boost::shared_ptr<ore::data::Market>& initMarket,
-                           const std::string& configuration = Market::defaultConfiguration,
-                           boost::shared_ptr<ScenarioFactory> baseScenarioFactory = {});
+    ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
+                           const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_);
     //! Default destructor
     ~ShiftScenarioGenerator(){};
 
@@ -97,12 +98,12 @@ public:
     //! Number of shift scenarios
     Size samples() { return scenarios_.size(); }
     //! Return the base scenario, i.e. cached initial values of all relevant market points
-    const boost::shared_ptr<Scenario>& baseScenario() { return baseScenario_; }
+    const boost::shared_ptr<Scenario>& baseScenario() { return scenarios_.front(); }
     //! Return vector of sensitivity scenarios, scenario 0 is the base scenario
     const std::vector<boost::shared_ptr<Scenario>>& scenarios() { return scenarios_; }
     //! Return vector of scenario descriptions
     std::vector<ScenarioDescription> scenarioDescriptions() { return scenarioDescriptions_; }
-    //! Return map of RiskFactorKeys to factors, i.e. human readable text representations
+    // ! Return map of RiskFactorKeys to factors, i.e. human readable text representations
     const std::map<RiskFactorKey, std::string>& keyToFactor() { return keyToFactor_; }
     //! Return revers map of factors to RiskFactorKeys
     const std::map<std::string, RiskFactorKey>& factorToKey() { return factorToKey_; }
@@ -171,51 +172,20 @@ public:
         bool initialise);
 
     //! return the base scenario
-    boost::shared_ptr<Scenario> baseScenario() const { return baseScenario_; }
+    boost::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    //! Clear the caches for base scenario keys and values
-    void clear();
-
-    //! Set up the "base" scenario and all shift scenarios using market points/values from the market object
-    void init(boost::shared_ptr<Market> market);
-
-    RiskFactorKey getFxKey(const std::string& ccypair);
-    RiskFactorKey getDiscountKey(const std::string& ccy, Size index);
-    RiskFactorKey getIndexKey(const std::string& indexName, Size index);
-    RiskFactorKey getYieldKey(const std::string& curveName, Size index);
-    RiskFactorKey getSwaptionVolKey(const std::string& ccy, Size index);
-    RiskFactorKey getOptionletVolKey(const std::string& ccy, Size index);
-    RiskFactorKey getFxVolKey(const std::string& ccypair, Size index);
-
-    boost::shared_ptr<ScenarioFactory> baseScenarioFactory_;
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
-    Date today_;
-    boost::shared_ptr<ore::data::Market> initMarket_;
-    const std::string configuration_;
-    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, fxKeys_, swaptionVolKeys_,
-        fxVolKeys_, optionletVolKeys_;
-    std::map<RiskFactorKey, Real> discountCurveCache_, indexCurveCache_, yieldCurveCache_, fxCache_, swaptionVolCache_,
-        fxVolCache_, optionletVolCache_;
-    Real numeraireCache_;
+    const boost::shared_ptr<Scenario> baseScenario_;
+    const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
-    boost::shared_ptr<Scenario> baseScenario_;
     Size counter_;
-
-    vector<string> discountCurrencies_, indexNames_, yieldCurveNames_, fxCcyPairs_, fxVolCcyPairs_,
-        swaptionVolCurrencies_, capFloorVolCurrencies_, crNames_, infIndexNames_;
-
     std::vector<ScenarioDescription> scenarioDescriptions_;
-
     // map risk factor key to "factor", i.e. human readable text representation
     std::map<RiskFactorKey, std::string> keyToFactor_;
     // reverse map of factors to risk factor keys
     std::map<std::string, RiskFactorKey> factorToKey_;
-
-private:
-    void addCacheTo(boost::shared_ptr<Scenario> scenario);
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
-}
-}
+} // namespace analytics
+} // namespace ore

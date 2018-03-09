@@ -1,7 +1,7 @@
 %========================================================
 \section{Market Data}\label{sec:market_data}
 %========================================================
-
+In this section we discuss the market data, which enters into the calibration of OREs risk factor evolution models. 
 Market data in the {\tt market.txt} file is given in three columns; Date, Quote and Quote value.
 
 \begin{itemize}
@@ -10,7 +10,7 @@ Market data in the {\tt market.txt} file is given in three columns; Date, Quote 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item {\bf Quote}: A generic description that contains Instrument Type
-  and Quote Type, followed by instrument specific descriptions (See \S
+  and Quote Type, followed by instrument specific descriptions (see 
   \ref{ss:zero_rate} ff.). The base of a quote consists of
   InstType/QuoteType followed by instrument specific information
   separated by slashes "/".
@@ -30,15 +30,16 @@ Allowable values: Any real number.
     \hline
     \bfseries{Market Data Parameter} & \bfseries{Allowable Values} \\
     \hline
- Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA,
-  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, FX, FX\_FWD,
+ Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA, IMM\_FRA,
+  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX\_SPOT, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
-  EQUITY\_OPTION, BOND} \\
+  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION} \\
 \hline
-  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
-  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL, SHIFT} \\
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
+  RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
+  BASE\_CORRELATION, SHIFT} \\
 \hline
   \end{tabu}
   \caption{Allowable values for Instrument and Quote type market data.}
@@ -170,6 +171,38 @@ Example:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{FX Forward Rate}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\label{ss:fx_forward_rate}
+
+An FX Forward quote is expected in ``forward points'' quotation
+$$
+\mbox{Forward Points} = \frac{\mbox{FX Forward} - \mbox{FX
+    Spot}}{\mbox{Conversion Factor}}
+$$ 
+with conversion factor set to 1.
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description}\\ \hline
+    Instrument Type & \emph{FX\_FWD} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Unit currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Unit/Source currency\\ \hline
+    Target currency & See \lstinline!Currency! in Table   \ref{tab:allow_stand_data} & Target currency\\  \hline
+    Term & An integer followed by D, W, M or Y. & Period from today to  maturity\\ \hline
+%    Conversion factor & Real number & 1.0 by default (if not  specified) \\ \hline
+  \end{tabular}
+  \caption{FX Forward Rate}
+  \label{tab:fxfwd_quote}
+\end{table}
+
+Example:
+\begin{itemize}
+\item {FX\_FWD/RATE/EUR/USD/1M}
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Deposit Rate}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -193,7 +226,7 @@ Deposits are usually quoted as ON (Overnight), TN (Tomorrow Next), SN
 (Spot Next), SW (Spot Week), 3W (3 Weeks), 6M (6 Months), etc. \\
 
 Forward start for ON is today (i.e. forward start = 0D), for TN tomorrow (forward start = 1D), for SN two days from
-today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see \S
+today (forward start = 2D). For longer term Deposits, forward start is derived from conventions, see 
 \ref{sec:conventions}, and is between 0D and 2D, i.e. "spot days" are between 0 and 2.
 
 \medskip
@@ -208,27 +241,47 @@ Example:
 
 \begin{table}[H]
 \centering
-  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
   \hline
     {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
     Instrument Type & \emph{FRA} & \\ \hline
     Quote Type & \emph{RATE} & \\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
-    Forward start & An integer followed by D, W, M or Y  & Period from today to start \\ \hline
+    Forward start & An integer followed by D, W, M or Y  & Period from today to start  \\ \hline
     Term & An integer followed by D, W, M or Y & Period from start to maturity\\ \hline
   \end{tabular}
   \caption{FRA Rate}
   \label{tab:fra_quote}
 \end{table}
-
 FRAs are typically quoted as e.g. 6x9 which means forward start 6M from today, maturity 9M from today, with appropriate
-adjustment of dates.
+adjustment of dates. 
+
+\medskip 
+IMM FRA quotes are represented as follows.
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3.5cm}|p{3.5cm}|p{6.5cm}|}
+  \hline
+    {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{IMM\_FRA} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Currency of the FRA rate\\ \hline
+    Start & An integer & Number of IMM dates from today to start  \\ \hline
+    End & An integer & Number of IMM dates from today to maturity\\ \hline
+  \end{tabular}
+  \caption{IMM FRA Rate}
+  \label{tab:imm_fra_quote}
+\end{table}
 
 \medskip
 Example:
 \begin{itemize}
 \item {FRA/RATE/EUR/9M/3M}
+\item {IMM\_FRA/RATE/EUR/2/3}
 \end{itemize}
+
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Money Market Futures Price}
@@ -251,7 +304,7 @@ Example:
   \label{tab:mmfp_quote}
 \end{table}
 
-Expiry month is typically quoted as JUN08, SEP09, DEC10, etc. The exact expiry date follows from a date rule such as 3rd
+Expiry month is quoted here as YYYY-MM. The exact expiry date follows from a date rule such as 3rd
 Wednesday of the specified month, adjusted to the following business day. The date rule is not quoted directly, but
 defined in the futures contract.
 
@@ -780,8 +833,8 @@ Examples:
     Instrument Type & \emph{SWAPTION} & \\ \hline
     Quote Type & \emph{RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL} & Lognormal quoted volatility, Normal quoted volatility, shifted lognormal quoted volatility\\ \hline
     Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data}&  Currency of the Swaption volatility\\ \hline
-    Term & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
-    IndexTenor & An integer followed by D, W, M or Y & Underlying index tenor \\ \hline
+    Expiry & An integer followed by D, W, M or Y & Period from start to expiry \\ \hline
+    Term & An integer followed by D, W, M or Y & Underlying Swap term \\ \hline
     Dimension & \emph{Smile, ATM}  & Whether volatility quote is a Smile or ATM \\ \hline
     Strike & Real number & Strike rate - (not required for ATM), as deviation from the ATM strike\\ \hline
   \end{tabular}
@@ -797,7 +850,7 @@ at-the-money volatility (the latter is e.g. the quotation convention used by BGC
 Examples:
 \begin{itemize}
 \item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/ATM} (absolute ATM vol quote)
-\item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/SMILE/0.0050} (absolute vol quote for ATM strike plus 50bp)
+\item { SWAPTION/RATE\_LNVOL/EUR/5Y/10Y/Smile/0.0050} (absolute vol quote for ATM strike plus 50bp)
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

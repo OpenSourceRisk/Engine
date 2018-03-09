@@ -21,17 +21,17 @@
     \ingroup utilities
 */
 
-#include <ored/utilities/parsers.hpp>
-#include <ored/utilities/indexparser.hpp>
-#include <ored/configuration/conventions.hpp>
-#include <ql/errors.hpp>
-#include <ql/indexes/all.hpp>
-#include <ql/time/daycounters/all.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <qle/indexes/all.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
 #include <map>
+#include <ored/configuration/conventions.hpp>
+#include <ored/utilities/indexparser.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ql/errors.hpp>
+#include <ql/indexes/all.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <qle/indexes/all.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -78,8 +78,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
 
-    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3, "Two or three tokens required in "
-                                                             << s << ": CCY-INDEX or CCY-INDEX-TERM");
+    QL_REQUIRE(tokens.size() == 2 || tokens.size() == 3,
+               "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
 
     Period p;
     if (tokens.size() == 3)
@@ -208,11 +208,17 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
         //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"EU HICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
         {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FR HICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
         {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UK RPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
-        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -221,7 +227,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
     }
 }
-boost::shared_ptr<Index> parseIndex(const string& s) {
+
+boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
         ret_idx = parseIborIndex(s);
@@ -229,7 +236,11 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseSwapIndex(s);
+            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions.get(s));
+            QL_REQUIRE(c, "no swap index convention");
+            auto c2 = boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions()));
+            QL_REQUIRE(c2, "no swap convention");
+            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), c2);
         } catch (...) {
         }
     }
@@ -248,5 +259,5 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
-}
-}
+} // namespace data
+} // namespace ore

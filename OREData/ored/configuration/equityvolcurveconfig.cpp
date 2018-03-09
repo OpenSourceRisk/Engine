@@ -17,6 +17,8 @@
 */
 
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
@@ -26,9 +28,27 @@ namespace data {
 
 EquityVolatilityCurveConfig::EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                                          const string& currency, const Dimension& dimension,
-                                                         const vector<string>& expiries)
-    : curveID_(curveID), curveDescription_(curveDescription), ccy_(currency), dimension_(dimension),
-      expiries_(expiries) {}
+                                                         const vector<string>& expiries, const vector<string>& strikes,
+                                                         const DayCounter& dayCounter)
+    : CurveConfig(curveID, curveDescription), ccy_(currency), dimension_(dimension), expiries_(expiries),
+      dayCounter_(dayCounter), strikes_(strikes) {}
+
+const vector<string>& EquityVolatilityCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        string base = "EQUITY_OPTION/RATE_LNVOL/" + curveID_ + "/" + ccy_ + "/";
+        if (dimension_ == Dimension::ATM) {
+            for (auto e : expiries_)
+                quotes_.push_back(base + to_string(e) + "/ATMF");
+        } else {
+            for (auto e : expiries_) {
+                for (auto s : strikes_) {
+                    quotes_.push_back(base + to_string(e) + "/" + to_string(s));
+                }
+            }
+        }
+    }
+    return quotes_;
+}
 
 void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "EquityVolatility");
@@ -37,12 +57,18 @@ void EquityVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     ccy_ = XMLUtils::getChildValue(node, "Currency", true);
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
-    if (dim == "ATM")
+    if (dim == "ATM") {
         dimension_ = Dimension::ATM;
-    else {
-        QL_FAIL("Dimension " << dim << " not supported yet");
+    } else if (dim == "Smile") {
+        dimension_ = Dimension::Smile;
+        strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     }
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+
+    string dc = XMLUtils::getChildValue(node, "DayCounter");
+    if (dc == "")
+        dc = "A365";
+    dayCounter_ = parseDayCounter(dc);
 }
 
 XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -54,11 +80,13 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
     } else {
-        QL_FAIL("Unkown Dimension in EquityVolatilityCurveConfig::toXML()");
+        XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

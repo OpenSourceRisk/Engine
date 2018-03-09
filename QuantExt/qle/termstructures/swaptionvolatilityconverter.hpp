@@ -36,6 +36,7 @@ using std::vector;
 namespace QuantExt {
 
 //! Container for holding swap conventions needed by the SwaptionVolatilityConverter
+//! \ingroup termstructures
 class SwapConventions {
 public:
     //! Constructor
@@ -76,11 +77,15 @@ public:
     //! Construct from SwapConventions
     SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
                                 const Handle<YieldTermStructure>& discount,
-                                const boost::shared_ptr<SwapConventions>& conventions, const VolatilityType targetType,
-                                const Matrix& targetShifts = Matrix());
+                                const Handle<YieldTermStructure>& shortDiscount,
+                                const boost::shared_ptr<SwapConventions>& conventions,
+                                const boost::shared_ptr<SwapConventions>& shortConventions,
+                                const Period& conventionsTenor, const Period& shortConventionsTenor,
+                                const VolatilityType targetType, const Matrix& targetShifts = Matrix());
     //! Construct from SwapIndex
     SwaptionVolatilityConverter(const Date& asof, const boost::shared_ptr<SwaptionVolatilityStructure>& svsIn,
-                                const boost::shared_ptr<SwapIndex>& swapIndex, const VolatilityType targetType,
+                                const boost::shared_ptr<SwapIndex>& swapIndex,
+                                const boost::shared_ptr<SwapIndex>& shortSwapIndex, const VolatilityType targetType,
                                 const Matrix& targetShifts = Matrix());
 
     //! Method that returns the converted <tt>SwaptionVolatilityStructure</tt>
@@ -100,13 +105,14 @@ private:
     convert(const boost::shared_ptr<SwaptionVolatilityMatrix>& svMatrix) const;
 
     // Convert a single vol associated with a given swaption
-    Real convert(const Date& expiry, const Period& swapTenor, const DayCounter& volDayCounter, Real inVol,
-                 VolatilityType inType, VolatilityType outType, Real inShift = 0.0, Real outShift = 0.0) const;
+    Real convert(const Date& expiry, const Period& swapTenor, Real strikeSpread, const DayCounter& volDayCounter,
+                 VolatilityType outType, Real outShift = 0.0) const;
 
     const Date asof_;
     const boost::shared_ptr<SwaptionVolatilityStructure> svsIn_;
-    Handle<YieldTermStructure> discount_;
-    const boost::shared_ptr<SwapConventions> conventions_;
+    Handle<YieldTermStructure> discount_, shortDiscount_;
+    const boost::shared_ptr<SwapConventions> conventions_, shortConventions_;
+    const Period conventionsTenor_, shortConventionsTenor_;
     const VolatilityType targetType_;
     const Matrix targetShifts_;
 
@@ -115,7 +121,8 @@ private:
     Natural maxEvaluations_;
     static const Volatility minVol_;
     static const Volatility maxVol_;
+    static const Real minVega_;
 };
-}
+} // namespace QuantExt
 
 #endif

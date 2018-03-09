@@ -18,21 +18,20 @@
 
 /*! \file ored/portfolio/envelope.hpp
     \brief trade envelope data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <ored/utilities/xmlutils.hpp>
 
 #include <vector>
 
 using std::string;
 using std::vector;
 using ore::data::XMLSerializable;
-;
-using ore::data::XMLDocument;
+
 using ore::data::XMLNode;
 
 namespace ore {
@@ -91,5 +90,5 @@ public:
 private:
     vector<TradeAction> actions_;
 };
-}
-}
+} // namespace data
+} // namespace ore

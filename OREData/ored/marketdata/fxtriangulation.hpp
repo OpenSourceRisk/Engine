@@ -23,10 +23,10 @@
 
 #pragma once
 
-#include <ql/types.hpp>
+#include <map>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>
-#include <map>
+#include <ql/types.hpp>
 
 using QuantLib::Quote;
 using QuantLib::Handle;
@@ -63,8 +63,11 @@ public:
     //! Get a quote from the repo, this will follow the algorithm described above
     Handle<Quote> getQuote(const std::string&) const;
 
+    //! Get all quotes currently stored in the triangulation
+    const std::map<std::string, Handle<Quote>>& quotes() const { return map_; }
+
 private:
     mutable std::map<std::string, Handle<Quote>> map_;
 };
-}
-}
+} // namespace data
+} // namespace ore

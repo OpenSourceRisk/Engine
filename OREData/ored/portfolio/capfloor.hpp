@@ -18,20 +18,20 @@
 
 /*! \file portfolio/capfloor.hpp
     \brief Ibor cap, floor or collar trade data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 namespace ore {
 namespace data {
 
 //! Serializable cap, floor, collar
 /*! \ingroup tradedata
-*/
+ */
 class CapFloor : public Trade {
 public:
     CapFloor() : Trade("CapFloor") {}
@@ -58,5 +58,5 @@ private:
     vector<double> caps_;
     vector<double> floors_;
 };
-}
-}
+} // namespace data
+} // namespace ore

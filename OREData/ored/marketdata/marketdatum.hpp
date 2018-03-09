@@ -23,15 +23,16 @@
 
 #pragma once
 
-#include <string>
-#include <ql/types.hpp>
+#include <boost/make_shared.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/types.hpp>
+#include <string>
 
 using std::string;
 using QuantLib::Real;
+using QuantLib::Size;
 using QuantLib::Date;
 using QuantLib::Period;
 using QuantLib::Quote;
@@ -68,10 +69,12 @@ public:
         MM,
         MM_FUTURE,
         FRA,
+        IMM_FRA,
         IR_SWAP,
         BASIS_SWAP,
         CC_BASIS_SWAP,
         CDS,
+        CDS_INDEX,
         FX_SPOT,
         FX_FWD,
         HAZARD_RATE,
@@ -87,7 +90,8 @@ public:
         EQUITY_FWD,
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
-        BOND
+        BOND,
+        INDEX_CDS_OPTION
     };
 
     //! Supported market quote types
@@ -102,6 +106,7 @@ public:
         RATE_LNVOL,
         RATE_NVOL,
         RATE_SLNVOL,
+        BASE_CORRELATION,
         SHIFT
     };
 
@@ -184,6 +189,36 @@ private:
     string ccy_;
     Period fwdStart_;
     Period term_;
+};
+
+//! IMM FRA market data class
+/*!
+    This class holds single market points of type
+    - IMM FRA
+
+    Specific data comprise currency, IMM 1 and IMM 2
+
+    IMM 1 & 2 are strings representing the IMM dates - 1 is the next date,
+    up to 9, and then A, B, C, D
+
+\ingroup marketdata
+*/
+class ImmFraQuote : public MarketDatum {
+public:
+    //! Constructor
+    ImmFraQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, Size imm1, Size imm2)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::IMM_FRA), ccy_(ccy), imm1_(imm1), imm2_(imm2) {}
+
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const Size& imm1() const { return imm1_; }
+    const Size& imm2() const { return imm2_; }
+    //@}
+private:
+    string ccy_;
+    Size imm1_;
+    Size imm2_;
 };
 
 //! Swap market data class
@@ -691,8 +726,8 @@ public:
                   Period expiry, string strike)
         : MarketDatum(value, asofDate, name, quoteType, InstrumentType::FX_OPTION), unitCcy_(unitCcy), ccy_(ccy),
           expiry_(expiry), strike_(strike) {
-        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR", "Invalid FXOptionQuote strike (" << strike
-                                                                                                             << ")");
+        QL_REQUIRE(strike == "ATM" || strike == "25BF" || strike == "25RR",
+                   "Invalid FXOptionQuote strike (" << strike << ")");
     }
 
     //! \name Inspectors
@@ -903,7 +938,7 @@ Specific data comprise
 - Equity/Index name
 - currency
 - expiry
-- "strike" {ATMF} (in future we should support explicit strikes here)
+- strike - can be "ATMF" or an actual strike
 
 \ingroup marketdata
 */
@@ -924,7 +959,7 @@ private:
     string eqName_;
     string ccy_;
     string expiry_;
-    string strike_; // ATMF only supported
+    string strike_;
 };
 
 //! Bond spread data class
@@ -946,5 +981,58 @@ public:
 private:
     string securityID_;
 };
-}
-}
+
+//! Base correlation data class
+/*!
+This class holds single market points of type
+- CDS_INDEX BASE_CORRELATION
+\ingroup marketdata
+*/
+class BaseCorrelationQuote : public MarketDatum {
+public:
+    //! Constructor
+    BaseCorrelationQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& cdsIndexName,
+                         Period term, Real detachmentPoint)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::CDS_INDEX), cdsIndexName_(cdsIndexName),
+          term_(term), detachmentPoint_(detachmentPoint) {}
+
+    //! \name Inspectors
+    //@{
+    const string& cdsIndexName() const { return cdsIndexName_; }
+    Real detachmentPoint() const { return detachmentPoint_; }
+    Period term() const { return term_; }
+    //@}
+private:
+    string cdsIndexName_;
+    Period term_;
+    Real detachmentPoint_;
+};
+
+//! CDS Index Option data class
+/*!
+This class holds single market points of type
+- INDEX_CDS_OPTION
+Specific data comprise
+- index name
+- option expiry (either a date or a period)
+
+\ingroup marketdata
+*/
+class IndexCDSOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    IndexCDSOptionQuote(Real value, Date asofDate, const string& name, const string& indexName, const string& expiry)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE_LNVOL, InstrumentType::INDEX_CDS_OPTION),
+          indexName_(indexName), expiry_(expiry) {}
+
+    //! \name Inspectors
+    //@{
+    const string& indexName() const { return indexName_; }
+    const string& expiry() const { return expiry_; }
+    //@}
+private:
+    string indexName_;
+    string expiry_;
+};
+} // namespace data
+} // namespace ore

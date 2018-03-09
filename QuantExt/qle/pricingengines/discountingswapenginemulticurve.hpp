@@ -64,6 +64,6 @@ private:
     class AmountImpl;
     boost::shared_ptr<AmountImpl> impl_;
 };
-}
+} // namespace QuantExt
 
 #endif

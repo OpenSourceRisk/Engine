@@ -17,6 +17,8 @@
 */
 
 #include <ored/portfolio/trade.hpp>
+#include <qle/instruments/payment.hpp>
+#include <qle/pricingengines/paymentdiscountingengine.hpp>
 
 using ore::data::XMLUtils;
 
@@ -44,5 +46,36 @@ XMLNode* Trade::toXML(XMLDocument& doc) {
         XMLUtils::appendNode(node, tradeActions_.toXML(doc));
     return node;
 }
+
+void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstruments, std::vector<Real>& addMultipliers,
+                       const Date& paymentDate, const Real& paymentAmount, const Currency& paymentCurrency,
+                       const Currency& tradeCurrency, const boost::shared_ptr<EngineFactory>& factory,
+                       const string& configuration) {
+    boost::shared_ptr<QuantExt::Payment> fee(new QuantExt::Payment(paymentAmount, paymentCurrency, paymentDate));
+
+    // assuming amount provided with correct sign
+    addMultipliers.push_back(+1.0);
+
+    // build discounting engine, discount in fee currency, convert into trade currency if different
+    Handle<YieldTermStructure> yts = factory->market()->discountCurve(fee->currency().code(), configuration);
+    Handle<Quote> fx;
+    if (tradeCurrency != fee->currency()) {
+        // FX quote for converting the fee NPV into trade currency by multiplication
+        string ccypair = fee->currency().code() + tradeCurrency.code();
+        fx = factory->market()->fxSpot(ccypair, configuration);
+    }
+    boost::shared_ptr<PricingEngine> discountingEngine(new QuantExt::PaymentDiscountingEngine(yts, fx));
+    fee->setPricingEngine(discountingEngine);
+
+    // 1) Add to additional instruments for pricing
+    addInstruments.push_back(fee);
+
+    // 2) Add a trade leg for cash flow reporting
+    legs_.push_back(Leg(1, fee->cashFlow()));
+    legCurrencies_.push_back(fee->currency().code());
+    // amount comes with its correct sign, avoid switching by saying payer=false
+    legPayers_.push_back(false);
 }
-}
+
+} // namespace data
+} // namespace ore

@@ -37,7 +37,7 @@ namespace QuantExt {
 
 //! Piecewise Constant Helper 1
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper1 {
 public:
     PiecewiseConstantHelper1(const Array& t);
@@ -81,7 +81,7 @@ private:
 
 //! Piecewise Constant Helper2
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper2 {
 public:
     PiecewiseConstantHelper2(const Array& t);
@@ -113,7 +113,7 @@ private:
 
 //! Piecewise Constant Helper 3
 /*! \ingroup models
-*/
+ */
 class PiecewiseConstantHelper3 {
 public:
     PiecewiseConstantHelper3(const Array& t1, const Array& t2);
@@ -229,7 +229,7 @@ inline void PiecewiseConstantHelper3::update() const {
     y2Union_ = Array(tUnion_.size() + 1);
     for (Size i = 0; i < tUnion_.size() + 1; ++i) {
         // choose a safe t for y1 and y2 evaluation
-        Real t = (i == tUnion_.size() ? (tUnion_.size() == 0 ? 1.0 : tUnion_.size() + 1.0)
+        Real t = (i == tUnion_.size() ? (tUnion_.size() == 0 ? 1.0 : tUnion_.back() + 1.0)
                                       : (0.5 * (tUnion_[i] + (i > 0 ? tUnion_[i - 1] : 0.0))));
         y1Union_[i] = QL_PIECEWISE_FUNCTION(t1_, y1_->params(), t);
         y2Union_[i] = QL_PIECEWISE_FUNCTION(t2_, y2_->params(), t);

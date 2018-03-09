@@ -23,17 +23,17 @@
 
 #pragma once
 
-#include <ored/marketdata/market.hpp>
-#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariofactory.hpp>
+#include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/dategrid.hpp>
+#include <ored/marketdata/market.hpp>
 
-#include <qle/models/crossassetmodel.hpp>
-#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
-#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 
 namespace ore {
 using namespace data;
@@ -74,10 +74,12 @@ private:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketConfig_;
     boost::shared_ptr<ore::data::Market> initMarket_;
     const std::string configuration_;
-    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_;
-    std::vector<RiskFactorKey> fxKeys_, eqKeys_;
+    std::vector<RiskFactorKey> discountCurveKeys_, indexCurveKeys_, yieldCurveKeys_, equityForecastCurveKeys_,
+        zeroInflationKeys_, yoyInflationKeys_;
+    std::vector<RiskFactorKey> fxKeys_, eqKeys_, cpiKeys_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedFxVolTermStructure>> fxVols_;
     std::vector<boost::shared_ptr<QuantExt::CrossAssetModelImpliedEqVolTermStructure>> eqVols_;
+    std::vector<std::vector<Period>> ten_dsc_, ten_idx_, ten_yc_, ten_efc_, ten_zinf_, ten_yinf_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

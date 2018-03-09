@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 
 #include <qle/instruments/makeaverageois.hpp>
 
@@ -56,6 +56,9 @@ MakeAverageOIS::operator boost::shared_ptr<AverageOIS>() const {
         effectiveDate = effectiveDate_;
     } else {
         Date valuationDate = Settings::instance().evaluationDate();
+        // if the evaluation date is not a business day
+        // then move to the next business day
+        valuationDate = spotLagCalendar_.adjust(valuationDate);
         Date spotDate = spotLagCalendar_.advance(valuationDate, spotLagTenor_);
         effectiveDate = spotDate + forwardStart_;
     }
@@ -248,4 +251,4 @@ MakeAverageOIS& MakeAverageOIS::withPricingEngine(const boost::shared_ptr<Pricin
     engine_ = engine;
     return *this;
 }
-}
+} // namespace QuantExt

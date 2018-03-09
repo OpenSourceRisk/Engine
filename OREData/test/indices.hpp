@@ -31,6 +31,7 @@ namespace testsuite {
 /*!
   \ingroup tests
 */
+
 class IndexTest {
 public:
     //! Test ibor index parsing, correctness of the resulting QuantLib index' name
@@ -41,4 +42,4 @@ public:
     static void testSwapIndexParsing();
     static boost::unit_test_framework::test_suite* suite();
 };
-}
+} // namespace testsuite

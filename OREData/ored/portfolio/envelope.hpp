@@ -18,19 +18,20 @@
 
 /*! \file ored/portfolio/envelope.hpp
     \brief trade envelope data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <map>
+#include <ored/utilities/xmlutils.hpp>
+#include <set>
 
 using std::string;
 using std::map;
+using std::set;
 using ore::data::XMLSerializable;
-;
-using ore::data::XMLDocument;
+
 using ore::data::XMLNode;
 
 namespace ore {
@@ -45,22 +46,25 @@ public:
     //! Default constructor
     Envelope() {}
 
-    //! Constructor without netting set, without additional fields
-    Envelope(const string& counterparty, const string& nettingSetId = "")
-        : counterparty_(counterparty), nettingSetId_(nettingSetId) {}
+    //! Constructor with netting set and portfolio ids, without additional fields
+    Envelope(const string& counterparty, const string& nettingSetId = "",
+             const set<string>& portfolioIds = set<string>())
+        : counterparty_(counterparty), nettingSetId_(nettingSetId), portfolioIds_(portfolioIds) {}
 
     // For some reason have a ctor with:
     // map<string, string>& additionalFields = map<string,string>()
     // fails under gcc, apparently it's a gcc bug! So to workaround we just have
     // 2 explict ctors.
 
-    //! Constructor with netting set, additional fields
+    //! Constructor without netting set / portfolio ids, with additional fields
     Envelope(const string& counterparty, const map<string, string>& additionalFields)
         : counterparty_(counterparty), nettingSetId_(""), additionalFields_(additionalFields) {}
 
-    //! Constructor without netting set, with additional fields
-    Envelope(const string& counterparty, const string& nettingSetId, const map<string, string>& additionalFields)
-        : counterparty_(counterparty), nettingSetId_(nettingSetId), additionalFields_(additionalFields) {}
+    //! Constructor with netting set / portfolio ids, with additional fields
+    Envelope(const string& counterparty, const string& nettingSetId, const map<string, string>& additionalFields,
+             const set<string>& portfolioIds = set<string>())
+        : counterparty_(counterparty), nettingSetId_(nettingSetId), portfolioIds_(portfolioIds),
+          additionalFields_(additionalFields) {}
 
     //! \name Serialisation
     //@{
@@ -72,12 +76,14 @@ public:
     //@{
     const string& counterparty() const { return counterparty_; }
     const string& nettingSetId() const { return nettingSetId_; }
+    const set<string>& portfolioIds() const { return portfolioIds_; }
     const map<string, string>& additionalFields() const { return additionalFields_; }
     //@}
 private:
     string counterparty_;
     string nettingSetId_;
+    set<string> portfolioIds_;
     map<string, string> additionalFields_;
 };
-}
-}
+} // namespace data
+} // namespace ore

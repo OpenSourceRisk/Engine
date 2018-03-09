@@ -18,35 +18,45 @@
 
 /*! \file ored/marketdata/market.hpp
     \brief Base Market class
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
 
-#include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/indexes/swapindex.hpp>
-#include <ql/indexes/inflationindex.hpp>
+#include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
-#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/indexes/inflationindex.hpp>
+#include <ql/indexes/swapindex.hpp>
 #include <ql/quote.hpp>
+#include <ql/termstructures/defaulttermstructure.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
+#include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
 using namespace QuantLib;
 using std::string;
 
+typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
+
 namespace ore {
 namespace data {
+
+enum class YieldCurveType {
+    Discount = 0, // Chosen to match MarketObject::DiscountCurve
+    Yield = 1,    // Chosen to match MarketObject::YieldCurve
+    EquityDividend = 2,
+    EquityForecast = 3
+};
 
 //! Market
 /*!
   Base class for central repositories containing all term structure objects
   needed in instrument pricing.
 
-  \ingroup curves
+  \ingroup marketdata
 */
 class Market {
 public:
@@ -58,6 +68,8 @@ public:
 
     //! \name Yield Curves
     //@{
+    virtual Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& name,
+                                                  const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     discountCurve(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure> yieldCurve(const string& name,
@@ -94,6 +106,18 @@ public:
                                        const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name (Index) CDS Option volatilities
+    //@{
+    virtual Handle<BlackVolTermStructure> cdsVol(const string&,
+                                                 const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Base Correlation term structures
+    //@{
+    virtual Handle<BilinearBaseCorrelationTermStructure>
+    baseCorrelation(const string&, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! \name Stripped Cap/Floor volatilities i.e. caplet/floorlet volatilities
     //@{
     virtual Handle<OptionletVolatilityStructure>
@@ -102,11 +126,9 @@ public:
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
-    zeroInflationIndex(const string& indexName, const bool interpolated,
-                       const string& configuration = Market::defaultConfiguration) const = 0;
+    zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YoYInflationIndex>
-    yoyInflationIndex(const string& indexName, const bool interpolated,
-                      const string& configuration = Market::defaultConfiguration) const = 0;
+    yoyInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
@@ -127,6 +149,12 @@ public:
     equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Equity volatilities
+    //@{
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! Refresh term structures for a given configuration
     virtual void refresh(const string&) {}
 
@@ -139,5 +167,5 @@ public:
                                          const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
-}
-}
+} // namespace data
+} // namespace ore

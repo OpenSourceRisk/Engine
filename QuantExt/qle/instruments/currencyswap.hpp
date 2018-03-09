@@ -25,14 +25,14 @@
 #ifndef quantext_currencyswap_hpp
 #define quantext_currencyswap_hpp
 
+#include <ql/cashflows/cashflows.hpp>
+#include <ql/currencies/europe.hpp>
+#include <ql/currency.hpp>
+#include <ql/indexes/iborindex.hpp>
 #include <ql/instruments/swap.hpp>
+#include <ql/money.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
-#include <ql/cashflows/cashflows.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <ql/currency.hpp>
-#include <ql/currencies/europe.hpp>
-#include <ql/money.hpp>
 
 using namespace QuantLib;
 
@@ -131,6 +131,7 @@ protected:
     mutable DiscountFactor npvDateDiscount_;
 };
 
+//! \ingroup instruments
 class CurrencySwap::arguments : public virtual PricingEngine::arguments {
 public:
     std::vector<Leg> legs;
@@ -139,6 +140,7 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class CurrencySwap::results : public Instrument::results {
 public:
     std::vector<Real> legNPV, inCcyLegNPV;
@@ -148,6 +150,7 @@ public:
     void reset();
 };
 
+//! \ingroup instruments
 class CurrencySwap::engine : public GenericEngine<CurrencySwap::arguments, CurrencySwap::results> {};
 
 //! Vanilla cross currency interest rate swap
@@ -193,6 +196,6 @@ public:
                       const boost::shared_ptr<IborIndex>& iborIndex2, std::vector<Rate> spreads2,
                       boost::optional<BusinessDayConvention> paymentConvention = boost::none);
 };
-}
+} // namespace QuantExt
 
 #endif

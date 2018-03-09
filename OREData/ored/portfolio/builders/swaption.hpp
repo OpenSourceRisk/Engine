@@ -18,13 +18,13 @@
 
 /*! \file portfolio/builders/swap.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
 
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
 
 #include <qle/models/lgm.hpp>
@@ -42,11 +42,12 @@ namespace data {
  *
  *  Engines are cached based on currency
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class EuropeanSwaptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&> {
 public:
-    EuropeanSwaptionEngineBuilder() : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine") {}
+    EuropeanSwaptionEngineBuilder()
+        : CachingEngineBuilder("BlackBachelier", "BlackBachelierSwaptionEngine", {"EuropeanSwaption"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }
@@ -56,47 +57,61 @@ protected:
 
 //! Abstract BermudanSwaptionEngineBuilder class
 /*! This defines the interface for Bermudan Swaption Builders
- *  Pricing Engines are not cached by this builder, but subclasses can employ
- *  a cache
+ *  Pricing Engines are cached by trade id
 
-    \ingroup portfolio
+    \ingroup builders
  */
-class BermudanSwaptionEngineBuilder : public EngineBuilder {
+class BermudanSwaptionEngineBuilder
+    : public CachingPricingEngineBuilder<string, const string&, const bool, const string&, const std::vector<Date>&,
+                                         const Date&, const std::vector<Real>&> {
 public:
-    BermudanSwaptionEngineBuilder(const string& model, const string& engine) : EngineBuilder(model, engine) {}
+    BermudanSwaptionEngineBuilder(const string& model, const string& engine)
+        : CachingEngineBuilder(model, engine, {"BermudanSwaption"}) {}
 
-    virtual boost::shared_ptr<PricingEngine> engine( //! a unique (trade) id, for caching
-        const string& id,
-        //! is this a standard swaption
-        bool isNonStandard,
-        //! the currency
-        const string& ccy,
-        //! Excercise dates
-        const std::vector<Date>& dates,
-        //! Final maturity (for physical this may be greater than the last exercise date)
-        const Date& maturity,
-        //! Fixed rate
-        Real fixedRate) = 0;
+protected:
+    virtual string keyImpl(const string& id, const bool isNonStandard, const string& ccy,
+                           const std::vector<Date>& dates, const Date& maturity,
+                           const std::vector<Real>& strikes) override {
+        return id;
+    }
 };
 
+//! Abstract LGMBermudanSwaptionEngineBuilder class
+/*! This defines the interface for LGM Bermudan Swaption Builders
+
+\ingroup builders
+*/
 class LGMBermudanSwaptionEngineBuilder : public BermudanSwaptionEngineBuilder {
 public:
     LGMBermudanSwaptionEngineBuilder(const string& engine) : BermudanSwaptionEngineBuilder("LGM", engine) {}
 
+protected:
     boost::shared_ptr<QuantExt::LGM> model(const string& id, bool isNonStandard, const string& ccy,
-                                           const std::vector<Date>& dates, const Date& maturity);
+                                           const std::vector<Date>& dates, const Date& maturity,
+                                           const std::vector<Real>& strikes);
 };
 
 //! Implementation of BermudanSwaptionEngineBuilder using LGM Grid pricer
-/*! \ingroup portfolio
-*/
+/*! \ingroup builders
+ */
 class LGMGridBermudanSwaptionEngineBuilder : public LGMBermudanSwaptionEngineBuilder {
 public:
     LGMGridBermudanSwaptionEngineBuilder() : LGMBermudanSwaptionEngineBuilder("Grid") {}
 
-    boost::shared_ptr<PricingEngine> engine(const string& id, bool isNonStandard, const string& ccy,
-                                            const std::vector<Date>& dates, const Date& maturity,
-                                            Real fixedRate) override;
+protected:
+    virtual boost::shared_ptr<PricingEngine> engineImpl(
+        //! a unique (trade) id, for caching
+        const string& id,
+        //! is this a standard swaption
+        const bool isNonStandard,
+        //! the currency
+        const string& ccy,
+        //! Excercise dates
+        const std::vector<Date>& dates,
+        //! maturity of the underlying
+        const Date& maturity,
+        //! Fixed rate (null means ATM)
+        const std::vector<Real>& strikes) override;
 };
 
 } // namespace data

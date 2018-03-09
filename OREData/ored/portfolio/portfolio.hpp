@@ -23,12 +23,12 @@
 
 #pragma once
 
-#include <ql/types.hpp>
-#include <ql/time/date.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/shared_ptr.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ql/time/date.hpp>
+#include <ql/types.hpp>
 #include <vector>
 
 namespace ore {
@@ -36,23 +36,36 @@ namespace data {
 
 //! Serializable portfolio
 /*!
-  \ingroup tradedata
+  \ingroup portfolio
 */
 class Portfolio {
 public:
     //! Default constructor
     Portfolio() {}
+
     //! Add a trade to the portfoliio
-    void add(const boost::shared_ptr<Trade>& trade) { trades_.push_back(trade); }
+    void add(const boost::shared_ptr<Trade>& trade);
+
+    //! Check if a trade id is already in the porfolio
+    bool has(const string& id);
+
     //! Clear the portfolio
     void clear() { trades_.clear(); }
+
     //! Reset all trade data
     void reset();
+
     //! Portfolio size
     QuantLib::Size size() const { return trades_.size(); }
+
     //! Load using a default or user supplied TradeFactory, existing trades are kept
     void load(const std::string& fileName,
               const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+
+    //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
+    void loadFromXMLString(const std::string& xmlString,
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 
@@ -74,8 +87,14 @@ public:
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
 
+    //! Compute set of portfolios
+    std::set<std::string> portfolioIds() const;
+
 private:
+    //! Load from XMLDocument
+    void load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& tf);
+
     std::vector<boost::shared_ptr<Trade>> trades_;
 };
-}
-}
+} // namespace data
+} // namespace ore

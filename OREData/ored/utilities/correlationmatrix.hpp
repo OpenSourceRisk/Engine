@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ql/math/matrix.hpp>
 #include <map>
+#include <ql/math/matrix.hpp>
 
 using namespace QuantLib;
 
@@ -53,23 +53,26 @@ public:
     Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys);
 
     //! Return a matrix for an IR/FX/INF model, assumes ccys[0] is the base.
-    /*! Returns an (2n-1+2m)*(2n-1+2m) matrix for an IR/FX/INF model.
+    /*! Returns an (2n-1+m)*(2n-1+m) matrix for an IR/FX/INF model.
       For any correlations that are missing, it will set the value to 0 and not throw.
     */
-    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys, const std::vector<std::string>& regions);
+    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+                                         const std::vector<std::string>& infIndices);
 
     //! Return a matrix for an IR/FX/INF/CR model, assumes ccys[0] is the base.
-    /*! Returns an (2n-1+2m+k)*(2n-1+2m+k) matrix for an IR/FX/INF/CR model.
+    /*! Returns an (2n-1+m+k)*(2n-1+m+k) matrix for an IR/FX/INF/CR model.
       For any correlations that are missing, it will set the value to 0 and not throw.
     */
-    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys, const std::vector<std::string>& regions,
+    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+                                         const std::vector<std::string>& infIndices,
                                          const std::vector<std::string>& names);
 
     //! Return a matrix for an IR/FX/INF/CR/EQ model, assumes ccys[0] is the base.
-    /*! Returns an (2n-1+2m+p+q)*(2n-1+2m+p+q) matrix for an IR/FX/INF/CR/EQ model.
+    /*! Returns an (2n-1+m+p+q)*(2n-1+m+p+q) matrix for an IR/FX/INF/CR/EQ model.
       For any correlations that are missing, it will set the value to 0 and not throw.
     */
-    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys, const std::vector<std::string>& regions,
+    Disposable<Matrix> correlationMatrix(const std::vector<std::string>& ccys,
+                                         const std::vector<std::string>& infIndices,
                                          const std::vector<std::string>& names,
                                          const std::vector<std::string>& equities);
 
@@ -98,15 +101,15 @@ private:
     Disposable<Matrix> correlationMatrixImpl(const std::vector<std::string>& ccys, std::vector<std::string>& factors);
 
     Disposable<Matrix> correlationMatrixImpl(const std::vector<std::string>& ccys,
-                                             const std::vector<std::string>& regions,
+                                             const std::vector<std::string>& infIndices,
                                              std::vector<std::string>& factors);
 
     Disposable<Matrix> correlationMatrixImpl(const std::vector<std::string>& ccys,
-                                             const std::vector<std::string>& regions,
+                                             const std::vector<std::string>& infIndices,
                                              const std::vector<std::string>& names, std::vector<std::string>& factors);
 
     Disposable<Matrix> correlationMatrixImpl(const std::vector<std::string>& ccys,
-                                             const std::vector<std::string>& regions,
+                                             const std::vector<std::string>& infIndices,
                                              const std::vector<std::string>& names,
                                              const std::vector<std::string>& equities,
                                              std::vector<std::string>& factors);
@@ -116,8 +119,9 @@ private:
     void checkFactor(const std::string& f);
     key buildkey(const std::string& f1, const std::string& f2);
     Disposable<Matrix> extendMatrix(const Matrix& mat, Size n);
-
+    Disposable<Matrix> extendCorrelationMatrix(const Matrix& mat, const std::vector<std::string>& names,
+                                               std::vector<std::string>& factors, const std::string& prefix);
     std::map<key, Real> data_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,14 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <ored/portfolio/equityoption.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/exercise.hpp>
-#include <ql/instruments/vanillaoption.hpp>
-#include <ql/instruments/compositeinstrument.hpp>
+#include <ored/portfolio/equityoption.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
-#include <boost/make_shared.hpp>
+#include <ql/exercise.hpp>
+#include <ql/instruments/compositeinstrument.hpp>
+#include <ql/instruments/vanillaoption.hpp>
 
 using namespace QuantLib;
 
@@ -68,7 +69,22 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
     Real mult = quantity_ * bsInd;
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult));
+    // If premium data is provided
+    // 1) build the fee trade and pass it to the instrument wrapper for pricing
+    // 2) add fee payment as additional trade leg for cash flow reporting
+    std::vector<boost::shared_ptr<Instrument>> additionalInstruments;
+    std::vector<Real> additionalMultipliers;
+    if (option_.premiumPayDate() != "" && option_.premiumCcy() != "") {
+        Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
+        Currency premiumCurrency = parseCurrency(option_.premiumCcy());
+        Date premiumDate = parseDate(option_.premiumPayDate());
+        addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
+                   engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
+        DLOG("option premium added for eq option " << id());
+    }
+
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
@@ -76,6 +92,10 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // Notional - we really need todays spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
+
+    Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(eqName_);
+    LOG("Implied vol for EquityOption on " << eqName_ << " with maturity " << maturity_ << " and strike " << strike_
+                                           << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void EquityOption::fromXML(XMLNode* node) {
@@ -102,5 +122,5 @@ XMLNode* EquityOption::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

@@ -18,13 +18,13 @@
 
 /*! \file portfolio/fxoption.hpp
     \brief FX Option data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/optiondata.hpp>
+#include <ored/portfolio/trade.hpp>
 
 using std::string;
 
@@ -69,5 +69,5 @@ private:
     string soldCurrency_;
     double soldAmount_;
 };
-}
-}
+} // namespace data
+} // namespace ore

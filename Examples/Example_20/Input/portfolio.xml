@@ -10,12 +10,12 @@
     </Envelope>
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>CREDIT_CURVE_A</CreditCurveId>
+      <CreditCurveId>BANK</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20160203</ProtectionStart>
-      <UpfrontDate>20160203</UpfrontDate>
-      <UpfrontFee>0.0324</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
+      <ProtectionStart>20160206</ProtectionStart>
+      <UpfrontDate>20160208</UpfrontDate>
+      <UpfrontFee>0.0</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
       <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
@@ -32,13 +32,13 @@
         </FixedLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20260203</EndDate>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
+            <Rule>CDS2015</Rule>
             <EndOfMonth/>
             <FirstDate/>
             <LastDate/>
@@ -46,227 +46,5 @@
         </ScheduleData>
       </LegData>
     </CreditDefaultSwapData>
-  </Trade>
-  <!-- Index CDS -->
-  <Trade id="INDEX_CDS">
-    <TradeType>IndexCreditDefaultSwap</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <IndexCreditDefaultSwapData>
-      <CreditCurveId>CREDIT_CURVE_Index</CreditCurveId>
-      <SettlesAccrual>Y</SettlesAccrual>
-      <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-      <ProtectionStart>20160203</ProtectionStart>
-      <UpfrontDate>20160203</UpfrontDate>
-      <UpfrontFee>0.0324</UpfrontFee>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>true</Payer>
-        <Currency>USD</Currency>
-        <Notionals>
-          <Notional>10000000.000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.01</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20260203</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>US</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <!-- Index constituents notionals sum must match premium leg
-	   notional -->
-      <Basket>
-        <Name>
-          <IssuerId>CPTY_1</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <Name>
-          <IssuerId>CPTY_2</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <Name>
-          <IssuerId>CPTY_3</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <!-- ... -->
-      </Basket>
-    </IndexCreditDefaultSwapData>
-  </Trade>
-  <!-- 6M expiry option on 5Y Index CDS -->
-  <Trade id="INDEX_CDS_OPTION">
-    <TradeType>IndexCreditDefaultSwapOption</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <IndexCreditDefaultSwapOptionData>
-      <KnockOut>N</KnockOut>
-      <OptionData>
-        <LongShort>Long</LongShort>
-        <OptionType>Call</OptionType>
-        <Style>European</Style>
-        <Settlement>Cash</Settlement>
-        <PayOffAtExpiry>false</PayOffAtExpiry>
-        <ExerciseDates>
-          <ExerciseDate>2016-08-03</ExerciseDate>
-        </ExerciseDates>
-      </OptionData>
-      <IndexCreditDefaultSwapData>
-        <CreditCurveId>CREDIT_CURVE_Index</CreditCurveId>
-        <SettlesAccrual>Y</SettlesAccrual>
-        <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-        <ProtectionStart>20170410</ProtectionStart>
-        <UpfrontDate/>
-        <UpfrontFee>0.0324</UpfrontFee>
-        <LegData>
-          <LegType>Fixed</LegType>
-          <Payer>true</Payer>
-          <Currency>USD</Currency>
-          <Notionals>
-            <Notional>10000000.000000</Notional>
-          </Notionals>
-          <DayCounter>A360</DayCounter>
-          <PaymentConvention>F</PaymentConvention>
-          <FixedLegData>
-            <Rates>
-              <Rate>0.01</Rate>
-            </Rates>
-          </FixedLegData>
-          <ScheduleData>
-            <Rules>
-              <StartDate>20160803</StartDate>
-              <EndDate>20210803</EndDate>
-              <Tenor>3M</Tenor>
-              <Calendar>US</Calendar>
-              <Convention>F</Convention>
-              <TermConvention>F</TermConvention>
-              <Rule>CDS</Rule>
-              <EndOfMonth/>
-              <FirstDate/>
-              <LastDate/>
-            </Rules>
-          </ScheduleData>
-        </LegData>
-        <!-- Index constituents notionals sum must match premium leg
-	     notional -->
-        <Basket>
-          <Name>
-            <IssuerId>CPTY_1</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
-          <Name>
-            <IssuerId>CPTY_2</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
-          <Name>
-            <IssuerId>CPTY_3</IssuerId>
-            <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
-            <Notional>100000.0</Notional>
-            <Currency>USD</Currency>
-          </Name>
-          <!-- ... -->
-        </Basket>
-      </IndexCreditDefaultSwapData>
-    </IndexCreditDefaultSwapOptionData>
-  </Trade>
-  <!-- 3-6% tranche of Index CDS, e.g. iTraxx, represented as CDO -->
-  <Trade id="CDS_INDEX_TRANCHE">
-    <TradeType>SyntheticCDO</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_A</CounterParty>
-      <NettingSetId>CPTY_A</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <CDOData>
-      <ProtectionStart>20170410</ProtectionStart>
-      <UpfrontDate/>
-      <UpfrontFee>0.0324</UpfrontFee>
-      <AttachmentPoint>0.03</AttachmentPoint>
-      <DetachmentPoint>0.06</DetachmentPoint>
-      <!-- Premium leg -->
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>true</Payer>
-        <!-- protection buyer pays premium -->
-        <Currency>USD</Currency>
-        <Notionals>
-          <Notional>10000000.000000</Notional>
-        </Notionals>
-        <DayCounter>A360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.01</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20160203</StartDate>
-            <EndDate>20260203</EndDate>
-            <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>CDS</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-      <!-- Index constituents notional sum times tranche
-	   width must match the premium leg notional
-      -->
-      <Basket>
-        <Name>
-          <IssuerId>CPTY_1</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_1</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <Name>
-          <IssuerId>CPTY_2</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_2</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <Name>
-          <IssuerId>CPTY_3</IssuerId>
-          <CreditCurveId>CREDIT_CURVE_3</CreditCurveId>
-          <Notional>100000.0</Notional>
-          <Currency>USD</Currency>
-        </Name>
-        <!-- ... -->
-      </Basket>
-    </CDOData>
   </Trade>
 </Portfolio>

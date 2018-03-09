@@ -19,6 +19,7 @@
 #include <ored/model/utilities.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/fxeqoptionhelper.hpp>
 
 #include <ql/exercise.hpp>
@@ -29,7 +30,7 @@ namespace data {
 
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
                           const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
-    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
+    LOG("# time   modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
     Real rmse = 0;
     Real t = 0.0, modelAlpha = 0.0, modelKappa = 0.0, modelHwSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -60,9 +61,9 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
-                         << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
-                         << ")  " << modelAlpha << " " << modelKappa << " " << modelHwSigma);
+        LOG(std::setw(2) << j << "  " << std::setprecision(6) << t << " " << modelVol << " " << marketVol << " ("
+                         << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
+                         << valueDiff << ")  " << modelAlpha << " " << modelKappa << " " << modelHwSigma);
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -81,7 +82,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
 Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
                           const boost::shared_ptr<FxBsParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
-    LOG("# modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
+    LOG("# time    modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
     Real rmse = 0;
     Real t = 0.0, modelSigma = 0.0;
     for (Size j = 0; j < basket.size(); j++) {
@@ -107,9 +108,9 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
             LOG("error implying model vol for instrument " << j);
         }
         rmse += volDiff * volDiff;
-        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelVol << " " << marketVol << " (" << std::setw(8)
-                         << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8) << valueDiff
-                         << ")  " << modelSigma);
+        LOG(std::setw(2) << j << " " << t << "  " << std::setprecision(6) << modelVol << " " << marketVol << " ("
+                         << std::setw(8) << volDiff << ")  " << modelValue << " " << marketValue << " (" << std::setw(8)
+                         << valueDiff << ")  " << modelSigma);
     }
     if (parametrization != nullptr) {
         // report alpha, kappa at t_expiry^+ for last expiry
@@ -163,5 +164,46 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     LOG("rmse = " << rmse);
     return rmse;
 }
+
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+                          const boost::shared_ptr<InfDkParametrization>& parametrization,
+                          const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
+    LOG("# modelValue marketValue (diff) infdkAlpha infdkH");
+    Real rmse = 0;
+    Real t = 0.0, modelAlpha = 0.0, modelH = 0.0;
+    for (Size j = 0; j < basket.size(); j++) {
+        Real modelValue = basket[j]->modelValue();
+        Real marketValue = basket[j]->marketValue();
+        Real valueDiff = (modelValue - marketValue);
+        boost::shared_ptr<CpiCapFloorHelper> instr = boost::dynamic_pointer_cast<CpiCapFloorHelper>(basket[j]);
+        if (instr != nullptr && parametrization != nullptr && domesticLgm != nullptr) {
+            // report alpha, H at t_expiry^-
+            t = inflationYearFraction(
+                    parametrization->termStructure()->frequency(),
+                    parametrization->termStructure()->indexIsInterpolated(),
+                    parametrization->termStructure()->dayCounter(), parametrization->termStructure()->baseDate(),
+                    instr->instrument()->payDate() - parametrization->termStructure()->observationLag()) -
+                1.0 / 250.0;
+            modelAlpha = parametrization->alpha(t);
+            modelH = parametrization->H(t);
+        }
+        // TODO handle other calibration helpers, too (capfloor)
+        rmse += valueDiff * valueDiff;
+        LOG(std::setw(2) << j << "  " << std::setprecision(6) << modelValue << " " << marketValue << " ("
+                         << std::setw(8) << valueDiff << ")  " << modelAlpha << " " << modelH);
+    }
+    if (parametrization != nullptr) {
+        // report alpha, kappa at t_expiry^+ for last expiry
+        t += 2 * 1.0 / 500.0;
+        modelAlpha = parametrization->alpha(t);
+        modelH = parametrization->H(t);
+    }
+    LOG("t >= " << t << ": infDkAlpha = " << modelAlpha << " infDkH = " << modelH);
+    rmse = sqrt(rmse / basket.size());
+    ;
+    LOG("rmse = " << rmse);
+    return rmse;
 }
-}
+
+} // namespace data
+} // namespace ore

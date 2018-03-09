@@ -26,11 +26,15 @@
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 
+using std::string;
+using std::vector;
+
 namespace ore {
 namespace data {
 
 /*! InMemoryReport just stores report information in local vectors and provides an interface to access
  *  the values. It could be used as a backend to a GUI
+ \ingroup report
  */
 class InMemoryReport : public Report {
 public:
@@ -79,5 +83,5 @@ private:
     vector<Size> columnPrecision_;
     vector<vector<ReportType>> data_;
 };
-}
-}
+} // namespace data
+} // namespace ore

@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 
@@ -25,15 +27,55 @@
 namespace ore {
 namespace data {
 
+std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t) {
+    switch (t) {
+    case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
+        return out << "RATE_LNVOL";
+    case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
+        return out << "RATE_NVOL";
+    case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+        return out << "RATE_SLNVOL";
+    default:
+        QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
+    }
+}
+
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, const bool extrapolate,
     bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
     const string& iborIndex, const string& discountCurve)
-    : curveID_(curveID), curveDescription_(curveDescription), volatilityType_(volatilityType),
-      extrapolate_(extrapolate), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter),
-      settleDays_(settleDays), calendar_(calendar), businessDayConvention_(businessDayConvention),
-      iborIndex_(iborIndex), discountCurve_(discountCurve) {}
+    : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
+      includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays),
+      calendar_(calendar), businessDayConvention_(businessDayConvention), iborIndex_(iborIndex),
+      discountCurve_(discountCurve) {}
+
+const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_);
+        Currency ccy = index->currency();
+        Period tenor = index->tenor();
+
+        std::stringstream ssBase;
+        ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";
+        string base = ssBase.str();
+
+        // TODO: how to tell if atmFlag or relative flag should be true
+        for (auto t : tenors_) {
+            for (auto s : strikes_) {
+                quotes_.push_back(base + to_string(t) + "/" + to_string(tenor) + "/0/0/" + to_string(s));
+            }
+        }
+
+        if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+            for (auto t : tenors_) {
+                std::stringstream ss;
+                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
+            }
+        }
+    }
+    return quotes_;
+}
 
 void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CapFloorVolatility");
@@ -95,5 +137,5 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

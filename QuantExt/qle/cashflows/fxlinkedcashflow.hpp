@@ -27,9 +27,9 @@
 
 #include <ql/cashflow.hpp>
 #include <ql/handle.hpp>
+#include <ql/patterns/visitor.hpp>
 #include <ql/quote.hpp>
 #include <ql/time/date.hpp>
-#include <ql/patterns/visitor.hpp>
 #include <qle/indexes/fxindex.hpp>
 
 using namespace QuantLib;
@@ -74,6 +74,7 @@ public:
     Date fxFixingDate() const { return fxFixingDate_; }
     const boost::shared_ptr<FxIndex>& index() const { return fxIndex_; }
     bool invertIndex() const { return invertIndex_; }
+    Real fxRate() const;
 
     //! \name Visitability
     //@{
@@ -86,8 +87,6 @@ private:
     Real foreignAmount_;
     boost::shared_ptr<FxIndex> fxIndex_;
     bool invertIndex_;
-
-    Real fxRate() const;
 };
 
 inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
@@ -97,6 +96,6 @@ inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
     else
         CashFlow::accept(v);
 }
-}
+} // namespace QuantExt
 
 #endif

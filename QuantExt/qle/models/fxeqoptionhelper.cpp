@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/models/fxeqoptionhelper.hpp>
 #include <ql/exercise.hpp>
 #include <ql/pricingengines/blackformula.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
 
 #include <boost/make_shared.hpp>
 

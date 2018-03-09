@@ -27,8 +27,8 @@
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
 
-#include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/nettingsetmanager.hpp>
+#include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
 
 #include <ql/time/date.hpp>
@@ -131,8 +131,6 @@ public:
         const string& fvaBorrowingCurve = "",
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
-        //! Collateral spread to be used in COLVA calculations
-        Real collateralSpread = 0.0,
         //! Quantile used in dynamic initial margin calculation
         Real dimQuantile = 0.99,
         //! Initial margin horizon in calendar days, 2 weeks = 14 days
@@ -146,7 +144,9 @@ public:
         //! Local regression band width in standard deviations of the regression variable
         Real dimLocalRegressionBandwidth = 0,
         //! Scaling factor applied to all DIM values
-        Real dimScaling = 1.0);
+        Real dimScaling = 1.0,
+        //! Assume t=0 collateral balance equals NPV (set to 0 if false)
+        bool fullInitialCollateralisation = false);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -295,7 +295,6 @@ private:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
-    Real collateralSpread_;
     Real dimQuantile_;
     Size dimHorizonCalendarDays_;
     Size dimRegressionOrder_;
@@ -303,6 +302,7 @@ private:
     Size dimLocalRegressionEvaluations_;
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
+    bool fullInitialCollateralisation_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore

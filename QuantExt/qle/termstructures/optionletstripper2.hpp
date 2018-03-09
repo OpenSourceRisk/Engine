@@ -24,8 +24,8 @@
 #ifndef quantext_optionletstripper2_hpp
 #define quantext_optionletstripper2_hpp
 
-#include <qle/termstructures/optionletstripper1.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
+#include <qle/termstructures/optionletstripper1.hpp>
 
 using namespace QuantLib;
 using std::vector;
@@ -36,6 +36,8 @@ namespace QuantExt {
     additional optionlet (i.e. caplet/floorlet) volatilities (a.k.a.
     forward-forward volatilities) from the (cap/floor) At-The-Money
     term volatilities of a CapFloorTermVolCurve.
+
+    \ingroup termstructures
 */
 class OptionletStripper2 : public OptionletStripper {
 public:
@@ -83,6 +85,6 @@ private:
     const VolatilityType inputVolatilityType_;
     const Real inputDisplacement_;
 };
-}
+} // namespace QuantExt
 
 #endif

@@ -33,18 +33,29 @@ namespace analytics {
 class ScenarioWriter : public ScenarioGenerator {
 public:
     //! Constructor
-    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',');
+    ScenarioWriter(const boost::shared_ptr<ScenarioGenerator>& src, const std::string& filename, const char sep = ',',
+                   const string& filemode = "w+");
+
+    //! Constructor to write single scenarios
+    ScenarioWriter(const std::string& filename, const char sep = ',', const string& filemode = "w+");
+
     //! Destructor
     virtual ~ScenarioWriter();
 
     //! Return the next scenario for the given date.
     virtual boost::shared_ptr<Scenario> next(const Date& d);
 
+    //! Write a single scenario
+    void writeScenario(boost::shared_ptr<Scenario>& s, const bool writeHeader);
+
     //! Reset the generator so calls to next() return the first scenario.
     virtual void reset();
 
-private:
+    //! Close the file if it is open, not normally needed by client code
     void close();
+
+private:
+    void open(const std::string& filename, const std::string& filemode = "w+");
 
     boost::shared_ptr<ScenarioGenerator> src_;
     std::vector<RiskFactorKey> keys_;
@@ -53,5 +64,5 @@ private:
     Size i_;
     const char sep_;
 };
-}
-}
+} // namespace analytics
+} // namespace ore
