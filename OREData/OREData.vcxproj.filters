@@ -381,6 +381,9 @@
     <ClInclude Include="ored\model\irlgmdata.hpp">
       <Filter>model</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\legbuilders.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -658,6 +661,9 @@
     </ClCompile>
     <ClCompile Include="ored\model\irlgmdata.cpp">
       <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\legbuilders.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
