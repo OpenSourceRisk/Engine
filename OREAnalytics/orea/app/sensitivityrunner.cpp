@@ -26,8 +26,12 @@ using namespace ore::analytics;
 namespace ore {
 namespace analytics {
 
-void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions, boost::shared_ptr<Parameters> params,
-                                               std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders) {
+void SensitivityRunner::runSensitivityAnalysis(
+    boost::shared_ptr<Market> market, Conventions& conventions, boost::shared_ptr<Parameters> params,
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders,
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders) {
+
+    LOG("extra engine builders size = " << extraBuilders.size());
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
@@ -42,19 +46,20 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
         boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
-            sensiData, conventions, recalibrateModels);
+                                                sensiData, conventions, recalibrateModels);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis, params);
-
 }
 
 void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-    boost::shared_ptr<SensitivityScenarioData>& sensiData,
-    boost::shared_ptr<EngineData>& engineData,
-    boost::shared_ptr<Portfolio>& sensiPortfolio, 
-    string& marketConfiguration, boost::shared_ptr<Parameters> params) {
-    
+                                             boost::shared_ptr<SensitivityScenarioData>& sensiData,
+                                             boost::shared_ptr<EngineData>& engineData,
+                                             boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration,
+                                             boost::shared_ptr<Parameters> params) {
+
+    DLOG("sensiInputInitialize called");
+
     LOG("Get Simulation Market Parameters");
     string inputPath = params->get("setup", "inputPath");
     string marketConfigFile = inputPath + "/" + params->get("sensitivity", "marketConfigFile");
@@ -71,14 +76,18 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     LOG("Get Portfolio");
     string portfolioFile = inputPath + "/" + params->get("setup", "portfolioFile");
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile, boost::make_shared<TradeFactory>());
+    sensiPortfolio->load(portfolioFile, tradeFactory_);
 
     LOG("Build Sensitivity Analysis");
     marketConfiguration = params->get("markets", "pricing");
+
+    DLOG("sensiInputInitialize done");
+    
     return;
 }
 
-void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis, boost::shared_ptr<Parameters> params) {
+void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
+                                           boost::shared_ptr<Parameters> params) {
 
     string outputPath = params->get("setup", "outputPath");
     string outputFile1 = outputPath + "/" + params->get("sensitivity", "scenarioOutputFile");
@@ -96,5 +105,5 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     return;
 }
 
-} // analytics
-} // ore
+} // namespace analytics
+} // namespace ore

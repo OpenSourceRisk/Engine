@@ -124,7 +124,8 @@ int OREApp::run() {
 
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
-            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_, params_, getExtraEngineBuilders());
+            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_, params_, getExtraEngineBuilders(),
+                                                           getExtraLegBuilders());
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
@@ -269,9 +270,7 @@ void OREApp::setupLog() {
     Log::instance().switchOn();
 }
 
-void OREApp::closeLog() {
-    Log::instance().removeAllLoggers();
-}
+void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
 void OREApp::getConventions() {
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
@@ -431,7 +430,7 @@ void OREApp::writeInitialReports() {
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
-                                  market_);
+                                       market_);
         out_ << "OK" << endl;
     } else {
         LOG("skip curve report");
@@ -446,7 +445,7 @@ void OREApp::writeInitialReports() {
         string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
         getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
-                               params_->get("markets", "pricing"), portfolio_);
+                                    params_->get("markets", "pricing"), portfolio_);
         out_ << "OK" << endl;
     } else {
         LOG("skip portfolio valuation");

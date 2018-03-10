@@ -24,11 +24,11 @@
 
 #include <boost/make_shared.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
-#include <orea/engine/sensitivityanalysis.hpp>
-#include <ored/marketdata/market.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/market.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 
@@ -37,22 +37,30 @@ namespace analytics {
 
 class SensitivityRunner {
 public:
-    virtual ~SensitivityRunner() {};
+    SensitivityRunner(boost::shared_ptr<TradeFactory> tradeFactory = boost::shared_ptr<TradeFactory>())
+        : tradeFactory_(tradeFactory) {}
 
-    virtual void runSensitivityAnalysis(boost::shared_ptr<ore::data::Market> market, Conventions& conventions, 
-                                        boost::shared_ptr<Parameters> params, std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders = {});
+    virtual ~SensitivityRunner(){};
 
+    virtual void runSensitivityAnalysis(boost::shared_ptr<ore::data::Market> market, Conventions& conventions,
+                                        boost::shared_ptr<Parameters> params,
+                                        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders = {},
+                                        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {});
 
     //! Initialize input parameters to the sensitivities analysis
     virtual void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-        boost::shared_ptr<SensitivityScenarioData>& sensiData,
-        boost::shared_ptr<EngineData>& engineData, boost::shared_ptr<Portfolio>& sensiPortfolio,
-        string& marketConfiguration, boost::shared_ptr<Parameters> params);
+                                      boost::shared_ptr<SensitivityScenarioData>& sensiData,
+                                      boost::shared_ptr<EngineData>& engineData,
+                                      boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration,
+                                      boost::shared_ptr<Parameters> params);
 
     //! Write out some standard sensitivities reports
-    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis, boost::shared_ptr<Parameters> params);
+    virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
+                                    boost::shared_ptr<Parameters> params);
+
+protected:
+    boost::shared_ptr<TradeFactory> tradeFactory_;
 };
 
 } // namespace analytics
 } // namespace ore
-
