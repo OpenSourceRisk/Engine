@@ -333,7 +333,8 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market, configurations);
+    boost::shared_ptr<EngineFactory> factory = 
+        boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
     return factory;
 }
 

@@ -142,11 +142,7 @@ SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuil
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations);
-    if (extraBuilders.size() > 0) {
-        for (auto eb : extraBuilders)
-            factory->registerBuilder(eb);
-    }
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders);
     return factory;
 }
 
