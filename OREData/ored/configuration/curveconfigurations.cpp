@@ -92,6 +92,10 @@ std::set<string> CurveConfigurations::quotes() const {
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : fxSpotConfigs_)
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : commodityCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : commodityVolatilityCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
 
     return std::set<string>(quotes.begin(), quotes.end());
 }
@@ -152,6 +156,14 @@ const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const s
     return get(curveID, fxSpotConfigs_);
 }
 
+const boost::shared_ptr<CommodityCurveConfig>& CurveConfigurations::commodityCurveConfig(const string& curveID) const {
+    return get(curveID, commodityCurveConfigs_);
+}
+
+const boost::shared_ptr<CommodityVolatilityCurveConfig>& CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
+    return get(curveID, commodityVolatilityCurveConfigs_);
+}
+
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
@@ -170,6 +182,8 @@ void CurveConfigurations::fromXML(XMLNode* node) {
               inflationCapFloorPriceSurfaceConfigs_);
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
+    parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
+    parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityCurveConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
@@ -189,6 +203,8 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "Securities", securityConfigs_);
     addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
+    addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
+    addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
 
     return parent;
 }

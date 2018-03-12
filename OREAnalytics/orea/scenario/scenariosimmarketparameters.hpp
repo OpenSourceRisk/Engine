@@ -54,7 +54,8 @@ public:
           recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
           dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
           equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          securitySpreadsSimulate_(false), baseCorrelationSimulate_(false) {
+          securitySpreadsSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
+        
         // set default tenors
         capFloorVolExpiries_[""];
         defaultTenors_[""];
@@ -62,6 +63,7 @@ public:
         equityForecastTenors_[""];
         zeroInflationTenors_[""];
         yoyInflationTenors_[""];
+        commodityCurveTenors_[""];
         // set default dayCounters
         setDefaults();
     }
@@ -163,6 +165,20 @@ public:
     bool simulateEquityForecastCurve() const { return equityForecastCurveSimulate_; }
     bool simulateDividendYield() const { return dividendYieldSimulate_; }
 
+    // Commodity price curve data getters
+    bool commodityCurveSimulate() const;
+    const std::vector<std::string>& commodityNames() const;
+    const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
+    bool hasCommodityCurveTenors(const std::string& commodityName) const;
+    const std::string& commodityCurveDayCounter(const std::string& commodityName) const;
+
+    // Commodity volatility data getters
+    bool commodityVolSimulate() const { return commodityVolSimulate_; }
+    const std::string& commodityVolDecayMode() const { return commodityVolDecayMode_; }
+    const std::vector<std::string>& commodityVolNames() const { return commodityVolNames_; }
+    const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
+    const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
+    const std::string& commodityVolDayCounter(const std::string& commodityName) const;
     //@}
 
     //! \name Setters
@@ -255,6 +271,19 @@ public:
     bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
     bool& simulateDividendYield() { return dividendYieldSimulate_; }
 
+    // Commodity price curve data setters
+    bool& commodityCurveSimulate();
+    std::vector<std::string>& commodityNames();
+    void setCommodityCurveTenors(const std::string& commodityName, const std::vector<QuantLib::Period>& p);
+    void setCommodityCurveDayCounter(const std::string& commodityName, const std::string& d);
+
+    // Commodity volatility data setters
+    bool& commodityVolSimulate() { return commodityVolSimulate_; }
+    std::string& commodityVolDecayMode() { return commodityVolDecayMode_; }
+    std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
+    std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) { return commodityVolExpiries_[commodityName]; }
+    std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) { return commodityVolMoneyness_[commodityName]; }
+    void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
     //@}
 
     //! \name Serialisation
@@ -357,6 +386,20 @@ private:
     vector<string> yoyInflationIndices_;
     map<string, string> yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
+
+    // Commodity price curve data
+    bool commodityCurveSimulate_;
+    std::vector<std::string> commodityNames_;
+    std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
+    std::map<std::string, std::string> commodityCurveDayCounters_;
+    
+    // Commodity volatility data
+    bool commodityVolSimulate_;
+    std::string commodityVolDecayMode_;
+    std::vector<std::string> commodityVolNames_;
+    std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
+    std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
+    std::map<std::string, std::string> commodityVolDayCounters_;
 };
 } // namespace analytics
 } // namespace ore

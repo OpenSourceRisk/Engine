@@ -26,6 +26,8 @@
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
+#include <ored/configuration/commoditycurveconfig.hpp>
+#include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
@@ -115,6 +117,16 @@ public:
     boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) { return fxSpotConfigs_[curveID]; };
     const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
 
+    boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) {
+        return commodityCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
+
+    boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) {
+        return commodityVolatilityCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
+
     std::set<string> quotes() const;
     //@}
 
@@ -137,6 +149,8 @@ private:
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;
     std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityVolatilityCurveConfig>> commodityVolatilityCurveConfigs_;
 };
 } // namespace data
 } // namespace ore

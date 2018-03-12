@@ -71,6 +71,18 @@
     <ClCompile Include="deltagammavar.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="pricecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityforward.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountingcommodityforwardengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="pricetermstructureadapter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="bonds.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -163,6 +175,18 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="deltagammavar.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="pricecurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commodityforward.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountingcommodityforwardengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="pricetermstructureadapter.hpp">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="bonds.hpp">

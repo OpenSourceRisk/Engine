@@ -124,6 +124,18 @@
       <Parameter name="MeanReversion">0.0</Parameter>
     </EngineParameters>
   </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
+  </Product>
   <!-- Hagan Numerical Model -->
   <Product type="CMS_DEACTIVATED">
     <Model>Hagan</Model>

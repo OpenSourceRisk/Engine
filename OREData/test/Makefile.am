@@ -22,6 +22,12 @@ OREDATA_TESTS = \
 	swaption.hpp swaption.cpp \
 	portfolio.hpp portfolio.cpp \
     curveconfig.hpp curveconfig.cpp \
+	ored_commodityforward.hpp ored_commodityforward.cpp \
+	commoditycurveconfig.hpp commoditycurveconfig.cpp \
+	commoditycurve.hpp commoditycurve.cpp \
+	commodityoption.hpp commodityoption.cpp \
+	commodityvolcurveconfig.hpp commodityvolcurveconfig.cpp \
+	commodityvolcurve.hpp commodityvolcurve.cpp \
 	cds.hpp cds.cpp
 
 dist-hook:

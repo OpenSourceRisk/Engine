@@ -65,6 +65,9 @@ public:
         CPIIndex,
         ZeroInflationCurve,
         YoYInflationCurve,
+        CommoditySpot,
+        CommodityCurve,
+        CommodityVolatility,
         SecuritySpread
     };
 
