@@ -243,7 +243,7 @@ vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names,
     return vec;
 }
 
-vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& name, bool mandatory) {
+vector<string> XMLUtils::getChildValues(XMLNode* parent, const string& name, bool mandatory) {
     vector<string> vec;
     if (mandatory) {
         QL_REQUIRE(parent, "Error: No XML Node " << name << " found.");

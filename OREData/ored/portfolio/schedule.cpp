@@ -57,7 +57,7 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
 void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
-    dates_ = XMLUtils::getChildrenValues(node, "Date");
+    dates_ = XMLUtils::getChildValues(node, "Date");
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
