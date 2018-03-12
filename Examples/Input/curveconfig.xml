@@ -300,7 +300,7 @@
       <CurveId>CHF6M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -358,7 +358,7 @@
       <CurveId>CHF3M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -414,7 +414,7 @@
       <CurveId>CHF1M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -462,7 +462,7 @@
       <CurveId>CHF1D</CurveId>
       <CurveDescription>CHF discount curve bootstrapped from TOIS swap rates</CurveDescription>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -515,7 +515,7 @@
       <CurveId>EUR1D</CurveId>
       <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -572,7 +572,7 @@
       <CurveId>EUR6M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -647,7 +647,7 @@
       <CurveId>EUR12M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -700,7 +700,7 @@
       <CurveId>EUR3M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -759,7 +759,7 @@
       <CurveId>EUR1M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -810,7 +810,7 @@
       <CurveId>USD1D</CurveId>
       <CurveDescription>USD discount curve bootstrapped from FED FUNDS swap rates</CurveDescription>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -897,7 +897,7 @@
       <CurveId>USD3M</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -956,7 +956,7 @@
       <CurveId>USD6M</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1008,7 +1008,7 @@
       <CurveId>GBP1D</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>OIS</Type>
@@ -1056,7 +1056,7 @@
       <CurveId>GBP6M</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1115,7 +1115,7 @@
       <CurveId>GBP3M</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1200,7 +1200,7 @@
       <CurveId>JPY1D</CurveId>
       <CurveDescription>JPY discount curve bootstrapped from MUTAN swap rates</CurveDescription>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1257,7 +1257,7 @@
       <CurveId>JPY6M</CurveId>
       <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1303,7 +1303,7 @@
       <CurveId>JPY3M</CurveId>
       <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>

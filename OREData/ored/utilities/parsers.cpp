@@ -206,6 +206,8 @@ Calendar parseCalendar(const string& s) {
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
+                                      // city specific calendars
+                                      {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
                                       {"RON", TARGET()},
@@ -330,7 +332,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
-                                        {"ACT29", ActualActual(ActualActual::ISDA)},
+                                        {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
