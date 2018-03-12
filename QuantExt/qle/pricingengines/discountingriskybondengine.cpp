@@ -110,7 +110,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
             Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
             Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, endDate);
 
-            npvValue += cf->amount() * recoveryVal * P * discountCurve_->discount(defaultDate);
+            npvValue += coupon->nominal() * recoveryVal * P * discountCurve_->discount(defaultDate);
         }
     }
 
