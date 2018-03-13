@@ -124,8 +124,7 @@ int OREApp::run() {
 
             // We reset this here because the date grid building in sensitivity analysis depends on it.
             Settings::instance().evaluationDate() = asof_;
-            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_, params_, getExtraEngineBuilders(),
-                                                           getExtraLegBuilders());
+            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_);
             out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
@@ -469,7 +468,9 @@ void OREApp::writeInitialReports() {
 
 boost::shared_ptr<ReportWriter> OREApp::getReportWriter() { return boost::make_shared<ReportWriter>(); }
 
-boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { return boost::make_shared<SensitivityRunner>(); }
+boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { 
+    return boost::make_shared<SensitivityRunner>(params_, getExtraEngineBuilders(), getExtraLegBuilders()); 
+}
 
 void OREApp::runStressTest() {
 

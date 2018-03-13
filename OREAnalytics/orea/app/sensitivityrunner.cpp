@@ -27,79 +27,73 @@ namespace ore {
 namespace analytics {
 
 void SensitivityRunner::runSensitivityAnalysis(
-    boost::shared_ptr<Market> market, Conventions& conventions, boost::shared_ptr<Parameters> params,
-    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraBuilders,
-    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders) {
-
-    LOG("extra engine builders size = " << extraBuilders.size());
+    boost::shared_ptr<Market> market, Conventions& conventions) {
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-    string marketConfiguration = params->get("markets", "sensitivity");
+    string marketConfiguration = params_->get("markets", "sensitivity");
 
-    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration, params);
+    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
 
     bool recalibrateModels =
-        params->has("sensitivity", "recalibrateModels") && parseBool(params->get("sensitivity", "recalibrateModels"));
+        params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
         boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
                                                 sensiData, conventions, recalibrateModels);
     sensiAnalysis->generateSensitivities();
 
-    sensiOutputReports(sensiAnalysis, params);
+    sensiOutputReports(sensiAnalysis);
 }
 
 void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                              boost::shared_ptr<SensitivityScenarioData>& sensiData,
                                              boost::shared_ptr<EngineData>& engineData,
-                                             boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration,
-                                             boost::shared_ptr<Parameters> params) {
+                                             boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration) {
 
     DLOG("sensiInputInitialize called");
 
     LOG("Get Simulation Market Parameters");
-    string inputPath = params->get("setup", "inputPath");
-    string marketConfigFile = inputPath + "/" + params->get("sensitivity", "marketConfigFile");
+    string inputPath = params_->get("setup", "inputPath");
+    string marketConfigFile = inputPath + "/" + params_->get("sensitivity", "marketConfigFile");
     simMarketData->fromFile(marketConfigFile);
 
     LOG("Get Sensitivity Parameters");
-    string sensitivityConfigFile = inputPath + "/" + params->get("sensitivity", "sensitivityConfigFile");
+    string sensitivityConfigFile = inputPath + "/" + params_->get("sensitivity", "sensitivityConfigFile");
     sensiData->fromFile(sensitivityConfigFile);
 
     LOG("Get Engine Data");
-    string sensiPricingEnginesFile = inputPath + "/" + params->get("sensitivity", "pricingEnginesFile");
+    string sensiPricingEnginesFile = inputPath + "/" + params_->get("sensitivity", "pricingEnginesFile");
     engineData->fromFile(sensiPricingEnginesFile);
 
     LOG("Get Portfolio");
-    string portfolioFile = inputPath + "/" + params->get("setup", "portfolioFile");
+    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile, tradeFactory_);
+    sensiPortfolio->load(portfolioFile, boost::make_shared<TradeFactory>());
 
     LOG("Build Sensitivity Analysis");
-    marketConfiguration = params->get("markets", "pricing");
+    marketConfiguration = params_->get("markets", "pricing");
 
     DLOG("sensiInputInitialize done");
     
     return;
 }
 
-void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis,
-                                           boost::shared_ptr<Parameters> params) {
+void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
 
-    string outputPath = params->get("setup", "outputPath");
-    string outputFile1 = outputPath + "/" + params->get("sensitivity", "scenarioOutputFile");
-    Real sensiThreshold = parseReal(params->get("sensitivity", "outputSensitivityThreshold"));
+    string outputPath = params_->get("setup", "outputPath");
+    string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
+    Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
     boost::shared_ptr<Report> scenReport = boost::make_shared<CSVFileReport>(outputFile1);
     sensiAnalysis->writeScenarioReport(scenReport, sensiThreshold);
 
-    string outputFile2 = outputPath + "/" + params->get("sensitivity", "sensitivityOutputFile");
+    string outputFile2 = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     boost::shared_ptr<Report> sensiReport = boost::make_shared<CSVFileReport>(outputFile2);
     sensiAnalysis->writeSensitivityReport(sensiReport, sensiThreshold);
 
-    string outputFile3 = outputPath + "/" + params->get("sensitivity", "crossGammaOutputFile");
+    string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
     boost::shared_ptr<Report> cgReport = boost::make_shared<CSVFileReport>(outputFile3);
     sensiAnalysis->writeCrossGammaReport(cgReport, sensiThreshold);
     return;
