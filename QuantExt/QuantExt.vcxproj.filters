@@ -537,6 +537,19 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripper3.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedatmoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\datedstrippedatmoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletatmstripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -904,5 +917,18 @@
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletstripper3.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedatmoptionletadapter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\datedstrippedatmoptionletadapter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletatmstripper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
   </ItemGroup>
 </Project>
