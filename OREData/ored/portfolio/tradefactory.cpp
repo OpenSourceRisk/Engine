@@ -28,13 +28,14 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace std;
 
 namespace ore {
 namespace data {
 
-TradeFactory::TradeFactory(map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
+TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
@@ -54,11 +55,11 @@ void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<A
     builders_[className] = b;
 }
 
-void TradeFactory::addExtraBuilders(map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
-    map<string, boost::shared_ptr<AbstractTradeBuilder>>::iterator it;
-    for (it = extraBuilders.begin(); it != extraBuilders.end(); it++)
-    {
-        addBuilder(it->first, it->second);
+void TradeFactory::addExtraBuilders(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
+    if (extraBuilders.size() > 0) {
+        LOG("adding " << extraBuilders.size() << " extra trade builders");
+        for (auto eb : extraBuilders)
+            addBuilder(eb.first, eb.second);
     }
 }
 
