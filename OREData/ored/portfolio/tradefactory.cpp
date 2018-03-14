@@ -34,7 +34,7 @@ using namespace std;
 namespace ore {
 namespace data {
 
-TradeFactory::TradeFactory(map<string, boost::shared_ptr<AbstractTradeBuilder>>& extraBuilders) {
+TradeFactory::TradeFactory(map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
@@ -54,7 +54,7 @@ void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<A
     builders_[className] = b;
 }
 
-void TradeFactory::addExtraBuilders(map<string, boost::shared_ptr<AbstractTradeBuilder>>& extraBuilders) {
+void TradeFactory::addExtraBuilders(map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     map<string, boost::shared_ptr<AbstractTradeBuilder>>::iterator it;
     for (it = extraBuilders.begin(); it != extraBuilders.end(); it++)
     {
