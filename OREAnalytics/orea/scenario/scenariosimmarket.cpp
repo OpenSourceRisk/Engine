@@ -532,6 +532,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
         }
 
+        hCapletVol->enableExtrapolation(); // FIXME
         capFloorCurves_.emplace(std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, ccy),
                                 std::forward_as_tuple(hCapletVol));
 
