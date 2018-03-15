@@ -48,7 +48,7 @@ void CashflowData::fromXML(XMLNode* node) {
 
 XMLNode* CashflowData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "Date", dates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Cashflow", "Amount", amounts_, "Date", dates_);
     return node;
 }
 void FixedLegData::fromXML(XMLNode* node) {
@@ -58,7 +58,7 @@ void FixedLegData::fromXML(XMLNode* node) {
 
 XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     return node;
 }
 
@@ -95,10 +95,11 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
-    addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
+                                                gearingDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
@@ -120,7 +121,7 @@ void CPILegData::fromXML(XMLNode* node) {
 XMLNode* CPILegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index", index_);
-    addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "Interpolated", interpolated_);
@@ -144,8 +145,9 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "ObservationLag", observationLag_);
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
-    addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
+                                                gearingDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     return node;
 }
 
@@ -154,10 +156,11 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", swapIndex_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
-    addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
-    addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
+                                                gearingDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
@@ -200,7 +203,7 @@ XMLNode* AmortizationData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Type", type_);
     XMLUtils::addChild(doc, node, "Value", value_);
     XMLUtils::addChild(doc, node, "StartDate", startDate_);
-    if(endDate_ != "")
+    if (endDate_ != "")
         XMLUtils::addChild(doc, node, "EndDate", endDate_);
     if (frequency_ != "")
         XMLUtils::addChild(doc, node, "Frequency", frequency_);
@@ -301,7 +304,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
-    addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
+                                                notionalDates_);
     XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
 
     if (!isNotResetXCCY_) {
