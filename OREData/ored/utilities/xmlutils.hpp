@@ -146,6 +146,9 @@ public:
     static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                           const vector<Real>& values, const string& attrName,
                                           const vector<string>& attrs);
+    static void addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                           const vector<Real>& values, const string& attrName,
+                                           const vector<string>& attrs);
 
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                             const string& firstName, const string& secondName, const map<string, string>& values);

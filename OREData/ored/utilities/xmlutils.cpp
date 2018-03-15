@@ -195,6 +195,15 @@ void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, cons
     }
 }
 
+void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                       const vector<Real>& values, const string& attrName,
+                                       const vector<string>& attrs) {
+    if (attrs.empty())
+        XMLUtils::addChildren(doc, n, names, name, values);
+    else
+        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrName, attrs);
+}
+
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
                            const string& firstName, const string& secondName, const map<string, string>& values) {
     XMLNode* node = addChild(doc, parent, names);

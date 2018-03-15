@@ -41,17 +41,6 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
-namespace {
-void addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
-                                       const vector<Real>& values, const string& attrName,
-                                       const vector<string>& attrs) {
-    if (attrs.empty())
-        XMLUtils::addChildren(doc, n, names, name, values);
-    else
-        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrName, attrs);
-}
-} // namespace
-
 void CashflowData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     amounts_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Cashflow", "Amount", "Date", dates_);
