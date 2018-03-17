@@ -22,4 +22,5 @@
 #include <qle/indexes/ibor/skkbribor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
+#include <qle/indexes/ibor/demlibor.hpp>
 
