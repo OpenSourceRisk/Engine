@@ -127,6 +127,16 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
         generateBaseCorrelationScenarios(sensiScenarioFactory, false);
     }
 
+    if (simMarketData_->commodityCurveSimulate()) {
+        generateCommodityCurveScenarios(sensiScenarioFactory, true);
+        generateCommodityCurveScenarios(sensiScenarioFactory, false);
+    }
+
+    if (simMarketData_->commodityVolSimulate()) {
+        generateCommodityVolScenarios(sensiScenarioFactory, true);
+        generateCommodityVolScenarios(sensiScenarioFactory, false);
+    }
+
     if (simMarketData_->securitySpreadsSimulate()) {
         generateSecuritySpreadScenarios(sensiScenarioFactory, true);
         generateSecuritySpreadScenarios(sensiScenarioFactory, false);
@@ -1462,6 +1472,220 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
     LOG("Base correlation scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateCommodityScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    
+    // Commodity spots to be shifted. If a list of names are provided in the 
+    // sensitivity data parameters, use them. If not, use all commodity names in the 
+    // simulation market
+    vector<string> names;
+    if (sensitivityData_->commodityNames().empty()) {
+        names = simMarketData_->commodityNames();
+    } else {
+        names = sensitivityData_->commodityNames();
+        // Log an ALERT if some commodity curves in simulation market are not in the list
+        for (const string& name : simMarketData_->commodityNames()) {
+            if (find(names.begin(), names.end(), name) == names.end()) {
+                ALOG("Commodity " << name << " in simulation market is not "
+                    "included in commodity sensitivity analysis");
+            }
+        }
+    }
+    
+    // Create the commodity spot shift for each name
+    Date asof = baseScenario_->asof();
+    for (const string& name : names) {
+        auto itr = sensitivityData_->commodityShiftData().find(name);
+        QL_REQUIRE(itr != sensitivityData_->equityShiftData().end(), 
+            "commodity shift data not found for " << name);
+        
+        SensitivityScenarioData::SpotShiftData data = itr->second;
+        ShiftType type = parseShiftType(data.shiftType);
+        Real shift = up ? data.shiftSize : -data.shiftSize;
+        boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
+        scenarioDescriptions_.push_back(commodityScenarioDescription(name, up));
+        RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, name);
+        Real spot = baseScenario_->get(key);
+        Real shiftedSpot = type == SensitivityScenarioGenerator::ShiftType::Relative ? 
+            spot * (1.0 + shift) : (spot + shift);
+        scenario->add(key, shiftedSpot);
+        scenarios_.push_back(scenario);
+        
+        DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+            << " created: " << shiftedSpot);
+    }
+    LOG("Commodity spot scenarios done");
+}
+
+void SensitivityScenarioGenerator::generateCommodityCurveScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+    
+    Date asof = baseScenario_->asof();
+
+    // Commodity curves that will be shifted. If a list of names are provided in the 
+    // sensitivity data parameters, use them. If not, use all commodity names in the 
+    // simulation market
+    vector<string> names;
+    if (sensitivityData_->commodityNames().empty()) {
+        names = simMarketData_->commodityNames();
+    } else {
+        names = sensitivityData_->commodityNames();
+        // Log an ALERT if some commodity curves in simulation market are not in the list
+        for (const string& name : simMarketData_->commodityNames()) {
+            if (find(names.begin(), names.end(), name) == names.end()) {
+                ALOG("Commodity " << name << " in simulation market is not "
+                    "included in commodity sensitivity analysis");
+            }
+        }
+    }
+    
+
+    for (Size i = 0; i < names.size(); ++i) {
+        // Tenors for this name in simulation market
+        vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(names[i]);
+        DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(names[i]));
+        vector<Real> times(simMarketTenors.size());
+        vector<Real> basePrices(times.size());
+        vector<Real> shiftedPrices(times.size());
+
+        // Get the base prices for this name from the base scenario
+        for (Size j = 0; j < times.size(); ++j) {
+            times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, names[i], j);
+            basePrices[j] = baseScenario_->get(key);
+        }
+
+        // Get the sensitivity data for this name
+        auto it = sensitivityData_->commodityCurveShiftData().find(names[i]);
+        QL_REQUIRE(it != sensitivityData_->commodityCurveShiftData().end(),
+            "Commodity curve CurveShiftData not found for " << names[i]);
+        SensitivityScenarioData::CurveShiftData data = *it->second;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+
+        // Get the times at which we want to apply the shifts
+        vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasCommodityCurveTenors(names[i])
+            ? simMarketTenors : data.shiftTenors;
+
+        QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
+        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
+            << shiftTenors.size() << ") and shift tenors (" << data.shiftTenors.size() << ")");
+
+        vector<Time> shiftTimes(shiftTenors.size());
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+            shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + shiftTenors[j]);
+        }
+        
+        // Generate the scenarios for each shift
+        for (Size j = 0; j < shiftTenors.size(); ++j) {
+
+            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
+            scenarioDescriptions_.push_back(commodityCurveScenarioDescription(names[i], j, up));
+
+            // Apply shift at tenor point j
+            applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
+
+            // store shifted commodity price curve in the scenario
+            for (Size k = 0; k < times.size(); ++k) {
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityCurve, names[i], k), shiftedPrices[k]);
+            }
+
+            // add this scenario to the scenario vector
+            scenarios_.push_back(scenario);
+            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+
+        }
+    }
+    LOG("Commodity curve scenarios done");
+}
+
+void SensitivityScenarioGenerator::generateCommodityVolScenarios(
+    const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
+
+    // Commodity curves that will be shifted. If a list of names are provided in the 
+    // sensitivity data parameters, use them. If not, use all commodity names in the 
+    // simulation market
+    vector<string> names;
+    if (sensitivityData_->commodityNames().empty()) {
+        names = simMarketData_->commodityVolNames();
+    } else {
+        names = sensitivityData_->commodityVolNames();
+        // Log an ALERT if some commodity vol names in simulation market are not in the list
+        for (const string& name : simMarketData_->commodityVolNames()) {
+            if (find(names.begin(), names.end(), name) == names.end()) {
+                ALOG("Commodity volatility " << name << " in simulation market is not "
+                    "included in commodity sensitivity analysis");
+            }
+        }
+    }
+
+    // Loop over each commodity and create volatility scenario
+    Date asof = baseScenario_->asof();
+    for (const string& name : names) {
+        // Simulation market data for the current name
+        const vector<Period>& expiries = simMarketData_->commodityVolExpiries(name);
+        const vector<Real>& moneyness = simMarketData_->commodityVolMoneyness(name);
+        QL_REQUIRE(!expiries.empty(), "Sim market commodity volatility expiries have not been specified for " << name);
+        QL_REQUIRE(!moneyness.empty(), "Sim market commodity volatility moneyness has not been specified for " << name);
+        // Store base scenario volatilities, strike x expiry
+        vector<vector<Real>> baseValues(moneyness.size(), vector<Real>(expiries.size()));
+        // Time to each expiry
+        vector<Time> times(expiries.size());
+        // Store shifted scenario volatilities
+        vector<vector<Real>> shiftedValues = baseValues;
+
+        // Find the shift data for commodity name
+        QL_REQUIRE(sensitivityData_->commodityVolShiftData().count(name) > 0,
+            "commodity " << name << " not found in volatility shift data");
+        SensitivityScenarioData::VolShiftData sd = sensitivityData_->commodityVolShiftData()[name];
+        QL_REQUIRE(!sd.shiftExpiries.empty(), "commodity volatility shift tenors must be specified");
+
+        ShiftType shiftType = parseShiftType(sd.shiftType);
+        vector<Time> shiftTimes(sd.shiftExpiries.size());
+        DayCounter dayCounter = parseDayCounter(simMarketData_->commodityVolDayCounter(name));
+
+        // Get the base scenario volatility values
+        for (Size j = 0; j < expiries.size(); j++) {
+            times[j] = dayCounter.yearFraction(asof, asof + expiries[j]);
+            for (Size i = 0; i < moneyness.size(); i++) {
+                RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, name, i * expiries.size() + j);
+                baseValues[i][j] = baseScenario_->get(key);
+            }
+        }
+
+        // Store the shift expiry times
+        for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
+            shiftTimes[sj] = dayCounter.yearFraction(asof, asof + sd.shiftExpiries[sj]);
+        }
+
+        // Loop and apply scenarios
+        for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
+            for (Size si = 0; si < sd.shiftStrikes.size(); ++si) {
+
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
+                scenarioDescriptions_.push_back(commodityVolScenarioDescription(name, sj, si, up));
+
+                applyShift(si, sj, sd.shiftSize, up, shiftType, sd.shiftStrikes, shiftTimes,
+                    moneyness, times, baseValues, shiftedValues, true);
+                
+                Size counter = 0;
+                for (Size i = 0; i < moneyness.size(); i++) {
+                    for (Size j = 0; j < expiries.size(); ++j) {
+                        scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityVolatility, name, counter++), 
+                            shiftedValues[i][j]);
+                    }
+                }
+
+                // Add the final scenario to the scenario vector
+                scenarios_.push_back(scenario);
+
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            }
+        }
+    }
+    LOG("Commodity volatility scenarios done");
+}
+
 void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(
     const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up) {
     // We can choose to shift fewer discount curves than listed in the market
@@ -1768,6 +1992,51 @@ SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexNam
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
     return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription 
+SensitivityScenarioGenerator::commodityScenarioDescription(const string& commodityName, bool up) {
+    RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, commodityName);
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    return ScenarioDescription(type, key, "spot");
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& commodityName, Size bucket, bool up) {
+
+    QL_REQUIRE(sensitivityData_->commodityCurveShiftData().count(commodityName) > 0,
+        "Name " << commodityName << " not found in commodity curve shift data");
+    vector<Period>& shiftTenors = sensitivityData_->commodityCurveShiftData()[commodityName]->shiftTenors;
+    QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
+    
+    RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);
+    ostringstream oss;
+    oss << shiftTenors[bucket];
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+
+    return ScenarioDescription(type, key, oss.str());
+}
+
+SensitivityScenarioGenerator::ScenarioDescription 
+SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& commodityName,
+    Size expiryBucket, Size strikeBucket, bool up) {
+
+    QL_REQUIRE(sensitivityData_->commodityVolShiftData().count(commodityName) > 0,
+        "commodity " << commodityName << " not found in commodity vol shift data");
+
+    SensitivityScenarioData::VolShiftData data = sensitivityData_->commodityVolShiftData()[commodityName];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, commodityName, index);
+    ostringstream o;
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftStrikes[strikeBucket];
+    }
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    return ScenarioDescription(type, key, o.str());
 }
 
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::securitySpreadScenarioDescription(

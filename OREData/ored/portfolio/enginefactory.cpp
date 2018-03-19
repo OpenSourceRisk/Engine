@@ -109,7 +109,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
-
+    registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
     registerLegBuilder(boost::make_shared<CashflowLegBuilder>());

@@ -122,6 +122,9 @@ private:
     void generateZeroInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateYoYInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateBaseCorrelationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateCommodityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateCommodityCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateCommodityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
     void generateSecuritySpreadScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
@@ -142,6 +145,10 @@ private:
     ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
+    ScenarioDescription commodityScenarioDescription(const std::string& commodityName, bool up);
+    ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket, bool up);
+    ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName,
+        QuantLib::Size expiryBucket, QuantLib::Size strikeBucket, bool up);
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;

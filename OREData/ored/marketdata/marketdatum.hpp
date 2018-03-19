@@ -91,7 +91,10 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
-        INDEX_CDS_OPTION
+        INDEX_CDS_OPTION,
+        COMMODITY_SPOT,
+        COMMODITY_FWD,
+        COMMODITY_OPTION
     };
 
     //! Supported market quote types
@@ -1034,5 +1037,98 @@ private:
     string indexName_;
     string expiry_;
 };
+
+//! Commodity spot quote class
+/*! This class holds a spot price for a commodity in a given currency
+    \ingroup marketdata
+*/
+class CommoditySpotQuote : public MarketDatum {
+public:
+    //! Constructor
+    CommoditySpotQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_SPOT), 
+          commodityName_(commodityName), quoteCurrency_(quoteCurrency) {
+        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity spot quote must be of type 'PRICE'");
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+};
+
+//! Commodity forward quote class
+/*! This class holds a forward price for a commodity in a given currency
+    \ingroup marketdata
+*/
+class CommodityForwardQuote : public MarketDatum {
+public:
+    //! Constructor
+    CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name, QuoteType quoteType,
+        const std::string& commodityName, const std::string& quoteCurrency, const QuantLib::Date& expiryDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), 
+          commodityName_(commodityName), quoteCurrency_(quoteCurrency), expiryDate_(expiryDate) {
+        QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
+    }
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    const QuantLib::Date& expiryDate() const { return expiryDate_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+    QuantLib::Date expiryDate_;
+};
+
+//! Commodity option data class
+/*! This class holds single market points of type COMMODITY_OPTION
+    \ingroup marketdata
+*/
+class CommodityOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    /*! \param value         The volatility value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE_NVOL
+        \param commodityName The name of the underlying commodity
+        \param quoteCurrency The quote currency
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATMF 
+    */
+    CommodityOptionQuote(QuantLib::Real value, 
+        const QuantLib::Date& asof, 
+        const std::string& name, 
+        QuoteType quoteType, 
+        const std::string& commodityName,
+        const std::string& quoteCurrency,
+        const std::string& expiry,
+        const std::string& strike);
+
+    //! \name Inspectors
+    //@{
+    const std::string& commodityName() const { return commodityName_; }
+    const std::string& quoteCurrency() const { return quoteCurrency_; }
+    const std::string& expiry() const { return expiry_; }
+    const std::string& strike() const { return strike_; }
+    //@}
+
+private:
+    std::string commodityName_;
+    std::string quoteCurrency_;
+    std::string expiry_;
+    std::string strike_;
+};
+
 } // namespace data
 } // namespace ore

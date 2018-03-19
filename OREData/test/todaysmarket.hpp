@@ -41,6 +41,8 @@ public:
     static void testEquityCurve();
     //! Test equity vol curve
     static void testEquityVolCurve();
+    //! Test the commodity price curve
+    static void testCommodityCurve();
 
     static boost::unit_test_framework::test_suite* suite();
 };
