@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Portfolio>
+  <Trade id="Var_Swap">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <VarSwapData>
+        <StartDate>2014-04-16</StartDate>
+        <EndDate>2015-06-18</EndDate>
+        <Currency>EUR</Currency>
+        <Name>STE</Name>
+        <LongShort>Long</LongShort>
+        <Strike>0.40</Strike>
+        <Notional>1000000</Notional>
+    </VarSwapData>
+    </Trade>
+</Portfolio>
