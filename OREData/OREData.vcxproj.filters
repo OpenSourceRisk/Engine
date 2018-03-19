@@ -285,9 +285,6 @@
     <ClInclude Include="ored\portfolio\builders\equityforward.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\equityoption.hpp">
-      <Filter>portfolio\builders</Filter>
-    </ClInclude>
     <ClInclude Include="ored\report\report.hpp">
       <Filter>report</Filter>
     </ClInclude>
@@ -407,6 +404,15 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\legbuilders.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\ored_varswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\equityoption.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\ored_pf_b_varswap.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -708,6 +714,9 @@
       <Filter>portfolio\builders</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\legbuilders.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\ored_varswap.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
