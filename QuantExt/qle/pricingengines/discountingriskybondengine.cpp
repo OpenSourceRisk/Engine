@@ -88,10 +88,12 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     Size numCoupons = 0;
+    bool hasLiveCashFlow = false;
     for (Size i = 0; i < arguments_.cashflows.size(); i++) {
         boost::shared_ptr<CashFlow> cf = arguments_.cashflows[i];
         if (cf->hasOccurred(npvDate, includeSettlementDateFlows_))
             continue;
+        hasLiveCashFlow = true;
 
         // Coupon value is discounted future payment times the survival probability
         Probability S = creditCurvePtr->survivalProbability(cf->date());
@@ -114,9 +116,15 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
         }
     }
 
+    // the ql instrument might not yet be expired and still have not anything to value if
+    // the npvDate > evaluation date
+    if(!hasLiveCashFlow)
+        return 0.0;
+
     if (arguments_.cashflows.size() > 1 && numCoupons == 0) {
         QL_FAIL("DiscountingRiskyBondEngine does not support bonds with multiple cashflows but no coupons");
     }
+
     /* If there are no coupon, as in a Zero Bond, we must integrate over the entire period from npv date to
        maturity. The timestepPeriod specified is used as provide the steps for the integration. This only applies
        to bonds with 1 cashflow, identified as a final redemption payment.
