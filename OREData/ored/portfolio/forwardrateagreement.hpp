@@ -39,8 +39,8 @@ public:
                          string index, double strike, double notional)
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
           endDate_(endDate), index_(index), strike_(strike) {
-		notional_ = notional;
-	}
+        notional_ = notional;
+    }
     void build(const boost::shared_ptr<EngineFactory>& engineFactory);
 
     virtual void fromXML(XMLNode* node);
