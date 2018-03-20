@@ -16,6 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/bond.hpp
+ \brief Bond trade data model and serialization
+ \ingroup tradedata
+ */
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
@@ -24,6 +28,10 @@
 namespace ore {
 namespace data {
 
+//! Serializable Bond
+/*!
+\ingroup tradedata
+*/
 class Bond : public Trade {
 public:
     //! Default constructor
@@ -34,7 +42,8 @@ public:
          string settlementDays, string calendar, string issueDate, LegData& coupons)
         : Trade("Bond", env), issuerId_(issuerId), creditCurveId_(creditCurveId), securityId_(securityId),
           referenceCurveId_(referenceCurveId), settlementDays_(settlementDays), calendar_(calendar),
-          issueDate_(issueDate), coupons_{coupons}, faceAmount_(0), maturityDate_(), currency_(), zeroBond_(false) {}
+          issueDate_(issueDate), coupons_(std::vector<LegData>{coupons}), faceAmount_(0), maturityDate_(), currency_(),
+          zeroBond_(false) {}
 
     //! Constructor for coupon bonds with multiple phases (represented as legs)
     Bond(Envelope env, string issuerId, string creditCurveId, string securityId, string referenceCurveId,
@@ -69,6 +78,9 @@ public:
     const Real& faceAmount() const { return faceAmount_; }
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
+
+protected:
+    virtual boost::shared_ptr<LegData> createLegData() const;
 
 private:
     string issuerId_;

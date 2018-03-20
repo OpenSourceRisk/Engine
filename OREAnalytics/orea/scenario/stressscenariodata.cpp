@@ -130,7 +130,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(equitySpots, "EquitySpots node not found");
         test.equityShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(equitySpots, "EquitySpot"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity " << equity);
             SpotShiftData data;
@@ -144,7 +144,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(equityVols, "FxVols node not found");
         test.equityVolShifts.clear();
         for (XMLNode* child = XMLUtils::getChildNode(equityVols, "EquityVolatility"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string equity = XMLUtils::getAttribute(child, "equity");
             LOG("Loading stress parameters for Equity vols " << equity);
             VolShiftData data;
@@ -199,6 +199,20 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
             test.capVolShifts[ccy] = data;
         }
 
+        LOG("Get Security spread stress parameters");
+        XMLNode* securitySpreads = XMLUtils::getChildNode(testCase, "SecuritySpreads");
+        QL_REQUIRE(securitySpreads, "SecuritySpreads node not found");
+        test.securitySpreadShifts.clear();
+        for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string bond = XMLUtils::getAttribute(child, "security");
+            LOG("Loading stress parameters for Security spreads " << bond);
+            SpotShiftData data;
+            data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
+            data.shiftSize = XMLUtils::getChildValueAsDouble(child, "ShiftSize", true);
+            test.securitySpreadShifts[bond] = data;
+        }
+
         data_.push_back(test);
 
         LOG("Loading stress test label " << test.label << " done");
@@ -207,7 +221,7 @@ void StressTestScenarioData::fromXML(XMLNode* root) {
     LOG("Loading stress tests done");
 }
 
-XMLNode* StressTestScenarioData::toXML(XMLDocument& doc) {
+XMLNode* StressTestScenarioData::toXML(ore::data::XMLDocument& doc) {
     XMLNode* node = doc.allocNode("StressTesting");
     QL_FAIL("toXML not implemented for stress testing data");
     return node;

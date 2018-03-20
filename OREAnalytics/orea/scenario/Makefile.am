@@ -35,7 +35,6 @@ this_include_HEADERS = \
 	scenariogenerator.hpp \
 	lgmscenariogenerator.hpp \
 	crossassetmodelscenariogenerator.hpp \
-	scenariosimmarketparameters.hpp \
 	scenariosimmarket.hpp \
 	scenariogeneratordata.hpp \
 	scenariogeneratorbuilder.hpp \

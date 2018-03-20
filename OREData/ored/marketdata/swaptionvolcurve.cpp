@@ -66,7 +66,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
         vector<Period> swapTenors = config->swapTenors();
         Matrix vols(optionTenors.size(), swapTenors.size());
         Matrix shifts(isSln ? vols.rows() : 0, isSln ? vols.columns() : 0);
-        vector<vector<bool>> found(optionTenors.size(), vector<bool>(swapTenors.size()));
+        vector<vector<bool>> found(optionTenors.size(), vector<bool>(swapTenors.size(), false));
         vector<bool> shiftFound(swapTenors.size());
         Size remainingQuotes = optionTenors.size() * swapTenors.size();
         Size remainingShiftQuotes = isSln ? swapTenors.size() : 0;
@@ -237,8 +237,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                             spreadQuotesRead++;
                             // Assume quotes are absolute vols by strike so construct the vol spreads here
                             Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
-                            volSpreadHandles[i * smileSwapTenors.size() + j][k] = Handle<Quote>(
-                                boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
+                            volSpreadHandles[i * smileSwapTenors.size() + j][k] =
+                                Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
                             found[i * smileSwapTenors.size() + j][k] = true;
                             zero[i * smileSwapTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
                         }

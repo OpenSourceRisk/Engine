@@ -34,6 +34,7 @@ namespace data {
 
 /*! InMemoryReport just stores report information in local vectors and provides an interface to access
  *  the values. It could be used as a backend to a GUI
+ \ingroup report
  */
 class InMemoryReport : public Report {
 public:
@@ -72,6 +73,7 @@ public:
     Size columns() const { return headers_.size(); }
     const string& header(Size i) const { return headers_[i]; }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
+    Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
     const vector<ReportType>& data(Size i) const { return data_[i]; }
 

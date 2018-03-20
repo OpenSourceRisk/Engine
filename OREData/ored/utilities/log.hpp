@@ -190,24 +190,6 @@ private:
     unsigned minLevel_;
 };
 
-//! BoostTest Logger
-/*!
-  This logger writes each log message out to the BOOST_TEST_MESSAGE.
-  To view log messages run ore unit tests with the flag "--log_level=test_suite"
-  \ingroup utilities
-  \see Log
- */
-
-class BoostTestLogger : public Logger {
-public:
-    //! the name "BoostTestLogger"
-    static const string name;
-    //! Constructor
-    BoostTestLogger() : Logger(name) {}
-    //! The log callback
-    virtual void log(unsigned, const string&);
-};
-
 //! Global static Log class
 /*!
   The Global Log class gets registered with individual loggers and recieves application log messages.
@@ -345,16 +327,16 @@ private:
     The proper usage is to use the macro LOGGERSTREAM and DLOGGERSTREAM, if a function takes
     a std::ostream& as a parameter, use the macro instead.
 
-    <code>
+    \code{.cpp}
     void function(int x, int y, std::ostream& out);
 
     void main () {
 
       // call function
       function (3, 4, LOGGERSTREAM);
-      // All logging will be completed before this line.
+      // All logging will be completed before this line
     }
-    </code>
+    \endcode
  */
 class LoggerStream {
 public:

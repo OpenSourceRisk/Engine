@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/sensitivityscenariogenerator.hpp
-    \brief Sensitivity scenario generation
+/*! \file scenario/shiftscenariogenerator.hpp
+    \brief Shift scenario generation
     \ingroup scenario
 */
 
@@ -60,6 +60,8 @@ public:
         RiskFactorKey key2() const { return key2_; }
         string indexDesc1() const { return indexDesc1_; }
         string indexDesc2() const { return indexDesc2_; }
+        string keyName1() const { return keyName(key1_); }
+        string keyName2() const { return keyName(key2_); }
         //@}
         //! Return type as string
         string typeString() const;
@@ -71,6 +73,7 @@ public:
         string text() const;
 
     private:
+        string keyName(RiskFactorKey key) const;
         Type type_;
         RiskFactorKey key1_;
         string indexDesc1_;
@@ -79,7 +82,7 @@ public:
     };
 
     //! Constructor
-    ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+    ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                            const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_);
     //! Default destructor
     ~ShiftScenarioGenerator(){};
@@ -172,7 +175,7 @@ public:
     boost::shared_ptr<Scenario> baseScenario() const { return scenarios_.front(); }
 
 protected:
-    const boost::shared_ptr<ScenarioSimMarket> simMarket_;
+    const boost::shared_ptr<Scenario> baseScenario_;
     const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     std::vector<boost::shared_ptr<Scenario>> scenarios_;
     Size counter_;

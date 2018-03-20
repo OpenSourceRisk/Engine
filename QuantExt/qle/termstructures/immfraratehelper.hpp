@@ -18,6 +18,7 @@
 
 /*! \file immfraratehelper.hpp
     \brief IMM FRA rate helper
+    \ingroup termstructures
 */
 
 #ifndef quantext_immfraratehelper_hpp
@@ -32,13 +33,12 @@ namespace QuantExt {
 typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 
 //! Rate helper for bootstrapping over %FRA rates
+//! \ingroup termstructures
 class ImmFraRateHelper : public RelativeDateRateHelper {
 public:
-    ImmFraRateHelper(const Handle<Quote>& rate,
-        const Size imm1, const Size imm2,
-        const boost::shared_ptr<IborIndex>& iborIndex,
-        Pillar::Choice pillar = Pillar::LastRelevantDate,
-        Date customPillarDate = Date());
+    ImmFraRateHelper(const Handle<Quote>& rate, const Size imm1, const Size imm2,
+                     const boost::shared_ptr<IborIndex>& iborIndex, Pillar::Choice pillar = Pillar::LastRelevantDate,
+                     Date customPillarDate = Date());
 
     //! \name RateHelper interface
     //@{
@@ -60,6 +60,6 @@ private:
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
 };
 
-};
+}; // namespace QuantExt
 
 #endif

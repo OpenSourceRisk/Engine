@@ -18,7 +18,7 @@
 
 /*! \file portfolio/schedule.hpp
     \brief trade schedule data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once

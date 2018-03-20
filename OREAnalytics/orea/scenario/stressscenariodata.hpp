@@ -33,7 +33,6 @@ using std::vector;
 using std::string;
 using std::pair;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
@@ -81,12 +80,13 @@ public:
         map<string, CurveShiftData> discountCurveShifts;     // by currency code
         map<string, CurveShiftData> indexCurveShifts;        // by index name
         map<string, CurveShiftData> yieldCurveShifts;        // by yield curve name
-        map<string, SpotShiftData> fxShifts;                   // by currency pair
-        map<string, VolShiftData> fxVolShifts;             // by currency pair
-        map<string, SpotShiftData> equityShifts;                   // by equity
-        map<string, VolShiftData> equityVolShifts;             // by equity
+        map<string, SpotShiftData> fxShifts;                 // by currency pair
+        map<string, VolShiftData> fxVolShifts;               // by currency pair
+        map<string, SpotShiftData> equityShifts;             // by equity
+        map<string, VolShiftData> equityVolShifts;           // by equity
         map<string, CapFloorVolShiftData> capVolShifts;      // by currency
         map<string, SwaptionVolShiftData> swaptionVolShifts; // by currency
+        map<string, SpotShiftData> securitySpreadShifts;     // by bond/security
     };
 
     //! Default constructor
@@ -106,7 +106,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
     //@}
 
     //! \name Equality Operators

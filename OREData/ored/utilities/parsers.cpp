@@ -107,6 +107,16 @@ Real parseReal(const string& s) {
     return atof(s.c_str());
 }
 
+bool tryParseReal(const string& s, QuantLib::Real& result) {
+    try {
+        result = std::stod(s);
+    } catch (...) {
+        result = Null<Real>();
+        return false;
+    }
+    return true;
+}
+
 Integer parseInteger(const string& s) {
     try {
         return io::to_integer(s);
@@ -143,11 +153,14 @@ Calendar parseCalendar(const string& s) {
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
                                       {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
+                                      {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
+                                      {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
                                       {"US-NERC", UnitedStates(UnitedStates::NERC)},
                                       {"GB", UnitedKingdom()},
                                       {"GBP", UnitedKingdom()},
                                       {"UK", UnitedKingdom()},
                                       {"UK settlement", UnitedKingdom()},
+                                      {"London stock exchange", UnitedKingdom(UnitedKingdom::Exchange)},
                                       {"LNB", UnitedKingdom()},
                                       {"CA", Canada()},
                                       {"TRB", Canada()},
@@ -193,6 +206,8 @@ Calendar parseCalendar(const string& s) {
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
+                                      // city specific calendars
+                                      {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
                                       {"CLP", TARGET()},
                                       {"RON", TARGET()},
@@ -215,9 +230,9 @@ Calendar parseCalendar(const string& s) {
                                       {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
-                                        //ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
+                                      // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
                                       {"EUTA", TARGET()},
-                                      {"BEBR", TARGET()}, //Belgium, Brussels not in QL
+                                      {"BEBR", TARGET()}, // Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()}};
@@ -317,7 +332,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
-                                        {"ACT29", ActualActual(ActualActual::ISDA)},
+                                        {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
@@ -328,10 +343,10 @@ DayCounter parseDayCounter(const string& s) {
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
                                         {"Business/252", Business252()},
-                                        {"Actual/365 (No Leap)", Actual365NoLeap()},
-                                        {"Act/365 (NL)", Actual365NoLeap()},
-                                        {"NL/365", Actual365NoLeap()},
-                                        {"Actual/365 (JGB)", Actual365NoLeap()}};
+                                        {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -369,19 +384,15 @@ Currency parseCurrency(const string& s) {
 }
 
 DateGeneration::Rule parseDateGenerationRule(const string& s) {
-    static map<string, DateGeneration::Rule> m = {
-        {"Backward", DateGeneration::Backward},
-        {"Forward", DateGeneration::Forward},
-        {"Zero", DateGeneration::Zero},
-        {"ThirdWednesday", DateGeneration::ThirdWednesday},
-        {"Twentieth", DateGeneration::Twentieth},
-        {"TwentiethIMM", DateGeneration::TwentiethIMM},
-        {"OldCDS", DateGeneration::OldCDS},
-#if QL_HEX_VERSION >= 0x011000f0
-        {"CDS2015", DateGeneration::CDS2015},
-#endif
-        {"CDS", DateGeneration::CDS}
-    };
+    static map<string, DateGeneration::Rule> m = {{"Backward", DateGeneration::Backward},
+                                                  {"Forward", DateGeneration::Forward},
+                                                  {"Zero", DateGeneration::Zero},
+                                                  {"ThirdWednesday", DateGeneration::ThirdWednesday},
+                                                  {"Twentieth", DateGeneration::Twentieth},
+                                                  {"TwentiethIMM", DateGeneration::TwentiethIMM},
+                                                  {"OldCDS", DateGeneration::OldCDS},
+                                                  {"CDS2015", DateGeneration::CDS2015},
+                                                  {"CDS", DateGeneration::CDS}};
 
     auto it = m.find(s);
     if (it != m.end()) {

@@ -59,6 +59,18 @@ QuantLib::Date parseDate(const string& s);
 */
 QuantLib::Real parseReal(const string& s);
 
+//! Attempt to convert text to Real
+/*! Attempts to convert text to Real
+    \param[in]  s      The string we wish to convert to a Real
+    \param[out] result The result of the conversion if it is valid.
+                       Null<Real>() if conversion fails
+    
+    \return True if the conversion was successful, False if not
+    
+    \ingroup utilities
+*/
+bool tryParseReal(const string& s, QuantLib::Real& result);
+
 //! Convert text to QuantLib::Integer
 /*!
   \ingroup utilities

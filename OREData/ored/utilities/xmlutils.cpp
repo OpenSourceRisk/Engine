@@ -134,6 +134,10 @@ XMLNode* XMLUtils::addChild(XMLDocument& doc, XMLNode* parent, const string& nam
     return node;
 }
 
+void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const char* value) {
+    addChild(doc, n, name, string(value));
+}
+
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value) {
     if (value.size() == 0) {
         addChild(doc, n, name);

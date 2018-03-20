@@ -37,7 +37,7 @@ namespace QuantExt {
 //! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold
-    aingroup models
+    \ingroup models
 */
 
 class LinearGaussMarkovModel : public LinkableCalibratedModel {

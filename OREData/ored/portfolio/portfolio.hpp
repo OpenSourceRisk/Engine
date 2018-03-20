@@ -36,7 +36,7 @@ namespace data {
 
 //! Serializable portfolio
 /*!
-  \ingroup tradedata
+  \ingroup portfolio
 */
 class Portfolio {
 public:
@@ -47,7 +47,7 @@ public:
     void add(const boost::shared_ptr<Trade>& trade);
 
     //! Check if a trade id is already in the porfolio
-    bool has(const string &id);
+    bool has(const string& id);
 
     //! Clear the portfolio
     void clear() { trades_.clear(); }
@@ -64,7 +64,7 @@ public:
 
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
-        const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+                           const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
@@ -86,6 +86,9 @@ public:
 
     //! Build a map from trade Ids to NettingSet
     std::map<std::string, std::string> nettingSetMap() const;
+
+    //! Compute set of portfolios
+    std::set<std::string> portfolioIds() const;
 
 private:
     //! Load from XMLDocument

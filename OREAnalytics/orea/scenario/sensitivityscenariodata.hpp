@@ -33,7 +33,6 @@ using std::vector;
 using std::string;
 using std::pair;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
@@ -47,81 +46,61 @@ class SensitivityScenarioData : public XMLSerializable {
 public:
     enum class ShiftType { Absolute, Relative };
 
-    struct CurveShiftData {
-        CurveShiftData() : shiftSize(0.0), parInstrumentSingleCurve(false) {}
+    struct ShiftData {
+        virtual ~ShiftData() {}
+        ShiftData() : shiftSize(0.0) {}
         string shiftType;
         Real shiftSize;
+    };
+
+    struct CurveShiftData : ShiftData {
+        virtual ~CurveShiftData() {}
         vector<Period> shiftTenors;
-        vector<string> parInstruments;
-        bool parInstrumentSingleCurve;
-        map<string, string> parInstrumentConventions;
     };
 
-    struct CapFloorVolShiftData {
-        CapFloorVolShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+    struct SpotShiftData : ShiftData {};
+
+    struct CdsVolShiftData : ShiftData {
+        string ccy;
         vector<Period> shiftExpiries;
-        vector<Real> shiftStrikes; // absolute
-        string indexName;
     };
 
-    struct SwaptionVolShiftData {
-        SwaptionVolShiftData() : shiftSize(0.0), shiftStrikes({0.0}) {}
-        string shiftType;
-        Real shiftSize;
-        vector<Period> shiftExpiries;
+    struct BaseCorrelationShiftData : ShiftData {
         vector<Period> shiftTerms;
-        vector<Real> shiftStrikes; // strikeSpreads
+        vector<Real> shiftLossLevels;
         string indexName;
     };
 
-    struct VolShiftData {
-        VolShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
+    struct VolShiftData : ShiftData {
+        VolShiftData() : shiftStrikes({0.0}) {}
         vector<Period> shiftExpiries;
         vector<Real> shiftStrikes; // FIXME: absolute or relative to ATM ?
     };
 
-    struct SpotShiftData {
-        SpotShiftData() : shiftSize(0.0) {}
-        string shiftType;
-        Real shiftSize;
-    };
-
-    struct CdsVolShiftData {
-        CdsVolShiftData() : shiftSize(0.0) {}
-        string ccy;
-        string shiftType;
-        Real shiftSize;
-        vector<Period> shiftExpiries;
-    };
-
-    struct BaseCorrelationShiftData {
-        BaseCorrelationShiftData() : shiftSize(0.0) {}
+    struct CapFloorVolShiftData : VolShiftData {
         string indexName;
-        string shiftType;
-        Real shiftSize;
+    };
+
+    struct SwaptionVolShiftData : VolShiftData {
         vector<Period> shiftTerms;
-        vector<Real> shiftLossLevels;
+        string indexName;
     };
 
     //! Default constructor
-    SensitivityScenarioData() : parConversion_(false){};
+    SensitivityScenarioData(){};
 
     //! \name Inspectors
     //@{
-    bool parConversion() const { return parConversion_; }
-
     const vector<string>& discountCurrencies() const { return discountCurrencies_; }
-    const map<string, CurveShiftData>& discountCurveShiftData() const { return discountCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() const {
+        return discountCurveShiftData_;
+    }
 
     const vector<string>& indexNames() const { return indexNames_; }
-    const map<string, CurveShiftData>& indexCurveShiftData() const { return indexCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
 
     const vector<string>& yieldCurveNames() const { return yieldCurveNames_; }
-    const map<string, CurveShiftData>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
 
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
@@ -142,23 +121,40 @@ public:
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
 
     const vector<string>& zeroInflationIndices() const { return zeroInflationIndices_; }
-    const map<string, CurveShiftData>& zeroInflationCurveShiftData() const { return zeroInflationCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() const {
+        return zeroInflationCurveShiftData_;
+    }
 
     const vector<string>& yoyInflationIndices() const { return yoyInflationIndices_; }
-    const map<string, CurveShiftData>& yoyInflationCurveShiftData() const { return yoyInflationCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const {
+        return yoyInflationCurveShiftData_;
+    }
 
     const vector<string>& creditNames() const { return creditNames_; }
     const map<string, string>& creditCcys() const { return creditCcys_; }
-    const map<string, CurveShiftData>& creditCurveShiftData() const { return creditCurveShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
 
     const vector<string>& equityNames() const { return equityNames_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
 
     const vector<string>& dividendYieldNames() const { return dividendYieldNames_; }
-    const map<string, CurveShiftData>& dividendYieldShiftData() const { return dividendYieldShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const {
+        return dividendYieldShiftData_;
+    }
 
     const vector<string>& equityVolNames() const { return equityVolNames_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
+
+    const std::vector<std::string>& commodityNames() const { return commodityNames_; }
+    const std::map<std::string, SpotShiftData>& commodityShiftData() const { return commodityShiftData_; }
+    const std::map<std::string, std::string>& commodityCurrencies() const { return commodityCurrencies_; }
+    const std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const { return commodityCurveShiftData_; }
+
+    const std::vector<std::string>& commodityVolNames() const { return commodityVolNames_; }
+    const std::map<std::string, VolShiftData>& commodityVolShiftData() const { return commodityVolShiftData_; }
+
+    const vector<string>& securityNames() const { return securityNames_; }
+    const map<string, SpotShiftData>& securityShiftData() const { return securityShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
@@ -166,19 +162,19 @@ public:
 
     //! \name Setters
     //@{
-    bool& parConversion() { return parConversion_; }
-
     vector<string>& discountCurrencies() { return discountCurrencies_; }
-    map<string, CurveShiftData>& discountCurveShiftData() { return discountCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& discountCurveShiftData() { return discountCurveShiftData_; }
 
     vector<string>& indexNames() { return indexNames_; }
-    map<string, CurveShiftData>& indexCurveShiftData() { return indexCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
 
     vector<string>& yieldCurveNames() { return yieldCurveNames_; }
-    map<string, CurveShiftData>& yieldCurveShiftData() { return yieldCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
 
     vector<string>& equityForecastCurveNames() { return equityForecastCurveNames_; }
-    map<string, CurveShiftData>& equityForecastCurveShiftData() { return equityForecastCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& equityForecastCurveShiftData() {
+        return equityForecastCurveShiftData_;
+    }
 
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
@@ -199,23 +195,36 @@ public:
     map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
 
     vector<string>& zeroInflationIndices() { return zeroInflationIndices_; }
-    map<string, CurveShiftData>& zeroInflationCurveShiftData() { return zeroInflationCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& zeroInflationCurveShiftData() {
+        return zeroInflationCurveShiftData_;
+    }
 
     vector<string>& yoyInflationIndices() { return yoyInflationIndices_; }
-    map<string, CurveShiftData>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
 
     vector<string>& creditNames() { return creditNames_; }
     map<string, string>& creditCcys() { return creditCcys_; }
-    map<string, CurveShiftData>& creditCurveShiftData() { return creditCurveShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() { return creditCurveShiftData_; }
 
     vector<string>& equityNames() { return equityNames_; }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
 
     vector<string>& dividendYieldNames() { return dividendYieldNames_; }
-    map<string, CurveShiftData>& dividendYieldShiftData() { return dividendYieldShiftData_; }
+    map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
 
     vector<string>& equityVolNames() { return equityVolNames_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
+
+    std::vector<std::string>& commodityNames() { return commodityNames_; }
+    std::map<std::string, SpotShiftData>& commodityShiftData() { return commodityShiftData_; }
+    std::map<std::string, std::string>& commodityCurrencies() { return commodityCurrencies_; }
+    std::map<std::string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
+
+    std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
+    std::map<std::string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
+
+    vector<string>& securityNames() { return securityNames_; }
+    map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
 
@@ -224,7 +233,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
     //@}
 
     //! \name Equality Operators
@@ -238,17 +247,19 @@ public:
     string getIndexCurrency(string indexName);
     //@}
 
-private:
-    bool parConversion_;
+protected:
+    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
+    void shiftDataFromXML(XMLNode* child, ShiftData& data);
+    void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
 
     vector<string> discountCurrencies_;
-    map<string, CurveShiftData> discountCurveShiftData_; // key: ccy
+    map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
 
     vector<string> indexNames_;
-    map<string, CurveShiftData> indexCurveShiftData_; // key: indexName
+    map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_; // key: indexName
 
     vector<string> yieldCurveNames_;
-    map<string, CurveShiftData> yieldCurveShiftData_; // key: yieldCurveName
+    map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_; // key: yieldCurveName
 
     vector<string> capFloorVolCurrencies_;
     map<string, CapFloorVolShiftData> capFloorVolShiftData_; // key: ccy
@@ -266,14 +277,14 @@ private:
     map<string, CdsVolShiftData> cdsVolShiftData_; // key: ccy pair
 
     vector<string> zeroInflationIndices_;
-    map<string, CurveShiftData> zeroInflationCurveShiftData_; // key: inflation index name
+    map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
 
     vector<string> yoyInflationIndices_;
-    map<string, CurveShiftData> yoyInflationCurveShiftData_; // key: yoy inflation index name
+    map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_; // key: yoy inflation index name
 
     vector<string> creditNames_;
     map<string, string> creditCcys_;
-    map<string, CurveShiftData> creditCurveShiftData_; // key: credit name
+    map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_; // key: credit name
 
     vector<string> equityVolNames_;
     map<string, VolShiftData> equityVolShiftData_; // key: equity name
@@ -282,13 +293,24 @@ private:
     map<string, SpotShiftData> equityShiftData_; // key: equity name
 
     vector<string> equityForecastCurveNames_;
-    map<string, CurveShiftData> equityForecastCurveShiftData_; // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> equityForecastCurveShiftData_; // key: equity name
 
     vector<string> dividendYieldNames_;
-    map<string, CurveShiftData> dividendYieldShiftData_; // key: equity name
+    map<string, boost::shared_ptr<CurveShiftData>> dividendYieldShiftData_; // key: equity name
 
     vector<string> baseCorrelationNames_;
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
+
+    std::vector<std::string> commodityNames_;
+    std::map<std::string, SpotShiftData> commodityShiftData_;
+    std::map<std::string, std::string> commodityCurrencies_;
+    std::map<std::string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+
+    std::vector<std::string> commodityVolNames_;
+    std::map<std::string, VolShiftData> commodityVolShiftData_;
+
+    vector<string> securityNames_;
+    map<string, SpotShiftData> securityShiftData_; // key: security name
 
     vector<pair<string, string>> crossGammaFilter_;
 };

@@ -107,10 +107,6 @@
     <CapFloorVolatility currency="EUR">CapFloorVolatility/EUR/EUR_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
-  <!-- cds vol definition -->
-  <CDSVolatilities id="default">
-   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
-  </CDSVolatilities>
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
@@ -131,10 +127,7 @@
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
   </EquityVolatilities>
-  <SecuritySpreads id="default">
-    <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
-  </SecuritySpreads>
-  <SecurityRecoveryRates id="default">
-    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
-  </SecurityRecoveryRates>
+   <Securities id="default">
+     <Security name="SECURITY_1">Security/SECURITY_1</Security>
+   </Securities>
 </TodaysMarket>

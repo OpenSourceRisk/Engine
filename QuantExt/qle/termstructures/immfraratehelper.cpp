@@ -16,21 +16,17 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/immfraratehelper.hpp>
-#include <ql/utilities/null_deleter.hpp>
 #include <ql/time/imm.hpp>
+#include <ql/utilities/null_deleter.hpp>
+#include <qle/termstructures/immfraratehelper.hpp>
 
 using namespace std;
 namespace QuantExt {
 
-ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate,
-    const Size imm1, const Size imm2,
-    const boost::shared_ptr<IborIndex>& i,
-    Pillar::Choice pillarChoice,
-    Date customPillarDate)
-    : RelativeDateRateHelper(rate),
-    imm1_(imm1), imm2_(imm2),
-    pillarChoice_(pillarChoice) {
+ImmFraRateHelper::ImmFraRateHelper(const Handle<Quote>& rate, const Size imm1, const Size imm2,
+                                   const boost::shared_ptr<IborIndex>& i, Pillar::Choice pillarChoice,
+                                   Date customPillarDate)
+    : RelativeDateRateHelper(rate), imm1_(imm1), imm2_(imm2), pillarChoice_(pillarChoice) {
     // take fixing into account
     iborIndex_ = i->clone(termStructureHandle_);
     // see above
@@ -59,10 +55,8 @@ void ImmFraRateHelper::setTermStructure(YieldTermStructure* t) {
 void ImmFraRateHelper::initializeDates() {
     // if the evaluation date is not a business day
     // then move to the next business day
-    Date referenceDate =
-        iborIndex_->fixingCalendar().adjust(evaluationDate_);
-    Date spotDate = iborIndex_->fixingCalendar().advance(
-        referenceDate, iborIndex_->fixingDays()*Days);
+    Date referenceDate = iborIndex_->fixingCalendar().adjust(evaluationDate_);
+    Date spotDate = iborIndex_->fixingCalendar().advance(referenceDate, iborIndex_->fixingDays() * Days);
 
     earliestDate_ = iborIndex_->fixingCalendar().adjust(getImmDate(spotDate, imm1_));
     maturityDate_ = iborIndex_->fixingCalendar().adjust(getImmDate(spotDate, imm2_));
@@ -79,14 +73,15 @@ void ImmFraRateHelper::initializeDates() {
         break;
     case Pillar::CustomDate:
         // pillarDate_ already assigned at construction time
-        QL_REQUIRE(pillarDate_ >= earliestDate_,
-            "pillar date (" << pillarDate_ << ") must be later "
-            "than or equal to the instrument's earliest date (" <<
-            earliestDate_ << ")");
-        QL_REQUIRE(pillarDate_ <= latestRelevantDate_,
-            "pillar date (" << pillarDate_ << ") must be before "
-            "or equal to the instrument's latest relevant date (" <<
-            latestRelevantDate_ << ")");
+        QL_REQUIRE(pillarDate_ >= earliestDate_, "pillar date (" << pillarDate_
+                                                                 << ") must be later "
+                                                                    "than or equal to the instrument's earliest date ("
+                                                                 << earliestDate_ << ")");
+        QL_REQUIRE(pillarDate_ <= latestRelevantDate_, "pillar date ("
+                                                           << pillarDate_
+                                                           << ") must be before "
+                                                              "or equal to the instrument's latest relevant date ("
+                                                           << latestRelevantDate_ << ")");
         break;
     default:
         QL_FAIL("unknown Pillar::Choice(" << Integer(pillarChoice_) << ")");
@@ -99,19 +94,18 @@ void ImmFraRateHelper::initializeDates() {
 
 Date ImmFraRateHelper::getImmDate(Date asof, Size i) {
     Date imm = asof;
-    for (Size j = 0; j<i; j++) {
+    for (Size j = 0; j < i; j++) {
         imm = IMM::nextDate(imm, true);
     }
     return imm;
 }
 
 void ImmFraRateHelper::accept(AcyclicVisitor& v) {
-    Visitor<ImmFraRateHelper>* v1 =
-        dynamic_cast<Visitor<ImmFraRateHelper>*>(&v);
+    Visitor<ImmFraRateHelper>* v1 = dynamic_cast<Visitor<ImmFraRateHelper>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else
         RateHelper::accept(v);
 }
 
-};
+}; // namespace QuantExt

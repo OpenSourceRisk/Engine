@@ -64,7 +64,11 @@ public:
         BaseCorrelation,
         CPIIndex,
         ZeroInflationCurve,
-        YoYInflationCurve
+        YoYInflationCurve,
+        CommoditySpot,
+        CommodityCurve,
+        CommodityVolatility,
+        SecuritySpread
     };
 
     //! Constructor

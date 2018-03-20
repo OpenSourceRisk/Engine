@@ -18,6 +18,7 @@
 
 /*! \file inflationindexwrapper.hpp
     \brief wrapper classes for inflation yoy and interpolation
+    \ingroup indexes
 */
 
 #ifndef quantext_inflation_index_wrapper_hpp
@@ -33,7 +34,9 @@ namespace QuantExt {
 
 //! Wrapper that changes the interpolation of an underlying ZC inflation index
 /*! The (possible) change in the interpolation is _not_ reflected in the index class itself,
-  only the fixing methods behave consistently */
+  only the fixing methods behave consistently
+ \ingroup indexes
+ */
 class ZeroInflationIndexWrapper : public ZeroInflationIndex {
 public:
     ZeroInflationIndexWrapper(const boost::shared_ptr<ZeroInflationIndex> source,
@@ -57,6 +60,7 @@ private:
   - the interpolated flag for historical fixings
   - the interpolated flag for forecasted fixings if a yoy ts is given
   - the underlying zero index behaviour for forecasted fixings if no yoy ts is given
+\ingroup indexes
 */
 class YoYInflationIndexWrapper : public YoYInflationIndex {
 public:
@@ -71,7 +75,9 @@ private:
 };
 
 //! YY coupon pricer that takes the nominal ts directly instead of reading it from the yoy ts
-/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper */
+/*! This is useful if no yoy ts is given, as it might be the case of the yoy inflation index wrapper
+\ingroup indexes
+*/
 class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
 public:
     YoYInflationCouponPricer2(

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file survivalprobabilitycurve.hpp
+/*! \file qle/termstructures/survivalprobabilitycurve.hpp
     \brief interpolated survival probability term structure
     \ingroup termstructures
 */
@@ -34,7 +34,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! DefaultProbabilityTermStructure based on interpolation of survival probability quotes
-/*! \ingroup defaultprobabilitytermstructures */
+/*! \ingroup termstructures */
 template <class Interpolator>
 class SurvivalProbabilityCurve : public SurvivalProbabilityStructure,
                                  protected InterpolatedCurve<Interpolator>,

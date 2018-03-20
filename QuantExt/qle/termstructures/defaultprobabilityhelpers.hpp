@@ -38,6 +38,7 @@
 
 /*! \file defaultprobabilityhelpers.hpp
     \brief bootstrap helpers for default-probability term structures
+     \ingroup termstructures
 */
 
 #ifndef quantext_default_probability_helpers_hpp
@@ -45,8 +46,8 @@
 
 #include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
-#include <qle/instruments/creditdefaultswap.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/instruments/creditdefaultswap.hpp>
 
 using namespace QuantExt;
 
@@ -67,6 +68,7 @@ typedef RelativeDateBootstrapHelper<DefaultProbabilityTermStructure> RelativeDat
     @param paymentConvention The payment convention applied to
                              coupons schedules, settlement dates
                              and protection period calculations.
+     \ingroup termstructures
 */
 class CdsHelper : public RelativeDateDefaultProbabilityHelper {
 public:
@@ -110,6 +112,7 @@ protected:
 };
 
 //! Spread-quoted CDS hazard rate bootstrap helper.
+//!  \ingroup termstructures
 class SpreadCdsHelper : public CdsHelper {
 public:
     SpreadCdsHelper(const Handle<Quote>& runningSpread, const Period& tenor, Integer settlementDays,
@@ -129,6 +132,7 @@ private:
 };
 
 //! Upfront-quoted CDS hazard rate bootstrap helper.
+//!  \ingroup termstructures
 class UpfrontCdsHelper : public CdsHelper {
 public:
     /*! \note the upfront must be quoted in fractional units. */

@@ -16,11 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/creditdefaultswap.hpp
+ \brief Ibor cap, floor or collar trade data model and serialization
+ \ingroup tradedata
+ */
+
 #pragma once
 
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/trade.hpp>
 
+//! Serializable Credit Default Swap
+/*!
+ \ingroup tradedata
+ */
 namespace ore {
 namespace data {
 

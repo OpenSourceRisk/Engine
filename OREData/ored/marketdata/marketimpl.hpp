@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/marketimpl.hpp
     \brief An implementation of the Market class that stores the required objects in maps
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -26,7 +26,8 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ored/marketdata/market.hpp>
-#include <ored/marketdata/marketimpl.hpp>
+
+#include <qle/indexes/inflationindexobserver.hpp>
 
 #include <map>
 
@@ -47,7 +48,7 @@ namespace data {
   The MarketImpl class differs from the Market base class in that it contains concrete maps
   of term structures, and it implements the interface.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 class MarketImpl : public Market {
 public:
@@ -65,7 +66,7 @@ public:
 
     //! Yield Curves
     Handle<YieldTermStructure> yieldCurve(const YieldCurveType& type, const string& ccy,
-                                             const string& configuration = Market::defaultConfiguration) const;
+                                          const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> discountCurve(const string& ccy,
                                              const string& configuration = Market::defaultConfiguration) const;
     Handle<YieldTermStructure> yieldCurve(const string& name,
@@ -123,14 +124,28 @@ public:
     //! Equity volatilities
     Handle<BlackVolTermStructure> equityVol(const string& eqName,
                                             const string& configuration = Market::defaultConfiguration) const;
-    
+
     //! Equity forecasting curves
-    Handle<YieldTermStructure> equityForecastCurve(const string& eqName, 
+    Handle<YieldTermStructure> equityForecastCurve(const string& eqName,
                                                    const string& configuration = Market::defaultConfiguration) const;
 
     //! Bond Spreads
     Handle<Quote> securitySpread(const string& securityID,
                                  const string& configuration = Market::defaultConfiguration) const;
+
+    //! Cpi Base Quotes
+    Handle<QuantExt::InflationIndexObserver> baseCpis(const string& index,
+                                                      const string& configuration = Market::defaultConfiguration) const;
+
+    //! Commodity curves
+    QuantLib::Handle<QuantLib::Quote> commoditySpot(const std::string& commodityName, 
+        const std::string& configuration = Market::defaultConfiguration) const;
+
+    QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
+
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(const std::string& commodityName,
+        const std::string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! \name Disable copying
@@ -163,6 +178,10 @@ protected:
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
+    map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     Conventions conventions_;
 
     //! add a swap index to the market

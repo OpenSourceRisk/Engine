@@ -49,6 +49,8 @@ namespace ore {
 namespace data {
 
 class Trade;
+class LegBuilder;
+class LegData;
 
 /*! Market configuration contexts. Note that there is only one pricing context.
   If several are needed (for different trade types, different collateral
@@ -94,6 +96,7 @@ public:
     /*! Constructor that takes a model and engine name
      *  @param model the model name
      *  @param engine the engine name
+     *  @param tradeTypes a set of trade types
      */
     EngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
         : model_(model), engine_(engine), tradeTypes_(tradeTypes) {}
@@ -184,11 +187,20 @@ public:
      */
     boost::shared_ptr<EngineBuilder> builder(const string& tradeType);
 
-    //! Add a set of default builders
+    //! Register a leg builder with the factory
+    void registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder);
+
+    //! Get a leg builder by leg type
+    boost::shared_ptr<LegBuilder> legBuilder(const string& legType);
+
+    //! Add a set of default engine and leg builders
     void addDefaultBuilders();
 
     //! Clear all builders
-    void clear() { builders_.clear(); }
+    void clear() {
+        builders_.clear();
+        legBuilders_.clear();
+    }
 
     //! return model builders
     Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> modelBuilders() const;
@@ -198,6 +210,20 @@ private:
     boost::shared_ptr<EngineData> engineData_;
     map<MarketContext, string> configurations_;
     map<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> builders_;
+    map<string, boost::shared_ptr<LegBuilder>> legBuilders_;
+};
+
+//! Leg builder
+class LegBuilder {
+public:
+    LegBuilder(const string& legType) : legType_(legType) {}
+    virtual ~LegBuilder() {}
+    virtual Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>&,
+                         const string& configuration) const = 0;
+    const string& legType() const { return legType_; }
+
+private:
+    const string legType_;
 };
 
 } // namespace data

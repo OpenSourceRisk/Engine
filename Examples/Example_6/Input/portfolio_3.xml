@@ -41,9 +41,9 @@
           <FixingDays>0</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.025</Rate>
-      </CapRates>
+      <Caps>
+        <Cap>0.025</Cap>
+      </Caps>
     </CapFloorData>
   </Trade>
   <Trade id="cap_03">
@@ -116,9 +116,9 @@
           <FixingDays>0</FixingDays>
         </FloatingLegData>
       </LegData>
-      <CapRates>
-        <Rate>0.025</Rate>
-      </CapRates>
+      <Caps>
+        <Cap>0.025</Cap>
+      </Caps>
     </CapFloorData>
   </Trade>
 </Portfolio>

@@ -131,8 +131,6 @@ public:
         const string& fvaBorrowingCurve = "",
         //! Lending curve name to be used in FVA calculations
         const string& fvaLendingCurve = "",
-        //! Collateral spread to be used in COLVA calculations
-        Real collateralSpread = 0.0,
         //! Quantile used in dynamic initial margin calculation
         Real dimQuantile = 0.99,
         //! Initial margin horizon in calendar days, 2 weeks = 14 days
@@ -234,8 +232,8 @@ public:
     const boost::shared_ptr<NPVCube>& netCube() { return nettedCube_; }
     //! Return the dynamic initial margin cube (regression approach)
     const boost::shared_ptr<NPVCube>& dimCube() { return dimCube_; }
-    //! Write average (over samples) DIM evolution through time for given netting set
-    void exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport);
+    //! Write average (over samples) DIM evolution through time for all netting sets
+    void exportDimEvolution(ore::data::Report& dimEvolutionReport);
     //! Write DIM as a function of sample netting set NPV for a given time step
     void exportDimRegression(const std::string& nettingSet, const std::vector<Size>& timeSteps,
                              const std::vector<boost::shared_ptr<ore::data::Report>>& dimRegReports);
@@ -297,7 +295,6 @@ private:
     string dvaName_;
     string fvaBorrowingCurve_;
     string fvaLendingCurve_;
-    Real collateralSpread_;
     Real dimQuantile_;
     Size dimHorizonCalendarDays_;
     Size dimRegressionOrder_;

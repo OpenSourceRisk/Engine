@@ -16,6 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file orea/simulation/fixingmanager.hpp
+ \brief Controls the updating/reset of the QuantLib::IndexManager
+ \ingroup simulation
+ */
 #pragma once
 
 #include <ored/portfolio/portfolio.hpp>

@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file scenario/sensitivityscenariogenerator.hpp
-    \brief Sensitivity scenario generation
+/*! \file scenario/stressscenariogenerator.hpp
+    \brief Stress scenario generation
     \ingroup scenario
 */
 
@@ -70,7 +70,7 @@ class StressScenarioGenerator : public ShiftScenarioGenerator {
 public:
     //! Constructor
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
-                            const boost::shared_ptr<ScenarioSimMarket>& scenarioSimMarket,
+                            const boost::shared_ptr<Scenario>& baseScenario,
                             const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
     //! Default destructor
     ~StressScenarioGenerator(){};
@@ -88,6 +88,7 @@ private:
     void addEquityVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addSwaptionVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
+    void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
     const boost::shared_ptr<StressTestScenarioData> stressData_;
 };

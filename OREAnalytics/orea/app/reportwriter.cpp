@@ -24,8 +24,8 @@
 #include <ostream>
 #include <ql/cashflows/indexedcashflow.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <ql/errors.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <stdio.h>
 
 using std::string;
@@ -60,11 +60,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
             Real npv = trade->instrument()->NPV();
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-                .add(trade->maturity())
-                .add(dc.yearFraction(today, trade->maturity()))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(npv)
                 .add(npvCcy)
                 .add(npv * fx)
@@ -75,11 +76,12 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
+            Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
                 .add(trade->tradeType())
-                .add(trade->maturity())
-                .add(dc.yearFraction(today, trade->maturity()))
+                .add(maturity)
+                .add(maturity == QuantLib::Null<Date>() ? Null<Real>() : dc.yearFraction(today, maturity))
                 .add(Null<Real>())
                 .add("#NA")
                 .add(Null<Real>())
@@ -97,8 +99,9 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
 void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     LOG("Writing cashflow report for " << asof);
-    report.addColumn("ID", string())
+    report.addColumn("TradeId", string())
         .addColumn("Type", string())
+        .addColumn("CashflowNo", Size())
         .addColumn("LegNo", Size())
         .addColumn("PayDate", Date())
         .addColumn("FlowType", string())
@@ -107,7 +110,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("Coupon", double(), 10)
         .addColumn("Accrual", double(), 10)
         .addColumn("fixingDate", Date())
-        .addColumn("fixingValue", double(), 10);
+        .addColumn("fixingValue", double(), 10)
+        .addColumn("Notional", double(), 4);
 
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
@@ -135,13 +139,16 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
                         Real coupon;
                         Real accrual;
+                        Real notional;
                         if (ptrCoupon) {
                             coupon = ptrCoupon->rate();
                             accrual = ptrCoupon->accrualPeriod();
+                            notional = ptrCoupon->nominal();
                             flowType = "Interest";
                         } else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
+                            notional = Null<Real>();
                             flowType = "Notional";
                         }
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
@@ -157,7 +164,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
-                            if (fixingDate > asof) flowType = "InterestProjected";
+                            if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
+                                flowType = "InterestProjected";
                         } else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
@@ -176,6 +184,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         report.next()
                             .add(trades[k]->id())
                             .add(trades[k]->tradeType())
+                            .add(j + 1)
                             .add(i)
                             .add(payDate)
                             .add(flowType)
@@ -184,7 +193,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(coupon)
                             .add(accrual)
                             .add(fixingDate)
-                            .add(fixingValue);
+                            .add(fixingValue)
+                            .add(notional);
                     }
                 }
             }
@@ -208,7 +218,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     map<string, string> YieldCurves = marketConfig.mapping(MarketObject::YieldCurve, configID);
     map<string, string> indexCurves = marketConfig.mapping(MarketObject::IndexCurve, configID);
     map<string, string> zeroInflationIndices, defaultCurves;
-    if(marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
+    if (marketConfig.hasMarketObject(MarketObject::ZeroInflationCurve))
         zeroInflationIndices = marketConfig.mapping(MarketObject::ZeroInflationCurve, configID);
     if (marketConfig.hasMarketObject(MarketObject::DefaultCurve))
         defaultCurves = marketConfig.mapping(MarketObject::DefaultCurve, configID);

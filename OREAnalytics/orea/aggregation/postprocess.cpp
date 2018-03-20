@@ -85,16 +85,15 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const map<string, bool>& analytics, const string& baseCurrency, const string& allocMethod,
                          Real marginalAllocationLimit, Real quantile, const string& calculationType,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
-                         Real collateralSpread, Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
+                         Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
                          Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
-      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), collateralSpread_(collateralSpread),
-      dimQuantile_(dimQuantile), dimHorizonCalendarDays_(dimHorizonCalendarDays),
-      dimRegressionOrder_(dimRegressionOrder), dimRegressors_(dimRegressors),
-      dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
+      fvaBorrowingCurve_(fvaBorrowingCurve), fvaLendingCurve_(fvaLendingCurve), dimQuantile_(dimQuantile),
+      dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
+      dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
       dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
       fullInitialCollateralisation_(fullInitialCollateralisation) {
 
@@ -355,7 +354,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> colvaInc(dates + 1, 0.0);
         vector<Real> eoniaFloorInc(dates + 1, 0.0);
         Real npv = nettingSetValueToday[nettingSetId];
-        if ((fullInitialCollateralisation_) &  (netting->activeCsaFlag())) {
+        if ((fullInitialCollateralisation_) & (netting->activeCsaFlag())) {
             // This assumes that the collateral at t=0 is the same as the npv at t=0.
             epe[0] = 0;
             ene[0] = 0;
@@ -365,8 +364,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             ene[0] = std::max(-npv, 0.0);
             pfe[0] = std::max(npv, 0.0);
         }
-        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral" column
-        // of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
+        // The fullInitialCollateralisation flag doesn't affect the eab, which feeds into the "ExpectedCollateral"
+        // column of the 'exposure_nettingset_*' reports.  We always assume the full collateral here.
         eab[0] = -npv;
         ee_b[0] = epe[0];
         eee_b[0] = ee_b[0];
@@ -397,8 +396,10 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     dim = nettingSetDIM_[nettingSetId][dimIndex][k];
                     QL_REQUIRE(dim >= 0, "negative DIM for set " << nettingSetId << ", date " << j << ", sample " << k);
                 }
-                epe[j + 1] += std::max(exposure - dim, 0.0) / samples;
-                ene[j + 1] += std::max(-exposure + dim, 0.0) / samples;
+                epe[j + 1] += std::max(exposure - dim, 0.0) /
+                              samples; // dim here represents the held IM, and is expressed as a positive number
+                ene[j + 1] += std::max(-exposure - dim, 0.0) /
+                              samples; // dim here represents the posted IM, and is expressed as a positive number
                 distribution[k] = exposure;
                 nettedCube_->set(exposure, nettingSetCount, j, k);
 
@@ -410,7 +411,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         dc = csaIndex->dayCounter();
                     }
                     Real dcf = dc.yearFraction(prevDate, date);
-                    Real colvaDelta = -balance * collateralSpread_ * dcf / samples;
+                    Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
+                    Real colvaDelta = -balance * collateralSpread * dcf / samples;
                     Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
@@ -657,15 +659,15 @@ void PostProcess::updateStandAloneXVA() {
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fbaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
-            tradeFBA_[tradeId] += fbaIncrement;
+            Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
+            tradeFCA_[tradeId] += fcaIncrement;
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
-            Real fcaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
-            tradeFCA_[tradeId] += fcaIncrement;
+            Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
+            tradeFBA_[tradeId] += fbaIncrement;
         }
         if (sumTradeCVA_.find(nid) == sumTradeCVA_.end()) {
             sumTradeCVA_[nid] = 0.0;
@@ -1195,8 +1197,9 @@ void PostProcess::performT0DimCalc() {
             // the first date greater than t0+MPOR, check if it is closest
             Size lastIdx = (i == 0) ? 0 : (i - 1);
             Size lastDaysFromT0 = (cube_->dates()[lastIdx] - today);
-            if (std::fabs(daysFromT0 - dimHorizonCalendarDays_) <=
-                std::fabs(lastDaysFromT0 - dimHorizonCalendarDays_)) {
+            int daysFromT0CloseOut = daysFromT0 - dimHorizonCalendarDays_;
+            int prevDaysFromT0CloseOut = lastDaysFromT0 - dimHorizonCalendarDays_;
+            if (std::abs(daysFromT0CloseOut) <= std::abs(prevDaysFromT0CloseOut)) {
                 relevantDateIdx = i;
                 sqrtTimeScaling = std::sqrt(Real(dimHorizonCalendarDays_) / Real(daysFromT0));
             } else {
@@ -1248,21 +1251,10 @@ void PostProcess::performT0DimCalc() {
     LOG("T0 IM Calculations Completed");
 }
 
-void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::Report& dimEvolutionReport) {
-    LOG("Export DIM evolution for netting set " << nettingSet);
+void PostProcess::exportDimEvolution(ore::data::Report& dimEvolutionReport) {
 
     Size dates = dimCube_->dates().size();
     Size samples = dimCube_->samples();
-    const std::vector<std::string>& ids = dimCube_->ids();
-
-    int index = -1;
-    for (Size i = 0; i < ids.size(); ++i) {
-        if (ids[i] == nettingSet) {
-            index = i;
-            break;
-        }
-    }
-    QL_REQUIRE(index >= 0, "netting set " << nettingSet << " not found in DIM cube");
 
     dimEvolutionReport.addColumn("TimeStep", Size())
         .addColumn("Date", Date())
@@ -1270,25 +1262,31 @@ void PostProcess::exportDimEvolution(const std::string& nettingSet, ore::data::R
         .addColumn("ZeroOrderDIM", Real(), 6)
         .addColumn("AverageDIM", Real(), 6)
         .addColumn("AverageFLOW", Real(), 6)
-        .addColumn("SimpleDIM", Real(), 6);
+        .addColumn("SimpleDIM", Real(), 6)
+        .addColumn("NettingSet", string());
 
-    for (Size i = 0; i < dates - 1; ++i) {
-        Real expectedFlow = 0.0;
-        for (Size j = 0; j < samples; ++j) {
-            expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+    for (auto nettingSet : dimCube_->ids()) {
+
+        LOG("Export DIM evolution for netting set " << nettingSet);
+        for (Size i = 0; i < dates - 1; ++i) {
+            Real expectedFlow = 0.0;
+            for (Size j = 0; j < samples; ++j) {
+                expectedFlow += nettingSetFLOW_[nettingSet][i][j] / samples;
+            }
+
+            Date d1 = dimCube_->dates()[i];
+            Date d2 = dimCube_->dates()[i + 1];
+            Size days = d2 - d1;
+            dimEvolutionReport.next()
+                .add(i)
+                .add(d1)
+                .add(days)
+                .add(nettingSetZeroOrderDIM_[nettingSet][i])
+                .add(nettingSetExpectedDIM_[nettingSet][i])
+                .add(expectedFlow)
+                .add(nettingSetSimpleDIMh_[nettingSet][i])
+                .add(nettingSet);
         }
-
-        Date d1 = dimCube_->dates()[i];
-        Date d2 = dimCube_->dates()[i + 1];
-        Size days = d2 - d1;
-        dimEvolutionReport.next()
-            .add(i)
-            .add(d1)
-            .add(days)
-            .add(nettingSetZeroOrderDIM_[nettingSet][i])
-            .add(nettingSetExpectedDIM_[nettingSet][i])
-            .add(expectedFlow)
-            .add(nettingSetSimpleDIMh_[nettingSet][i]);
     }
     dimEvolutionReport.end();
     LOG("Exporting expected DIM through time done");

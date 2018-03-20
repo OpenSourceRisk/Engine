@@ -24,6 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
+#include <orea/engine/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -74,23 +75,17 @@ public:
     //! Generate the Sensitivities
     void generateSensitivities();
 
-    //! Return set of trades analysed
-    const std::set<std::string>& trades() const;
-
-    //! Return unique set of factors shifted
-    const std::map<std::string, QuantLib::Real>& factors() const;
-
     //! Return base NPV by trade, before shift
-    const std::map<std::string, Real>& baseNPV() const;
+    Real baseNPV(std::string& id) const;
 
-    //! Return delta/vega (first order sensitivity times shift) by trade/factor pair
-    const std::map<std::pair<std::string, std::string>, Real>& delta() const;
+    //! Return delta/vega (first order sensitivity times shift) for a trade/factor pair
+    Real delta(const std::string& trade, const std::string& factor) const;
 
-    //! Return gamma (second order sensitivity times shift^2) by trade/factor pair
-    const std::map<std::pair<std::string, std::string>, Real>& gamma() const;
+    //! Return gamma (second order sensitivity times shift^2) for a trade/factor pair
+    Real gamma(const std::string& trade, const std::string& factor) const;
 
-    //! Return cross gamma (mixed second order sensitivity times shift^2) by trade/factor1/factor2
-    const std::map<std::tuple<std::string, std::string, std::string>, Real>& crossGamma() const;
+    //! Return cross gamma (mixed second order sensitivity times shift^2) for a given trade/factor1/factor2
+    Real crossGamma(const std::string& trade, const std::string& factor1, const std::string& factor2) const;
 
     //! Write "raw" NPV by trade/scenario (contains base, up and down shift scenarios)
     void writeScenarioReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
@@ -99,7 +94,7 @@ public:
     void writeSensitivityReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
     //! Write cross gammas by trade/factor1/factor2
-    void writeCrossGammaReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
+    virtual void writeCrossGammaReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -127,6 +122,12 @@ public:
     //! override shift tenors with sim market tenors
     void overrideTenors(const bool b) { overrideTenors_ = b; }
 
+    //! the portfolio of trades
+    boost::shared_ptr<Portfolio> portfolio() const { return portfolio_; }
+
+    //! a wrapper for the sensivity results cube
+    boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
+
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
     virtual void initialize(boost::shared_ptr<NPVCube>& cube);
@@ -143,8 +144,6 @@ protected:
 
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
-    //! collect the sensitivity results from the cube and populate appropriate containers
-    void collectResultsFromCube(const boost::shared_ptr<NPVCube>& cube);
 
     //! archive the actual shift size for each risk factor (so as to interpret results)
     void storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc);
@@ -161,16 +160,6 @@ protected:
     Conventions conventions_;
     bool recalibrateModels_, overrideTenors_;
 
-    // base NPV by trade
-    std::map<std::string, Real> baseNPV_;
-    // NPV respectively sensitivity by trade and factor
-    std::map<std::pair<string, string>, Real> upNPV_, downNPV_, delta_, gamma_;
-    // cross gamma by trade, factor1, factor2
-    std::map<std::tuple<string, string, string>, Real> crossNPV_, crossGamma_;
-    // unique set of factors
-    std::map<std::string, QuantLib::Real> factors_;
-    // unique set of trades
-    std::set<std::string> trades_;
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
     //! the engine data (provided as input, needed to construct the engine factory)
@@ -181,6 +170,10 @@ protected:
     bool initialized_, computed_;
     //! model builders
     std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
+    //! sensitivityCube
+    boost::shared_ptr<SensitivityCube> sensiCube_;
+    // unique set of factors
+    std::map<RiskFactorKey, QuantLib::Real> factors_;
 };
 } // namespace analytics
 } // namespace ore

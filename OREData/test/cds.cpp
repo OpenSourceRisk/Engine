@@ -18,8 +18,8 @@
 
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/envelope.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -93,14 +93,13 @@ struct CommonVars {
     vector<Real> notionals;
     vector<Real> spread;
 
-
     // utilities
     boost::shared_ptr<ore::data::CreditDefaultSwap> makeCDS(string end, Real rate) {
         ScheduleData fixedSchedule(ScheduleRules(start, end, fixtenor, calStr, conv, conv, rule));
 
         // build CDS
-        FixedLegData fixedLegRateData(vector<double>(1, rate));
-        LegData fixedLegData(isPayer, ccy, fixedLegRateData, fixedSchedule, fixDC, notionals);
+        boost::shared_ptr<FixedLegData> fixedLegRateData = boost::make_shared<FixedLegData>(vector<double>(1, rate));
+        LegData fixedLegData(fixedLegRateData, isPayer, ccy, fixedSchedule, fixDC, notionals);
 
         CreditDefaultSwapData cd(issuerId, creditCurveId, fixedLegData, false, true);
         Envelope env("CP1");
@@ -108,10 +107,10 @@ struct CommonVars {
         boost::shared_ptr<ore::data::CreditDefaultSwap> cds(new ore::data::CreditDefaultSwap(env, cd));
         return cds;
     }
-    
 
-CommonVars() : ccy("EUR"), creditCurveId("CreditCurve_A"), issuerId("CPTY_A"), 
-		isPayer(false), start("20160203"), issue("20160203"), fixtenor("1Y") {
+    CommonVars()
+        : ccy("EUR"), creditCurveId("CreditCurve_A"), issuerId("CPTY_A"), isPayer(false), start("20160203"),
+          issue("20160203"), fixtenor("1Y") {
         cal = TARGET();
         calStr = "TARGET";
         conv = "MF";
@@ -128,8 +127,8 @@ CommonVars() : ccy("EUR"), creditCurveId("CreditCurve_A"), issuerId("CPTY_A"),
 
 namespace testsuite {
 
-
-void checkCreditDefaultSwapNPV(Real hazardRate, Real recoveryRate, Real liborRate, string endDate, Real fixedRate, Real expectedNpv) {
+void checkCreditDefaultSwapNPV(Real hazardRate, Real recoveryRate, Real liborRate, string endDate, Real fixedRate,
+                               Real expectedNpv) {
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(hazardRate, recoveryRate, liborRate);
@@ -155,23 +154,19 @@ void checkCreditDefaultSwapNPV(Real hazardRate, Real recoveryRate, Real liborRat
 void CreditDefaultSwapTest::testCreditDefaultSwap() {
     BOOST_TEST_MESSAGE("Testing CDS...");
 
-    //Case: HazardRate = 0, couponRate = 0. ExpectedNpv = 0
-    checkCreditDefaultSwapNPV( 0, 1, 0, "20170203", 0, 0);
-    //Case: RecoveryRate = 1, couponRate = 0. ExpectedNpv = 0
-    checkCreditDefaultSwapNPV( 1, 1, 0, "20170203", 0, 0);
-    //Case: Example from Hull, Ch 21 (pp. 510 - 513).
-    //5Y CDS, RR=0.04, spread =  0.012424884, hazardRate = 0.02
-    //Expected Payments from the Default Protection Buyer to the Default Protection Seller
-    //Take RR = 1 to show only couponNPV
-    checkCreditDefaultSwapNPV( 0.02, 1, 0.05, "20210203", 0.0124248849209095, 0.050659);
-    //Expected Value of the Default Protection Buyer
-    //Take coupon rate = 0 to show only defaultNPV
-    checkCreditDefaultSwapNPV( 0.02, 0.4, 0.05, "20210203", 0.0, -0.05062);
-
+    // Case: HazardRate = 0, couponRate = 0. ExpectedNpv = 0
+    checkCreditDefaultSwapNPV(0, 1, 0, "20170203", 0, 0);
+    // Case: RecoveryRate = 1, couponRate = 0. ExpectedNpv = 0
+    checkCreditDefaultSwapNPV(1, 1, 0, "20170203", 0, 0);
+    // Case: Example from Hull, Ch 21 (pp. 510 - 513).
+    // 5Y CDS, RR=0.04, spread =  0.012424884, hazardRate = 0.02
+    // Expected Payments from the Default Protection Buyer to the Default Protection Seller
+    // Take RR = 1 to show only couponNPV
+    checkCreditDefaultSwapNPV(0.02, 1, 0.05, "20210203", 0.0124248849209095, 0.050659);
+    // Expected Value of the Default Protection Buyer
+    // Take coupon rate = 0 to show only defaultNPV
+    checkCreditDefaultSwapNPV(0.02, 0.4, 0.05, "20210203", 0.0, -0.05062);
 }
-
-
-
 
 test_suite* CreditDefaultSwapTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CreditDefaultSwapTest");

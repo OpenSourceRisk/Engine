@@ -111,6 +111,7 @@ public:
 
     static XMLNode* addChild(XMLDocument& doc, XMLNode* n, const string& name);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const string& value);
+    static void addChild(XMLDocument& doc, XMLNode* n, const string& name, const char* value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, int value);
     static void addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value);

@@ -18,6 +18,7 @@
 
 /*! \file fxblackvolsurface.hpp
     \brief FX Black volatility surface that incorperates an FxSmile
+  \ingroup termstructures
 */
 
 #ifndef quantext_fx_black_vol_surface_hpp
@@ -35,7 +36,7 @@ namespace QuantExt {
 
 //! Fx Black volatility surface
 /*! This class calculates time/strike dependent Black volatilities
-
+  \ingroup termstructures
 */
 class FxBlackVolatilitySurface : public BlackVolatilityTermStructure {
 public:
@@ -94,6 +95,10 @@ inline void FxBlackVolatilitySurface::accept(AcyclicVisitor& v) {
         BlackVolatilityTermStructure::accept(v);
 }
 
+//! Fx Black vanna volga volatility surface
+/*! This class calculates time/strike dependent Black volatilities
+     \ingroup termstructures
+*/
 class FxBlackVannaVolgaVolatilitySurface : public FxBlackVolatilitySurface {
 public:
     FxBlackVannaVolgaVolatilitySurface(const Date& refDate, const std::vector<Date>& dates,

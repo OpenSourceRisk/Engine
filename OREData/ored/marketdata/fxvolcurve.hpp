@@ -26,8 +26,8 @@
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/fxspot.hpp>
+#include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
@@ -50,8 +50,8 @@ public:
     FXVolCurve() {}
     //! Detailed constructor
     FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-        const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
-        const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
+               const std::map<string, boost::shared_ptr<FXSpot>>& fxSpots,
+               const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves);
     //@}
 
     //! \name Inspectors

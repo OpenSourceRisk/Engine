@@ -105,6 +105,9 @@ public:
     /*! return index for equity (0 = first equity) */
     Size eqIndex(const std::string& eqName) const;
 
+    /*! return index for inflation (0 = first inflation index) */
+    Size infIndex(const std::string& index) const;
+
     /*! observer and linked calibrated model interface */
     void update();
     void generateArguments();
@@ -172,10 +175,17 @@ public:
                               const bool usePiecewiseIntegration = true) const;
     const boost::shared_ptr<Integrator> integrator() const;
 
+    /*! return (V(t), V^tilde(t,T)) in the notation of the book */
+    std::pair<Real, Real> infdkV(const Size i, const Time t, const Time T);
+
     /*! return (I(t), I^tilde(t,T)) in the notation of the book, note that
-      I(0) is normalized to 1 here, i.e. you have to multiply the result
-      with the index value (as of the base date of the inflation ts) */
+        I(0) is normalized to 1 here, i.e. you have to multiply the result
+        with the index value (as of the base date of the inflation ts) */
     std::pair<Real, Real> infdkI(const Size i, const Time t, const Time T, const Real z, const Real y);
+
+    /*! return YoYIIS(t) in the notation of the book, the year on year
+        swaplet price from S to T, at time t */
+    Real infdkYY(const Size i, const Time t, const Time S, const Time T, const Real z, const Real y, const Real irz);
 
     /*! returns (S(t), S^tilde(t,T)) in the notation of the book */
     std::pair<Real, Real> crlgm1fS(const Size i, const Size ccy, const Time t, const Time T, const Real z,
@@ -236,6 +246,20 @@ public:
                                            OptimizationMethod& method, const EndCriteria& endCriteria,
                                            const Constraint& constraint = Constraint(),
                                            const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate infdk volatilities globally to a sequence of cpi cap/floors */
+    void calibrateInfDkVolatilitiesGlobal(const Size index,
+                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          OptimizationMethod& method, const EndCriteria& endCriteria,
+                                          const Constraint& constraint = Constraint(),
+                                          const std::vector<Real>& weights = std::vector<Real>());
+
+    /*! calibrate infdk reversions globally to a sequence of cpi cap/floors */
+    void calibrateInfDkReversionsGlobal(const Size index,
+                                        const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                        OptimizationMethod& method, const EndCriteria& endCriteria,
+                                        const Constraint& constraint = Constraint(),
+                                        const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */

@@ -49,8 +49,8 @@ Volatility DynamicSwaptionVolatilityMatrix::volatilityImpl(Time optionTime, Time
         Real realisedVariance = (source_->blackVariance(tf + optionTime, swapLength, strike) -
                                  source_->blackVariance(tf, swapLength, strike));
         QL_REQUIRE(realisedVariance >= 0.0, "DynamicSwaptionVolatilityMatrix: negative realised variance at t="
-                                     << tf << " (option time " << optionTime << ", swapLength " << swapLength
-                                     << ", strike " << strike << ")");
+                                                << tf << " (option time " << optionTime << ", swapLength " << swapLength
+                                                << ", strike " << strike << ")");
         return std::sqrt(realisedVariance / optionTime);
     }
     if (decayMode_ == ConstantVariance) {

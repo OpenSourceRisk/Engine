@@ -52,10 +52,14 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (legData_.legType() == "Floating") {
         builder = engineFactory->builder(tradeType_);
-        QL_REQUIRE(legData_.floatingLegData().caps().empty() && legData_.floatingLegData().floors().empty(),
+
+        boost::shared_ptr<FloatingLegData> floatData =
+            boost::dynamic_pointer_cast<FloatingLegData>(legData_.concreteLegData());
+        QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << legData_.legType());
+        QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
                    "CapFloor build error, Floating leg section must not have caps and floors");
 
-        string indexName = legData_.floatingLegData().index();
+        string indexName = floatData->index();
         Handle<IborIndex> hIndex =
             engineFactory->market()->iborIndex(indexName, builder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find ibor index " << indexName << " in market.");
@@ -101,7 +105,10 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     } else if (legData_.legType() == "CMS") {
         builder = engineFactory->builder("Swap");
 
-        string swapIndexName = legData_.cmsLegData().swapIndex();
+        boost::shared_ptr<CMSLegData> cmsData = boost::dynamic_pointer_cast<CMSLegData>(legData_.concreteLegData());
+        QL_REQUIRE(cmsData, "Wrong LegType, expected CMS");
+
+        string swapIndexName = cmsData->swapIndex();
         Handle<SwapIndex> hIndex =
             engineFactory->market()->swapIndex(swapIndexName, builder->configuration(MarketContext::pricing));
         QL_REQUIRE(!hIndex.empty(), "Could not find swap index " << swapIndexName << " in market.");
@@ -139,8 +146,8 @@ void CapFloor::fromXML(XMLNode* node) {
     XMLNode* capFloorNode = XMLUtils::getChildNode(node, "CapFloorData");
     longShort_ = XMLUtils::getChildValue(capFloorNode, "LongShort", true);
     legData_.fromXML(XMLUtils::getChildNode(capFloorNode, "LegData"));
-    caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "CapRates", "Rate");
-    floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "FloorRates", "Rate");
+    caps_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Caps", "Cap");
+    floors_ = XMLUtils::getChildrenValuesAsDoubles(capFloorNode, "Floors", "Floor");
 }
 
 XMLNode* CapFloor::toXML(XMLDocument& doc) {
@@ -149,8 +156,8 @@ XMLNode* CapFloor::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, capFloorNode);
     XMLUtils::addChild(doc, capFloorNode, "LongShort", longShort_);
     XMLUtils::appendNode(capFloorNode, legData_.toXML(doc));
-    XMLUtils::addChildren(doc, capFloorNode, "CapRates", "Rate", caps_);
-    XMLUtils::addChildren(doc, capFloorNode, "FloorRates", "Rate", floors_);
+    XMLUtils::addChildren(doc, capFloorNode, "Caps", "Cap", caps_);
+    XMLUtils::addChildren(doc, capFloorNode, "Floors", "Floor", floors_);
     return node;
 }
 } // namespace data

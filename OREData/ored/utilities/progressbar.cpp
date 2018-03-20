@@ -42,8 +42,8 @@ void ProgressReporter::resetProgress() {
         i->reset();
 }
 
-SimpleProgressBar::SimpleProgressBar(const std::string& message, const unsigned int messageWidth,
-                                     const unsigned int barWidth, const unsigned int numberOfScreenUpdates)
+SimpleProgressBar::SimpleProgressBar(const std::string& message, const QuantLib::Size messageWidth,
+                                     const QuantLib::Size barWidth, const QuantLib::Size numberOfScreenUpdates)
     : message_(message), messageWidth_(messageWidth), barWidth_(barWidth),
       numberOfScreenUpdates_(numberOfScreenUpdates), updateCounter_(0), finalized_(false) {
     updateProgress(0, 1);

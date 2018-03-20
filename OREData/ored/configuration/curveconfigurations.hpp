@@ -23,23 +23,25 @@
 
 #pragma once
 
-#include <ored/utilities/xmlutils.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
+#include <ored/configuration/commoditycurveconfig.hpp>
+#include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
+#include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
+#include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 
 namespace ore {
 namespace data {
@@ -108,12 +110,30 @@ public:
         return equityVolCurveConfigs_[curveID];
     };
     const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
+
+    boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) { return securityConfigs_[curveID]; };
+    const boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) const;
+
+    boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) { return fxSpotConfigs_[curveID]; };
+    const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
+
+    boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) {
+        return commodityCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
+
+    boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) {
+        return commodityVolatilityCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
+
+    std::set<string> quotes() const;
     //@}
 
     //! \name Serialisation
     //@{
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
@@ -127,6 +147,10 @@ private:
     std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;
+    std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CommodityVolatilityCurveConfig>> commodityVolatilityCurveConfigs_;
 };
 } // namespace data
 } // namespace ore

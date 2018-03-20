@@ -40,7 +40,7 @@ namespace ore {
 using namespace data;
 namespace data {
 
-LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
+LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                        const std::string& configuration, Real bootstrapTolerance)
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
@@ -106,14 +106,18 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstantHullWhiteAdaptor");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantHullWhiteAdaptor>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
-    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite) {
+    } else if (data_->reversionType() == LgmData::ReversionType::HullWhite &&
+               data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseConstant");
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseConstantParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
-    } else {
+    } else if (data_->reversionType() == LgmData::ReversionType::Hagan &&
+               data_->volatilityType() == LgmData::VolatilityType::Hagan) {
         parametrization_ = boost::make_shared<QuantExt::IrLgm1fPiecewiseLinearParametrization>(
             ccy, discountCurve_, aTimes, alpha, hTimes, h);
         LOG("IR parametrization for " << ccy << ": IrLgm1fPiecewiseLinear");
+    } else {
+        QL_FAIL("Reversion type Hagan and volatility type HullWhite not covered");
     }
     LOG("alpha times size: " << aTimes.size());
     LOG("lambda times size: " << hTimes.size());
@@ -198,21 +202,21 @@ void LgmBuilder::performCalculations() const {
 
 void LgmBuilder::buildSwaptionBasket() const {
 
-    QL_REQUIRE(data_->swaptionExpiries().size() == data_->swaptionTerms().size(), "swaption vector size mismatch");
-    QL_REQUIRE(data_->swaptionExpiries().size() == data_->swaptionStrikes().size(), "swaption vector size mismatch");
+    QL_REQUIRE(data_->optionExpiries().size() == data_->optionTerms().size(), "swaption vector size mismatch");
+    QL_REQUIRE(data_->optionExpiries().size() == data_->optionStrikes().size(), "swaption vector size mismatch");
 
-    std::vector<Time> expiryTimes(data_->swaptionExpiries().size());
-    std::vector<Time> maturityTimes(data_->swaptionTerms().size());
+    std::vector<Time> expiryTimes(data_->optionExpiries().size());
+    std::vector<Time> maturityTimes(data_->optionTerms().size());
     swaptionBasket_.clear();
-    for (Size j = 0; j < data_->swaptionExpiries().size(); j++) {
-        std::string expiryString = data_->swaptionExpiries()[j];
-        std::string termString = data_->swaptionTerms()[j];
+    for (Size j = 0; j < data_->optionExpiries().size(); j++) {
+        std::string expiryString = data_->optionExpiries()[j];
+        std::string termString = data_->optionTerms()[j];
         bool expiryDateBased, termDateBased;
         Period expiryPb, termPb;
         Date expiryDb, termDb;
         parseDateOrPeriod(expiryString, expiryDb, expiryPb, expiryDateBased);
         parseDateOrPeriod(termString, termDb, termPb, termDateBased);
-        Strike strike = parseStrike(data_->swaptionStrikes()[j]);
+        Strike strike = parseStrike(data_->optionStrikes()[j]);
         Real strikeValue;
         // TODO: Extend strike type coverage
         if (strike.type == Strike::Type::ATM)

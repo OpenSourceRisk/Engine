@@ -52,9 +52,10 @@ public:
         InflationCapFloorPrice,
         Equity,
         EquityVolatility,
-        SecuritySpread,
-        SecurityRecoveryRate,
-        BaseCorrelation
+        Security,
+        BaseCorrelation,
+        Commodity,
+        CommodityVolatility
     };
     //! Default destructor
     virtual ~CurveSpec() {}
@@ -79,10 +80,8 @@ public:
             return "FX";
         case CurveType::FXVolatility:
             return "FXVolatility";
-        case CurveType::SecuritySpread:
-            return "SecuritySpread";
-        case CurveType::SecurityRecoveryRate:
-            return "SecurityRecoveryRate";
+        case CurveType::Security:
+            return "Security";
         case CurveType::Default:
             return "Default";
         case CurveType::CDSVolatility:
@@ -97,6 +96,10 @@ public:
             return "EquityVolatility";
         case CurveType::BaseCorrelation:
             return "BaseCorrelation";
+        case CurveType::Commodity:
+            return "Commodity";
+        case CurveType::CommodityVolatility:
+            return "CommodityVolatility";
         default:
             return "N/A";
         }
@@ -411,13 +414,13 @@ private:
     string curveConfigID_;
 };
 
-//! SecuritySpread description
-class SecuritySpreadSpec : public CurveSpec {
+//! Security description
+class SecuritySpec : public CurveSpec {
 public:
-    SecuritySpreadSpec(const string& securityID) : securityID_(securityID) {}
+    SecuritySpec(const string& securityID) : securityID_(securityID) {}
     //! Default constructor
-    SecuritySpreadSpec() {}
-    CurveType baseType() const { return CurveType::SecuritySpread; }
+    SecuritySpec() {}
+    CurveType baseType() const { return CurveType::Security; }
     string subName() const { return securityID_; }
     const string& securityID() const { return securityID_; }
     //@}
@@ -426,19 +429,62 @@ protected:
     string securityID_;
 };
 
-//! SecurityRecoveryRate description
-class SecurityRecoveryRateSpec : public CurveSpec {
+//! Commodity curve description
+/*! \ingroup curves
+*/
+class CommodityCurveSpec : public CurveSpec {
+
 public:
-    SecurityRecoveryRateSpec(const string& securityID) : securityID_(securityID) {}
+    //! \name Constructors
+    //@{
     //! Default constructor
-    SecurityRecoveryRateSpec() {}
-    CurveType baseType() const { return CurveType::SecurityRecoveryRate; }
-    string subName() const { return securityID_; }
-    const string& securityID() const { return securityID_; }
+    CommodityCurveSpec() {}
+
+    //! Detailed constructor
+    CommodityCurveSpec(const std::string& currency, const std::string& curveConfigId)
+        : currency_(currency), curveConfigId_(curveConfigId) {}
     //@}
 
-protected:
-    string securityID_;
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::Commodity; }
+    const std::string& currency() const { return currency_; }
+    const std::string& curveConfigId() const { return curveConfigId_; }
+    std::string subName() const { return currency_ + "/" + curveConfigId_; }
+    //@}
+
+private:
+    std::string currency_;
+    std::string curveConfigId_;
 };
+
+//! Commodity volatility description
+/*! \ingroup curves
+*/
+class CommodityVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CommodityVolatilityCurveSpec() {}
+
+    //! Detailed constructor
+    CommodityVolatilityCurveSpec(const std::string& currency, const std::string& curveConfigId)
+        : currency_(currency), curveConfigId_(curveConfigId) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::CommodityVolatility; }
+    const std::string& currency() const { return currency_; }
+    const std::string& curveConfigId() const { return curveConfigId_; }
+    std::string subName() const { return currency_ + "/" + curveConfigId_; }
+    //@}
+
+private:
+    std::string currency_;
+    std::string curveConfigId_;
+};
+
 } // namespace data
 } // namespace ore

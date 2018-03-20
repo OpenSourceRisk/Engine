@@ -20,12 +20,12 @@
 #include <ored/marketdata/equityvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/math/matrix.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -40,17 +40,16 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         const boost::shared_ptr<EquityVolatilityCurveConfig>& config =
             curveConfigs.equityVolCurveConfig(spec.curveConfigID());
         QL_REQUIRE(config->dimension() == EquityVolatilityCurveConfig::Dimension::ATM ||
-                   config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile,
+                       config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile,
                    "Unkown Equity curve building dimension");
 
         // daycounter used for interpolation in time.
-        // TODO: push into conventions or config
-        DayCounter dc = Actual365Fixed();
+        DayCounter dc = config->dayCounter();
 
         bool isSurface = config->dimension() == EquityVolatilityCurveConfig::Dimension::Smile;
 
         vector<string> expiries = config->expiries();
-        vector<string> strikes ({ "ATMF" });
+        vector<string> strikes({"ATMF"});
         if (isSurface)
             strikes = config->strikes();
         QL_REQUIRE(expiries.size() > 0, "No expiries defined");
@@ -71,7 +70,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                     Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
 
                     if (i < strikes.size() && j < expiries.size()) {
-                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " already set");
+                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
+                                                                 << expiries[j] << " already set");
                         vols[i][j] = q->quote()->value();
                     }
                 }
@@ -80,14 +80,14 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         // Check that we have all the quotes we need
         for (Size i = 0; i < strikes.size(); i++) {
             for (Size j = 0; j < expiries.size(); j++) {
-                QL_REQUIRE(vols[i][j] >= 0, "Error vol (" << spec << ") for " << strikes[i] <<", " << expiries[j] << " not set");
+                QL_REQUIRE(vols[i][j] >= 0,
+                           "Error vol (" << spec << ") for " << strikes[i] << ", " << expiries[j] << " not set");
             }
         }
 
         if (expiries.size() == 1 && strikes.size() == 1) {
             LOG("EquityVolCurve: Building BlackConstantVol");
-            vol_ = boost::shared_ptr<BlackVolTermStructure>(
-                new BlackConstantVol(asof, Calendar(), vols[0][0], dc));
+            vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(asof, Calendar(), vols[0][0], dc));
         } else {
 
             // get dates
@@ -119,7 +119,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 Calendar cal = NullCalendar(); // why do we need this?
 
                 // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
-                vol_ = boost::make_shared<BlackVarianceSurface> (asof, cal, dates, strikesReal, vols, dc);
+                vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, vols, dc);
             }
         }
         vol_->enableExtrapolation();

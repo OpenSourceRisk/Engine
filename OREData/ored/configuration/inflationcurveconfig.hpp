@@ -34,7 +34,6 @@
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
 using QuantLib::Date;
 using QuantLib::DayCounter;
@@ -55,15 +54,13 @@ public:
                          const Period& lag, const Frequency& frequency, const Real baseRate, const Real tolerance,
                          const Date& seasonalityBaseDate, const Frequency& seasonalityFrequency,
                          const vector<string>& seasonalityFactors);
-    virtual ~InflationCurveConfig() {}
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     // Inspectors
     const string& nominalTermStructure() const { return nominalTermStructure_; }
     const Type& type() const { return type_; }
-    const vector<string>& quotes() const { return quotes_; }
     const string& conventions() const { return conventions_; }
     const bool& extrapolate() const { return extrapolate_; }
     const Calendar& calendar() const { return calendar_; }
@@ -75,11 +72,11 @@ public:
     const Date& seasonalityBaseDate() const { return seasonalityBaseDate_; }
     const Frequency& seasonalityFrequency() const { return seasonalityFrequency_; }
     const vector<string>& seasonalityFactors() const { return seasonalityFactors_; }
+    const vector<string>& swapQuotes() { return swapQuotes_; }
 
     // Setters
     string& nominalTermStructure() { return nominalTermStructure_; }
     Type& type() { return type_; }
-    vector<string>& quotes() { return quotes_; }
     string& conventions() { return conventions_; }
     bool& extrapolate() { return extrapolate_; }
     Calendar& calendar() { return calendar_; }
@@ -93,9 +90,9 @@ public:
     vector<string>& seasonalityFactors() { return seasonalityFactors_; }
 
 private:
+    vector<string> swapQuotes_;
     string nominalTermStructure_;
     Type type_;
-    vector<string> quotes_;
     string conventions_;
     string interpolationMethod_;
     bool extrapolate_;

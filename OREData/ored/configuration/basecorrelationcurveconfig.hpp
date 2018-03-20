@@ -32,7 +32,6 @@
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
 using QuantLib::DayCounter;
 using QuantLib::Natural;
@@ -55,14 +54,12 @@ public:
     //! Detailed constructor
     BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                const vector<Real>& detachmentPoints, const vector<Period>& terms);
-    //! Default destructor
-    virtual ~BaseCorrelationCurveConfig() {}
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -74,6 +71,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const bool& extrapolate() const { return extrapolate_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters

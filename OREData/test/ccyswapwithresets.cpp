@@ -190,11 +190,11 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     string foreignCCY = "USD";
     Real foreignAmount = 10000000;
     string fxIndex = "FX-ECB-EUR-USD";
-    FloatingLegData legdataEUR(indexEUR, days, isInArrears, spreadEUR);
-    LegData legEUR1(isPayerEUR, "EUR", legdataEUR, scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+    auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
+    LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
                     foreignAmount, fxIndex, days);
-    LegData legEUR2(isPayerEUR, "EUR", legdataEUR, scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
+    LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
                     fxIndex, days);
 
@@ -203,8 +203,8 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     string indexUSD = "USD-LIBOR-3M";
     vector<Real> spreadUSD(1, 0);
     vector<Real> notionalUSD(1, 10000000);
-    FloatingLegData legdataUSD(indexUSD, days, isInArrears, spreadUSD);
-    LegData legUSD(isPayerUSD, "USD", legdataUSD, scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
+    auto legdataUSD = boost::make_shared<FloatingLegData>(indexUSD, days, isInArrears, spreadUSD);
+    LegData legUSD(legdataUSD, isPayerUSD, "USD", scheduleUSD, dc, notionalUSD, vector<string>(), paymentConvention,
                    notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL);
 
     // Build swap trades

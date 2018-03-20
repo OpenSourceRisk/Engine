@@ -36,6 +36,7 @@ using std::vector;
 namespace QuantExt {
 
 //! Container for holding swap conventions needed by the SwaptionVolatilityConverter
+//! \ingroup termstructures
 class SwapConventions {
 public:
     //! Constructor

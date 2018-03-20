@@ -47,6 +47,7 @@ namespace data {
     - contain additional serializable data classes
     - implement a build() function that parses data and constructs QuantLib
       and QuantExt objects
+ \ingroup portfolio
 */
 class Trade : public XMLSerializable {
 public:
@@ -90,7 +91,9 @@ public:
 
     const string& tradeType() const { return tradeType_; }
 
-    const Envelope& envelope() { return envelope_; }
+    const Envelope& envelope() const { return envelope_; }
+
+    const set<string>& portfolioIds() const { return envelope().portfolioIds(); }
 
     const TradeActions& tradeActions() { return tradeActions_; }
 

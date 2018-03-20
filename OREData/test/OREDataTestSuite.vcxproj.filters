@@ -69,6 +69,30 @@
     <ClInclude Include="portfolio.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="curveconfig.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="cds.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commoditycurveconfig.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commoditycurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commodityoption.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commodityvolcurveconfig.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="commodityvolcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ored_commodityforward.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -130,6 +154,30 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="portfolio.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="curveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cds.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commoditycurveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commoditycurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityoption.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityvolcurveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityvolcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="ored_commodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

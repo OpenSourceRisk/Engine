@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/bond.hpp
 \brief
-\ingroup portfolio
+\ingroup builders
 */
 
 #pragma once
@@ -38,7 +38,7 @@ namespace data {
 
 //! Engine Builder base class for Bonds
 /*! Pricing engines are cached by security id
-\ingroup portfolio
+\ingroup builders
 */
 
 class BondEngineBuilder
@@ -47,14 +47,14 @@ protected:
     BondEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"Bond"}) {}
 
-    virtual string keyImpl(const Currency&, const string& securityId, const string&, const string&) override {
+    virtual string keyImpl(const Currency&, const string&, const string& securityId, const string&) override {
         return securityId;
     }
 };
 
 //! Discounting Engine Builder class for Bonds
 /*! This class creates a DiscountingRiskyBondEngine
-\ingroup portfolio
+\ingroup builders
 */
 
 class BondDiscountingEngineBuilder : public BondEngineBuilder {
@@ -69,8 +69,10 @@ protected:
         string tsperiodStr = engineParameters_.at("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
-        Handle<DefaultProbabilityTermStructure> dpts =
-            market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
+        Handle<DefaultProbabilityTermStructure> dpts;
+        // credit curve may not always be used. If credit curve ID is empty proceed without it
+        if (!creditCurveId.empty())
+            dpts = market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
         Handle<Quote> recovery;
         try {
             // try security recovery first
@@ -79,7 +81,8 @@ protected:
             // otherwise fall back on curve recovery
             ALOG("security specific recovery rate not found for security ID "
                  << securityId << ", falling back on the recovery rate for credit curve Id " << creditCurveId);
-            recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+            if (!creditCurveId.empty())
+                recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
         Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 

@@ -19,6 +19,7 @@
 /*! \file crossassetstateprocess.hpp
     \brief crossasset model state process
     \ingroup crossassetmodel
+    \ingroup processes
 */
 
 #ifndef quantext_crossasset_stateprocess_hpp
@@ -37,6 +38,7 @@ class CrossAssetModel;
 
 //! Cross Asset Model State Process
 /*! \ingroup crossassetmodel
+ \ingroup processes
  */
 class CrossAssetStateProcess : public StochasticProcess {
 public:

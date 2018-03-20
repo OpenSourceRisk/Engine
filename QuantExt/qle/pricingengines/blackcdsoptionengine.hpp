@@ -37,6 +37,7 @@
 /*! \file blackcdsoptionengine.hpp
     \brief Black credit default swap option engine, with handling
     of upfront amount and exercise before CDS start
+    \ingroup engines
 */
 
 #ifndef quantext_black_cds_option_engine_hpp
@@ -51,6 +52,7 @@ using namespace QuantLib;
 namespace QuantExt {
 
 //! Black-formula CDS-option engine base class
+//! \ingroup engines
 class BlackCdsOptionEngineBase {
 public:
     BlackCdsOptionEngineBase(const Handle<YieldTermStructure>& termStructure, const Handle<BlackVolTermStructure>& vol);

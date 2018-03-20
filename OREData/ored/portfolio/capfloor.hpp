@@ -18,7 +18,7 @@
 
 /*! \file portfolio/capfloor.hpp
     \brief Ibor cap, floor or collar trade data model and serialization
-    \ingroup portfolio
+    \ingroup tradedata
 */
 
 #pragma once

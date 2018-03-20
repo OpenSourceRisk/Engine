@@ -53,13 +53,13 @@
     <DefaultCurves>
       <Names>
 	    <Name>CPTY_C</Name>
+		<Name>BANK</Name>
       </Names>
-      <Tenors>6M,1Y,2Y</Tenors>
+      <Tenors>6M,1Y,2Y,5Y,10Y</Tenors>
       <SimulateSurvivalProbabilities>true</SimulateSurvivalProbabilities>
     </DefaultCurves>
 
-	<Equities>
-      <SimulateEquityNames>true</SimulateEquityNames>
+    <Equities>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
@@ -69,8 +69,8 @@
     </Equities>
 
     <!-- Even if we do not simulate them - option pricing needs vol
-	   surfaces, so we need to specify here how we propagate the
-	   vol structure and what its composition will be -->
+    surfaces, so we need to specify here how we propagate the
+    vol structure and what its composition will be -->
     <SwaptionVolatilities>
       <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
@@ -129,7 +129,10 @@
     </BenchmarkCurves>
 
     <Securities>
-      <Security>SECURITY_1</Security>
+      <Simulate>true</Simulate>
+      <Names>
+        <Name>SECURITY_1</Name>
+      </Names>
     </Securities>
 
     <ZeroInflationIndexCurves>

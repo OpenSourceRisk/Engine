@@ -244,7 +244,7 @@ MAN_LINKS              = YES
 #---------------------------------------------------------------------------
 # Configuration options related to the XML output
 #---------------------------------------------------------------------------
-GENERATE_XML           = YES
+GENERATE_XML           = NO
 XML_OUTPUT             = xml
 XML_PROGRAMLISTING     = NO
 #---------------------------------------------------------------------------
@@ -279,8 +279,8 @@ SKIP_FUNCTION_MACROS   = YES
 #---------------------------------------------------------------------------
 # Configuration options related to external references
 #---------------------------------------------------------------------------
-TAGFILES               = ../../QuantExt/doc/quantext.tag=../qle \
-                         ../../OREData/doc/ored.tag=../ored
+TAGFILES               = ../../QuantExt/doc/quantext.tag=../../../QuantExt/doc/html \
+						 ../../OREData/doc/ored.tag=../../../OREData/doc/html
 GENERATE_TAGFILE       = orea.tag
 ALLEXTERNALS           = NO
 EXTERNAL_GROUPS        = NO

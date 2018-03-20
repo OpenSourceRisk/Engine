@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string/split.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
@@ -27,6 +28,21 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) const {
+    string keyName;
+    RiskFactorKey::KeyType keyType = key.keytype;
+    if (keyType != RiskFactorKey::KeyType::IndexCurve)
+        keyName = key.name;
+    else {
+        std::vector<string> tokens;
+        boost::split(tokens, key.name, boost::is_any_of("-"));
+        keyName = tokens[0];
+    }
+
+    std::ostringstream o;
+    o << keyType << "/" << keyName;
+    return o.str();
+}
 string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
@@ -71,12 +87,12 @@ string ShiftScenarioGenerator::ScenarioDescription::text() const {
     return ret;
 }
 
-ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
                                                const boost::shared_ptr<ScenarioSimMarketParameters> simMarketData)
-    : simMarket_(simMarket), simMarketData_(simMarketData), counter_(0) {
-    QL_REQUIRE(simMarket_ != NULL, "ShiftScenarioGenerator: simMarket is null");
+    : baseScenario_(baseScenario), simMarketData_(simMarketData), counter_(0) {
+    QL_REQUIRE(baseScenario_ != NULL, "ShiftScenarioGenerator: baseScenario is null");
     QL_REQUIRE(simMarketData_ != NULL, "ShiftScenarioGenerator: simMarketData is null");
-    scenarios_.push_back(simMarket_->baseScenario());
+    scenarios_.push_back(baseScenario_);
     scenarioDescriptions_.push_back(ScenarioDescription(ScenarioDescription::Type::Base));
 }
 

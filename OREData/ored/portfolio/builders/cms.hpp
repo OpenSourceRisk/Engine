@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oredp/portfolio/builders/cms.hpp
+/*! \file ored/portfolio/builders/cms.hpp
     \brief builder that returns an engine to price capped floored ibor legs
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -37,11 +37,11 @@ namespace data {
 
 //! CouponPricer Builder for CmsLeg
 /*! The coupon pricers are cached by currency
+ \ingroup builders
  */
 class CmsCouponPricerBuilder : public CachingCouponPricerBuilder<string, const Currency&> {
 public:
-    CmsCouponPricerBuilder(const string& model, const string& engine)
-        : CachingEngineBuilder(model, engine, {"CMS"}) {}
+    CmsCouponPricerBuilder(const string& model, const string& engine) : CachingEngineBuilder(model, engine, {"CMS"}) {}
 
 protected:
     virtual string keyImpl(const Currency& ccy) override { return ccy.code(); }

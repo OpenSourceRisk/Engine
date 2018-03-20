@@ -19,6 +19,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/all.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
 
 namespace ore {
@@ -35,7 +36,7 @@ EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, co
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
     const string& modelName = builder->model();
     const string& engineName = builder->engine();
-    LOG("EngineFactory regisering builder for model:" << modelName << " and engine:" << engineName);
+    LOG("EngineFactory registering builder for model:" << modelName << " and engine:" << engineName);
     builders_[make_tuple(modelName, engineName, builder->tradeTypes())] = builder;
 }
 
@@ -49,12 +50,12 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     const string& model = engineData_->model(tradeType);
     const string& engine = engineData_->engine(tradeType);
     typedef pair<tuple<string, string, set<string>>, boost::shared_ptr<EngineBuilder>> map_type;
-    auto it = std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType] (const map_type &v) -> bool {
-        const set<string>& types = std::get<2>(v.first);
-        return std::get<0>(v.first) == model &&
-               std::get<1>(v.first) == engine &&
-               std::find(types.begin(), types.end(), tradeType) != types.end();
-    });
+    auto it =
+        std::find_if(builders_.begin(), builders_.end(), [&model, &engine, &tradeType](const map_type& v) -> bool {
+            const set<string>& types = std::get<2>(v.first);
+            return std::get<0>(v.first) == model && std::get<1>(v.first) == engine &&
+                   std::find(types.begin(), types.end(), tradeType) != types.end();
+        });
     QL_REQUIRE(it != builders_.end(), "No EngineBuilder for " << model << "/" << engine << "/" << tradeType);
 
     boost::shared_ptr<EngineBuilder> builder = it->second;
@@ -65,8 +66,19 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     return builder;
 }
 
+void EngineFactory::registerLegBuilder(const boost::shared_ptr<LegBuilder>& legBuilder) {
+    LOG("EngineFactory registering builder for leg type " << legBuilder->legType());
+    legBuilders_[legBuilder->legType()] = legBuilder;
+}
+
+boost::shared_ptr<LegBuilder> EngineFactory::legBuilder(const string& legType) {
+    auto it = legBuilders_.find(legType);
+    QL_REQUIRE(it != legBuilders_.end(), "No LegBuilder for " << legType);
+    return it->second;
+}
+
 Disposable<set<std::pair<string, boost::shared_ptr<ModelBuilder>>>> EngineFactory::modelBuilders() const {
-    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res; 
+    set<std::pair<string, boost::shared_ptr<ModelBuilder>>> res;
     for (auto const& b : builders_) {
         res.insert(b.second->modelBuilders().begin(), b.second->modelBuilders().end());
     }
@@ -97,6 +109,14 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
+    registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+    registerLegBuilder(boost::make_shared<FixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
+    registerLegBuilder(boost::make_shared<CashflowLegBuilder>());
+    registerLegBuilder(boost::make_shared<CPILegBuilder>());
+    registerLegBuilder(boost::make_shared<YYLegBuilder>());
+    registerLegBuilder(boost::make_shared<CMSLegBuilder>());
 }
 
 } // namespace data

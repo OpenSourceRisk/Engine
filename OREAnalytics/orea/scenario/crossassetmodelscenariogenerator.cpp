@@ -20,6 +20,9 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/indexes/inflationindexobserver.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
 #include <qle/models/lgmimpliedyieldtermstructure.hpp>
 
 using namespace QuantLib;
@@ -131,6 +134,51 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
             LOG("Set up CrossAssetModelImpliedEqVolTermStructures for " << equityName << " done");
         }
     }
+
+    // Cache INF rate keys0
+    Size n_inf = model_->components(INF);
+    if (n_inf > 0) {
+        cpiKeys_.reserve(n_inf);
+        for (Size j = 0; j < n_inf; ++j) {
+            cpiKeys_.emplace_back(RiskFactorKey::KeyType::CPIIndex, model->infdk(j)->name());
+        }
+
+        Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
+        if (n_zeroinf > 0) {
+            zeroInflationKeys_.reserve(n_zeroinf * simMarketConfig_->zeroInflationTenors("").size());
+            for (Size j = 0; j < n_zeroinf; ++j) {
+                ten_zinf_.push_back(simMarketConfig_->zeroInflationTenors(simMarketConfig_->zeroInflationIndices()[j]));
+                Size n_ten = ten_zinf_.back().size();
+                for (Size k = 0; k < n_ten; ++k) {
+                    zeroInflationKeys_.emplace_back(RiskFactorKey::KeyType::ZeroInflationCurve,
+                                                    simMarketConfig_->zeroInflationIndices()[j], k);
+                }
+            }
+        }
+
+        Size n_yoyinf = simMarketConfig_->yoyInflationIndices().size();
+        if (n_yoyinf > 0) {
+            yoyInflationKeys_.reserve(n_yoyinf * simMarketConfig_->yoyInflationTenors("").size());
+            for (Size j = 0; j < n_yoyinf; ++j) {
+                ten_yinf_.push_back(simMarketConfig_->yoyInflationTenors(simMarketConfig_->yoyInflationIndices()[j]));
+                Size n_ten = ten_yinf_.back().size();
+                for (Size k = 0; k < n_ten; ++k) {
+                    yoyInflationKeys_.emplace_back(RiskFactorKey::KeyType::YoYInflationCurve,
+                                                   simMarketConfig_->yoyInflationIndices()[j], k);
+                }
+            }
+        }
+    }
+
+    // Equity Forecast curve keys
+    equityForecastCurveKeys_.reserve(n_ccy * simMarketConfig_->equityForecastTenors("").size());
+    for (Size j = 0; j < model_->components(EQ); j++) {
+        ten_efc_.push_back(simMarketConfig_->equityForecastTenors(simMarketConfig_->equityNames()[j]));
+        Size n_ten = ten_efc_.back().size();
+        for (Size k = 0; k < n_ten; k++)
+            equityForecastCurveKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve,
+                                                  simMarketConfig_->equityNames()[j], k); // j * n_ten + k
+    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -138,16 +186,23 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     Sample<MultiPath> sample = pathGenerator_->next();
     Size n_ccy = model_->components(IR);
     Size n_eq = model_->components(EQ);
+    Size n_inf = model_->components(INF);
     Size n_indices = simMarketConfig_->indices().size();
     Size n_curves = simMarketConfig_->yieldCurveNames().size();
-    vector<string> ccyPairs(n_ccy - 1);
+    Size n_zeroinf = simMarketConfig_->zeroInflationIndices().size();
+    Size n_yoyinf = simMarketConfig_->yoyInflationIndices().size();
     vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> curves, fwdCurves, yieldCurves;
+    vector<boost::shared_ptr<QuantExt::DkImpliedZeroInflationTermStructure>> zeroInfCurves;
+    vector<boost::shared_ptr<QuantExt::DkImpliedYoYInflationTermStructure>> yoyInfCurves;
     vector<boost::shared_ptr<IborIndex>> indices;
     vector<Currency> yieldCurveCurrency;
+    vector<boost::shared_ptr<QuantExt::LgmImpliedYieldTermStructure>> equityForecastCurves;
+    vector<Currency> equityForecastCurrency;
+    vector<string> zeroInflationIndex, yoyInflationIndex;
 
     DayCounter dc = model_->irlgm1f(0)->termStructure()->dayCounter();
 
-    for (Size j = 0; j < model_->components(IR); ++j) {
+    for (Size j = 0; j < n_ccy; ++j) {
         curves.push_back(boost::make_shared<QuantExt::LgmImpliedYieldTermStructure>(model_->lgm(j), dc, true));
     }
 
@@ -169,6 +224,24 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
             boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
         yieldCurves.push_back(impliedYieldCurve);
         yieldCurveCurrency.push_back(ccy);
+    }
+
+    for (Size j = 0; j < n_zeroinf; ++j) {
+        zeroInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedZeroInflationTermStructure>(model_, j));
+    }
+
+    for (Size j = 0; j < n_yoyinf; ++j) {
+        yoyInfCurves.push_back(boost::make_shared<QuantExt::DkImpliedYoYInflationTermStructure>(model_, j));
+    }
+
+    for (Size j = 0; j < n_eq; ++j) {
+        std::string curveName = simMarketConfig_->equityNames()[j];
+        Currency ccy = model_->eqbs(j)->currency();
+        Handle<YieldTermStructure> yts = initMarket_->equityForecastCurve(curveName, configuration_);
+        auto ForecastCurve =
+            boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
+        equityForecastCurves.push_back(ForecastCurve);
+        equityForecastCurrency.push_back(ccy);
     }
 
     for (Size i = 0; i < dates_.size(); i++) {
@@ -269,6 +342,67 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                     Real vol = eqVols_[k]->blackVol(dates_[i] + expiries[j], Null<Real>(), true);
                     scenarios[i]->add(RiskFactorKey(RiskFactorKey::KeyType::EquityVolatility, equityName, j), vol);
                 }
+            }
+        }
+
+        // Inflation curves
+        for (Size j = 0; j < n_inf; j++) {
+            // LGM factor value, second index = 0 holds initial values
+            Real z = sample.value[model_->pIdx(INF, j, 0)][i + 1];
+            Real y = sample.value[model_->pIdx(INF, j, 1)][i + 1];
+
+            // update fixing manage with fixing for base date
+            boost::shared_ptr<ZeroInflationIndex> index = *initMarket_->zeroInflationIndex(model_->infdk(j)->name());
+            Date baseDate = index->zeroInflationTermStructure()->baseDate();
+            Time relativeTime =
+                inflationYearFraction(index->zeroInflationTermStructure()->frequency(),
+                                      index->zeroInflationTermStructure()->indexIsInterpolated(),
+                                      index->zeroInflationTermStructure()->dayCounter(), baseDate,
+                                      dates_[i] - index->zeroInflationTermStructure()->observationLag());
+            std::pair<Real, Real> ii = model_->infdkI(j, relativeTime, relativeTime, z, y);
+
+            Real baseCPI = index->fixing(baseDate);
+            scenarios[i]->add(cpiKeys_[j], baseCPI * ii.first);
+        }
+
+        for (Size j = 0; j < n_zeroinf; ++j) {
+            std::string indexName = simMarketConfig_->zeroInflationIndices()[j];
+            Real z = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 0)][i + 1];
+            Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
+            zeroInfCurves[j]->move(dates_[i], z, y);
+            for (Size k = 0; k < ten_zinf_[j].size(); k++) {
+                Date d = dates_[i] + ten_zinf_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real zero = zeroInfCurves[j]->zeroRate(T);
+                scenarios[i]->add(zeroInflationKeys_[j * ten_zinf_[j].size() + k], zero);
+            }
+        }
+
+        for (Size j = 0; j < n_yoyinf; ++j) {
+            std::string indexName = simMarketConfig_->yoyInflationIndices()[j];
+            Size ccy = model_->ccyIndex(model_->infdk(j)->currency());
+            Real z = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 0)][i + 1];
+            Real y = sample.value[model_->pIdx(INF, model_->infIndex(indexName), 1)][i + 1];
+            Real ir_z = sample.value[model_->pIdx(IR, ccy)][i + 1];
+            yoyInfCurves[j]->move(dates_[i], z, y, ir_z);
+            vector<Date> d_yinf;
+            for (Size k = 0; k < ten_yinf_[j].size(); k++)
+                d_yinf.push_back(dates_[i] + ten_yinf_[j][k]);
+            map<Date, Real> yoyRates = yoyInfCurves[j]->yoyRates(d_yinf);
+            for (Size l = 0; l < d_yinf.size(); l++) {
+                scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
+            }
+        }
+
+        // EquityForecastCurve
+        for (Size j = 0; j < n_eq; ++j) {
+            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(equityForecastCurrency[j]))][i + 1];
+            equityForecastCurves[j]->move(dates_[i], z);
+            for (Size k = 0; k < ten_efc_[j].size(); ++k) {
+                Date d = dates_[i] + ten_efc_[j][k];
+                Time T = dc.yearFraction(dates_[i], d);
+                Real discount = std::max(equityForecastCurves[j]->discount(T), 0.00001);
+                scenarios[i]->add(equityForecastCurveKeys_[j * ten_efc_[j].size() + k], discount);
             }
         }
 

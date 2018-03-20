@@ -49,8 +49,8 @@ public:
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! Build a date grid from an explicit set of dates, sorted in ascending order.
-    DateGrid(const std::vector<QuantLib::Date>& dates, 
-        const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
+    DateGrid(const std::vector<QuantLib::Date>& dates,
+             const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! The size of the date grid
     QuantLib::Size size() const { return dates_.size(); }

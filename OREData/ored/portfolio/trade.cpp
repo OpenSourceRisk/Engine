@@ -74,7 +74,7 @@ void Trade::addPayment(std::vector<boost::shared_ptr<Instrument>>& addInstrument
     legs_.push_back(Leg(1, fee->cashFlow()));
     legCurrencies_.push_back(fee->currency().code());
     // amount comes with its correct sign, avoid switching by saying payer=false
-    legPayers_.push_back(false); 
+    legPayers_.push_back(false);
 }
 
 } // namespace data

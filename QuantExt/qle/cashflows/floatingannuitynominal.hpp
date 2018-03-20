@@ -18,6 +18,7 @@
 
 /*! \file floatingannuitynominal.hpp
     \brief Nominal flow associated with a floating annuity coupon
+    \ingroup cashflows
 */
 
 #ifndef quantext_floating_annuity_nominal_hpp
@@ -30,30 +31,27 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! Nominal flows associated with the FloatingAnnuityCoupon 
-    class FloatingAnnuityNominal : public CashFlow {
-      public:
-        FloatingAnnuityNominal(const boost::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon) 
-            : coupon_(floatingAnnuityCoupon) {}
+//! Nominal flows associated with the FloatingAnnuityCoupon
+//! \ingroup cashflows
+class FloatingAnnuityNominal : public CashFlow {
+public:
+    FloatingAnnuityNominal(const boost::shared_ptr<FloatingAnnuityCoupon>& floatingAnnuityCoupon)
+        : coupon_(floatingAnnuityCoupon) {}
 
-        //! \name Cashflow interface
-        Rate amount() const; 
-        Date date() const;
+    //! \name Cashflow interface
+    Rate amount() const;
+    Date date() const;
 
-      private:
-        boost::shared_ptr<FloatingAnnuityCoupon> coupon_;
-    };
-    
-    inline Date FloatingAnnuityNominal::date() const {
-        return coupon_->accrualStartDate();
-    }
-    
-    inline Real FloatingAnnuityNominal::amount() const {
-        return coupon_->previousNominal() - coupon_->nominal();
-    }
-    
-    Leg makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg);
+private:
+    boost::shared_ptr<FloatingAnnuityCoupon> coupon_;
+};
 
-}
+inline Date FloatingAnnuityNominal::date() const { return coupon_->accrualStartDate(); }
+
+inline Real FloatingAnnuityNominal::amount() const { return coupon_->previousNominal() - coupon_->nominal(); }
+
+Leg makeFloatingAnnuityNominalLeg(const Leg& floatingAnnuityLeg);
+
+} // namespace QuantExt
 
 #endif

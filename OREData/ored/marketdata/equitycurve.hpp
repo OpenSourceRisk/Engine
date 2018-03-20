@@ -48,7 +48,7 @@ public:
     EquityCurve() {}
     //! Detailed constructor
     EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                const Conventions& conventions);
+                const Conventions& conventions, const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves);
     //@}
     //! \name Inspectors
     //@{
@@ -65,6 +65,8 @@ private:
     vector<Date> terms_;
     DayCounter dc_;
     Handle<YieldTermStructure> forecastYieldTermStructure_;
+    YieldCurve::InterpolationVariable dividendInterpVariable_;
+    YieldCurve::InterpolationMethod dividendInterpMethod_;
 };
 } // namespace data
 } // namespace ore

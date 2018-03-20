@@ -80,10 +80,11 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
         Date premiumDate = parseDate(option_.premiumPayDate());
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, ccy,
                    engineFactory, eqOptBuilder->configuration(MarketContext::pricing));
-	DLOG("option premium added for eq option " << id()); 
+        DLOG("option premium added for eq option " << id());
     }
 
-    instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
+    instrument_ = boost::shared_ptr<InstrumentWrapper>(
+        new VanillaInstrument(vanilla, mult, additionalInstruments, additionalMultipliers));
 
     npvCurrency_ = currency_;
     maturity_ = expiryDate;
@@ -93,7 +94,8 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     notional_ = strike_ * quantity_;
 
     Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(eqName_);
-    LOG("Implied vol for EquityOption on " << eqName_ << " with maturity " << maturity_ << " and strike " << strike_ << " is " << blackVol->blackVol(maturity_, strike_));
+    LOG("Implied vol for EquityOption on " << eqName_ << " with maturity " << maturity_ << " and strike " << strike_
+                                           << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void EquityOption::fromXML(XMLNode* node) {

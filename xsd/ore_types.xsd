@@ -362,6 +362,14 @@
        <xs:enumeration value="Smile"/>
      </xs:restriction>
    </xs:simpleType>
+   
+   <xs:simpleType name="commodityVolatilityType">
+     <xs:restriction base="xs:string">
+       <xs:enumeration value="Constant"/>
+       <xs:enumeration value="Curve"/>
+       <xs:enumeration value="Surface"/>
+     </xs:restriction>
+   </xs:simpleType>
 
    <xs:simpleType name="volatilityType">
      <xs:restriction base="xs:string">

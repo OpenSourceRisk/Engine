@@ -41,7 +41,7 @@ namespace QuantExt {
 /*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet
     (i.e. caplet/floorlet) volatilities with a fixed reference date.
 
-            \ingroup termstructues
+            \ingroup termstructures
 */
 class DatedStrippedOptionletBase : public LazyObject {
 public:

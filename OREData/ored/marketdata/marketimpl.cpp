@@ -24,20 +24,19 @@
 #include <ored/utilities/parsers.hpp>
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 
-using namespace QuantLib;
 using namespace std;
 using std::string;
 using std::map;
 using std::make_pair;
 
+using namespace QuantLib;
+
+using QuantExt::PriceTermStructure;
+
 namespace ore {
 namespace data {
 
 namespace {
-
-inline std::ostream& operator<<(std::ostream& out, pair<string, bool> p) {
-    return out << p.first << " (" << (p.second ? "true" : "false") << ")";
-}
 
 template <class A, class B, class C>
 A lookup(const B& map, const C& key, const string& configuration, const string& type) {
@@ -52,24 +51,26 @@ A lookup(const B& map, const C& key, const string& configuration, const string& 
 }
 
 template <class A, class B, class C>
-A lookup(const B& map, const C& key, const YieldCurveType y ,const string& configuration, const string& type) {
+A lookup(const B& map, const C& key, const YieldCurveType y, const string& configuration, const string& type) {
     auto it = map.find(make_tuple(configuration, y, key));
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_tuple(Market::defaultConfiguration, y, key));
-        QL_REQUIRE(it != map.end(),
-                   "did not find object " << key << " of type " << type << " under configuration " << configuration << " in YieldCurves");
+        QL_REQUIRE(it != map.end(), "did not find object " << key << " of type " << type << " under configuration "
+                                                           << configuration << " in YieldCurves");
     }
     return it->second;
 }
 
 } // anonymous namespace
-Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key, const string& configuration) const {
+Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
+                                                  const string& configuration) const {
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, type, configuration, "yield curve");
 }
 
 Handle<YieldTermStructure> MarketImpl::discountCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration, "discount curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::Discount, configuration,
+                                              "discount curve");
 }
 
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const string& key, const string& configuration) const {
@@ -170,7 +171,8 @@ Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configurat
 }
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration, "dividend yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration,
+                                              "dividend yield curve");
 }
 
 Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
@@ -178,11 +180,28 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
 }
 
 Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration, "equity forecast yield curve");
+    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration,
+                                              "equity forecast yield curve");
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {
     return lookup<Handle<Quote>>(securitySpreads_, key, configuration, "security spread");
+}
+
+Handle<QuantExt::InflationIndexObserver> MarketImpl::baseCpis(const string& key, const string& configuration) const {
+    return lookup<Handle<QuantExt::InflationIndexObserver>>(baseCpis_, key, configuration, "base CPI");
+}
+
+Handle<Quote> MarketImpl::commoditySpot(const string& commodityName, const string& configuration) const {
+    return lookup<Handle<Quote>>(commoditySpots_, commodityName, configuration, "commodity spot");
+}
+
+Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName, const string& configuration) const {
+    return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
+}
+
+Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName, const string& configuration) const {
+    return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
@@ -284,11 +303,32 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-
+        for (auto& x : baseCpis_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : commodityCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : commodityVols_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
     }
 
     for (auto& x : it->second)
         x->update();
+
+    // update fx spot quotes
+    auto fxSpots = fxSpots_.find(configuration);
+    if (fxSpots != fxSpots_.end()) {
+        for (auto& x : fxSpots->second.quotes()) {
+            auto dq = boost::dynamic_pointer_cast<Observer>(*x.second);
+            if (dq != nullptr)
+                dq->update();
+        }
+    }
 
 } // refresh
 

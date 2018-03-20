@@ -98,8 +98,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
         {"EUR-EURIB", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
-        {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<QuantExt::Cdor>>()},
-        {"CAD-BA", boost::make_shared<IborIndexParserWithPeriod<QuantExt::Cdor>>()},
+        {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
+        {"CAD-BA", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
         {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
         {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
@@ -128,6 +128,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()}};
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
@@ -209,11 +210,17 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
         //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
+        {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
+        {"EU HICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},
         {"FRHICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
+        {"FR HICP", boost::make_shared<ZeroInflationIndexParser<FRHICP>>()},
         {"UKRPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
+        {"UK RPI", boost::make_shared<ZeroInflationIndexParser<UKRPI>>()},
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
-        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
+        {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -222,7 +229,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         QL_FAIL("parseZeroInflationIndex: \"" << s << "\" not recognized");
     }
 }
-boost::shared_ptr<Index> parseIndex(const string& s) {
+
+boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
         ret_idx = parseIborIndex(s);
@@ -230,7 +238,11 @@ boost::shared_ptr<Index> parseIndex(const string& s) {
     }
     if (!ret_idx) {
         try {
-            ret_idx = parseSwapIndex(s);
+            auto c = boost::dynamic_pointer_cast<SwapIndexConvention>(conventions.get(s));
+            QL_REQUIRE(c, "no swap index convention");
+            auto c2 = boost::dynamic_pointer_cast<IRSwapConvention>(conventions.get(c->conventions()));
+            QL_REQUIRE(c2, "no swap convention");
+            ret_idx = parseSwapIndex(s, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(), c2);
         } catch (...) {
         }
     }

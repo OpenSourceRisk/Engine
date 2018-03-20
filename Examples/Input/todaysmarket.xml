@@ -20,24 +20,28 @@
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (in ccy ois discounting) -->
   <YieldCurves id="ois">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="xois_eur">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
   </YieldCurves>
   <!-- yield curve definition (xois discounting w.r.t. EUR collateral) -->
   <YieldCurves id="inccy_swap">
     <YieldCurve name="BENCHMARK_EUR">Yield/EUR/BENCHMARK_EUR</YieldCurve>
     <YieldCurve name="BANK_EUR_LEND">Yield/EUR/BANK_EUR_LEND</YieldCurve>
     <YieldCurve name="BANK_EUR_BORROW">Yield/EUR/BANK_EUR_BORROW</YieldCurve>
+    <YieldCurve name="BOND_YIELD_EUR">Yield/EUR/BOND_YIELD_EUR</YieldCurve>
     <YieldCurve name="EUR-EURIBOR-6M">Yield/EUR/EUR6M</YieldCurve>
   </YieldCurves>
   <!-- discounting curve definition (in ccy swap discounting) -->
@@ -53,8 +57,8 @@
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
-    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
-    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF1D</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY1D</DiscountingCurve>
   </DiscountingCurves>
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
@@ -157,16 +161,13 @@
     <CapFloorVolatility currency="USD">CapFloorVolatility/USD/USD_CF_N</CapFloorVolatility>
     <CapFloorVolatility currency="GBP">CapFloorVolatility/GBP/GBP_CF_N</CapFloorVolatility>
   </CapFloorVolatilities>
-  <!-- cds vol definition -->
-  <CDSVolatilities id="default">
-   <CDSVolatility name="BANK">CDSVolatility/CDXIG</CDSVolatility>
-  </CDSVolatilities>
   <!-- default curves definition -->
   <DefaultCurves id="default">
     <DefaultCurve name="BANK">Default/USD/BANK_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_A">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_B">Default/USD/CPTY_A_SR_USD</DefaultCurve>
     <DefaultCurve name="CPTY_C">Default/EUR/CPTY_C_SR_EUR</DefaultCurve>
+    <DefaultCurve name="BOND_YIELD_EUR_OVER_OIS">Default/EUR/BOND_YIELD_EUR_OVER_OIS</DefaultCurve>
   </DefaultCurves>
   <!-- inflation price surface definition -->
   <InflationCapFloorPriceSurfaces id="default">
@@ -182,10 +183,18 @@
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
   </EquityVolatilities>
-  <SecuritySpreads id="default">
-    <SecuritySpread name="SECURITY_1">SecuritySpread/SECURITY_1</SecuritySpread>
-  </SecuritySpreads>
-  <SecurityRecoveryRates id="default">
-    <SecurityRecoveryRate name="SECURITY_1">SecurityRecoveryRate/SECURITY_1</SecurityRecoveryRate>
-  </SecurityRecoveryRates>
+   <Securities id="collateral_eur">
+     <Security name="SECURITY_1">Security/SECURITY_1</Security>
+   </Securities>
+   <Securities id="default">
+     <Security name="SECURITY_1">Security/SECURITY_1</Security>
+   </Securities>
+  <CommodityCurves id="default">
+    <CommodityCurve name="COMDTY_GOLD_USD">Commodity/USD/GOLD_USD</CommodityCurve>
+    <CommodityCurve name="COMDTY_WTI_USD">Commodity/USD/WTI_USD</CommodityCurve>
+  </CommodityCurves>
+  <CommodityVolatilities id="default">
+      <CommodityVolatility name="COMDTY_GOLD_USD">CommodityVolatility/USD/GOLD_USD_VOLS</CommodityVolatility>
+      <CommodityVolatility name="COMDTY_WTI_USD">CommodityVolatility/USD/WTI_USD_VOLS</CommodityVolatility>
+  </CommodityVolatilities>
 </TodaysMarket>

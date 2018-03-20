@@ -26,8 +26,8 @@
 using namespace std;
 
 // Boost
-#include <boost/timer.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/timer.hpp>
 using namespace boost;
 
 // Boost.Test
@@ -36,7 +36,7 @@ using namespace boost;
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
 
-#include <ored/utilities/log.hpp>
+#include <oret/oret.hpp>
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>
@@ -56,8 +56,15 @@ using boost::unit_test::test_suite;
 #include "ccyswapwithresets.hpp"
 #include "cds.hpp"
 #include "cms.hpp"
+#include "commoditycurve.hpp"
+#include "commoditycurveconfig.hpp"
+#include "ored_commodityforward.hpp"
+#include "commodityoption.hpp"
+#include "commodityvolcurve.hpp"
+#include "commodityvolcurveconfig.hpp"
 #include "cpiswap.hpp"
 #include "crossassetmodeldata.hpp"
+#include "curveconfig.hpp"
 #include "equitymarketdata.hpp"
 #include "equitytrades.hpp"
 #include "fxoption.hpp"
@@ -66,12 +73,12 @@ using boost::unit_test::test_suite;
 #include "indices.hpp"
 #include "legdata.hpp"
 #include "parser.hpp"
+#include "portfolio.hpp"
 #include "schedule.hpp"
+#include "swaption.hpp"
 #include "todaysmarket.hpp"
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
-#include "swaption.hpp"
-#include "portfolio.hpp"
 
 namespace {
 
@@ -94,13 +101,13 @@ void stopTimer() {
 } // namespace
 
 test_suite* init_unit_test_suite(int, char* []) {
-    
-    boost::shared_ptr<ore::data::BoostTestLogger> logger =
-    boost::make_shared<ore::data::BoostTestLogger>();
-    ore::data::Log::instance().removeAllLoggers();
-    ore::data::Log::instance().registerLogger(logger);
-    ore::data::Log::instance().switchOn();
-    ore::data::Log::instance().setMask(255);
+
+    // Get command line arguments
+    int argc = boost::unit_test::framework::master_test_suite().argc;
+    char** argv = boost::unit_test::framework::master_test_suite().argv;
+
+    // Set up test logging
+    ore::test::setupTestLogging(argc, argv);
 
     test_suite* test = BOOST_TEST_SUITE("OREDataTestSuite");
 
@@ -126,7 +133,14 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::CmsTest::suite());
     test->add(testsuite::SwaptionTest::suite());
     test->add(testsuite::PortfolioTest::suite());
+    test->add(testsuite::CurveConfigTest::suite());
     test->add(testsuite::CreditDefaultSwapTest::suite());
+    test->add(testsuite::CommodityForwardTest::suite());
+    test->add(testsuite::CommodityCurveConfigTest::suite());
+    test->add(testsuite::CommodityCurveTest::suite());
+    test->add(testsuite::CommodityOptionTest::suite());
+    test->add(testsuite::CommodityVolatilityCurveConfigTest::suite());
+    test->add(testsuite::CommodityVolCurveTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

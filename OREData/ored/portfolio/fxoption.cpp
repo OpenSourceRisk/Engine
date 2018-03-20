@@ -79,10 +79,10 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Real premiumAmount = -bsInd * option_.premium(); // pay if long, receive if short
         Currency premiumCurrency = parseCurrency(option_.premiumCcy());
         Date premiumDate = parseDate(option_.premiumPayDate());
-	// soldCcy is the NpvCcy, see below
+        // soldCcy is the NpvCcy, see below
         addPayment(additionalInstruments, additionalMultipliers, premiumDate, premiumAmount, premiumCurrency, soldCcy,
                    engineFactory, fxOptBuilder->configuration(MarketContext::pricing));
-	DLOG("option premium added for fx option " << id()); 
+        DLOG("option premium added for fx option " << id());
     }
 
     instrument_ = boost::shared_ptr<InstrumentWrapper>(

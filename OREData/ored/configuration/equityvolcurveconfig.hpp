@@ -24,13 +24,14 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
+using QuantLib::DayCounter;
 
 namespace ore {
 namespace data {
@@ -51,15 +52,14 @@ public:
     //! Detailed constructor
     EquityVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                 const Dimension& dimension, const vector<string>& expiries,
-                                const vector<string>& strikes = vector<string>());
-    //! Default destructor
-    virtual ~EquityVolatilityCurveConfig() {}
+                                const vector<string>& strikes = vector<string>(),
+                                const DayCounter& dayCounter = QuantLib::Actual365Fixed());
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
@@ -67,8 +67,12 @@ public:
     const string& ccy() const { return ccy_; }
     const Dimension& dimension() const { return dimension_; }
     const vector<string>& expiries() const { return expiries_; }
-    const vector<string>& strikes() const { return strikes_; } // Really these should be Reals, but we want to match the type of
-                                                               // The equity option market datum (which is string for "ATMF"
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const vector<string>& strikes() const {
+        return strikes_;
+    } // Really these should be Reals, but we want to match the type of
+      // The equity option market datum (which is string for "ATMF"
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
@@ -76,12 +80,14 @@ public:
     string& ccy() { return ccy_; }
     Dimension& dimension() { return dimension_; }
     vector<string>& expiries() { return expiries_; }
+    DayCounter& dayCounter() { return dayCounter_; }
     vector<string>& strikes() { return strikes_; }
     //@}
 private:
     string ccy_;
     Dimension dimension_;
     vector<string> expiries_;
+    DayCounter dayCounter_;
     vector<string> strikes_;
 };
 } // namespace data

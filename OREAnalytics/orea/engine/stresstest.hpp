@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file engine/sensitivityanalysis.hpp
-    \brief Perfrom sensitivity analysis for a given portfolio
+/*! \file engine/stresstest.hpp
+    \brief  perform a stress testing analysis for a given portfolio.
     \ingroup simulation
 */
 

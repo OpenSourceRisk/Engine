@@ -754,7 +754,7 @@
     <Id>USD-OIS-CONVENTIONS</Id>
     <SpotLag>2</SpotLag>
     <Index>USD-FedFunds</Index>
-    <FixedDayCounter>A365</FixedDayCounter>
+    <FixedDayCounter>A360</FixedDayCounter>
     <PaymentLag>2</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>

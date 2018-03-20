@@ -18,6 +18,7 @@
 
 /*! \file timeperiod.hpp
     \brief non-contiguous time period handling
+    \ingroup utilities
 */
 
 #pragma once
@@ -31,6 +32,10 @@ using QuantLib::Size;
 namespace ore {
 namespace data {
 
+//! Handles non-contiguous time period
+/*!
+\ingroup utilities
+*/
 class TimePeriod {
 public:
     /* The given vector of dates defines the contiguous parts of the time period

@@ -18,7 +18,7 @@
 
 /*! \file ored/marketdata/todaysmarketparameters.hpp
     \brief A class to hold todays market configuration(s)
-    \ingroup curves
+    \ingroup marketdata
 */
 
 #pragma once
@@ -32,7 +32,6 @@ using std::vector;
 using std::string;
 using std::pair;
 using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
 
@@ -48,7 +47,7 @@ namespace data {
   Applications then need to specify the desired market configuration ID when making calls
   to any of the term structures provided by the market object.
 
-  \ingroup curves
+  \ingroup marketdata
  */
 
 //! elements must be numbered 0...n, so we can iterate over them
@@ -69,8 +68,9 @@ enum class MarketObject {
     InflationCapFloorPriceSurface = 13,
     EquityCurve = 14,
     EquityVol = 15,
-    SecuritySpread = 16,
-    SecurityRecoveryRate = 17
+    Security = 16,
+    CommodityCurve = 17,
+    CommodityVolatility = 18
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);

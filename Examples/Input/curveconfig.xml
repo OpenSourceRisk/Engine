@@ -220,15 +220,6 @@
       <DiscountCurve>Yield/USD/USD1D</DiscountCurve>
     </CapFloorVolatility>
   </CapFloorVolatilities>
-  <CDSVolatilities>
-    <CDSVolatility>
-      <CurveId>CDXIG</CurveId>
-      <CurveDescription>Lognormal option implied vols for CDX IG</CurveDescription>
-      <Expiries>
-        1M,3M,6M
-      </Expiries>
-    </CDSVolatility>
-  </CDSVolatilities>
   <DefaultCurves>
     <DefaultCurve>
       <CurveId>BANK_SR_USD</CurveId>
@@ -291,6 +282,18 @@
       </Quotes>
       <Conventions>CDS-STANDARD-CONVENTIONS</Conventions>
     </DefaultCurve>
+    <DefaultCurve>
+      <CurveId>BOND_YIELD_EUR_OVER_OIS</CurveId>
+      <CurveDescription>Default curve derived as bond yield curve over Eonia</CurveDescription>
+      <Currency>EUR</Currency>
+      <Type>Benchmark</Type>
+      <DayCounter>A365</DayCounter>
+      <BenchmarkCurve>Yield/EUR/EUR1D</BenchmarkCurve>
+      <SourceCurve>Yield/EUR/BOND_YIELD_EUR</SourceCurve>
+      <Pillars>1Y,2Y,3Y,4Y,5Y,7Y,10Y</Pillars>
+      <SpotLag>0</SpotLag>
+      <Calendar>TARGET</Calendar>
+    </DefaultCurve>
   </DefaultCurves>
   <YieldCurves>
     <YieldCurve>
@@ -333,7 +336,7 @@
       <CurveId>CHF6M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -391,7 +394,7 @@
       <CurveId>CHF3M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -447,7 +450,7 @@
       <CurveId>CHF1M</CurveId>
       <CurveDescription/>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -495,7 +498,7 @@
       <CurveId>CHF1D</CurveId>
       <CurveDescription>CHF discount curve bootstrapped from TOIS swap rates</CurveDescription>
       <Currency>CHF</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>CHF1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -548,7 +551,7 @@
       <CurveId>EUR1D</CurveId>
       <CurveDescription>EUR discount curve bootstrapped from EONIA swap rates</CurveDescription>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -605,7 +608,7 @@
       <CurveId>EUR6M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -680,7 +683,7 @@
       <CurveId>EUR12M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -733,7 +736,7 @@
       <CurveId>EUR3M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -792,7 +795,7 @@
       <CurveId>EUR1M</CurveId>
       <CurveDescription/>
       <Currency>EUR</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>EUR1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -843,7 +846,7 @@
       <CurveId>USD1D</CurveId>
       <CurveDescription>USD discount curve bootstrapped from FED FUNDS swap rates</CurveDescription>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -930,7 +933,7 @@
       <CurveId>USD3M</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -989,7 +992,7 @@
       <CurveId>USD6M</CurveId>
       <CurveDescription/>
       <Currency>USD</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>USD1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1041,7 +1044,7 @@
       <CurveId>GBP1D</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>OIS</Type>
@@ -1089,7 +1092,7 @@
       <CurveId>GBP6M</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1148,7 +1151,7 @@
       <CurveId>GBP3M</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>GBP1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1233,7 +1236,7 @@
       <CurveId>JPY1D</CurveId>
       <CurveDescription>JPY discount curve bootstrapped from MUTAN swap rates</CurveDescription>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1290,7 +1293,7 @@
       <CurveId>JPY6M</CurveId>
       <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -1336,7 +1339,7 @@
       <CurveId>JPY3M</CurveId>
       <CurveDescription/>
       <Currency>JPY</Currency>
-      <DiscountCurve/>
+      <DiscountCurve>JPY1D</DiscountCurve>
       <Segments>
         <Simple>
           <Type>Deposit</Type>
@@ -2053,6 +2056,22 @@
       </Segments>
     </YieldCurve>
     <YieldCurve>
+      <CurveId>BOND_YIELD_EUR</CurveId>
+      <CurveDescription>Bond yield curve EUR</CurveDescription>
+      <Currency>EUR</Currency>
+      <DiscountCurve></DiscountCurve>
+      <Segments>
+	    <Direct>
+	      <Type>Zero</Type>
+	      <Quotes>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/5Y</Quote>
+	        <Quote>ZERO/RATE/EUR/BOND_YIELD_EUR/A365/10Y</Quote>
+	      </Quotes>
+	      <Conventions>EUR-ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+	    </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>BANK_EUR_BORROW</CurveId>
       <CurveDescription>BANK's average borrowing spread in EUR</CurveDescription>
       <Currency>EUR</Currency>
@@ -2408,7 +2427,8 @@
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2427,7 +2447,8 @@
           <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/USD/USD1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2446,7 +2467,8 @@
           <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/GBP/GBP1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes>
+          <!-- <CapStrikes>0.01,0.015,0.02,0.025,0.03</CapStrikes> -->
+		  <CapStrikes/> 
           <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
       </InflationCapFloorPriceSurface>
@@ -2468,6 +2490,10 @@
                 <Quote>EQUITY_DIVIDEND/RATE/SP5/USD/20170915</Quote>
             </Quotes>
             <DayCounter>A365</DayCounter>
+            <DividendInterpolation>
+                <InterpolationVariable>Zero</InterpolationVariable>
+                <InterpolationMethod>Linear</InterpolationMethod>
+            </DividendInterpolation>
         </EquityCurve>
         <EquityCurve>
             <CurveId>Lufthansa</CurveId>
@@ -2505,14 +2531,165 @@
             </Expiries>
         </EquityVolatility>
   </EquityVolatilities>
-  <SecuritySpreads>
-    <SecuritySpread>
+  <Securities>
+    <Security>
       <CurveId>SECURITY_1</CurveId>
-      <CurveDescription>Security Spread</CurveDescription>
+      <CurveDescription>Security</CurveDescription>
+      <SpreadQuote>BOND/YIELD_SPREAD/SECURITY_1</SpreadQuote>
+      <RecoveryRateQuote>RECOVERY_RATE/RATE/SECURITY_1</RecoveryRateQuote>
+    </Security>
+  </Securities>
+  <CommodityCurves>
+    <CommodityCurve>
+      <CurveId>GOLD_USD</CurveId>
+      <CurveDescription>Gold USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/GOLD/USD</SpotQuote>
       <Quotes>
-        <Quote>BOND/YIELD_SPREAD/SECURITY_1</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-04-29</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-12-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-04-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2018-06-29</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2019-06-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2019-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2020-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2021-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31</Quote>
       </Quotes>
-    </SecuritySpread>
-  </SecuritySpreads>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+    <CommodityCurve>
+      <CurveId>WTI_USD</CurveId>
+      <CurveDescription>WTI USD price curve</CurveDescription>
+      <Currency>USD</Currency>
+      <SpotQuote>COMMODITY/PRICE/WTI/USD</SpotQuote>
+      <Quotes>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2016-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2017-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2018-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2019-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-02-29</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2020-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-01-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-02-28</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-03-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-04-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-05-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-07-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-08-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-09-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-10-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-11-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2021-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2022-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2022-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2023-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2023-12-31</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2024-06-30</Quote>
+        <Quote>COMMODITY_FWD/PRICE/WTI/USD/2024-12-31</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <InterpolationMethod>Linear</InterpolationMethod>
+      <Extrapolation>true</Extrapolation>
+    </CommodityCurve>
+  </CommodityCurves>
+  <CommodityVolatilities>
+    <CommodityVolatility>
+      <CurveId>GOLD_USD_VOLS</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <Type>Curve</Type>
+      <Quotes>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF</Quote>
+        <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF</Quote>
+      </Quotes>
+      <DayCounter>A365</DayCounter>
+      <Calendar>USD</Calendar>
+      <Extrapolation>true</Extrapolation>
+    </CommodityVolatility>
+    <CommodityVolatility>
+      <CurveId>WTI_USD_VOLS</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <Type>Surface</Type>
+      <Surface>
+        <Expiries>1Y,5Y,10Y</Expiries>
+        <Strikes>30.0,35.0,40.0,45.0,50.0,55.0,60.0</Strikes>
+      </Surface>
+      <DayCounter>A365</DayCounter>
+      <Calendar>USD</Calendar>
+      <Extrapolation>true</Extrapolation>
+      <LowerStrikeConstantExtrapolation>false</LowerStrikeConstantExtrapolation>
+      <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
+    </CommodityVolatility>
+  </CommodityVolatilities>
 </CurveConfiguration>
 

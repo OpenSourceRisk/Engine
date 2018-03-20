@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file model/crossassetmodeldata.hpp
-    \brief Cross asset model data
+/*! \file model/lgmdata.hpp
+    \brief Linear Gauss Markov model data
     \ingroup models
 */
 
@@ -113,16 +113,16 @@ public:
     LgmData() {}
 
     //! Detailed constructor
-    LgmData(std::string ccy, CalibrationType calibrationType, ReversionType revType, VolatilityType volType,
+    LgmData(std::string qualifier, CalibrationType calibrationType, ReversionType revType, VolatilityType volType,
             bool calibrateH, ParamType hType, std::vector<Time> hTimes, std::vector<Real> hValues, bool calibrateA,
             ParamType aType, std::vector<Time> aTimes, std::vector<Real> aValues, Real shiftHorizon = 0.0,
-            Real scaling = 1.0, std::vector<std::string> swaptionExpiries = std::vector<std::string>(),
-            std::vector<std::string> swaptionTerms = std::vector<std::string>(),
-            std::vector<std::string> swaptionStrikes = std::vector<std::string>())
-        : ccy_(ccy), calibrationType_(calibrationType), revType_(revType), volType_(volType), calibrateH_(calibrateH),
-          hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA), aType_(aType), aTimes_(aTimes),
-          aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling), swaptionExpiries_(swaptionExpiries),
-          swaptionTerms_(swaptionTerms), swaptionStrikes_(swaptionStrikes) {}
+            Real scaling = 1.0, std::vector<std::string> optionExpiries = std::vector<std::string>(),
+            std::vector<std::string> optionTerms = std::vector<std::string>(),
+            std::vector<std::string> optionStrikes = std::vector<std::string>())
+        : qualifier_(qualifier), calibrationType_(calibrationType), revType_(revType), volType_(volType),
+          calibrateH_(calibrateH), hType_(hType), hTimes_(hTimes), hValues_(hValues), calibrateA_(calibrateA),
+          aType_(aType), aTimes_(aTimes), aValues_(aValues), shiftHorizon_(shiftHorizon), scaling_(scaling),
+          optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
     void clear();
@@ -139,7 +139,7 @@ public:
 
     //! \name Setters/Getters
     //@{
-    std::string& ccy() { return ccy_; }
+    std::string& qualifier() { return qualifier_; }
     CalibrationType& calibrationType() { return calibrationType_; }
     ReversionType& reversionType() { return revType_; }
     VolatilityType& volatilityType() { return volType_; }
@@ -153,9 +153,9 @@ public:
     std::vector<Real>& aValues() { return aValues_; }
     Real& shiftHorizon() { return shiftHorizon_; }
     Real& scaling() { return scaling_; }
-    std::vector<std::string>& swaptionExpiries() { return swaptionExpiries_; }
-    std::vector<std::string>& swaptionTerms() { return swaptionTerms_; }
-    std::vector<std::string>& swaptionStrikes() { return swaptionStrikes_; }
+    std::vector<std::string>& optionExpiries() { return optionExpiries_; }
+    std::vector<std::string>& optionTerms() { return optionTerms_; }
+    std::vector<std::string>& optionStrikes() { return optionStrikes_; }
     CalibrationStrategy& calibrationStrategy() { return calibrationStrategy_; }
     //@}
 
@@ -166,7 +166,7 @@ public:
     //@}
 
 private:
-    std::string ccy_;
+    std::string qualifier_;
     CalibrationType calibrationType_;
     ReversionType revType_;
     VolatilityType volType_;
@@ -179,9 +179,9 @@ private:
     std::vector<Time> aTimes_;
     std::vector<Real> aValues_;
     Real shiftHorizon_, scaling_;
-    std::vector<std::string> swaptionExpiries_;
-    std::vector<std::string> swaptionTerms_;
-    std::vector<std::string> swaptionStrikes_;
+    std::vector<std::string> optionExpiries_;
+    std::vector<std::string> optionTerms_;
+    std::vector<std::string> optionStrikes_;
     CalibrationStrategy calibrationStrategy_;
 };
 

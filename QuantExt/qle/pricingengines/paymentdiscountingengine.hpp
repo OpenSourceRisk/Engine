@@ -44,7 +44,7 @@ public:
     //! \name Constructors
     //@{
     /*! \param discountCurve
-               Discount curve for the cash flow 
+               Discount curve for the cash flow
         \param spotFX
                The market spot rate quote for multiplicative conversion into the NPV currency, can be empty
         \param includeSettlementDateFlows, settlementDate
@@ -57,9 +57,9 @@ public:
                is set to the evaluation date
     */
     PaymentDiscountingEngine(const Handle<YieldTermStructure>& discountCurve,
-			     const Handle<Quote>& spotFX = Handle<Quote>(),
-			     boost::optional<bool> includeSettlementDateFlows = boost::none,
-			     const Date& settlementDate = Date(), const Date& npvDate = Date());
+                             const Handle<Quote>& spotFX = Handle<Quote>(),
+                             boost::optional<bool> includeSettlementDateFlows = boost::none,
+                             const Date& settlementDate = Date(), const Date& npvDate = Date());
     //@}
 
     //! \name PricingEngine interface

@@ -95,7 +95,8 @@ public:
 private:
     void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
-                       const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors);
+                       const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors,
+                       const std::string& dc);
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<AggregationScenarioData> asd_;

@@ -18,7 +18,7 @@
 
 /*! \file ored/configuration/conventions.hpp
     \brief Currency and instrument specific conventions/defaults
-    \ingroup marketdata
+    \ingroup configuration
 */
 
 #pragma once
@@ -39,7 +39,7 @@ namespace data {
 
 //! Abstract base class for convention objects
 /*!
-  \ingroup marketdata
+  \ingroup configuration
  */
 class Convention : public XMLSerializable {
 public:

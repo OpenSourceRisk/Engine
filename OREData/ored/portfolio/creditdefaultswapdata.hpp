@@ -16,6 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file portfolio/creditdefaultswapdata.hpp
+ \brief A class to hold credit default swap data
+ \ingroup tradedata
+ */
+
 #pragma once
 
 #include <ored/portfolio/legdata.hpp>
@@ -24,19 +29,23 @@
 namespace ore {
 namespace data {
 
+//! Serializable credit default swap data
+/*!
+\ingroup tradedata
+*/
 class CreditDefaultSwapData {
 public:
     //! Default constructor
     CreditDefaultSwapData() {}
 
     //! Constructor
-    CreditDefaultSwapData(const string& issuerId, const string& creditCurveId,
-                          const LegData& leg, const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
+    CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
+                          const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
                           const Real upfrontFee = Null<Real>())
-        : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg),
-          settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart),
-          upfrontDate_(upfrontDate), upfrontFee_(upfrontFee) {}
+        : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
+          paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
+          upfrontFee_(upfrontFee) {}
 
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);

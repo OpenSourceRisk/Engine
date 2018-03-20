@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/model/crossassetmodelbuilder.hpp
-    \brief Build a csross asset model
+/*! \file ored/model/lgmbuilder.hpp
+    \brief Build an lgm model
     \ingroup models
 */
 
@@ -29,7 +29,7 @@
 
 #include <qle/models/lgm.hpp>
 
-#include <ored/model/lgmdata.hpp>
+#include <ored/model/irlgmdata.hpp>
 #include <ored/model/modelbuilder.hpp>
 
 using namespace QuantLib;
@@ -50,7 +50,7 @@ public:
     /*! The configuration should refer to the calibration configuration here,
       alternative discounting curves are then usually set in the pricing
       engines for swaptions etc. */
-    LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<LgmData>& data,
+    LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const boost::shared_ptr<IrLgmData>& data,
                const std::string& configuration = Market::defaultConfiguration, Real bootstrapTolerance = 0.001);
     //! Return calibration error
     Real error() {
@@ -78,7 +78,7 @@ private:
 
     boost::shared_ptr<ore::data::Market> market_;
     const std::string configuration_;
-    boost::shared_ptr<LgmData> data_;
+    boost::shared_ptr<IrLgmData> data_;
     Real bootstrapTolerance_;
     mutable Real error_;
     boost::shared_ptr<QuantExt::LGM> model_;

@@ -91,11 +91,11 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     ScheduleData floatSchedule(ScheduleRules(startDate, endDate, "6M", "TARGET", "MF", "MF", "Forward"));
     ScheduleData fixedSchedule(ScheduleRules(startDate, endDate, "1Y", "TARGET", "MF", "MF", "Forward"));
     // fixed leg
-    FixedLegData fixedLegData(std::vector<Real>(1, 0.03)); // about ATM
-    LegData fixedLeg(true, "EUR", fixedLegData, fixedSchedule, "30/360", std::vector<Real>(1, 10000.0));
+    LegData fixedLeg(boost::make_shared<FixedLegData>(std::vector<Real>(1, 0.03)), true, "EUR", fixedSchedule, "30/360",
+                     std::vector<Real>(1, 10000.0));
     // float leg
-    FloatingLegData floatingLegData("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0));
-    LegData floatingLeg(false, "EUR", floatingLegData, floatSchedule, "A360", std::vector<Real>(1, 10000.0));
+    LegData floatingLeg(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, std::vector<Real>(1, 0.0)),
+                        false, "EUR", floatSchedule, "A360", std::vector<Real>(1, 10000.0));
     // leg vector
     vector<LegData> legs;
     legs.push_back(fixedLeg);
@@ -112,7 +112,7 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
 
     Real expectedNpvCash = 615.03;
-    Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));    
+    Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));
     Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
     // Build and price

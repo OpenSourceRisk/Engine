@@ -8,11 +8,9 @@ m4datadir = $(datadir)/aclocal
 
 EXTRA_DIST = \
 	autogen.sh \
-	OREData_vc12.sln \
-	OREData_vc14.sln \
+	OREData.sln \
 	OREData.vcxproj \
-	OREData.vcxproj.filters \
-	OREData.props
+	OREData.vcxproj.filters
 
 .PHONY: docs docs-man docs-online docs-dist docs-clean
 BASEPATH = @abs_top_srcdir@

@@ -24,14 +24,17 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/time/calendars/target.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
+using QuantLib::DayCounter;
+using QuantLib::Calendar;
 
 namespace ore {
 namespace data {
@@ -54,31 +57,37 @@ public:
     FXVolatilityCurveConfig() {}
     //! Detailed constructor
     FXVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                            const vector<Period>& expiries);
-    //! Default destructor
-    virtual ~FXVolatilityCurveConfig() {}
+                            const vector<Period>& expiries, const string& fxSpotID = "",
+                            const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
+                            const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
+                            const Calendar& calendar = QuantLib::TARGET());
     //@}
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
     //! \name Inspectors
     //@{
     const Dimension& dimension() const { return dimension_; }
     const vector<Period>& expiries() const { return expiries_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    const Calendar& calendar() const { return calendar_; }
     // only required for Smile
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
     Dimension& dimension() { return dimension_; }
     vector<Period>& expiries() { return expiries_; }
+    DayCounter& dayCounter() { return dayCounter_; }
+    Calendar& calendar() { return calendar_; }
     string& fxSpotID() { return fxSpotID_; }
     string& fxForeignYieldCurveID() { return fxForeignYieldCurveID_; }
     string& fxDomesticYieldCurveID() { return fxDomesticYieldCurveID_; }
@@ -86,6 +95,8 @@ public:
 private:
     Dimension dimension_;
     vector<Period> expiries_;
+    DayCounter dayCounter_;
+    Calendar calendar_;
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;

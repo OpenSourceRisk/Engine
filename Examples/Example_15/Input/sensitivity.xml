@@ -88,34 +88,12 @@
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
-      <ParConversion>
-        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-        <SingleCurve>true</SingleCurve>
-        <Conventions>
-          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
-          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
-          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
-          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
-          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
-        </Conventions>
-      </ParConversion>
     </YieldCurve>
     <YieldCurve name="Lufthansa">
       <CurveType>EquityForecast</CurveType>
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
       <ShiftTenors>6M,1Y,2Y,3Y,4Y,5Y,7Y,10Y</ShiftTenors>
-      <ParConversion>
-        <Instruments>DEP,OIS,OIS,OIS,OIS,OIS,OIS,OIS</Instruments>
-        <SingleCurve>true</SingleCurve>
-        <Conventions>
-          <Convention id="DEP">EUR-EURIBOR-CONVENTIONS</Convention>
-          <Convention id="IRS">EUR-3M-SWAP-CONVENTIONS</Convention>
-          <Convention id="OIS">EUR-OIS-CONVENTIONS</Convention>
-          <Convention id="XBS">EUR-USD-XCCY-BASIS-CONVENTIONS</Convention>
-          <Convention id="FXF">USD-EUR-FX-CONVENTIONS</Convention>
-        </Conventions>
-      </ParConversion>
     </YieldCurve>
   </YieldCurves>
   <!-- FX spot shifts -->
@@ -193,7 +171,13 @@
       <Currency>EUR</Currency>
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.0001</ShiftSize>
-      <ShiftTenors>6M,1Y,2Y</ShiftTenors>
+      <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
+    </CreditCurve>
+    <CreditCurve name="BANK">
+      <Currency>USD</Currency>
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+      <ShiftTenors>6M,1Y,2Y,5Y,10Y</ShiftTenors>
     </CreditCurve>
   </CreditCurves>
   <!-- Equity spot shifts -->
@@ -257,6 +241,12 @@
     </YYInflationIndexCurve>
   </YYInflationIndexCurves>
   <BaseCorrelations/>
+  <SecuritySpreads>
+    <SecuritySpread security="SECURITY_1">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </SecuritySpread>
+  </SecuritySpreads>
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>

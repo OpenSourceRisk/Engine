@@ -16,7 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
 
 using ore::data::XMLUtils;
@@ -25,8 +28,17 @@ namespace ore {
 namespace data {
 
 CDSVolatilityCurveConfig::CDSVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                                   const vector<string>& expiries)
+                                                   const vector<string>& expiries, const DayCounter& dayCounter)
     : CurveConfig(curveID, curveDescription), expiries_(expiries) {}
+
+const vector<string>& CDSVolatilityCurveConfig::quotes() {
+    if (quotes_.size() == 0) {
+        string base = "INDEX_CDS_OPTION/RATE_LNVOL/" + curveID_ + "/";
+        for (auto e : expiries_)
+            quotes_.push_back(base + e);
+    }
+    return quotes_;
+}
 
 void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CDSVolatility");
@@ -34,6 +46,10 @@ void CDSVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
+    string dc = XMLUtils::getChildValue(node, "DayCounter");
+    if (dc == "")
+        dc = "A365";
+    dayCounter_ = parseDayCounter(dc);
 }
 
 XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -42,6 +58,7 @@ XMLNode* CDSVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;
 }

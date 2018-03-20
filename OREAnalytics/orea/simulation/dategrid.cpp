@@ -107,11 +107,11 @@ DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridC
 
 DateGrid::DateGrid(const vector<Date>& dates, const DayCounter& dayCounter) : dates_(dates) {
     QL_REQUIRE(!dates_.empty(), "Construction of DateGrid requires a non-empty vector of dates");
-    QL_REQUIRE(is_sorted(dates_.begin(), dates_.end()), 
-        "Construction of DateGrid requires a sorted vector of unique dates");
+    QL_REQUIRE(is_sorted(dates_.begin(), dates_.end()),
+               "Construction of DateGrid requires a sorted vector of unique dates");
     Date today = Settings::instance().evaluationDate();
-    QL_REQUIRE(today < dates_.front(), 
-        "Construction of DateGrid requires first element to be strictly greater than today");
+    QL_REQUIRE(today < dates_.front(),
+               "Construction of DateGrid requires first element to be strictly greater than today");
 
     // Populate the tenors, times and timegrid
     tenors_.resize(dates_.size());

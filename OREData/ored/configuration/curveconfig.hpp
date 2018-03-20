@@ -24,7 +24,6 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
-
 using std::string;
 using ore::data::XMLSerializable;
 
@@ -41,12 +40,10 @@ public:
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
-    CurveConfig(const string& curveID, const string& curveDescription)
-    : curveID_(curveID), curveDescription_(curveDescription) {}
+    CurveConfig(const string& curveID, const string& curveDescription, const vector<string>& quotes = vector<string>())
+        : curveID_(curveID), curveDescription_(curveDescription), quotes_(quotes) {}
     //! Default constructor
     CurveConfig() {}
-    //! Default destructor
-    virtual ~CurveConfig() {}
     //@}
 
     //! \name Inspectors
@@ -62,11 +59,12 @@ public:
     //@}
 
     //! Return all the market quotes required for this config
-    // TODO: const vector<string>& quotes() = 0;
+    virtual const vector<string>& quotes() { return quotes_; }
 
 protected:
     string curveID_;
     string curveDescription_;
+    vector<string> quotes_;
 };
 
 } // namespace data

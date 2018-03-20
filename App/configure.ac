@@ -1,5 +1,5 @@
 # Process this file with autoconf to produce a configure script.
-AC_INIT([App], [1.8.2],
+AC_INIT([App], [1.8.3],
         [opensourcerisk.org/forum],
         [App])
 AC_PREREQ(2.62)
@@ -55,20 +55,43 @@ if test [ -n "$ql_boost_include_path" ] ; then
    AC_SUBST([BOOST_INCLUDE],["-I${ql_boost_include_path}"])
    AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_boost_include_path}"])
 fi
+
+# Set ql_boost_lib_path if --with-boost-lib is provided
 AC_ARG_WITH([boost-lib],
             AC_HELP_STRING([--with-boost-lib=LIB_PATH],
                            [Supply the location of Boost libraries]),
             [ql_boost_lib_path="`cd ${withval} 2>/dev/null && pwd`"],
-            [ql_boost_lib_path="${BOOST}/stage/lib"])
+            [])
+
+# If --with-boost-lib is not provided, check env $BOOST
+if test [ -z "$ql_boost_lib_path" ] ; then
+  if test [ -n "$BOOST" ] ; then
+    ql_boost_lib_path="${BOOST}/stage/lib"
+  fi
+fi
+
 if test [ -n "$ql_boost_lib_path" ] ; then
    AC_SUBST([BOOST_LIB],["-L${ql_boost_lib_path}"])
    AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_boost_lib_path}"])
 fi
 
 # QuantLib
-ql_path="`cd ../QuantLib 2>/dev/null && pwd`"
-AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_path}"])
-AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_path}/ql/.libs"])
+AC_ARG_WITH([quantlib-prefix],
+            AC_HELP_STRING([--with-quantlib-prefix=PREFIX],
+                           [Supply the location of QuantLib if already installed]),
+            [ql_prefix="`cd ${withval} 2>/dev/null && pwd`"],
+            [])
+
+if test [ -n "$ql_prefix" ] ; then
+    AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_prefix}/include"])
+    AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_prefix}/lib"])
+else
+    ql_path="`cd ../QuantLib 2>/dev/null && pwd`"
+    if test [ -n "$ql_path" ] ; then
+        AC_SUBST([CPPFLAGS],["${CPPFLAGS} -I${ql_path}"])
+        AC_SUBST([LDFLAGS],["${LDFLAGS} -L${ql_path}/ql/.libs"])
+    fi
+fi
 
 # Continue setup
 
@@ -97,6 +120,9 @@ fi
 # Check for Boost components
 QL_CHECK_BOOST
 AM_CONDITIONAL(BOOST_UNIT_TEST_FOUND, test "x${BOOST_UNIT_TEST_LIB}" != "x")
+
+# Check for QuantLib version
+QL_CHECK_QUANTLIB
 
 # Check for Emacs
 AM_PATH_LISPDIR

@@ -1,20 +1,20 @@
 /*
-  Copyright (C) 2016 Quaternion Risk Management Ltd
-  All rights reserved.
+ Copyright (C) 2016 Quaternion Risk Management Ltd
+ All rights reserved.
 
-  This file is part of ORE, a free-software/open-source library
-  for transparent pricing and risk analysis - http://opensourcerisk.org
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
-  ORE is free software: you can redistribute it and/or modify it
-  under the terms of the Modified BSD License.  You should have received a
-  copy of the license along with this program.
-  The license is also available online at <http://opensourcerisk.org>
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
-  This program is distributed on the basis that it will form a useful
-  contribution to risk analytics and model standardisation, but WITHOUT
-  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
- */
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
 
 /*! \file orea/app/oreapp.hpp
   \brief Open Risk Engine App
@@ -27,6 +27,8 @@
 #include <iostream>
 #include <orea/aggregation/all.hpp>
 #include <orea/app/parameters.hpp>
+#include <orea/app/reportwriter.hpp>
+#include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
@@ -58,6 +60,8 @@ public:
     virtual void readSetup();
     //! set up logging
     void setupLog();
+    //! remove logs
+    void closeLog();
     //! load market conventions
     void getConventions();
     //! load market parameters
@@ -65,7 +69,8 @@ public:
     //! build today's market
     void buildMarket();
     //! build engine factory for a given market
-    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market, const string& groupName = "setup");
+    virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
+                                                                const string& groupName = "setup");
     //! build trade factory
     virtual boost::shared_ptr<TradeFactory> buildTradeFactory();
     //! build portfolio for a given market
@@ -100,6 +105,8 @@ public:
     virtual void runSensitivityAnalysis();
     //! run stress tests and write out report
     virtual void runStressTest();
+    //! run parametric var and write out report
+    void runParametricVar();
 
     //! write out initial (pre-cube) reports
     void writeInitialReports();
@@ -120,6 +127,9 @@ public:
     virtual void writeAdditionalReports() {}
 
 protected:
+    //! Get report writer
+    virtual boost::shared_ptr<ReportWriter> getReportWriter();
+
     //! Initialize input parameters to the sensitivities analysis
     void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                               boost::shared_ptr<SensitivityScenarioData>& sensiData,
@@ -128,6 +138,15 @@ protected:
 
     //! Write out some standard sensitivities reports
     void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
+
+    //! Get parametric var calculator
+    virtual boost::shared_ptr<ParametricVarCalculator>
+    buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
+                                 const std::string& portfolioFilter,
+                                 const boost::shared_ptr<SensitivityData>& sensitivities,
+                                 const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
+                                 const std::vector<Real>& p, const std::string& method, const Size mcSamples,
+                                 const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
 
     Size tab_, progressBarWidth_;
     Date asof_;
@@ -141,15 +160,17 @@ protected:
     bool writeDIMReport_;
     bool sensitivity_;
     bool stress_;
+    bool parametricVar_;
     bool writeBaseScenario_;
 
-    boost::shared_ptr<Market> market_;
-    boost::shared_ptr<Portfolio> portfolio_;
+    boost::shared_ptr<Market> market_;               // T0 market
+    boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market
+    boost::shared_ptr<Portfolio> portfolio_;         // portfolio linked to T0 market
     Conventions conventions_;
     TodaysMarketParameters marketParameters_;
 
-    boost::shared_ptr<ScenarioSimMarket> simMarket_;
-    boost::shared_ptr<Portfolio> simPortfolio_;
+    boost::shared_ptr<ScenarioSimMarket> simMarket_; // sim market
+    boost::shared_ptr<Portfolio> simPortfolio_;      // portfolio linked to sim market
 
     boost::shared_ptr<DateGrid> grid_;
     Size samples_;

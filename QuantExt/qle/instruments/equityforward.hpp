@@ -26,11 +26,11 @@
 #define quantext_equity_forward_hpp
 
 #include <ql/currency.hpp>
-#include <ql/money.hpp>
 #include <ql/exchangerate.hpp>
 #include <ql/instrument.hpp>
-#include <ql/quote.hpp>
+#include <ql/money.hpp>
 #include <ql/position.hpp>
+#include <ql/quote.hpp>
 
 using namespace QuantLib;
 
@@ -83,6 +83,7 @@ private:
     Real strike_;
 };
 
+//! \ingroup instruments
 class EquityForward::arguments : public virtual PricingEngine::arguments {
 public:
     std::string name;
@@ -94,7 +95,8 @@ public:
     void validate() const;
 };
 
+//! \ingroup instruments
 class EquityForward::engine : public GenericEngine<EquityForward::arguments, Instrument::results> {};
-}
+} // namespace QuantExt
 
 #endif

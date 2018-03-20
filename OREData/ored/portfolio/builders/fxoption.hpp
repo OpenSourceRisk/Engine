@@ -18,7 +18,7 @@
 
 /*! \file portfolio/builders/fxoption.hpp
     \brief
-    \ingroup portfolio
+    \ingroup builders
 */
 
 #pragma once
@@ -35,7 +35,7 @@ namespace data {
 //! Engine Builder for European FX Options
 /*! Pricing engines are cached by currency pair
 
-    \ingroup portfolio
+    \ingroup builders
  */
 class FxOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:

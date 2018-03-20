@@ -24,6 +24,8 @@
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/commoditycurve.hpp>
+#include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
 #include <ored/marketdata/defaultcurve.hpp>
@@ -33,8 +35,7 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
-#include <ored/marketdata/securityrecoveryrate.hpp>
-#include <ored/marketdata/securityspread.hpp>
+#include <ored/marketdata/security.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
@@ -42,9 +43,13 @@
 #include <ored/utilities/log.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
 
 using namespace std;
 using namespace QuantLib;
+
+using QuantExt::PriceTermStructure;
+using QuantExt::PriceTermStructureAdapter;
 
 namespace ore {
 namespace data {
@@ -56,7 +61,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // Fixings
     // Apply them now in case a curve builder needs them
     LOG("Todays Market Loading Fixings");
-    applyFixings(loader.loadFixings());
+    applyFixings(loader.loadFixings(), conventions);
     LOG("Todays Market Loading Fixing done.");
 
     // store all curves built, since they might appear in several configurations
@@ -74,8 +79,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
-    map<string, boost::shared_ptr<SecuritySpread>> requiredSecuritySpreads;
-    map<string, boost::shared_ptr<SecurityRecoveryRate>> requiredSecurityRecoveryRates;
+    map<string, boost::shared_ptr<Security>> requiredSecurities;
+    map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves;
+    map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves;
 
     for (const auto& configuration : params.configurations()) {
 
@@ -127,17 +133,17 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
                 // We may have to add this spec multiple times (for discounting, yield and forwarding curves)
                 vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
-                for(auto& y : yieldCurveTypes) {
+                for (auto& y : yieldCurveTypes) {
                     MarketObject o = static_cast<MarketObject>(y);
                     for (auto& it : params.mapping(o, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                        << configuration.first);
+                                                     << configuration.first);
                             yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
                         }
                     }
                 }
-                
+
                 for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
                     if (it.second == spec->name()) {
                         LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
@@ -184,8 +190,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredFxVolCurves.end()) {
                     // build the curve
                     LOG("Building FXVolatility for asof " << asof);
-                    boost::shared_ptr<FXVolCurve> fxVolCurve =
-                        boost::make_shared<FXVolCurve>(asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
+                    boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
+                        asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
                     itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                 }
 
@@ -393,9 +399,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
                                                                                            << ", but could not cast");
                         // index is not interpolated
-                        auto tmp = parseZeroInflationIndex(it.first, false,
-                                                           Handle<ZeroInflationTermStructure>(ts));
-                        zeroInflationIndices_[make_pair(configuration.first, it.first)] = Handle<ZeroInflationIndex>(tmp);
+                        auto tmp = parseZeroInflationIndex(it.first, false, Handle<ZeroInflationTermStructure>(ts));
+                        zeroInflationIndices_[make_pair(configuration.first, it.first)] =
+                            Handle<ZeroInflationIndex>(tmp);
                     }
                 }
                 // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
@@ -459,8 +465,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 if (itr == requiredEquityCurves.end()) {
                     // build the curve
                     LOG("Building EquityCurve for asof " << asof);
-                    boost::shared_ptr<EquityCurve> equityCurve =
-                        boost::make_shared<EquityCurve>(asof, *equityspec, loader, curveConfigs, conventions);
+                    boost::shared_ptr<EquityCurve> equityCurve = boost::make_shared<EquityCurve>(
+                        asof, *equityspec, loader, curveConfigs, conventions, requiredYieldCurves);
                     itr = requiredEquityCurves.insert(make_pair(equityspec->name(), equityCurve)).first;
                 }
 
@@ -469,12 +475,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec << " to configuration "
                                                    << configuration.first);
                         Handle<YieldTermStructure> yts;
-                        boost::shared_ptr<EquityCurveConfig> equityConfig = curveConfigs.equityCurveConfig(equityspec->curveConfigID());
-                        boost::shared_ptr<YieldTermStructure> divYield =
-                            itr->second->divYieldTermStructure(asof);
+                        boost::shared_ptr<EquityCurveConfig> equityConfig =
+                            curveConfigs.equityCurveConfig(equityspec->curveConfigID());
+                        boost::shared_ptr<YieldTermStructure> divYield = itr->second->divYieldTermStructure(asof);
                         Handle<YieldTermStructure> div_h(divYield);
                         yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] = div_h;
-                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] = 
+                        yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] =
                             itr->second->forecastingYieldTermStructure();
                         equitySpots_[make_pair(configuration.first, it.first)] =
                             Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
@@ -524,57 +530,97 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 break;
             }
 
-            case CurveSpec::CurveType::SecuritySpread: {
-                boost::shared_ptr<SecuritySpreadSpec> securityspreadspec =
-                    boost::dynamic_pointer_cast<SecuritySpreadSpec>(spec);
-                QL_REQUIRE(securityspreadspec, "Failed to convert spec " << *spec << " to security spread spec");
+            case CurveSpec::CurveType::Security: {
+                boost::shared_ptr<SecuritySpec> securityspec = boost::dynamic_pointer_cast<SecuritySpec>(spec);
+                QL_REQUIRE(securityspec, "Failed to convert spec " << *spec << " to security spec");
 
-                // have we built the curve already?
-                auto itr = requiredSecuritySpreads.find(securityspreadspec->securityID());
-                if (itr == requiredSecuritySpreads.end()) {
+                auto check = requiredDefaultCurves.find(securityspec->securityID());
+                if (check != requiredDefaultCurves.end())
+                    QL_FAIL("securities cannot have the same name as a default curve");
+
+                // have we built the security spread already?
+                auto itr = requiredSecurities.find(securityspec->securityID());
+
+                if (itr == requiredSecurities.end()) {
                     // build the curve
-                    LOG("Building SecuritySpreads for asof " << asof);
-                    boost::shared_ptr<SecuritySpread> securitySpread =
-                        boost::make_shared<SecuritySpread>(asof, *securityspreadspec, loader);
-                    itr = requiredSecuritySpreads.insert(make_pair(securityspreadspec->securityID(), securitySpread))
-                              .first;
+                    LOG("Building Securities for asof " << asof);
+                    boost::shared_ptr<Security> security = boost::make_shared<Security>(asof, *securityspec, loader);
+                    itr = requiredSecurities.insert(make_pair(securityspec->securityID(), security)).first;
                 }
 
                 // add the handle to the Market Map (possible lots of times for proxies)
-                for (const auto& it : params.mapping(MarketObject::SecuritySpread, configuration.first)) {
+                for (const auto& it : params.mapping(MarketObject::Security, configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding SecuritySpread (" << it.first << ") with spec " << *securityspreadspec
-                                                      << " to configuration " << configuration.first);
+                        LOG("Adding Security (" << it.first << ") with spec " << *securityspec << " to configuration "
+                                                << configuration.first);
                         securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                        recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
+                    }
+                }
+
+                break;
+            }
+
+            case CurveSpec::CurveType::Commodity: {
+                boost::shared_ptr<CommodityCurveSpec> commodityCurveSpec = boost::dynamic_pointer_cast<CommodityCurveSpec>(spec);
+                QL_REQUIRE(commodityCurveSpec, "Failed to convert spec, " << *spec << ", to CommodityCurveSpec");
+
+                // Have we built the curve already?
+                auto itr = requiredCommodityCurves.find(commodityCurveSpec->name());
+                if (itr == requiredCommodityCurves.end()) {
+                    // build the curve
+                    LOG("Building CommodityCurve for asof " << asof);
+                    boost::shared_ptr<CommodityCurve> commodityCurve = boost::make_shared<CommodityCurve>(
+                        asof, *commodityCurveSpec, loader, curveConfigs, conventions);
+                    itr = requiredCommodityCurves.insert(make_pair(commodityCurveSpec->name(), commodityCurve)).first;
+                }
+
+                for (const auto it : params.mapping(MarketObject::CommodityCurve, configuration.first)) {
+                    if (it.second == commodityCurveSpec->name()) {
+                        LOG("Adding CommodityCurve, " << it.first << ", with spec " << 
+                            *commodityCurveSpec << " to configuration " << configuration.first);
+                        commodityCurves_[make_pair(configuration.first, it.first)] = 
+                            Handle<PriceTermStructure>(itr->second->commodityPriceCurve());
+                        commoditySpots_[make_pair(configuration.first, it.first)] =
+                            Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->commoditySpot()));
                     }
                 }
                 break;
             }
 
-            case CurveSpec::CurveType::SecurityRecoveryRate: {
-                boost::shared_ptr<SecurityRecoveryRateSpec> securityrecoveryratespec =
-                    boost::dynamic_pointer_cast<SecurityRecoveryRateSpec>(spec);
-                QL_REQUIRE(securityrecoveryratespec,
-                           "Failed to convert spec " << *spec << " to security recovery rate spec");
+            case CurveSpec::CurveType::CommodityVolatility: {
 
-                // have we built the curve already?
-                auto itr = requiredSecurityRecoveryRates.find(securityrecoveryratespec->securityID());
-                if (itr == requiredSecurityRecoveryRates.end()) {
-                    // build the curve
-                    LOG("Building SecurityRecoveryRates for asof " << asof);
-                    boost::shared_ptr<SecurityRecoveryRate> securityRecoveryRate =
-                        boost::make_shared<SecurityRecoveryRate>(asof, *securityrecoveryratespec, loader);
-                    itr = requiredSecurityRecoveryRates
-                              .insert(make_pair(securityrecoveryratespec->securityID(), securityRecoveryRate))
-                              .first;
+                boost::shared_ptr<CommodityVolatilityCurveSpec> commodityVolSpec =
+                    boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
+                QL_REQUIRE(commodityVolSpec, "Failed to convert spec " << *spec << " to commodity volatility spec");
+
+                // Build the volatility structure if we have not built it before
+                auto itr = requiredCommodityVolCurves.find(commodityVolSpec->name());
+                if (itr == requiredCommodityVolCurves.end()) {
+                    LOG("Building commodity volatility for asof " << asof);
+
+                    boost::shared_ptr<CommodityVolCurve> commodityVolCurve =
+                        boost::make_shared<CommodityVolCurve>(asof, *commodityVolSpec, loader, curveConfigs);
+                    itr = requiredCommodityVolCurves.insert(make_pair(commodityVolSpec->name(), commodityVolCurve)).first;
                 }
 
-                // add the handle to the Market Map for recovery rates
-                for (const auto& it : params.mapping(MarketObject::SecurityRecoveryRate, configuration.first)) {
+                // add the handle to the Market Map (possible lots of times for proxies)
+                for (const auto& it : params.mapping(MarketObject::CommodityVolatility, configuration.first)) {
                     if (it.second == spec->name()) {
-                        LOG("Adding SecurityRecoveryRate (" << it.first << ") with spec " << *spec
-                                                            << " to configuration " << configuration.first);
-                        recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
+                        string commodityName = it.first;
+                        LOG("Adding commodity volatility (" << commodityName << ") with spec " << 
+                            *commodityVolSpec << " to configuration " << configuration.first);
+
+                        // Logic copied from Equity vol section of TodaysMarket for now
+                        boost::shared_ptr<BlackVolTermStructure> bvts(itr->second->volatility());
+                        Handle<Quote> spot = commoditySpot(commodityName, configuration.first);
+                        Handle<YieldTermStructure> discount = discountCurve(commodityVolSpec->currency(), configuration.first);
+                        Handle<PriceTermStructure> priceCurve = commodityPriceCurve(commodityName, configuration.first);
+                        Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
+                            boost::make_shared<PriceTermStructureAdapter>(*spot, *priceCurve, *discount));
+
+                        bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, discount, yield);
+                        commodityVols_[make_pair(configuration.first, it.first)] = Handle<BlackVolTermStructure>(bvts);
                     }
                 }
                 break;

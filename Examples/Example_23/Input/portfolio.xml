@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-    <Trade id="fra1">
+  <Trade id="fra1">
     <TradeType>ForwardRateAgreement</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -8,16 +8,16 @@
       <AdditionalFields/>
     </Envelope>
     <ForwardRateAgreementData>
-            <StartDate>2016-10-28</StartDate>
-            <EndDate>2035-10-28</EndDate>
-            <Currency>EUR</Currency>
-            <Index>EUR-EURIBOR-6M</Index>
-            <LongShort>Long</LongShort>
-            <Strike>0.00001</Strike>
-            <Notional>1000000000</Notional>
+      <StartDate>2016-10-28</StartDate>
+      <EndDate>2035-10-28</EndDate>
+      <Currency>EUR</Currency>
+      <Index>EUR-EURIBOR-6M</Index>
+      <LongShort>Long</LongShort>
+      <Strike>0.00001</Strike>
+      <Notional>100000000</Notional>
     </ForwardRateAgreementData>
   </Trade>
-    <Trade id="averageOIS">
+  <Trade id="averageOIS">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -29,7 +29,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>1</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -58,12 +58,12 @@
           </Rules>
         </ScheduleData>
       </LegData>
-     <LegData>
+      <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>1</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>30/360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -89,7 +89,6 @@
       </LegData>
     </SwapData>
   </Trade>
-
   <Trade id="averageOIS1">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -102,7 +101,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>1</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -141,12 +140,12 @@
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-    <LegData>
+      <LegData>
         <LegType>Fixed</LegType>
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>1</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
         <DayCounter>30/360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -172,5 +171,4 @@
       </LegData>
     </SwapData>
   </Trade>
-
 </Portfolio>
