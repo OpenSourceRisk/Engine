@@ -175,6 +175,11 @@
     <IndexBased>true</IndexBased>
     <Index>MXN-TIIE</Index>
   </Deposit>
+  <Deposit>
+    <Id>RUB-MOSPRIME-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>RUB-MOSPRIME</Index>
+  </Deposit>
   <!-- Money Market Futures -->
   <Future>
     <Id>USD-LIBOR-3M-FUTURES-CONVENTIONS</Id>
@@ -651,7 +656,7 @@
   <Swap>
     <Id>HKD-3M-SWAP</Id>
     <FixedCalendar>HKD</FixedCalendar>
-    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedFrequency>Quarterly</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>HKD-HIBOR-3M</Index>
@@ -663,7 +668,7 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>INR-MIFOR-3M</Index>
-  </Swap>
+   </Swap>
    <Swap>
     <Id>INR-6M-SWAP</Id>
     <FixedCalendar>INR</FixedCalendar>
@@ -679,6 +684,7 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>KRW-KORIBOR-3M</Index>
+  </Swap>
   <Swap>
     <Id>MYR-3M-SWAP</Id>
     <FixedCalendar>MYR</FixedCalendar>
@@ -706,7 +712,7 @@
   <Swap>
     <Id>TWD-3M-SWAP</Id>
     <FixedCalendar>TWD</FixedCalendar>
-    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedFrequency>Quarterly</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>TWD-TAIBOR-3M</Index>
@@ -991,6 +997,88 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
+  <FX>
+    <Id>USD-TWD-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>TWD</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-KRW-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>KRW</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-INR-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>INR</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-BRL-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>BRL</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-CLP-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>CLP</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-IDR-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>IDR</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-CNY-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>CNY</SourceCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-MYR-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>MYR</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
+  <Fx>
+    <Id>USD-PHP-FX-CONVENTIONS</Id>
+    <SpotDays>2</SpotDays>
+    <SourceCurrency>USD</SourceCurrency>
+    <TargetCurrency>PHP</TargetCurrency>
+    <PointsFactor>10000</PointsFactor>
+    <AdvanceCalendar>US</AdvanceCalendar>
+    <AdditionalSettleCalendar>
+  </Fx>
   <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
     <Id>EUR-USD-XCCY-BASIS-CONVENTIONS</Id>
