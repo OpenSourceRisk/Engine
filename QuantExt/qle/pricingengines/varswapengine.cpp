@@ -141,21 +141,23 @@ Real VarSwapEngine::calculateFutureVariance() const {
     boost::shared_ptr<VarianceSwap> vs(new VarianceSwap(Position::Long, arguments_.strike,
                                                         1.0, today, arguments_.maturityDate));
 
-    Real fwd = equityPrice_->value() * dividendTS_->discount(time) / yieldTS_->discount(time);
-    Real dk = stepSize_ * sqrt(time);
+    //  In QRE the strikes were defined in terms of the forward price.
+    //  The pillars of the IV surface (to my knowledge) are usually quoted in terms of the spot at the maturities for which varswaps are more common so I'm going with spot instead.
+    //   Real fwd = equityPrice_->value() * dividendTS_->discount(time) / yieldTS_->discount(time);
+    Real dKPct = stepSize_ * sqrt(time);
     std::vector<Real> callStrikes (numCalls_);
     for (Size i = 0; i < numCalls_; i++)
-        callStrikes[i] = fwd * (1 + i*dk);
+        callStrikes[i] = equityPrice_->value() * (1 + i*dKPct);
 
     std::vector<Real> putStrikes (numPuts_);
     for (Size i = 0; i < numPuts_; i++)
-        putStrikes[i] = fwd * (1 - i*dk);
+        putStrikes[i] = equityPrice_->value() * (1 - i*dKPct);
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> process(
         new BlackScholesMertonProcess(equityPrice_, dividendTS_, yieldTS_, volTS_));
 
     boost::shared_ptr<PricingEngine> vsEng(
-        new ReplicatingVarianceSwapEngine(process, dk, callStrikes, putStrikes));
+        new ReplicatingVarianceSwapEngine(process, dKPct*100, callStrikes, putStrikes));
 
     vs->setPricingEngine(vsEng);
     return vs->variance();
