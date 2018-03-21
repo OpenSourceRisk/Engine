@@ -76,6 +76,18 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="VarianceSwap">
+    <Model>BlackScholesMerton</Model>
+    <ModelParameters/>
+    <Engine>ReplicatingVarianceSwapEngine</Engine>
+    <EngineParameters>
+    <!-- Optionally we need to define the grid of calls and puts we wish to integrate over. -->
+    <!-- The default parameters are #Calls=11, #Puts=11, annualised step size=5% of spot -->
+        <Parameter name="NumberOfCalls">8</Parameter>
+        <Parameter name="NumberOfPuts">11</Parameter>
+        <Parameter name="MoneynessStep">0.05</Parameter>
+    </EngineParameters>
+  </Product>
   <Product type="Bond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>

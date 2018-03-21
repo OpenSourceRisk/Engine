@@ -8,10 +8,10 @@
       <AdditionalFields/>
     </Envelope>
     <VarSwapData>
-        <StartDate>2014-04-16</StartDate>
-        <EndDate>2015-06-18</EndDate>
+        <StartDate>2016-02-05</StartDate>
+        <EndDate>2016-05-05</EndDate>
         <Currency>EUR</Currency>
-        <Name>STE</Name>
+        <Name>Lufthansa</Name>
         <LongShort>Long</LongShort>
         <Strike>0.40</Strike>
         <Notional>1000000</Notional>
