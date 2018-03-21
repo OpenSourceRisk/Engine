@@ -101,6 +101,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<VarSwapEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
 
