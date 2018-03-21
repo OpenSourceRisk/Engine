@@ -37,7 +37,7 @@ public:
                 Size numPuts = 11,
                 //! Number of Calls
                 Size numCalls = 11,
-                //! Default StepSize for 1Y swap (scaled by sqrt(T))
+                //! Default Moneyness StepSize for 1Y swap (scaled by sqrt(T))
                 Real stepSize = 0.05);
 
     void calculate() const;

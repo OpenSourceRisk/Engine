@@ -137,27 +137,29 @@ Real VarSwapEngine::calculateFutureVariance() const {
     Date today = Settings::instance().evaluationDate();
     Real time = ActualActual().yearFraction(today, arguments_.maturityDate);
 
+
     // Use a replicatingVarianceSwapEngine to price the future Variance segment of the Leg
     boost::shared_ptr<VarianceSwap> vs(new VarianceSwap(Position::Long, arguments_.strike,
                                                         1.0, today, arguments_.maturityDate));
 
-    //  In QRE the strikes were defined in terms of the forward price.
     //  The pillars of the IV surface (to my knowledge) are usually quoted in terms of the spot at the maturities for which varswaps are more common so I'm going with spot instead.
-    //   Real fwd = equityPrice_->value() * dividendTS_->discount(time) / yieldTS_->discount(time);
-    Real dKPct = stepSize_ * sqrt(time);
+    //  Real fwd = equityPrice_->value() * dividendTS_->discount(time) / yieldTS_->discount(time);
+    Real dMoneyness = stepSize_ * sqrt(time);
+    QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(time) >=1 this would lead to negative strikes in the replicating options.");
+
     std::vector<Real> callStrikes (numCalls_);
     for (Size i = 0; i < numCalls_; i++)
-        callStrikes[i] = equityPrice_->value() * (1 + i*dKPct);
+        callStrikes[i] = equityPrice_->value() * (1 + i*dMoneyness);
 
     std::vector<Real> putStrikes (numPuts_);
     for (Size i = 0; i < numPuts_; i++)
-        putStrikes[i] = equityPrice_->value() * (1 - i*dKPct);
+        putStrikes[i] = equityPrice_->value() * (1 - i*dMoneyness);
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> process(
         new BlackScholesMertonProcess(equityPrice_, dividendTS_, yieldTS_, volTS_));
 
     boost::shared_ptr<PricingEngine> vsEng(
-        new ReplicatingVarianceSwapEngine(process, dKPct*100, callStrikes, putStrikes));
+        new ReplicatingVarianceSwapEngine(process, dMoneyness*100, callStrikes, putStrikes));
 
     vs->setPricingEngine(vsEng);
     return vs->variance();
