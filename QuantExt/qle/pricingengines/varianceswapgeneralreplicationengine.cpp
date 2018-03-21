@@ -9,7 +9,7 @@
     \brief equity variance swap engine
 */
 
-#include <qle/pricingengines/varswapengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/pricingengines/forward/replicatingvarianceswapengine.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/calendars/target.hpp>

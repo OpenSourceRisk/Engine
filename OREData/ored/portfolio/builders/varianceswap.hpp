@@ -27,7 +27,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/utilities/log.hpp>
-#include <qle/pricingengines/varswapengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/version.hpp>
 

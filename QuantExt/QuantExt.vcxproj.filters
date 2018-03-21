@@ -537,7 +537,7 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\varswapengine.hpp">
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
   </ItemGroup>
@@ -907,7 +907,7 @@
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\varswapengine.cpp">
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>

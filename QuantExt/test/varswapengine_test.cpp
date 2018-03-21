@@ -16,8 +16,6 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 //remove these after debugging
-#include <iostream>
-#include <ql/pricingengines/forward/replicatingvarianceswapengine.hpp>
 
 #include "varswapengine_test.hpp"
 #include "utilities.hpp"
@@ -26,7 +24,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/pricingengines/all.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <qle/pricingengines/varswapengine.hpp>
+#include <ql/pricingengines/forward/replicatingvarianceswapengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 
 #include <ql/math/array.hpp>
 #include <ql/math/comparison.hpp>
@@ -84,7 +83,6 @@ namespace testsuite {
 
 void VarSwapEngineTest::testT0Pricing() {
 
-    std::cout << "Running QuantExt VarSwap test." << std::endl;
     const Date today = Date::todaysDate();
     DayCounter dc = Actual365Fixed();
     Date exDate = today + Integer(0.246575 * 365 + 0.5);

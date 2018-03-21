@@ -10,8 +10,8 @@
   \brief Variance Swap data model
   \ingroup Wrap 
 */
-#include <ored/portfolio/builders/ored_pf_b_varswap.hpp>
-#include <ored/portfolio/ored_varswap.hpp>
+#include <ored/portfolio/builders/varianceswap.hpp>
+#include <ored/portfolio/varianceswap.hpp>
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/instruments/varianceswap.hpp>
