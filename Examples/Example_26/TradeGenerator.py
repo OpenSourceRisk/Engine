@@ -20,7 +20,7 @@ FXFWDConventions = {}
 oisConventions = {}
 xccyBasisConventions = {}
 basisConventions = {}
-marketDataInputFile = "..\\Input\\market_" + startDateStr + ".txt"
+marketDataInputFile = "../Input/market_" + startDateStr + ".txt"
 oisTrades = ET.Element("Portfolio")
 EURxoisTrades = ET.Element("Portfolio")
 USDxoisTrades = ET.Element("Portfolio")
@@ -34,7 +34,7 @@ if len(sys.argv) > 1:
 
 
 #####for testing
-tradeFile = "Helpers\TradeTemplate.xml"
+tradeFile = "Helpers/TradeTemplate.xml"
 template = ET.parse(tradeFile)
 swapTemplate = template.find('.//Trade[@id="swaptemplate"]')
 FRATemplate = template.find('.//Trade[@id="fratemplate"]')
@@ -43,12 +43,12 @@ xccyBasisTemplate = template.find('.//Trade[@id="xccybasisswaptemplate"]')
 basisTemplate = template.find('.//Trade[@id="xccybasisswaptemplate"]')
 
 
-oisFile = "Input\ois_portfolio.xml"
-EURxoisFile = r"Input\EUR_xois_portfolio.xml"
-USDxoisFile = r"Input\USD_xois_portfolio.xml"
+oisFile = "Input/ois_portfolio.xml"
+EURxoisFile = r"Input/EUR_xois_portfolio.xml"
+USDxoisFile = r"Input/USD_xois_portfolio.xml"
 
-convetions_file = "..\Input\conventions.xml"
-curve_config_file = "..\Input\curveconfig.xml"
+convetions_file = "../Input/conventions.xml"
+curve_config_file = "../Input/curveconfig.xml"
 
 def debugPrint(line):
 	if debug:
