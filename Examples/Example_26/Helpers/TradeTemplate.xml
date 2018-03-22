@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Templates>
+<Portfolio>
 <Trade id="swaptemplate">
 	<TradeType>Swap</TradeType>
 	<Envelope>
@@ -185,4 +185,4 @@
 	  </LegData>
 	</SwapData>
 </Trade>
-</Templates>
+</Portfolio>
