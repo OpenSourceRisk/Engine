@@ -153,14 +153,25 @@ Schedule makeSchedule(const ScheduleData& data) {
                   [](const Schedule& lhs, const Schedule& rhs) -> bool { return lhs.startDate() < rhs.startDate(); });
         // 2) Build vector of dates, checking that they match up and
         // that we have a consistant calendar.
-        vector<Date> dates = schedules.front().dates();
-        Calendar cal = schedules.front().calendar();
-        BusinessDayConvention convention = Unadjusted;
+        const Schedule& s0 = schedules.front();
+        vector<Date> dates = s0.dates();
+        Calendar cal = s0.calendar();
+        BusinessDayConvention convention = s0.businessDayConvention();
         boost::optional<BusinessDayConvention> termDateConvention = boost::none;
+        if (s0.hasTerminationDateBusinessDayConvention())
+            termDateConvention = s0.terminationDateBusinessDayConvention();
         boost::optional<Period> tenor = boost::none;
+        if (s0.hasTenor())
+            tenor = s0.tenor();
         boost::optional<DateGeneration::Rule> rule = boost::none;
+        if (s0.hasRule())
+            rule = s0.rule();
         boost::optional<bool> endOfMonth = boost::none;
-        std::vector<bool> isRegular;
+        if (s0.hasEndOfMonth())
+            endOfMonth = boost::none;
+        std::vector<bool> isRegular(s0.dates().size() - 1, false);
+        if (s0.hasIsRegular())
+            isRegular = s0.isRegular();
         for (Size i = 1; i < schedules.size(); ++i) {
             const Schedule& s = schedules[i];
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
