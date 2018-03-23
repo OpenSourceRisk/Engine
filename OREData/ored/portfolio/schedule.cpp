@@ -180,7 +180,7 @@ Schedule makeSchedule(const ScheduleData& data) {
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
             // add them
-            Size offset = dates.back() == s.dates().front() ? 0 : 1;
+            Size offset = dates.back() == s.dates().front() ? 1 : 0;
             dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
             // set convention, termDateConvention, tenor, rule, eom to those from last schedule where
             // tenor and rule are provided (since bdc, term bdc, eom are optional anyway)
