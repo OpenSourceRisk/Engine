@@ -180,7 +180,8 @@ Schedule makeSchedule(const ScheduleData& data) {
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
             // add them
-            dates.insert(dates.end(), s.dates().begin() + (dates.back() == s.dates().front() ? 0 : 1), s.dates().end());
+            Size offset = dates.back() == s.dates().front() ? 0 : 1;
+            dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
             // set convention, termDateConvention, tenor, rule, eom to those from last schedule where
             // tenor and rule are provided (since bdc, term bdc, eom are optional anyway)
             if (s.hasTenor() && s.hasRule()) {
@@ -201,14 +202,16 @@ Schedule makeSchedule(const ScheduleData& data) {
             if (s.hasIsRegular()) {
                 isRegular.insert(isRegular.end(), s.isRegular().begin(), s.isRegular().end());
             } else {
-                for (Size ii = 0; ii < s.dates().size() - 1; ++ii)
+                for (Size ii = 0; ii < s.dates().size() - offset; ++ii)
                     isRegular.push_back(false);
             }
         }
         // 3) Build schedule
         std::clog << "Building Schedule with " << dates.size() << " dates, cal = " << cal.name()
-                  << ", conv = " << (convention ? "set" : "notSet") << ", tenor =" << (tenor ? ore::data::to_string(*tenor) : "notSet")
-                  << ", rule =" << (rule ? "set" : "notSet") << ", eom = " << (endOfMonth ? "set" : "notSet") << std::endl;
+                  << ", conv = " << (convention ? "set" : "notSet")
+                  << ", tenor =" << (tenor ? ore::data::to_string(*tenor) : "notSet")
+                  << ", rule =" << (rule ? "set" : "notSet") << ", eom = " << (endOfMonth ? "set" : "notSet")
+                  << std::endl;
         return Schedule(dates, cal, convention, termDateConvention, tenor, rule, endOfMonth, isRegular);
     }
 }
