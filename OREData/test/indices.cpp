@@ -99,6 +99,9 @@ static struct test_data index_data[] = {
     {"JPY-TONAR-1D", "TONARON Actual/365 (Fixed)", 1 * Days},
     {"CHF-TOIS", "CHF-TOISTN Actual/360", 1 * Days},
     {"USD-FedFunds", "FedFundsON Actual/360", 1 * Days},
+    {"CHF-SARON", "CHF-SARONON Actual/360", 1 * Days},
+    {"DKK-OIS", "DKK-DKKOISTN Actual/360", 1 * Days},
+    {"SEK-OIS", "SEK-SIORTN Actual/360", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
