@@ -272,7 +272,10 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate
     legroot.find("ScheduleData/Rules/Tenor").text = tenor
-    legroot.find("ScheduleData/Rules/Rule").text = rule
+    if rule != "":
+        rules = legroot.find("ScheduleData/Rules")
+        rules.append(ET.Element("Rule"))
+        rules.find("Rule").text = rule
     legroot.find("ScheduleData/Rules/Calendar").text = calendar if calendar != "" else currency
     legroot.find("ScheduleData/Rules/Convention").text = payConvention
     legroot.find("ScheduleData/Rules/TermConvention").text = payConvention
@@ -347,7 +350,10 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate
     legroot.find("ScheduleData/Rules/Tenor").text = tenor
-    legroot.find("ScheduleData/Rules/Rule").text = rule
+    if rule != "":
+        rules = legroot.find("ScheduleData/Rules")
+        rules.append(ET.Element("Rule"))
+        rules.find("Rule").text = rule
     legroot.find("ScheduleData/Rules/Calendar").text = calendar if calendar != "" else currency
     legroot.find("ScheduleData/Rules/Convention").text = termConvention
     legroot.find("ScheduleData/Rules/TermConvention").text = termConvention
@@ -609,25 +615,22 @@ for child in yield_curves.getchildren():
 
 
 outputfile = open(oisFile, "w")
-outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
 xmlString = minidom.parseString(ET.tostring(oisTrades)).toprettyxml(indent="  ")
 xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
 outputfile.write(xmlString)
 outputfile.close()
 
 outputfile = open(EURxoisFile, "w")
-outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
 xmlString = minidom.parseString(ET.tostring(EURxoisTrades)).toprettyxml(indent="  ")
 xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
 outputfile.write(xmlString)
 outputfile.close()
 
-# outputfile = open(USDxoisFile, "w")
-# outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
-# xmlString = minidom.parseString(ET.tostring(USDxoisTrades)).toprettyxml(indent="  ")
-# xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
-# outputfile.write(xmlString)
-# outputfile.close()
+outputfile = open(USDxoisFile, "w")
+xmlString = minidom.parseString(ET.tostring(USDxoisTrades)).toprettyxml(indent="  ")
+xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
+outputfile.write(xmlString)
+outputfile.close()
 
 debugPrint("Hello World!")
 
