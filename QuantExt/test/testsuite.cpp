@@ -45,6 +45,7 @@ using boost::unit_test::test_suite;
 #include "blackvariancecurve.hpp"
 #include "bonds.hpp"
 #include "cashflow.hpp"
+#include "commodityforward.hpp"
 #include "crossassetmodel.hpp"
 #include "crossassetmodel2.hpp"
 #include "crossassetmodelparametrizations.hpp"
@@ -52,6 +53,7 @@ using boost::unit_test::test_suite;
 #include "deltagammavar.hpp"
 #include "deposit.hpp"
 #include "discountcurve.hpp"
+#include "discountingcommodityforwardengine.hpp"
 #include "dynamicblackvoltermstructure.hpp"
 #include "dynamicswaptionvolmatrix.hpp"
 #include "fxvolsmile.hpp"
@@ -59,12 +61,14 @@ using boost::unit_test::test_suite;
 #include "logquote.hpp"
 #include "optionletstripper.hpp"
 #include "payment.hpp"
+#include "pricecurve.hpp"
 #include "ratehelpers.hpp"
 #include "stabilisedglls.hpp"
 #include "staticallycorrectedyieldtermstructure.hpp"
 #include "survivalprobabilitycurve.hpp"
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
+#include "pricetermstructureadapter.hpp"
 
 namespace {
 
@@ -119,6 +123,10 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::FxVolSmileTest::suite());
     test->add(testsuite::PaymentTest::suite());
     test->add(testsuite::DeltaGammaVarTest::suite());
+    test->add(testsuite::PriceCurveTest::suite());
+    test->add(testsuite::CommodityForwardTest::suite());
+    test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
+    test->add(testsuite::PriceTermStructureAdapterTest::suite());
     test->add(testsuite::BondsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));

@@ -382,7 +382,15 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/20170226 0.00")
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00")
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF 0.25")
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF 0.35");
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF 0.35")
+        // commodity quotes
+        ("20160226 COMMODITY/PRICE/GOLD/USD 1155.593")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2016-08-31 1158.8")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28 1160.9")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31 1163.4")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29 1165.3")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31 1172.9")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223");
     // clang-format on
 
     for (auto s : data) {
@@ -425,6 +433,8 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     map<string, string> equityVolMap = {{"SP5", "EquityVolatility/USD/SP5"}};
     parameters->addMarketObject(MarketObject::EquityVol, "ois", equityVolMap);
 
+    parameters->addMarketObject(MarketObject::CommodityCurve, "ois", {{"COMDTY_GOLD_USD", "Commodity/USD/GOLD_USD"}});
+
     // all others empty so far
     map<string, string> emptyMap;
     parameters->addMarketObject(MarketObject::FXSpot, "ois", emptyMap);
@@ -444,6 +454,7 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     config.setId(MarketObject::FXVol, "ois");
     config.setId(MarketObject::EquityCurve, "ois");
     config.setId(MarketObject::EquityVol, "ois");
+    config.setId(MarketObject::CommodityCurve, "ois");
 
     parameters->addConfiguration("default", config);
 
@@ -692,12 +703,29 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
         "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
 
+    // clang-format off
+    vector<string> commodityQuotes{
+        "COMMODITY_FWD/PRICE/GOLD/USD/2016-08-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31"
+    };
+    // clang-format on
+
+    configs->commodityCurveConfig("GOLD_USD") = boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", 
+        "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+
     return configs;
 }
 
 boost::shared_ptr<TodaysMarket> market;
 
 void setup() {
+    
+    SavedSettings backup;
+
     Date asof(26, February, 2016);
     Settings::instance().evaluationDate() = asof;
 
@@ -853,6 +881,17 @@ void TodaysMarketTest::testEquityVolCurve() {
     BOOST_CHECK_CLOSE(v_5y_atm, v_50y_atm, 1.e-10);
 }
 
+void TodaysMarketTest::testCommodityCurve() {
+    
+    CommonVars vars;
+
+    BOOST_TEST_MESSAGE("Testing commodity price curve");
+
+    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    Handle<PriceTermStructure> commodityCurve = market->commodityPriceCurve("COMDTY_GOLD_USD");
+    BOOST_CHECK(*commodityCurve);
+}
+
 test_suite* TodaysMarketTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("TodaysMarketTest");
 
@@ -860,6 +899,8 @@ test_suite* TodaysMarketTest::suite() {
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testNormalOptionletVolatility));
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityCurve));
     suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityVolCurve));
+    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testCommodityCurve));
+
     return suite;
 }
 } // namespace testsuite

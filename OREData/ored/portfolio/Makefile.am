@@ -34,7 +34,9 @@ libOREDataPortfolio_la_SOURCES = \
 	bond.cpp \
 	creditdefaultswap.cpp \
 	creditdefaultswapdata.cpp \
-	forwardrateagreement.cpp \
+    forwardrateagreement.cpp \
+	commodityforward.cpp \
+	commodityoption.cpp \
 	legbuilders.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -65,7 +67,9 @@ this_include_HEADERS = \
 	bond.hpp \
 	creditdefaultswap.hpp \
 	creditdefaultswapdata.hpp \
-	forwardrateagreement.hpp \
+    forwardrateagreement.hpp \
+	commodityforward.hpp \
+	commodityoption.hpp \
 	legbuilders.hpp
 
 all.hpp: Makefile.am

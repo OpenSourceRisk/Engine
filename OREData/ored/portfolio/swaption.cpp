@@ -195,9 +195,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     // Build swaption
     DLOG("Build Swaption instrument");
     boost::shared_ptr<QuantLib::Instrument> swaption;
-    if (isNonStandard)
+    if (isNonStandard) {
         swaption = boost::shared_ptr<QuantLib::Instrument>(
             new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery));
+        // workaround for missing registration in QL versions < 1.13
+        swaption->registerWithObservables(nonstandardSwap);
+    }
     else
         swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise, delivery));
 
