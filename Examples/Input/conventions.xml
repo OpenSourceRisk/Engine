@@ -1002,83 +1002,91 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>TWD</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-KRW-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>KRW</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>100</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-INR-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>INR</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>100</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-BRL-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>BRL</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-CLP-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CLP</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-IDR-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>IDR</TargetCurrency>
     <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-CNY-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
-    <TargetCurrency>CNY</SourceCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <TargetCurrency>CNY</TargetCurrency>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-MYR-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>MYR</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
-  <Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
+  <FX>
     <Id>USD-PHP-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>PHP</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
-    <AdditionalSettleCalendar>
-  </Fx>
+    <SpotRelative>true</SpotRelative>
+    <AdditionalSettleCalendar/>
+  </FX>
   <!-- Cross Currency Basis Swaps -->
   <CrossCurrencyBasis>
     <Id>EUR-USD-XCCY-BASIS-CONVENTIONS</Id>
