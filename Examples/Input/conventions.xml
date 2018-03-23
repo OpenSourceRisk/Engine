@@ -681,7 +681,7 @@
     <SpotLag>2</SpotLag>
     <Index>DKK-DKKOIS</Index>
     <FixedDayCounter>A360</FixedDayCounter>
-    <PaymentLag>1</PaymentLag>
+    <PaymentLag>0</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>Following</FixedConvention>
@@ -693,7 +693,7 @@
     <SpotLag>2</SpotLag>
     <Index>SEK-SIOR</Index>
     <FixedDayCounter>A360</FixedDayCounter>
-    <PaymentLag>1</PaymentLag>
+    <PaymentLag>0</PaymentLag>
     <EOM>false</EOM>
     <FixedFrequency>Annual</FixedFrequency>
     <FixedConvention>Following</FixedConvention>
