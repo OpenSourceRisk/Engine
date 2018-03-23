@@ -155,18 +155,40 @@ Schedule makeSchedule(const ScheduleData& data) {
         // that we have a consistant calendar.
         vector<Date> dates = schedules.front().dates();
         Calendar cal = schedules.front().calendar();
+        BusinessDayConvention convention = Unadjusted;
+        boost::optional<BusinessDayConvention> termDateConvention = boost::none;
+        boost::optional<Period> tenor = boost::none;
+        boost::optional<DateGeneration::Rule> rule = boost::none;
+        boost::optional<bool> endOfMonth = boost::none;
+        std::vector<bool> isRegular;
         for (Size i = 1; i < schedules.size(); ++i) {
             const Schedule& s = schedules[i];
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
-            QL_REQUIRE(dates.back() == s.startDate(), "Dates mismatch");
+            QL_REQUIRE(dates.back() == s.dates().front(), "Dates mismatch");
             // add them
             dates.insert(dates.end(), s.dates().begin() + 1, s.dates().end());
+            // set convention, termDateConvention, tenor, rule to those from last rule based schedule
+            // we have to chose one, this seems better than disregarding the information in total?
+            if (s.hasTenor() && s.hasRule()) {
+                convention = s.businessDayConvention();
+                if (s.hasTerminationDateBusinessDayConvention())
+                    termDateConvention = s.terminationDateBusinessDayConvention();
+                if (s.hasEndOfMonth())
+                    endOfMonth = s.endOfMonth();
+                tenor = s.tenor();
+                rule = s.rule();
+            }
+            // add isRegular information, if available, otherwise set it to false
+            if (s.hasIsRegular()) {
+                isRegular.insert(isRegular.end(), s.isRegular().begin(), s.isRegular().end());
+            } else {
+                for (Size ii = 0; ii < s.dates().size() - 1; ++ii)
+                    isRegular.push_back(false);
+            }
         }
         // 3) Build schedule
-        // dummy parameters will not be needed any more from QL 1.12 on
-        return Schedule(dates, cal, Unadjusted, boost::none, boost::none, boost::none, boost::none,
-                        std::vector<bool>(dates.size() - 1, true));
+        return Schedule(dates, cal, convention, termDateConvention, tenor, rule, endOfMonth, isRegular);
     }
 }
 } // namespace data
