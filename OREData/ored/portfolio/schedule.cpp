@@ -93,9 +93,7 @@ Schedule makeSchedule(const ScheduleDates& data) {
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
         scheduleDates[i] = parseDate(data.dates()[i]);
-    // dummy parameters will not be needed any more from QL 1.12 on
-    return Schedule(scheduleDates, calendar, Unadjusted, boost::none, boost::none, boost::none, boost::none,
-                    std::vector<bool>(scheduleDates.size() - 1, true));
+    return Schedule(scheduleDates, calendar);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {
@@ -103,10 +101,8 @@ Schedule makeSchedule(const ScheduleRules& data) {
     Date startDate = parseDate(data.startDate());
     Date endDate = parseDate(data.endDate());
     // Handle trivial case here
-    // dummy parameters will not be needed any more from QL 1.12 on
     if (startDate == endDate)
-        return Schedule(vector<Date>(1, startDate), calendar, Unadjusted, boost::none, boost::none, boost::none,
-                        boost::none, std::vector<bool>(0));
+        return Schedule(vector<Date>(1, startDate), calendar);
 
     QL_REQUIRE(startDate < endDate, "StartDate " << startDate << " is ahead of EndDate " << endDate);
 
