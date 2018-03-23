@@ -540,6 +540,9 @@
     <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\equityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -909,6 +912,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\equityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
