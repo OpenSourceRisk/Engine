@@ -28,6 +28,7 @@ void VarSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Position::Type longShort = parsePositionType(longShort_);
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
+    Calendar calendar = parseCalendar(calendarStr_);
 
     QL_REQUIRE(strike_ > 0, "VarSwap::build() invalid strike " << strike_);
     QL_REQUIRE(notional_ > 0, "VarSwap::build() invalid notional " << notional_);
@@ -63,6 +64,7 @@ void VarSwap::fromXML(XMLNode *node) {
     strike_ = XMLUtils::getChildValueAsDouble(vNode, "Strike", true);
     startDate_ = XMLUtils::getChildValue(vNode, "StartDate", true);
     endDate_ = XMLUtils::getChildValue(vNode, "EndDate", true);
+    calendarStr_ = XMLUtils::getChildValue(vNode, "Calendar", true);
 }
 
 XMLNode* VarSwap::toXML(XMLDocument& doc) {
@@ -76,6 +78,7 @@ XMLNode* VarSwap::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, vNode, "Notional", notional_);
     XMLUtils::addChild(doc, vNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, vNode, "EndDate", endDate_);
+    XMLUtils::addChild(doc, vNode, "Calendar", calendarStr_);
     return node;
 }
 
