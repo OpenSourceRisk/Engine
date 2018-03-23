@@ -31,6 +31,7 @@ namespace testsuite {
         /*! Test the pricing according to the example provided in Demeterfi et al. (1999), 
         which should coincide with the test case in QuantLib. */
         static void testT0Pricing();
+        static void testSeasonedSwapPricing();
         static void testReplicatingVarianceSwap();
 
         static boost::unit_test_framework::test_suite* suite();

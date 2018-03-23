@@ -129,6 +129,65 @@ void VarSwapEngineTest::testT0Pricing() {
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
 
+void VarSwapEngineTest::testSeasonedSwapPricing() {
+
+    Date today = Date::todaysDate();
+    DayCounter dc = Actual365Fixed();
+    Date startDate = today - Integer(0.019178 * 365 + 0.5);  //started 7 calendar days ago
+    Date exDate = today + Integer(0.246575 * 365 + 0.5);
+    std::string equityName = "STE";
+    Calendar cal = TARGET();
+    std::vector<Date> pastDates;
+    std::vector<Date> dates = { exDate };
+
+    for (Date day = cal.adjust(startDate); day < today; day = cal.advance(day, 1, Days)) {
+        pastDates.push_back(day);
+    }
+    
+    std::vector<Real> fixings{ 98.0, 99.0, 100.2, 99.4 ,98.2};
+    TimeSeries<Real> fixingHistory(pastDates.begin(), pastDates.end(), fixings.begin());
+    IndexManager::instance().setHistory("EQ_" + equityName, fixingHistory);
+
+    std::vector<Real> strikes = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
+        105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
+    std::vector<Real> volsVector = { 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2,    //Put Vols
+        0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
+    Matrix vols(18, 1, volsVector.begin(), volsVector.end());
+
+    BOOST_TEST_MESSAGE("Testing t0 pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
+    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
+    Handle<YieldTermStructure> yieldTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
+    Handle<YieldTermStructure> dividendTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.0, dc));
+    Handle<BlackVolTermStructure> volTS = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurface>(today, cal, dates, strikes, vols, dc));
+    Handle<YieldTermStructure> discountingTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
+    Size numPuts = 11;
+    Size numCalls = 8;
+    Real stepSize = 0.05 / sqrt(dc.yearFraction(today, exDate)); //This is % step size between option strikes / Time to Maturity
+
+    boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+        new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
+
+    boost::shared_ptr<PricingEngine> engine(
+        new VarSwapEngine(equityName,
+            equityPrice,
+            yieldTS,
+            dividendTS,
+            volTS,
+            discountingTS,
+            numPuts,
+            numCalls,
+            stepSize));
+
+    VarianceSwap varianceSwap(Position::Long, 0.04, 50000, startDate, exDate);
+    varianceSwap.setPricingEngine(engine);
+
+    Real result = varianceSwap.variance();
+    Real expected = 0.041888574;
+    Real tol = 1.0e-4;
+    BOOST_CHECK_CLOSE(result, expected, tol);
+}
+
 void VarSwapEngineTest::testReplicatingVarianceSwap() {
 
     BOOST_TEST_MESSAGE("Testing variance swap with replicating cost engine...");
@@ -259,6 +318,7 @@ test_suite* VarSwapEngineTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("QuantExt variance swap engine test");
     suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testReplicatingVarianceSwap));
     suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testT0Pricing));
+    suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testSeasonedSwapPricing));
     return suite;
 } 
 } // namespace testsuite
