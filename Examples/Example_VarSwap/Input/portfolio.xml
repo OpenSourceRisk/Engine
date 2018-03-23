@@ -1,20 +1,21 @@
 <?xml version="1.0"?>
 <Portfolio>
   <Trade id="Var_Swap">
-    <TradeType>Swap</TradeType>
+    <TradeType>VarianceSwap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
     <VarSwapData>
-        <StartDate>2016-02-05</StartDate>
+        <StartDate>2016-01-29</StartDate>
         <EndDate>2016-05-05</EndDate>
-        <Currency>EUR</Currency>
-        <Name>Lufthansa</Name>
+        <Currency>USD</Currency>
+        <Name>SP5</Name>
         <LongShort>Long</LongShort>
         <Strike>0.40</Strike>
-        <Notional>1000000</Notional>
+        <Notional>50000</Notional>
+        <Calendar>US</Calendar>
     </VarSwapData>
     </Trade>
 </Portfolio>
