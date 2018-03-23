@@ -172,9 +172,9 @@ Schedule makeSchedule(const ScheduleData& data) {
             const Schedule& s = schedules[i];
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
-            QL_REQUIRE(dates.back() == s.dates().front(), "Dates mismatch");
+            QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
             // add them
-            dates.insert(dates.end(), s.dates().begin() + 1, s.dates().end());
+            dates.insert(dates.end(), s.dates().begin() + (dates.back() == s.dates().front() ? 0 : 1), s.dates().end());
             // set convention, termDateConvention, tenor, rule to those from last rule based schedule
             // we have to chose one, this seems better than disregarding the information in total?
             if (s.hasTenor() && s.hasRule()) {
