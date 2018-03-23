@@ -10,7 +10,6 @@
 */
 
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
-#include <ql/pricingengines/forward/replicatingvarianceswapengine.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -95,7 +94,7 @@ void VarSwapEngine::calculate() const {
 
 Real VarSwapEngine::calculateAccruedVariance() const {
     // return annualised accrued variance
-    string eqIndex = "EQ_" + equityName_;
+    string eqIndex = "EQ/" + equityName_;
     QL_REQUIRE(IndexManager::instance().hasHistory (eqIndex), "No historical fixings for " << eqIndex);
     const TimeSeries<Real>& history = IndexManager::instance().getHistory(eqIndex);
 
@@ -143,7 +142,6 @@ Real VarSwapEngine::calculateFutureVariance() const {
                                                         1.0, today, arguments_.maturityDate));
 
     //  The pillars of the IV surface (to my knowledge) are usually quoted in terms of the spot at the maturities for which varswaps are more common so I'm going with spot instead.
-    //  Real fwd = equityPrice_->value() * dividendTS_->discount(time) / yieldTS_->discount(time);
     Real dMoneyness = stepSize_ * sqrt(time);
     QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(time) >=1 this would lead to negative strikes in the replicating options.");
 
@@ -159,7 +157,7 @@ Real VarSwapEngine::calculateFutureVariance() const {
         new BlackScholesMertonProcess(equityPrice_, dividendTS_, yieldTS_, volTS_));
 
     boost::shared_ptr<PricingEngine> vsEng(
-        new ReplicatingVarianceSwapEngine(process, dMoneyness*100, callStrikes, putStrikes));
+        new ReplicatingVarianceSwapEngine2(process, discountingTS_, dMoneyness*100, callStrikes, putStrikes));
 
     vs->setPricingEngine(vsEng);
     return vs->variance();
