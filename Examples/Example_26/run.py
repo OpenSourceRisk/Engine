@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 import os
 import sys
-sys.path.append('Helpers')
+sys.path.append('Helpers/')
 import TradeGenerator
 
 
