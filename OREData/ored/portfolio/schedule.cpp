@@ -164,7 +164,7 @@ Schedule makeSchedule(const ScheduleData& data) {
             rule = s0.rule();
         boost::optional<bool> endOfMonth = boost::none;
         if (s0.hasEndOfMonth())
-            endOfMonth = boost::none;
+            endOfMonth = s0.endOfMonth();
         std::vector<bool> isRegular(s0.dates().size() - 1, false);
         if (s0.hasIsRegular())
             isRegular = s0.isRegular();
