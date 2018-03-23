@@ -91,6 +91,7 @@ public:
     //! \name Inspectors
     //@{
     const string& calendar() const { return calendar_; }
+    const string& convention() const { return convention_; }
     const vector<string>& dates() const { return dates_; }
     //@}
 
@@ -101,6 +102,7 @@ public:
     //@}
 private:
     string calendar_;
+    string convention_;
     vector<string> dates_;
 };
 

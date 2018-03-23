@@ -20,6 +20,8 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <ored/utilities/to_string.hpp>
+
 using namespace QuantLib;
 
 namespace ore {
@@ -57,6 +59,7 @@ XMLNode* ScheduleRules::toXML(XMLDocument& doc) {
 void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
+    convention_ = XMLUtils::getChildValue(node, "Convention");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
@@ -90,10 +93,13 @@ XMLNode* ScheduleData::toXML(XMLDocument& doc) {
 Schedule makeSchedule(const ScheduleDates& data) {
     QL_REQUIRE(data.dates().size() > 0, "Must provide at least 1 date for Schedule");
     Calendar calendar = parseCalendar(data.calendar());
+    BusinessDayConvention convention = Unadjusted;
+    if (data.convention() != "")
+        convention = parseBusinessDayConvention(data.convention());
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
-        scheduleDates[i] = parseDate(data.dates()[i]);
-    return Schedule(scheduleDates, calendar);
+        scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
+    return Schedule(scheduleDates, calendar, convention);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {
@@ -175,16 +181,21 @@ Schedule makeSchedule(const ScheduleData& data) {
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
             // add them
             dates.insert(dates.end(), s.dates().begin() + (dates.back() == s.dates().front() ? 0 : 1), s.dates().end());
-            // set convention, termDateConvention, tenor, rule to those from last rule based schedule
-            // we have to chose one, this seems better than disregarding the information in total?
+            // set convention, termDateConvention, tenor, rule, eom to those from last schedule where
+            // tenor and rule are provided (since bdc, term bdc, eom are optional anyway)
             if (s.hasTenor() && s.hasRule()) {
+                tenor = s.tenor();
+                rule = s.rule();
+                // these are optional anyway:
                 convention = s.businessDayConvention();
                 if (s.hasTerminationDateBusinessDayConvention())
                     termDateConvention = s.terminationDateBusinessDayConvention();
+                else
+                    termDateConvention = boost::none;
                 if (s.hasEndOfMonth())
                     endOfMonth = s.endOfMonth();
-                tenor = s.tenor();
-                rule = s.rule();
+                else
+                    endOfMonth = boost::none;
             }
             // add isRegular information, if available, otherwise set it to false
             if (s.hasIsRegular()) {
@@ -195,6 +206,9 @@ Schedule makeSchedule(const ScheduleData& data) {
             }
         }
         // 3) Build schedule
+        std::clog << "Building Schedule with " << dates.size() << " dates, cal = " << cal.name()
+                  << ", conv = " << (convention ? "set" : "notSet") << ", tenor =" << (tenor ? ore::data::to_string(*tenor) : "notSet")
+                  << ", rule =" << (rule ? "set" : "notSet") << ", eom = " << (endOfMonth ? "set" : "notSet") << std::endl;
         return Schedule(dates, cal, convention, termDateConvention, tenor, rule, endOfMonth, isRegular);
     }
 }
