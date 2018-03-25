@@ -153,8 +153,8 @@ Schedule makeSchedule(const ScheduleData& data) {
         // 1) sort by start date
         std::sort(schedules.begin(), schedules.end(),
                   [](const Schedule& lhs, const Schedule& rhs) -> bool { return lhs.startDate() < rhs.startDate(); });
-        // 2) Build vector of dates, checking that they match up and
-        // that we have a consistant calendar.
+        // 2) Build vector of dates, checking that the dates do not overlap and that we have consistent
+        // meta data, if given
         const Schedule& s0 = schedules.front();
         vector<Date> dates = s0.dates();
         Calendar cal = s0.calendar();
@@ -179,39 +179,44 @@ Schedule makeSchedule(const ScheduleData& data) {
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
-            // add them
-            Size offset = dates.back() == s.dates().front() ? 1 : 0;
-            dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
-            // set convention, termDateConvention, tenor, rule, eom to those from last schedule where
-            // tenor and rule are provided (since bdc, term bdc, eom are optional anyway)
+            // set convention, termDateConvention, tenor, rule, eom and check for consistency,
+            // if we already have them
             if (s.hasTenor() && s.hasRule()) {
+                QL_REQUIRE(!tenor || s.tenor() == tenor,
+                           "inconsistent tenor for schedule " << i << " " << s.tenor() << " expected " << *tenor);
+                QL_REQUIRE(!rule || s.rule() == rule,
+                           "inconsistent rule for schedule " << i << " " << s.rule() << " expected " << *rule);
                 tenor = s.tenor();
                 rule = s.rule();
-                // these are optional anyway:
+                // these are optional
+                QL_REQUIRE(convention != Unadjusted || convention == s.businessDayConvention(),
+                           "inconsistent convention for schedule " << i << " " << s.businessDayConvention()
+                                                                   << " expected " << convention);
                 convention = s.businessDayConvention();
-                if (s.hasTerminationDateBusinessDayConvention())
-                    termDateConvention = s.terminationDateBusinessDayConvention();
-                else
-                    termDateConvention = boost::none;
-                if (s.hasEndOfMonth())
-                    endOfMonth = s.endOfMonth();
-                else
-                    endOfMonth = boost::none;
+                QL_REQUIRE(!termDateConvention || !s.hasTerminationDateBusinessDayConvention() ||
+                               termDateConvention == s.terminationDateBusinessDayConvention(),
+                           "inconsistent term convention for schedule "
+                               << i << " " << s.terminationDateBusinessDayConvention() << " expected "
+                               << *termDateConvention);
+                termDateConvention = s.terminationDateBusinessDayConvention();
+                QL_REQUIRE(!endOfMonth || !s.hasEndOfMonth(), "inconsistent eom for schedule "
+                                                                  << i << " " << s.endOfMonth() << " expected "
+                                                                  << *endOfMonth);
+                endOfMonth = s.endOfMonth();
             }
-            // add isRegular information, if available, otherwise set it to false
+            // if the end points match up, skip one to avoid duplicates, otherwise take both
+            Size offset = dates.back() == s.dates().front() ? 1 : 0;
+            // add isRegular information, if available, otherwise assume irregular periods
             if (s.hasIsRegular()) {
                 isRegular.insert(isRegular.end(), s.isRegular().begin(), s.isRegular().end());
             } else {
                 for (Size ii = 0; ii < s.dates().size() - offset; ++ii)
                     isRegular.push_back(false);
             }
+            // add the dates
+            dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
         }
         // 3) Build schedule
-        std::clog << "Building Schedule with " << dates.size() << " dates, cal = " << cal.name()
-                  << ", conv = " << (convention ? "set" : "notSet")
-                  << ", tenor =" << (tenor ? ore::data::to_string(*tenor) : "notSet")
-                  << ", rule =" << (rule ? "set" : "notSet") << ", eom = " << (endOfMonth ? "set" : "notSet")
-                  << std::endl;
         return Schedule(dates, cal, convention, termDateConvention, tenor, rule, endOfMonth, isRegular);
     }
 }
