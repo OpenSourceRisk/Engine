@@ -11,9 +11,9 @@
   <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
-  <!-- <Configuration id="xois_usd"> -->
-    <!-- <DiscountingCurvesId>xois_usd</DiscountingCurvesId> -->
-  <!-- </Configuration> -->
+  <Configuration id="xois_usd">
+    <DiscountingCurvesId>xois_usd</DiscountingCurvesId>
+  </Configuration>
   
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
@@ -72,13 +72,13 @@
     <DiscountingCurve currency="CHF">Yield/CHF/CHF-IN-EUR</DiscountingCurve>
     <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
   </DiscountingCurves>
-  <!-- <DiscountingCurves id="xois_usd"> -->
-    <!-- <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve> -->
-    <!-- <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve> -->
-    <!-- <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve> -->
-    <!-- <DiscountingCurve currency="CHF">Yield/CHF/CHF3M</DiscountingCurve> -->
-    <!-- <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve> -->
-  <!-- </DiscountingCurves> -->
+  <DiscountingCurves id="xois_usd">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+  </DiscountingCurves>
   
   <!-- index forwarding curve definition -->
   <IndexForwardingCurves id="default">

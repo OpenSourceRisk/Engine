@@ -106,7 +106,7 @@ def importMarketData(mdFileLoc):
             marketData[info[1]] = info[2].rstrip()
 
 def addTenorToDate(date, inputTenorString):
-    while date.weekday() > 4 or date.weekday() < 1:
+    while date.weekday() > 4: # or date.weekday() < 1:
         date += datetime.timedelta(days=1)
     if len(inputTenorString) > 3:
         # aYbM -> (12*a + b)M
@@ -140,6 +140,9 @@ def addTenorToDate(date, inputTenorString):
             date = date + datetime.timedelta(days=num * 7)
         elif dmy == "D":
             date = date + datetime.timedelta(days=num)
+            if date.weekday() > 4:
+                date = date + datetime.timedelta(days=num)
+
 
     return date
 
@@ -224,7 +227,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 convention = oisConventions[curve]
                 rule = convention.find("Rule").text
                 spotLag = convention.find("SpotLag").text
-
+                fixingDays = spotLag
             else:
                 debugPrint("Failed to find convention for " + curve)
                 return False
@@ -234,7 +237,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             tenor = details[4]
             dayCounter = currencyDaycountConvention(currency)
             payer = True
-            fixingDays = getFixingDaysForCCY(currency)
+
             payConvention = convention.find("FixedConvention").text
             maturity = details[5]
 
@@ -247,7 +250,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
         notional *= fxRate
 
     startDate = addTenorToDate(startDate, spotLag + "D") #why is fixing days 2 in CHF OIS trades?
-    while startDate.weekday() > 4 or startDate.weekday() < 1:
+    while startDate.weekday() > 4: #or startDate.weekday() < 1:
         startDate += datetime.timedelta(days=1)
     endDate = addTenorToDate(startDate, maturity)
     endDate = endDate.strftime('%Y%m%d')
@@ -269,7 +272,10 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate
     legroot.find("ScheduleData/Rules/Tenor").text = tenor
-    legroot.find("ScheduleData/Rules/Rule").text = rule
+    if rule != "":
+        rules = legroot.find("ScheduleData/Rules")
+        rules.append(ET.Element("Rule"))
+        rules.find("Rule").text = rule
     legroot.find("ScheduleData/Rules/Calendar").text = calendar if calendar != "" else currency
     legroot.find("ScheduleData/Rules/Convention").text = payConvention
     legroot.find("ScheduleData/Rules/TermConvention").text = payConvention
@@ -291,33 +297,35 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     termConvention = ""
     payer = "false"
     rule = ""
+    currency = details[2]
+    fixingDays = details[3]
 
+    maturity = details[5]
     try:
         if tradeType == "Swap":
             convention = swapConventions[curve]
             calendar = convention.find("FixedCalendar").text
+            fixingDays = getFixingDaysForCCY(currency)
         elif tradeType == "OIS":
             convention = oisConventions[curve]
             rule = convention.find("Rule").text
+            fixingDays = convention.find("SpotLag").text
         else:
             debugPrint("could not find convention for " + curve)
             return False
     except:
         debugPrint ("could not find convention for " + curve)
         return False
-    currency = details[2]
-    fixingDays = details[3]
 
-    maturity = details[5]
 
     try:
         rate = marketData[tradeQuote]
     except:
         debugPrint("cound not find market data for " + tradeQuote)
         return False
-    fixingDays = getFixingDaysForCCY(currency)
+
     startDate = addTenorToDate(startDate, fixingDays + "D")
-    while startDate.weekday() > 4 or startDate.weekday() < 1:
+    while startDate.weekday()  > 4: #or startDate.weekday() < 1:
         startDate += datetime.timedelta(days=1)
     endDate = addTenorToDate(startDate, maturity)
     endDate = endDate.strftime('%Y%m%d')
@@ -342,7 +350,10 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate
     legroot.find("ScheduleData/Rules/Tenor").text = tenor
-    legroot.find("ScheduleData/Rules/Rule").text = rule
+    if rule != "":
+        rules = legroot.find("ScheduleData/Rules")
+        rules.append(ET.Element("Rule"))
+        rules.find("Rule").text = rule
     legroot.find("ScheduleData/Rules/Calendar").text = calendar if calendar != "" else currency
     legroot.find("ScheduleData/Rules/Convention").text = termConvention
     legroot.find("ScheduleData/Rules/TermConvention").text = termConvention
@@ -604,25 +615,22 @@ for child in yield_curves.getchildren():
 
 
 outputfile = open(oisFile, "w")
-outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
 xmlString = minidom.parseString(ET.tostring(oisTrades)).toprettyxml(indent="  ")
 xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
 outputfile.write(xmlString)
 outputfile.close()
 
 outputfile = open(EURxoisFile, "w")
-outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
 xmlString = minidom.parseString(ET.tostring(EURxoisTrades)).toprettyxml(indent="  ")
 xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
 outputfile.write(xmlString)
 outputfile.close()
 
-# outputfile = open(USDxoisFile, "w")
-# outputfile.write(r'<?xml version="1.0" encoding="utf-8"?>')
-# xmlString = minidom.parseString(ET.tostring(USDxoisTrades)).toprettyxml(indent="  ")
-# xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
-# outputfile.write(xmlString)
-# outputfile.close()
+outputfile = open(USDxoisFile, "w")
+xmlString = minidom.parseString(ET.tostring(USDxoisTrades)).toprettyxml(indent="  ")
+xmlString = '\n'.join([line for line in xmlString.split('\n') if line.strip()])
+outputfile.write(xmlString)
+outputfile.close()
 
 debugPrint("Hello World!")
 
