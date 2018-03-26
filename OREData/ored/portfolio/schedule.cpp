@@ -179,29 +179,35 @@ Schedule makeSchedule(const ScheduleData& data) {
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
                        "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
-            // set convention, termDateConvention, tenor, rule, eom and check for consistency,
-            // if we already have them
-            if (s.hasTenor() && s.hasRule()) {
+            // set convention, termDateConvention, tenor, rule, eom and check for consistency, if already set
+            if (s.hasTenor()) {
                 QL_REQUIRE(!tenor || s.tenor() == tenor,
                            "inconsistent tenor for schedule " << i << " " << s.tenor() << " expected " << *tenor);
+                tenor = s.tenor();
+            }
+            if (s.hasRule()) {
                 QL_REQUIRE(!rule || s.rule() == rule,
                            "inconsistent rule for schedule " << i << " " << s.rule() << " expected " << *rule);
-                tenor = s.tenor();
                 rule = s.rule();
-                // these are optional
+            }
+            // FIXE the empty value is unadjusted for the convention, can no distinguish
+            if (s.businessDayConvention() != Unadjusted) {
                 QL_REQUIRE(convention != Unadjusted || convention == s.businessDayConvention(),
                            "inconsistent convention for schedule " << i << " " << s.businessDayConvention()
                                                                    << " expected " << convention);
                 convention = s.businessDayConvention();
-                QL_REQUIRE(!termDateConvention || !s.hasTerminationDateBusinessDayConvention() ||
-                               termDateConvention == s.terminationDateBusinessDayConvention(),
+            }
+            if (s.hasTerminationDateBusinessDayConvention()) {
+                QL_REQUIRE(!termDateConvention || termDateConvention == s.terminationDateBusinessDayConvention(),
                            "inconsistent term convention for schedule "
                                << i << " " << s.terminationDateBusinessDayConvention() << " expected "
                                << *termDateConvention);
                 termDateConvention = s.terminationDateBusinessDayConvention();
-                QL_REQUIRE(!endOfMonth || !s.hasEndOfMonth(), "inconsistent eom for schedule "
-                                                                  << i << " " << s.endOfMonth() << " expected "
-                                                                  << *endOfMonth);
+            }
+            if (s.hasEndOfMonth()) {
+                QL_REQUIRE(!endOfMonth || endOfMonth == s.endOfMonth(), "inconsistent eom for schedule "
+                                                                            << i << " " << s.endOfMonth()
+                                                                            << " expected " << *endOfMonth);
                 endOfMonth = s.endOfMonth();
             }
             // if the end points match up, skip one to avoid duplicates, otherwise take both
