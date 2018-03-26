@@ -1405,7 +1405,7 @@
             <Quote>FXFWD/RATE/EUR/USD/3M</Quote>
             <Quote>FXFWD/RATE/EUR/USD/6M</Quote>
             <Quote>FXFWD/RATE/EUR/USD/9M</Quote>
-            <Quote>FXFWD/RATE/EUR/USD/1Y</Quote>
+            <Quote>FXFWD/RATE/EUR/USD/12M</Quote>
           </Quotes>
           <Conventions>EUR-USD-FX-CONVENTIONS</Conventions>
           <DiscountCurve>USD1D</DiscountCurve>
@@ -1643,8 +1643,6 @@
           <Quotes>
             <Quote>FXFWD/RATE/EUR/CHF/3M</Quote>
             <Quote>FXFWD/RATE/EUR/CHF/6M</Quote>
-            <Quote>FXFWD/RATE/EUR/CHF/9M</Quote>
-            <Quote>FXFWD/RATE/EUR/CHF/1Y</Quote>
           </Quotes>
           <Conventions>EUR-CHF-FX-CONVENTIONS</Conventions>
           <DiscountCurve>EUR1D</DiscountCurve>
