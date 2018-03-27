@@ -19,6 +19,7 @@ this_include_HEADERS = \
 	noknibor.hpp \
 	nzdbkbm.hpp \
 	plnwibor.hpp \
+	rubmosprime.hpp \
 	sekstibor.hpp \
 	sgdsibor.hpp \
 	sgdsor.hpp \
