@@ -20,8 +20,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
-#include <ored/utilities/to_string.hpp>
-
 using namespace QuantLib;
 
 namespace ore {
