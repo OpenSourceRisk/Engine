@@ -172,6 +172,8 @@ Schedule makeSchedule(const ScheduleData& data) {
         std::vector<bool> isRegular(s0.dates().size() - 1, false);
         if (s0.hasIsRegular())
             isRegular = s0.isRegular();
+        // will be removed, if next schedule's front date is matching the last date of current schedule
+        isRegular.push_back(false);
         for (Size i = 1; i < schedules.size(); ++i) {
             const Schedule& s = schedules[i];
             QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
@@ -210,12 +212,18 @@ Schedule makeSchedule(const ScheduleData& data) {
             }
             // if the end points match up, skip one to avoid duplicates, otherwise take both
             Size offset = dates.back() == s.dates().front() ? 1 : 0;
-            // add isRegular information, if available, otherwise assume irregular periods
+            isRegular.erase(isRegular.end() - offset,
+                            isRegular.end()); // correct for superfluous flags from previous schedule
+            // add isRegular information, if available, otherwi≈cdse assume irregular periods
             if (s.hasIsRegular()) {
                 isRegular.insert(isRegular.end(), s.isRegular().begin(), s.isRegular().end());
             } else {
-                for (Size ii = 0; ii < s.dates().size() - offset; ++ii)
+                for (Size ii = 0; ii < s.dates().size() - 1; ++ii)
                     isRegular.push_back(false);
+            }
+            if (i < schedules.size() - 1) {
+                // will be removed if next schedule's front date is matching last date of current schedule
+                isRegular.push_back(false);
             }
             // add the dates
             dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
