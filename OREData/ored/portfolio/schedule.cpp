@@ -153,10 +153,33 @@ Schedule makeSchedule(const ScheduleData& data) {
                   [](const Schedule& lhs, const Schedule& rhs) -> bool { return lhs.startDate() < rhs.startDate(); });
         // 2) Build vector of dates, checking that the dates do not overlap and that we have consistent
         // meta data, if given
+        //
+        // the convention needs a separate treatment, since the schedule does not provide an empty value for
+        // it, so we do the consistency check on the schedule data level
+        BusinessDayConvention convention = Unadjusted;
+        string conventionStr = "";
+        for (auto& d : data.dates()) {
+            if (d.convention() != "") {
+                QL_REQUIRE(conventionStr == "" || conventionStr == d.convention(),
+                           "inconsistent conventions in schedule blocks, " << conventionStr << " and "
+                                                                           << d.convention());
+                conventionStr = d.convention();
+                convention = parseBusinessDayConvention(d.convention());
+            }
+        }
+        for (auto& d : data.rules()) {
+            if (d.convention() != "") {
+                QL_REQUIRE(conventionStr == "" || conventionStr == d.convention(),
+                           "inconsistent conventions in schedule blocks, " << conventionStr << " and "
+                                                                           << d.convention());
+                conventionStr = d.convention();
+                convention = parseBusinessDayConvention(d.convention());
+            }
+        }
+        //
         const Schedule& s0 = schedules.front();
         vector<Date> dates = s0.dates();
         Calendar cal = s0.calendar();
-        BusinessDayConvention convention = s0.businessDayConvention();
         boost::optional<BusinessDayConvention> termDateConvention = boost::none;
         if (s0.hasTerminationDateBusinessDayConvention())
             termDateConvention = s0.terminationDateBusinessDayConvention();
@@ -189,13 +212,6 @@ Schedule makeSchedule(const ScheduleData& data) {
                 QL_REQUIRE(!rule || s.rule() == rule,
                            "inconsistent rule for schedule " << i << " " << s.rule() << " expected " << *rule);
                 rule = s.rule();
-            }
-            // FIXE the empty value is unadjusted for the convention, can no distinguish
-            if (s.businessDayConvention() != Unadjusted) {
-                QL_REQUIRE(convention == Unadjusted || convention == s.businessDayConvention(),
-                           "inconsistent convention for schedule " << i << " " << s.businessDayConvention()
-                                                                   << " expected " << convention);
-                convention = s.businessDayConvention();
             }
             if (s.hasTerminationDateBusinessDayConvention()) {
                 QL_REQUIRE(!termDateConvention || termDateConvention == s.terminationDateBusinessDayConvention(),
