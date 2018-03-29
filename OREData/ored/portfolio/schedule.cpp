@@ -192,7 +192,7 @@ Schedule makeSchedule(const ScheduleData& data) {
             }
             // FIXE the empty value is unadjusted for the convention, can no distinguish
             if (s.businessDayConvention() != Unadjusted) {
-                QL_REQUIRE(convention != Unadjusted || convention == s.businessDayConvention(),
+                QL_REQUIRE(convention == Unadjusted || convention == s.businessDayConvention(),
                            "inconsistent convention for schedule " << i << " " << s.businessDayConvention()
                                                                    << " expected " << convention);
                 convention = s.businessDayConvention();
