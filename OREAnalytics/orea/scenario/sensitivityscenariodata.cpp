@@ -269,7 +269,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             SpotShiftData data;
             shiftDataFromXML(child, data);
             commodityShiftData_[name] = data;
-            commodityNames_.push_back(name);
+            commodityNames_.insert(name);
         }
     }
 
@@ -283,7 +283,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
             commodityCurveShiftData_[name] = boost::make_shared<CurveShiftData>(data);
-            commodityNames_.push_back(name);
+            commodityNames_.insert(name);
         }
     }
 
@@ -303,7 +303,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
                 data.shiftStrikes[0] = 1.0;
             }
             commodityVolShiftData_[name] = data;
-            commodityVolNames_.push_back(name);
+            commodityVolNames_.insert(name);
         }
     }
 
@@ -334,16 +334,6 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 XMLNode* SensitivityScenarioData::toXML(ore::data::XMLDocument& doc) {
     XMLNode* node = doc.allocNode("SensitivityAnalysis");
     // TODO
-    
-    // Commodity curve parameters (add later)
-    //LOG("Write commodity curve sensitivity parameters");
-    //XMLNode* ccsNode = XMLUtils::addChild(doc, node, "CommodityCurves");
-    //for (const string& name : commodityNames_) {
-    //    XMLNode* ccNode = XMLUtils::addChild(doc, ccsNode, "CommodityCurve");
-    //    XMLUtils::addAttribute(doc, ccNode, "name", name);
-    //    XMLUtils::addChild(doc, ccNode, "Currency", commodityCurrencies_[name]);
-    //    // Need shift data to XML here
-    //}
 
     return node;
 }
