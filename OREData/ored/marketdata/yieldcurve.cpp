@@ -1108,8 +1108,8 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
                 discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
                 basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
                 basisSwapConvention->subPeriodsCouponType()));
-            instruments.push_back(basisSwapHelper);
         }
+        instruments.push_back(basisSwapHelper);
     }
 }
 
