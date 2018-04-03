@@ -147,7 +147,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     Handle<YieldTermStructure> discountingTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
     Size numPuts = 11;
     Size numCalls = 8;
-    Real stepSize = 0.05 / sqrt(dc.yearFraction(today, exDate)); //This is % step size between option strikes / Time to Maturity
+    Real stepSize = 0.05 / sqrt(ActualActual().yearFraction(today, exDate)); //This is % step size between option strikes / Time to Maturity
 
     boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
         new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
@@ -165,7 +165,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
-    Real expected = 0.041888574;
+    Real expected = 0.040433841;
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
