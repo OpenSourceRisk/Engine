@@ -25,8 +25,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 namespace testsuite {
 
-    //! VarSwapEngine tests
-    class VarSwapEngineTest {
+    //! GeneralisedReplicatingVarianceSwapEngine tests
+    class GeneralisedReplicatingVarianceSwapEngineTest {
     public:
         /*! Test the pricing according to the example provided in Demeterfi et al. (1999), 
         which should coincide with the test case in QuantLib. */

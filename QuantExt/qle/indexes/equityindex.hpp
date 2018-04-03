@@ -64,8 +64,10 @@ public:
     // @}
     //! \name Additional methods
     //@{
-    virtual boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
-                                                 const Handle<YieldTermStructure>& dividend) const;
+    virtual boost::shared_ptr<EquityIndex> clone(
+        const Handle<Quote> spotQuote, 
+        const Handle<YieldTermStructure>& rate,
+        const Handle<YieldTermStructure>& dividend) const;
     // @}
 protected:
     std::string familyName_;

@@ -28,8 +28,12 @@ void VarSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Position::Type longShort = parsePositionType(longShort_);
     Date startDate = parseDate(startDate_);
     Date endDate = parseDate(endDate_);
-    Calendar calendar = parseCalendar(calendarStr_);
+    Calendar calendar = parseCalendar(calendar_);
 
+    if (calendar.empty()) {
+        calendar = parseCalendar(ccy.code());
+    }
+    
     QL_REQUIRE(strike_ > 0, "VarSwap::build() invalid strike " << strike_);
     QL_REQUIRE(notional_ > 0, "VarSwap::build() invalid notional " << notional_);
 
@@ -45,7 +49,7 @@ void VarSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<VarSwapEngineBuilder> varSwapBuilder =
         boost::dynamic_pointer_cast<VarSwapEngineBuilder>(builder);
 
-    varSwap->setPricingEngine(varSwapBuilder->engine(eqName_, ccy));
+    varSwap->setPricingEngine(varSwapBuilder->engine(eqName_, ccy, calendar));
 
     // set up other Trade details
     instrument_ = boost::shared_ptr<InstrumentWrapper>(new VanillaInstrument(varSwap));
@@ -64,7 +68,7 @@ void VarSwap::fromXML(XMLNode *node) {
     strike_ = XMLUtils::getChildValueAsDouble(vNode, "Strike", true);
     startDate_ = XMLUtils::getChildValue(vNode, "StartDate", true);
     endDate_ = XMLUtils::getChildValue(vNode, "EndDate", true);
-    calendarStr_ = XMLUtils::getChildValue(vNode, "Calendar", true);
+    calendar_ = XMLUtils::getChildValue(vNode, "Calendar", true);
 }
 
 XMLNode* VarSwap::toXML(XMLDocument& doc) {
@@ -78,7 +82,7 @@ XMLNode* VarSwap::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, vNode, "Notional", notional_);
     XMLUtils::addChild(doc, vNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, vNode, "EndDate", endDate_);
-    XMLUtils::addChild(doc, vNode, "Calendar", calendarStr_);
+    XMLUtils::addChild(doc, vNode, "Calendar", calendar_);
     return node;
 }
 

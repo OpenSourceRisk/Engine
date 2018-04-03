@@ -11,7 +11,6 @@
 
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <ql/time/calendars/target.hpp>
 #include <ql/indexes/indexmanager.hpp>
 
 using std::string;
@@ -19,43 +18,33 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-VarSwapEngine::VarSwapEngine( const string& equityName,
-            const Handle<Quote>& equityPrice,
-            const Handle<YieldTermStructure>& yieldTS,
-            const Handle<YieldTermStructure>& dividendTS,
-            const Handle<BlackVolTermStructure>& volTS,
+GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine( const string& equityName,
+            const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
             const Handle<YieldTermStructure>& discountingTS,
+            const Calendar& calendar,
             Size numPuts,
             Size numCalls,
             Real stepSize) : 
         equityName_(equityName),
-        equityPrice_(equityPrice),
-        yieldTS_(yieldTS),
-        dividendTS_(dividendTS),
-        volTS_(volTS),
+        process_(process),
         discountingTS_(discountingTS),
+        calendar_(calendar),
         numPuts_(numPuts),
         numCalls_(numCalls),
         stepSize_(stepSize) {
 
-QL_REQUIRE(!equityPrice_.empty(), "empty equity quote handle");
-QL_REQUIRE(!yieldTS_.empty(), "empty yield term structure handle");
-QL_REQUIRE(!dividendTS_.empty(), "empty dividend term structure handle");
-QL_REQUIRE(!volTS_.empty(), "empty equity vol term structure handle");
-QL_REQUIRE(!discountingTS_.empty(), "empty discounting term structure handle");
-        
+QL_REQUIRE(process_, "Black-Scholes process not present.");
+QL_REQUIRE(!discountingTS_.empty(), "Empty discounting term structure handle");
+QL_REQUIRE(!calendar_.empty(), "Calendar not provided.");
 QL_REQUIRE(numPuts_ > 0, "Invalid number of Puts, must be > 0");
 QL_REQUIRE(numCalls_ > 0, "Invalid number of Calls, must be > 0");
 QL_REQUIRE(stepSize_ > 0, "Invalid stepSize, must be > 0");
 
-registerWith(equityPrice_);
-registerWith(yieldTS_);
-registerWith(dividendTS_);
-registerWith(volTS_);
+registerWith(process_);
 registerWith(discountingTS_);
 }
 
-void VarSwapEngine::calculate() const {
+void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
 
     results_.value = 0.0;
 
@@ -70,17 +59,19 @@ void VarSwapEngine::calculate() const {
         // forward starting.
         QL_FAIL("Cannot price Forward starting variance swap");
         //variance = calculateFutureVariance();
-    } else if (arguments_.startDate == today) {
+    }
+    else if (arguments_.startDate == today) {
         // The only time the QL price works
         variance = calculateFutureVariance();
-    } else {
+    }
+    else {
         // Get weighted average of Future and Realised variancies.
         Real futVar = calculateFutureVariance();
         Real accVar = calculateAccruedVariance();
 
-        Real totalTime = (arguments_.maturityDate - arguments_.startDate) / 365.0;
-        Real accTime = (today - arguments_.startDate) / 365.0;
-        Real futTime = (arguments_.maturityDate - today) / 365.0;
+        Real totalTime = calendar_.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
+        Real accTime = calendar_.businessDaysBetween(arguments_.startDate, today, true, true);
+        Real futTime = calendar_.businessDaysBetween(today, arguments_.maturityDate, false, true);
 
         variance = (accVar * accTime / totalTime) + (futVar * futTime / totalTime);
     }
@@ -92,76 +83,174 @@ void VarSwapEngine::calculate() const {
     results_.value = multiplier * df * arguments_.notional * (variance - arguments_.strike);
 }
 
-Real VarSwapEngine::calculateAccruedVariance() const {
+Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance() const {
     // return annualised accrued variance
     string eqIndex = "EQ/" + equityName_;
-    QL_REQUIRE(IndexManager::instance().hasHistory (eqIndex), "No historical fixings for " << eqIndex);
+    QL_REQUIRE(IndexManager::instance().hasHistory(eqIndex), "No historical fixings for " << eqIndex);
     const TimeSeries<Real>& history = IndexManager::instance().getHistory(eqIndex);
-
-    Calendar cal = TARGET(); // FIXME: Should be part of instrument really, but that is in QL.
 
     // Calculate historical variance from arguments_.startDate to today
     Date today = Settings::instance().evaluationDate();
 
     Real variance = 0.0;
     Size counter = 0;
-    Date firstDate = cal.advance(arguments_.startDate, -1, Days);
+    Date firstDate = calendar_.advance(arguments_.startDate, -1, Days);
     Real last = history[firstDate];
-    //QL_REQUIRE(last != Null<Real>(), "No fixing for " << eqIndex << " on date " << firstDate);
-    if (last == Null<Real>()) {
-        last = history[arguments_.startDate]; // just assume a flat move for now.
-        QL_REQUIRE(last != Null<Real>(), "No fixing for " << eqIndex << " on date " << firstDate);
-    }
+    QL_REQUIRE(last != Null<Real>(), "No fixing for " << eqIndex << " on date " << firstDate << ". This is required for fixing the return on the first day of the variance swap.");
 
-    for (Date d = arguments_.startDate; d < today; d = cal.advance(d, 1, Days)) {
+    for (Date d = arguments_.startDate; d < today; d = calendar_.advance(d, 1, Days)) {
         Real price = history[d];
         QL_REQUIRE(price != Null<Real>(), "No fixing for " << eqIndex << " on date " << d);
-        Real move = log(price/last);
+        Real move = log(price / last);
         variance += move * move;
-        counter ++;
+        counter++;
         last = price;
     }
+
     // Now do final move. Yesterday is a fixing, todays price is in equityPrice_
-    Real lastMove = log(equityPrice_->value()/last);
+    Real lastMove = log(process_->x0() / last);
     variance += lastMove * lastMove;
-    counter ++;
+    counter++;
 
     // Annualize
-    Size days = 255; // FIXME: get days from calendar - but the instrument doesn't have one!
+    Size days = 252; // FIXME: maybe get days from calendar?
     return days * variance / counter;
 }
 
-Real VarSwapEngine::calculateFutureVariance() const {
+Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
 
     Date today = Settings::instance().evaluationDate();
-    Real time = ActualActual().yearFraction(today, arguments_.maturityDate);
+    Real timeToMaturity = ActualActual().yearFraction(today, arguments_.maturityDate);
 
+    //  The pillars of the IV surface are usually quoted in terms of the spot at the maturities for which varswaps are more common.
+    Real dMoneyness = stepSize_ * sqrt(timeToMaturity);
+    QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(timeToMaturity) >=1 this would lead to negative strikes in the replicating options.");
 
-    // Use a replicatingVarianceSwapEngine to price the future Variance segment of the Leg
-    boost::shared_ptr<VarianceSwap> vs(new VarianceSwap(Position::Long, arguments_.strike,
-                                                        1.0, today, arguments_.maturityDate));
-
-    //  The pillars of the IV surface (to my knowledge) are usually quoted in terms of the spot at the maturities for which varswaps are more common so I'm going with spot instead.
-    Real dMoneyness = stepSize_ * sqrt(time);
-    QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(time) >=1 this would lead to negative strikes in the replicating options.");
-
-    std::vector<Real> callStrikes (numCalls_);
+    std::vector<Real> callStrikes(numCalls_);
     for (Size i = 0; i < numCalls_; i++)
-        callStrikes[i] = equityPrice_->value() * (1 + i*dMoneyness);
+        callStrikes[i] = process_->x0() * (1 + i * dMoneyness);
 
-    std::vector<Real> putStrikes (numPuts_);
+    std::vector<Real> putStrikes(numPuts_);
     for (Size i = 0; i < numPuts_; i++)
-        putStrikes[i] = equityPrice_->value() * (1 - i*dMoneyness);
+        putStrikes[i] = process_->x0() * (1 - i * dMoneyness);
 
-    boost::shared_ptr<GeneralizedBlackScholesProcess> process(
-        new BlackScholesMertonProcess(equityPrice_, dividendTS_, yieldTS_, volTS_));
+    QL_REQUIRE(!callStrikes.empty() && !putStrikes.empty(),
+        "no strike(s) given");
+    QL_REQUIRE(*std::min_element(putStrikes.begin(), putStrikes.end())>0.0,
+        "min put strike must be positive");
+    QL_REQUIRE(*std::min_element(callStrikes.begin(), callStrikes.end()) ==
+        *std::max_element(putStrikes.begin(), putStrikes.end()),
+        "min call and max put strikes differ");
 
-    boost::shared_ptr<PricingEngine> vsEng(
-        new ReplicatingVarianceSwapEngine2(process, discountingTS_, dMoneyness*100, callStrikes, putStrikes));
+    weights_type optionWeights;
+    computeOptionWeights(callStrikes, Option::Call, optionWeights, dMoneyness*  100.0);
+    computeOptionWeights(putStrikes, Option::Put, optionWeights, dMoneyness * 100.0);
 
-    vs->setPricingEngine(vsEng);
-    return vs->variance();
+    Real variance = computeReplicatingPortfolio(optionWeights);
+
+    DiscountFactor riskFreeDiscount =
+        process_->riskFreeRate()->discount(arguments_.maturityDate);
+    Real multiplier;
+    switch (arguments_.position) {
+    case Position::Long:
+        multiplier = 1.0;
+        break;
+    case Position::Short:
+        multiplier = -1.0;
+        break;
+    default:
+        QL_FAIL("Unknown position");
+    }
+    results_.value = multiplier * riskFreeDiscount * arguments_.notional *
+        (results_.variance - arguments_.strike);
+
+    results_.additionalResults["optionWeights"] = optionWeights;
+
+    return variance;
 }
 
+void GeneralisedReplicatingVarianceSwapEngine::computeOptionWeights(
+    const std::vector<Real>& availStrikes,
+    const Option::Type type,
+    weights_type& optionWeights,
+    Real dk) const {
+    if (availStrikes.empty())
+        return;
+
+    std::vector<Real> strikes = availStrikes;
+
+    // add end-strike for piecewise approximation
+    switch (type) {
+    case Option::Call:
+        std::sort(strikes.begin(), strikes.end());
+        strikes.push_back(strikes.back() + dk);
+        break;
+    case Option::Put:
+        std::sort(strikes.begin(), strikes.end(), std::greater<Real>());
+        strikes.push_back(std::max(strikes.back() - dk, 0.0));
+        break;
+    default:
+        QL_FAIL("invalid option type");
+    }
+
+    // remove duplicate strikes
+    std::vector<Real>::iterator last =
+        std::unique(strikes.begin(), strikes.end());
+    strikes.erase(last, strikes.end());
+
+    // compute weights
+    Real f = strikes.front();
+    Real slope, prevSlope = 0.0;
+
+    for (std::vector<Real>::const_iterator k = strikes.begin();
+        // added end-strike discarded
+        k<strikes.end() - 1;
+        ++k) {
+        slope = std::fabs((computeLogPayoff(*(k + 1), f) -
+            computeLogPayoff(*k, f)) /
+            (*(k + 1) - *k));
+        boost::shared_ptr<StrikedTypePayoff> payoff(
+            new PlainVanillaPayoff(type, *k));
+        if (k == strikes.begin())
+            optionWeights.push_back(std::make_pair(payoff, slope));
+        else
+            optionWeights.push_back(
+                std::make_pair(payoff, slope - prevSlope));
+        prevSlope = slope;
+    }
+}
+
+Real GeneralisedReplicatingVarianceSwapEngine::computeReplicatingPortfolio(
+    const weights_type& optionWeights) const {
+
+    boost::shared_ptr<Exercise> exercise(
+        new EuropeanExercise(arguments_.maturityDate));
+    boost::shared_ptr<PricingEngine> optionEngine(
+        new AnalyticEuropeanEngine(process_, discountingTS_));
+    Real optionsValue = 0.0;
+
+    for (weights_type::const_iterator i = optionWeights.begin();
+        i < optionWeights.end(); ++i) {
+        boost::shared_ptr<StrikedTypePayoff> payoff = i->first;
+        EuropeanOption option(payoff, exercise);
+        option.setPricingEngine(optionEngine);
+        Real weight = i->second;
+        optionsValue += option.NPV() * weight;
+    }
+
+    Real f = optionWeights.front().first->strike();
+    return 2.0 * forecastingRate() -
+        2.0 / residualTime() *
+        (((underlying() / forecastingDiscount() - f) / f) +
+            std::log(f / underlying())) +
+        optionsValue / riskFreeDiscount();
+}
+
+Real GeneralisedReplicatingVarianceSwapEngine::computeLogPayoff(
+    const Real strike,
+    const Real callPutStrikeBoundary) const {
+    Real f = callPutStrikeBoundary;
+    return (2.0 / residualTime()) * (((strike - f) / f) - std::log(strike / f));
+}
 }
 

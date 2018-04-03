@@ -43,21 +43,6 @@ using boost::unit_test_framework::test_suite;
 
 namespace {
 
-    struct MCVarianceSwapData {
-        Position::Type type;
-        Real varStrike;
-        Real nominal;
-        Real s;         // spot
-        Rate q;         // dividend
-        Rate r;         // risk-free rate
-        Time t1;        // intermediate time
-        Time t;         // time to maturity
-        Volatility v1;  // volatility at t1
-        Volatility v;   // volatility at t
-        Real result;    // result
-        Real tol;       // tolerance
-    };
-
     struct ReplicatingVarianceSwapData {
         Position::Type type;
         Real varStrike;
@@ -81,9 +66,10 @@ namespace {
 
 namespace testsuite {
 
-void VarSwapEngineTest::testT0Pricing() {
+void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
 
     const Date today = Date::todaysDate();
+    Calendar cal = TARGET();
     DayCounter dc = Actual365Fixed();
     Date exDate = today + Integer(0.246575 * 365 + 0.5);
     std::vector<Date> dates = { exDate };
@@ -110,12 +96,10 @@ void VarSwapEngineTest::testT0Pricing() {
         new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
 
     boost::shared_ptr<PricingEngine> engine(
-        new VarSwapEngine(equityName,
-            equityPrice,
-            yieldTS,
-            dividendTS,
-            volTS,
+        new GeneralisedReplicatingVarianceSwapEngine(equityName,
+            stochProcess,
             discountingTS,
+            cal,
             numPuts,
             numCalls,
             stepSize));
@@ -129,7 +113,7 @@ void VarSwapEngineTest::testT0Pricing() {
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
 
-void VarSwapEngineTest::testSeasonedSwapPricing() {
+void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
 
     Date today = Date::todaysDate();
     DayCounter dc = Actual365Fixed();
@@ -140,13 +124,13 @@ void VarSwapEngineTest::testSeasonedSwapPricing() {
     std::vector<Date> pastDates;
     std::vector<Date> dates = { exDate };
 
-    for (Date day = cal.adjust(startDate); day < today; day = cal.advance(day, 1, Days)) {
+    for (Date day = cal.adjust(cal.advance(startDate, -1, Days)); day < today; day = cal.advance(day, 1, Days)) {
         pastDates.push_back(day);
     }
     
-    std::vector<Real> fixings{ 98.0, 99.0, 100.2, 99.4 ,98.2};
+    std::vector<Real> fixings{ 98.5, 98.0, 99.0, 100.2, 99.4 ,98.2};
     TimeSeries<Real> fixingHistory(pastDates.begin(), pastDates.end(), fixings.begin());
-    IndexManager::instance().setHistory("EQ_" + equityName, fixingHistory);
+    IndexManager::instance().setHistory("EQ/" + equityName, fixingHistory);
 
     std::vector<Real> strikes = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
         105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
@@ -154,7 +138,7 @@ void VarSwapEngineTest::testSeasonedSwapPricing() {
         0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
     Matrix vols(18, 1, volsVector.begin(), volsVector.end());
 
-    BOOST_TEST_MESSAGE("Testing t0 pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
+    BOOST_TEST_MESSAGE("Testing seasoned swap pricing of the QuantExt VarSwap engine.");
     boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
     Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
     Handle<YieldTermStructure> yieldTS = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, cal, 0.05, dc));
@@ -169,12 +153,10 @@ void VarSwapEngineTest::testSeasonedSwapPricing() {
         new BlackScholesMertonProcess(equityPrice, dividendTS, yieldTS, volTS));
 
     boost::shared_ptr<PricingEngine> engine(
-        new VarSwapEngine(equityName,
-            equityPrice,
-            yieldTS,
-            dividendTS,
-            volTS,
+        new GeneralisedReplicatingVarianceSwapEngine(equityName,
+            stochProcess,
             discountingTS,
+            cal,
             numPuts,
             numCalls,
             stepSize));
@@ -188,7 +170,7 @@ void VarSwapEngineTest::testSeasonedSwapPricing() {
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
 
-void VarSwapEngineTest::testReplicatingVarianceSwap() {
+void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap() {
 
     BOOST_TEST_MESSAGE("Testing variance swap with replicating cost engine...");
 
@@ -314,11 +296,11 @@ void VarSwapEngineTest::testReplicatingVarianceSwap() {
 }
 
 
-test_suite* VarSwapEngineTest::suite() {
+test_suite* GeneralisedReplicatingVarianceSwapEngineTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("QuantExt variance swap engine test");
-    suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testReplicatingVarianceSwap));
-    suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testT0Pricing));
-    suite->add(BOOST_TEST_CASE(&VarSwapEngineTest::testSeasonedSwapPricing));
+    suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap));
+    suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing));
+    suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing));
     return suite;
 } 
 } // namespace testsuite

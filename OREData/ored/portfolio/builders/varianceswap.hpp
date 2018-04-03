@@ -39,35 +39,40 @@ namespace data {
 
     \ingroup builders
  */
-class VarSwapEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
+class VarSwapEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&, const Calendar&> {
 public:
     VarSwapEngineBuilder()
         : CachingEngineBuilder("BlackScholesMerton", "ReplicatingVarianceSwapEngine", {"VarianceSwap"}) {}
 
 protected:
-    virtual string keyImpl(const string& equityName, const Currency& ccy) override {
-        return equityName + "/" + ccy.code();
+    virtual string keyImpl(const string& equityName, const Currency& ccy, const Calendar& cal) override {
+        return equityName + "/" + ccy.code() + "/" + cal.name();
     }
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
-        //string key = keyImpl(equityName, ccy);
+    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy, const Calendar& cal = NullCalendar()) override {
+        //string key = keyImpl(equityName, ccy, cal);
         Integer numCalls = parseInteger(engineParameters_.at("NumberOfCalls"));
         Integer numPuts = parseInteger(engineParameters_.at("NumberOfPuts"));
         Real moneyStep = parseReal(engineParameters_.at("MoneynessStep"));
-        
+        string eqIndex = "EQ/" + equityName;
+
         QL_REQUIRE(numCalls > 0, "Variance swap engine: not enough calls specified. Should be at least one, more is better.");
         QL_REQUIRE(numPuts > 0, "Variance swap engine: not enough puts specified. Should be at least one, more is better.");
         QL_REQUIRE(moneyStep > 0, "Variance swap engine: moneyness step is a percentage of strike and should satisfy be greater than 0.");
         // It is not necessarily required that the step size be less than 1. The step size is scaled with sqrt(T), which can be less than 1.
 
-        return boost::make_shared<QuantExt::VarSwapEngine>(
-            equityName, 
+        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
             market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-            market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
             market_->equityDividendCurve(equityName, configuration(MarketContext::pricing)),
-            market_->equityVol(equityName, configuration(MarketContext::pricing)),
+            market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
+            market_->equityVol(equityName, configuration(MarketContext::pricing))
+            );
+           
+        return boost::make_shared<QuantExt::GeneralisedReplicatingVarianceSwapEngine>(
+            equityName, 
+            gbsp,
             market_->discountCurve(ccy.code(), configuration(MarketContext::pricing)),
-            numPuts, numCalls, moneyStep);
+            cal, numPuts, numCalls, moneyStep);
     }
 };
 

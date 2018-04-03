@@ -49,7 +49,7 @@ public:
     double notional() { return notional_; }
     string startDate() { return startDate_; }
     string endDate() { return endDate_; }
-    string calendarStr() { return calendarStr_; }
+    string calendar() { return calendar_; }
 
     virtual void fromXML(XMLNode *node);
     virtual XMLNode* toXML(XMLDocument& doc);
@@ -61,8 +61,7 @@ private:
     double notional_;
     string startDate_;
     string endDate_;
-    string calendarStr_;
-    Calendar calendar_;
+    string calendar_;
 };
 }   // namespace data
 }   // namespace ore

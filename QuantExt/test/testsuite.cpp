@@ -129,7 +129,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
     test->add(testsuite::PriceTermStructureAdapterTest::suite());
     test->add(testsuite::BondsTest::suite());
-    test->add(testsuite::VarSwapEngineTest::suite());
+    test->add(testsuite::GeneralisedReplicatingVarianceSwapEngineTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

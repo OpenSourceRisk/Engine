@@ -79,7 +79,12 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     split(tokens, s, boost::is_any_of("-"));
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
-    return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+    if (tokens.size() == 2) {
+        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+    }
+    else {
+        QL_FAIL("Error parsing equity string " + s);
+    }
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
