@@ -86,7 +86,7 @@
     <ClCompile Include="bonds.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="varswapengine_test.cpp">
+    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -195,7 +195,7 @@
     <ClInclude Include="bonds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="varswapengine_test.hpp">
+    <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

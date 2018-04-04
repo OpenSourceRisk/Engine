@@ -69,7 +69,7 @@ using boost::unit_test::test_suite;
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
 #include "pricetermstructureadapter.hpp"
-#include "varswapengine_test.hpp"
+#include "generalisedreplicatingvarianceswapengine.hpp"
 
 namespace {
 

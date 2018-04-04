@@ -17,7 +17,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 //remove these after debugging
 
-#include "varswapengine_test.hpp"
+#include "generalisedreplicatingvarianceswapengine.hpp"
 #include "utilities.hpp"
 
 #include <qle/models/all.hpp>
@@ -68,7 +68,8 @@ namespace testsuite {
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
 
-    const Date today = Date::todaysDate();
+    Date today = Date::todaysDate();
+    Settings::instance().evaluationDate() = today;
     Calendar cal = TARGET();
     DayCounter dc = Actual365Fixed();
     Date exDate = today + Integer(0.246575 * 365 + 0.5);
@@ -111,11 +112,16 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
     Real expected = 0.041888574;
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
+    result = varianceSwap.NPV();
+    expected = 93.27166913;
+    BOOST_CHECK_CLOSE(result, expected, tol);
+
 }
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
 
     Date today = Date::todaysDate();
+    Settings::instance().evaluationDate() = today;
     DayCounter dc = Actual365Fixed();
     Date startDate = today - Integer(0.019178 * 365 + 0.5);  //started 7 calendar days ago
     Date exDate = today + Integer(0.246575 * 365 + 0.5);
@@ -168,6 +174,9 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     Real expected = 0.040433841;
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
+    result = varianceSwap.NPV();
+    expected = 21.42626646;
+    BOOST_CHECK_CLOSE(result, expected, tol);
 }
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap() {
@@ -215,6 +224,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap()
 
     DayCounter dc = Actual365Fixed();
     Date today = Date::todaysDate();
+    Settings::instance().evaluationDate() = today;
 
     boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
     boost::shared_ptr<SimpleQuote> qRate(new SimpleQuote(0.0));
