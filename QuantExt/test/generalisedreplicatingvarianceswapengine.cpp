@@ -187,6 +187,9 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     result = varianceSwap.NPV();
     expected = 5356.5666;
     BOOST_CHECK_CLOSE(result, expected, tol);
+    
+    // A little clean up of the environment.
+    IndexManager::instance().clearHistory("EQ/" + equityName);
 }
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap() {
