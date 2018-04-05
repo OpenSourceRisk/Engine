@@ -75,6 +75,10 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
     DayCounter dc = Actual365Fixed();
     Date exDate = today + Integer(0.246575 * 365 + 0.5);
     std::vector<Date> dates = { exDate };
+    Real volatilityStrike = 0.2;
+    Real varianceStrike = volatilityStrike * volatilityStrike;
+    Real vegaNotional = 50000.0;
+    Real varianceNotional = vegaNotional / (2.0 * 100.0 * volatilityStrike);
 
     std::vector<Real> strikes = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
                                     105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
@@ -106,7 +110,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
             numCalls,
             stepSize));
 
-    VarianceSwap varianceSwap(Position::Long, 0.04, 50000, today, exDate);
+    VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, today, exDate);
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
@@ -114,7 +118,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
     result = varianceSwap.NPV();
-    expected = 93.27166913;
+    expected = 23317.917;
     BOOST_CHECK_CLOSE(result, expected, tol);
 
 }
@@ -131,6 +135,10 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     Calendar cal = TARGET();
     std::vector<Date> pastDates;
     std::vector<Date> dates = { exDate };
+    Real volatilityStrike = 0.2;
+    Real varianceStrike = volatilityStrike * volatilityStrike;
+    Real vegaNotional = 50000.0;
+    Real varianceNotional = vegaNotional / (2.0 * 100.0 * volatilityStrike);
 
     for (Date day = cal.adjust(cal.advance(startDate, -1, Days)); day < today; day = cal.advance(day, 1, Days)) {
         pastDates.push_back(day);
@@ -169,7 +177,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
             numCalls,
             stepSize));
 
-    VarianceSwap varianceSwap(Position::Long, 0.04, 50000, startDate, exDate);
+    VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, startDate, exDate);
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
@@ -177,7 +185,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
     result = varianceSwap.NPV();
-    expected = 21.42626646;
+    expected = 5356.5666;
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
 

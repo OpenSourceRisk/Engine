@@ -12,6 +12,7 @@
 #pragma once
 #include <ql/instruments/varianceswap.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/quote.hpp>
 
 #include <ql/instruments/europeanoption.hpp>
@@ -80,7 +81,7 @@ inline Real GeneralisedReplicatingVarianceSwapEngine::underlying() const {
 
 
 inline Time GeneralisedReplicatingVarianceSwapEngine::residualTime() const {
-    return process_->time(arguments_.maturityDate);
+    return ActualActual().yearFraction(Settings::instance().evaluationDate(), arguments_.maturityDate);
 }
 
 

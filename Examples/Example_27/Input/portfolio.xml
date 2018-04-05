@@ -13,7 +13,7 @@
         <Currency>USD</Currency>
         <Name>SP5</Name>
         <LongShort>Long</LongShort>
-        <Strike>0.40</Strike>
+        <Strike>0.20</Strike>
         <Notional>50000</Notional>
         <Calendar>US</Calendar>
     </VarianceSwapData>

@@ -63,11 +63,15 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     else if (arguments_.startDate == today) {
         // The only time the QL price works
         variance = calculateFutureVariance();
+        results_.additionalResults["accruedVariance"] = 0;
+        results_.additionalResults["futureVariance"] = variance;
     }
     else {
         // Get weighted average of Future and Realised variancies.
-        Real futVar = calculateFutureVariance();
         Real accVar = calculateAccruedVariance();
+        Real futVar = calculateFutureVariance();
+        results_.additionalResults["accruedVariance"] = accVar;
+        results_.additionalResults["futureVariance"] = futVar;
 
         Real totalTime = calendar_.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
         Real accTime = calendar_.businessDaysBetween(arguments_.startDate, today, true, true);
@@ -80,7 +84,7 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     Real multiplier = arguments_.position == Position::Long ? 1.0 : -1.0;
 
     results_.variance = variance;
-    results_.value = multiplier * df * arguments_.notional * (variance - arguments_.strike);
+    results_.value = multiplier * df * arguments_.notional * 10000.0 * (variance - arguments_.strike); //factor of 10000 to convert vols to market quotes
 }
 
 Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance() const {
@@ -161,9 +165,6 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
     default:
         QL_FAIL("Unknown position");
     }
-    results_.value = multiplier * riskFreeDiscount * arguments_.notional *
-        (results_.variance - arguments_.strike);
-
     results_.additionalResults["optionWeights"] = optionWeights;
 
     return variance;

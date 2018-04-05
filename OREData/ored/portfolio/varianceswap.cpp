@@ -38,10 +38,11 @@ void VarSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(notional_ > 0, "VarSwap::build() invalid notional " << notional_);
 
     // Input strike is annualised Vol
-    // QL::varianceStrike needs a annualised variance.
+    // The quantlib strike and notional are in terms of variance, not volatility, so we convert here.
     Real varianceStrike = strike_ * strike_;
+    Real varianceNotional = notional_ / (2 * 100 * notional_);
 
-    boost::shared_ptr<VarianceSwap> varSwap(new VarianceSwap(longShort, varianceStrike, notional_, startDate, endDate));
+    boost::shared_ptr<VarianceSwap> varSwap(new VarianceSwap(longShort, varianceStrike, varianceNotional, startDate, endDate));
 
     // Pricing Engine
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
