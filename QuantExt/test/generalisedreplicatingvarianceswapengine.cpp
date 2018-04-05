@@ -68,6 +68,7 @@ namespace testsuite {
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
 
+    SavedSettings backup;
     Date today = Date::todaysDate();
     Settings::instance().evaluationDate() = today;
     Calendar cal = TARGET();
@@ -120,6 +121,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
 
 void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
 
+    SavedSettings backup; 
     Date today = Date::todaysDate();
     Settings::instance().evaluationDate() = today;
     DayCounter dc = Actual365Fixed();
@@ -222,6 +224,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap()
         { Option::Call, 135,  0.13 }
     };
 
+    SavedSettings backup;
     DayCounter dc = Actual365Fixed();
     Date today = Date::todaysDate();
     Settings::instance().evaluationDate() = today;
