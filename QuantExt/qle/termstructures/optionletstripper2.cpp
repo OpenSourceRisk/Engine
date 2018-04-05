@@ -99,6 +99,7 @@ void OptionletStripper2::performCalculations() const {
     spreadsVolImplied_ = spreadsVolImplied(discountCurve);
 
     StrippedOptionletAdapter adapter(stripper1_);
+    adapter.enableExtrapolation();
 
     Volatility unadjustedVol, adjustedVol;
     for (Size j = 0; j < nOptionExpiries_; ++j) {
@@ -154,6 +155,7 @@ OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
     Real targetValue, const Handle<YieldTermStructure>& discount)
     : cap_(cap), targetValue_(targetValue), discount_(discount) {
     boost::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper1));
+    adapter->enableExtrapolation();
 
     // set an implausible value, so that calculation is forced
     // at first operator()(Volatility x) call
