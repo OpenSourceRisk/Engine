@@ -1012,7 +1012,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>KRW</TargetCurrency>
-    <PointsFactor>100</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1022,7 +1022,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>INR</TargetCurrency>
-    <PointsFactor>100</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1052,7 +1052,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>IDR</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
