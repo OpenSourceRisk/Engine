@@ -702,14 +702,6 @@
     <Index>RUB-MOSPRIME-3M</Index>
   </Swap>
   <Swap>
-    <Id>THB-6M-SWAP</Id>
-    <FixedCalendar>THB</FixedCalendar>
-    <FixedFrequency>Semiannual</FixedFrequency>
-    <FixedConvention>MF</FixedConvention>
-    <FixedDayCounter>A365</FixedDayCounter>
-    <Index>THB-BIBOR-6M</Index>
-  </Swap>
-  <Swap>
     <Id>TWD-3M-SWAP</Id>
     <FixedCalendar>TWD</FixedCalendar>
     <FixedFrequency>Quarterly</FixedFrequency>
