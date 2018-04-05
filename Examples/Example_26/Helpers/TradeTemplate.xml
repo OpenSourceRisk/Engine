@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Templates>
+<Portfolio>
 <Trade id="swaptemplate">
 	<TradeType>Swap</TradeType>
 	<Envelope>
@@ -11,26 +11,25 @@
 	  <LegData>
 		<LegType>Fixed</LegType>
 		<Payer>false</Payer>
-		<Currency></Currency>
+		<Currency>EUR</Currency>
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
 		</Notionals>
-		<DayCounter></DayCounter>
-		<PaymentConvention></PaymentConvention>
+		<DayCounter>ACT/360</DayCounter>
+		<PaymentConvention>MF</PaymentConvention>
 		<FixedLegData>
 		  <Rates>
-			<Rate></Rate>
+			<Rate>0</Rate>
 		  </Rates>
 		</FixedLegData>
 		<ScheduleData>
 		  <Rules>
-			<StartDate></StartDate>
-			<EndDate></EndDate>
-			<Tenor></Tenor>
-			<Calendar></Calendar>
-			<Convention></Convention>
-			<TermConvention></TermConvention>
-			<Rule></Rule>
+			<StartDate>20160205</StartDate>
+			<EndDate>20170205</EndDate>
+			<Tenor>1Y</Tenor>
+			<Calendar>TARGET</Calendar>
+			<Convention>MF</Convention>
+			<TermConvention>MF</TermConvention>
 			<EndOfMonth/>
 			<FirstDate/>
 			<LastDate/>
@@ -40,29 +39,28 @@
 	  <LegData>
 		<LegType>Floating</LegType>
 		<Payer>true</Payer>
-		<Currency></Currency>
+		<Currency>EUR</Currency>
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
 		</Notionals>
-		<DayCounter></DayCounter>
-		<PaymentConvention></PaymentConvention>
+		<DayCounter>ACT/360</DayCounter>
+		<PaymentConvention>MF</PaymentConvention>
 		<FloatingLegData>
-		  <Index></Index>
+		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
 		  <IsInArrears>false</IsInArrears>
-		  <FixingDays></FixingDays>
+		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
 		  <Rules>
-			<StartDate></StartDate>
-			<EndDate></EndDate>
-			<Tenor></Tenor>
-			<Calendar></Calendar>
-			<Convention></Convention>
-			<TermConvention></TermConvention>
-			<Rule></Rule>
+			<StartDate>20160205</StartDate>
+			<EndDate>20170205</EndDate>
+			<Tenor>1Y</Tenor>
+			<Calendar>TARGET</Calendar>
+			<Convention>MF</Convention>
+			<TermConvention>MF</TermConvention>
 			<EndOfMonth/>
 			<FirstDate/>
 			<LastDate/>
@@ -81,10 +79,10 @@
   <ForwardRateAgreementData>
     <StartDate></StartDate>
     <EndDate></EndDate>
-    <Currency></Currency>
-    <Index></Index>
+    <Currency>EUR</Currency>
+    <Index>EUR-EURIBOR-1Y</Index>
     <LongShort>Long</LongShort>
-    <Strike></Strike>
+    <Strike>0</Strike>
     <Notional>10000000</Notional>
   </ForwardRateAgreementData>
 </Trade>
@@ -99,8 +97,8 @@
     <ValueDate></ValueDate>
     <BoughtCurrency>EUR</BoughtCurrency>
     <BoughtAmount>1000000</BoughtAmount>
-    <SoldCurrency></SoldCurrency>
-    <SoldAmount></SoldAmount>
+    <SoldCurrency>EUR</SoldCurrency>
+    <SoldAmount>1000000</SoldAmount>
   </FxForwardData>
 </Trade>
 <Trade id="xccybasisswaptemplate">
@@ -114,7 +112,7 @@
 	  <LegData>
 		<LegType>Floating</LegType>
 		<Payer>false</Payer>
-		<Currency></Currency>
+		<Currency>EUR</Currency>
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
 		  <Exchanges>
@@ -122,25 +120,24 @@
             <NotionalFinalExchange>true</NotionalFinalExchange>
           </Exchanges>
 		</Notionals>
-		<DayCounter></DayCounter>
-		<PaymentConvention></PaymentConvention>
+		<DayCounter>ACT/360</DayCounter>
+		<PaymentConvention>MF</PaymentConvention>
 		<FloatingLegData>
-		  <Index></Index>
+		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
 		  <IsInArrears>false</IsInArrears>
-		  <FixingDays></FixingDays>
+		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
 		  <Rules>
-			<StartDate></StartDate>
-			<EndDate></EndDate>
-			<Tenor></Tenor>
-			<Calendar></Calendar>
-			<Convention></Convention>
-			<TermConvention></TermConvention>
-			<Rule></Rule>
+			<StartDate>20160205</StartDate>
+			<EndDate>20170205</EndDate>
+			<Tenor>1Y</Tenor>
+			<Calendar>TARGET</Calendar>
+			<Convention>MF</Convention>
+			<TermConvention>MF</TermConvention>
 			<EndOfMonth/>
 			<FirstDate/>
 			<LastDate/>
@@ -150,7 +147,7 @@
 	  <LegData>
 		<LegType>Floating</LegType>
 		<Payer>true</Payer>
-		<Currency></Currency>
+		<Currency>EUR</Currency>
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
           <Exchanges>
@@ -158,25 +155,24 @@
             <NotionalFinalExchange>true</NotionalFinalExchange>
           </Exchanges>
         </Notionals>
-		<DayCounter></DayCounter>
-		<PaymentConvention></PaymentConvention>
+		<DayCounter>ACT/360</DayCounter>
+		<PaymentConvention>MF</PaymentConvention>
 		<FloatingLegData>
-		  <Index></Index>
+		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
 			<Spread>0.000000</Spread>
 		  </Spreads>
 		  <IsInArrears>false</IsInArrears>
-		  <FixingDays></FixingDays>
+		  <FixingDays>0</FixingDays>
 		</FloatingLegData>
 		<ScheduleData>
 		  <Rules>
-			<StartDate></StartDate>
-			<EndDate></EndDate>
-			<Tenor></Tenor>
-			<Calendar></Calendar>
-			<Convention></Convention>
-			<TermConvention></TermConvention>
-			<Rule></Rule>
+			<StartDate>20160205</StartDate>
+			<EndDate>20170205</EndDate>
+			<Tenor>1Y</Tenor>
+			<Calendar>TARGET</Calendar>
+			<Convention>MF</Convention>
+			<TermConvention>MF</TermConvention>
 			<EndOfMonth/>
 			<FirstDate/>
 			<LastDate/>
@@ -185,4 +181,4 @@
 	  </LegData>
 	</SwapData>
 </Trade>
-</Templates>
+</Portfolio>
