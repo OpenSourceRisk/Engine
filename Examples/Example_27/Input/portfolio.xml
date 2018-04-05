@@ -7,7 +7,7 @@
       <NettingSetId>CPTY_A</NettingSetId>
       <AdditionalFields/>
     </Envelope>
-    <VarSwapData>
+    <VarianceSwapData>
         <StartDate>2016-01-29</StartDate>
         <EndDate>2016-05-05</EndDate>
         <Currency>USD</Currency>
@@ -16,6 +16,6 @@
         <Strike>0.40</Strike>
         <Notional>50000</Notional>
         <Calendar>US</Calendar>
-    </VarSwapData>
+    </VarianceSwapData>
     </Trade>
 </Portfolio>

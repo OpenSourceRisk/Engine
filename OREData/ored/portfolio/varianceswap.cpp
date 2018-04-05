@@ -60,7 +60,7 @@ void VarSwap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
 void VarSwap::fromXML(XMLNode *node) {
     Trade::fromXML(node);
-    XMLNode* vNode = XMLUtils::getChildNode(node, "VarSwapData");
+    XMLNode* vNode = XMLUtils::getChildNode(node, "VarianceSwapData");
     longShort_ = XMLUtils::getChildValue(vNode, "LongShort", true);
     eqName_ = XMLUtils::getChildValue(vNode, "Name", true);
     currency_ = XMLUtils::getChildValue(vNode, "Currency", true);
@@ -73,7 +73,7 @@ void VarSwap::fromXML(XMLNode *node) {
 
 XMLNode* VarSwap::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* vNode = doc.allocNode("VarSwapData");
+    XMLNode* vNode = doc.allocNode("VarianceSwapData");
     XMLUtils::appendNode(node, vNode);
     XMLUtils::addChild(doc, vNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, vNode, "Name", eqName_);
