@@ -33,8 +33,9 @@ namespace data {
 void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     // Make sure the leg is floating or CMS
-    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS"),
-               "CapFloor build error, LegType must be Floating or CMS");
+    QL_REQUIRE((legData_.legType() == "Floating") || (legData_.legType() == "CMS") || 
+               (legData_.legType() == "CPI") || (legData_.legType() == "YY"),
+               "CapFloor build error, LegType must be Floating, CMS, CPI or YY");
 
     // Determine if we have a cap, a floor or a collar
     QL_REQUIRE(caps_.size() > 0 || floors_.size() > 0, "CapFloor build error, no cap rates or floor rates provided");
@@ -130,7 +131,14 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(capFloor));
         maturity_ = capFloor->maturityDate();
 
-    } else {
+    }
+    else if (legData_.legType() == "CPI") {
+        // Add CPI Cap/Floors
+    }
+    else if (legData_.legType() == "YY") {
+
+    }
+    else {
         QL_FAIL("Invalid legType for CapFloor");
     }
 

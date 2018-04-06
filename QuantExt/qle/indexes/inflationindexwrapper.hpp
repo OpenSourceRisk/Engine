@@ -82,7 +82,7 @@ class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
 public:
     YoYInflationCouponPricer2(
         const Handle<YieldTermStructure>& nominalTs,
-        const Handle<YoYOptionletVolatilitySurface>& capletVol = Handle<YoYOptionletVolatilitySurface>())
+        const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol = Handle<QuantLib::YoYOptionletVolatilitySurface>())
         : YoYInflationCouponPricer(capletVol), nominalTs_(nominalTs) {}
     //! \name InflationCouponPricer interface
     //@{

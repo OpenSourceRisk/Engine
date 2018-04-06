@@ -37,6 +37,7 @@
 #include <ql/time/date.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -124,6 +125,12 @@ public:
     //@{
     virtual Handle<OptionletVolatilityStructure>
     capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities
+    //@{
+    virtual Handle<QuantExt::YoYOptionletVolatilitySurface>
+    yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Inflation Indexes

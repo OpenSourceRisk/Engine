@@ -104,6 +104,10 @@ public:
     //! CapFloor volatilities
     Handle<OptionletVolatilityStructure> capFloorVol(const string& ccy,
                                                      const string& configuration = Market::defaultConfiguration) const;
+   
+    //! YoY Inflation CapFloor volatilities
+    Handle<QuantExt::YoYOptionletVolatilitySurface> yoyCapFloorVol(const string& ccy,
+                                                         const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
@@ -172,6 +176,7 @@ protected:
     map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
+    map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorCurves_;
     map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> inflationCapFloorPriceSurfaces_;
