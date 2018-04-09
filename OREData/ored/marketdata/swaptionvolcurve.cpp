@@ -315,7 +315,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
         }
 
     } catch (std::exception& e) {
-        QL_FAIL("swaption vol curve building failed :" << e.what());
+        QL_FAIL("swaption volatility curve building failed for curve " << spec.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
     } catch (...) {
         QL_FAIL("swaption vol curve building failed: unknown error");
     }
