@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file chfsonar.hpp
+/*! \file chfsaron.hpp
     \brief Swiss Average Rate Overnight (SARON)
     \ingroup indexes
 */
