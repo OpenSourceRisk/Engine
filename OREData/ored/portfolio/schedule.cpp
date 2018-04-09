@@ -141,6 +141,22 @@ Schedule makeSchedule(const ScheduleRules& data) {
     return Schedule(startDate, endDate, tenor, calendar, bdc, bdcEnd, rule, endOfMonth, firstDate, lastDate);
 }
 
+namespace {
+// helper function used in makeSchedule below
+template <class T>
+void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, const std::function<T(string)>& parser) {
+    if (s != "") {
+        T tmp = parser(s);
+        if (hasT) {
+            hasConsistentT = hasConsistentT && (tmp == t);
+        } else {
+            t = tmp;
+            hasT = true;
+        }
+    }
+}
+} // namespace
+
 Schedule makeSchedule(const ScheduleData& data) {
     // build all the date and rule based sub-schedules we have
     vector<Schedule> schedules;
@@ -154,50 +170,39 @@ Schedule makeSchedule(const ScheduleData& data) {
         return schedules.front();
     else {
         // if we have multiple, combine them
+
         // 1) sort by start date
         std::sort(schedules.begin(), schedules.end(),
                   [](const Schedule& lhs, const Schedule& rhs) -> bool { return lhs.startDate() < rhs.startDate(); });
-        // 2) Build vector of dates, checking that the dates do not overlap and that we have consistent
-        // meta data, if given
-        //
-        // the convention needs a separate treatment, since the schedule does not provide an empty value for
-        // it, so we do the consistency check on the schedule data level
-        BusinessDayConvention convention = Unadjusted;
-        string conventionStr = "";
+
+        // 2) check if meta data is present, and if yes if it is consistent across schedules;
+        //    the only exception is the term date convention, this is taken from the last schedule always
+        BusinessDayConvention convention;
+        Calendar calendar;
+        Period tenor;
+        DateGeneration::Rule rule;
+        bool endOfMonth;
+        bool hasCalendar = false, hasConvention = false, hasTenor = false, hasRule = false, hasEndOfMonth = false,
+             hasConsistentCalendar = true, hasConsistentConvention = true, hasConsistentTenor = true,
+             hasConsistentRule = true, hasConsistentEndOfMonth = true;
         for (auto& d : data.dates()) {
-            if (d.convention() != "") {
-                QL_REQUIRE(conventionStr == "" || conventionStr == d.convention(),
-                           "inconsistent conventions in schedule blocks, " << conventionStr << " and "
-                                                                           << d.convention());
-                conventionStr = d.convention();
-                convention = parseBusinessDayConvention(d.convention());
-            }
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
+                                              parseBusinessDayConvention);
+            updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
         }
         for (auto& d : data.rules()) {
-            if (d.convention() != "") {
-                QL_REQUIRE(conventionStr == "" || conventionStr == d.convention(),
-                           "inconsistent conventions in schedule blocks, " << conventionStr << " and "
-                                                                           << d.convention());
-                conventionStr = d.convention();
-                convention = parseBusinessDayConvention(d.convention());
-            }
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
+                                              parseBusinessDayConvention);
+            updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
+            updateData<bool>(d.endOfMonth(), endOfMonth, hasEndOfMonth, hasConsistentEndOfMonth, parseBool);
+            updateData<DateGeneration::Rule>(d.rule(), rule, hasRule, hasConsistentRule, parseDateGenerationRule);
         }
-        //
+
+        // 3) combine dates and fill isRegular flag
         const Schedule& s0 = schedules.front();
         vector<Date> dates = s0.dates();
-        Calendar cal = s0.calendar();
-        boost::optional<BusinessDayConvention> termDateConvention = boost::none;
-        if (s0.hasTerminationDateBusinessDayConvention())
-            termDateConvention = s0.terminationDateBusinessDayConvention();
-        boost::optional<Period> tenor = boost::none;
-        if (s0.hasTenor())
-            tenor = s0.tenor();
-        boost::optional<DateGeneration::Rule> rule = boost::none;
-        if (s0.hasRule())
-            rule = s0.rule();
-        boost::optional<bool> endOfMonth = boost::none;
-        if (s0.hasEndOfMonth())
-            endOfMonth = s0.endOfMonth();
         std::vector<bool> isRegular(s0.dates().size() - 1, false);
         if (s0.hasIsRegular())
             isRegular = s0.isRegular();
@@ -205,33 +210,7 @@ Schedule makeSchedule(const ScheduleData& data) {
         isRegular.push_back(false);
         for (Size i = 1; i < schedules.size(); ++i) {
             const Schedule& s = schedules[i];
-            QL_REQUIRE(s.calendar() == cal || s.calendar() == NullCalendar(),
-                       "Inconsistant calendar for schedule " << i << " " << s.calendar() << " expected " << cal);
             QL_REQUIRE(dates.back() <= s.dates().front(), "Dates mismatch");
-            // set convention, termDateConvention, tenor, rule, eom and check for consistency, if already set
-            if (s.hasTenor()) {
-                QL_REQUIRE(!tenor || s.tenor() == tenor,
-                           "inconsistent tenor for schedule " << i << " " << s.tenor() << " expected " << *tenor);
-                tenor = s.tenor();
-            }
-            if (s.hasRule()) {
-                QL_REQUIRE(!rule || s.rule() == rule,
-                           "inconsistent rule for schedule " << i << " " << s.rule() << " expected " << *rule);
-                rule = s.rule();
-            }
-            if (s.hasTerminationDateBusinessDayConvention()) {
-                QL_REQUIRE(!termDateConvention || termDateConvention == s.terminationDateBusinessDayConvention(),
-                           "inconsistent term convention for schedule "
-                               << i << " " << s.terminationDateBusinessDayConvention() << " expected "
-                               << *termDateConvention);
-                termDateConvention = s.terminationDateBusinessDayConvention();
-            }
-            if (s.hasEndOfMonth()) {
-                QL_REQUIRE(!endOfMonth || endOfMonth == s.endOfMonth(), "inconsistent eom for schedule "
-                                                                            << i << " " << s.endOfMonth()
-                                                                            << " expected " << *endOfMonth);
-                endOfMonth = s.endOfMonth();
-            }
             // if the end points match up, skip one to avoid duplicates, otherwise take both
             Size offset = dates.back() == s.dates().front() ? 1 : 0;
             isRegular.erase(isRegular.end() - offset,
@@ -250,8 +229,16 @@ Schedule makeSchedule(const ScheduleData& data) {
             // add the dates
             dates.insert(dates.end(), s.dates().begin() + offset, s.dates().end());
         }
-        // 3) Build schedule
-        return Schedule(dates, cal, convention, termDateConvention, tenor, rule, endOfMonth, isRegular);
+
+        // 4) Build schedule
+        return Schedule(
+            dates, hasConsistentCalendar ? calendar : NullCalendar(), hasConsistentConvention ? convention : Unadjusted,
+            schedules.back().hasTerminationDateBusinessDayConvention()
+                ? boost::optional<BusinessDayConvention>(schedules.back().terminationDateBusinessDayConvention())
+                : boost::none,
+            hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
+            hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
+            hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
     }
 }
 } // namespace data
