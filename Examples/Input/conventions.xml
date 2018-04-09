@@ -215,6 +215,10 @@
     <Index>EUR-EURIBOR-3M</Index>
   </FRA>
   <FRA>
+    <Id>EUR-1M-FRA-CONVENTIONS</Id>
+    <Index>EUR-EURIBOR-1M</Index>
+  </FRA>
+  <FRA>
     <Id>AUD-3M-FRA-CONVENTIONS</Id>
     <Index>AUD-BBSW-3M</Index>
   </FRA>
