@@ -22,6 +22,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/indexes/inflationindexwrapper.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
@@ -30,6 +31,22 @@
 using namespace QuantLib;
 using namespace std;
 using namespace ore::data;
+
+
+namespace {
+
+void addCapFloorQuotes(const string& fileString, const string& path) {
+    vector<string> fileNames;
+    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
+    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
+        boost::trim(*it);
+        *it = path + "/" + *it;
+    }
+    return fileNames;
+}
+
+} // anonymous namespace
+
 
 namespace ore {
 namespace data {
@@ -44,8 +61,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& config =
             curveConfigs.inflationCapFloorPriceSurfaceConfig(spec.curveConfigID());
 
-        QL_REQUIRE(config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC,
-                   "Only type ZC is supported for inflation cap floor price surfaces currently");
+        QL_REQUIRE((config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC) || 
+                   (config->type() == InflationCapFloorPriceSurfaceConfig::Type::YY),
+                   "Inflation cap floor price surfaces must be of type 'ZC' or 'YY'");
 
         Handle<YieldTermStructure> yts;
         auto it = yieldCurves.find(config->yieldTermStructure());
@@ -58,23 +76,6 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                                                    << spec.name() << ", was not found.");
         }
 
-        boost::shared_ptr<ZeroInflationIndex> index;
-        auto it2 = inflationCurves.find(config->indexCurve());
-        if (it2 != inflationCurves.end()) {
-            boost::shared_ptr<ZeroInflationTermStructure> ts =
-                boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
-            QL_REQUIRE(ts,
-                       "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
-            index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                                            Handle<ZeroInflationTermStructure>(ts));
-        } else {
-            QL_FAIL("The zero inflation curve, " << config->indexCurve()
-                                                 << ", required in building the inflation cap floor price surface "
-                                                 << spec.name() << ", was not found");
-        }
-
-        // We loop over all market data, looking for quotes that match the configuration
-
         const std::vector<Period>& terms = config->maturities();
         std::vector<Real> capStrikes = config->capStrikes();
         std::vector<Real> floorStrikes = config->floorStrikes();
@@ -82,12 +83,64 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
             fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());
 
+
+
+        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC) {
+            // ZC Curve
+
+            boost::shared_ptr<ZeroInflationIndex> index;
+            auto it2 = inflationCurves.find(config->indexCurve());
+            if (it2 != inflationCurves.end()) {
+                boost::shared_ptr<ZeroInflationTermStructure> ts =
+                    boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
+                QL_REQUIRE(ts,
+                    "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
+                index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
+                    Handle<ZeroInflationTermStructure>(ts));
+            }
+            else {
+                QL_FAIL("The zero inflation curve, " << config->indexCurve()
+                    << ", required in building the inflation cap floor price surface "
+                    << spec.name() << ", was not found");
+            }
+        }
+        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::YY) {
+
+            boost::shared_ptr<YoYInflationIndex> index;
+            auto it2 = inflationCurves.find(config->indexCurve());
+            if (it2 != inflationCurves.end()) {
+                boost::shared_ptr<YoYInflationTermStructure> ts =
+                    boost::dynamic_pointer_cast<YoYInflationTermStructure>(it2->second->inflationTermStructure());
+                QL_REQUIRE(ts,
+                    "inflation term structure " << config->indexCurve() << " was expected to be yoy, but is not");
+                bool interp = it2->second->interpolatedIndex());
+                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                    parseZeroInflationIndex(config->index(), interp), interp, Handle<YoYInflationTermStructure>(ts));
+            }
+            else {
+                QL_FAIL("The yoy inflation curve, " << config->indexCurve()
+                    << ", required in building the inflation cap floor price surface "
+                    << spec.name() << ", was not found");
+            }
+
+        }
+
+        // We loop over all market data, looking for quotes that match the configuration
+
+
         for (auto& md : loader.loadQuotes(asof)) {
 
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR) {
+            if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
+                                           md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
-                boost::shared_ptr<ZcInflationCapFloorQuote> q =
-                    boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
+                boost::shared_ptr<InflationCapFloorQuote> q;
+                    
+                if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC) {
+                    q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
+                }
+                else {
+                    q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
+                }
 
                 if (q != NULL && q->index() == spec.index()) {
                     auto it1 = std::find(terms.begin(), terms.end(), q->term());
@@ -98,7 +151,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                             if (close_enough(capStrikes[i], strike))
                                 strikeIdx = i;
                         }
-                    } else {
+                    }
+                    else {
                         for (Size i = 0; i < floorStrikes.size(); ++i) {
                             if (close_enough(floorStrikes[i], strike))
                                 strikeIdx = i;
@@ -107,11 +161,12 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                     if (it1 != terms.end() && strikeIdx != Null<Size>()) {
                         if (q->isCap()) {
                             cPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
-                        } else {
+                        }
+                        else {
                             fPrice[strikeIdx][it1 - terms.begin()] = q->quote()->value();
                         }
                     }
-                }
+                }               
             }
         }
 

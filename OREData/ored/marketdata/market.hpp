@@ -25,6 +25,7 @@
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
+#include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -141,9 +142,14 @@ public:
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
-    inflationCapFloorPriceSurface(const string& indexName,
-                                  const string& configuration = Market::defaultConfiguration) const = 0;
+    cpiInflationCapFloorPriceSurface(const string& indexName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
 
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<YoYCapFloorTermPriceSurface>
+    yoyInflationCapFloorPriceSurface(const string& indexName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
+    
     //! \name Equity curves
     //@{
     virtual Handle<Quote> equitySpot(const string& eqName,

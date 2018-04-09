@@ -440,11 +440,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 auto itr = requiredInflationCapFloorPriceSurfaces.find(infcapfloorspec->name());
                 if (itr == requiredInflationCapFloorPriceSurfaces.end()) {
                     LOG("Building InflationCapFloorPriceSurface for asof " << asof);
-                    boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
+                    boost::shared_ptr<InflationCapFloorPriceSurface> cpiInflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
                     itr = requiredInflationCapFloorPriceSurfaces
-                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
+                              .insert(make_pair(infcapfloorspec->name(), cpiInflationCapFloorPriceSurface))
                               .first;
                 }
                 for (const auto it : params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first)) {
@@ -452,7 +452,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
                                                                      << " to configuration " << configuration.first);
                         inflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
-                            Handle<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface());
+                            Handle<CPICapFloorTermPriceSurface>(itr->second->cpiInflationCapFloorPriceSurface());
                     }
                 }
                 break;

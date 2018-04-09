@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 
 #include <ored/configuration/conventions.hpp>
@@ -58,11 +57,11 @@ public:
     //! getters
     const InflationCapFloorPriceSurfaceSpec& spec() const { return spec_; }
 
-    const boost::shared_ptr<CPICapFloorTermPriceSurface> inflationCapFloorPriceSurface() const { return surface_; }
+    const boost::shared_ptr<InflationTermStructure> inflationCapFloorPriceSurface() const { return surface_; }
 
 private:
     InflationCapFloorPriceSurfaceSpec spec_;
-    boost::shared_ptr<CPICapFloorTermPriceSurface> surface_;
+    boost::shared_ptr<InflationTermStructure> surface_;
 };
 } // namespace data
 } // namespace ore
