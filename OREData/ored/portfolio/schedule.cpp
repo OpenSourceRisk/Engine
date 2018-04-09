@@ -232,13 +232,14 @@ Schedule makeSchedule(const ScheduleData& data) {
 
         // 4) Build schedule
         return Schedule(
-            dates, hasConsistentCalendar ? calendar : NullCalendar(), hasConsistentConvention ? convention : Unadjusted,
+            dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
+            hasConvention && hasConsistentConvention ? convention : Unadjusted,
             schedules.back().hasTerminationDateBusinessDayConvention()
                 ? boost::optional<BusinessDayConvention>(schedules.back().terminationDateBusinessDayConvention())
                 : boost::none,
-            hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
-            hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
-            hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
+            hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
+            hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
+            hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
     }
 }
 } // namespace data
