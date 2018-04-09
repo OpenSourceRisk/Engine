@@ -92,6 +92,7 @@ public:
     //@{
     const string& calendar() const { return calendar_; }
     const string& convention() const { return convention_; }
+    const string& tenor() const { return tenor_; }
     const vector<string>& dates() const { return dates_; }
     //@}
 
@@ -103,6 +104,7 @@ public:
 private:
     string calendar_;
     string convention_;
+    string tenor_;
     vector<string> dates_;
 };
 

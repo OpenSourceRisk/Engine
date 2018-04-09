@@ -58,12 +58,15 @@ void ScheduleDates::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Dates");
     calendar_ = XMLUtils::getChildValue(node, "Calendar");
     convention_ = XMLUtils::getChildValue(node, "Convention");
+    tenor_ = XMLUtils::getChildValue(node, "Tenor");
     dates_ = XMLUtils::getChildrenValues(node, "Dates", "Date");
 }
 
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
+    XMLUtils::addChild(doc, node, "Convention", convention_);
+    XMLUtils::addChild(doc, node, "Tenor", tenor_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
     return node;
 }
@@ -94,10 +97,13 @@ Schedule makeSchedule(const ScheduleDates& data) {
     BusinessDayConvention convention = Unadjusted;
     if (data.convention() != "")
         convention = parseBusinessDayConvention(data.convention());
+    boost::optional<Period> tenor = boost::none;
+    if (data.tenor() != "")
+        tenor = parsePeriod(data.tenor());
     vector<Date> scheduleDates(data.dates().size());
     for (Size i = 0; i < data.dates().size(); i++)
         scheduleDates[i] = calendar.adjust(parseDate(data.dates()[i]), convention);
-    return Schedule(scheduleDates, calendar, convention);
+    return Schedule(scheduleDates, calendar, convention, boost::none, tenor);
 }
 
 Schedule makeSchedule(const ScheduleRules& data) {
