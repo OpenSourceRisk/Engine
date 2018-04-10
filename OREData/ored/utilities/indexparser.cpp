@@ -133,6 +133,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
         return it->second->build(p, h);
+    } else if (tokens[1] == "GENERIC") {
+        // We have a generic index
+        auto ccy = parseCurrency(tokens[0]);
+        return boost::make_shared<GenericIborIndex>(p, ccy, h);
     } else {
         QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
     }
