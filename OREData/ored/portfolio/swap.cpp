@@ -73,7 +73,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
             // 1. Parse the index we have with no term structures
             boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(legData_[i].fxIndex());
-            QL_REQUIRE(fxIndexBase != nullptr, "Resetting XCCY - fx index base could not be parsed.");
 
             // get market data objects - we set up the index using source/target, fixing days
             // and calendar from legData_[i].fxIndex()
