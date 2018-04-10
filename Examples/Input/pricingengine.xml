@@ -64,9 +64,9 @@
     <Engine>BlackIborCouponPricer</Engine>
     <EngineParameters>
       <!-- Black76 or BivariateLognormal -->
-      <TimingAdjustment>Black76</TimingAdjustment>
+      <Parameter name="TimingAdjustment">Black76</Parameter>
       <!-- Correlation Parameter for BivariateLognormal -->
-      <Correlation>1.0</Correlation>
+      <Parameter name="Correlation">1.0</Parameter>
     </EngineParameters>
   </Product>
   <Product type="EquityForward">
