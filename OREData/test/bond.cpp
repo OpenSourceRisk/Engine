@@ -144,7 +144,7 @@ struct CommonVars {
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
         LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
-                             "", 0, {amortizationData});
+                             "", 0, "", {amortizationData});
 
         Envelope env("CP1");
 
@@ -159,7 +159,7 @@ struct CommonVars {
         AmortizationData amortizationData(amortType, value, start, end, fixtenor, underflow);
         LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
                                 floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true,
-                                "", 0, "", 0, {amortizationData});
+                                "", 0, "", 0, "", {amortizationData});
 
         Envelope env("CP1");
 
@@ -178,7 +178,7 @@ struct CommonVars {
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
         LegData fixedLegData(boost::make_shared<FixedLegData>(vector<double>(1, fixedRate)), isPayer, ccy,
                              fixedSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true, "", 0,
-                             "", 0, {amortizationData1, amortizationData2});
+                             "", 0, "", {amortizationData1, amortizationData2});
 
         Envelope env("CP1");
 
@@ -197,7 +197,7 @@ struct CommonVars {
         AmortizationData amortizationData2(amortType2, value2, end1, end, fixtenor, underflow2);
         LegData floatingLegData(boost::make_shared<FloatingLegData>("EUR-EURIBOR-6M", 2, false, spread), isPayer, ccy,
                                 floatingSchedule, fixDC, notionals, vector<string>(), conv, false, false, false, true,
-                                "", 0, "", 0, {amortizationData1, amortizationData2});
+                                "", 0, "", 0, "", {amortizationData1, amortizationData2});
 
         Envelope env("CP1");
 
