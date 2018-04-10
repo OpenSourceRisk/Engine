@@ -86,7 +86,8 @@ public:
     //! Default constructor
     ScheduleDates() {}
     //! Constructor
-    ScheduleDates(const string& calendar, const vector<string>& dates) : calendar_(calendar), dates_(dates) {}
+    ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates)
+        : calendar_(calendar), convention_(convention), tenor_(tenor), dates_(dates) {}
 
     //! \name Inspectors
     //@{
