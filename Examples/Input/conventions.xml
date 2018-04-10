@@ -71,6 +71,21 @@
     <Index>CHF-TOIS</Index>
   </Deposit>
   <Deposit>
+    <Id>CHF-SARON-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>CHF-SARON</Index>
+  </Deposit>
+  <Deposit>
+    <Id>DKK-DKKOIS-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>DKK-DKKOIS</Index>
+  </Deposit>
+  <Deposit>
+    <Id>SEK-SIOR-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>SEK-SIOR</Index>
+  </Deposit>
+  <Deposit>
     <Id>EUR-EONIA-CONVENTIONS</Id>
     <IndexBased>true</IndexBased>
     <Index>EUR-EONIA</Index>
@@ -739,9 +754,45 @@
     <Rule>Backward</Rule>
   </OIS>
   <OIS>
+    <Id>DKK-OIS-CONVENTIONS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>DKK-DKKOIS</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>0</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+  <OIS>
+    <Id>SEK-OIS-CONVENTIONS</Id>
+    <SpotLag>2</SpotLag>
+    <Index>SEK-SIOR</Index>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <PaymentLag>0</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+  <OIS>
     <Id>CHF-OIS-CONVENTIONS</Id>
     <SpotLag>1</SpotLag>
     <Index>CHF-TOIS</Index>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <PaymentLag>2</PaymentLag>
+    <EOM>false</EOM>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>Following</FixedConvention>
+    <FixedPaymentConvention>Following</FixedPaymentConvention>
+    <Rule>Backward</Rule>
+  </OIS>
+  <OIS>
+    <Id>CHF-OIS-SARON-CONVENTIONS</Id>
+    <SpotLag>1</SpotLag>
+    <Index>CHF-SARON</Index>
     <FixedDayCounter>30/360</FixedDayCounter>
     <PaymentLag>2</PaymentLag>
     <EOM>false</EOM>

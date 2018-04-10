@@ -86,11 +86,14 @@ public:
     //! Default constructor
     ScheduleDates() {}
     //! Constructor
-    ScheduleDates(const string& calendar, const vector<string>& dates) : calendar_(calendar), dates_(dates) {}
+    ScheduleDates(const string& calendar, const string& convention, const string& tenor, const vector<string>& dates)
+        : calendar_(calendar), convention_(convention), tenor_(tenor), dates_(dates) {}
 
     //! \name Inspectors
     //@{
     const string& calendar() const { return calendar_; }
+    const string& convention() const { return convention_; }
+    const string& tenor() const { return tenor_; }
     const vector<string>& dates() const { return dates_; }
     //@}
 
@@ -101,6 +104,8 @@ public:
     //@}
 private:
     string calendar_;
+    string convention_;
+    string tenor_;
     vector<string> dates_;
 };
 
