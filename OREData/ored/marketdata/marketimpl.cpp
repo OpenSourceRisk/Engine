@@ -309,7 +309,11 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-        for (auto& x : inflationCapFloorPriceSurfaces_) {
+        for (auto& x : cpiInflationCapFloorPriceSurfaces_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : yoyInflationCapFloorPriceSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }

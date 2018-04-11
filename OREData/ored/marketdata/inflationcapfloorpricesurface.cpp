@@ -25,28 +25,13 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 
 #include <algorithm>
 
 using namespace QuantLib;
 using namespace std;
 using namespace ore::data;
-
-
-namespace {
-
-void addCapFloorQuotes(const string& fileString, const string& path) {
-    vector<string> fileNames;
-    boost::split(fileNames, fileString, boost::is_any_of(",;"), boost::token_compress_on);
-    for (auto it = fileNames.begin(); it < fileNames.end(); it++) {
-        boost::trim(*it);
-        *it = path + "/" + *it;
-    }
-    return fileNames;
-}
-
-} // anonymous namespace
-
 
 namespace ore {
 namespace data {
@@ -82,52 +67,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
 
         Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
             fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());
-
-
-
-        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC) {
-            // ZC Curve
-
-            boost::shared_ptr<ZeroInflationIndex> index;
-            auto it2 = inflationCurves.find(config->indexCurve());
-            if (it2 != inflationCurves.end()) {
-                boost::shared_ptr<ZeroInflationTermStructure> ts =
-                    boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
-                QL_REQUIRE(ts,
-                    "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
-                index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
-                    Handle<ZeroInflationTermStructure>(ts));
-            }
-            else {
-                QL_FAIL("The zero inflation curve, " << config->indexCurve()
-                    << ", required in building the inflation cap floor price surface "
-                    << spec.name() << ", was not found");
-            }
-        }
-        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::YY) {
-
-            boost::shared_ptr<YoYInflationIndex> index;
-            auto it2 = inflationCurves.find(config->indexCurve());
-            if (it2 != inflationCurves.end()) {
-                boost::shared_ptr<YoYInflationTermStructure> ts =
-                    boost::dynamic_pointer_cast<YoYInflationTermStructure>(it2->second->inflationTermStructure());
-                QL_REQUIRE(ts,
-                    "inflation term structure " << config->indexCurve() << " was expected to be yoy, but is not");
-                bool interp = it2->second->interpolatedIndex());
-                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), interp), interp, Handle<YoYInflationTermStructure>(ts));
-            }
-            else {
-                QL_FAIL("The yoy inflation curve, " << config->indexCurve()
-                    << ", required in building the inflation cap floor price surface "
-                    << spec.name() << ", was not found");
-            }
-
-        }
-
+        
         // We loop over all market data, looking for quotes that match the configuration
-
-
         for (auto& md : loader.loadQuotes(asof)) {
 
             if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
@@ -237,12 +178,60 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         DLOG("Floor Strikes are: " << floorStrikesString.str());
         DLOGGERSTREAM << "Cap Price Matrix:\n" << cPrice << "Floor Price Matrix:\n" << fPrice;
 
-        // Build the term structure
-        surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
-            new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
-                1.0, config->startRate(), config->observationLag(), config->calendar(), config->businessDayConvention(),
-                config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
-                fPrice));
+
+        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::ZC) {
+            // ZC Curve
+
+            boost::shared_ptr<ZeroInflationIndex> index;
+            auto it2 = inflationCurves.find(config->indexCurve());
+            if (it2 != inflationCurves.end()) {
+                boost::shared_ptr<ZeroInflationTermStructure> ts =
+                    boost::dynamic_pointer_cast<ZeroInflationTermStructure>(it2->second->inflationTermStructure());
+                QL_REQUIRE(ts,
+                    "inflation term structure " << config->indexCurve() << " was expected to be zero, but is not");
+                index = parseZeroInflationIndex(config->index(), it2->second->interpolatedIndex(),
+                    Handle<ZeroInflationTermStructure>(ts));
+            }
+            else {
+                QL_FAIL("The zero inflation curve, " << config->indexCurve()
+                    << ", required in building the inflation cap floor price surface "
+                    << spec.name() << ", was not found");
+            }
+            // Build the term structure
+            surface_ = boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>(
+                new InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>(
+                    1.0, config->startRate(), config->observationLag(), config->calendar(), config->businessDayConvention(),
+                    config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
+                    fPrice));
+
+        }
+        if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::YY) {
+
+            boost::shared_ptr<YoYInflationIndex> index;
+            auto it2 = inflationCurves.find(config->indexCurve());
+            if (it2 != inflationCurves.end()) {
+                boost::shared_ptr<YoYInflationTermStructure> ts =
+                    boost::dynamic_pointer_cast<YoYInflationTermStructure>(it2->second->inflationTermStructure());
+                QL_REQUIRE(ts,
+                    "inflation term structure " << config->indexCurve() << " was expected to be yoy, but is not");
+                bool interp = it2->second->interpolatedIndex();
+                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                    parseZeroInflationIndex(config->index(), interp), interp, Handle<YoYInflationTermStructure>(ts));
+            }
+            else {
+                QL_FAIL("The yoy inflation curve, " << config->indexCurve()
+                    << ", required in building the inflation cap floor price surface "
+                    << spec.name() << ", was not found");
+            }
+            // Build the term structure
+            surface_ = boost::shared_ptr<InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
+                new InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>(
+                    0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(), config->businessDayConvention(),
+                    capStrikes, floorStrikes, terms, cPrice, fPrice));
+
+        }
+
+
     } catch (std::exception& e) {
         QL_FAIL("inflation cap floor price surface building failed: " << e.what());
     } catch (...) {

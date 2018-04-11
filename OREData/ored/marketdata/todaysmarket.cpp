@@ -447,14 +447,41 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                               .insert(make_pair(infcapfloorspec->name(), cpiInflationCapFloorPriceSurface))
                               .first;
                 }
-                for (const auto it : params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first)) {
+
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
                     if (it.second == spec->name()) {
                         LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
                                                                      << " to configuration " << configuration.first);
-                        inflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
-                            Handle<CPICapFloorTermPriceSurface>(itr->second->cpiInflationCapFloorPriceSurface());
+                        cpiInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<CPICapFloorTermPriceSurface>(
+                                boost::dynamic_pointer_cast<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
                     }
                 }
+
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.mapping(MarketObject::YoYInflationCapFloorPriceSurface, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding YoYInflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<YoYCapFloorTermPriceSurface>(
+                                boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
+                    }
+                }
+
                 break;
             }
 

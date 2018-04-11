@@ -66,11 +66,12 @@ enum class MarketObject {
     ZeroInflationCurve = 11,
     YoYInflationCurve = 12,
     InflationCapFloorPriceSurface = 13,
-    EquityCurve = 14,
-    EquityVol = 15,
-    Security = 16,
-    CommodityCurve = 17,
-    CommodityVolatility = 18
+    YoYInflationCapFloorPriceSurface = 14,
+    EquityCurve = 15,
+    EquityVol = 16,
+    Security = 17,
+    CommodityCurve = 18,
+    CommodityVolatility = 19
 };
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o);
