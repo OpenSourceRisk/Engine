@@ -177,14 +177,14 @@ Schedule makeSchedule(const ScheduleData& data) {
 
         // 2) check if meta data is present, and if yes if it is consistent across schedules;
         //    the only exception is the term date convention, this is taken from the last schedule always
-        BusinessDayConvention convention;
+        BusinessDayConvention convention, termConvention;
         Calendar calendar;
         Period tenor;
         DateGeneration::Rule rule;
         bool endOfMonth;
-        bool hasCalendar = false, hasConvention = false, hasTenor = false, hasRule = false, hasEndOfMonth = false,
-             hasConsistentCalendar = true, hasConsistentConvention = true, hasConsistentTenor = true,
-             hasConsistentRule = true, hasConsistentEndOfMonth = true;
+        bool hasCalendar = false, hasConvention = false, hasTermConvention = false, hasTenor = false,
+             hasRule = false, hasEndOfMonth = false, hasConsistentCalendar = true, hasConsistentConvention = true,
+             hasConsistentTenor = true, hasConsistentRule = true, hasConsistentEndOfMonth = true;
         for (auto& d : data.dates()) {
             updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
@@ -198,6 +198,10 @@ Schedule makeSchedule(const ScheduleData& data) {
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
             updateData<bool>(d.endOfMonth(), endOfMonth, hasEndOfMonth, hasConsistentEndOfMonth, parseBool);
             updateData<DateGeneration::Rule>(d.rule(), rule, hasRule, hasConsistentRule, parseDateGenerationRule);
+            if (d.termConvention() != "") {
+                hasTermConvention = true;
+                termConvention = parseBusinessDayConvention(d.termConvention());
+            }
         }
 
         // 3) combine dates and fill isRegular flag
@@ -234,9 +238,7 @@ Schedule makeSchedule(const ScheduleData& data) {
         return Schedule(
             dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
             hasConvention && hasConsistentConvention ? convention : Unadjusted,
-            schedules.back().hasTerminationDateBusinessDayConvention()
-                ? boost::optional<BusinessDayConvention>(schedules.back().terminationDateBusinessDayConvention())
-                : boost::none,
+            hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
             hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
             hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
             hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
