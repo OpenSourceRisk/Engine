@@ -184,11 +184,11 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
-    Real expected = 0.040433841;
+    Real expected = 0.041225686;
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
     result = varianceSwap.NPV();
-    expected = 5356.5666;
+    expected = 15133.3435;
     BOOST_CHECK_CLOSE(result, expected, tol);
     
     // A little clean up of the environment.
