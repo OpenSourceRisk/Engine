@@ -157,13 +157,13 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     resettingLeg.push_back(
                         boost::shared_ptr<CashFlow>(new SimpleCashFlow(c->nominal(), c->accrualEndDate())));
                 } else {
+                    Date fixingDate = fxIndex->fixingCalendar().advance(
+                        c->accrualStartDate(), -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     resettingLeg.push_back(boost::shared_ptr<CashFlow>(new FXLinkedCashFlow(
-                        c->accrualStartDate(), c->accrualStartDate(), -foreignNotional, fxIndex, invertFxIndex)));
+                        c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex, invertFxIndex)));
 
                     // we don't want a final one, unless there is notional exchange
                     if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange()) {
-                        Date fixingDate = fxIndex->fixingCalendar().advance(
-                            c->accrualStartDate(), -static_cast<Integer>(fxIndex->fixingDays()), Days);
                         resettingLeg.push_back(boost::shared_ptr<CashFlow>(new FXLinkedCashFlow(
                             c->accrualEndDate(), fixingDate, foreignNotional, fxIndex, invertFxIndex)));
                     }
