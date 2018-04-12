@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
  Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
@@ -26,7 +24,6 @@
 #ifndef quantext_equityindex_hpp
 #define quantext_equityindex_hpp
 
-#pragma once
 #include <ql/handle.hpp>
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>

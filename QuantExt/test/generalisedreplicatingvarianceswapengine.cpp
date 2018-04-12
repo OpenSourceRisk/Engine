@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
 Copyright (C) 2018 Quaternion Risk Management Ltd
 All rights reserved.
