@@ -58,10 +58,12 @@ public:
     const InflationCapFloorPriceSurfaceSpec& spec() const { return spec_; }
 
     const boost::shared_ptr<InflationTermStructure> inflationCapFloorPriceSurface() const { return surface_; }
+    const boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyVolSurface_; }
 
 private:
     InflationCapFloorPriceSurfaceSpec spec_;
     boost::shared_ptr<InflationTermStructure> surface_;
+    boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyVolSurface_;
 };
 } // namespace data
 } // namespace ore

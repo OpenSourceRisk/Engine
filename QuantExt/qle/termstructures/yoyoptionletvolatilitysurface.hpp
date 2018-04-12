@@ -44,9 +44,25 @@ public:
         const DayCounter& dc, const Period& observationLag,
         Frequency frequency, bool indexIsInterpolated) : 
         QuantLib::YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated) {}
-
+    
+    
+    //! \name Limits
+    //@{
+    virtual Date maxDate() const { return Date::maxDate(); }
+    //! the minimum strike for which the term structure can return vols
+    virtual Real minStrike() const { return minStrike_; }
+    //! the maximum strike for which the term structure can return vols
+    virtual Real maxStrike() const { return maxStrike_; }
+    //@}
     virtual QuantLib::VolatilityType volatilityType() const;
     virtual Real displacement() const;
+
+protected:
+    //! implements the actual volatility calculation in derived classes
+    virtual Volatility volatilityImpl(Time length, Rate strike) const { return volatility_; }
+
+    Volatility volatility_;
+    Rate minStrike_, maxStrike_;
 };
 
 inline QuantLib::VolatilityType YoYOptionletVolatilitySurface::volatilityType() const {

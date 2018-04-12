@@ -26,6 +26,7 @@
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
+#include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
 
 #include <algorithm>
 
@@ -224,10 +225,23 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                     << spec.name() << ", was not found");
             }
             // Build the term structure
-            surface_ = boost::shared_ptr<InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
-                new InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>(
-                    0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(), config->businessDayConvention(),
-                    capStrikes, floorStrikes, terms, cPrice, fPrice));
+            boost::shared_ptr<InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear >> yoySurface =
+                boost::make_shared<InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
+                    0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(), 
+                    config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
+            surface_ = yoySurface;
+
+            boost::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper = 
+                boost::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
+            boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> ovs = boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(
+                yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(), yoySurface->dayCounter(), 
+                yoySurface->observationLag(), yoySurface->frequency(), yoySurface->indexIsInterpolated());
+            Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
+
+            boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine = 
+                boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoySurface->yoyIndex(), hovs);
+            
+            yoyStripper->initialize(yoySurface, cfEngine, 1);
 
         }
 

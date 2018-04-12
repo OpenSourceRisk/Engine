@@ -440,11 +440,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 auto itr = requiredInflationCapFloorPriceSurfaces.find(infcapfloorspec->name());
                 if (itr == requiredInflationCapFloorPriceSurfaces.end()) {
                     LOG("Building InflationCapFloorPriceSurface for asof " << asof);
-                    boost::shared_ptr<InflationCapFloorPriceSurface> cpiInflationCapFloorPriceSurface =
+                    boost::shared_ptr<InflationCapFloorPriceSurface> inflationCapFloorPriceSurface =
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
                     itr = requiredInflationCapFloorPriceSurfaces
-                              .insert(make_pair(infcapfloorspec->name(), cpiInflationCapFloorPriceSurface))
+                              .insert(make_pair(infcapfloorspec->name(),inflationCapFloorPriceSurface))
                               .first;
                 }
 
