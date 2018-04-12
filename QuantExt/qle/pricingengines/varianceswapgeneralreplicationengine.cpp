@@ -1,14 +1,29 @@
 /* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
-  Copyright (C) 2013 - 2016 Quaternion Risk Management Ltd.
-  All rights reserved.
+Copyright (C) 2018 Quaternion Risk Management Ltd
+All rights reserved.
+
+This file is part of ORE, a free-software/open-source library
+for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ORE is free software: you can redistribute it and/or modify it
+under the terms of the Modified BSD License.  You should have received a
+copy of the license along with this program.
+The license is also available online at <http://opensourcerisk.org>
+
+This program is distributed on the basis that it will form a useful
+contribution to risk analytics and model standardisation, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/pricingengines/varswapengine.cpp
+/*! \file qle/pricingengines/varianceswapgeneralreplicationengine.cpp
     \brief equity variance swap engine
+    \ingroup engines
 */
 
+#pragma once
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -33,15 +48,15 @@ GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngi
         numCalls_(numCalls),
         stepSize_(stepSize) {
 
-QL_REQUIRE(process_, "Black-Scholes process not present.");
-QL_REQUIRE(!discountingTS_.empty(), "Empty discounting term structure handle");
-QL_REQUIRE(!calendar_.empty(), "Calendar not provided.");
-QL_REQUIRE(numPuts_ > 0, "Invalid number of Puts, must be > 0");
-QL_REQUIRE(numCalls_ > 0, "Invalid number of Calls, must be > 0");
-QL_REQUIRE(stepSize_ > 0, "Invalid stepSize, must be > 0");
+    QL_REQUIRE(process_, "Black-Scholes process not present.");
+    QL_REQUIRE(!discountingTS_.empty(), "Empty discounting term structure handle");
+    QL_REQUIRE(!calendar_.empty(), "Calendar not provided.");
+    QL_REQUIRE(numPuts_ > 0, "Invalid number of Puts, must be > 0");
+    QL_REQUIRE(numCalls_ > 0, "Invalid number of Calls, must be > 0");
+    QL_REQUIRE(stepSize_ > 0, "Invalid stepSize, must be > 0");
 
-registerWith(process_);
-registerWith(discountingTS_);
+    registerWith(process_);
+    registerWith(discountingTS_);
 }
 
 void GeneralisedReplicatingVarianceSwapEngine::calculate() const {

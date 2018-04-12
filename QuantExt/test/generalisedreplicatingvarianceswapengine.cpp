@@ -1,5 +1,7 @@
+/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+
 /*
-Copyright (C) 2016 Quaternion Risk Management Ltd
+Copyright (C) 2018 Quaternion Risk Management Ltd
 All rights reserved.
 
 This file is part of ORE, a free-software/open-source library
@@ -15,7 +17,10 @@ contribution to risk analytics and model standardisation, but WITHOUT
 ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-//remove these after debugging
+
+/*! \file test/varianceswap.hpp
+\brief variance swap pricing engine test suite
+*/
 
 #include "generalisedreplicatingvarianceswapengine.hpp"
 #include "utilities.hpp"

@@ -1,3 +1,4 @@
+/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 
 /*
 Copyright (C) 2018 Quaternion Risk Management Ltd
@@ -17,8 +18,8 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/varianceswapsengine.hpp
-\brief variance swap pricing engine test
+/*! \file test/varianceswap.hpp
+\brief variance swap pricing engine test suite
 */
 
 #include <boost/test/unit_test.hpp>
