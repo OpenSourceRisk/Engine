@@ -396,7 +396,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
-    string fixingCalendar() const { return fixingCalendar_; }
+    const string& fixingCalendar() const { return fixingCalendar_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //
     const string& legType() const { return concreteLegData_->legType(); }

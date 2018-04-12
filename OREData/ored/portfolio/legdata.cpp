@@ -257,7 +257,7 @@ void LegData::fromXML(XMLNode* node) {
             foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount");
             fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex");
             fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
-            fixingCalendar_ = XMLUtils::getChildValue(node, "FixingCalendar"); // may be empty string
+            fixingCalendar_ = XMLUtils::getChildValue(fxResetNode, "FixingCalendar"); // may be empty string
             // TODO add schedule
         }
         XMLNode* exchangeNode = XMLUtils::getChildNode(tmp, "Exchanges");
