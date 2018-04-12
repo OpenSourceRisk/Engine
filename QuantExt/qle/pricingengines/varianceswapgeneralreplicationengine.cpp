@@ -141,8 +141,8 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
     Date today = Settings::instance().evaluationDate();
     Real timeToMaturity = ActualActual().yearFraction(today, arguments_.maturityDate);
 
-    //  The pillars of the IV surface are usually quoted in terms of the spot at the maturities for which varswaps are more common.
-    Real dMoneyness = stepSize_ * sqrt(timeToMaturity);
+    // We put a minimum range of 10% either side of spot, for the sake of swaps close to maturity
+    Real dMoneyness = std::max(stepSize_ * sqrt(timeToMaturity),0.10/std::min(numCalls_, numPuts_));
     QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(timeToMaturity) >=1 this would lead to negative strikes in the replicating options.");
 
     std::vector<Real> callStrikes(numCalls_);
