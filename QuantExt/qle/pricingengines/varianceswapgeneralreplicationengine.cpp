@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
 Copyright (C) 2018 Quaternion Risk Management Ltd
 All rights reserved.
@@ -23,7 +21,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
     \ingroup engines
 */
 
-#pragma once
+#ifndef quantext_variance_swap_generalized_replication_engine_hpp
+#define quantext_variance_swap_generalized_replication_engine_hpp
+
 #include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -270,3 +270,4 @@ Real GeneralisedReplicatingVarianceSwapEngine::computeLogPayoff(
 }
 }
 
+#endif
