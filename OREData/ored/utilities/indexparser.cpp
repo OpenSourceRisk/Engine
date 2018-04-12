@@ -106,8 +106,12 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"GBP-SONIA", boost::make_shared<IborIndexParserOIS<Sonia>>()},
         {"JPY-TONAR", boost::make_shared<IborIndexParserOIS<Tonar>>()},
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
+        {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
+        {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
+        {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
+        {"SEK-SIOR", boost::make_shared<IborIndexParserOIS<SEKSior>>()},
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
@@ -141,6 +145,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>()},
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
+        {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);

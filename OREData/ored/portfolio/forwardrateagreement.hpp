@@ -38,7 +38,9 @@ public:
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
                          string index, double strike, double notional)
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
-          endDate_(endDate), index_(index), strike_(strike), notional_(notional) {}
+          endDate_(endDate), index_(index), strike_(strike) {
+        notional_ = notional;
+    }
     void build(const boost::shared_ptr<EngineFactory>& engineFactory);
 
     virtual void fromXML(XMLNode* node);
@@ -51,7 +53,7 @@ private:
     string endDate_;
     string index_;
     double strike_;
-    double notional_;
+
 };
 } // namespace data
 } // namespace ore

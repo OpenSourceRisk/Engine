@@ -32,7 +32,22 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
         Handle<YieldTermStructure> yts = market_->discountCurve(ccyCode, configuration(MarketContext::pricing));
         QL_REQUIRE(!yts.empty(), "engineFactory error: yield term structure not found for currency " << ccyCode);
         Handle<OptionletVolatilityStructure> ovs = market_->capFloorVol(ccyCode, configuration(MarketContext::pricing));
-        boost::shared_ptr<FloatingRateCouponPricer> pricer = boost::make_shared<BlackIborCouponPricer>(ovs);
+        BlackIborCouponPricer::TimingAdjustment timingAdjustment = BlackIborCouponPricer::Black76;
+        boost::shared_ptr<SimpleQuote> correlation = boost::make_shared<SimpleQuote>(1.0);
+        // for backwards compatibility we do not require the additional timing adjustment fields
+        if (engineParameters_.find("TimingAdjustment") != engineParameters_.end()) {
+            string adjStr = engineParameters_.at("TimingAdjustment");
+            if (adjStr == "Black76")
+                timingAdjustment = BlackIborCouponPricer::Black76;
+            else if (adjStr == "BivariateLognormal")
+                timingAdjustment = BlackIborCouponPricer::BivariateLognormal;
+            else {
+                QL_FAIL("timing adjustment parameter (" << adjStr << ") not recognised.");
+            }
+            correlation->setValue(parseReal(engineParameters_.at("Correlation")));
+        }
+        boost::shared_ptr<FloatingRateCouponPricer> pricer =
+            boost::make_shared<BlackIborCouponPricer>(ovs, timingAdjustment, Handle<Quote>(correlation));
         engines_[ccyCode] = pricer;
     }
 
