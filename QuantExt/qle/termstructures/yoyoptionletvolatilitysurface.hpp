@@ -34,43 +34,82 @@ namespace QuantExt {
 
 //! YoY Inflation volatility surface
 /*! \ingroup termstructures */
-class YoYOptionletVolatilitySurface : public QuantLib::YoYOptionletVolatilitySurface {
+class YoYOptionletVolatilitySurface : public QuantLib::TermStructure {
 public:
 
     //! \name Constructor
     //! calculate the reference date based on the global evaluation date
-    YoYOptionletVolatilitySurface(Natural settlementDays,
-        const Calendar& cal, BusinessDayConvention bdc,
-        const DayCounter& dc, const Period& observationLag,
-        Frequency frequency, bool indexIsInterpolated) : 
-        QuantLib::YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, observationLag, frequency, indexIsInterpolated) {}
+    YoYOptionletVolatilitySurface(boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface,
+        VolatilityType volType = VolatilityType::ShiftedLognormal, Real displacement = 0.0) :
+        TermStructure(), referenceVolSurface_(referenceVolSurface), volType_(volType), displacement_(displacement) {}
     
-    
-    //! \name Limits
-    //@{
-    virtual Date maxDate() const { return Date::maxDate(); }
-    //! the minimum strike for which the term structure can return vols
-    virtual Real minStrike() const { return minStrike_; }
-    //! the maximum strike for which the term structure can return vols
-    virtual Real maxStrike() const { return maxStrike_; }
-    //@}
-    virtual QuantLib::VolatilityType volatilityType() const;
+    Volatility volatility(const Date& maturityDate,
+        Rate strike,
+        const Period &obsLag = Period(-1, Days),
+        bool extrapolate = false) const;
+    Volatility volatility(const Period& optionTenor,
+        Rate strike,
+        const Period &obsLag = Period(-1, Days),
+        bool extrapolate = false) const;
+
+    virtual Volatility totalVariance(const Date& exerciseDate,
+        Rate strike,
+        const Period &obsLag = Period(-1, Days),
+        bool extrapolate = false) const;
+    virtual Volatility totalVariance(const Period& optionTenor,
+        Rate strike,
+        const Period &obsLag = Period(-1, Days),
+        bool extrapolate = false) const;
+
+    virtual Period observationLag() const { return referenceVolSurface_->observationLag(); }
+    virtual Frequency frequency() const { return referenceVolSurface_->frequency(); }
+    virtual bool indexIsInterpolated() const { return referenceVolSurface_->indexIsInterpolated(); }
+    virtual Date baseDate() const { return referenceVolSurface_->baseDate(); }
+    virtual Time timeFromBase(const Date &date, const Period& obsLag = Period(-1, Days)) const {
+        return referenceVolSurface_->timeFromBase(date, obsLag); }
+
+    virtual Date maxDate() const { return referenceVolSurface_->maxDate(); }
+    virtual Real minStrike() const { return referenceVolSurface_->minStrike(); }
+    virtual Real maxStrike() const { return referenceVolSurface_->maxStrike(); }
+    virtual VolatilityType volatilityType() const;
     virtual Real displacement() const;
+    virtual Volatility baseLevel() const { return referenceVolSurface_->baseLevel(); }
+
+    boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyVolSurface() const { return referenceVolSurface_; }
 
 protected:
-    //! implements the actual volatility calculation in derived classes
-    virtual Volatility volatilityImpl(Time length, Rate strike) const { return volatility_; }
-
-    Volatility volatility_;
+    boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface_;
+    VolatilityType volType_;
+    Real displacement_;
     Rate minStrike_, maxStrike_;
 };
 
-inline QuantLib::VolatilityType YoYOptionletVolatilitySurface::volatilityType() const {
-    return ShiftedLognormal;
+inline Volatility YoYOptionletVolatilitySurface::volatility(const Date& maturityDate, Rate strike,
+    const Period &obsLag, bool extrapolate) const {
+    return referenceVolSurface_->volatility(maturityDate, strike, obsLag, extrapolate);
+}
+
+inline Volatility YoYOptionletVolatilitySurface::volatility(const Period& optionTenor,
+    Rate strike, const Period &obsLag, bool extrapolate) const {
+    return referenceVolSurface_->volatility(optionTenor, strike, obsLag, extrapolate);
+}
+
+inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Date& exerciseDate,
+    Rate strike, const Period &obsLag, bool extrapolate) const {
+    return referenceVolSurface_->totalVariance(exerciseDate, strike, obsLag, extrapolate);
+}
+
+inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Period& optionTenor,
+    Rate strike, const Period &obsLag, bool extrapolate) const {
+    return referenceVolSurface_->totalVariance(optionTenor, strike, obsLag, extrapolate);
+}
+
+inline VolatilityType YoYOptionletVolatilitySurface::volatilityType() const {
+    return volType_;
 }
 
 inline Real YoYOptionletVolatilitySurface::displacement() const {
-    return 0.0;
+    return displacement_;
 }
 
 } // namespace QuantExt

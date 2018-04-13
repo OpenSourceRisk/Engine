@@ -540,6 +540,9 @@
     <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

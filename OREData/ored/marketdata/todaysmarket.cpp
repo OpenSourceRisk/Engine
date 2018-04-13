@@ -479,6 +479,13 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         yoyInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<YoYCapFloorTermPriceSurface>(
                                 boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
+
+                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<QuantExt::YoYOptionletVolatilitySurface>(
+                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->yoyInflationCapFloorVolSurface()));
+
                     }
                 }
 

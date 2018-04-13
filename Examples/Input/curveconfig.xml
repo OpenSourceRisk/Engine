@@ -2791,8 +2791,8 @@
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
           <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
-          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.05,0.06</CapStrikes>
-          <FloorStrikes>-0.02,-0.01,0.00,0.01,0.015,0.02,0.03</FloorStrikes> -->
+          <CapStrikes>0.01,0.02,0.025,0.03,0.035,0.04,0.05,0.06</CapStrikes>
+          <FloorStrikes>-0.02,-0.01,0.00,0.01</FloorStrikes>
           <Maturities>1Y,2Y,3Y,5Y,7Y,10Y,12Y,15Y,20Y</Maturities>
       </InflationCapFloorPriceSurface>
       

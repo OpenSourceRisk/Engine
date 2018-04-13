@@ -50,11 +50,11 @@ namespace ore {
             //@{
             const InflationCapFloorVolatilityCurveSpec& spec() const { return spec_; }
             //! Caplet/Floorlet curve or surface i.e. result of stripping
-            const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface>& yoyOptionletVolStructure() const { return yoyOptionletVol_; }
+            const boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface>& yoyOptionletVolStructure() const { return yoyOptionletVol_; }
             //@}
         private:
             InflationCapFloorVolatilityCurveSpec spec_;
-            boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyOptionletVol_;
+            boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyOptionletVol_;
         };
     } // namespace data
 } // namespace ore

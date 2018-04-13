@@ -624,6 +624,7 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />

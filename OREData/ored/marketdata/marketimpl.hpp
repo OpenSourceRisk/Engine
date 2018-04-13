@@ -181,7 +181,7 @@ protected:
     map<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>> baseCorrelations_;
     map<pair<string, string>, Handle<Quote>> recoveryRates_;
     map<pair<string, string>, Handle<OptionletVolatilityStructure>> capFloorCurves_;
-    map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorCurves_;
+    map<pair<string, string>, Handle<QuantExt::YoYOptionletVolatilitySurface>> yoyCapFloorVolSurfaces_;
     map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> cpiInflationCapFloorPriceSurfaces_;

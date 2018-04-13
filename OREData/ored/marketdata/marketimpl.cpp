@@ -153,7 +153,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
 }
 
 Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
-    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorCurves_, key, configuration, "capfloor curve");
+    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration, "capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
@@ -279,7 +279,7 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
-        for (auto& x : yoyCapFloorCurves_) {
+        for (auto& x : yoyCapFloorVolSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
