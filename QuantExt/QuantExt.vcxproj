@@ -506,6 +506,7 @@
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\indexes\all.hpp" />
+    <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
     <ClInclude Include="qle\indexes\ibor\all.hpp" />

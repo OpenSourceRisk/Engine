@@ -549,6 +549,9 @@
     <ClInclude Include="qle\indexes\ibor\seksior.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\bmaindexwrapper.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

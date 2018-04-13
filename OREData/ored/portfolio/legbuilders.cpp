@@ -36,8 +36,13 @@ Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<En
     auto ois = boost::dynamic_pointer_cast<OvernightIndex>(index);
     if (ois != nullptr)
         return makeOISLeg(data, ois);
-    else
-        return makeIborLeg(data, index, engineFactory);
+    else {
+        auto bma = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(index);
+        if (bma != nullptr)
+            return makeBMALeg(data, bma);
+        else
+            return makeIborLeg(data, index, engineFactory);
+    }
 }
 
 Leg CashflowLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,

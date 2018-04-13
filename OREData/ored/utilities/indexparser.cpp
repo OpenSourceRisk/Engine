@@ -64,6 +64,16 @@ public:
         return boost::make_shared<T>(h);
     }
 };
+
+template <class T> class IborIndexParserBMA : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p.units() == Months, "BMA indexes must have period in months.");
+        const boost::shared_ptr<BMAIndex> bma = boost::make_shared<BMAIndex>(h);
+        return boost::make_shared<T>(bma);
+    }
+};
+
 boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -132,7 +142,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
-        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
+        {"USD-SIFMA", boost::make_shared <IborIndexParserBMA<BMAIndexWrapper>>()} };
+    //can maybe wrap SIFMA around the wrapper to mention other conventions?
+
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
