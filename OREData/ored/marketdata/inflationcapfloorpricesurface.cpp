@@ -212,6 +212,23 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             boost::shared_ptr<YoYInflationIndex> index;
             auto it2 = inflationCurves.find(config->indexCurve());
             if (it2 != inflationCurves.end()) {
+                boost::shared_ptr<InflationTermStructure> ts = it2->second->inflationTermStructure();
+                // Check if the Index curve is a YoY curve - if not it most be a zero curve
+                boost::shared_ptr<YoYInflationTermStructure> yyTs = 
+                    boost::dynamic_pointer_cast<YoYInflationTermStructure>(ts);
+
+                bool interp = it2->second->interpolatedIndex();
+                if (yyTs) {
+                    index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                        parseZeroInflationIndex(config->index(), interp), true, Handle<YoYInflationTermStructure>(yyTs));
+                }
+                else {
+                    boost::shared_ptr<ZeroInflationTermStructure> zeroTs =
+                        boost::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
+                    QL_REQUIRE(zeroTs, 
+                        "inflation term structure " << curve->indexCurve() << "must be of type YoY or Zero");
+
+                }
                 boost::shared_ptr<YoYInflationTermStructure> ts =
                     boost::dynamic_pointer_cast<YoYInflationTermStructure>(it2->second->inflationTermStructure());
                 QL_REQUIRE(ts,

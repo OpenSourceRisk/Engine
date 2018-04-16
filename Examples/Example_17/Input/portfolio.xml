@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <!-- <Trade id="CPI_Swap_1">
+  <Trade id="CPI_Swap_1">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -195,50 +195,5 @@
         </YYLegData>
       </LegData>
     </SwapData>
-  </Trade> -->
-  <Trade id="YearOnYear_Cap">
-    <TradeType>CapFloor</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_B</CounterParty>
-      <NettingSetId>CPTY_B</NettingSetId>
-      <AdditionalFields/>
-    </Envelope>
-    <CapFloorData>
-      <LongShort>Short</LongShort>
-      <LegData>
-        <LegType>YY</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>Following</PaymentConvention>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2021-02-05</EndDate>
-            <Tenor>1Y</Tenor>
-            <Calendar>UK</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-        <YYLegData>
-          <Index>EUHICPXT</Index>
-          <FixingDays>2</FixingDays>
-          <ObservationLag>2M</ObservationLag>
-          <Interpolated>true</Interpolated>
-        </YYLegData>
-      </LegData>
-      <Caps>
-        <Cap>0.03</Cap>
-      </Caps>
-      <Floors/>
-    </CapFloorData>
   </Trade>
 </Portfolio>
