@@ -235,7 +235,8 @@ Calendar parseCalendar(const string& s) {
                                       {"BEBR", TARGET()}, // Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
-                                      {"NullCalendar", NullCalendar()}};
+                                      {"NullCalendar", NullCalendar()},
+                                      {"", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
