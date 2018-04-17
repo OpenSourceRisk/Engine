@@ -72,6 +72,7 @@ public:
         IMM_FRA,
         IR_SWAP,
         BASIS_SWAP,
+        BMA_SWAP,
         CC_BASIS_SWAP,
         CDS,
         CDS_INDEX,
@@ -385,6 +386,41 @@ public:
     //@}
 private:
     Period flatTerm_;
+    Period term_;
+    string ccy_;
+    Period maturity_;
+};
+
+//! BMA Basis Swap data class FIXME ALL THIS NONSENSE
+/*!
+This class holds single market points of type
+- BASIS_SWAP RATIO
+Specific data comprise
+- flat term
+- term
+
+The quote (in Basis Points) is then interpreted as follows:
+
+A fair Swap pays the reference index with "flat term" with spread zero
+and receives the reference index with "term" plus the quoted spread.
+
+\ingroup marketdata
+*/
+class BMASwapQuote : public MarketDatum {
+public:
+    //! Constructor
+    BMASwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, Period term,
+        string ccy = "USD", Period maturity = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term),
+        ccy_(ccy), maturity_(maturity) {}
+
+    //! \name Inspectors
+    //@{
+    const Period& term() const { return term_; }
+    const string& ccy() const { return ccy_; }
+    const Period& maturity() const { return maturity_; }
+    //@}
+private:
     Period term_;
     string ccy_;
     Period maturity_;

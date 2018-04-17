@@ -65,6 +65,7 @@ public:
         AverageOIS,
         TenorBasis,
         TenorBasisTwo,
+        BasisBMA,
         FXForward,
         CrossCcyBasis
     };
@@ -262,6 +263,49 @@ public:
 private:
     string shortProjectionCurveID_;
     string longProjectionCurveID_;
+};
+
+//! Tenor Basis yield curve segment
+/*!
+Yield curve building from tenor basis swap quotes requires a set of tenor
+basis spread quotes and the projection curve for either the shorter or the longer tenor
+which acts as the reference curve.
+
+\ingroup configuration
+*/
+class BMABasisYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    BMABasisYieldCurveSegment() {}
+    //! Detailed constructor
+    BMABasisYieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes,
+        const string& bmaProjectionCurveID, const string& liborProjectionCurveID);
+    //! Default destructor
+    virtual ~BMABasisYieldCurveSegment() {}
+    //@}
+
+    //!\name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& bmaProjectionCurveID() const { return bmaProjectionCurveID_; }
+    const string& liborProjectionCurveID() const { return liborProjectionCurveID_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    virtual void accept(AcyclicVisitor&);
+    //@}
+
+private:
+    string bmaProjectionCurveID_;
+    string liborProjectionCurveID_;
 };
 
 //! Cross Currency yield curve segment

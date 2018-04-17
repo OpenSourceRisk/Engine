@@ -644,6 +644,9 @@ void YieldCurve::buildBootstrappedCurve() {
         case YieldCurveSegment::Type::TenorBasisTwo:
             addTenorBasisTwoSwaps(curveSegments_[i], instruments);
             break;
+        case YieldCurveSegment::Type::BasisBMA:
+            addBMABasisSwaps(curveSegments_[i], instruments);
+            break;
         case YieldCurveSegment::Type::FXForward:
             addFXForwards(curveSegments_[i], instruments);
             break;
@@ -1193,6 +1196,100 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
             discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
 
         instruments.push_back(basisSwapHelper);
+    }
+}
+
+void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+    vector<boost::shared_ptr<RateHelper>>& instruments) {
+
+    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+
+    // Get the conventions associated with the segment.
+    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
+    QL_REQUIRE(convention->type() == Convention::Type::BMABasisSwap,
+        "Conventions ID does not give bma basis swap conventions.");
+    boost::shared_ptr<BMABasisSwapConvention> basisSwapConvention =
+        boost::dynamic_pointer_cast<BMABasisSwapConvention>(convention);
+
+    boost::shared_ptr<BMABasisYieldCurveSegment> basisSwapSegment =
+        boost::dynamic_pointer_cast<BMABasisYieldCurveSegment>(segment);
+
+    // If short index projection curve ID is not this curve.
+    string bmaCurveID = basisSwapSegment->bmaProjectionCurveID();
+    boost::shared_ptr<BMAIndexWrapper> bmaIndex = basisSwapConvention->bmaIndex();
+    if (bmaCurveID != curveConfig_->curveID() && !bmaCurveID.empty()) {
+        bmaCurveID = yieldCurveKey(currency_, bmaCurveID, asofDate_);
+        boost::shared_ptr<YieldCurve> bmaCurve;
+        map<string, boost::shared_ptr<YieldCurve>>::iterator it;
+        it = requiredYieldCurves_.find(bmaCurveID);
+        if (it != requiredYieldCurves_.end()) {
+            bmaCurve = it->second;
+        }
+        else {
+            QL_FAIL("The BMA projection curve, " << bmaCurveID
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
+        bmaIndex = boost::dynamic_pointer_cast<BMAIndexWrapper>(bmaIndex->clone(bmaCurve->handle()));
+    }
+
+    // If long index projection curve ID is not this curve.
+    string liborCurveID = basisSwapSegment->liborProjectionCurveID();
+    boost::shared_ptr<IborIndex> liborIndex = basisSwapConvention->liborIndex();
+    if (liborCurveID != curveConfig_->curveID() && !liborCurveID.empty()) {
+        liborCurveID = yieldCurveKey(currency_, liborCurveID, asofDate_);
+        boost::shared_ptr<YieldCurve> liborCurve;
+        map<string, boost::shared_ptr<YieldCurve>>::iterator it;
+        it = requiredYieldCurves_.find(liborCurveID);
+        if (it != requiredYieldCurves_.end()) {
+            liborCurve = it->second;
+        }
+        else {
+            QL_FAIL("The LIBOR projection curve, " << liborCurveID
+                << ", required in the building "
+                "of the curve, "
+                << curveSpec_.name() << ", was not found.");
+        }
+        liborIndex = liborIndex->clone(liborCurve->handle());
+    }
+
+    vector<string> basisSwapQuoteIDs = basisSwapSegment->quotes();
+    for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
+
+        // Check that we have a valid basis swap quote
+        boost::shared_ptr<BMASwapQuote> bmaSwapQuote;
+        if (marketQuote) {
+            QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BMA_SWAP,
+                "Market quote not of type basis swap.");
+            QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO,
+                "Market quote not of type ratio.");
+            bmaSwapQuote = boost::dynamic_pointer_cast<BMASwapQuote>(marketQuote);
+        }
+        else {
+            QL_FAIL("Could not find quote for ID " << basisSwapQuoteIDs[i] << " with as of date "
+                << io::iso_date(asofDate_) << ".");
+        }
+
+        // FIXME: Aghhhh wtf is this?
+        Natural settlementDays = 1;
+        Calendar cal = UnitedStates();
+        // Create a tenor basis swap helper if we do.
+        boost::shared_ptr<RateHelper> bmaSwapHelper;
+        bmaSwapHelper.reset(new BMASwapRateHelper(
+            bmaSwapQuote->quote(),
+            bmaSwapQuote->maturity(),
+            settlementDays, // FIXME: wtf should this be? :'(
+            cal,    //calendar
+            bmaSwapQuote->term(), //bmaPeriod
+            bmaIndex->businessDayConvention(), //bmaConvention //FIXME?
+            bmaIndex->dayCounter(), //bmaDayCount //FIXME?
+            bmaIndex->bma(),   //bmaIndex
+            liborIndex  //index
+        ));
+        instruments.push_back(bmaSwapHelper);
     }
 }
 

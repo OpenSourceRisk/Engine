@@ -448,6 +448,40 @@ void TenorBasisYieldCurveSegment::accept(AcyclicVisitor& v) {
         YieldCurveSegment::accept(v);
 }
 
+BMABasisYieldCurveSegment::BMABasisYieldCurveSegment(const string& typeID, const string& conventionsID,
+    const vector<string>& quotes,
+    const string& bmaProjectionCurveID,
+    const string& liborProjectionCurveID)
+    : YieldCurveSegment(typeID, conventionsID, quotes), bmaProjectionCurveID_(bmaProjectionCurveID),
+    liborProjectionCurveID_(liborProjectionCurveID) {}
+
+void BMABasisYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "BMABasis");
+    YieldCurveSegment::fromXML(node);
+    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    bmaProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveBMA", false);
+    liborProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveLibor", false);
+}
+
+XMLNode* BMABasisYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "BMABasis");
+    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
+    if (!bmaProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveBMA", bmaProjectionCurveID_);
+    if (!liborProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveLibor", liborProjectionCurveID_);
+    return node;
+}
+
+void BMABasisYieldCurveSegment::accept(AcyclicVisitor& v) {
+    Visitor<BMABasisYieldCurveSegment>* v1 = dynamic_cast<Visitor<BMABasisYieldCurveSegment>*>(&v);
+    if (v1 != 0)
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
 CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const string& conventionsID,
                                                      const vector<string>& quotes, const string& spotRateID,
                                                      const string& foreignDiscountCurveID,

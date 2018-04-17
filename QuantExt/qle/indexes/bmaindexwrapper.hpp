@@ -42,6 +42,9 @@ namespace QuantExt {
         BMAIndexWrapper(const boost::shared_ptr<QuantLib::BMAIndex>& bma)
             : IborIndex(bma->name(), bma->tenor(), bma->fixingDays(), bma->currency(), bma->fixingCalendar(), ModifiedFollowing, false, bma->dayCounter(), bma->forwardingTermStructure()), bma_(bma) {}
 
+        BMAIndexWrapper(const boost::shared_ptr<QuantLib::BMAIndex>& bma, const Handle<YieldTermStructure>& h)
+            : IborIndex(bma->name(), bma->tenor(), bma->fixingDays(), bma->currency(), bma->fixingCalendar(), ModifiedFollowing, false, bma->dayCounter(), h), bma_(new BMAIndex(h)) {}
+
         // overwrite all the virtual methods
         std::string name() const { return "BMA"; }
         bool isValidFixingDate(const Date& date) const {
@@ -64,6 +67,9 @@ namespace QuantExt {
             return termStructure_->forwardRate(start, end,
                 dayCounter_,
                 Simple);
+        }
+        boost::shared_ptr<IborIndex> clone(const Handle<YieldTermStructure>& h) const {
+            return boost::shared_ptr<BMAIndexWrapper>(new BMAIndexWrapper(bma(), h));
         }
 
 
