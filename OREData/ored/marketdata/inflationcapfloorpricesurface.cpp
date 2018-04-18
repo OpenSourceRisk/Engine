@@ -214,7 +214,7 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             auto it2 = inflationCurves.find(config->indexCurve());
             if (it2 != inflationCurves.end()) {
                 boost::shared_ptr<InflationTermStructure> ts = it2->second->inflationTermStructure();
-                // Check if the Index curve is a YoY curve - if not it most be a zero curve
+                // Check if the Index curve is a YoY curve - if not it must be a zero curve
                 boost::shared_ptr<YoYInflationTermStructure> yyTs = 
                     boost::dynamic_pointer_cast<YoYInflationTermStructure>(ts);
                                 
@@ -239,15 +239,14 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                     << ", required in building the inflation cap floor price surface "
                     << spec.name() << ", was not found");
             }
-
             
             // Build the term structure
-            boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear >> yoySurface =
+            boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface
+                <QuantLib::Bilinear, QuantLib::Linear>> yoySurface =
                 boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
                     0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(),
                     config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
             
-
             std::vector<Period> optionletTerms = { yoySurface->maturities().front() };
             while (optionletTerms.back() != terms.back()){
                 optionletTerms.push_back(optionletTerms.back() +Period(1,Years));
@@ -259,12 +258,15 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                 boost::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
 
             // Create an empty volatlity surface to pass to the engine
-            boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs = boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
+            boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs = 
+                boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
                 boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(
-                    0.0, yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(), yoySurface->dayCounter(),
-                    yoySurface->observationLag(), yoySurface->frequency(), yoySurface->indexIsInterpolated()));
+                    0.0, yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(), 
+                    yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface->frequency(), 
+                    yoySurface->indexIsInterpolated()));
             Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
 
+            // create a yoy Index from the surfaces termstructure
             yoyTs_ = yoySurface->YoYTS();
             boost::shared_ptr<YoYInflationIndex> yoyIndex = index->clone(Handle<YoYInflationTermStructure>(yoyTs_));
 
@@ -272,7 +274,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                 boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs);
             
             boost::shared_ptr<KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface = 
-                boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(yoySurface->settlementDays(), yoySurface->calendar(), 
+                boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+                    yoySurface->settlementDays(), yoySurface->calendar(), 
                     yoySurface->businessDayConvention(), yoySurface->dayCounter(),
                     yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
 

@@ -151,13 +151,6 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::update() {
 
 template<class I2D, class I1D>
 void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() const {
-    // calculate all the useful things
-    // ... first the intersection of the cap and floor surfs
-    // intersect();
-
-    // ... then the yoy term structure, which requires instruments
-    // and a bootstrap
-    // calculateYoYTermStructure();
 
     cfMaturityTimes_.clear();
     for (Size i = 0; i < cfMaturities_.size(); i++) {
@@ -205,11 +198,6 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
         boost::shared_ptr<ZeroInflationTermStructure> zeroTs = 
             yiiWrapper->zeroIndex()->zeroInflationTermStructure().currentLink();
         Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)));
-        
-        /*atmYoYSwapDateRates_.first.push_back(referenceDate() + Period(1, Years));
-        atmYoYSwapTimeRates_.first.push_back(timeFromReference(yoyOptionDateFromTenor(Period(1, Years))));
-        atmYoYSwapTimeRates_.second.push_back(fairSwap1Y);
-        atmYoYSwapDateRates_.second.push_back(fairSwap1Y);*/
 
         Real k;
         if (fairSwap1Y < overlappingStrikes.back()) {
@@ -230,7 +218,7 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
             Size numYears = (Size)(t + 0.5);
             Real fairSwap;
             if (numYears == 1) {
-                break;
+                fairSwap = fairSwap1Y;
             }
             else {
                 Real sumDiscount = 0.0;
