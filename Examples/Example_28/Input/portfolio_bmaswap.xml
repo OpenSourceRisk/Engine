@@ -47,7 +47,7 @@
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-3M</Index>
+          <Index>USD-SIFMA-1W</Index>
           <Spreads>
             <Spread>0.000000</Spread>
           </Spreads>

@@ -98,7 +98,7 @@
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY1D</Index>
-    <Index name="USD-SIFMA-3M">Yield/USD/USD3M</Index>
+    <Index name="USD-SIFMA-1W">Yield/USD/USDBMA</Index>
     </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
