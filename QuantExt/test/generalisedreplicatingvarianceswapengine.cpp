@@ -77,7 +77,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
     Calendar cal = TARGET();
     DayCounter dc = Actual365Fixed();
     Date exDate = today + Integer(0.246575 * 365 + 0.5);
-    std::vector<Date> dates = { exDate };
+    std::vector<Date> dates(1, exDate);
     Real volatilityStrike = 0.2;
     Real varianceStrike = volatilityStrike * volatilityStrike;
     Real vegaNotional = 50000.0;
@@ -141,7 +141,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     std::string equityName = "STE";
     Calendar cal = TARGET();
     std::vector<Date> pastDates;
-    std::vector<Date> dates = { exDate };
+    std::vector<Date> dates(1, exDate);
     Real volatilityStrike = 0.2;
     Real varianceStrike = volatilityStrike * volatilityStrike;
     Real vegaNotional = 50000.0;
