@@ -68,6 +68,7 @@ public:
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    const boost::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;

@@ -24,6 +24,7 @@
 
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
@@ -216,50 +217,56 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                 // Check if the Index curve is a YoY curve - if not it most be a zero curve
                 boost::shared_ptr<YoYInflationTermStructure> yyTs = 
                     boost::dynamic_pointer_cast<YoYInflationTermStructure>(ts);
-
-                bool interp = it2->second->interpolatedIndex();
+                                
                 if (yyTs) {
+                    useMarketYoyCurve_ = true;
                     index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                        parseZeroInflationIndex(config->index(), interp), true, Handle<YoYInflationTermStructure>(yyTs));
+                        parseZeroInflationIndex(config->index(), true), true, Handle<YoYInflationTermStructure>(yyTs));
                 }
                 else {
+                    useMarketYoyCurve_ = false;
                     boost::shared_ptr<ZeroInflationTermStructure> zeroTs =
                         boost::dynamic_pointer_cast<ZeroInflationTermStructure>(ts);
                     QL_REQUIRE(zeroTs, 
-                        "inflation term structure " << curve->indexCurve() << "must be of type YoY or Zero");
-
+                        "Inflation term structure " << config->indexCurve() << "must be of type YoY or Zero");
+                    index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                        parseZeroInflationIndex(config->index(), true, Handle<ZeroInflationTermStructure>(zeroTs)),
+                        true, Handle<YoYInflationTermStructure>());
                 }
-                boost::shared_ptr<YoYInflationTermStructure> ts =
-                    boost::dynamic_pointer_cast<YoYInflationTermStructure>(it2->second->inflationTermStructure());
-                QL_REQUIRE(ts,
-                    "inflation term structure " << config->indexCurve() << " was expected to be yoy, but is not");
-                bool interp = it2->second->interpolatedIndex();
-                index = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-                    parseZeroInflationIndex(config->index(), interp), true, Handle<YoYInflationTermStructure>(ts));
             }
             else {
-                QL_FAIL("The yoy inflation curve, " << config->indexCurve()
+                QL_FAIL("The inflation curve, " << config->indexCurve()
                     << ", required in building the inflation cap floor price surface "
                     << spec.name() << ", was not found");
             }
 
+            
             // Build the term structure
             boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear >> yoySurface =
                 boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
-                    0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(), 
-                    config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice, true);
+                    0, config->observationLag(), index, config->startRate(), yts, config->dayCounter(), config->calendar(),
+                    config->businessDayConvention(), capStrikes, floorStrikes, terms, cPrice, fPrice);
+            
+
+            std::vector<Period> optionletTerms = { yoySurface->maturities().front() };
+            while (optionletTerms.back() != terms.back()){
+                optionletTerms.push_back(optionletTerms.back() +Period(1,Years));
+            }
+            yoySurface->setMaturities(optionletTerms);
             surface_ = yoySurface;
-
-
-            boost::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper = 
+            
+            boost::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper =
                 boost::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
+
+            // Create an empty volatlity surface to pass to the engine
             boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> ovs = boost::dynamic_pointer_cast<QuantLib::YoYOptionletVolatilitySurface>(
                 boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(
                     0.0, yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(), yoySurface->dayCounter(),
                     yoySurface->observationLag(), yoySurface->frequency(), yoySurface->indexIsInterpolated()));
             Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs);
 
-            boost::shared_ptr<YoYInflationIndex> yoyIndex = index->clone(Handle<YoYInflationTermStructure>(yoySurface->YoYTS()));
+            yoyTs_ = yoySurface->YoYTS();
+            boost::shared_ptr<YoYInflationIndex> yoyIndex = index->clone(Handle<YoYInflationTermStructure>(yoyTs_));
 
             boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine = 
                 boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs);
@@ -267,7 +274,7 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             boost::shared_ptr<KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface = 
                 boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(yoySurface->settlementDays(), yoySurface->calendar(), 
                     yoySurface->businessDayConvention(), yoySurface->dayCounter(),
-                    yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 1);
+                    yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
 
             boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface = 
                 boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(interpVolSurface, VolatilityType::Normal);

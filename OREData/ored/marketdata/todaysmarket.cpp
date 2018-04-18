@@ -425,7 +425,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         yoyInflationIndices_[make_pair(configuration.first, it.first)] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                                 parseZeroInflationIndex(it.first, false), false,
-                                Handle<YoYInflationTermStructure>(ts)));
+                                Handle<YoYInflationTermStructure>(ts)));                        
                     }
                 }
                 break;
@@ -485,6 +485,17 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<QuantExt::YoYOptionletVolatilitySurface>(
                                 boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->yoyInflationCapFloorVolSurface()));
+                                                                   
+                        if (!itr->second->useMarketYoyCurve()) {
+                            LOG("Adding YoYInflationCurve (" << it.first << ") to configuration " << configuration.first);
+                            boost::shared_ptr<YoYInflationTermStructure> ts = itr->second->yoyInflationAtmCurve();
+                            QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
+                                << ", but could not cast");
+                            yoyInflationIndices_[make_pair(configuration.first, it.first)] =
+                                Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                    parseZeroInflationIndex(it.first, false), false,
+                                    Handle<YoYInflationTermStructure>(ts)));
+                        }
 
                     }
                 }

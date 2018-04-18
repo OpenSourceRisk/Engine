@@ -28,6 +28,7 @@
 #define quantext_interpolated_yoy_capfloor_term_pricesurface_hpp
 
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
+#include <qle/indexes/inflationindexwrapper.hpp>
 
 using namespace QuantLib;
 
@@ -37,7 +38,7 @@ namespace QuantExt {
 /*! \ingroup termstructures */
 template<class Interpolator2D, class Interpolator1D>
 class InterpolatedYoYCapFloorTermPriceSurface
-    : public QuantLib::InterpolatedYoYCapFloorTermPriceSurface<Interpolator2D, Interpolator1D> {
+    : public YoYCapFloorTermPriceSurface {
 public:
     InterpolatedYoYCapFloorTermPriceSurface(
         Natural fixingDays,
@@ -53,22 +54,354 @@ public:
         const std::vector<Period> &cfMaturities,
         const Matrix &cPrice,
         const Matrix &fPrice,
-        bool useYoySwaps = false,
         const Interpolator2D &interpolator2d = Interpolator2D(),
-        const Interpolator1D &interpolator1d = Interpolator1D()) :
-        QuantLib::InterpolatedYoYCapFloorTermPriceSurface<Interpolator2D, Interpolator1D>(
-            fixingDays, yyLag, yii, baseRate, nominal, dc, cal, bdc, cStrikes, fStrikes, cfMaturities,
-            cPrice, fPrice, Interpolator2D(), Interpolator1D()),
-        useYoySwaps_(useYoySwaps) {}
+        const Interpolator1D &interpolator1d = Interpolator1D());
 
-    boost::shared_ptr<YoYInflationTermStructure> YoYTS() const override {
-        return useYoySwaps_ ? yoyIndex_->yoyInflationTermStructure().currentLink() : yoy_;
-    };
+    //! inflation term structure interface
+    //@{
+    virtual Date maxDate() const { return yoy_->maxDate(); }
+    virtual Date baseDate() const { return yoy_->baseDate(); }
+    //@}
+    virtual Natural fixingDays() const { return fixingDays_; }
 
-private:
-    bool useYoySwaps_;
+    //! \name YoYCapFloorTermPriceSurface interface
+    //@{
+    virtual std::pair<std::vector<Time>, std::vector<Rate> >
+        atmYoYSwapTimeRates() const { return atmYoYSwapTimeRates_; }
+    virtual std::pair<std::vector<Date>, std::vector<Rate> >
+        atmYoYSwapDateRates() const { return atmYoYSwapDateRates_; }
+    virtual boost::shared_ptr<YoYInflationTermStructure> YoYTS() const { 
+        return yoyIndex_->yoyInflationTermStructure().empty() ? yoy_ : 
+            yoyIndex_->yoyInflationTermStructure().currentLink(); }
 
+    virtual Rate price(const Date &d, const Rate k) const;
+    virtual Real floorPrice(const Date &d, const Rate k) const;
+    virtual Real capPrice(const Date &d, const Rate k) const;
+    virtual Rate atmYoYSwapRate(const Date &d,
+        bool extrapolate = true) const {
+        return atmYoYSwapRateCurve_(timeFromReference(d), extrapolate);
+    }
+    virtual Rate atmYoYRate(const Date &d,
+        const Period &obsLag = Period(-1, Days),
+        bool extrapolate = true) const {
+        // work in terms of maturity-of-instruments
+        // so ask for rate with observation lag
+        // Third parameter = force linear interpolation of yoy
+        return yoy_->yoyRate(d, obsLag, false, extrapolate);
+    }
+    //@}
+
+    //! \name LazyObject interface
+    //@{
+    void update();
+    void performCalculations() const;
+    //@}
+
+    /* For stripping vols from a surface we need a more dense set of maturities than 
+       provided by market data i.e. yearly. This provides the option to update the 
+       vector of maturities - the interpoator handles the price */
+    void setMaturities(std::vector<Period> &overrideMaturities) {
+        cfMaturities_ = overrideMaturities;
+    }
+
+protected:
+    // create instruments from quotes and bootstrap
+    void calculateYoYTermStructure() const;
+
+    // data for surfaces and curve
+    mutable Matrix cPriceB_;
+    mutable Matrix fPriceB_;
+    mutable Interpolation2D capPrice_, floorPrice_;
+    mutable Interpolator2D interpolator2d_;
+    mutable Interpolation atmYoYSwapRateCurve_;
+    mutable Interpolator1D interpolator1d_;
 };
+
+// template definitions
+template<class I2D, class I1D>
+InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+InterpolatedYoYCapFloorTermPriceSurface(
+    Natural fixingDays,
+    const Period &yyLag,
+    const boost::shared_ptr<YoYInflationIndex>& yii,
+    Rate baseRate,
+    const Handle<YieldTermStructure> &nominal,
+    const DayCounter &dc,
+    const Calendar &cal,
+    const BusinessDayConvention &bdc,
+    const std::vector<Rate> &cStrikes,
+    const std::vector<Rate> &fStrikes,
+    const std::vector<Period> &cfMaturities,
+    const Matrix &cPrice,
+    const Matrix &fPrice,
+    const I2D &interpolator2d,
+    const I1D &interpolator1d)
+    : YoYCapFloorTermPriceSurface(fixingDays, yyLag, yii,
+        baseRate, nominal, dc, cal, bdc,
+        cStrikes, fStrikes, cfMaturities,
+        cPrice, fPrice),
+    interpolator2d_(interpolator2d), interpolator1d_(interpolator1d) {
+    performCalculations();
+}
+
+template<class I2D, class I1D>
+void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::update() {
+    notifyObservers();
+}
+
+template<class I2D, class I1D>
+void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() const {
+    // calculate all the useful things
+    // ... first the intersection of the cap and floor surfs
+    // intersect();
+
+    // ... then the yoy term structure, which requires instruments
+    // and a bootstrap
+    // calculateYoYTermStructure();
+
+    cfMaturityTimes_.clear();
+    for (Size i = 0; i < cfMaturities_.size(); i++) {
+        cfMaturityTimes_.push_back(timeFromReference(
+            yoyOptionDateFromTenor(cfMaturities_[i])));
+    }
+
+    Interpolation2D capPriceTemp, floorPriceTemp;
+    capPriceTemp = interpolator2d_.interpolate(
+        cfMaturityTimes_.begin(), cfMaturityTimes_.end(),
+        cStrikes_.begin(), cStrikes_.end(),
+        cPrice_
+    );
+    capPriceTemp.enableExtrapolation();
+
+    floorPriceTemp = interpolator2d_.interpolate(
+        cfMaturityTimes_.begin(), cfMaturityTimes_.end(),
+        fStrikes_.begin(), fStrikes_.end(),
+        fPrice_
+    );
+    floorPriceTemp.enableExtrapolation();
+
+    // check if we have a valid yoyTS
+    if (yoyIndex_->yoyInflationTermStructure().empty()) {
+        // create a yoyinflation term structure from put/call parity
+        // find the first overlapping strike 
+        std::vector<Real> overlappingStrikes;
+        for (auto floorStrike : fStrikes_) {
+            for (auto capStrike : cStrikes_) {
+                if (floorStrike == capStrike) {
+                    overlappingStrikes.push_back(floorStrike);
+                }
+            }
+        }
+        QL_REQUIRE(overlappingStrikes.size(), "No overlapping stikes between caps and floors for " <<
+            "yoycapfloortermpricesurface " << yoyIndex_->name());
+
+        // calculate the yoy termstructure from the first overlapping strike
+        // TODO: extend to use all overlapping strike
+
+        // We can get the 1Y fair swap rate from the zero Inflation curve
+        // If the YoY curve is unavailable, a YoY Index built from a ZeroInflationIndex
+        boost::shared_ptr<YoYInflationIndexWrapper> yiiWrapper = 
+            boost::dynamic_pointer_cast<YoYInflationIndexWrapper>(yoyIndex_);
+        boost::shared_ptr<ZeroInflationTermStructure> zeroTs = 
+            yiiWrapper->zeroIndex()->zeroInflationTermStructure().currentLink();
+        Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)));
+        
+        /*atmYoYSwapDateRates_.first.push_back(referenceDate() + Period(1, Years));
+        atmYoYSwapTimeRates_.first.push_back(timeFromReference(yoyOptionDateFromTenor(Period(1, Years))));
+        atmYoYSwapTimeRates_.second.push_back(fairSwap1Y);
+        atmYoYSwapDateRates_.second.push_back(fairSwap1Y);*/
+
+        Real k;
+        if (fairSwap1Y < overlappingStrikes.back()) {
+            for (auto strike : overlappingStrikes) {
+                if (strike > fairSwap1Y) {
+                    k = strike;
+                    break;
+                }
+            }
+        }
+        else {
+            k = overlappingStrikes.back();
+        }
+
+        for (Size i = 0; i < cfMaturities_.size(); i++) {
+            Time t = cfMaturityTimes_[i];
+            // determine the sum of discount factors
+            Size numYears = (Size)(t + 0.5);
+            Real fairSwap;
+            if (numYears == 1) {
+                break;
+            }
+            else {
+                Real sumDiscount = 0.0;
+                for (Size j = 0; j < numYears; ++j)
+                    sumDiscount += nominalTermStructure()->discount(j + 1.0);
+
+                Real capPrice = capPriceTemp(t, k);
+                Real floorPrice = floorPriceTemp(t, k);
+
+                fairSwap = ((capPrice - floorPrice) / 10000 + k * sumDiscount) / sumDiscount;
+            }
+
+            atmYoYSwapDateRates_.first.push_back(referenceDate() + cfMaturities_[i]);
+            atmYoYSwapTimeRates_.first.push_back(t);
+            atmYoYSwapTimeRates_.second.push_back(fairSwap);
+            atmYoYSwapDateRates_.second.push_back(fairSwap);
+        }
+
+        atmYoYSwapRateCurve_ =
+            interpolator1d_.interpolate(atmYoYSwapTimeRates_.first.begin(),
+                atmYoYSwapTimeRates_.first.end(),
+                atmYoYSwapTimeRates_.second.begin());
+
+        calculateYoYTermStructure();
+
+    }
+    else {
+        yoy_ = yoyIndex_->yoyInflationTermStructure().currentLink();
+    }
+
+    cPriceB_ =
+        Matrix(cfStrikes_.size(), cfMaturities_.size(), Null<Real>());
+    fPriceB_ =
+        Matrix(cfStrikes_.size(), cfMaturities_.size(), Null<Real>());
+    
+    for (Size j = 0; j < cfMaturities_.size(); ++j) {
+        Period mat = cfMaturities_[j];
+
+        Time t = cfMaturityTimes_[j];
+        Size numYears = (Size)(t + 0.5);
+        Real sumDiscount = 0.0;
+        for (Size k = 0; k < numYears; ++k)
+            sumDiscount += nominalTermStructure()->discount(k + 1.0);
+        
+        Real S = yoy_->yoyRate(yoyOptionDateFromTenor(mat));
+        for (Size i = 0; i < cfStrikes_.size(); ++i) {
+            Real K = cfStrikes_[i];
+            //Real K = std::pow(1.0 + K_quote, mat.length());
+            Size indF = std::find_if(fStrikes_.begin(), fStrikes_.end(),
+                detail::CloseEnoughComparator(cfStrikes_[i])) -
+                fStrikes_.begin();
+            Size indC = std::find_if(cStrikes_.begin(), cStrikes_.end(),
+                detail::CloseEnoughComparator(cfStrikes_[i])) -
+                cStrikes_.begin();
+            bool isFloorStrike = indF < fStrikes_.size();
+            bool isCapStrike = indC < cStrikes_.size();
+            if (isFloorStrike) {
+                fPriceB_[i][j] = fPrice_[indF][j];
+                if (!isCapStrike) {
+                    cPriceB_[i][j] = fPrice_[indF][j] + (S - K) * sumDiscount * 10000;
+                }
+            }
+            if (isCapStrike) {
+                cPriceB_[i][j] = cPrice_[indC][j];
+                if (!isFloorStrike) {
+                    fPriceB_[i][j] = cPrice_[indC][j] - (S - K) * sumDiscount * 10000;
+                }
+            }
+        }
+    }
+
+    // check that all cells are filled
+    for (Size i = 0; i < cPriceB_.rows(); ++i) {
+        for (Size j = 0; j < cPriceB_.columns(); ++j) {
+            QL_REQUIRE(cPriceB_[i][j] != Null<Real>(),
+                "InterpolatedCPICapFloorTermPriceSurface: did not "
+                "fill call price matrix at ("
+                << i << "," << j << "), this is unexpected");
+            QL_REQUIRE(fPriceB_[i][j] != Null<Real>(),
+                "InterpolatedCPICapFloorTermPriceSurface: did not "
+                "fill floor price matrix at ("
+                << i << "," << j << "), this is unexpected");
+        }
+    }
+
+    capPrice_ = interpolator2d_.interpolate(cfMaturityTimes_.begin(), cfMaturityTimes_.end(),
+        cfStrikes_.begin(), cfStrikes_.end(),
+        cPriceB_
+    );
+    capPrice_.enableExtrapolation();
+
+    floorPrice_ = interpolator2d_.interpolate(cfMaturityTimes_.begin(), cfMaturityTimes_.end(),
+        cfStrikes_.begin(), cfStrikes_.end(),
+        fPriceB_
+    );
+    floorPrice_.enableExtrapolation();
+
+
+
+}
+
+template<class I2D, class I1D>
+Rate InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+price(const Date &d, const Rate k) const {
+    Rate atm = atmYoYSwapRate(d);
+    return k > atm ? capPrice(d, k) : floorPrice(d, k);
+}
+
+template<class I2D, class I1D>
+Rate InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+capPrice(const Date &d, const Rate k) const {
+    Time t = timeFromReference(d);
+    return std::max(0.0, capPrice_(t, k));
+}
+
+template<class I2D, class I1D>
+Rate InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+floorPrice(const Date &d, const Rate k) const {
+    Time t = timeFromReference(d);
+    return std::max(0.0, floorPrice_(t, k));
+}
+
+template<class I2D, class I1D>
+void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+calculateYoYTermStructure() const {
+
+    // which yoy-swap points to use in building the yoy-fwd curve?
+    // for now pick every year
+    Size nYears = (Size)(0.5 + timeFromReference(referenceDate() + cfMaturities_.back()));
+
+    std::vector<boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure>>> YYhelpers;
+    for (Size i = 1; i <= nYears; i++) {
+        Date maturity = nominalTermStructure()->referenceDate() + Period(i, Years);
+        Handle<Quote> quote(boost::shared_ptr<Quote>(
+            new SimpleQuote(atmYoYSwapRate(maturity))));//!
+        boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure> >
+            anInstrument(
+                new YearOnYearInflationSwapHelper(
+                    quote, observationLag(), maturity,
+                    calendar(), bdc_, dayCounter(),
+                    yoyIndex()));
+        YYhelpers.push_back(anInstrument);
+    }
+
+    // usually this base rate is known
+    // however for the data to be self-consistent
+    // we pick this as the end of the curve
+    Rate baseYoYRate = atmYoYSwapRate(referenceDate());//!
+
+    Handle<YieldTermStructure> nominalH(nominalTermStructure());
+    boost::shared_ptr<PiecewiseYoYInflationCurve<I1D> >   pYITS(
+        new PiecewiseYoYInflationCurve<I1D>(
+            nominalTermStructure()->referenceDate(),
+            calendar(), dayCounter(), observationLag(), yoyIndex()->frequency(),
+            yoyIndex()->interpolated(), baseYoYRate,
+            nominalH, YYhelpers));
+    pYITS->recalculate();
+    yoy_ = pYITS;   // store
+
+                    // check that helpers are repriced
+    const Real eps = 1e-5;
+    for (Size i = 0; i < YYhelpers.size(); i++) {
+        Rate original = atmYoYSwapRate(yoyOptionDateFromTenor(Period(i + 1, Years)));
+        QL_REQUIRE(fabs(YYhelpers[i]->impliedQuote() - original) < eps,
+            "could not reprice helper " << i
+            << ", data " << original
+            << ", implied quote " << YYhelpers[i]->impliedQuote()
+        );
+    }
+}
+
 
 } // namespace QuantExt
 
