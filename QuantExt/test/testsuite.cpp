@@ -69,6 +69,7 @@ using boost::unit_test::test_suite;
 #include "swaptionvolatilityconverter.hpp"
 #include "swaptionvolconstantspread.hpp"
 #include "pricetermstructureadapter.hpp"
+#include "interpolatedyoycapfloortermpricesurface.hpp"
 
 namespace {
 
@@ -99,7 +100,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test_suite* test = BOOST_TEST_SUITE("QuantExtTestSuite");
 
     test->add(BOOST_TEST_CASE(startTimer));
-
+    
+    test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
     test->add(testsuite::CashFlowTest::suite());
     test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
     test->add(testsuite::CrossAssetModelTest::suite());

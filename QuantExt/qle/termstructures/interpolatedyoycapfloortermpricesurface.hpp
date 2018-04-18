@@ -117,6 +117,14 @@ protected:
     mutable Interpolator1D interpolator1d_;
 };
 
+namespace detail {
+    struct CloseEnoughComparator {
+        explicit CloseEnoughComparator(const Real v) : v_(v) {}
+        bool operator()(const Real w) const { return close_enough(v_, w); }
+        Real v_;
+    };
+}
+
 // template definitions
 template<class I2D, class I1D>
 InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
@@ -228,7 +236,7 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
                 Real capPrice = capPriceTemp(t, k);
                 Real floorPrice = floorPriceTemp(t, k);
 
-                fairSwap = ((capPrice - floorPrice) / 10000 + k * sumDiscount) / sumDiscount;
+                fairSwap = ((capPrice - floorPrice) + k * sumDiscount) / sumDiscount;
             }
 
             atmYoYSwapDateRates_.first.push_back(referenceDate() + cfMaturities_[i]);
@@ -278,13 +286,13 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
             if (isFloorStrike) {
                 fPriceB_[i][j] = fPrice_[indF][j];
                 if (!isCapStrike) {
-                    cPriceB_[i][j] = fPrice_[indF][j] + (S - K) * sumDiscount * 10000;
+                    cPriceB_[i][j] = fPrice_[indF][j] + (S - K) * sumDiscount;
                 }
             }
             if (isCapStrike) {
                 cPriceB_[i][j] = cPrice_[indC][j];
                 if (!isFloorStrike) {
-                    fPriceB_[i][j] = cPrice_[indC][j] - (S - K) * sumDiscount * 10000;
+                    fPriceB_[i][j] = cPrice_[indC][j] - (S - K) * sumDiscount;
                 }
             }
         }
