@@ -391,18 +391,19 @@ private:
     Period maturity_;
 };
 
-//! BMA Basis Swap data class FIXME ALL THIS NONSENSE
+//! BMA Swap data class
 /*!
 This class holds single market points of type
-- BASIS_SWAP RATIO
+- BMA_SWAP
 Specific data comprise
-- flat term
 - term
+- currency
+- maturity
 
 The quote (in Basis Points) is then interpreted as follows:
 
-A fair Swap pays the reference index with "flat term" with spread zero
-and receives the reference index with "term" plus the quoted spread.
+A fair Swap pays the libor index with gearing equal to the quote
+and receives the bma index.
 
 \ingroup marketdata
 */

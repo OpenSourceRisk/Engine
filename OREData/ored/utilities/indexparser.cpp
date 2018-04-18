@@ -68,7 +68,7 @@ public:
 template <class T> class IborIndexParserBMA : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
-        QL_REQUIRE(p.units() == Months, "BMA indexes must have period in months.");
+        QL_REQUIRE( (p.length() ==7 &&  p.units() == Days) || (p.length() == 1 && p.units() == Weeks), "BMA indexes are uniquely available with a tenor of 1 week.");
         const boost::shared_ptr<BMAIndex> bma = boost::make_shared<BMAIndex>(h);
         return boost::make_shared<T>(bma);
     }
@@ -144,7 +144,6 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"USD-SIFMA", boost::make_shared <IborIndexParserBMA<BMAIndexWrapper>>()} };
-    //can maybe wrap SIFMA around the wrapper to mention other conventions?
 
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);

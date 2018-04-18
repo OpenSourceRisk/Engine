@@ -30,7 +30,7 @@ using boost::iequals;
 namespace ore {
 namespace data {
 
-YieldCurveSegment::Type parseYieldCurveSegement(const string& s) {
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
     if (iequals(s, "Zero"))
         return YieldCurveSegment::Type::Zero;
     else if (iequals(s, "Zero Spread"))
@@ -53,6 +53,8 @@ YieldCurveSegment::Type parseYieldCurveSegement(const string& s) {
         return YieldCurveSegment::Type::TenorBasis;
     else if (iequals(s, "Tenor Basis Two Swaps"))
         return YieldCurveSegment::Type::TenorBasisTwo;
+    else if (iequals(s, "BMA Basis Swap"))
+        return YieldCurveSegment::Type::BMABasis;
     else if (iequals(s, "FX Forward"))
         return YieldCurveSegment::Type::FXForward;
     else if (iequals(s, "Cross Currency Basis Swap"))
@@ -288,11 +290,11 @@ void YieldCurveConfig::populateRequiredYieldCurveIDs() {
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
                                      const vector<string>& quotes = vector<string>())
-    : quotes_(quotes), type_(parseYieldCurveSegement(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
+    : quotes_(quotes), type_(parseYieldCurveSegment(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
-    type_ = parseYieldCurveSegement(typeID_);
+    type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
 }
 
@@ -448,39 +450,6 @@ void TenorBasisYieldCurveSegment::accept(AcyclicVisitor& v) {
         YieldCurveSegment::accept(v);
 }
 
-BMABasisYieldCurveSegment::BMABasisYieldCurveSegment(const string& typeID, const string& conventionsID,
-    const vector<string>& quotes,
-    const string& bmaProjectionCurveID,
-    const string& liborProjectionCurveID)
-    : YieldCurveSegment(typeID, conventionsID, quotes), bmaProjectionCurveID_(bmaProjectionCurveID),
-    liborProjectionCurveID_(liborProjectionCurveID) {}
-
-void BMABasisYieldCurveSegment::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "BMABasis");
-    YieldCurveSegment::fromXML(node);
-    quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-    bmaProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveBMA", false);
-    liborProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveLibor", false);
-}
-
-XMLNode* BMABasisYieldCurveSegment::toXML(XMLDocument& doc) {
-    XMLNode* node = YieldCurveSegment::toXML(doc);
-    XMLUtils::setNodeName(doc, node, "BMABasis");
-    XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
-    if (!bmaProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveBMA", bmaProjectionCurveID_);
-    if (!liborProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveLibor", liborProjectionCurveID_);
-    return node;
-}
-
-void BMABasisYieldCurveSegment::accept(AcyclicVisitor& v) {
-    Visitor<BMABasisYieldCurveSegment>* v1 = dynamic_cast<Visitor<BMABasisYieldCurveSegment>*>(&v);
-    if (v1 != 0)
-        v1->visit(*this);
-    else
-        YieldCurveSegment::accept(v);
-}
 
 CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const string& conventionsID,
                                                      const vector<string>& quotes, const string& spotRateID,

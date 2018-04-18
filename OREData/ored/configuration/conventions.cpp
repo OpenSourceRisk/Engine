@@ -179,6 +179,7 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+
 FutureConvention::FutureConvention(const string& id, const string& index)
     : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(index)) {}
 
@@ -283,6 +284,7 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions)
     : Convention(id, Type::SwapIndex), strConventions_(conventions) {}
@@ -441,6 +443,7 @@ TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const strin
     build();
 }
 
+
 void TenorBasisSwapConvention::build() {
     longIndex_ = parseIborIndex(strLongIndex_);
     shortIndex_ = parseIborIndex(strShortIndex_);
@@ -481,6 +484,7 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
@@ -547,8 +551,9 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+
 BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
-    : Convention(id, Type::TenorBasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
+    : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
     build();
 }
 
@@ -560,7 +565,7 @@ void BMABasisSwapConvention::build() {
 void BMABasisSwapConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "BMABasisSwap");
-    type_ = Type::TenorBasisSwap;
+    type_ = Type::BMABasisSwap;
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
@@ -579,6 +584,7 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
@@ -628,6 +634,7 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays,
                                                          const string& strSettlementCalendar,
