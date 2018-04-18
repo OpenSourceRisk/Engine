@@ -83,11 +83,15 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
     Real vegaNotional = 50000.0;
     Real varianceNotional = vegaNotional / (2.0 * 100.0 * volatilityStrike);
 
-    std::vector<Real> strikes = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
-                                    105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
-    std::vector<Real> volsVector = { 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2,    //Put Vols
-                                        0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
-    Matrix vols(18,1,volsVector.begin(), volsVector.end());
+    // add strikes in C++98 compatible way
+    Real arrStrikes[] = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
+                          105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
+    std::vector<Real> strikes(arrStrikes, arrStrikes + sizeof(arrStrikes) / sizeof(Real));
+    // add vols in C++98 compatible way
+    Real arrVols[] = { 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2,    //Put Vols
+                       0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
+    std::vector<Real> volsVector(arrVols, arrVols + sizeof(arrVols) / sizeof(Real));
+    Matrix vols(18, 1, volsVector.begin(), volsVector.end());
 
     BOOST_TEST_MESSAGE("Testing t0 pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
     std::string equityName = "STE";
@@ -147,14 +151,20 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
         pastDates.push_back(day);
     }
     
-    std::vector<Real> fixings{ 98.5, 98.0, 99.0, 100.2, 99.4 ,98.2};
+    // add fixings in C++98 compatible way
+    Real arrFixings[] = { 98.5, 98.0, 99.0, 100.2, 99.4 ,98.2 };
+    std::vector<Real> fixings(arrFixings, arrFixings + sizeof(arrFixings)/sizeof(Real));
     TimeSeries<Real> fixingHistory(pastDates.begin(), pastDates.end(), fixings.begin());
     IndexManager::instance().setHistory("EQ/" + equityName, fixingHistory);
 
-    std::vector<Real> strikes = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
-        105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
-    std::vector<Real> volsVector = { 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2,    //Put Vols
-        0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
+    // add strikes in C++98 compatible way
+    Real arrStrikes[] = { 50.0, 55.0, 60.0, 65.0, 70.0, 75.0, 80.0, 85.0, 90.0, 95.0, 100.0, //Put Strikes
+                          105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };   //Call Strikes
+    std::vector<Real> strikes(arrStrikes, arrStrikes + sizeof(arrStrikes) / sizeof(Real));
+    // add vols in C++98 compatible way
+    Real arrVols[] = { 0.3, 0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2,    //Put Vols
+                       0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };    //Call Vols
+    std::vector<Real> volsVector(arrVols, arrVols + sizeof(arrVols) / sizeof(Real));
     Matrix vols(18, 1, volsVector.begin(), volsVector.end());
 
     BOOST_TEST_MESSAGE("Testing seasoned swap pricing of the QuantExt VarSwap engine.");
