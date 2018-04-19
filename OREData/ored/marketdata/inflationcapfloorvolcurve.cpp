@@ -40,34 +40,35 @@ using namespace std;
 namespace ore {
 namespace data {
 
-InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
-    const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
-    Handle<YieldTermStructure> discountCurve) {
-    //try {
+InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, 
+    const Loader& loader, const CurveConfigurations& curveConfigs,
+    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+    map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
+    try {
 
-    //    const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
-    //        curveConfigs.capFloorVolCurveConfig(spec.curveConfigID());
+        const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
+            curveConfigs.capFloorVolCurveConfig(spec.curveConfigID());
 
-    //    // Volatility type
-    //    MarketDatum::QuoteType volatilityType;
-    //    VolatilityType quoteVolatilityType;
+        // Volatility type
+        MarketDatum::QuoteType volatilityType;
+        VolatilityType quoteVolatilityType;
 
-    //    switch (config->volatilityType()) {
-    //    case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
-    //        volatilityType = MarketDatum::QuoteType::RATE_LNVOL;
-    //        quoteVolatilityType = ShiftedLognormal;
-    //        break;
-    //    case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
-    //        volatilityType = MarketDatum::QuoteType::RATE_NVOL;
-    //        quoteVolatilityType = Normal;
-    //        break;
-    //    case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-    //        volatilityType = MarketDatum::QuoteType::RATE_SLNVOL;
-    //        quoteVolatilityType = ShiftedLognormal;
-    //        break;
-    //    default:
-    //        QL_FAIL("unexpected volatility type");
-    //    }
+        switch (config->volatilityType()) {
+        case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
+            volatilityType = MarketDatum::QuoteType::RATE_LNVOL;
+            quoteVolatilityType = ShiftedLognormal;
+            break;
+        case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
+            volatilityType = MarketDatum::QuoteType::RATE_NVOL;
+            quoteVolatilityType = Normal;
+            break;
+        case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
+            volatilityType = MarketDatum::QuoteType::RATE_SLNVOL;
+            quoteVolatilityType = ShiftedLognormal;
+            break;
+        default:
+            QL_FAIL("unexpected volatility type");
+        }
 
     //    // Read in quotes matrix. If we hit any ATM quotes that match one of the tenors, store those also.
     //    vector<Period> tenors = config->tenors();
@@ -177,13 +178,13 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
     //        capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);
     //        capletVol_->enableExtrapolation(config->extrapolate());
     //    }
-    //}
-    //catch (std::exception& e) {
-    //    QL_FAIL("cap/floor vol curve building failed :" << e.what());
-    //}
-    //catch (...) {
-    //    QL_FAIL("cap/floor vol curve building failed: unknown error");
-    //}
+    }
+    catch (std::exception& e) {
+        QL_FAIL("inflation cap/floor vol curve building failed :" << e.what());
+    }
+    catch (...) {
+        QL_FAIL("inflation cap/floor vol curve building failed: unknown error");
+    }
 }
 } // namespace data
 } // namespace ore

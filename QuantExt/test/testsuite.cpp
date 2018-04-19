@@ -101,7 +101,6 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
     
-    test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
     test->add(testsuite::CashFlowTest::suite());
     test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
     test->add(testsuite::CrossAssetModelTest::suite());
@@ -130,6 +129,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
     test->add(testsuite::PriceTermStructureAdapterTest::suite());
     test->add(testsuite::BondsTest::suite());
+    test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -508,6 +508,51 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveSpec>(spec);
                 QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor spec");
 
+                // have we built the curve already ?
+                auto itr = requiredInflationCapFloorVolCurves.find(infcapfloorspec->name());
+                if (itr == requiredInflationCapFloorVolCurves.end()) {
+                    LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                    boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
+                        boost::make_shared<InflationCapFloorVolCurve>(asof, *infcapfloorspec, loader, curveConfigs,
+                            requiredYieldCurves, requiredInflationCurves);
+                    itr = requiredInflationCapFloorVolCurves
+                        .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
+                        .first;
+                }
+
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.mapping(MarketObject::ZeroInflationCapFloorVol, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        // Add Zero Inflation Vol curves
+                    }
+                }
+
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.mapping(MarketObject::YoYInflationCapFloorVol, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
+                    if (it.second == spec->name()) {
+
+                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<QuantExt::YoYOptionletVolatilitySurface>(
+                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->inflationCapFloorVolSurface()));
+                    }
+                }
+
                 break;
             }
 
