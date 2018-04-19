@@ -25,6 +25,7 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/inflationcurve.hpp>
 #include <ored/marketdata/loader.hpp>
 
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
@@ -35,26 +36,27 @@ using QuantLib::YieldTermStructure;
 using ore::data::CurveConfigurations;
 
 namespace ore {
-    namespace data {
+namespace data {
 
-        //! Wrapper class for building CapFloor volatility structures
-        //! \ingroup curves
-        class InflationCapFloorVolCurve {
-        public:
-            InflationCapFloorVolCurve() {}
-            InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
-                const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
-                Handle<YieldTermStructure> discountCurve);
+//! Wrapper class for building CapFloor volatility structures
+//! \ingroup curves
+class InflationCapFloorVolCurve {
+public:
+    InflationCapFloorVolCurve() {}
+    InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, 
+        const Loader& loader, const CurveConfigurations& curveConfigs,
+        map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+        map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
 
-            //! \name Inspectors
-            //@{
-            const InflationCapFloorVolatilityCurveSpec& spec() const { return spec_; }
-            //! Caplet/Floorlet curve or surface i.e. result of stripping
-            const boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface>& yoyOptionletVolStructure() const { return yoyOptionletVol_; }
-            //@}
-        private:
-            InflationCapFloorVolatilityCurveSpec spec_;
-            boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> yoyOptionletVol_;
-        };
-    } // namespace data
+    //! \name Inspectors
+    //@{
+    const InflationCapFloorVolatilityCurveSpec& spec() const { return spec_; }
+    //! Caplet/Floorlet curve or surface i.e. result of stripping
+    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyVolSurface_; }
+    //@}
+private:
+    InflationCapFloorVolatilityCurveSpec spec_;
+    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
+};
+} // namespace data
 } // namespace ore
