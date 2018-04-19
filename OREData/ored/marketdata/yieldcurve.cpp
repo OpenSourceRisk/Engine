@@ -1221,10 +1221,23 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
     boost::shared_ptr<BMAIndexWrapper> bmaIndex = bmaBasisSwapConvention->bmaIndex();
     bmaIndex = dynamic_pointer_cast<BMAIndexWrapper>(bmaIndex->clone(handle()));
 
-    // If long index projection curve ID is not this curve.
+    // If libor index projection curve ID is not this curve.
     string liborCurveID = bmaBasisSwapSegment->projectionCurveID();
-    QL_REQUIRE(liborCurveID != curveConfig_->curveID(), "Libor index for BMA curve must forward on a different curve.");
     boost::shared_ptr<IborIndex> liborIndex = bmaBasisSwapConvention->liborIndex();
+    liborCurveID = yieldCurveKey(currency_, liborCurveID, asofDate_);
+    boost::shared_ptr<YieldCurve> liborCurve;
+    map<string, boost::shared_ptr<YieldCurve>>::iterator it;
+    it = requiredYieldCurves_.find(liborCurveID);
+    if (it != requiredYieldCurves_.end()) {
+        liborCurve = it->second;
+    }
+    else {
+        QL_FAIL("The libor side projection curve, " << liborCurveID
+            << ", required in the building "
+            "of the curve, "
+            << curveSpec_.name() << ", was not found.");
+    }
+    liborIndex = liborIndex->clone(liborCurve->handle());
 
     vector<string> bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
@@ -1244,15 +1257,13 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
                 << io::iso_date(asofDate_) << ".");
         }
 
-        Natural settlementDays = bmaIndex->fixingDays();
-        Calendar cal = bmaIndex->fixingCalendar();
-        // Create a tenor basis swap helper if we do.
+        // Create bma basis swap helper if we do.
         boost::shared_ptr<RateHelper> bmaSwapHelper;
         bmaSwapHelper.reset(new BMASwapRateHelper(
             bmaBasisSwapQuote->quote(),
             bmaBasisSwapQuote->maturity(),
-            settlementDays, 
-            cal,
+            bmaIndex->fixingDays(),
+            bmaIndex->fixingCalendar(),
             bmaBasisSwapQuote->term(),
             bmaIndex->businessDayConvention(),
             bmaIndex->dayCounter(),

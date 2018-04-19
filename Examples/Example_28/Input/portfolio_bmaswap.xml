@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="bmaSwap_20">
+  <Trade id="bmaBasisSwap_2y">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -9,27 +9,33 @@
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
           <Notional>10000000.000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.009851</Rate>
-          </Rates>
-        </FixedLegData>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.0000</Spread>
+          </Spreads>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2018-02-05</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
             <Rule>Forward</Rule>
             <EndOfMonth/>
             <FirstDate/>
@@ -49,17 +55,17 @@
         <FloatingLegData>
           <Index>USD-SIFMA-1W</Index>
           <Spreads>
-            <Spread>0.000000</Spread>
+            <Spread>0.0000</Spread>
           </Spreads>
           <IsInArrears>false</IsInArrears>
-          <FixingDays>2</FixingDays>
+          <FixingDays>1</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2018-02-05</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
+            <Calendar>NYSE</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
             <Rule>Forward</Rule>
