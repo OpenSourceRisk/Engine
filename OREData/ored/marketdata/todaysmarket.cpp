@@ -545,11 +545,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 for (const auto it : yyInfMap) {
                     if (it.second == spec->name()) {
 
-                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                        /*LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
                             << " to configuration " << configuration.first);
                         yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->inflationCapFloorVolSurface()));
+                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->inflationCapFloorVolSurface()));*/
                     }
                 }
 

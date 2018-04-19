@@ -180,5 +180,11 @@
     <ClCompile Include="ored_commodityforward.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="inflationcapfloor.hpp">
+      <Filter>headers</Filter>
+    </ClCompile>
+    <ClCompile Include="inflationcapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
