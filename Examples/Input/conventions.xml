@@ -702,7 +702,7 @@
   </Swap>
   <Swap>
     <Id>MYR-3M-SWAP</Id>
-    <FixedCalendar>MYR</FixedCalendar>
+    <FixedCalendar>TARGET</FixedCalendar>
     <FixedFrequency>Quarterly</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
@@ -718,11 +718,27 @@
   </Swap>
   <Swap>
     <Id>THB-6M-SWAP</Id>
-    <FixedCalendar>THB</FixedCalendar>
+    <FixedCalendar>TARGET</FixedCalendar>
     <FixedFrequency>Semiannual</FixedFrequency>
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>THB-BIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>COP-3M-SWAP</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>COP-IBR-3M</Index>
+  </Swap>  
+  <Swap>
+    <Id>PHP-3M-SWAP</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>PHP-PHIREF-3M</Index>
   </Swap>
   <Swap>
     <Id>TWD-3M-SWAP</Id>
