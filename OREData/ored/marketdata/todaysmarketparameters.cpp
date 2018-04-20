@@ -51,8 +51,8 @@ static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
     {"CapFloorVolatility", "currency"}, {"ZeroInflationIndexCurve", "name"},
     {"YYInflationIndexCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
     {"YYInflationCapFloorPriceSurface", "name" },
-    {"ZeroInflationCapFloorVolatilities", "name" },
-    {"YYInflationCapFloorVolatilities", "name" },
+    {"ZeroInflationCapFloorVolatility", "name" },
+    {"YYInflationCapFloorVolatility", "name" },
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
     {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}};
 // clang-format on

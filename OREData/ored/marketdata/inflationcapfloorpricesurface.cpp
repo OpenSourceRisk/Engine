@@ -24,7 +24,6 @@
 
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
-#include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
@@ -74,8 +73,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
         // We loop over all market data, looking for quotes that match the configuration
         for (auto& md : loader.loadQuotes(asof)) {
 
-            if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
-                                           md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
+            if (md->asofDate() == asof && 
+                (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
+                 md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
                 boost::shared_ptr<InflationCapFloorQuote> q;
                     
@@ -86,7 +86,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                     q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
                 }
 
-                if (q != NULL && q->index() == spec.index()) {
+                if (q != NULL && q->index() == spec.index() &&
+                    md->quoteType() == MarketDatum::QuoteType::PRICE) {
                     auto it1 = std::find(terms.begin(), terms.end(), q->term());
                     Real strike = parseReal(q->strike());
                     Size strikeIdx = Null<Size>();

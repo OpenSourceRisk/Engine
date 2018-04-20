@@ -540,7 +540,12 @@
     <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -907,6 +912,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

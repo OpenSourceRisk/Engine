@@ -41,36 +41,42 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
 }
 
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
-    const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, const bool extrapolate,
-    bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
+    const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType, 
+    const bool extrapolate, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-    const string& iborIndex, const string& discountCurve)
-    : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
-    includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays),
-    calendar_(calendar), businessDayConvention_(businessDayConvention), iborIndex_(iborIndex),
-    discountCurve_(discountCurve) {}
+    const string& index, const string& indexCurve, const string& yieldTermStructure)
+    : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
+    tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays),
+    calendar_(calendar), businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
+    yieldTermStructure_(yieldTermStructure) {}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_);
+        boost::shared_ptr<IborIndex> index = parseIborIndex(index_);
         Currency ccy = index->currency();
         Period tenor = index->tenor();
 
+        string type;
+        if (type_ == Type::ZC)
+            type = "ZC";
+        else if (type_ == Type::YY)
+            type = "YY";
+
         std::stringstream ssBase;
-        ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";
+        ssBase << type << "_INFLATIONCAPFLOOR/" << volatilityType_ << "/" << index_ << "/";
         string base = ssBase.str();
 
         // TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
             for (auto s : strikes_) {
-                quotes_.push_back(base + to_string(t) + "/" + to_string(tenor) + "/0/0/" + to_string(s));
+                quotes_.push_back(base + to_string(t) + "/F/" + to_string(s));
             }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
+                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + to_string(t));
             }
         }
     }
@@ -78,10 +84,20 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
 }
 
 void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "CapFloorVolatility");
+    XMLUtils::checkNode(node, "InflationCapFloorVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+
+    string type = XMLUtils::getChildValue(node, "Type", true);
+    if (type == "ZC") {
+        type_ = Type::ZC;
+    }
+    else if (type == "YY") {
+        type_ = Type::YY;
+    }
+    else
+        QL_FAIL("Type " << type << " not recognized");
 
     // We are requiring explicit strikes so there should be at least one strike
     strikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "Strikes", true);
@@ -101,15 +117,15 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     else {
         QL_FAIL("Volatility type, " << volType << ", not recognized");
     }
-    includeAtm_ = XMLUtils::getChildValueAsBool(node, "IncludeAtm", true);
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", true);
     tenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "Tenors", true);
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
 
-    iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
-    discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+    index_ = XMLUtils::getChildValue(node, "Index", true);
+    indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
+    yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -117,6 +133,15 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+
+    if (type_ == Type::ZC) {
+        XMLUtils::addChild(doc, node, "Type", "ZC");
+    }
+    else if (type_ == Type::YY) {
+        XMLUtils::addChild(doc, node, "Type", "YY");
+    }
+    else
+        QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
 
     if (volatilityType_ == VolatilityType::Normal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
@@ -132,14 +157,14 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
-    XMLUtils::addChild(doc, node, "IncludeAtm", includeAtm_);
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addChild(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
-    XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
-    XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+    XMLUtils::addChild(doc, node, "Index", index_);
+    XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
+    XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
 
     return node;
 }

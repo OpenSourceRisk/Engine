@@ -35,11 +35,15 @@ boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const stri
 
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
-        //Should have a displacement
-        LOG("Build YoYInflationBlackCapFloorEngine for inflation index " << indexName);
-        //return boost::make_shared<YoYInflationBlackCapFloorEngine>(yts, ovs, ovs->displacement());
-        return boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyTs, hovs);
-        break;
+        if (ovs->displacement() == 0.0) {
+            LOG("Build YoYInflationBlackCapFloorEngine for inflation index " << indexName);
+            return boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyTs, hovs);
+            break;
+        } else {
+            LOG("Build YoYInflationUnitDisplacedBlackCapFloorEngine for inflation index " << indexName);
+            return boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyTs, hovs);
+            break;
+        }
     case Normal:
         LOG("Build YoYInflationBachelierCapFloorEngine for inflation index " << indexName);
         return boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyTs, hovs);

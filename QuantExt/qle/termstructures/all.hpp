@@ -47,3 +47,4 @@
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>

@@ -2838,7 +2838,26 @@
       </InflationCapFloorPriceSurface>
       
   </InflationCapFloorPriceSurfaces>
-
+  
+  <InflationCapFloorVolatilities>
+      <InflationCapFloorVolatility>
+          <CurveId>EUHICPXT_YY_CF_N</CurveId>
+		  <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+          <Type>YY</Type>
+		  <VolatilityType>Normal</VolatilityType>
+		  <Extrapolation>TRUE</Extrapolation>
+		  <DayCounter>Actual/365 (Fixed)</DayCounter>
+		  <Calendar>TARGET</Calendar>
+		  <BusinessDayConvention>Following</BusinessDayConvention>
+		  <Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+		  <Strikes>-0.01,0,0.01,0.02,0.03</Strikes>
+		  <Index>EUHICPXT</Index>
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
+  </InflationCapFloorVolatilities>
+  
   <EquityCurves>
         <EquityCurve>
             <CurveId>SP5</CurveId>
