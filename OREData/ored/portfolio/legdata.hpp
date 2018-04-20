@@ -370,7 +370,7 @@ public:
             const bool notionalInitialExchange = false, const bool notionalFinalExchange = false,
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
-            int fixingDays = 0,
+            int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>());
 
     //! \name Serialisation
@@ -396,6 +396,7 @@ public:
     double foreignAmount() const { return foreignAmount_; }
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
+    const string& fixingCalendar() const { return fixingCalendar_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //
     const string& legType() const { return concreteLegData_->legType(); }
@@ -423,6 +424,7 @@ private:
     double foreignAmount_;
     string fxIndex_;
     int fixingDays_;
+    string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
 };
 
