@@ -585,13 +585,12 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
     vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
 
-
     applyAmortization(notionals, data, schedule);
     // amortization type annuity is not allowed, check this
     if (!data.amortizationData().empty()) {
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
-        QL_REQUIRE(amortizationType != AmortizationType::Annuity,
-            "AmortizationType " << data.amortizationData().front().type() << " not supported for BMA legs");
+        QL_REQUIRE(amortizationType == AmortizationType::None,
+            "Amortization is not supported for BMA legs");
     }
 
     AverageBMALeg leg = AverageBMALeg(schedule, index)

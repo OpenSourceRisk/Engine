@@ -26,6 +26,7 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <stdio.h>
 
 using std::string;
@@ -152,6 +153,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             notional = Null<Real>();
                             flowType = "Notional";
                         }
+                        boost::shared_ptr<AverageBMACoupon> ptrBMA =
+                            boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
@@ -162,7 +165,12 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
-                        if (ptrFloat) {
+                        if (ptrBMA) {
+                            fixingDate = ptrBMA->fixingDates().end()[-2]; //last "fixing" is after the coupon expiry
+                            fixingValue = ptrBMA->pricer()->swapletRate();
+                            if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
+                                flowType = "BMAaverage";
+                        } else if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
                             if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
