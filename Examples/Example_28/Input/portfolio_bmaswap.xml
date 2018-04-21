@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="bmaBasisSwap_2y">
+  <Trade id="bmaBasisSwap_01y">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CPTY_A</CounterParty>
@@ -13,15 +13,13 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>100.000000</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
           <Index>USD-LIBOR-3M</Index>
-          <Spreads>
-            <Spread>0.0000</Spread>
-          </Spreads>
+          <Spreads/>
           <Gearings>
             <Gearing>0.8</Gearing>
           </Gearings>
@@ -30,48 +28,363 @@
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2018-02-05</EndDate>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2017-02-08</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>US with Libor impact</Calendar>
             <Convention>MF</Convention>
-            <TermConvention>MF</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <Rule>Backward</Rule>
           </Rules>
         </ScheduleData>
       </LegData>
       <LegData>
         <LegType>Floating</LegType>
-        <Payer>true</Payer>
+        <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>100.000000</Notional>
         </Notionals>
-        <DayCounter>A360</DayCounter>
+        <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
           <Index>USD-SIFMA-1W</Index>
-          <Spreads>
-            <Spread>0.0000</Spread>
-          </Spreads>
+          <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2018-02-05</EndDate>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2017-02-08</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>NYSE</Calendar>
+            <Calendar>US-NYSE</Calendar>
             <Convention>MF</Convention>
-            <TermConvention>MF</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="bmaBasisSwap_02y">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads/>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2018-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-SIFMA-1W</Index>
+          <Spreads/>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2018-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US-NYSE</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="bmaBasisSwap_03y">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads/>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2019-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-SIFMA-1W</Index>
+          <Spreads/>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2019-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US-NYSE</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="bmaBasisSwap_04y">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads/>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2020-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-SIFMA-1W</Index>
+          <Spreads/>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2020-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US-NYSE</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="bmaBasisSwap_05y">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads/>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2021-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-SIFMA-1W</Index>
+          <Spreads/>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2021-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US-NYSE</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="bmaBasisSwap_10y">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads/>
+          <Gearings>
+            <Gearing>0.8</Gearing>
+          </Gearings>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2026-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US with Libor impact</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100.000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-SIFMA-1W</Index>
+          <Spreads/>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>1</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-08</StartDate>
+            <EndDate>2026-02-08</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>US-NYSE</Calendar>
+            <Convention>MF</Convention>
+            <Rule>Backward</Rule>
           </Rules>
         </ScheduleData>
       </LegData>
