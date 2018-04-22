@@ -195,7 +195,7 @@
     <ClInclude Include="bonds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="interpolatedyoycapfloortermpricesurface.hpp">
+    <ClInclude Include="C.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

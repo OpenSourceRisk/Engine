@@ -686,7 +686,7 @@
     <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="fxvolsmile.hpp" />
     <ClInclude Include="index.hpp" />
-    <ClInclude Include="interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="C.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="payment.hpp" />

@@ -186,10 +186,10 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
         // create a yoyinflation term structure from put/call parity
         // find the first overlapping strike 
         std::vector<Real> overlappingStrikes;
-        for (auto floorStrike : fStrikes_) {
-            for (auto capStrike : cStrikes_) {
-                if (floorStrike == capStrike) {
-                    overlappingStrikes.push_back(floorStrike);
+        for (Size i = 0; i < fStrikes_.size(); i++) {
+            for (Size j = 0; j < cStrikes_.size(); j++) {
+                if (fStrikes_[i] == cStrikes_[j]) {
+                    overlappingStrikes.push_back(fStrikes_[i]);
                 }
             }
         }
@@ -209,9 +209,9 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
 
         Real k;
         if (fairSwap1Y < overlappingStrikes.back()) {
-            for (auto strike : overlappingStrikes) {
-                if (strike > fairSwap1Y) {
-                    k = strike;
+            for (Size i = 0; i < overlappingStrikes.size(); i++) {
+                if (overlappingStrikes[i] > fairSwap1Y) {
+                    k = overlappingStrikes[i];
                     break;
                 }
             }
