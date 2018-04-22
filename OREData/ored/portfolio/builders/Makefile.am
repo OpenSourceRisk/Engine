@@ -12,7 +12,7 @@ libOREDataPortfolioBuilders_la_SOURCES = \
 	swaption.cpp \
     cms.cpp \
 	commodityoption.cpp \
-	yoycapfloor.cp
+	yoycapfloor.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \

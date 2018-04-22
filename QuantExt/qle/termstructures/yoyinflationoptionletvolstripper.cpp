@@ -25,6 +25,7 @@
 
 #include <boost/make_shared.hpp>
 
+using namespace QuantLib;
 using boost::shared_ptr;
 
 namespace QuantExt {
