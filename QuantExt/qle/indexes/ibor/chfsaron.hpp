@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,39 +16,34 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dkkcibor.hpp
-    \brief DKK-CIBOR index
+/*! \file chfsaron.hpp
+    \brief Swiss Average Rate Overnight (SARON)
     \ingroup indexes
 */
 
-#ifndef quantext_dkkcibor_hpp
-#define quantext_dkkcibor_hpp
+#ifndef quantext_saron_hpp
+#define quantext_saron_hpp
 
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/denmark.hpp>
+#include <ql/time/calendars/switzerland.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! DKK-CIBOR index
-/*! DKK-CIBOR rate overseen by Danish Bankers Association.
+//! %CHF %SARON rate
+/*! Swiss Average Rate Overnight published by SNB.
 
-    See <http://www.finansraadet.dk/Pages/forside.aspx>.
+See <https://www.snb.ch/en/ifor/finmkt/id/finmkt_repos_saron>.
 
-    \remark Using Denmark calendar, should be Copenhagen.
-            There is another index, DKK-CIBOR2, that has a spot lag of 2D.
-
-    \warning Check roll convention and EOM.
-
-            \ingroup indexes
+\ingroup indexes
 */
-class DKKCibor : public IborIndex {
+class CHFSaron : public OvernightIndex {
 public:
-    DKKCibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("DKK-CIBOR", tenor, 2, DKKCurrency(), Denmark(), ModifiedFollowing, false, Actual360(), h) {}
+    CHFSaron(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("CHF-SARON", 0, CHFCurrency(), Switzerland(), Actual360(), h) {}
 };
 } // namespace QuantExt
 

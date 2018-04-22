@@ -1,10 +1,10 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
-
+ 
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file dkkcibor.hpp
-    \brief DKK-CIBOR index
+/*! \file dkkois.hpp
+    \brief DKK T/N rate
     \ingroup indexes
 */
 
-#ifndef quantext_dkkcibor_hpp
-#define quantext_dkkcibor_hpp
+#ifndef quantext_dkkois_hpp
+#define quantext_dkkois_hpp
 
 #include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
@@ -33,22 +33,17 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-//! DKK-CIBOR index
-/*! DKK-CIBOR rate overseen by Danish Bankers Association.
+//! %DKK OIS
+/*! %DKK T/N rate 
 
-    See <http://www.finansraadet.dk/Pages/forside.aspx>.
+\remark Using Denmark calendar.
 
-    \remark Using Denmark calendar, should be Copenhagen.
-            There is another index, DKK-CIBOR2, that has a spot lag of 2D.
-
-    \warning Check roll convention and EOM.
-
-            \ingroup indexes
+\ingroup indexes
 */
-class DKKCibor : public IborIndex {
+class DKKOis : public OvernightIndex {
 public:
-    DKKCibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("DKK-CIBOR", tenor, 2, DKKCurrency(), Denmark(), ModifiedFollowing, false, Actual360(), h) {}
+    DKKOis(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("DKK-DKKOIS", 1, DKKCurrency(), Denmark(), Actual360(), h) {}
 };
 } // namespace QuantExt
 

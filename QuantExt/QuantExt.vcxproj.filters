@@ -545,6 +545,18 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>  
+    <ClInclude Include="qle\indexes\ibor\dkkois.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\demlibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\chfsaron.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\seksior.hpp">
+      <Filter>indexes\ibor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
