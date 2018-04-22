@@ -478,13 +478,15 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             << " to configuration " << configuration.first);
                         yoyInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<YoYCapFloorTermPriceSurface>(
-                                boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
+                                boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(
+                                    itr->second->inflationCapFloorPriceSurface()));
 
                         LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
                             << " to configuration " << configuration.first);
                         yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->yoyInflationCapFloorVolSurface()));
+                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(
+                                    itr->second->yoyInflationCapFloorVolSurface()));
                                                                    
                         if (!itr->second->useMarketYoyCurve()) {
                             LOG("Adding YoYInflationCurve (" << it.first << ") to configuration " << configuration.first);
@@ -544,15 +546,12 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 }
                 for (const auto it : yyInfMap) {
                     if (it.second == spec->name()) {
-
-                        /*LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
                             << " to configuration " << configuration.first);
                         yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
-                            Handle<QuantExt::YoYOptionletVolatilitySurface>(
-                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(itr->second->inflationCapFloorVolSurface()));*/
+                            Handle<QuantExt::YoYOptionletVolatilitySurface>(itr->second->yoyInflationCapFloorVolSurface());
                     }
                 }
-
                 break;
             }
 

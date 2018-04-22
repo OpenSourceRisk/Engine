@@ -83,8 +83,7 @@ public:
                 parseZeroInflationIndex("EUHICPXT", false), false,
                 Handle<YoYInflationTermStructure>(yoyTs)));
 
-            // Add EUHICPXT yoy volatility term structure
-
+        // Add EUHICPXT yoy volatility term structure
         boost::shared_ptr<QuantLib::ConstantYoYOptionletVolatility> volSurface = 
             boost::make_shared<QuantLib::ConstantYoYOptionletVolatility>(0.01, 0, cal, bdc, dc, 
                 Period(3, Months), Monthly, index->interpolated());

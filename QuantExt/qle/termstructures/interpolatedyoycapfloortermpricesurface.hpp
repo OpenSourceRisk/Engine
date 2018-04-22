@@ -236,7 +236,7 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
                 Real capPrice = capPriceTemp(t, k);
                 Real floorPrice = floorPriceTemp(t, k);
 
-                fairSwap = ((capPrice - floorPrice) + k * sumDiscount) / sumDiscount;
+                fairSwap = ((capPrice - floorPrice)/10000 + k * sumDiscount) / sumDiscount;
             }
 
             atmYoYSwapDateRates_.first.push_back(referenceDate() + cfMaturities_[i]);
@@ -286,13 +286,13 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
             if (isFloorStrike) {
                 fPriceB_[i][j] = fPrice_[indF][j];
                 if (!isCapStrike) {
-                    cPriceB_[i][j] = fPrice_[indF][j] + (S - K) * sumDiscount;
+                    cPriceB_[i][j] = fPrice_[indF][j] + (S - K) * 10000 * sumDiscount;
                 }
             }
             if (isCapStrike) {
                 cPriceB_[i][j] = cPrice_[indC][j];
                 if (!isFloorStrike) {
-                    fPriceB_[i][j] = cPrice_[indC][j] - (S - K) * sumDiscount;
+                    fPriceB_[i][j] = cPrice_[indC][j] - (S - K) * 10000 * sumDiscount;
                 }
             }
         }

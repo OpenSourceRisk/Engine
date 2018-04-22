@@ -52,13 +52,22 @@ namespace QuantExt {
         std::vector<Real> strikes = volSurface_->strikes();
         std::vector<Period> terms = volSurface_->optionTenors();
         std::vector<Time> times = volSurface_->optionTimes();
-        Matrix cPrice(strikes.size(), strikes.size() == 0 ? 0 : terms.size(), Null<Real>()), 
-               fPrice(strikes.size(), strikes.size() == 0 ? 0 : terms.size(), Null<Real>());
+        
+        std::vector<Period> optionletTerms = { terms.front() };
+        while (optionletTerms.back() != terms.back()) {
+            optionletTerms.push_back(optionletTerms.back() + Period(1, Years));
+        }
+
+        Matrix cPrice(strikes.size(), strikes.size() == 0 ? 0 : optionletTerms.size(), Null<Real>()),
+            fPrice(strikes.size(), strikes.size() == 0 ? 0 : optionletTerms.size(), Null<Real>());
 
         // populate cPrice
-        for (Size i = 0; i < terms.size(); i++) {
+        for (Size i = 0; i < optionletTerms.size(); i++) {
             for (Size j = 0; j < strikes.size(); j++) {
-                Real vol = volSurface_->volatility(times[i], strikes[j]);
+                Time t = volSurface_->timeFromReference(
+                    volSurface_->optionDateFromTenor(optionletTerms[i]));
+
+                Real vol = volSurface_->volatility(t, strikes[j]);
                 boost::shared_ptr<ConstantYoYOptionletVolatility> ovs (
                     new ConstantYoYOptionletVolatility(vol, settDays,
                         cal, bdc, dc, obsLag, frequency, false, -1.0, 3.0));
@@ -79,15 +88,17 @@ namespace QuantExt {
                 }
                 // calculate the cap price
                 YoYInflationCapFloor cap(MakeYoYInflationCapFloor(
-                    YoYInflationCapFloor::Type::Cap, terms[i].length(), cal, 
+                    YoYInflationCapFloor::Type::Cap, optionletTerms[i].length(), cal,
                     yoyIndex_, obsLag, strikes[j])
-                    .withPricingEngine(pe));
+                    .withPricingEngine(pe)
+                    .withNominal(10000));
                 cPrice[j][i] = cap.NPV();
                 // floor price
                 YoYInflationCapFloor floor(MakeYoYInflationCapFloor(
-                    YoYInflationCapFloor::Type::Floor, terms[i].length(), cal,
+                    YoYInflationCapFloor::Type::Floor, optionletTerms[i].length(), cal,
                     yoyIndex_, obsLag, strikes[j])
-                    .withPricingEngine(pe));
+                    .withPricingEngine(pe)
+                    .withNominal(10000));
                 fPrice[j][i] = floor.NPV();
             }
         }
@@ -96,13 +107,7 @@ namespace QuantExt {
             <QuantLib::Bilinear, QuantLib::Linear>> yoySurface =
             boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear>>(
                 0, obsLag, yoyIndex_, yoyIndex_->yoyInflationTermStructure()->baseRate(), nominalTs_,
-                dc, cal, bdc, strikes, strikes, terms, cPrice, fPrice);
-
-        std::vector<Period> optionletTerms = { yoySurface->maturities().front() };
-        while (optionletTerms.back() != terms.back()) {
-            optionletTerms.push_back(optionletTerms.back() + Period(1, Years));
-        }
-        yoySurface->setMaturities(optionletTerms);
+                dc, cal, bdc, strikes, strikes, optionletTerms, cPrice, fPrice);
 
         boost::shared_ptr<InterpolatedYoYOptionletStripper<QuantLib::Linear>> yoyStripper =
             boost::make_shared<InterpolatedYoYOptionletStripper<QuantLib::Linear>>();
