@@ -40,7 +40,7 @@ public:
     //! \name Constructor
     //! calculate the reference date based on the global evaluation date
     YoYOptionletVolatilitySurface(boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface,
-        VolatilityType volType = VolatilityType::ShiftedLognormal, Real displacement = 0.0) :
+        VolatilityType volType = ShiftedLognormal, Real displacement = 0.0) :
         TermStructure(), referenceVolSurface_(referenceVolSurface), volType_(volType), displacement_(displacement) {}
     
     Volatility volatility(const Date& maturityDate,

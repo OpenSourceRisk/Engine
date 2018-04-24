@@ -126,8 +126,8 @@ namespace detail {
 }
 
 // template definitions
-template<class I2D, class I1D>
-InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::
+template<class Interpolator2D, class Interpolator1D>
+InterpolatedYoYCapFloorTermPriceSurface<Interpolator2D, Interpolator1D>::
 InterpolatedYoYCapFloorTermPriceSurface(
     Natural fixingDays,
     const Period &yyLag,
@@ -142,8 +142,8 @@ InterpolatedYoYCapFloorTermPriceSurface(
     const std::vector<Period> &cfMaturities,
     const Matrix &cPrice,
     const Matrix &fPrice,
-    const I2D &interpolator2d,
-    const I1D &interpolator1d)
+    const Interpolator2D &interpolator2d,
+    const Interpolator1D &interpolator1d)
     : YoYCapFloorTermPriceSurface(fixingDays, yyLag, yii,
         baseRate, nominal, dc, cal, bdc,
         cStrikes, fStrikes, cfMaturities,
@@ -357,7 +357,7 @@ calculateYoYTermStructure() const {
     // for now pick every year
     Size nYears = (Size)(0.5 + timeFromReference(referenceDate() + cfMaturities_.back()));
 
-    std::vector<boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure>>> YYhelpers;
+    std::vector<boost::shared_ptr<BootstrapHelper<YoYInflationTermStructure> > > YYhelpers;
     for (Size i = 1; i <= nYears; i++) {
         Date maturity = nominalTermStructure()->referenceDate() + Period(i, Years);
         Handle<Quote> quote(boost::shared_ptr<Quote>(

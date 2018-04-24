@@ -49,10 +49,27 @@ void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTer
     Handle<YieldTermStructure> nominalTs = 
         Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, TARGET(), 0.005, Actual365Fixed()));
 
-    std::vector<Rate> capStrikes = { 0.01, 0.02, 0.03, 0.04, 0.05 };
-    std::vector<Rate> floorStrikes = { -0.02, -0.01, 0.0, 0.01, 0.02 };
-    std::vector<Period> maturities = {Period(2,Years), Period(5,Years), Period(7,Years), 
-                                        Period(10,Years), Period(15,Years), Period(20,Years), };
+    std::vector<Rate> capStrikes;
+    capStrikes.push_back(0.01);
+    capStrikes.push_back(0.02);
+    capStrikes.push_back(0.03);
+    capStrikes.push_back(0.04);
+    capStrikes.push_back(0.05);
+
+    std::vector<Rate> floorStrikes;
+    floorStrikes.push_back(-0.02);
+    floorStrikes.push_back(-0.01);
+    floorStrikes.push_back(0.0);
+    floorStrikes.push_back(0.01);
+    floorStrikes.push_back(0.02);
+    
+    std::vector<Period> maturities;
+    maturities.push_back(Period(2, Years));
+    maturities.push_back(Period(5, Years));
+    maturities.push_back(Period(7, Years));
+    maturities.push_back(Period(10, Years));
+    maturities.push_back(Period(15, Years));
+    maturities.push_back(Period(20, Years));
 
     Matrix capPrice(capStrikes.size(), maturities.size(), Null<Real>()),
             floorPrice(floorStrikes.size(), maturities.size(), Null<Real>());
@@ -119,8 +136,10 @@ void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTer
     floorPrice[4][5] = 0.12839;
 
     // build a 
-    std::vector<Date> datesZCII = { asof_ + 1 * Years};
-    std::vector<Rate> ratesZCII = { 1.1625};
+    std::vector<Date> datesZCII;
+    datesZCII.push_back( asof_ + 1 * Years );
+    std::vector<Rate> ratesZCII;
+    ratesZCII.push_back( 1.1625 );
 
     // build EUHICPXT fixing history
     Schedule fixingDatesEUHICPXT =
@@ -134,17 +153,17 @@ void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTer
         ii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
     // now build the helpers ...
-    std::vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>>> instruments;
+    std::vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > instruments;
     for (Size i = 0; i < datesZCII.size(); i++) {
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
-        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure>> anInstrument(
+        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(
             new ZeroCouponInflationSwapHelper(quote, Period(3, Months), datesZCII[i], TARGET(),
                 ModifiedFollowing, Actual365Fixed(), ii));
         instruments.push_back(anInstrument);
     };
 
     Rate baseZeroRate = ratesZCII[0] / 100.0;
-    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>> pCPIts(new PiecewiseZeroInflationCurve<Linear>(
+    boost::shared_ptr<PiecewiseZeroInflationCurve<Linear> > pCPIts(new PiecewiseZeroInflationCurve<Linear>(
         asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, false,
         baseZeroRate, nominalTs, instruments));
     pCPIts->recalculate();
@@ -158,10 +177,12 @@ void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTer
     yoyIndex = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
         zeroIndex, true, Handle<YoYInflationTermStructure>());
 
-    boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear >> yoySurface =
-        boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<QuantLib::Bilinear, QuantLib::Linear >>(
-            0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes,
-            floorStrikes, maturities, capPrice, floorPrice);
+    QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
+        0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes,
+        floorStrikes, maturities, capPrice, floorPrice);
+
+    boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
+        boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
 
     // check the cap and floor prices from the surface
     Real tol = 1.0E-8;

@@ -41,7 +41,7 @@ class YoYInflationOptionletVolStripper {
 public:
     YoYInflationOptionletVolStripper(const boost::shared_ptr<CapFloorTermVolSurface>& volSurface, 
         const boost::shared_ptr<YoYInflationIndex>& index, const Handle<YieldTermStructure>& nominalTs,
-        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
+        VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
 
     const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyOptionletVolSurface_; }
 
