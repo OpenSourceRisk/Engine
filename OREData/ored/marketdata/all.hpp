@@ -27,10 +27,6 @@
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
-<<<<<<< HEAD
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
-=======
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
-
->>>>>>> master
