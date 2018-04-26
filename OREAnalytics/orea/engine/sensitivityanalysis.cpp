@@ -247,7 +247,7 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
                 report->add(base);
                 report->add(d);
                 report->add(g);
-            } else if (!std::isfinite(d) || std::isfinite(g)) {
+            } else if (!std::isfinite(d) || !std::isfinite(g)) {
                 ALOG("sensitivity results for trade " << id << ", factor " << factor << " are not finite (delta = " << d
                                                       << ", gamma = " << g << ")");
             }

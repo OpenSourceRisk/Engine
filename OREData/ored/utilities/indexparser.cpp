@@ -83,6 +83,19 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
                                        parseCurrency(tokens[3]), NullCalendar());
 }
 
+boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
+    QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
+    if (tokens.size() == 2) {
+        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+    }
+    else {
+        QL_FAIL("Error parsing equity string " + s);
+    }
+}
+
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
 
     std::vector<string> tokens;
@@ -149,6 +162,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
         return it->second->build(p, h);
+    } else if (tokens[1] == "GENERIC") {
+        // We have a generic index
+        auto ccy = parseCurrency(tokens[0]);
+        return boost::make_shared<GenericIborIndex>(p, ccy, h);
     } else {
         QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
     }
@@ -272,6 +289,13 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
         try {
             ret_idx = parseFxIndex(s);
         } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseEquityIndex(s);
+        }
+        catch (...) {
         }
     }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");

@@ -196,10 +196,10 @@
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
   </EquityVolatilities>
-   <Securities id="collateral_eur">
+  <Securities id="collateral_eur">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
-   <Securities id="default">
+  <Securities id="default">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
   <CommodityCurves id="default">

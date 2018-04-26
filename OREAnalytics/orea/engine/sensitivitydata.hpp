@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <ored/report/inmemoryreport.hpp>
+
 #include <orea/scenario/scenario.hpp>
 
 #include <ql/types.hpp>
@@ -96,6 +98,12 @@ void loadSensitivityDataFromCsv(SensitivityDataInMemory& data, const std::string
 //! utility function that loads a mapping table from a CSV file
 void loadMappingTableFromCsv(std::map<std::string, std::string>& data, const std::string& fileName,
                              const char delim = '\n');
+
+//! Create SensitivityDataInMemory object from par sensitivity report
+SensitivityDataInMemory sensitivityDataFromParReport(ore::data::InMemoryReport& parSensiReport);
+
+//! Create mapping table from report assuming that the report has two columns of type string
+std::map<std::string, std::string> mappingFromReport(ore::data::InMemoryReport& report);
 
 } // namespace analytics
 } // namespace ore

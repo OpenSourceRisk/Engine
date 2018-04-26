@@ -515,8 +515,8 @@ void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
     sensiPortfolio->load(portfolioFile, buildTradeFactory());
 
-    LOG("Build Sensitivity Analysis");
     marketConfiguration = params_->get("markets", "pricing");
+
     return;
 }
 

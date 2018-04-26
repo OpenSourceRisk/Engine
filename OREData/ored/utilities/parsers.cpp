@@ -181,12 +181,14 @@ Calendar parseCalendar(const string& s) {
                                       {"SS", Sweden()},
                                       {"SEK", Sweden()},
                                       {"SEST", Sweden()},
+                                      {"Sweden", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
                                       {"CNY", China()},
                                       {"CZK", CzechRepublic()},
                                       {"DKK", Denmark()},
                                       {"DEN", Denmark()},
+                                      {"Denmark", Denmark()},
                                       {"FIN", Finland()},
                                       {"HKD", HongKong()},
                                       {"ISK", Iceland()},
@@ -195,6 +197,7 @@ Calendar parseCalendar(const string& s) {
                                       {"MXN", Mexico()},
                                       {"NZD", NewZealand()},
                                       {"NOK", Norway()},
+                                      {"Norway", Norway()},
                                       {"PLN", Poland()},
                                       {"RUB", Russia()},
                                       {"SAR", SaudiArabia()},
@@ -235,7 +238,8 @@ Calendar parseCalendar(const string& s) {
                                       {"BEBR", TARGET()}, // Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
-                                      {"NullCalendar", NullCalendar()}};
+                                      {"NullCalendar", NullCalendar()},
+                                      {"", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
