@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/indexes/equityindex.cpp
+/*! \file qle/indexes/equityindex.hpp
     \brief equity index class for holding equity fixing histories and forwarding.
     \ingroup indexes
 */
