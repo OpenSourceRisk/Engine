@@ -326,7 +326,6 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap()
 
         Real calculated = varianceSwap.variance();
         Real expected = values[i].result;
-        Real error = std::fabs(calculated - expected);
         Real tol = 1.0e-4;
         BOOST_CHECK_CLOSE(calculated, expected, tol);
     }

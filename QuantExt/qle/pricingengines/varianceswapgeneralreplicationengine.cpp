@@ -167,8 +167,6 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
 
     Real variance = computeReplicatingPortfolio(optionWeights);
 
-    DiscountFactor riskFreeDiscount =
-        process_->riskFreeRate()->discount(arguments_.maturityDate);
     Real multiplier;
     switch (arguments_.position) {
     case Position::Long:
