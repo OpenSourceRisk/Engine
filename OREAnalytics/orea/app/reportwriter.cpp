@@ -153,6 +153,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             notional = Null<Real>();
                             flowType = "Notional";
                         }
+                        // This BMA part here (and below) is necessary because the fixingDay() method of
+                        // AverageBMACoupon returns an exception rather than the last fixing day of the period.
                         boost::shared_ptr<AverageBMACoupon> ptrBMA =
                             boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
@@ -166,7 +168,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                         Date fixingDate;
                         Real fixingValue;
                         if (ptrBMA) {
-                            fixingDate = ptrBMA->fixingDates().end()[-2]; //last "fixing" is after the coupon expiry
+                            // We return the last fixing inside the coupon period
+                            fixingDate = ptrBMA->fixingDates().end()[-2];
                             fixingValue = ptrBMA->pricer()->swapletRate();
                             if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
                                 flowType = "BMAaverage";
