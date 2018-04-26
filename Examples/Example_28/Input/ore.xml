@@ -21,6 +21,7 @@
     <Parameter name="fxcalibration">collateral_eur</Parameter>
     <Parameter name="pricing">collateral_eur</Parameter>
     <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="sensitivity">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -43,7 +44,7 @@
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
-      <!-- Parameter name="scenariodump">scenariodump.csv</Parameter> -->
+      <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
@@ -73,6 +74,17 @@
     <Analytic type="initialMargin">
       <Parameter name="active">N</Parameter>
       <Parameter name="method"/>
+    </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">sensisimulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
