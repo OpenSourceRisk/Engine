@@ -13,7 +13,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -42,7 +42,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -78,7 +78,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -107,7 +107,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -143,7 +143,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -172,7 +172,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -208,7 +208,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -237,7 +237,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -273,7 +273,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -302,7 +302,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -338,7 +338,7 @@
         <Payer>true</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
@@ -367,7 +367,7 @@
         <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000000.00</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>

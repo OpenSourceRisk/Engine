@@ -1335,6 +1335,7 @@
         <Simple>
           <Type>BMA Basis Swap</Type>
           <Quotes>
+            <Quote>BMA_SWAP/RATIO/USD/3M/3M</Quote>
             <Quote>BMA_SWAP/RATIO/USD/3M/1Y</Quote>
             <Quote>BMA_SWAP/RATIO/USD/3M/2Y</Quote>
             <Quote>BMA_SWAP/RATIO/USD/3M/3Y</Quote>
