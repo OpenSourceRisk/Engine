@@ -1127,7 +1127,7 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
-   <FX>
+  <FX>
     <Id>USD-MXN-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
