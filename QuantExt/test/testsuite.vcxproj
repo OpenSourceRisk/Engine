@@ -665,6 +665,7 @@
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />
     <ClCompile Include="testsuite.cpp" />
+    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyticlgmswaptionengine.hpp" />
@@ -684,6 +685,7 @@
     <ClInclude Include="dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="fxvolsmile.hpp" />
+    <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp" />
     <ClInclude Include="index.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />

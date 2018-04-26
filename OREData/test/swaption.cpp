@@ -34,7 +34,6 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
-using namespace ore::data;
 
 namespace {
 
