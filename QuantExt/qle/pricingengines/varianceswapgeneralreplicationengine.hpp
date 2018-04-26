@@ -21,7 +21,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
     \ingroup engines
 */
 
-#pragma once
+#ifndef quantext_varswap_engine_hpp
+#define quantext_varswap_engine_hpp
+
 #include <ql/instruments/varianceswap.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -124,3 +126,5 @@ inline
 }
 
 }   //namespace QuantExt
+
+#endif
