@@ -537,6 +537,12 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\equityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -915,6 +921,12 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\equityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
