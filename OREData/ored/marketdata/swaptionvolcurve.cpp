@@ -251,8 +251,10 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                     for (Size j = 0; j < smileSwapTenors.size(); ++j) {
                         for (Size k = 0; k < spreads.size(); ++k) {
                             if (!close_enough(spreads[k], 0.0) && !found[i * smileSwapTenors.size() + j][k]) {
-                                WLOG("Missing market quote for " << smileOptionTenors[i] << "/" << smileSwapTenors[j]
-                                                                 << "/" << spreads[k]);
+                                WLOG("Missing market quote for " << spec.curveConfigID() << "/" 
+                                                                 << smileOptionTenors[i] << "/" 
+                                                                 << smileSwapTenors[j] << "/" 
+                                                                 << spreads[k]);
                             }
                         }
                     }
@@ -270,7 +272,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                             *volSpreadHandles[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]);
                         if (zero[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]) {
                             q->setValue(lastNonZeroValue);
-                            WLOG("Overwrite vol spread for " << smileOptionTenors[i] << "/" << smileSwapTenors[j] << "/"
+                            WLOG("Overwrite vol spread for " << spec.curveConfigID() << "/" 
+                                                             << smileOptionTenors[i] << "/" << smileSwapTenors[j] << "/"
                                                              << spreads[spreads.size() - 1 - k] << " with "
                                                              << lastNonZeroValue << " since market quote is zero");
                         } else {
@@ -315,7 +318,7 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
         }
 
     } catch (std::exception& e) {
-        QL_FAIL("swaption vol curve building failed :" << e.what());
+        QL_FAIL("swaption volatility curve building failed for curve " << spec.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
     } catch (...) {
         QL_FAIL("swaption vol curve building failed: unknown error");
     }

@@ -180,17 +180,15 @@ void SensitivityAnalysis::writeScenarioReport(const boost::shared_ptr<Report>& r
 
             Real npv = sensiCube_->getNPV(i, j);
             Real sensi = npv - base;
+            ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
+            string type = desc.typeString();
+            ostringstream o;
+            o << desc.factor1();
+            if (desc.factor2() != "")
+                o << ":" << desc.factor2();
+            string factor = o.str();
 
             if (fabs(sensi) > outputThreshold) {
-
-                ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
-                string type = desc.typeString();
-                ostringstream o;
-                o << desc.factor1();
-                if (desc.factor2() != "")
-                    o << ":" << desc.factor2();
-                string factor = o.str();
-
                 report->next();
                 report->add(id);
                 report->add(factor);
@@ -198,6 +196,9 @@ void SensitivityAnalysis::writeScenarioReport(const boost::shared_ptr<Report>& r
                 report->add(base);
                 report->add(npv);
                 report->add(sensi);
+            } else if (!std::isfinite(sensi)) {
+                ALOG("sensitivity scenario for trade " << id << ", factor " << factor << " is not finite (" << sensi
+                                                       << ")");
             }
         }
     }
@@ -243,6 +244,9 @@ void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>
                 report->add(base);
                 report->add(d);
                 report->add(g);
+            } else if (!std::isfinite(d) || !std::isfinite(g)) {
+                ALOG("sensitivity results for trade " << id << ", factor " << factor << " are not finite (delta = " << d
+                                                      << ", gamma = " << g << ")");
             }
         }
     }
@@ -290,6 +294,9 @@ void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>&
                 report->add(shiftSize2);
                 report->add(npv0);
                 report->add(cg);
+            }  else if (!std::isfinite(cg)) {
+                ALOG("sensitivity result for trade " << id << ", factors " << factor1 << ", " << factor2
+                                                     << " is not finite (cross-gamma = " << cg << ")");
             }
         }
     }

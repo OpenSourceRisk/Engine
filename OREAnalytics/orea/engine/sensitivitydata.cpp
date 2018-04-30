@@ -28,6 +28,8 @@
 #include <ql/utilities/null.hpp>
 
 using QuantLib::Null;
+using namespace ore::data;
+using namespace std;
 
 namespace ore {
 namespace analytics {
@@ -152,6 +154,57 @@ void loadMappingTableFromCsv(std::map<string, string>& data, const std::string& 
     }
     LOG("Read " << count << " valid data lines in file " << fileName);
 } // loadMappingTableFromCsv
+
+SensitivityDataInMemory sensitivityDataFromParReport(InMemoryReport& parSensiReport) {
+    
+    SensitivityDataInMemory sensitivityData;
+
+    // Get number of columns and rows in the report
+    auto numColumns = parSensiReport.columns();
+    auto numRows = parSensiReport.data(0).size();
+
+    // Check that we have a par sensi report
+    QL_REQUIRE(numColumns == 5, "Par sensitivity report should have five columns");
+    QL_REQUIRE(parSensiReport.header(0) == "TradeId", "Par sensitivity report's first column should be TradeId");
+    QL_REQUIRE(parSensiReport.header(1) == "Factor", "Par sensitivity report's second column should be Factor");
+    QL_REQUIRE(parSensiReport.header(3) == "ParDelta", "Par sensitivity report's fourth column should be ParDelta");
+    QL_REQUIRE(parSensiReport.header(4) == "ParGamma", "Par sensitivity report's fifth column should be ParGamma");
+
+    // Fill sensitivity data object
+    for (Size i = 0; i < numRows; i++) {
+        string tradeId = boost::get<string>(parSensiReport.data(0)[i]);
+        string factor = boost::get<string>(parSensiReport.data(1)[i]);
+        Real parDelta = boost::get<Real>(parSensiReport.data(3)[i]);
+        Real parGamma = boost::get<Real>(parSensiReport.data(4)[i]);
+        sensitivityData.add(tradeId, factor, "", parDelta, parGamma);
+    }
+
+    return sensitivityData;
+}
+
+map<string, string> mappingFromReport(InMemoryReport& report) {
+    
+    map<string, string> mapping;
+
+    // Get number of columns and rows in the report
+    auto numColumns = report.columns();
+    QL_REQUIRE(numColumns == 2, "Mapping report should have two columns");
+    auto numRows = report.data(0).size();
+
+    // If no data, return empty map
+    if (numRows == 0) {
+        return mapping;
+    }
+
+    // Fill the map
+    for (Size i = 0; i < numRows; i++) {
+        string key = boost::get<string>(report.data(0)[i]);
+        string value = boost::get<string>(report.data(1)[i]);
+        mapping[key] = value;
+    }
+
+    return mapping;
+}
 
 } // namespace analytics
 } // namespace ore

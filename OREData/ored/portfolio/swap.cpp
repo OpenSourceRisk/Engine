@@ -74,15 +74,17 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // 1. Parse the index we have with no term structures
             boost::shared_ptr<QuantExt::FxIndex> fxIndexBase = parseFxIndex(legData_[i].fxIndex());
 
-            // get market data objects - we set up the index using source/target from legData_[i].fxIndex()
+            // get market data objects - we set up the index using source/target, fixing days
+            // and calendar from legData_[i].fxIndex()
             string source = fxIndexBase->sourceCurrency().code();
             string target = fxIndexBase->targetCurrency().code();
             Handle<YieldTermStructure> sorTS = market->discountCurve(source);
             Handle<YieldTermStructure> tarTS = market->discountCurve(target);
             Handle<Quote> spot = market->fxSpot(source + target);
+            Calendar cal = parseCalendar(legData_[i].fixingCalendar());
             fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
                                                   fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
-                                                  fxIndexBase->fixingCalendar(), spot, sorTS, tarTS);
+                                                  cal, spot, sorTS, tarTS);
             QL_REQUIRE(fxIndex, "Resetting XCCY - fxIndex failed to build");
 
             // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
@@ -107,20 +109,21 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
                 // this is the reseting leg...
+                QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
                 Real foreignNotional = legData_[i].foreignAmount();
                 // First coupon is the same (no reset or FX link)
                 // The reset are FX Linked
                 for (Size j = 1; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
+                    Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
+                                                                  -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
                         new FloatingRateFXLinkedNotionalCoupon(
-                            foreignNotional,
-                            coupon->accrualStartDate(), // fx fixing at start of coupon
-                            fxIndex, invertFxIndex, coupon->date(), coupon->accrualStartDate(),
-                            coupon->accrualEndDate(), legData_[i].fixingDays(), coupon->index(), coupon->gearing(),
-                            coupon->spread(), coupon->referencePeriodStart(), coupon->referencePeriodEnd(),
-                            coupon->dayCounter(), coupon->isInArrears()));
+                            foreignNotional, fixingDate, fxIndex, invertFxIndex, coupon->date(),
+                            coupon->accrualStartDate(), coupon->accrualEndDate(), coupon->fixingDays(), coupon->index(),
+                            coupon->gearing(), coupon->spread(), coupon->referencePeriodStart(),
+                            coupon->referencePeriodEnd(), coupon->dayCounter(), coupon->isInArrears()));
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
@@ -154,13 +157,16 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     resettingLeg.push_back(
                         boost::shared_ptr<CashFlow>(new SimpleCashFlow(c->nominal(), c->accrualEndDate())));
                 } else {
+                    Date fixingDate = fxIndex->fixingCalendar().advance(
+                        c->accrualStartDate(), -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     resettingLeg.push_back(boost::shared_ptr<CashFlow>(new FXLinkedCashFlow(
-                        c->accrualStartDate(), c->accrualStartDate(), -foreignNotional, fxIndex, invertFxIndex)));
+                        c->accrualStartDate(), fixingDate, -foreignNotional, fxIndex, invertFxIndex)));
 
                     // we don't want a final one, unless there is notional exchange
-                    if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange())
+                    if (j < legs_[i].size() - 1 || legData_[i].notionalFinalExchange()) {
                         resettingLeg.push_back(boost::shared_ptr<CashFlow>(new FXLinkedCashFlow(
-                            c->accrualEndDate(), c->accrualStartDate(), foreignNotional, fxIndex, invertFxIndex)));
+                            c->accrualEndDate(), fixingDate, foreignNotional, fxIndex, invertFxIndex)));
+                    }
                 }
             }
             legs_.push_back(resettingLeg);

@@ -32,7 +32,8 @@ QLE_TESTS = \
 	discountingcommodityforwardengine.hpp discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
 	bonds.hpp bonds.cpp \
-	utilities.hpp
+	utilities.hpp \
+    generalisedreplicatingvarianceswapengine.hpp generalisedreplicatingvarianceswapengine.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

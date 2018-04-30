@@ -549,7 +549,27 @@
     <ClInclude Include="qle\termstructures\optionletatmstripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
+      <Filter>cashflows</cashflows>    
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\equityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\dkkois.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\demlibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\chfsaron.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\seksior.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -929,6 +949,14 @@
     <ClCompile Include="qle\termstructures\optionletatmstripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>	    
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\equityindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
