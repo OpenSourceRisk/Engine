@@ -170,7 +170,9 @@ public:
         const boost::shared_ptr<Market>& market,
         //! The market configurations that are passed to each builder
         const map<MarketContext, string>& configurations = std::map<MarketContext, string>(),
+        //! additional engine builders
         const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
+        //! additional leg builders
         const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {});
 
     //! Return the market used by this EngineFactory
