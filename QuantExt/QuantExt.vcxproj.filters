@@ -558,6 +558,9 @@
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -930,6 +933,9 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\equityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\fixedbmaswap.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

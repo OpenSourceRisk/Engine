@@ -548,6 +548,7 @@
     <ClInclude Include="qle\instruments\currencyswap.hpp" />
     <ClInclude Include="qle\instruments\deposit.hpp" />
     <ClInclude Include="qle\instruments\equityforward.hpp" />
+    <ClInclude Include="qle\instruments\fixedbmaswap.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
@@ -698,6 +699,7 @@
     <ClCompile Include="qle\instruments\currencyswap.cpp" />
     <ClCompile Include="qle\instruments\deposit.cpp" />
     <ClCompile Include="qle\instruments\equityforward.cpp" />
+    <ClCompile Include="qle\instruments\fixedbmaswap.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\impliedbondspread.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
