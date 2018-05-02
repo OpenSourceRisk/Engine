@@ -24,7 +24,6 @@
 
 #include <qle/instruments/fixedbmaswap.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <ql/currencies/america.hpp>

@@ -27,7 +27,7 @@
 #define quantlib_makefixedbmaswap_hpp
 
 #include <ql/instruments/swap.hpp>
-#include <ql/indexes/bmaindex.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 
 using namespace QuantLib;
 
