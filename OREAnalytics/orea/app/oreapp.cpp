@@ -120,7 +120,12 @@ int OREApp::run() {
          * Sensitivity analysis
          */
         if (sensitivity_) {
-            runSensitivityAnalysis();
+            out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
+
+            // We reset this here because the date grid building in sensitivity analysis depends on it.
+            Settings::instance().evaluationDate() = asof_;
+            getSensitivityRunner()->runSensitivityAnalysis(market_, conventions_);
+            out_ << "OK" << endl;
         } else {
             LOG("skip sensitivity analysis");
             out_ << setw(tab_) << left << "Sensitivity... ";
@@ -264,9 +269,7 @@ void OREApp::setupLog() {
     Log::instance().switchOn();
 }
 
-void OREApp::closeLog() {
-    Log::instance().removeAllLoggers();
-}
+void OREApp::closeLog() { Log::instance().removeAllLoggers(); }
 
 void OREApp::getConventions() {
     if (params_->has("setup", "conventionsFile") && params_->get("setup", "conventionsFile") != "") {
@@ -333,11 +336,12 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
     configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
     configurations[MarketContext::pricing] = params_->get("markets", "pricing");
-    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market, configurations);
+    boost::shared_ptr<EngineFactory> factory = 
+        boost::make_shared<EngineFactory>(engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
     return factory;
 }
 
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make_shared<TradeFactory>(); }
+boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make_shared<TradeFactory>(getExtraTradeBuilders()); }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string inputPath = params_->get("setup", "inputPath");
@@ -425,7 +429,7 @@ void OREApp::writeInitialReports() {
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
-                                  market_);
+                                       market_);
         out_ << "OK" << endl;
     } else {
         LOG("skip curve report");
@@ -440,7 +444,7 @@ void OREApp::writeInitialReports() {
         string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
         getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
-                               params_->get("markets", "pricing"), portfolio_);
+                                    params_->get("markets", "pricing"), portfolio_);
         out_ << "OK" << endl;
     } else {
         LOG("skip portfolio valuation");
@@ -464,78 +468,8 @@ void OREApp::writeInitialReports() {
 
 boost::shared_ptr<ReportWriter> OREApp::getReportWriter() { return boost::make_shared<ReportWriter>(); }
 
-void OREApp::runSensitivityAnalysis() {
-
-    out_ << setw(tab_) << left << "Sensitivity Report... " << flush;
-
-    boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
-    boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
-    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-    boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
-    string marketConfiguration = params_->get("markets", "sensitivity");
-
-    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
-
-    bool recalibrateModels =
-        params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
-
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
-        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market_, marketConfiguration, engineData, simMarketData,
-                                                sensiData, conventions_, recalibrateModels);
-    sensiAnalysis->generateSensitivities();
-
-    sensiOutputReports(sensiAnalysis);
-
-    out_ << "OK" << endl;
-}
-
-void OREApp::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                  boost::shared_ptr<SensitivityScenarioData>& sensiData,
-                                  boost::shared_ptr<EngineData>& engineData,
-                                  boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration) {
-
-    // We reset this here because the date grid building below depends on it.
-    Settings::instance().evaluationDate() = asof_;
-
-    LOG("Get Simulation Market Parameters");
-    string inputPath = params_->get("setup", "inputPath");
-    string marketConfigFile = inputPath + "/" + params_->get("sensitivity", "marketConfigFile");
-    simMarketData->fromFile(marketConfigFile);
-
-    LOG("Get Sensitivity Parameters");
-    string sensitivityConfigFile = inputPath + "/" + params_->get("sensitivity", "sensitivityConfigFile");
-    sensiData->fromFile(sensitivityConfigFile);
-
-    LOG("Get Engine Data");
-    string sensiPricingEnginesFile = inputPath + "/" + params_->get("sensitivity", "pricingEnginesFile");
-    engineData->fromFile(sensiPricingEnginesFile);
-
-    LOG("Get Portfolio");
-    string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
-    // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
-    sensiPortfolio->load(portfolioFile, buildTradeFactory());
-
-    marketConfiguration = params_->get("markets", "pricing");
-
-    return;
-}
-
-void OREApp::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
-
-    string outputPath = params_->get("setup", "outputPath");
-    string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
-    Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
-    boost::shared_ptr<Report> scenReport = boost::make_shared<CSVFileReport>(outputFile1);
-    sensiAnalysis->writeScenarioReport(scenReport, sensiThreshold);
-
-    string outputFile2 = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
-    boost::shared_ptr<Report> sensiReport = boost::make_shared<CSVFileReport>(outputFile2);
-    sensiAnalysis->writeSensitivityReport(sensiReport, sensiThreshold);
-
-    string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
-    boost::shared_ptr<Report> cgReport = boost::make_shared<CSVFileReport>(outputFile3);
-    sensiAnalysis->writeCrossGammaReport(cgReport, sensiThreshold);
-    return;
+boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { 
+    return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(), getExtraLegBuilders()); 
 }
 
 void OREApp::runStressTest() {

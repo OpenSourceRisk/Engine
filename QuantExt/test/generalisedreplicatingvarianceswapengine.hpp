@@ -1,5 +1,3 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
 Copyright (C) 2018 Quaternion Risk Management Ltd
 All rights reserved.
@@ -18,7 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/varianceswap.hpp
+/*! \file test/generalisedreplicatingvarianceswapengine.hpp
 \brief variance swap pricing engine test suite
 */
 

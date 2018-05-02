@@ -133,7 +133,7 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing() {
 void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
 
     SavedSettings backup; 
-    Date today = Date::todaysDate();
+    Date today = Date(30,April,2018);
     Settings::instance().evaluationDate() = today;
     DayCounter dc = Actual365Fixed();
     Date startDate = today - Integer(0.019178 * 365 + 0.5);  //started 7 calendar days ago
