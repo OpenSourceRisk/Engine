@@ -36,6 +36,8 @@ namespace QuantExt {
     //! swap paying a fixed rate against BMA coupons
     class FixedBMASwap : public Swap {
     public:
+        class results;
+        class engine;
         enum Type { Receiver = -1, Payer = 1 };
         FixedBMASwap(Type type,
             Real nominal,
@@ -67,13 +69,26 @@ namespace QuantExt {
         Real bmaLegBPS() const;
         Real bmaLegNPV() const;
         //@}
-
+        //results
+        void fetchResults(const PricingEngine::results*) const;
     private:
         Type type_;
         Real nominal_;
         Rate fixedRate_;
+        //results
+        mutable Rate fairRate_;
     };
 
+    class FixedBMASwap::results : public Swap::results {
+        public:
+            Rate fairRate;
+            void reset();
+    };
+    
+    class FixedBMASwap::engine : GenericEngine<FixedBMASwap::arguments,
+                                               FixedBMASwap::results> {};
+    // factory class for making fixed vs bma swaps
+    
     class MakeFixedBMASwap {
     public:
         MakeFixedBMASwap(const Period& swapTenor,

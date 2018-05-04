@@ -111,11 +111,9 @@ namespace QuantExt {
     }
 
     Rate FixedBMASwap::fairRate() const {
-        static const Spread basisPoint = 1.0e-4;
-
-        QL_REQUIRE(fixedRate_ != 0.0,
-            "result not available (null fixed leg NPV)");
-        return  fixedRate_ - NPV_ / (legBPS_[0] / basisPoint);
+        calculate();
+        QL_REQUIRE(fairRate_ != Null<Rate>(), "result not available");
+        return fairRate_;
     }
 
     Real FixedBMASwap::bmaLegBPS() const {
@@ -130,6 +128,31 @@ namespace QuantExt {
         return legNPV_[1];
     }
 
+    void FixedBMASwap::fetchResults(const PricingEngine::results* r) const {
+        static const Spread basisPoint = 1.0e-4;
+
+        Swap::fetchResults(r);
+
+        const FixedBMASwap::results* results =
+            dynamic_cast<const FixedBMASwap::results*>(r);
+        if (results) { // might be a swap engine, so no error is thrown
+            fairRate_ = results->fairRate;
+        }
+        else {
+            fairRate_ = Null<Rate>();
+        }
+        if (fairRate_ == Null<Rate>()) {
+            // calculate it from other results
+            if (legBPS_[0] != Null<Real>())
+                fairRate_ = fixedRate_ - NPV_ / (legBPS_[0] / basisPoint);
+        }
+    }
+
+    void FixedBMASwap::results::reset() {
+        Swap::results::reset();
+        fairRate = Null<Rate>();
+    }
+    
     MakeFixedBMASwap::MakeFixedBMASwap(const Period& swapTenor,
         const boost::shared_ptr<BMAIndex>& index,
         Rate fixedRate,
