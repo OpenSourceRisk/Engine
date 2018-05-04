@@ -65,9 +65,14 @@ private:
 
     Date today_, fixingsEnd_;
     bool modifiedFixingHistory_;
-    std::map<std::string, TimeSeries<Real>> fixingCache_;
-    std::vector<boost::shared_ptr<Index>> indices_;
-    std::map<std::string, std::vector<Date>> fixingMap_;
+
+    struct indexComp {
+        bool operator()(const boost::shared_ptr<Index>& a, const boost::shared_ptr<Index>& b) const {
+            return a->name() < b->name();
+        }
+    };
+    std::map<boost::shared_ptr<Index>, TimeSeries<Real>, indexComp> fixingCache_;
+    std::map<boost::shared_ptr<Index>, std::set<Date>, indexComp> fixingMap_;
 };
 } // namespace analytics
 } // namespace ore
