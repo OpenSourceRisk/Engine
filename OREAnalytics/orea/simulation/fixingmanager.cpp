@@ -21,9 +21,11 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
+#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
@@ -48,9 +50,29 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
         for (auto leg : trade->legs()) {
             flowList.push_back(data::flowAnalysis(leg));
             for (auto cf : leg) {
-                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-                if (frc)
+
+                // floating rate coupons
+
+                boost::shared_ptr<FloatingRateCoupon> frc;
+                auto cfCpn = boost::dynamic_pointer_cast<CappedFlooredCoupon>(cf);
+                if(cfCpn)
+                    frc = cfCpn->underlying();
+                else
+                    frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+
+                if(frc) {
+                    // indices with fixings derived from underlying indices
+                    boost::shared_ptr<CmsSpreadCoupon> cmssp = boost::dynamic_pointer_cast<CmsSpreadCoupon>(frc);
+                    if(cmssp) {
+                        setIndices.insert(cmssp->swapSpreadIndex()->swapIndex1());
+                        setIndices.insert(cmssp->swapSpreadIndex()->swapIndex2());
+                        continue;
+                    }
+                    // indices with native fixings
                     setIndices.insert(frc->index());
+                }
+
+                // other coupon types
 
                 boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
                     boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);

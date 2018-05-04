@@ -338,6 +338,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<YoYLegData>();
     } else if (legType == "CMS") {
         return boost::make_shared<CMSLegData>();
+    } else if (legType == "CMSSpread") {
+        return boost::make_shared<CMSSpreadLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
