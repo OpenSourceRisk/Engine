@@ -72,5 +72,17 @@ Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     return makeCMSLeg(data, index, engineFactory);
 }
 
+Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                                  const string& configuration) const {
+    auto cmsSpreadData = boost::dynamic_pointer_cast<CMSSpreadLegData>(data.concreteLegData());
+    QL_REQUIRE(cmsSpreadData, "Wrong LegType, expected CMSSpread");
+    auto index1 = *engineFactory->market()->swapIndex(cmsSpreadData->swapIndex1(), configuration);
+    auto index2 = *engineFactory->market()->swapIndex(cmsSpreadData->swapIndex2(), configuration);
+    return makeCMSSpreadLeg(data,
+                            boost::make_shared<QuantLib::SwapSpreadIndex>(
+                                "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
+                            engineFactory);
+}
+
 } // namespace data
 } // namespace ore

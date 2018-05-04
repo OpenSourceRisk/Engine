@@ -141,18 +141,6 @@
       <Parameter name="MeanReversion">0.0</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="CommodityForward">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingCommodityForwardEngine</Engine>
-    <EngineParameters/>
-  </Product>
-  <Product type="CommodityOption">
-    <Model>BlackScholes</Model>
-    <ModelParameters/>
-    <Engine>AnalyticEuropeanEngine</Engine>
-    <EngineParameters/>
-  </Product>
   <!-- Hagan Numerical Model -->
   <Product type="CMS_DEACTIVATED">
     <Model>Hagan</Model>
@@ -166,5 +154,31 @@
       <Parameter name="LowerLimit">1.0</Parameter>
       <Parameter name="Precision">0.000001</Parameter>
     </EngineParameters>
+  </Product>
+  <!-- CMS Spread Brigo Mercurio Model -->
+  <Product type="CMSSpread">
+    <Model>BrigoMercurio</Model>
+    <ModelParameters>
+      <Parameter name="Correlation_EUR">0.8</Parameter>
+      <Parameter name="Correlation_USD">0.75</Parameter>
+      <Parameter name="Correlation_GBP">0.72</Parameter>
+      <Parameter name="Correlation_CHF">0.7</Parameter>
+    </ModelParameters>
+    <Engine>Analytic</Engine>
+    <EngineParameters>
+      <Parameter name="IntegrationPoints">16</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="CommodityForward">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCommodityForwardEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CommodityOption">
+    <Model>BlackScholes</Model>
+    <ModelParameters/>
+    <Engine>AnalyticEuropeanEngine</Engine>
+    <EngineParameters/>
   </Product>
 </PricingEngines>
