@@ -403,6 +403,7 @@
       <xs:enumeration value="Future"/>
       <xs:enumeration value="OIS"/>
       <xs:enumeration value="Swap"/>
+      <xs:enumeration value="BMA Basis Swap"/>
     </xs:restriction>
   </xs:simpleType>
 

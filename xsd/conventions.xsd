@@ -15,6 +15,7 @@
       <xs:element type="averageOISType" name="AverageOIS"/>
       <xs:element type="tenorBasisSwapType" name="TenorBasisSwap"/>
       <xs:element type="tenorBasisTwoSwapType" name="TenorBasisTwoSwap"/>
+      <xs:element type="bmaBasisSwapType" name="BMABasisSwap"/>
       <xs:element type="fxType" name="FX"/>
       <xs:element type="crossCurrencyBasisType" name="CrossCurrencyBasis"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
@@ -146,6 +147,14 @@
       <xs:element type="dayCounter" name="ShortFixedDayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="ShortIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="LongMinusShort" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="bmaBasisSwapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="LiborIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BMAIndex" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

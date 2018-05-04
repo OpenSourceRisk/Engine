@@ -1353,7 +1353,7 @@
             <Quote>BMA_SWAP/RATIO/USD/3M/30Y</Quote>
           </Quotes>
           <Conventions>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Conventions>
-`          <ProjectionCurve>USD3M</ProjectionCurve>
+          <ProjectionCurve>USD3M</ProjectionCurve>
         </Simple>
       </Segments>
     </YieldCurve>
