@@ -95,7 +95,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     initialized_ = true;
 }
 
-void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube>& cube) {
+void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube) {
 
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
