@@ -92,7 +92,8 @@ void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfo
                 for (Size n = 0; n < leg.size(); n++) {
                     boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg[n]);
                     if (frc) {
-                        frc->unregisterWith(frc->index());
+                        //frcs are lazy from ql 1.13 on, so we can not unregister them
+                        //frc->unregisterWith(frc->index());
                         trades[i]->instrument()->qlInstrument()->unregisterWith(frc);
                         // Unregister with eval dates
                         frc->unregisterWith(Settings::instance().evaluationDate());

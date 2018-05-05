@@ -101,7 +101,7 @@ void OISRateHelper::setTermStructure(YieldTermStructure* t) {
 Real OISRateHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
     // we didn't register as observers - force calculation
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairRate();
 }
 
@@ -173,7 +173,7 @@ void DatedOISRateHelper::setTermStructure(YieldTermStructure* t) {
 Real DatedOISRateHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
     // we didn't register as observers - force calculation
-    swap_->recalculate();
+    swap_->deepUpdate();
     return swap_->fairRate();
 }
 
