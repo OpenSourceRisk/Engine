@@ -95,12 +95,11 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     initialized_ = true;
 }
 
-void SensitivityAnalysis::generateSensitivities() {
+void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube) {
 
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
     // initialize the helper member objects
-    boost::shared_ptr<NPVCube> cube;
     initialize(cube);
     QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
