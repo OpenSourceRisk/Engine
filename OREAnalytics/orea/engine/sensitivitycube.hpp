@@ -42,8 +42,7 @@ public:
 
     //! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
     SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
-        const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
-        const std::vector<std::string>& tradeIds);
+        const std::vector<ShiftScenarioDescription>& scenarioDescriptions);
 
     //! \name Inspectors
     //@{
@@ -53,8 +52,8 @@ public:
     const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const {
         return scenarioDescriptions_;
     }
-    const std::vector<std::string>& tradeIds() const {
-        return tradeIds_;
+    const std::vector<string>& tradeIds() const {
+        return cube_->ids();
     }
     //@}
 
@@ -92,7 +91,6 @@ public:
 private:
     boost::shared_ptr<NPVCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
-    std::vector<std::string> tradeIds_;
 
     // Maps for faster lookup of cube entries. They are populated in the constructor
     // TODO: Review this i.e. could it be done better / using less memory

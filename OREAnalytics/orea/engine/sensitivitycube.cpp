@@ -55,16 +55,15 @@ namespace ore {
 namespace analytics {
 
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube, 
-    const vector<ShiftScenarioDescription>& scenarioDescriptions, 
-    const vector<string>& tradeIds) 
-    : cube_(cube), scenarioDescriptions_(scenarioDescriptions), tradeIds_(tradeIds) {
+    const vector<ShiftScenarioDescription>& scenarioDescriptions) 
+    : cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
 
     QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base, 
         "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
     // Populate the trade ID lookup map
-    for (Size i = 0; i < tradeIds_.size(); i++) {
-        tradeIdx_[tradeIds_[i]] = i;
+    for (Size i = 0; i < cube_->numIds(); i++) {
+        tradeIdx_[cube_->ids()[i]] = i;
     }
 
     // Populate the scenario lookup map
