@@ -44,6 +44,7 @@ using boost::unit_test::test_suite;
 #include "analyticlgmswaptionengine.hpp"
 #include "blackvariancecurve.hpp"
 #include "bonds.hpp"
+#include "calendars.hpp"
 #include "cashflow.hpp"
 #include "commodityforward.hpp"
 #include "crossassetmodel.hpp"
@@ -128,6 +129,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
     test->add(testsuite::PriceTermStructureAdapterTest::suite());
     test->add(testsuite::BondsTest::suite());
+    test->add(testsuite::CalendarsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 
