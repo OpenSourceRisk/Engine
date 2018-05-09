@@ -127,9 +127,6 @@ public:
     virtual void writeAdditionalReports() {}
 
 protected:
-    //! Get report writer
-    virtual boost::shared_ptr<ReportWriter> getReportWriter();
-
     //! Initialize input parameters to the sensitivities analysis
     void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                               boost::shared_ptr<SensitivityScenarioData>& sensiData,

@@ -158,6 +158,9 @@
     <ClInclude Include="orea\engine\sensitivitydata.hpp">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="orea\engine\sensitivitycube.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="orea\aggregation\collateralaccount.cpp">
@@ -254,6 +257,9 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\sensitivitydata.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivitycube.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>

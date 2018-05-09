@@ -29,6 +29,8 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/marketdata/market.hpp>
 
+#include <tuple>
+
 namespace ore {
 using namespace data;
 namespace analytics {
@@ -55,11 +57,11 @@ public:
               indexDesc2_(d2.indexDesc1()) {}
         //! Inspectors
         //@{
-        Type type() const { return type_; }
-        RiskFactorKey key1() const { return key1_; }
-        RiskFactorKey key2() const { return key2_; }
-        string indexDesc1() const { return indexDesc1_; }
-        string indexDesc2() const { return indexDesc2_; }
+        const Type& type() const { return type_; }
+        const RiskFactorKey& key1() const { return key1_; }
+        const RiskFactorKey& key2() const { return key2_; }
+        const string& indexDesc1() const { return indexDesc1_; }
+        const string& indexDesc2() const { return indexDesc2_; }
         string keyName1() const { return keyName(key1_); }
         string keyName2() const { return keyName(key2_); }
         //@}
@@ -69,8 +71,8 @@ public:
         string factor1() const;
         //! Return key2 as string with text2 appended as key index description
         string factor2() const;
-        //! Return full description
-        string text() const;
+        //! Return "factor1" and append ":factor2" if factor2 is not empty
+        string factors() const;
 
     private:
         string keyName(RiskFactorKey key) const;
@@ -187,5 +189,12 @@ protected:
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
+
+std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
+
+inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+    return std::tie(lhs.type(), lhs.key1(), lhs.key2()) < std::tie(rhs.type(), rhs.key1(), rhs.key2());
+}
+
 } // namespace analytics
 } // namespace ore

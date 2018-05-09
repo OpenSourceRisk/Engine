@@ -17,7 +17,7 @@
 */
 
 /*! \file orea/engine/sensitivitycube.hpp
-    \brief wrapper class for an npvCube and a vector of scenarioDescriotions for use in sensitivity generation
+    \brief holds a grid of NPVs for a list of trades under various scenarios
     \ingroup Cube
 */
 
@@ -37,93 +37,71 @@ namespace analytics {
 class SensitivityCube {
 
 public:
+    typedef std::pair<RiskFactorKey, RiskFactorKey> crossPair;
+    typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
+
     //! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
     SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
-                    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenarioDescriptions,
-                    const boost::shared_ptr<ore::data::Portfolio>& portfolio)
-        : cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
-        for (Size i = 0; i < scenarioDescriptions->size(); i++) {
-            ShiftScenarioGenerator::ScenarioDescription desc = (*scenarioDescriptions)[i];
+        const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
+        const std::vector<std::string>& tradeIds);
 
-            if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-                upFactorIndices_[desc.factor1()] = i;
-            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-                downFactorIndices_[desc.factor1()] = i;
-            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-                std::pair<string, string> pair(desc.factor1(), desc.factor2());
-                crossFactorIndices_[pair] = i;
-            } else if (desc.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
-                baseFactorIndices_[desc.factor1()] = i;
-            }
-        }
-        for (Size i = 0; i < portfolio->size(); i++) {
-            tradeIndices_[portfolio->trades()[i]->id()] = i;
-        }
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<NPVCube>& npvCube() const { 
+        return cube_;
     }
-
-    Real baseNPV(Size tradeIdx) const { return cube_->getT0(tradeIdx, 0); }
-    Real baseNPV(string tradeId) const {
-        Size tradeIdx = getTradeIndex(tradeId);
-        return cube_->getT0(tradeIdx, 0);
-    }
-
-    Real upNPV(Size tradeIdx, string factor) const {
-        return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Up, factor, "");
-    }
-
-    Real downNPV(Size tradeIdx, string factor) const {
-        return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Down, factor, "");
-    }
-
-    Real crossNPV(Size tradeIdx, string factor1, string factor2) const {
-        return cubeNPV(tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type::Cross, factor1, factor2);
-    }
-
-    Real getNPV(Size i, Size j) const { return cube_->get(i, 0, j, 0); }
-
-    // the scenarioDescriptions_ indices match the cube_ indices for a given type/factor
-    Size getFactorIndex(ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1, string factor2) const {
-        if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Up) {
-            return upFactorIndices_.find(factor1)->second;
-        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Down) {
-            return downFactorIndices_.find(factor1)->second;
-        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
-            std::pair<string, string> pair(factor1, factor2);
-            return crossFactorIndices_.find(pair)->second;
-        } else if (type == ShiftScenarioGenerator::ScenarioDescription::Type::Base) {
-            return baseFactorIndices_.find(factor1)->second;
-        } else {
-            QL_FAIL("Invalid type");
-        }
-    }
-
-    Size getTradeIndex(string tradeId) const {
-        auto it = tradeIndices_.find(tradeId);
-        return it->second;
-    }
-
-    //! Accessors
-    const std::map<string, Size>& upFactors() const { return upFactorIndices_; }
-    const std::map<string, Size>& downFactors() const { return downFactorIndices_; }
-    const std::map<pair<string, string>, Size>& crossFactors() const { return crossFactorIndices_; }
-
-    const boost::shared_ptr<NPVCube>& npvCube() const { return cube_; }
-    const boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>>& scenDesc() const {
+    const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const {
         return scenarioDescriptions_;
     }
+    const std::vector<std::string>& tradeIds() const {
+        return tradeIds_;
+    }
+    //@}
+
+    //! Check if the cube has scenario NPVs for trade with ID \p tradeId
+    bool hasTrade(const std::string& tradeId) const;
+    
+    //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
+    bool hasScenario(const ShiftScenarioDescription& scenarioDescription) const;
+    
+    //! Get the description for the risk factor key \p riskFactorKey
+    //! Returns the result of ShiftScenarioGenerator::ScenarioDescription::factor1()
+    std::string factorDescription(const RiskFactorKey& riskFactorKey) const;
+
+    //! Returns the set of risk factor keys for which a delta and gamma can be calculated 
+    std::set<RiskFactorKey> factors() const;
+    
+    //! Returns the set of pairs of risk factor keys for which a cross gamma is available 
+    std::set<crossPair> crossFactors() const;
+
+    //! Get the base NPV for trade with ID \p tradeId
+    QuantLib::Real npv(const std::string& tradeId) const;
+
+    //! Get the NPV with scenario description \p scenarioDescription for trade with ID \p tradeId
+    QuantLib::Real npv(const std::string& tradeId, const ShiftScenarioDescription& scenarioDescription) const;
+
+    //! Get the trade delta for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
+    QuantLib::Real delta(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
+
+    //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
+    QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
+
+    //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p riskFactorKeyPair
+    QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
 private:
-    Real cubeNPV(Size& tradeIdx, ShiftScenarioGenerator::ScenarioDescription::Type type, string factor1,
-                 string factor2 = "") const {
-        Size index = getFactorIndex(type, factor1, factor2);
-        return cube_->get(tradeIdx, 0, index, 0);
-    }
-
     boost::shared_ptr<NPVCube> cube_;
-    boost::shared_ptr<std::vector<ShiftScenarioGenerator::ScenarioDescription>> scenarioDescriptions_;
+    std::vector<ShiftScenarioDescription> scenarioDescriptions_;
+    std::vector<std::string> tradeIds_;
 
-    std::map<string, Size> tradeIndices_, upFactorIndices_, downFactorIndices_, baseFactorIndices_;
-    std::map<pair<string, string>, Size> crossFactorIndices_;
+    // Maps for faster lookup of cube entries. They are populated in the constructor
+    // TODO: Review this i.e. could it be done better / using less memory
+    std::map<std::string, QuantLib::Size> tradeIdx_;
+    std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
+    std::map<RiskFactorKey, QuantLib::Size> upFactors_;
+    std::map<RiskFactorKey, QuantLib::Size> downFactors_;
+    std::map<crossPair, QuantLib::Size> crossFactors_;
 };
-} // namespace analytics
-} // namespace ore
+
+}
+}

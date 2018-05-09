@@ -34,10 +34,11 @@ using QuantLib::Date;
 
 namespace ore {
 namespace analytics {
+namespace reports {
 
-void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
-                            boost::shared_ptr<Market> market, const std::string& configuration,
-                            boost::shared_ptr<Portfolio> portfolio) {
+void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+    boost::shared_ptr<Market> market, const std::string& configuration,
+    boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     DayCounter dc = ActualActual();
     Date today = Settings::instance().evaluationDate();
@@ -75,7 +76,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->notional() * fx)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             Date maturity = trade->maturity();
             report.next()
@@ -97,7 +99,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
@@ -146,7 +148,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
                             flowType = "Interest";
-                        } else {
+                        }
+                        else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
@@ -167,18 +170,22 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
                             if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
                                 flowType = "InterestProjected";
-                        } else if (ptrInfl) {
+                        }
+                        else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
                             flowType = "Inflation";
-                        } else if (ptrIndCf) {
+                        }
+                        else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
                             flowType = "Index";
-                        } else if (ptrFxlCf) {
+                        }
+                        else if (ptrFxlCf) {
                             fixingDate = ptrFxlCf->fxFixingDate();
                             fixingValue = ptrFxlCf->fxRate();
-                        } else {
+                        }
+                        else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
                         }
@@ -199,9 +206,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                     }
                 }
             }
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e) {
             LOG("Exception writing cashflow report : " << e.what());
-        } catch (...) {
+        }
+        catch (...) {
             LOG("Exception writing cashflow report : Unkown Exception");
         }
     }
@@ -209,8 +218,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
     LOG("Cashflow report written");
 }
 
-void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                               const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
+void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+    const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
     LOG("Write curves... ");
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
@@ -269,8 +278,8 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
     report.end();
 }
 
-void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                       const string& tradeId) {
+void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -320,8 +329,8 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
     report.end();
 }
 
-void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                            const string& nettingSetId) {
+void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -367,8 +376,8 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
     report.end();
 }
 
-void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
-                            boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
+void writeXVA(ore::data::Report& report, const string& allocationMethod,
+    boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
     report.addColumn("TradeId", string())
@@ -428,8 +437,8 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
     report.end();
 }
 
-void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                        const string& nettingSetId) {
+void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -476,7 +485,7 @@ void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared
     report.end();
 }
 
-void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
     report.addColumn("Date", Size()).addColumn("Scenario", Size());
     for (auto const& k : data.keys()) {
         std::string tmp = ore::data::to_string(k.first) + k.second;
@@ -494,5 +503,142 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
+void writeScenarioReport(Report& report,
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold) {
+
+    LOG("Writing Scenario report");
+
+    report.addColumn("TradeId", string());
+    report.addColumn("Factor", string());
+    report.addColumn("Up/Down", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Scenario NPV", double(), 2);
+    report.addColumn("Difference", double(), 2);
+
+    for (const auto& tradeId : sensitivityCube->tradeIds()) {
+        Real baseNpv = sensitivityCube->npv(tradeId);
+
+        for (const auto& scenarioDescription : sensitivityCube->scenarioDescriptions()) {
+
+            Real scenarioNpv = sensitivityCube->npv(tradeId, scenarioDescription);
+            Real difference = scenarioNpv - baseNpv;
+
+            if (fabs(difference) > outputThreshold) {
+                report.next();
+                report.add(tradeId);
+                report.add(scenarioDescription.factors());
+                report.add(scenarioDescription.typeString());
+                report.add(baseNpv);
+                report.add(scenarioNpv);
+                report.add(difference);
+            }
+            else if (!std::isfinite(difference)) {
+                // TODO: is this needed?
+                ALOG("sensitivity scenario for trade " << tradeId << ", factor " <<
+                    scenarioDescription.factors() << " is not finite (" << difference << ")");
+            }
+        }
+    }
+
+    report.end();
+    LOG("Scenario report finished");
+}
+
+void writeSensitivityReport(Report& report,
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
+    const map<RiskFactorKey, Real>& shiftSizes) {
+
+    LOG("Writing Sensitivity report");
+
+    report.addColumn("TradeId", string());
+    report.addColumn("Factor", string());
+    report.addColumn("ShiftSize", double(), 6);
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Delta", double(), 2);
+    report.addColumn("Gamma", double(), 2);
+
+    for (const auto& tradeId : sensitivityCube->tradeIds()) {
+        Real baseNpv = sensitivityCube->npv(tradeId);
+
+        for (const auto& factor : sensitivityCube->factors()) {
+
+            Real delta = sensitivityCube->delta(tradeId, factor);
+            Real gamma = sensitivityCube->gamma(tradeId, factor);
+
+            if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
+
+                Real shiftSize = shiftSizes.count(factor) > 0 ? shiftSizes.at(factor) : Null<Real>();
+
+                report.next();
+                report.add(tradeId);
+                report.add(sensitivityCube->factorDescription(factor));
+                report.add(shiftSize);
+                report.add(baseNpv);
+                report.add(delta);
+                report.add(gamma);
+
+            }
+            else if (!std::isfinite(delta) || !std::isfinite(gamma)) {
+                // TODO: Again, is this needed?
+                ALOG("sensitivity results for trade " << tradeId << ", factor " <<
+                    sensitivityCube->factorDescription(factor) << " are not finite (delta = " << delta
+                    << ", gamma = " << gamma << ")");
+            }
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
+}
+
+void writeCrossGammaReport(Report& report,
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
+    const map<RiskFactorKey, Real>& shiftSizes) {
+
+    LOG("Writing CrossGamma report");
+
+    report.addColumn("TradeId", string());
+    report.addColumn("Factor 1", string());
+    report.addColumn("ShiftSize1", double(), 6);
+    report.addColumn("Factor 2", string());
+    report.addColumn("ShiftSize2", double(), 6);
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("CrossGamma", double(), 2);
+
+    for (const auto& tradeId : sensitivityCube->tradeIds()) {
+        Real baseNpv = sensitivityCube->npv(tradeId);
+
+        for (const auto& crossPair : sensitivityCube->crossFactors()) {
+            Real crossGamma = sensitivityCube->crossGamma(tradeId, crossPair);
+
+            if (fabs(crossGamma) > outputThreshold) {
+
+                Real shiftSize_1 = shiftSizes.count(crossPair.first) > 0 ? shiftSizes.at(crossPair.first) : Null<Real>();
+                Real shiftSize_2 = shiftSizes.count(crossPair.second) > 0 ? shiftSizes.at(crossPair.second) : Null<Real>();
+
+                report.next();
+                report.add(tradeId);
+                report.add(sensitivityCube->factorDescription(crossPair.first));
+                report.add(shiftSize_1);
+                report.add(sensitivityCube->factorDescription(crossPair.second));
+                report.add(shiftSize_2);
+                report.add(baseNpv);
+                report.add(crossGamma);
+
+            }
+            else if (!std::isfinite(crossGamma)) {
+                ALOG("sensitivity result for trade " << tradeId << ", factors "
+                    << sensitivityCube->factorDescription(crossPair.first) << ", "
+                    << sensitivityCube->factorDescription(crossPair.second)
+                    << " is not finite (cross-gamma = " << crossGamma << ")");
+            }
+        }
+    }
+
+    report.end();
+    LOG("Cross gamma written");
+}
+
+} // namespace reports
 } // namespace analytics
 } // namespace ore

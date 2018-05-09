@@ -370,7 +370,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
             scenarioDescriptions_.push_back(discountScenarioDescription(ccy, j, up));
             DLOG("generate discount curve scenario, ccy " << ccy << ", bucket " << j << ", up " << up << ", desc "
-                                                          << scenarioDescriptions_.back().text());
+                                                          << scenarioDescriptions_.back());
 
             // apply zero rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
@@ -1138,7 +1138,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory->buildScenario(asof);
             scenarioDescriptions_.push_back(survivalProbabilityScenarioDescription(name, j, up));
             LOG("generate survival probability scenario, name " << name << ", bucket " << j << ", up " << up
-                                                                << ", desc " << scenarioDescriptions_.back().text());
+                                                                << ", desc " << scenarioDescriptions_.back());
 
             // apply averaged hazard rate shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, hazardRates, times, shiftedHazardRates, true);

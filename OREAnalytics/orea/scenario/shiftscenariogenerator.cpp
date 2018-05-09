@@ -75,16 +75,12 @@ string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::text() const {
-    string t = typeString();
-    string f1 = factor1();
-    string f2 = factor2();
-    string ret = t;
-    if (f1 != "")
-        ret += ":" + f1;
-    if (f2 != "")
-        ret += ":" + f2;
-    return ret;
+
+string ShiftScenarioGenerator::ScenarioDescription::factors() const {
+    string result = factor1();
+    if (factor2() != "")
+        result += ":" + factor2();
+    return result;
 }
 
 ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
@@ -111,6 +107,15 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     } else {
         QL_FAIL("Cannot convert shift type " << s << " to ShiftScenarioGenerator::ShiftType");
     }
+}
+
+ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription) {
+    out << scenarioDescription.typeString();
+    if (scenarioDescription.factor1() != "")
+        out << ":" << scenarioDescription.factor1();
+    if (scenarioDescription.factor2() != "")
+        out << ":" << scenarioDescription.factor2();
+    return out;
 }
 
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
