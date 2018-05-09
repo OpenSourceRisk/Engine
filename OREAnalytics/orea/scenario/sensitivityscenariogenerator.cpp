@@ -19,10 +19,12 @@
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ostream>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -192,8 +194,14 @@ void SensitivityScenarioGenerator::generateScenarios(const boost::shared_ptr<Sce
                     crossScenario->add(keys[k], newVal);
                 }
             }
-            scenarios_.push_back(crossScenario);
+
             scenarioDescriptions_.push_back(ScenarioDescription(iDesc, jDesc));
+
+            // Give the scenario a label
+            crossScenario->label(to_string(scenarioDescriptions_.back()));
+
+            scenarios_.push_back(crossScenario);
+
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << crossScenario->label() << " created");
         }
     }
@@ -265,6 +273,10 @@ void SensitivityScenarioGenerator::generateFxScenarios(const boost::shared_ptr<S
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newRate);
+
+        // Give the scenario a label
+        scenario->label(to_string(scenarioDescriptions_.back()));
+
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
@@ -305,6 +317,10 @@ void SensitivityScenarioGenerator::generateEquityScenarios(
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newRate);
+
+        // Give the scenario a label
+        scenario->label(to_string(scenarioDescriptions_.back()));
+
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
                                        << " created: " << newRate);
@@ -382,6 +398,10 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(
                     scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DiscountCurve, ccy, k), shiftedDiscount);
                 }
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -459,6 +479,10 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::IndexCurve, indexName, k), shiftedDiscount);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -536,6 +560,10 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::YieldCurve, name, k), shiftedDiscount);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -613,6 +641,10 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::EquityForecastCurve, name, k), shiftedDiscount);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -690,6 +722,10 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::DividendYield, name, k), shiftedDiscount);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -772,6 +808,10 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(
                                   shiftedValues[k][l]);
                 }
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -850,6 +890,10 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(
                                   shiftedValues[k][l]);
                 }
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -974,6 +1018,10 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(
                             }
                         }
                     }
+
+                    // Give the scenario a label
+                    scenario->label(to_string(scenarioDescriptions_.back()));
+
                     // add this scenario to the scenario vector
                     scenarios_.push_back(scenario);
                     DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -1063,6 +1111,10 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(
                                       shiftedVolData[jj][kk]);
                     }
                 }
+
+                // Give the scenario a label
+                scenario->label(to_string(scenarioDescriptions_.back()));
+
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
                 DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -1149,6 +1201,9 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::SurvivalProbability, name, k), shiftedProb);
             }
 
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -1219,6 +1274,10 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(
                 Size idx = jj;
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CDSVolatility, name, idx), shiftedVolData[jj]);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             LOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -1293,6 +1352,10 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(
                 // Real shiftedDiscount = exp(-shiftedYoys[k] * times[k]);
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, k), shiftedZeros[k]);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -1369,6 +1432,10 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(
             for (Size k = 0; k < n_ten; ++k) {
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::YoYInflationCurve, indexName, k), shiftedYoys[k]);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
+
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -1463,6 +1530,10 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(
                                       shiftedBcData[jj][kk]);
                     }
                 }
+
+                // Give the scenario a label
+                scenario->label(to_string(scenarioDescriptions_.back()));
+
                 // add this scenario to the scenario vector
                 scenarios_.push_back(scenario);
                 DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
@@ -1509,6 +1580,10 @@ void SensitivityScenarioGenerator::generateCommodityScenarios(
         Real shiftedSpot = type == SensitivityScenarioGenerator::ShiftType::Relative ? 
             spot * (1.0 + shift) : (spot + shift);
         scenario->add(key, shiftedSpot);
+
+        // Give the scenario a label
+        scenario->label(to_string(scenarioDescriptions_.back()));
+
         scenarios_.push_back(scenario);
         
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
@@ -1589,6 +1664,9 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(
             for (Size k = 0; k < times.size(); ++k) {
                 scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityCurve, names[i], k), shiftedPrices[k]);
             }
+
+            // Give the scenario a label
+            scenario->label(to_string(scenarioDescriptions_.back()));
 
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
@@ -1676,6 +1754,9 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(
                     }
                 }
 
+                // Give the scenario a label
+                scenario->label(to_string(scenarioDescriptions_.back()));
+
                 // Add the final scenario to the scenario vector
                 scenarios_.push_back(scenario);
 
@@ -1719,6 +1800,10 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newSpread);
+
+        // Give the scenario a label
+        scenario->label(to_string(scenarioDescriptions_.back()));
+
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
             << " created: " << newSpread);
