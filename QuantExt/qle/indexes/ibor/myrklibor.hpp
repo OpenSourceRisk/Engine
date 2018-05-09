@@ -26,7 +26,7 @@
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/target.hpp>
+#include <qle/calendars/malaysia.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
@@ -45,7 +45,7 @@ No MYR Calendar in QuantLib
 class MYRKlibor : public IborIndex {
 public:
     MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), TARGET(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 

@@ -26,7 +26,7 @@
 
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/target.hpp>
+#include <qle/calendars/chile.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
@@ -39,7 +39,7 @@ namespace QuantExt {
 class CLPCamara : public IborIndex {
 public:
     CLPCamara(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("CLP-CAMARA", tenor, 2, CLPCurrency(), TARGET(), ModifiedFollowing, false, Actual360(),
+        : IborIndex("CLP-CAMARA", tenor, 2, CLPCurrency(), Chile(), ModifiedFollowing, false, Actual360(),
                     h) {}
 };
 } // namespace QuantExt

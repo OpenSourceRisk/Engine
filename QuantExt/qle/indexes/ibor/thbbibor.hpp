@@ -26,7 +26,7 @@
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/calendars/target.hpp>
+#include <qle/calendars/thailand.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
@@ -41,7 +41,7 @@ No THB Calendar in QuantLib
 class THBBibor : public IborIndex {
 public:
     THBBibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("THB-BIBOR", tenor, 2, THBCurrency(), TARGET(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+        : IborIndex("THB-BIBOR", tenor, 2, THBCurrency(), Thailand(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 
