@@ -34,13 +34,14 @@
 namespace ore {
 namespace analytics {
 
+//! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
 class SensitivityCube {
 
 public:
     typedef std::pair<RiskFactorKey, RiskFactorKey> crossPair;
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
 
-    //! SensitivityCube is a wrapper for an npvCube that gives easier access to the underlying cube elements
+    //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
         const std::vector<ShiftScenarioDescription>& scenarioDescriptions);
 
