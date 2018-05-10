@@ -12,7 +12,8 @@ OREANALYTICS_TESTS = \
 	testportfolio.hpp testportfolio.cpp \
 	observationmode.hpp observationmode.cpp \
 	stresstest.hpp stresstest.cpp \
-	sensitivityperformance.hpp sensitivityperformance.cpp
+	sensitivityperformance.hpp sensitivityperformance.cpp \
+	shiftscenariogenerator.hpp shiftscenariogenerator.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

@@ -55,6 +55,9 @@ public:
         ScenarioDescription(ScenarioDescription d1, ScenarioDescription d2)
             : type_(Type::Cross), key1_(d1.key1()), indexDesc1_(d1.indexDesc1()), key2_(d2.key1()),
               indexDesc2_(d2.indexDesc1()) {}
+        //! Construct from string
+        ScenarioDescription(const std::string& description);
+        
         //! Inspectors
         //@{
         const Type& type() const { return type_; }
@@ -76,6 +79,7 @@ public:
 
     private:
         string keyName(RiskFactorKey key) const;
+
         Type type_;
         RiskFactorKey key1_;
         string indexDesc1_;
@@ -192,8 +196,19 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
 
 std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
 
+//! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or ScenarioDescription::factor2() 
+std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& factor);
+
 inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
     return std::tie(lhs.type(), lhs.key1(), lhs.key2()) < std::tie(rhs.type(), rhs.key1(), rhs.key2());
+}
+
+inline bool operator==(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+    return lhs.type() == rhs.type() && 
+        lhs.key1() == rhs.key1() && 
+        lhs.indexDesc1() == rhs.indexDesc1() &&
+        lhs.key2() == rhs.key2() &&
+        lhs.indexDesc2() == rhs.indexDesc2();
 }
 
 } // namespace analytics

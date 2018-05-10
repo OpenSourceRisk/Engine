@@ -57,8 +57,23 @@ namespace analytics {
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube, 
     const vector<ShiftScenarioDescription>& scenarioDescriptions) 
     : cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
+    initialise();
+}
 
-    QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base, 
+SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
+    const vector<string>& scenarioDescriptions) : cube_(cube) {
+
+    // Populate scenarioDescriptions_ from string descriptions
+    scenarioDescriptions_.reserve(scenarioDescriptions.size());
+    for (const auto& des : scenarioDescriptions) {
+        scenarioDescriptions_.push_back(ShiftScenarioDescription(des));
+    }
+
+    initialise();
+}
+
+void SensitivityCube::initialise() {
+    QL_REQUIRE(scenarioDescriptions_[0].type() == ShiftScenarioDescription::Type::Base,
         "Expected the first scenario in the sensitivity cube to be of type 'Base'");
 
     // Populate the trade ID lookup map
@@ -71,7 +86,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
     for (Size i = 0; i < scenarioDescriptions_.size(); i++) {
         auto des = scenarioDescriptions_[i];
         scenarioIdx_[des] = i;
-        
+
         // Populate factors_ = list of factors for which we can calculate a delta/gamma
         switch (des.type()) {
         case ShiftScenarioDescription::Type::Up:
@@ -97,7 +112,7 @@ SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
     }
 
     // Check that up factors and down factors align
-    QL_REQUIRE(upFactors_.size() == downFactors_.size(), 
+    QL_REQUIRE(upFactors_.size() == downFactors_.size(),
         "The number 'Up' shifts should equal the number of 'Down' shifts");
 
     auto pred = [](pair<RiskFactorKey, Size> a, pair<RiskFactorKey, Size> b) { return a.first == b.first; };

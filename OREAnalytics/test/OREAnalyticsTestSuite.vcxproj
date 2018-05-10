@@ -43,6 +43,7 @@
     <ClInclude Include="sensitivityanalysis.hpp" />
     <ClInclude Include="sensitivityanalysis2.hpp" />
     <ClInclude Include="sensitivityperformance.hpp" />
+    <ClInclude Include="shiftscenariogenerator.hpp" />
     <ClInclude Include="stresstest.hpp" />
     <ClInclude Include="swapperformance.hpp" />
     <ClInclude Include="testmarket.hpp" />
@@ -57,6 +58,7 @@
     <ClCompile Include="sensitivityanalysis.cpp" />
     <ClCompile Include="sensitivityanalysis2.cpp" />
     <ClCompile Include="sensitivityperformance.cpp" />
+    <ClCompile Include="shiftscenariogenerator.cpp" />
     <ClCompile Include="stresstest.cpp" />
     <ClCompile Include="swapperformance.cpp" />
     <ClCompile Include="testmarket.cpp" />

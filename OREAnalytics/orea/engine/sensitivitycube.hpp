@@ -45,6 +45,10 @@ public:
     SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
         const std::vector<ShiftScenarioDescription>& scenarioDescriptions);
 
+    //! Constructor using a vector of scenario description strings
+    SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
+        const std::vector<std::string>& scenarioDescriptions);
+
     //! \name Inspectors
     //@{
     const boost::shared_ptr<NPVCube>& npvCube() const { 
@@ -90,6 +94,9 @@ public:
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
 private:
+    //! Initialise method used by the constructors
+    void initialise();
+
     boost::shared_ptr<NPVCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
 
