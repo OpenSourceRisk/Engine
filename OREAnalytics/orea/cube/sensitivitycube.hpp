@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file orea/engine/sensitivitycube.hpp
+/*! \file orea/cube/sensitivitycube.hpp
     \brief holds a grid of NPVs for a list of trades under various scenarios
     \ingroup Cube
 */

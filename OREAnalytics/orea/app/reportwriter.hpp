@@ -28,7 +28,7 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/sensitivitycube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>

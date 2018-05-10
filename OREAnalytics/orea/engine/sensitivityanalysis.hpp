@@ -24,7 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/sensitivitycube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -72,7 +72,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities();
+    void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -116,7 +116,8 @@ protected:
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
     virtual boost::shared_ptr<EngineFactory>
-    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {}) const;
+    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {},
+                 const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {}) const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
     /*! build the ScenarioSimMarket that will be used by ValuationEngine and

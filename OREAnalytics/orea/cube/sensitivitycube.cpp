@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/sensitivitycube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 
 using std::make_pair;
 

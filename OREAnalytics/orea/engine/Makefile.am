@@ -11,7 +11,6 @@ libOREAnalyticsEngine_la_SOURCES = \
 	valuationcalculator.cpp \
 	sensitivityanalysis.cpp \
 	stresstest.cpp \
-	sensitivitycube.cpp \
 	riskfilter.cpp \
 	parametricvar.cpp \
 	sensitivitydata.cpp
@@ -24,7 +23,6 @@ this_include_HEADERS = \
 	valuationcalculator.hpp \
 	sensitivityanalysis.hpp \
 	stresstest.hpp \
-    sensitivitycube.hpp \
 	riskfilter.hpp \
 	parametricvar.hpp \
 	sensitivitydata.hpp

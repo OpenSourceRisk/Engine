@@ -125,7 +125,7 @@ public:
     //! Default constructor
     FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
-    FloatingLegData(const string& index, int fixingDays, bool isInArrears, const vector<double>& spreads,
+    FloatingLegData(const string& index, QuantLib::Natural fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
@@ -140,7 +140,7 @@ public:
     //! \name Inspectors
     //@{
     const string& index() const { return index_; }
-    int fixingDays() const { return fixingDays_; }
+    QuantLib::Natural fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     const vector<double>& spreads() const { return spreads_; }
@@ -161,7 +161,7 @@ public:
     //@}
 private:
     string index_;
-    int fixingDays_;
+    QuantLib::Natural fixingDays_;
     bool isInArrears_;
     bool isAveraged_;
     vector<double> spreads_;
