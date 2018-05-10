@@ -60,6 +60,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
             fx = market->fxSpot(npvCcy + baseCurrency, configuration)->value();
         try {
             Real npv = trade->instrument()->NPV();
+            QL_REQUIRE(std::isfinite(npv), "npv is not finite (" << npv << ")");
             Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())

@@ -26,11 +26,14 @@ namespace ore {
 namespace data {
 
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
-                             const map<MarketContext, string>& configurations)
+                             const map<MarketContext, string>& configurations, 
+                             const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+                             const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders)
     : market_(market), engineData_(engineData), configurations_(configurations) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
+    addExtraBuilders(extraEngineBuilders, extraLegBuilders);
 }
 
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
@@ -101,6 +104,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<VarSwapEngineBuilder>());
 
     registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
 
@@ -117,6 +121,22 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
+}
+
+
+void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+    const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) {
+    
+    if (extraEngineBuilders.size() > 0) {
+        LOG("adding " << extraEngineBuilders.size() << " extra engine builders");
+        for (auto eb : extraEngineBuilders)
+            registerBuilder(eb);
+    }
+    if (extraLegBuilders.size() > 0) {
+        LOG("adding " << extraLegBuilders.size() << " extra leg builders");
+        for (auto elb : extraLegBuilders)
+            registerLegBuilder(elb);
+    }
 }
 
 } // namespace data

@@ -64,6 +64,7 @@ public:
         return boost::make_shared<T>(h);
     }
 };
+
 boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -71,6 +72,19 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
                                        parseCurrency(tokens[3]), NullCalendar());
+}
+
+boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
+    QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
+    if (tokens.size() == 2) {
+        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+    }
+    else {
+        QL_FAIL("Error parsing equity string " + s);
+    }
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
@@ -92,8 +106,12 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"GBP-SONIA", boost::make_shared<IborIndexParserOIS<Sonia>>()},
         {"JPY-TONAR", boost::make_shared<IborIndexParserOIS<Tonar>>()},
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
+        {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
+        {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
+        {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
+        {"SEK-SIOR", boost::make_shared<IborIndexParserOIS<SEKSior>>()},
         {"AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>()},
         {"AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>()},
         {"EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
@@ -133,6 +151,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
         return it->second->build(p, h);
+    } else if (tokens[1] == "GENERIC") {
+        // We have a generic index
+        auto ccy = parseCurrency(tokens[0]);
+        return boost::make_shared<GenericIborIndex>(p, ccy, h);
     } else {
         QL_FAIL("parseIborIndex \"" << s << "\" not recognized");
     }
@@ -256,6 +278,13 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
         try {
             ret_idx = parseFxIndex(s);
         } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseEquityIndex(s);
+        }
+        catch (...) {
         }
     }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");

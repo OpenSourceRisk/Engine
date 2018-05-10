@@ -48,7 +48,7 @@ namespace QuantExt {
 class DKKCibor : public IborIndex {
 public:
     DKKCibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("DKK-CIBOR", tenor, 0, DKKCurrency(), Denmark(), ModifiedFollowing, false, Actual360(), h) {}
+        : IborIndex("DKK-CIBOR", tenor, 2, DKKCurrency(), Denmark(), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 

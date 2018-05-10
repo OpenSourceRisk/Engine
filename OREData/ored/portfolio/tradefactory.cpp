@@ -21,6 +21,7 @@
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
+#include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -30,13 +31,14 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/tradefactory.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace std;
 
 namespace ore {
 namespace data {
 
-TradeFactory::TradeFactory() {
+TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
     addBuilder("Swap", boost::make_shared<TradeBuilder<Swap>>());
     addBuilder("Swaption", boost::make_shared<TradeBuilder<Swaption>>());
     addBuilder("FxForward", boost::make_shared<TradeBuilder<FxForward>>());
@@ -46,14 +48,25 @@ TradeFactory::TradeFactory() {
     addBuilder("CapFloor", boost::make_shared<TradeBuilder<CapFloor>>());
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
+    addBuilder("VarianceSwap", boost::make_shared<TradeBuilder<VarSwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
-    addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());
+    addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());    
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
+    if (extraBuilders.size() > 0)
+        addExtraBuilders(extraBuilders);
 }
 
 void TradeFactory::addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>& b) {
     builders_[className] = b;
+}
+
+void TradeFactory::addExtraBuilders(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders) {
+    if (extraBuilders.size() > 0) {
+        LOG("adding " << extraBuilders.size() << " extra trade builders");
+        for (auto eb : extraBuilders)
+            addBuilder(eb.first, eb.second);
+    }
 }
 
 boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
@@ -63,5 +76,6 @@ boost::shared_ptr<Trade> TradeFactory::build(const string& className) const {
     else
         return it->second->build();
 }
+
 } // namespace data
 } // namespace ore

@@ -179,7 +179,7 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     bool isPayerEUR = true;
     string indexEUR = "EUR-EURIBOR-6M";
     bool isInArrears = false;
-    int days = 2;
+    int days = 2, fxFixingDays = 0;
     vector<Real> spreadEUR(1, 0.000261);
     string dc = "ACT/360";
     vector<Real> notionalEUR(1, 8833141.95);
@@ -193,10 +193,10 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
     auto legdataEUR = boost::make_shared<FloatingLegData>(indexEUR, days, isInArrears, spreadEUR);
     LegData legEUR1(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, notionalFinalXNL, foreignCCY,
-                    foreignAmount, fxIndex, days);
+                    foreignAmount, fxIndex, fxFixingDays);
     LegData legEUR2(legdataEUR, isPayerEUR, "EUR", scheduleEUR, dc, notionalEUR, vector<string>(), paymentConvention,
                     notionalInitialXNL, notionalFinalXNL, notionalAmortizingXNL, false, foreignCCY, foreignAmount,
-                    fxIndex, days);
+                    fxIndex, fxFixingDays);
 
     // USD Leg without notional resets
     bool isPayerUSD = false;
