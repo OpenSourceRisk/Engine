@@ -550,7 +550,7 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
-      <Filter>cashflows</cashflows>    
+      <Filter>cashflows</Filter>    
     </ClInclude>
     <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
       <Filter>pricingengines</Filter>
