@@ -174,7 +174,8 @@ void CalendarsTest::testMalaysianCalendar() {
     expectedHolidays.push_back(Date(1, February, 2018));
     expectedHolidays.push_back(Date(1, May, 2018));
     expectedHolidays.push_back(Date(31, August, 2018));
-    expectedHolidays.push_back(Date(16, September, 2018));
+    expectedHolidays.push_back(Date(17, September, 2018));
+    expectedHolidays.push_back(Date(25, December, 2018));
 
     Calendar c = Malaysia();
 
@@ -198,7 +199,7 @@ void CalendarsTest::testChileanCalendar() {
     expectedHolidays.push_back(Date(21, May, 2018));
     expectedHolidays.push_back(Date(16, July, 2018));
     expectedHolidays.push_back(Date(15, August, 2018));
-    expectedHolidays.push_back(Date(8, December, 2018));
+    expectedHolidays.push_back(Date(1, November, 2018));
     expectedHolidays.push_back(Date(25, December, 2018));
 
     Calendar c = Chile();
@@ -217,6 +218,8 @@ test_suite* CalendarsTest::suite() {
     suite->add(BOOST_TEST_CASE(&CalendarsTest::testColombianCalendar));
     suite->add(BOOST_TEST_CASE(&CalendarsTest::testPeruvianCalendar));
     suite->add(BOOST_TEST_CASE(&CalendarsTest::testThaiCalendar));
+    suite->add(BOOST_TEST_CASE(&CalendarsTest::testChileanCalendar));
+    suite->add(BOOST_TEST_CASE(&CalendarsTest::testMalaysianCalendar));
     return suite;
 }
 } // namespace testsuite
