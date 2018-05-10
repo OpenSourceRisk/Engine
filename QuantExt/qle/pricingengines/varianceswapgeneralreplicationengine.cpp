@@ -167,18 +167,6 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
 
     Real variance = computeReplicatingPortfolio(optionWeights);
 
-    // Argument set but not used giving warnings
-    /*Real multiplier;
-    switch (arguments_.position) {
-    case Position::Long:
-        multiplier = 1.0;
-        break;
-    case Position::Short:
-        multiplier = -1.0;
-        break;
-    default:
-        QL_FAIL("Unknown position");
-    }*/
     results_.additionalResults["optionWeights"] = optionWeights;
 
     return variance;
