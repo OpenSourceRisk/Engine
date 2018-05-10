@@ -55,10 +55,12 @@ public:
 class TradeFactory {
 public:
     //! Construct a factory with the default builders
-    TradeFactory();
+    TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders = {});
 
     //! Add a new custom builder
     void addBuilder(const string& className, const boost::shared_ptr<AbstractTradeBuilder>&);
+    //! Add extra trade builders
+    void addExtraBuilders(std::map<string, boost::shared_ptr<AbstractTradeBuilder>> extraBuilders);
 
     //! Build, if className is unknown, an empty pointer is returned
     boost::shared_ptr<Trade> build(const string& className) const;

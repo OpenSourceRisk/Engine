@@ -33,7 +33,8 @@ QLE_TESTS = \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
 	bonds.hpp bonds.cpp \
 	calendars.hpp calendars.cpp \
-	utilities.hpp
+	utilities.hpp \
+    generalisedreplicatingvarianceswapengine.hpp generalisedreplicatingvarianceswapengine.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

@@ -195,6 +195,51 @@
     <IndexBased>true</IndexBased>
     <Index>RUB-MOSPRIME</Index>
   </Deposit>
+  <Deposit>
+    <Id>BRL-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>BRL-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>CLP-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>CLP-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>CNY-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>CNY-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>IDR-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>IDR-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>INR-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>INR-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>KRW-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>KRW-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>MYR-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>MYR-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>PHP-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>PHP-GENERIC</Index>
+  </Deposit>
+  <Deposit>
+    <Id>TWD-GENERIC-CONVENTIONS</Id>
+    <IndexBased>true</IndexBased>
+    <Index>TWD-GENERIC</Index>
+  </Deposit>
   <!-- Money Market Futures -->
   <Future>
     <Id>USD-LIBOR-3M-FUTURES-CONVENTIONS</Id>
@@ -755,7 +800,79 @@
     <FixedConvention>MF</FixedConvention>
     <FixedDayCounter>A365</FixedDayCounter>
     <Index>ZAR-JIBAR-3M</Index>
-  </Swap>  
+  </Swap>
+  <Swap>
+    <Id>BRL-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>BRL-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>CLP-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>CLP-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>CNY-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>CNY-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>IDR-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>IDR-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>INR-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>INR-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>KRW-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>KRW-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>MYR-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>MYR-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>PHP-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>PHP-GENERIC-3M</Index>
+  </Swap>
+  <Swap>
+    <Id>TWD-GENERIC-3M-SWAP-CONVENTIONS</Id>
+    <FixedCalendar>TARGET</FixedCalendar>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>30/360</FixedDayCounter>
+    <Index>TWD-GENERIC-3M</Index>
+  </Swap>
   <!-- Overnight Index linked Swap Legs -->
   <OIS>
     <Id>EUR-OIS-CONVENTIONS</Id>
@@ -1034,7 +1151,7 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
-   <FX>
+  <FX>
     <Id>USD-MXN-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
@@ -1109,7 +1226,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CLP</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1129,7 +1246,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>CNY</TargetCurrency>
-    <PointsFactor>1</PointsFactor>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1139,7 +1256,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>MYR</TargetCurrency>
-    <PointsFactor>1</PointsFactor>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1149,7 +1266,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>PHP</TargetCurrency>
-    <PointsFactor>1</PointsFactor>
+    <PointsFactor>10</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1242,6 +1359,78 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>CAD-CDOR-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-BRL-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>BRL-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-CLP-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>CLP-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-CNY-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>CNY-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-IDR-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>IDR-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-INR-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>INR-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-KRW-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>KRW-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-MYR-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>MYR-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-PHP-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>PHP-GENERIC-3M</SpreadIndex>
+  </CrossCurrencyBasis>
+  <CrossCurrencyBasis>
+    <Id>USD-TWD-GENERIC-XCCY-BASIS-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>TARGET,US,UK</SettlementCalendar>
+    <RollConvention>MF</RollConvention>
+    <FlatIndex>USD-LIBOR-3M</FlatIndex>
+    <SpreadIndex>TWD-GENERIC-3M</SpreadIndex>
   </CrossCurrencyBasis>
   <!-- Inflation Swaps -->
   <InflationSwap>

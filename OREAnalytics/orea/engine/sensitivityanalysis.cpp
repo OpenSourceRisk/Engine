@@ -95,12 +95,11 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     initialized_ = true;
 }
 
-void SensitivityAnalysis::generateSensitivities() {
+void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube) {
 
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
     // initialize the helper member objects
-    boost::shared_ptr<NPVCube> cube;
     initialize(cube);
     QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
     boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
@@ -138,15 +137,12 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
 }
 
 boost::shared_ptr<EngineFactory>
-SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders) const {
+SensitivityAnalysis::buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders,
+                                  const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) const {
     map<MarketContext, string> configurations;
     configurations[MarketContext::pricing] = marketConfiguration_;
     boost::shared_ptr<EngineFactory> factory =
-        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations);
-    if (extraBuilders.size() > 0) {
-        for (auto eb : extraBuilders)
-            factory->registerBuilder(eb);
-    }
+        boost::make_shared<EngineFactory>(engineData_, simMarket_, configurations, extraBuilders, extraLegBuilders);
     return factory;
 }
 

@@ -141,8 +141,7 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             h_->enableExtrapolation();
         }
     } catch (QuantLib::Error& e) {
-
-        QL_FAIL("yield curve building failed :" << e.what());
+        QL_FAIL("yield curve building failed for curve " << curveSpec_.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
     } catch (std::exception& e) {
         QL_FAIL(e.what());
     } catch (...) {

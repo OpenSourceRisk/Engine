@@ -71,7 +71,7 @@ inline std::ostream& operator<<(std::ostream& out, const YieldCurveRollDown& t) 
     switch (t) {
     case ConstantDiscounts:
         return out << "ConstantDiscounts";
-    case ForwardForwardVariance:
+    case ForwardForward:
         return out << "ForwardForward";
     default:
         return out << "Unknown yield curve roll down type (" << t << ")";

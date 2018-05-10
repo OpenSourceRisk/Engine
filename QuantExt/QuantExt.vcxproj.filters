@@ -537,6 +537,27 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripper3.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedatmoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\datedstrippedatmoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletatmstripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
+      <Filter>cashflows</cashflows>    
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\equityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -915,6 +936,27 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletstripper3.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedatmoptionletadapter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\datedstrippedatmoptionletadapter.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\optionletatmstripper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>	    
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\equityindex.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
