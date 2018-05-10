@@ -1553,7 +1553,8 @@ void SensitivityScenarioGenerator::generateCommodityScenarios(
     if (sensitivityData_->commodityNames().empty()) {
         names = simMarketData_->commodityNames();
     } else {
-        names = sensitivityData_->commodityNames();
+        auto commodityNames = sensitivityData_->commodityNames();
+        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
         // Log an ALERT if some commodity curves in simulation market are not in the list
         for (const string& name : simMarketData_->commodityNames()) {
             if (find(names.begin(), names.end(), name) == names.end()) {
@@ -1604,7 +1605,8 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(
     if (sensitivityData_->commodityNames().empty()) {
         names = simMarketData_->commodityNames();
     } else {
-        names = sensitivityData_->commodityNames();
+        auto commodityNames = sensitivityData_->commodityNames();
+        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
         // Log an ALERT if some commodity curves in simulation market are not in the list
         for (const string& name : simMarketData_->commodityNames()) {
             if (find(names.begin(), names.end(), name) == names.end()) {
@@ -1687,7 +1689,8 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(
     if (sensitivityData_->commodityNames().empty()) {
         names = simMarketData_->commodityVolNames();
     } else {
-        names = sensitivityData_->commodityVolNames();
+        auto commodityNames = sensitivityData_->commodityVolNames();
+        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
         // Log an ALERT if some commodity vol names in simulation market are not in the list
         for (const string& name : simMarketData_->commodityVolNames()) {
             if (find(names.begin(), names.end(), name) == names.end()) {
