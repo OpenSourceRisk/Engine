@@ -44,7 +44,7 @@ using boost::unit_test::test_suite;
 #include "analyticlgmswaptionengine.hpp"
 #include "blackvariancecurve.hpp"
 #include "bonds.hpp"
-#include "calendars.hpp"
+#include "qle_calendars.hpp"
 #include "cashflow.hpp"
 #include "commodityforward.hpp"
 #include "crossassetmodel.hpp"

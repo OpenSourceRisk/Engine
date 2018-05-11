@@ -32,7 +32,7 @@ QLE_TESTS = \
 	discountingcommodityforwardengine.hpp discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
 	bonds.hpp bonds.cpp \
-	calendars.hpp calendars.cpp \
+	qle_calendars.hpp qle_calendars.cpp \
 	utilities.hpp \
     generalisedreplicatingvarianceswapengine.hpp generalisedreplicatingvarianceswapengine.cpp
 
