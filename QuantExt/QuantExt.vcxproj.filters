@@ -537,20 +537,8 @@
     <ClInclude Include="qle\instruments\impliedbondspread.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\termstructures\optionletstripper3.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\strippedatmoptionletadapter.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\datedstrippedatmoptionletadapter.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\optionletatmstripper.hpp">
-      <Filter>termstructures</Filter>
-    </ClInclude>
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
-      <Filter>cashflows</Filter>    
+      <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
       <Filter>pricingengines</Filter>
@@ -582,6 +570,27 @@
     <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
     <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
+    <ClInclude Include="qle\calendars\all.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\chile.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\colombia.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\malaysia.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\peru.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\philippines.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\thailand.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -622,6 +631,12 @@
     </Filter>
     <Filter Include="utilities">
       <UniqueIdentifier>{e0dfc578-ff16-4b64-a977-3cf9e8ebd310}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="time">
+      <UniqueIdentifier>{a613e638-0ceb-4ac4-8d1a-9533b2d31270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="time\calendars">
+      <UniqueIdentifier>{127ebe18-cbb6-4387-b8ac-95cae7669e94}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -949,21 +964,9 @@
     <ClCompile Include="qle\instruments\impliedbondspread.cpp">
       <Filter>instruments</Filter>
     </ClCompile>
-    <ClCompile Include="qle\termstructures\optionletstripper3.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\strippedatmoptionletadapter.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\datedstrippedatmoptionletadapter.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\termstructures\optionletatmstripper.cpp">
-      <Filter>termstructures</Filter>
-    </ClCompile>
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
       <Filter>cashflows</Filter>
-    </ClCompile>	    
+    </ClCompile>
     <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
@@ -972,6 +975,24 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\fixedbmaswap.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\chile.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\colombia.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\malaysia.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\peru.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\philippines.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\thailand.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

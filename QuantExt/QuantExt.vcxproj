@@ -490,6 +490,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="qle\auto_link.hpp" />
+    <ClInclude Include="qle\calendars\all.hpp" />
+    <ClInclude Include="qle\calendars\chile.hpp" />
+    <ClInclude Include="qle\calendars\colombia.hpp" />
+    <ClInclude Include="qle\calendars\malaysia.hpp" />
+    <ClInclude Include="qle\calendars\peru.hpp" />
+    <ClInclude Include="qle\calendars\philippines.hpp" />
+    <ClInclude Include="qle\calendars\thailand.hpp" />
     <ClInclude Include="qle\cashflows\all.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
@@ -681,6 +688,12 @@
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="qle\calendars\chile.cpp" />
+    <ClCompile Include="qle\calendars\colombia.cpp" />
+    <ClCompile Include="qle\calendars\malaysia.cpp" />
+    <ClCompile Include="qle\calendars\peru.cpp" />
+    <ClCompile Include="qle\calendars\philippines.cpp" />
+    <ClCompile Include="qle\calendars\thailand.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcoupon.cpp" />
     <ClCompile Include="qle\cashflows\averageonindexedcouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\couponpricer.cpp" />

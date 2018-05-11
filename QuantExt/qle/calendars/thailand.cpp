@@ -31,7 +31,6 @@ namespace QuantLib {
         Weekday w = date.weekday();
         Day d = date.dayOfMonth();
         Month m = date.month();
-        Year y = date.year();
         if (isWeekend(w)
             // New Years Day
             || ((d == 1 || ((d == 2 || d == 3) && w == Monday))
