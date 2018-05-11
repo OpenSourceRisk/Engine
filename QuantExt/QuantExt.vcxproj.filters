@@ -558,6 +558,12 @@
     <ClInclude Include="qle\indexes\ibor\seksior.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\bmaindexwrapper.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
@@ -966,6 +972,9 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\equityindex.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\fixedbmaswap.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
     <ClCompile Include="qle\calendars\chile.cpp">
       <Filter>time\calendars</Filter>

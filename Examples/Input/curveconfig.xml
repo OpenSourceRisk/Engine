@@ -461,7 +461,7 @@
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
-  </YieldCurve>
+    </YieldCurve>
     <YieldCurve>
       <CurveId>SEK-IN-USD</CurveId>
       <CurveDescription>SEK FX Fwd discount curve</CurveDescription>
@@ -521,7 +521,7 @@
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-  <YieldCurve>
+    <YieldCurve>
       <CurveId>CAD-IN-USD</CurveId>
       <CurveDescription>CAD collateralised in USD discount curve</CurveDescription>
       <Currency>CAD</Currency>
@@ -1327,6 +1327,37 @@
       </Segments>
     </YieldCurve>
     <YieldCurve>
+      <CurveId>USDBMA</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <DiscountCurve>USD3M</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>BMA Basis Swap</Type>
+          <Quotes>
+            <Quote>BMA_SWAP/RATIO/USD/3M/3M</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/1Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/2Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/3Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/4Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/5Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/6Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/7Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/8Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/9Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/10Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/12Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/15Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/20Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/25Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/30Y</Quote>
+          </Quotes>
+          <Conventions>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Conventions>
+          <ProjectionCurve>USD3M</ProjectionCurve>
+        </Simple>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>GBP1D</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
@@ -1670,8 +1701,8 @@
           <ProjectionCurve>JPY3M</ProjectionCurve>
         </Simple>
       </Segments>
-  </YieldCurve>
-   <YieldCurve>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>JPY-IN-USD</CurveId>
       <CurveDescription>JPY collateralised in USD discount curve</CurveDescription>
       <Currency>JPY</Currency>

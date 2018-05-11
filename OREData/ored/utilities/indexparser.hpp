@@ -30,6 +30,7 @@
 #include <ql/indexes/swapindex.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 
 using std::string;
 using QuantLib::IborIndex;
