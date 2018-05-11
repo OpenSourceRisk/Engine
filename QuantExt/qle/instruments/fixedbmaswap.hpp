@@ -22,137 +22,126 @@
     \ingroup instruments
 */
 
-
 #ifndef quantlib_makefixedbmaswap_hpp
 #define quantlib_makefixedbmaswap_hpp
 
-#include <ql/instruments/swap.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/instruments/swap.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-    //! swap paying a fixed rate against BMA coupons
-    class FixedBMASwap : public Swap {
-    public:
-        class results;
-        class engine;
-        enum Type { Receiver = -1, Payer = 1 };
-        FixedBMASwap(Type type,
-            Real nominal,
-            // Fixed leg
-            const Schedule& fixedSchedule,
-            Rate fixedRate,
-            const DayCounter& fixedDayCount,
-            // BMA leg
-            const Schedule& bmaSchedule,
-            const boost::shared_ptr<BMAIndex>& bmaIndex,
-            const DayCounter& bmaDayCount);
+//! swap paying a fixed rate against BMA coupons
+class FixedBMASwap : public Swap {
+public:
+    class results;
+    class engine;
+    enum Type { Receiver = -1, Payer = 1 };
+    FixedBMASwap(Type type, Real nominal,
+                 // Fixed leg
+                 const Schedule& fixedSchedule, Rate fixedRate, const DayCounter& fixedDayCount,
+                 // BMA leg
+                 const Schedule& bmaSchedule, const boost::shared_ptr<BMAIndex>& bmaIndex,
+                 const DayCounter& bmaDayCount);
 
-        //! \name Inspectors
-        //@{
-        Real fixedRate() const;
-        Real nominal() const;
-        //! "payer" or "receiver" refer to the BMA leg
-        Type type() const;
-        const Leg& bmaLeg() const;
-        const Leg& fixedLeg() const;
-        //@}
+    //! \name Inspectors
+    //@{
+    Real fixedRate() const;
+    Real nominal() const;
+    //! "payer" or "receiver" refer to the BMA leg
+    Type type() const;
+    const Leg& bmaLeg() const;
+    const Leg& fixedLeg() const;
+    //@}
 
-        //! \name Results
-        //@{
-        Real fixedLegBPS() const;
-        Real fixedLegNPV() const;
-        Rate fairRate() const;
+    //! \name Results
+    //@{
+    Real fixedLegBPS() const;
+    Real fixedLegNPV() const;
+    Rate fairRate() const;
 
-        Real bmaLegBPS() const;
-        Real bmaLegNPV() const;
-        //@}
-        //results
-        void fetchResults(const PricingEngine::results*) const;
-    private:
-        Type type_;
-        Real nominal_;
-        Rate fixedRate_;
-        //results
-        mutable Rate fairRate_;
-    };
+    Real bmaLegBPS() const;
+    Real bmaLegNPV() const;
+    //@}
+    // results
+    void fetchResults(const PricingEngine::results*) const;
 
-    class FixedBMASwap::results : public Swap::results {
-        public:
-            Rate fairRate;
-            void reset();
-    };
-    
-    class FixedBMASwap::engine : GenericEngine<FixedBMASwap::arguments,
-                                               FixedBMASwap::results> {};
-    // factory class for making fixed vs bma swaps
-    
-    class MakeFixedBMASwap {
-    public:
-        MakeFixedBMASwap(const Period& swapTenor,
-            const boost::shared_ptr<BMAIndex>& bmaIndex,
-            Rate fixedRate = Null<Rate>(),
-            const Period& forwardStart = 0 * Days);
+private:
+    Type type_;
+    Real nominal_;
+    Rate fixedRate_;
+    // results
+    mutable Rate fairRate_;
+};
 
-        operator FixedBMASwap() const;
-        operator boost::shared_ptr<FixedBMASwap>() const;
+class FixedBMASwap::results : public Swap::results {
+public:
+    Rate fairRate;
+    void reset();
+};
 
-        // We regard the BMA leg parameters as fixed by convention apart from tenor
-        // and provide a factory for the fixed leg per MakeVanillaSwap
+class FixedBMASwap::engine : GenericEngine<FixedBMASwap::arguments, FixedBMASwap::results> {};
+// factory class for making fixed vs bma swaps
 
-        MakeFixedBMASwap& receiveFixed(bool flag = true);
-        MakeFixedBMASwap& withType(FixedBMASwap::Type type);
-        MakeFixedBMASwap& withNominal(Real n);
-        MakeFixedBMASwap& withBMALegTenor(const Period& tenor);
+class MakeFixedBMASwap {
+public:
+    MakeFixedBMASwap(const Period& swapTenor, const boost::shared_ptr<BMAIndex>& bmaIndex,
+                     Rate fixedRate = Null<Rate>(), const Period& forwardStart = 0 * Days);
 
-        MakeFixedBMASwap& withSettlementDays(Natural settlementDays);
-        MakeFixedBMASwap& withEffectiveDate(const Date&);
-        MakeFixedBMASwap& withTerminationDate(const Date&);
+    operator FixedBMASwap() const;
+    operator boost::shared_ptr<FixedBMASwap>() const;
 
-        MakeFixedBMASwap& withFixedLegTenor(const Period& t);
-        MakeFixedBMASwap& withFixedLegCalendar(const Calendar& cal);
-        MakeFixedBMASwap& withFixedLegConvention(BusinessDayConvention bdc);
-        MakeFixedBMASwap& withFixedLegTerminationDateConvention(
-            BusinessDayConvention bdc);
-        MakeFixedBMASwap& withFixedLegRule(DateGeneration::Rule r);
-        MakeFixedBMASwap& withFixedLegEndOfMonth(bool flag = true);
-        MakeFixedBMASwap& withFixedLegFirstDate(const Date& d);
-        MakeFixedBMASwap& withFixedLegNextToLastDate(const Date& d);
-        MakeFixedBMASwap& withFixedLegDayCount(const DayCounter& dc);
+    // We regard the BMA leg parameters as fixed by convention apart from tenor
+    // and provide a factory for the fixed leg per MakeVanillaSwap
 
-        MakeFixedBMASwap& withDiscountingTermStructure(
-            const Handle<YieldTermStructure>& discountCurve);
-        MakeFixedBMASwap& withPricingEngine(
-            const boost::shared_ptr<PricingEngine>& engine);
+    MakeFixedBMASwap& receiveFixed(bool flag = true);
+    MakeFixedBMASwap& withType(FixedBMASwap::Type type);
+    MakeFixedBMASwap& withNominal(Real n);
+    MakeFixedBMASwap& withBMALegTenor(const Period& tenor);
 
-    private:
-        Period swapTenor_;
-        boost::shared_ptr<BMAIndex> bmaIndex_;
-        Rate fixedRate_;
-        Period fixedTenor_;
-        Period forwardStart_;
+    MakeFixedBMASwap& withSettlementDays(Natural settlementDays);
+    MakeFixedBMASwap& withEffectiveDate(const Date&);
+    MakeFixedBMASwap& withTerminationDate(const Date&);
 
-        Natural settlementDays_;
-        Date effectiveDate_, terminationDate_;
-        Calendar fixedCalendar_, bmaCalendar_;
+    MakeFixedBMASwap& withFixedLegTenor(const Period& t);
+    MakeFixedBMASwap& withFixedLegCalendar(const Calendar& cal);
+    MakeFixedBMASwap& withFixedLegConvention(BusinessDayConvention bdc);
+    MakeFixedBMASwap& withFixedLegTerminationDateConvention(BusinessDayConvention bdc);
+    MakeFixedBMASwap& withFixedLegRule(DateGeneration::Rule r);
+    MakeFixedBMASwap& withFixedLegEndOfMonth(bool flag = true);
+    MakeFixedBMASwap& withFixedLegFirstDate(const Date& d);
+    MakeFixedBMASwap& withFixedLegNextToLastDate(const Date& d);
+    MakeFixedBMASwap& withFixedLegDayCount(const DayCounter& dc);
 
-        FixedBMASwap::Type type_;
-        Real nominal_;
-        Period bmaLegTenor_;
-        BusinessDayConvention fixedConvention_, fixedTerminationDateConvention_;
-        BusinessDayConvention bmaConvention_, bmaTerminationDateConvention_;
-        DateGeneration::Rule fixedRule_, bmaRule_;
-        bool fixedEndOfMonth_, bmaEndOfMonth_;
-        Date fixedFirstDate_, fixedNextToLastDate_;
-        Date bmaFirstDate_, bmaNextToLastDate_;
-        Spread bmaSpread_;
-        DayCounter fixedDayCount_, bmaDayCount_;
+    MakeFixedBMASwap& withDiscountingTermStructure(const Handle<YieldTermStructure>& discountCurve);
+    MakeFixedBMASwap& withPricingEngine(const boost::shared_ptr<PricingEngine>& engine);
 
-        boost::shared_ptr<PricingEngine> engine_;
-    };
-}
+private:
+    Period swapTenor_;
+    boost::shared_ptr<BMAIndex> bmaIndex_;
+    Rate fixedRate_;
+    Period fixedTenor_;
+    Period forwardStart_;
+
+    Natural settlementDays_;
+    Date effectiveDate_, terminationDate_;
+    Calendar fixedCalendar_, bmaCalendar_;
+
+    FixedBMASwap::Type type_;
+    Real nominal_;
+    Period bmaLegTenor_;
+    BusinessDayConvention fixedConvention_, fixedTerminationDateConvention_;
+    BusinessDayConvention bmaConvention_, bmaTerminationDateConvention_;
+    DateGeneration::Rule fixedRule_, bmaRule_;
+    bool fixedEndOfMonth_, bmaEndOfMonth_;
+    Date fixedFirstDate_, fixedNextToLastDate_;
+    Date bmaFirstDate_, bmaNextToLastDate_;
+    Spread bmaSpread_;
+    DayCounter fixedDayCount_, bmaDayCount_;
+
+    boost::shared_ptr<PricingEngine> engine_;
+};
+} // namespace QuantExt
 
 #endif
-
