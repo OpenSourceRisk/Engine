@@ -155,9 +155,11 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
-        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"USD-SIFMA", boost::make_shared <IborIndexParserBMA<BMAIndexWrapper>>()} };
-
+        {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
+        {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
+        {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {

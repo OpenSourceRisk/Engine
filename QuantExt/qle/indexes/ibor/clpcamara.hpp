@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,36 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
+/*! \file clpcamara.hpp
+    \brief CLP-CAMARA index
     \ingroup indexes
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_clpcamara_hpp
+#define quantext_clpcamara_hpp
 
-#include <ql/currencies/asia.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/calendars/chile.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
+//! CLP-CAMARA index
+//! CLP-CAMARA rate
 
-\warning Check roll convention and EOM.
-
-No MYR Calendar in QuantLib
-
-\ingroup indexes
-*/
-class MYRKlibor : public IborIndex {
+class CLPCamara : public IborIndex {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    CLPCamara(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("CLP-CAMARA", tenor, 2, CLPCurrency(), Chile(), ModifiedFollowing, false, Actual360(),
+                    h) {}
 };
 } // namespace QuantExt
 

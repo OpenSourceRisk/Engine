@@ -73,7 +73,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities();
+    void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
 
     //! Return base NPV by trade, before shift
     Real baseNPV(std::string& id) const;

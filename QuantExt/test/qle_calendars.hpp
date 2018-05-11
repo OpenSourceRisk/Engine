@@ -16,32 +16,30 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
+/*! \file test/qle_calendars.hpp
+    \brief Calendar tests
+*/
+
+#ifndef quantext_test_qle_calendars_hpp
+#define quantext_test_qle_calendars_hpp
 
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
 
-//! Test NPV cubes
-/*!
-  \ingroup tests
- */
-class CubeTest {
+//! Calendar tests
+class CalendarsTest {
 public:
-    //! Test reading and writing from/to a 100x100x1000 (trades, dates, samples) single precision cube
-    static void testSinglePrecisionInMemoryCube();
-    //! Test reading and writing from/to a 100x100x1000 (trades, dates, samples) double precision cube
-    static void testDoublePrecisionInMemoryCube();
-    // ! Test with cube of depth N
-    static void testSinglePrecisionInMemoryCubeN();
-    // ! Test with cube of depth N
-    static void testDoublePrecisionInMemoryCubeN();
-    // ! Test reading and writing of Cube
-    static void testDoublePrecisionInMemoryCubeFileIO();
-    // ! Test reading and writing of Cube of depth N
-    static void testDoublePrecisionInMemoryCubeFileNIO();
-    // ! Test the get/set methods by trade id and date
-    static void testInMemoryCubeGetSetbyDateID();
+    /*! Test whether currencies were set up with correct data. */
+    static void testPhilippineCalendar();
+    static void testColombianCalendar();
+    static void testPeruvianCalendar();
+    static void testThaiCalendar();
+    static void testMalaysianCalendar();
+    static void testChileanCalendar();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite
+
+#endif

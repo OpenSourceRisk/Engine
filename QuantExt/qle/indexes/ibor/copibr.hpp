@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,36 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
+/*! \file copibr.hpp
+    \brief COP-IBR index
     \ingroup indexes
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_copibr_hpp
+#define quantext_copibr_hpp
 
-#include <ql/currencies/asia.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
+//! COP-IBR index
+//! COP-IBR rate
 
-\warning Check roll convention and EOM.
-
-No MYR Calendar in QuantLib
-
-\ingroup indexes
-*/
-class MYRKlibor : public IborIndex {
+class COPIbr : public IborIndex {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    COPIbr(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("COP-IBR", tenor, 2, COPCurrency(), Colombia(), ModifiedFollowing, false, Actual360(),
+                    h) {}
 };
 } // namespace QuantExt
 

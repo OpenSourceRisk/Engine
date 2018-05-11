@@ -550,7 +550,7 @@
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
-      <Filter>cashflows</cashflows>    
+      <Filter>cashflows</Filter>    
     </ClInclude>
     <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
       <Filter>pricingengines</Filter>
@@ -576,6 +576,12 @@
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
+    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
+    <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
+    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
+    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

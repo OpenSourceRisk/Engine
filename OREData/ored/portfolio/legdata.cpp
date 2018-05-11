@@ -108,7 +108,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
-    XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
