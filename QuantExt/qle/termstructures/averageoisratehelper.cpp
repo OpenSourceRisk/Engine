@@ -75,7 +75,7 @@ void AverageOISRateHelper::initializeDates() {
 Real AverageOISRateHelper::impliedQuote() const {
 
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
-    averageOIS_->deepUpdate();
+    averageOIS_->recalculate();
 
     // Calculate the fair fixed rate after accounting for the
     // spread in the spread quote. Recall, the spread quote was

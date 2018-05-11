@@ -117,7 +117,7 @@ void TenorBasisSwapHelper::setTermStructure(YieldTermStructure* t) {
 
 Real TenorBasisSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "Termstructure not set");
-    swap_->deepUpdate();
+    swap_->recalculate();
     return (spreadOnShort_ ? swap_->fairShortLegSpread() : swap_->fairLongLegSpread());
 }
 

@@ -90,7 +90,7 @@ void OIBSHelper::setTermStructure(YieldTermStructure* t) {
 Real OIBSHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_ != 0, "term structure not set");
     // we didn't register as observers - force calculation
-    swap_->deepUpdate();
+    swap_->recalculate();
     return swap_->fairOvernightSpread();
 }
 

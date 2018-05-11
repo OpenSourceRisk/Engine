@@ -76,9 +76,9 @@ public:
 
     //! call update on enclosed instrument(s)
     virtual void updateQlInstruments() {
-        instrument_->deepUpdate();
+        instrument_->update();
         for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
-            additionalInstruments_[i]->deepUpdate();
+            additionalInstruments_[i]->update();
     }
 
     //! is it an Option?
