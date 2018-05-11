@@ -658,6 +658,7 @@
     <ClCompile Include="payment.cpp" />
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
+    <ClCompile Include="qle_calendars.cpp" />
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
@@ -692,6 +693,7 @@
     <ClInclude Include="payment.hpp" />
     <ClInclude Include="pricecurve.hpp" />
     <ClInclude Include="pricetermstructureadapter.hpp" />
+    <ClInclude Include="qle_calendars.hpp" />
     <ClInclude Include="ratehelpers.hpp" />
     <ClInclude Include="stabilisedglls.hpp" />
     <ClInclude Include="staticallycorrectedyieldtermstructure.hpp" />
