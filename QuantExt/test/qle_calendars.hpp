@@ -16,37 +16,30 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
-    \ingroup indexes
+/*! \file test/qle_calendars.hpp
+    \brief Calendar tests
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_test_qle_calendars_hpp
+#define quantext_test_qle_calendars_hpp
 
-#include <ql/currencies/asia.hpp>
-#include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <boost/test/unit_test.hpp>
 
-using namespace QuantLib;
+namespace testsuite {
 
-namespace QuantExt {
-
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
-
-\warning Check roll convention and EOM.
-
-No MYR Calendar in QuantLib
-
-\ingroup indexes
-*/
-class MYRKlibor : public IborIndex {
+//! Calendar tests
+class CalendarsTest {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    /*! Test whether currencies were set up with correct data. */
+    static void testPhilippineCalendar();
+    static void testColombianCalendar();
+    static void testPeruvianCalendar();
+    static void testThaiCalendar();
+    static void testMalaysianCalendar();
+    static void testChileanCalendar();
+
+    static boost::unit_test_framework::test_suite* suite();
 };
-} // namespace QuantExt
+} // namespace testsuite
 
 #endif

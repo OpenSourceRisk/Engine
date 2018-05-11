@@ -16,36 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
+/*! \file brlcdi.hpp
+    \brief BRL-CDI index
     \ingroup indexes
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_brlcdi_hpp
+#define quantext_brlcdi_hpp
 
-#include <ql/currencies/asia.hpp>
+#include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/time/calendars/brazil.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
+//! BRL-CDI index
 
-\warning Check roll convention and EOM.
+//****** Figure out day count - According to BBG: DU252 ******
 
-No MYR Calendar in QuantLib
-
-\ingroup indexes
-*/
-class MYRKlibor : public IborIndex {
+class BRLCdi : public IborIndex {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    BRLCdi(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("BRL-CDI", tenor, 0, BRLCurrency(), Brazil(), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 

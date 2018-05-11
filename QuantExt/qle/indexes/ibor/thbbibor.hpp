@@ -16,36 +16,32 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
+/*! \file thbbibor.hpp
+    \brief THB-BIBOR index
     \ingroup indexes
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_thbbibor_hpp
+#define quantext_thbbibor_hpp
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/thailand.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
+//! THB-BIBOR index/
+/*! THB-BIBOR rate.
 
-\warning Check roll convention and EOM.
-
-No MYR Calendar in QuantLib
-
-\ingroup indexes
+No THB Calendar in QuantLib
 */
-class MYRKlibor : public IborIndex {
+class THBBibor : public IborIndex {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    THBBibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("THB-BIBOR", tenor, 2, THBCurrency(), Thailand(), ModifiedFollowing, false, Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 

@@ -161,6 +161,7 @@ esac
 AC_CONFIG_FILES([
     Makefile
     qle/Makefile
+    qle/calendars/Makefile
     qle/cashflows/Makefile
     qle/currencies/Makefile
     qle/indexes/Makefile

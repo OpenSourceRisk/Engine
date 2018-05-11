@@ -16,36 +16,34 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file myrklibor.hpp
-    \brief MYR-KLIBOR index
+/*! \file phpphiref.hpp
+    \brief PHP-PHIREF index
     \ingroup indexes
 */
 
-#ifndef quantext_myrklibor_hpp
-#define quantext_myrklibor_hpp
+#ifndef quantext_phpphiref_hpp
+#define quantext_phpphiref_hpp
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-//! MYR-KLIBOR index
-/*! MYR-KLIBOR rate.
+//! PHP-PHIREF index
+/*! PHP-PHIREF rate.
 
-\warning Check roll convention and EOM.
-
-No MYR Calendar in QuantLib
+No PHP Calendar in QuantLib
 
 \ingroup indexes
 */
-class MYRKlibor : public IborIndex {
+class PHPPhiref : public IborIndex {
 public:
-    MYRKlibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("MYR-KLIBOR", tenor, 2, MYRCurrency(), Malaysia(), ModifiedFollowing, false, Actual365Fixed(), h) {}
+    PHPPhiref(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("PHP-PHIREF", tenor, 2, PHPCurrency(), Philippines(), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 
