@@ -117,18 +117,23 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube)
 }
 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
+    
     LOG("Initialise sim market for sensitivity analysis");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
-    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarket_->baseScenario(),
-                                                                          simMarketData_, overrideTenors_);
+    LOG("Sim market initialised for sensitivity analysis");
+
+    LOG("Create scenario factory for sensitivity analysis");
+    boost::shared_ptr<Scenario> baseScenario = simMarket_->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
+    LOG("Scenario factory created for sensitivity analysis");
+
+    LOG("Create scenario generator for sensitivity analysis");
+    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
+        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_);
+    LOG("Scenario generator created for sensitivity analysis");
+
+    // Set simulation market's scenario generator
     simMarket_->scenarioGenerator() = scenarioGenerator_;
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenFactory =
-        (scenFact != NULL) ? scenFact
-                           : boost::make_shared<CloneScenarioFactory>(
-                                 baseScen); // needed so that sensi scenarios are consistent with base scenario
-    LOG("Generating sensitivity scenarios");
-    scenarioGenerator_->generateScenarios(scenFactory);
 }
 
 boost::shared_ptr<EngineFactory>
