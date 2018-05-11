@@ -19,7 +19,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/all.hpp>
-#include <qle/calendars/peru.hpp>
 #include <test/calendars.hpp>
 
 using namespace QuantLib;
