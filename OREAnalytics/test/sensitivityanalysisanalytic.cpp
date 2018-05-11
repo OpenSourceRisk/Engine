@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "sensitivityanalysis2.hpp"
+#include "sensitivityanalysisanalytic.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
@@ -235,7 +235,7 @@ bool check(const Real reference, const Real value) {
 
 } // anonymous namespace
 
-void SensitivityAnalysis2Test::testSensitivities() {
+void SensitivityAnalysisAnalyticTest::testSensitivities() {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
 
@@ -1429,10 +1429,10 @@ void SensitivityAnalysis2Test::testSensitivities() {
     BOOST_CHECK(true);
 }
 
-test_suite* SensitivityAnalysis2Test::suite() {
+test_suite* SensitivityAnalysisAnalyticTest::suite() {
 
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysis2Test");
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysis2Test::testSensitivities));
+    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisAnalyticTest");
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisAnalyticTest::testSensitivities));
     return suite;
 }
 } // namespace testsuite

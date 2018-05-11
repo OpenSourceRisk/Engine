@@ -42,10 +42,10 @@
     <ClInclude Include="sensitivityperformance.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="sensitivityanalysis2.hpp">
+    <ClInclude Include="shiftscenariogenerator.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="shiftscenariogenerator.hpp">
+    <ClInclude Include="sensitivityanalysisanalytic.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -81,13 +81,13 @@
     <ClCompile Include="sensitivityperformance.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="sensitivityanalysis2.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="testmarket.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="shiftscenariogenerator.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityanalysisanalytic.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
