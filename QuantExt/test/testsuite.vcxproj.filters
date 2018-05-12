@@ -89,6 +89,12 @@
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="qle_calendars.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -196,6 +202,12 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="C.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="qle_calendars.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -98,7 +98,8 @@
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY1D</Index>
-  </IndexForwardingCurves>
+    <Index name="USD-SIFMA-1W">Yield/USD/USDBMA</Index>
+    </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
       <Discounting>EUR-EONIA</Discounting>
@@ -202,10 +203,10 @@
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
   </EquityVolatilities>
-   <Securities id="collateral_eur">
+  <Securities id="collateral_eur">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
-   <Securities id="default">
+  <Securities id="default">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
   <CommodityCurves id="default">

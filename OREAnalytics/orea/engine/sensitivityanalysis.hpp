@@ -73,7 +73,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities();
+    void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
 
     //! Return base NPV by trade, before shift
     Real baseNPV(std::string& id) const;
@@ -135,7 +135,8 @@ protected:
     virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
     //! build engine factory
     virtual boost::shared_ptr<EngineFactory>
-    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {}) const;
+    buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {},
+                 const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {}) const;
     //! reset and rebuild the portfolio to make use of the appropriate engine factory
     virtual void resetPortfolio(const boost::shared_ptr<EngineFactory>& factory);
     /*! build the ScenarioSimMarket that will be used by ValuationEngine and

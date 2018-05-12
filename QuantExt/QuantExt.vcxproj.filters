@@ -546,6 +546,15 @@
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>  
+    <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\equityindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\dkkois.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -557,6 +566,39 @@
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\seksior.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\bmaindexwrapper.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
+    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
+    <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
+    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
+    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
+    <ClInclude Include="qle\calendars\all.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\chile.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\colombia.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\malaysia.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\peru.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\philippines.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\thailand.hpp">
+      <Filter>time\calendars</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -598,6 +640,12 @@
     </Filter>
     <Filter Include="utilities">
       <UniqueIdentifier>{e0dfc578-ff16-4b64-a977-3cf9e8ebd310}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="time">
+      <UniqueIdentifier>{a613e638-0ceb-4ac4-8d1a-9533b2d31270}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="time\calendars">
+      <UniqueIdentifier>{127ebe18-cbb6-4387-b8ac-95cae7669e94}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -927,6 +975,37 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\equityindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\fixedbmaswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\chile.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\colombia.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\malaysia.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\peru.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\philippines.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\thailand.cpp">
+      <Filter>time\calendars</Filter>
+>>>>>>> master
     </ClCompile>
   </ItemGroup>
 </Project>

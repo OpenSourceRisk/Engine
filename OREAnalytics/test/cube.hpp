@@ -40,7 +40,8 @@ public:
     static void testDoublePrecisionInMemoryCubeFileIO();
     // ! Test reading and writing of Cube of depth N
     static void testDoublePrecisionInMemoryCubeFileNIO();
-
+    // ! Test the get/set methods by trade id and date
+    static void testInMemoryCubeGetSetbyDateID();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite

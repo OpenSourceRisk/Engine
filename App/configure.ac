@@ -4,7 +4,7 @@ AC_INIT([App], [1.8.3],
         [App])
 AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([ore.cpp])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign nostdinc])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_COPYRIGHT([

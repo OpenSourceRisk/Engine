@@ -6,7 +6,7 @@ AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([ored/ored.hpp])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([ored/config.hpp])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign nostdinc])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_COPYRIGHT([

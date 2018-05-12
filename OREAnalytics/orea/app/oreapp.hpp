@@ -28,12 +28,14 @@
 #include <orea/aggregation/all.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
+#include <orea/app/sensitivityrunner.hpp>
 #include <orea/engine/parametricvar.hpp>
 #include <orea/scenario/scenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/ored.hpp>
+#include <ored/portfolio/tradefactory.hpp>
 
 using namespace ore::data;
 
@@ -72,7 +74,7 @@ public:
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
                                                                 const string& groupName = "setup");
     //! build trade factory
-    virtual boost::shared_ptr<TradeFactory> buildTradeFactory();
+    boost::shared_ptr<TradeFactory> buildTradeFactory();
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
 
@@ -101,8 +103,6 @@ public:
     //! run postProcessor to generate reports from cube
     void runPostProcessor();
 
-    //! run sensitivity analysis and write out reports
-    virtual void runSensitivityAnalysis();
     //! run stress tests and write out report
     virtual void runStressTest();
     //! run parametric var and write out report
@@ -129,16 +129,14 @@ public:
 protected:
     //! Get report writer
     virtual boost::shared_ptr<ReportWriter> getReportWriter();
-
-    //! Initialize input parameters to the sensitivities analysis
-    void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                              boost::shared_ptr<SensitivityScenarioData>& sensiData,
-                              boost::shared_ptr<EngineData>& engineData, boost::shared_ptr<Portfolio>& sensiPortfolio,
-                              string& marketConfiguration);
-
-    //! Write out some standard sensitivities reports
-    void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
-
+    //! Get sensitivity runner
+    virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
+    //! Add extra engine builders
+    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() { return {}; };
+    //! Add extra leg builders
+    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() { return {}; };
+    //! Add extra trade builders
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() { return {}; };
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,

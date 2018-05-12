@@ -44,6 +44,7 @@ using boost::unit_test::test_suite;
 #include "analyticlgmswaptionengine.hpp"
 #include "blackvariancecurve.hpp"
 #include "bonds.hpp"
+#include "qle_calendars.hpp"
 #include "cashflow.hpp"
 #include "commodityforward.hpp"
 #include "crossassetmodel.hpp"
@@ -70,6 +71,7 @@ using boost::unit_test::test_suite;
 #include "swaptionvolconstantspread.hpp"
 #include "pricetermstructureadapter.hpp"
 #include "interpolatedyoycapfloortermpricesurface.hpp"
+#include "generalisedreplicatingvarianceswapengine.hpp"
 
 namespace {
 
@@ -129,7 +131,12 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
     test->add(testsuite::PriceTermStructureAdapterTest::suite());
     test->add(testsuite::BondsTest::suite());
+<<<<<<< HEAD
     test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
+=======
+    test->add(testsuite::CalendarsTest::suite());
+    test->add(testsuite::GeneralisedReplicatingVarianceSwapEngineTest::suite());
+>>>>>>> master
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

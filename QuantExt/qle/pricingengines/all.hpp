@@ -19,4 +19,5 @@
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 

@@ -179,6 +179,7 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+
 FutureConvention::FutureConvention(const string& id, const string& index)
     : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(index)) {}
 
@@ -283,6 +284,7 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions)
     : Convention(id, Type::SwapIndex), strConventions_(conventions) {}
@@ -433,13 +435,14 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
 }
 
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-                                                   const string& shortPayTenor, const string& spreadOnShort,
-                                                   const string& includeSpread, const string& subPeriodsCouponType)
+    const string& shortPayTenor, const string& spreadOnShort,
+    const string& includeSpread, const string& subPeriodsCouponType)
     : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-      strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
-      strSubPeriodsCouponType_(subPeriodsCouponType) {
+    strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
+    strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
+
 
 void TenorBasisSwapConvention::build() {
     longIndex_ = parseIborIndex(strLongIndex_);
@@ -448,7 +451,7 @@ void TenorBasisSwapConvention::build() {
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon::Compounding
-                                                             : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+        : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
 
 void TenorBasisSwapConvention::fromXML(XMLNode* node) {
@@ -481,6 +484,7 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
@@ -547,6 +551,41 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+
+BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
+    : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
+    build();
+}
+
+void BMABasisSwapConvention::build() {
+    liborIndex_ = parseIborIndex(strLiborIndex_);
+    bmaIndex_ = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBmaIndex_));
+}
+
+void BMABasisSwapConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "BMABasisSwap");
+    type_ = Type::BMABasisSwap;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strLiborIndex_ = XMLUtils::getChildValue(node, "LiborIndex", true);
+    strBmaIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
+
+    build();
+}
+
+XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("BMABasisSwap");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "LiborIndex", strLiborIndex_);
+    XMLUtils::addChild(doc, node, "BMAIndex", strBmaIndex_);
+
+    return node;
+}
+
+
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
                            const string& spotRelative)
@@ -595,6 +634,7 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
+
 
 CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays,
                                                          const string& strSettlementCalendar,
@@ -858,6 +898,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new TenorBasisSwapConvention());
         } else if (childName == "TenorBasisTwoSwap") {
             convention.reset(new TenorBasisTwoSwapConvention());
+        } else if (childName == "BMABasisSwap") {
+            convention.reset(new BMABasisSwapConvention());
         } else if (childName == "FX") {
             convention.reset(new FXConvention());
         } else if (childName == "CrossCurrencyBasis") {

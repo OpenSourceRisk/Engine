@@ -64,6 +64,16 @@ public:
         return boost::make_shared<T>(h);
     }
 };
+
+template <class T> class IborIndexParserBMA : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE( (p.length() ==7 &&  p.units() == Days) || (p.length() == 1 && p.units() == Weeks), "BMA indexes are uniquely available with a tenor of 1 week.");
+        const boost::shared_ptr<BMAIndex> bma = boost::make_shared<BMAIndex>(h);
+        return boost::make_shared<T>(bma);
+    }
+};
+
 boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -71,6 +81,19 @@ boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     QL_REQUIRE(tokens[0] == "FX", "expected first token to be FX");
     return boost::make_shared<FxIndex>(tokens[0] + "/" + tokens[1], 0, parseCurrency(tokens[2]),
                                        parseCurrency(tokens[3]), NullCalendar());
+}
+
+boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
+    QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
+    if (tokens.size() == 2) {
+        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+    }
+    else {
+        QL_FAIL("Error parsing equity string " + s);
+    }
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
@@ -132,6 +155,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"USD-SIFMA", boost::make_shared <IborIndexParserBMA<BMAIndexWrapper>>()},
+        {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
+        {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
+        {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
@@ -264,6 +291,13 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
         try {
             ret_idx = parseFxIndex(s);
         } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseEquityIndex(s);
+        }
+        catch (...) {
         }
     }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");

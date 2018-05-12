@@ -762,6 +762,30 @@
     <Index>RUB-MOSPRIME-3M</Index>
   </Swap>
   <Swap>
+    <Id>THB-6M-SWAP</Id>
+    <FixedCalendar>THB</FixedCalendar>
+    <FixedFrequency>Semiannual</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>A365</FixedDayCounter>
+    <Index>THB-BIBOR-6M</Index>
+  </Swap>
+  <Swap>
+    <Id>COP-3M-SWAP</Id>
+    <FixedCalendar>COP</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>COP-IBR-3M</Index>
+  </Swap>  
+  <Swap>
+    <Id>PHP-3M-SWAP</Id>
+    <FixedCalendar>PHP</FixedCalendar>
+    <FixedFrequency>Quarterly</FixedFrequency>
+    <FixedConvention>MF</FixedConvention>
+    <FixedDayCounter>ACT/360</FixedDayCounter>
+    <Index>PHP-PHIREF-3M</Index>
+  </Swap>
+  <Swap>
     <Id>TWD-3M-SWAP</Id>
     <FixedCalendar>TWD</FixedCalendar>
     <FixedFrequency>Quarterly</FixedFrequency>
@@ -1036,6 +1060,11 @@
     <ShortIndex>EUR-EONIA</ShortIndex>
     <ShortPayTenor>1Y</ShortPayTenor>
   </TenorBasisSwap>
+  <BMABasisSwap>
+    <Id>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Id>
+    <LiborIndex>USD-LIBOR-3M</LiborIndex>
+    <BMAIndex>USD-SIFMA-1W</BMAIndex>
+  </BMABasisSwap>
   <!-- FX Forwards -->
   <FX>
     <Id>GBP-USD-FX-CONVENTIONS</Id>
@@ -1127,7 +1156,7 @@
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
   </FX>
-   <FX>
+  <FX>
     <Id>USD-MXN-FX-CONVENTIONS</Id>
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
@@ -1212,7 +1241,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>IDR</TargetCurrency>
-    <PointsFactor>1</PointsFactor>
+    <PointsFactor>10000</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>

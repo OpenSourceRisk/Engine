@@ -33,7 +33,9 @@ QLE_TESTS = \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
 	bonds.hpp bonds.cpp \
 	interpolatedyoycapfloortermpricesurface.hpp interpolatedyoycapfloortermpricesurface.cpp \
-	utilities.hpp
+	qle_calendars.hpp qle_calendars.cpp \
+	utilities.hpp \
+    generalisedreplicatingvarianceswapengine.hpp generalisedreplicatingvarianceswapengine.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

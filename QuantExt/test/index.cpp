@@ -73,7 +73,7 @@ void IndexTest::testIborIndex() {
                                   { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
                                   { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
                                   { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
-                                  { MYRKlibor(pd), "MYR-KLIBOR", TARGET().name(), MYRCurrency().name() },
+                                  { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
                                   { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
 
     Size size = sizeof(data) / sizeof(data[0]);

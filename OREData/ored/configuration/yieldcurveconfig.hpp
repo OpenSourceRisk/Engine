@@ -65,6 +65,7 @@ public:
         AverageOIS,
         TenorBasis,
         TenorBasisTwo,
+        BMABasis,
         FXForward,
         CrossCcyBasis
     };

@@ -42,6 +42,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
+        {"BMA_SWAP", MarketDatum::InstrumentType::BMA_SWAP },
         {"CDS", MarketDatum::InstrumentType::CDS},
         {"CDS_INDEX", MarketDatum::InstrumentType::CDS_INDEX},
         {"FX", MarketDatum::InstrumentType::FX_SPOT},
@@ -213,6 +214,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         const string& ccy = tokens[4];
         Period maturity = parsePeriod(tokens[5]);
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
+    }
+
+    case MarketDatum::InstrumentType::BMA_SWAP: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        Period maturity = parsePeriod(tokens[4]);
+        return boost::make_shared<BMASwapQuote>(value, asof, datumName, quoteType, term, ccy, maturity);
     }
 
     case MarketDatum::InstrumentType::CC_BASIS_SWAP: {

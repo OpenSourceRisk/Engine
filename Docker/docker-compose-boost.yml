@@ -2,10 +2,10 @@ version: '3'
 
 services:
   build_env_boost:
-    image: build_env_boost:1.63.0
+    image: build_env_boost:1.65.1
     build:
       context: .
       dockerfile: Dockerfile-Boost
       args:
-        - boost_version=1.63.0
-        - boost_dir=boost_1_63_0
+        - boost_version=1.65.1
+        - boost_dir=boost_1_65_1

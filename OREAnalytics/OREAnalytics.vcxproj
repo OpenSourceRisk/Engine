@@ -43,6 +43,7 @@
     <ClInclude Include="orea\app\oreapp.hpp" />
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
+    <ClInclude Include="orea\app\sensitivityrunner.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
     <ClInclude Include="orea\cube\all.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
@@ -53,6 +54,7 @@
     <ClInclude Include="orea\engine\parametricvar.hpp" />
     <ClInclude Include="orea\engine\riskfilter.hpp" />
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
+    <ClInclude Include="orea\engine\sensitivitycube.hpp" />
     <ClInclude Include="orea\engine\sensitivitydata.hpp" />
     <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
@@ -90,6 +92,7 @@
     <ClCompile Include="orea\app\oreapp.cpp" />
     <ClCompile Include="orea\app\parameters.cpp" />
     <ClCompile Include="orea\app\reportwriter.cpp" />
+    <ClCompile Include="orea\app\sensitivityrunner.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
     <ClCompile Include="orea\engine\parametricvar.cpp" />
     <ClCompile Include="orea\engine\riskfilter.cpp" />
