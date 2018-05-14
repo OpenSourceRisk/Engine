@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/interpolatedyoycapfloor0termpricesurface.hpp
+/*! \file test/interpolatedyoycapfloortermpricesurface.hpp
     \brief tests for InterpolatedYoyCapFloorTermPriceSurface
 */
 
