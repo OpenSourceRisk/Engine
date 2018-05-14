@@ -18,6 +18,8 @@
         <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="yyInflationCapFloorPriceSurfacesType" name="yyInflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="yyInflationCapFloorVolatilitiesType" name="yyInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
@@ -42,6 +44,8 @@
       <xs:element type="xs:string" name="CDSVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="DefaultCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="InflationCapFloorPriceSurfacesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="yyInflationCapFloorPriceSurfacesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="yyInflationCapFloorVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="EquityCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SecuritiesId" minOccurs="0"/>
@@ -232,6 +236,36 @@
   <xs:complexType name="inflationCapFloorPriceSurfacesType">
     <xs:sequence>
       <xs:element name="InflationCapFloorPriceSurface" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yyInflationCapFloorPriceSurfacesType">
+    <xs:sequence>
+      <xs:element name="yyInflationCapFloorPriceSurface" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yyInflationCapFloorVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="yyInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
