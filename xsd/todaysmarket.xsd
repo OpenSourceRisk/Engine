@@ -18,8 +18,8 @@
         <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="YYInflationCapFloorPriceSurfacesType" name="YYInflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="YYInflationCapFloorVolatilitiesType" name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="yyInflationCapFloorPriceSurfacesType" name="YYInflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
+        <xs:element type="yyInflationCapFloorVolatilitiesType" name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
         <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
@@ -248,7 +248,7 @@
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
 
-  <xs:complexType name="YYInflationCapFloorPriceSurfacesType">
+  <xs:complexType name="yyInflationCapFloorPriceSurfacesType">
     <xs:sequence>
       <xs:element name="YYInflationCapFloorPriceSurface" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
@@ -263,9 +263,9 @@
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
 
-  <xs:complexType name="YYInflationCapFloorVolatilitiesType">
+  <xs:complexType name="yyInflationCapFloorVolatilitiesType">
     <xs:sequence>
-      <xs:element name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0">
+      <xs:element name="YYInflationCapFloorVolatility" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
