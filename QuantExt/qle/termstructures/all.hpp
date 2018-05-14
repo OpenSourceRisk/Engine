@@ -45,4 +45,7 @@
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
 
