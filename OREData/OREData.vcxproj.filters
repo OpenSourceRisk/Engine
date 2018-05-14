@@ -725,7 +725,6 @@
     <ClCompile Include="ored\portfolio\legbuilders.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
-<<<<<<< HEAD
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp">
       <Filter>portfolio\builders</Filter>
     </ClCompile>
@@ -734,10 +733,9 @@
     </ClCompile>
     <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp">
       <Filter>configuration</Filter>
-=======
+    </ClCompile>
     <ClCompile Include="ored\portfolio\varianceswap.cpp">
       <Filter>portfolio</Filter>
->>>>>>> master
     </ClCompile>
   </ItemGroup>
 </Project>
