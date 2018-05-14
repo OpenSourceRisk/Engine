@@ -1005,7 +1005,6 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\thailand.cpp">
       <Filter>time\calendars</Filter>
->>>>>>> master
     </ClCompile>
   </ItemGroup>
 </Project>
