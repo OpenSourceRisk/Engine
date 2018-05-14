@@ -86,6 +86,7 @@ public:
         ZC_INFLATIONSWAP,
         ZC_INFLATIONCAPFLOOR,
         YY_INFLATIONSWAP,
+        YY_INFLATIONCAPFLOOR,
         SEASONALITY,
         EQUITY_SPOT,
         EQUITY_FWD,
@@ -805,21 +806,21 @@ private:
     Period term_;
 };
 
-//! ZC Cap Floor data class
+//! Inflation Cap Floor data class
 /*!
- This class holds single market points of type
- - ZC_INFLATION_CAPFLOOR
- Specific data comprise type (can be price or nvol or slnvol),
- index, term, cap/floor, strike
+This class holds single market points of type
+- INFLATION_CAPFLOOR
+Specific data comprise type (can be price or nvol or slnvol),
+index, term, cap/floor, strike
 
- \ingroup marketdata
- */
-class ZcInflationCapFloorQuote : public MarketDatum {
+\ingroup marketdata
+*/
+class InflationCapFloorQuote : public MarketDatum {
 public:
-    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
-                             Period term, bool isCap, const string& strike)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
-          term_(term), isCap_(isCap), strike_(strike) {}
+    InflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+        Period term, bool isCap, const string& strike, InstrumentType instrumentType)
+        : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index),
+        term_(term), isCap_(isCap), strike_(strike) {}
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -830,6 +831,23 @@ private:
     Period term_;
     bool isCap_;
     string strike_;
+};
+
+//! ZC Cap Floor data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATION_CAPFLOOR
+ Specific data comprise type (can be price or nvol or slnvol),
+ index, term, cap/floor, strike
+
+ \ingroup marketdata
+ */
+class ZcInflationCapFloorQuote : public InflationCapFloorQuote {
+public:
+    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+                             Period term, bool isCap, const string& strike)
+        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike, 
+                                 InstrumentType::ZC_INFLATIONCAPFLOOR) {}
 };
 
 //! YoY Inflation swap data class
@@ -851,6 +869,23 @@ public:
 private:
     string index_;
     Period term_;
+};
+
+//! YY Cap Floor data class
+/*!
+This class holds single market points of type
+- YY_INFLATION_CAPFLOOR
+Specific data comprise type (can be price or nvol or slnvol),
+index, term, cap/floor, strike
+
+\ingroup marketdata
+*/
+class YyInflationCapFloorQuote : public InflationCapFloorQuote {
+public:
+    YyInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+        Period term, bool isCap, const string& strike)
+        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
+            InstrumentType::YY_INFLATIONCAPFLOOR) {}
 };
 
 //! Inflation seasonality data class

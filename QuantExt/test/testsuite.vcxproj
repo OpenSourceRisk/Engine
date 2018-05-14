@@ -653,6 +653,7 @@
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
+    <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
@@ -688,6 +689,7 @@
     <ClInclude Include="fxvolsmile.hpp" />
     <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp" />
     <ClInclude Include="index.hpp" />
+    <ClInclude Include="C.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="payment.hpp" />

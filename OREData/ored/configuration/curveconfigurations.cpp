@@ -84,6 +84,8 @@ std::set<string> CurveConfigurations::quotes() const {
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : inflationCapFloorPriceSurfaceConfigs_)
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+    for (auto m : inflationCapFloorVolCurveConfigs_)
+        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : equityCurveConfigs_)
         quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : equityVolCurveConfigs_)
@@ -139,6 +141,11 @@ CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) 
     return get(curveID, inflationCapFloorPriceSurfaceConfigs_);
 }
 
+const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
+CurveConfigurations::inflationCapFloorVolCurveConfig(const string& curveID) const {
+    return get(curveID, inflationCapFloorVolCurveConfigs_);
+}
+
 const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
     return get(curveID, equityCurveConfigs_);
 }
@@ -180,6 +187,8 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
     parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
               inflationCapFloorPriceSurfaceConfigs_);
+    parseNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility",
+              inflationCapFloorVolCurveConfigs_);
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
     parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
@@ -201,6 +210,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
+    addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
     addNodes(doc, parent, "Securities", securityConfigs_);
     addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);

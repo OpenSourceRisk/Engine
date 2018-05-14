@@ -63,6 +63,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
+        {"YY_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR },
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
@@ -353,6 +354,18 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
                                                             strike);
+    }
+
+    case MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
+            "excepted C or F for Cap or Floor at position 5 in " << datumName);
+        bool isCap = tokens[4] == "C";
+        string strike = tokens[5];
+        return boost::make_shared<YyInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
+            strike);
     }
 
     case MarketDatum::InstrumentType::SEASONALITY: {

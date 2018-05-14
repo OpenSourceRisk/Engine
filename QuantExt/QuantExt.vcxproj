@@ -645,6 +645,7 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
+    <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
@@ -684,6 +685,8 @@
     <ClInclude Include="qle\termstructures\tenorbasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\yoyinflationcurveobservermoving.hpp" />
+    <ClInclude Include="qle\termstructures\yoyinflationoptionletvolstripper.hpp" />
+    <ClInclude Include="qle\termstructures\yoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobserverstatic.hpp" />
     <ClInclude Include="qle\termstructures\zeroinflationcurveobservermoving.hpp" />
   </ItemGroup>
@@ -804,6 +807,7 @@
     <ClCompile Include="qle\termstructures\swaptionvolatilityconverter.cpp" />
     <ClCompile Include="qle\termstructures\swaptionvolcube2.cpp" />
     <ClCompile Include="qle\termstructures\tenorbasisswaphelper.cpp" />
+    <ClCompile Include="qle\termstructures\yoyinflationoptionletvolstripper.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
