@@ -65,6 +65,15 @@ public:
     }
 };
 
+template <class T> class IborIndexParserBMA : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE( (p.length() ==7 &&  p.units() == Days) || (p.length() == 1 && p.units() == Weeks), "BMA indexes are uniquely available with a tenor of 1 week.");
+        const boost::shared_ptr<BMAIndex> bma = boost::make_shared<BMAIndex>(h);
+        return boost::make_shared<T>(bma);
+    }
+};
+
 boost::shared_ptr<FxIndex> parseFxIndex(const string& s) {
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -146,6 +155,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
+        {"USD-SIFMA", boost::make_shared <IborIndexParserBMA<BMAIndexWrapper>>()},
+        {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
+        {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
+        {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);

@@ -26,6 +26,7 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <stdio.h>
 
 using std::string;
@@ -155,6 +156,10 @@ void writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portf
                             notional = Null<Real>();
                             flowType = "Notional";
                         }
+                        // This BMA part here (and below) is necessary because the fixingDay() method of
+                        // AverageBMACoupon returns an exception rather than the last fixing day of the period.
+                        boost::shared_ptr<AverageBMACoupon> ptrBMA =
+                            boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
@@ -165,7 +170,13 @@ void writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portf
                             boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
-                        if (ptrFloat) {
+                        if (ptrBMA) {
+                            // We return the last fixing inside the coupon period
+                            fixingDate = ptrBMA->fixingDates().end()[-2];
+                            fixingValue = ptrBMA->pricer()->swapletRate();
+                            if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
+                                flowType = "BMAaverage";
+                        } else if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
                             if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())

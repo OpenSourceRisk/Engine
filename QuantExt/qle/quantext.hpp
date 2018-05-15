@@ -17,4 +17,5 @@
 #include <qle/pricingengines/all.hpp>
 #include <qle/processes/all.hpp>
 #include <qle/quotes/all.hpp>
+#include <qle/calendars/all.hpp>
 #include <qle/termstructures/all.hpp>

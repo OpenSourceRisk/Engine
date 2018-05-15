@@ -35,6 +35,7 @@
 #include <ored/marketdata/fxvolcurve.hpp>
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -77,6 +78,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<BaseCorrelationCurve>> requiredBaseCorrelationCurves;
     map<string, boost::shared_ptr<InflationCurve>> requiredInflationCurves;
     map<string, boost::shared_ptr<InflationCapFloorPriceSurface>> requiredInflationCapFloorPriceSurfaces;
+    map<string, boost::shared_ptr<InflationCapFloorVolCurve>> requiredInflationCapFloorVolCurves;
     map<string, boost::shared_ptr<EquityCurve>> requiredEquityCurves;
     map<string, boost::shared_ptr<EquityVolCurve>> requiredEquityVolCurves;
     map<string, boost::shared_ptr<Security>> requiredSecurities;
@@ -423,7 +425,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         yoyInflationIndices_[make_pair(configuration.first, it.first)] =
                             Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
                                 parseZeroInflationIndex(it.first, false), false,
-                                Handle<YoYInflationTermStructure>(ts)));
+                                Handle<YoYInflationTermStructure>(ts)));                        
                     }
                 }
                 break;
@@ -442,15 +444,112 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         boost::make_shared<InflationCapFloorPriceSurface>(asof, *infcapfloorspec, loader, curveConfigs,
                                                                           requiredYieldCurves, requiredInflationCurves);
                     itr = requiredInflationCapFloorPriceSurfaces
-                              .insert(make_pair(infcapfloorspec->name(), inflationCapFloorPriceSurface))
+                              .insert(make_pair(infcapfloorspec->name(),inflationCapFloorPriceSurface))
                               .first;
                 }
-                for (const auto it : params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first)) {
+
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.mapping(MarketObject::InflationCapFloorPriceSurface, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
                     if (it.second == spec->name()) {
                         LOG("Adding InflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
                                                                      << " to configuration " << configuration.first);
-                        inflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
-                            Handle<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface());
+                        cpiInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<CPICapFloorTermPriceSurface>(
+                                boost::dynamic_pointer_cast<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
+                    }
+                }
+
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.mapping(MarketObject::YoYInflationCapFloorPriceSurface, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding YoYInflationCapFloorPriceSurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<YoYCapFloorTermPriceSurface>(
+                                boost::dynamic_pointer_cast<YoYCapFloorTermPriceSurface>(
+                                    itr->second->inflationCapFloorPriceSurface()));
+
+                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<QuantExt::YoYOptionletVolatilitySurface>(
+                                boost::dynamic_pointer_cast<QuantExt::YoYOptionletVolatilitySurface>(
+                                    itr->second->yoyInflationCapFloorVolSurface()));
+                                                                   
+                        if (!itr->second->useMarketYoyCurve()) {
+                            LOG("Adding YoYInflationCurve (" << it.first << ") to configuration " << configuration.first);
+                            boost::shared_ptr<YoYInflationTermStructure> ts = itr->second->yoyInflationAtmCurve();
+                            QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
+                                << ", but could not cast");
+                            yoyInflationIndices_[make_pair(configuration.first, it.first)] =
+                                Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                    parseZeroInflationIndex(it.first, false), false,
+                                    Handle<YoYInflationTermStructure>(ts)));
+                        }
+
+                    }
+                }
+
+                break;
+            }
+
+            case CurveSpec::CurveType::InflationCapFloorVolatility: {
+                boost::shared_ptr<InflationCapFloorVolatilityCurveSpec> infcapfloorspec =
+                    boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveSpec>(spec);
+                QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor spec");
+
+                // have we built the curve already ?
+                auto itr = requiredInflationCapFloorVolCurves.find(infcapfloorspec->name());
+                if (itr == requiredInflationCapFloorVolCurves.end()) {
+                    LOG("Building InflationCapFloorPriceSurface for asof " << asof);
+                    boost::shared_ptr<InflationCapFloorVolCurve> inflationCapFloorVolCurve =
+                        boost::make_shared<InflationCapFloorVolCurve>(asof, *infcapfloorspec, loader, curveConfigs,
+                            requiredYieldCurves, requiredInflationCurves);
+                    itr = requiredInflationCapFloorVolCurves
+                        .insert(make_pair(infcapfloorspec->name(), inflationCapFloorVolCurve))
+                        .first;
+                }
+
+                map<string, string> zcInfMap;
+                try {
+                    zcInfMap = params.mapping(MarketObject::ZeroInflationCapFloorVol, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : zcInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding InflationCapFloorVol (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        // Add Zero Inflation Vol curves
+                    }
+                }
+
+                map<string, string> yyInfMap;
+                try {
+                    yyInfMap = params.mapping(MarketObject::YoYInflationCapFloorVol, configuration.first);
+                }
+                catch (QuantLib::Error& e) {
+                    LOG(e.what());
+                }
+                for (const auto it : yyInfMap) {
+                    if (it.second == spec->name()) {
+                        LOG("Adding YoYOptionletVolatilitySurface (" << it.first << ") with spec " << *infcapfloorspec
+                            << " to configuration " << configuration.first);
+                        yoyCapFloorVolSurfaces_[make_pair(configuration.first, it.first)] =
+                            Handle<QuantExt::YoYOptionletVolatilitySurface>(itr->second->yoyInflationCapFloorVolSurface());
                     }
                 }
                 break;

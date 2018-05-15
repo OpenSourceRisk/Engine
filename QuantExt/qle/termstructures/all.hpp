@@ -45,4 +45,10 @@
 #include <qle/termstructures/fxblackvolsurface.hpp>
 #include <qle/termstructures/fxsmilesection.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
+#include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/pricecurve.hpp>
+#include <qle/termstructures/pricetermstructureadapter.hpp>
+#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
+#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 

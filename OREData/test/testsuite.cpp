@@ -79,6 +79,7 @@ using boost::unit_test::test_suite;
 #include "todaysmarket.hpp"
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
+#include "inflationcapfloor.hpp"
 
 namespace {
 
@@ -113,6 +114,7 @@ test_suite* init_unit_test_suite(int, char* []) {
 
     test->add(BOOST_TEST_CASE(startTimer));
 
+    test->add(testsuite::InflationCapFloorTest::suite());
     test->add(testsuite::FXSwapTest::suite());
     test->add(testsuite::FXOptionTest::suite());
     test->add(testsuite::CcySwapWithResetsTest::suite());

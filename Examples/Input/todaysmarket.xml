@@ -98,7 +98,8 @@
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY1D</Index>
-  </IndexForwardingCurves>
+    <Index name="USD-SIFMA-1W">Yield/USD/USDBMA</Index>
+    </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
       <Discounting>EUR-EONIA</Discounting>
@@ -187,6 +188,13 @@
       <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
       <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
   </InflationCapFloorPriceSurfaces>
+  <!-- <YYInflationCapFloorPriceSurfaces id="default">
+      <YYInflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_YY_CF</YYInflationCapFloorPriceSurface>
+  </YYInflationCapFloorPriceSurfaces> -->
+  <!-- inflation volatility curves definition -->
+  <YYInflationCapFloorVolatilities id="default">
+    <YYInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF_N</YYInflationCapFloorVolatility>
+  </YYInflationCapFloorVolatilities>
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>

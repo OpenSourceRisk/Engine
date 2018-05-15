@@ -51,6 +51,7 @@
     <ClInclude Include="ored\configuration\fxspotconfig.hpp" />
     <ClInclude Include="ored\configuration\fxvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcapfloorpricesurfaceconfig.hpp" />
+    <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\inflationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
@@ -84,6 +85,7 @@
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
+    <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
     <ClInclude Include="ored\model\all.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
@@ -117,6 +119,7 @@
     <ClInclude Include="ored\portfolio\builders\varianceswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
+    <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
     <ClInclude Include="ored\portfolio\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\commodityoption.hpp" />
@@ -181,6 +184,7 @@
     <ClCompile Include="ored\configuration\equityvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcapfloorpricesurfaceconfig.cpp" />
+    <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\inflationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\swaptionvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp" />
@@ -211,6 +215,7 @@
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarketparameters.cpp" />
     <ClCompile Include="ored\marketdata\yieldcurve.cpp" />
+    <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp" />
     <ClCompile Include="ored\model\crossassetmodelbuilder.cpp" />
     <ClCompile Include="ored\model\crossassetmodeldata.cpp" />
     <ClCompile Include="ored\model\eqbsbuilder.cpp" />
@@ -229,6 +234,7 @@
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
     <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
+    <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
     <ClCompile Include="ored\portfolio\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\commodityforward.cpp" />
     <ClCompile Include="ored\portfolio\commodityoption.cpp" />

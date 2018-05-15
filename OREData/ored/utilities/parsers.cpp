@@ -33,6 +33,7 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
 #include <qle/currencies/all.hpp>
+#include <qle/calendars/all.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -209,18 +210,19 @@ Calendar parseCalendar(const string& s) {
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
+                                      {"CLP", Chile()},
+                                      {"THB", Thailand()},
+                                      {"COP", Colombia()},
+                                      {"PEN", Peru()},
+                                      {"MYR", Malaysia()},
+                                      {"PHP", Philippines()},
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"CLP", TARGET()},
                                       {"RON", TARGET()},
-                                      {"THB", TARGET()},
-                                      {"COP", TARGET()},
                                       {"ILS", TARGET()},
                                       {"KWD", TARGET()},
-                                      {"PEN", TARGET()},
                                       {"TND", TARGET()},
-                                      {"MYR", TARGET()},
                                       {"KZT", TARGET()},
                                       {"QAR", TARGET()},
                                       {"MXV", TARGET()},
@@ -230,7 +232,6 @@ Calendar parseCalendar(const string& s) {
                                       {"OMR", TARGET()},
                                       {"VND", TARGET()},
                                       {"AED", TARGET()},
-                                      {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
                                       // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
