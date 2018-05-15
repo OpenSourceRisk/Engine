@@ -93,6 +93,12 @@ void XMLDocument::toFile(const string& fileName) {
     ofs.close();
 }
 
+string XMLDocument::toString() {
+    ostringstream oss;
+    oss << *_doc;
+    return oss.str();
+}
+
 XMLNode* XMLDocument::allocNode(const string& nodeName) {
     XMLNode* n = _doc->allocate_node(node_element, allocString(nodeName));
     QL_REQUIRE(n, "Failed to allocate XMLNode for " << nodeName);

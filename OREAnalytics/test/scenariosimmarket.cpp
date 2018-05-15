@@ -228,7 +228,6 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 
     BOOST_TEST_MESSAGE("Testing to XML...");
     XMLDocument outDoc;
-    XMLDocument inDoc;
     string testFile = "simtest.xml";
     XMLNode* node = params->toXML(outDoc);
 
