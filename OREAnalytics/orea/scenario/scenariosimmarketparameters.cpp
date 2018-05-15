@@ -664,17 +664,24 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     }
 
     DLOG("Loading AggregationScenarioDataIndices");
+    if (XMLUtils::getChildNode(node, "AggregationScenarioDataIndices")) {
+        additionalScenarioDataIndices_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataIndices", "Index");
+    }
 
-    additionalScenarioDataIndices_ = XMLUtils::getChildrenValues(node, "AggregationScenarioDataIndices", "Index");
-    additionalScenarioDataCcys_ =
-        XMLUtils::getChildrenValues(node, "AggregationScenarioDataCurrencies", "Currency", true);
+    DLOG("Loading AggregationScenarioDataCurrencies");
+    if (XMLUtils::getChildNode(node, "AggregationScenarioDataCurrencies")) {
+        additionalScenarioDataCcys_ = XMLUtils::getChildrenValues(
+            node, "AggregationScenarioDataCurrencies", "Currency", true);
+    }
 
+    DLOG("Loading Securities");
     nodeChild = XMLUtils::getChildNode(node, "Securities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         securitySpreadsSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false);
         securities_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
     }
 
+    DLOG("Loading BaseCorrelations");
     nodeChild = XMLUtils::getChildNode(node, "BaseCorrelations");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         baseCorrelationSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", true);
@@ -918,12 +925,17 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     // additional scenario data currencies
     DLOG("Writing aggregation scenario data currencies");
-    XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
-                          additionalScenarioDataCcys_);
+    if (!additionalScenarioDataCcys_.empty()) {
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", 
+            "Currency", additionalScenarioDataCcys_);
+    }
 
     // additional scenario data indices
     DLOG("Writing aggregation scenario data indices");
-    XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index", additionalScenarioDataIndices_);
+    if (!additionalScenarioDataIndices_.empty()) {
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index", 
+            additionalScenarioDataIndices_);
+    }
 
     // securities
     DLOG("Writing securities");
