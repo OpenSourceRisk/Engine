@@ -20,7 +20,7 @@
         <CMSSpreadLegData>
           <Index1>EUR-CMS-10Y</Index1>
           <Index2>EUR-CMS-2Y</Index2>
-          <IsInArrears>N</IsInArrears>
+          <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
           <Caps>
             <Cap>0.06</Cap>
@@ -34,7 +34,7 @@
           <Spreads>
             <Spread>0.0010</Spread>
           </Spreads>
-          <NakedOption>N</NakedOption>
+          <NakedOption>false</NakedOption>
         </CMSSpreadLegData>
         <ScheduleData>
           <Rules>

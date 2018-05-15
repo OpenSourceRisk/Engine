@@ -237,6 +237,7 @@
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
+  </xs:element>
   <xs:element name="CMSSpreadLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
@@ -392,6 +393,7 @@
       <xs:enumeration value="CPI"/>
       <xs:enumeration value="YY"/>
       <xs:enumeration value="CMS"/>
+      <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="Cashflow"/>
     </xs:restriction>
   </xs:simpleType>
