@@ -56,15 +56,7 @@ public:
           equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
           securitySpreadsSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
         
-        // set default tenors
-        capFloorVolExpiries_[""];
-        defaultTenors_[""];
-        equityDividendTenors_[""];
-        equityForecastTenors_[""];
-        zeroInflationTenors_[""];
-        yoyInflationTenors_[""];
-        commodityCurveTenors_[""];
-        // set default dayCounters
+        // set defaults
         setDefaults();
     }
 
