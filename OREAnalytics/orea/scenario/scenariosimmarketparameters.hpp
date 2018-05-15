@@ -292,6 +292,10 @@ public:
 
 private:
     void setDefaults();
+
+    //! A method used to reset the object to its default state before fromXML is called
+    void reset();
+
     string baseCcy_;
     map<string, string> yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;

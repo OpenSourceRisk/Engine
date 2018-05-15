@@ -77,6 +77,11 @@ void ScenarioSimMarketParameters::setDefaults() {
     defaultCurveCalendars_[""] = "TARGET";
 }
 
+void ScenarioSimMarketParameters::reset() {
+    ScenarioSimMarketParameters ssmp;
+    std::swap(*this, ssmp);
+}
+
 const vector<Period>& ScenarioSimMarketParameters::yieldCurveTenors(const string& key) const {
     return returnTenors(yieldCurveTenors_, key);
 }
@@ -322,6 +327,10 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
 bool ScenarioSimMarketParameters::operator!=(const ScenarioSimMarketParameters& rhs) { return !(*this == rhs); }
 
 void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
+
+    // fromXML always uses a "clean" object
+    reset();
+
     DLOG("ScenarioSimMarketParameters::fromXML()");
 
     XMLNode* sim = XMLUtils::locateNode(root, "Simulation");
