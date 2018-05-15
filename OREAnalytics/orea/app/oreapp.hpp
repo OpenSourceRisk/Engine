@@ -127,7 +127,8 @@ public:
     virtual void writeAdditionalReports() {}
 
 protected:
-
+    //! Get report writer
+    virtual boost::shared_ptr<ReportWriter> getReportWriter();
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
     //! Add extra engine builders

@@ -39,46 +39,51 @@
 
 namespace ore {
 namespace analytics {
-namespace reports {
+//! Write ORE outputs to reports
+/*! \ingroup app
+*/
+class ReportWriter {
+public:
+    virtual ~ReportWriter() {};
 
-void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
-                        boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
-                        boost::shared_ptr<Portfolio> portfolio);
+    virtual void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+                            boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                            boost::shared_ptr<Portfolio> portfolio);
 
-void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
 
-void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                        const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
+    virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+                            const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
 
-void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                const std::string& tradeId);
+    virtual void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                    const std::string& tradeId);
 
-void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+    virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                            const std::string& nettingSetId);
+
+    virtual void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                         const std::string& nettingSetId);
 
-void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                    const std::string& nettingSetId);
+    virtual void writeXVA(ore::data::Report& report, const string& allocationMethod,
+                            boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
 
-void writeXVA(ore::data::Report& report, const string& allocationMethod,
-                        boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
+    virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
 
-void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
+    virtual void writeScenarioReport(ore::data::Report& report, 
+        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0);
 
-void writeScenarioReport(ore::data::Report& report, 
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0);
+    // Note: empty braces for default map argument will not work on Visual Studio
+    //       https://stackoverflow.com/a/28837927/1771882
+    // TODO: do we really need the actual shift sizes in the sensitivity report? Would it be better to have 
+    //       shift size and shift type? Could make these part of Scenario Descriptions - would be cleaner.
+    virtual void writeSensitivityReport(ore::data::Report& report,
+        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
+        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
 
-// Note: empty braces for default map argument will not work on Visual Studio
-//       https://stackoverflow.com/a/28837927/1771882
-// TODO: do we really need the actual shift sizes in the sensitivity report? Would it be better to have 
-//       shift size and shift type? Could make these part of Scenario Descriptions - would be cleaner.
-void writeSensitivityReport(ore::data::Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
+    virtual void writeCrossGammaReport(ore::data::Report& report,
+        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
+        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
 
-void writeCrossGammaReport(ore::data::Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
-
-} // namespace reports
+};
 } // namespace analytics
 } // namespace ore

@@ -26,8 +26,6 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-using namespace reports;
-
 void SensitivityRunner::runSensitivityAnalysis(
     boost::shared_ptr<Market> market, Conventions& conventions) {
 
@@ -88,15 +86,17 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
 
     string outputFile = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
     CSVFileReport scenReport(outputFile);
-    writeScenarioReport(scenReport, sensiAnalysis->sensiCube(), sensiThreshold);
+    ReportWriter().writeScenarioReport(scenReport, sensiAnalysis->sensiCube(), sensiThreshold);
 
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), sensiThreshold, sensiAnalysis->shiftSizes());
+    ReportWriter().writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), 
+        sensiThreshold, sensiAnalysis->shiftSizes());
 
     outputFile = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
     CSVFileReport cgReport(outputFile);
-    writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), sensiThreshold, sensiAnalysis->shiftSizes());
+    ReportWriter().writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), 
+        sensiThreshold, sensiAnalysis->shiftSizes());
 }
 
 } // namespace analytics

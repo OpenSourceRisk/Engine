@@ -35,9 +35,8 @@ using QuantLib::Date;
 
 namespace ore {
 namespace analytics {
-namespace reports {
 
-void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
     boost::shared_ptr<Market> market, const std::string& configuration,
     boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
@@ -100,7 +99,7 @@ void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
     LOG("NPV file written");
 }
 
-void writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
     Date asof = Settings::instance().evaluationDate();
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
@@ -229,7 +228,7 @@ void writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portf
     LOG("Cashflow report written");
 }
 
-void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
     const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
     LOG("Write curves... ");
 
@@ -289,7 +288,7 @@ void writeCurves(ore::data::Report& report, const std::string& configID, const D
     report.end();
 }
 
-void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
     const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -340,7 +339,7 @@ void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProces
     report.end();
 }
 
-void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
     const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -387,7 +386,7 @@ void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostP
     report.end();
 }
 
-void writeXVA(ore::data::Report& report, const string& allocationMethod,
+void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
     boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
@@ -448,7 +447,7 @@ void writeXVA(ore::data::Report& report, const string& allocationMethod,
     report.end();
 }
 
-void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
     const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
@@ -496,7 +495,7 @@ void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProce
     report.end();
 }
 
-void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
+void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data) {
     report.addColumn("Date", Size()).addColumn("Scenario", Size());
     for (auto const& k : data.keys()) {
         std::string tmp = ore::data::to_string(k.first) + k.second;
@@ -514,7 +513,7 @@ void writeAggregationScenarioData(ore::data::Report& report, const AggregationSc
     report.end();
 }
 
-void writeScenarioReport(Report& report,
+void ReportWriter::writeScenarioReport(Report& report,
     const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -555,7 +554,7 @@ void writeScenarioReport(Report& report,
     LOG("Scenario report finished");
 }
 
-void writeSensitivityReport(Report& report,
+void ReportWriter::writeSensitivityReport(Report& report,
     const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
     const map<RiskFactorKey, Real>& shiftSizes) {
 
@@ -602,7 +601,7 @@ void writeSensitivityReport(Report& report,
     LOG("Sensitivity report finished");
 }
 
-void writeCrossGammaReport(Report& report,
+void ReportWriter::writeCrossGammaReport(Report& report,
     const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
     const map<RiskFactorKey, Real>& shiftSizes) {
 
@@ -650,6 +649,5 @@ void writeCrossGammaReport(Report& report,
     LOG("Cross gamma written");
 }
 
-} // namespace reports
 } // namespace analytics
 } // namespace ore
