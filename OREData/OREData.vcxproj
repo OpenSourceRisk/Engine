@@ -109,6 +109,7 @@
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\cms.hpp" />
+    <ClInclude Include="ored\portfolio\builders\cmsspread.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\creditdefaultswap.hpp" />
@@ -232,6 +233,7 @@
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />
+    <ClCompile Include="ored\portfolio\builders\cmsspread.cpp" />
     <ClCompile Include="ored\portfolio\builders\commodityoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\swaption.cpp" />
     <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp" />
