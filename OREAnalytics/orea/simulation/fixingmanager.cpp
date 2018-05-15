@@ -48,6 +48,15 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
         for (auto leg : trade->legs()) {
             for (auto cf : leg) {
 
+                // For any coupon type that requires fixings, it must be handled here
+                // Most coupons are based off a floating rate coupon and their single index
+                // will be captured in section A.
+                //
+                // Other more exotic coupons (inflation, CMS spreads, etc) are captured on a
+                // case by case basis in section B.
+                //
+                // In all cases we want to add dates to the fixingMap_ map.
+
                 // A floating rate coupons
 
                 // extract underlying from cap/floored coupons
