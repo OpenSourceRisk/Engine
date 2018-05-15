@@ -58,6 +58,12 @@
     <Engine>IborCapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="YYCapFloor">
+    <Model>YYCapModel</Model>
+    <ModelParameters/>
+    <Engine>YYCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>

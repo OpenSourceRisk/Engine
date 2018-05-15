@@ -16,5 +16,6 @@
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/varianceswap.hpp>
+#include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 

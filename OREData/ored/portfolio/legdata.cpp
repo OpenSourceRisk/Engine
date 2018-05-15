@@ -37,6 +37,9 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+//I'm guessing I'll need to wrap the bma coupon here...
+#include <ql/cashflows/averagebmacoupon.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 
 using namespace QuantLib;
 
@@ -107,7 +110,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
-    XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate", gearingDates_);
@@ -608,6 +611,40 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         return leg;
     }
+}
+
+Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWrapper>& indexWrapper) {
+    boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
+    QL_REQUIRE(floatData, "Wrong LegType, expected Floating, got " << data.legType());
+    boost::shared_ptr<BMAIndex> index = indexWrapper->bma();
+
+    if (floatData->caps().size() > 0 || floatData->floors().size() > 0)
+        QL_FAIL("Caps and floors are not supported for BMA legs");
+
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+
+    vector<Real> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
+    vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
+
+    applyAmortization(notionals, data, schedule);
+    // amortization type annuity is not allowed, check this
+    if (!data.amortizationData().empty()) {
+        AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
+        QL_REQUIRE(amortizationType == AmortizationType::None,
+            "Amortization is not supported for BMA legs");
+    }
+
+    AverageBMALeg leg = AverageBMALeg(schedule, index)
+        .withNotionals(notionals)
+        .withSpreads(spreads)
+        .withPaymentDayCounter(dc)
+        .withPaymentAdjustment(bdc)
+        .withGearings(gearings);
+
+    return leg;
 }
 
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow) {

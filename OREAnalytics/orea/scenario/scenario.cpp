@@ -119,8 +119,12 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::ZeroInflationCurve;
     else if (str == "YoYInflationCurve")
         return RiskFactorKey::KeyType::YoYInflationCurve;
+    else if (str == "CommoditySpot")
+        return RiskFactorKey::KeyType::CommoditySpot;
     else if (str == "CommodityCurve")
         return RiskFactorKey::KeyType::CommodityCurve;
+    else if (str == "CommodityVolatility")
+        return RiskFactorKey::KeyType::CommodityVolatility;
     else if (str == "SecuritySpread")
         return RiskFactorKey::KeyType::SecuritySpread;
 

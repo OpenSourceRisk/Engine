@@ -332,7 +332,7 @@ XMLNode* XMLUtils::getChildNode(XMLNode* n, const string& name) {
 
 // return first node in the hierarchy of n that matches name, maybe n itself
 XMLNode* XMLUtils::locateNode(XMLNode* n, const string& name) {
-    QL_REQUIRE(n, "XML Node is NULL");
+    QL_REQUIRE(n, "XMLUtils::locateNode(" << name << "): XML Node is NULL");
     if (n->name() == name)
         return n;
     else {
@@ -351,15 +351,14 @@ void XMLUtils::appendNode(XMLNode* parent, XMLNode* child) {
 }
 
 void XMLUtils::addAttribute(XMLDocument& doc, XMLNode* node, const string& attrName, const string& attrValue) {
-    QL_REQUIRE(node, "XMLUtils::appendAttribute() node is NULL");
-
+    QL_REQUIRE(node, "XMLUtils::appendAttribute(" << attrName << "," << attrName << ") node is NULL");
     char* name = doc.allocString(attrName.c_str());
     char* value = doc.allocString(attrValue.c_str());
     node->append_attribute(doc.doc()->allocate_attribute(name, value));
 }
 
 string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
-    QL_REQUIRE(node, "XMLUtils::getAttribute() node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getAttribute(" << attrName << ") node is NULL");
     xml_attribute<>* attr = node->first_attribute(attrName.c_str());
     if (attr && attr->value())
         return string(attr->value());
@@ -368,7 +367,7 @@ string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
 }
 
 vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
-    QL_REQUIRE(node, "XMLUtils::getAttribute() node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getChildredNodes(" << name << ") node is NULL");
     vector<XMLNode*> res;
     const char* p = name.size() == 0 ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))

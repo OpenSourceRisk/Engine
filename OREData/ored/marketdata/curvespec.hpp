@@ -50,6 +50,7 @@ public:
         CDSVolatility,
         Inflation,
         InflationCapFloorPrice,
+        InflationCapFloorVolatility,
         Equity,
         EquityVolatility,
         Security,
@@ -90,6 +91,8 @@ public:
             return "Inflation";
         case CurveType::InflationCapFloorPrice:
             return "InflationCapFloorPrice";
+        case CurveType::InflationCapFloorVolatility:
+            return "InflationCapFloorVolatility";
         case CurveType::Equity:
             return "Equity";
         case CurveType::EquityVolatility:
@@ -350,6 +353,26 @@ public:
         : index_(index), curveConfigID_(curveConfigID) {}
 
     CurveType baseType() const { return CurveType::InflationCapFloorPrice; }
+    const string& index() const { return index_; }
+    const string& curveConfigID() const { return curveConfigID_; }
+
+    string subName() const { return index() + "/" + curveConfigID(); }
+
+private:
+    string index_;
+    string curveConfigID_;
+};
+
+//! Inflation cap floor volatility description
+/*! \ingroup curves
+*/
+class InflationCapFloorVolatilityCurveSpec : public CurveSpec {
+public:
+    InflationCapFloorVolatilityCurveSpec() {}
+    InflationCapFloorVolatilityCurveSpec(const string& index, const string& curveConfigID)
+        : index_(index), curveConfigID_(curveConfigID) {}
+
+    CurveType baseType() const { return CurveType::InflationCapFloorVolatility; }
     const string& index() const { return index_; }
     const string& curveConfigID() const { return curveConfigID_; }
 

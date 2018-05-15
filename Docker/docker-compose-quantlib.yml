@@ -7,4 +7,4 @@ services:
       context: ../
       dockerfile: Docker/Dockerfile-QuantLib
       args:
-        - boost_version=1.63.0
+        - boost_version=1.65.1

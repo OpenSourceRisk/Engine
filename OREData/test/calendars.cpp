@@ -18,9 +18,11 @@
 
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <qle/calendars/all.hpp>
 #include <test/calendars.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
 namespace testsuite {
@@ -68,22 +70,22 @@ static struct test_data cal_data[] = {
     {"AED", TARGET()},
     {"BHD", TARGET()},
     {"CLF", TARGET()},
-    {"CLP", TARGET()},
-    {"COP", TARGET()},
+    {"CLP", Chile()},
+    {"COP", Colombia()},
     {"EGP", TARGET()},
     {"ILS", TARGET()},
     {"KWD", TARGET()},
     {"KZT", TARGET()},
     {"MAD", TARGET()},
     {"MXV", TARGET()},
-    {"MYR", TARGET()},
+    {"MYR", Malaysia()},
     {"NGN", TARGET()},
     {"OMR", TARGET()},
-    {"PEN", TARGET()},
-    {"PHP", TARGET()},
+    {"PEN", Peru()},
+    {"PHP", Philippines()},
     {"QAR", TARGET()},
     {"RON", TARGET()},
-    {"THB", TARGET()},
+    {"THB", Thailand()},
     {"TND", TARGET()},
     {"VND", TARGET()},
     // joint calendars
