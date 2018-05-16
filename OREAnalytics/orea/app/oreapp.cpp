@@ -466,7 +466,9 @@ void OREApp::writeInitialReports() {
     }
 }
 
-boost::shared_ptr<ReportWriter> OREApp::getReportWriter() { return boost::make_shared<ReportWriter>(); }
+boost::shared_ptr<ReportWriter> OREApp::getReportWriter() {
+    return boost::shared_ptr<ReportWriter>(getReportWriterImpl());
+}
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { 
     return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(), getExtraLegBuilders()); 

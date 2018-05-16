@@ -128,7 +128,7 @@ public:
 
 protected:
     //! Get report writer
-    virtual boost::shared_ptr<ReportWriter> getReportWriter();
+    boost::shared_ptr<ReportWriter> getReportWriter();
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
     //! Add extra engine builders
@@ -178,6 +178,11 @@ protected:
     boost::shared_ptr<NPVCube> cube_;
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
+
+private:
+    virtual ReportWriter* getReportWriterImpl() const {
+        return new ReportWriter();
+    }
 };
 } // namespace analytics
 } // namespace ore
