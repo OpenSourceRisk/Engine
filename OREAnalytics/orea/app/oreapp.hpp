@@ -128,6 +128,30 @@ public:
 
 protected:
     //! Get report writer
+    /*! This calls the private method getReportWriterImpl() which returns the 
+        actual ReportWriter implementation. The private method is virtual and 
+        can be overridden in derived classes to provide a dervied ReportWriter 
+        instance. This method is not virtual and can be hidden in derived 
+        classes by a method with the same name. This method can then return a 
+        shared pointer to the derived ReportWriter class.
+
+        For example, we can have the following in a derived class:
+        \code{.cpp}
+        class MyApp : public OREApp {
+            // stuff
+        protected:
+            boost::shared_ptr<MyReportWriter> getReportWriter() {
+                return boost::shared_ptr<MyReportWriter>(getReportWriterImpl());
+            }
+        private:
+            virtual MyReportWriter* getReportWriterImpl() const {
+                return new MyReportWriter();
+            }
+        };
+        \endcode
+        where we have our own special report writer class MyReportWriter that 
+        derives from ReportWriter or any class in its hierarchy.
+    */
     boost::shared_ptr<ReportWriter> getReportWriter();
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
