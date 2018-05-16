@@ -104,6 +104,12 @@
     <SwapIndex name="EUR-CMS-1Y">
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
+    <SwapIndex name="EUR-CMS-2Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-10Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
     <SwapIndex name="EUR-CMS-30Y">
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>

@@ -26,7 +26,7 @@ namespace ore {
 namespace data {
 
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
-                             const map<MarketContext, string>& configurations, 
+                             const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
                              const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders)
     : market_(market), engineData_(engineData), configurations_(configurations) {
@@ -101,6 +101,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
 
@@ -117,18 +118,20 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
     registerLegBuilder(boost::make_shared<CashflowLegBuilder>());
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
+    registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
 }
 
 
 void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
     const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) {
-    
+
     if (extraEngineBuilders.size() > 0) {
         LOG("adding " << extraEngineBuilders.size() << " extra engine builders");
         for (auto eb : extraEngineBuilders)

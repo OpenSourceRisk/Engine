@@ -11,6 +11,7 @@ libOREDataPortfolioBuilders_la_SOURCES = \
 	capfloorediborleg.cpp \
 	swaption.cpp \
 	cms.cpp \
+	cmsspread.cpp \
 	commodityoption.cpp \
 	yoycapfloor.cpp
 
@@ -29,6 +30,7 @@ this_include_HEADERS = \
 	swaption.hpp \
 	creditdefaultswap.hpp \
 	cms.hpp \
+	cmsspread.hpp \
 	commodityforward.hpp \
 	commodityoption.hpp \
 	yoycapfloor.hpp \

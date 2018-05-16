@@ -21,9 +21,12 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
+#include <ql/experimental/coupons/cmsspreadcoupon.hpp>
+#include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
@@ -31,7 +34,6 @@ using namespace std;
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace ore::data;
-using FlowList = std::vector<std::vector<std::string>>;
 
 namespace ore {
 namespace analytics {
@@ -40,88 +42,81 @@ namespace analytics {
 
 void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
 
-    // Get the flow list and required indices from the portfolio.
-    vector<FlowList> flowList;
-    set<boost::shared_ptr<Index>> setIndices;
+    // loop over all cashflows, populate index map
 
     for (auto trade : portfolio->trades()) {
         for (auto leg : trade->legs()) {
-            flowList.push_back(data::flowAnalysis(leg));
             for (auto cf : leg) {
-                boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-                if (frc)
-                    setIndices.insert(frc->index());
+
+                // For any coupon type that requires fixings, it must be handled here
+                // Most coupons are based off a floating rate coupon and their single index
+                // will be captured in section A.
+                //
+                // Other more exotic coupons (inflation, CMS spreads, etc) are captured on a
+                // case by case basis in section B.
+                //
+                // In all cases we want to add dates to the fixingMap_ map.
+
+                // A floating rate coupons
+
+                // extract underlying from cap/floored coupons
+                boost::shared_ptr<FloatingRateCoupon> frc;
+                auto cfCpn = boost::dynamic_pointer_cast<CappedFlooredCoupon>(cf);
+                if (cfCpn)
+                    frc = cfCpn->underlying();
+                else
+                    frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+
+                if (frc) {
+                    // A1 indices with fixings derived from underlying indices
+                    auto cmssp = boost::dynamic_pointer_cast<CmsSpreadCoupon>(frc);
+                    if (cmssp) {
+                        fixingMap_[cmssp->swapSpreadIndex()->swapIndex1()].insert(frc->fixingDate());
+                        fixingMap_[cmssp->swapSpreadIndex()->swapIndex2()].insert(frc->fixingDate());
+                        continue;
+                    }
+
+                    // A2 indices with native fixings
+                    auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);
+                    if (avon) {
+                        for (auto const& d : avon->fixingDates())
+                            fixingMap_[avon->index()].insert(d);
+                        continue;
+                    }
+                    fixingMap_[frc->index()].insert(frc->fixingDate());
+                }
+
+                // B other coupon types
 
                 boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fc =
                     boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
                 if (fc) {
-                    setIndices.insert(fc->index());
-                    setIndices.insert(fc->fxLinkedCashFlow().index());
+                    fixingMap_[fc->index()].insert(fc->fixingDate());
+                    fixingMap_[fc->fxLinkedCashFlow().index()].insert(fc->fxLinkedCashFlow().fxFixingDate());
                 }
 
                 boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
                 if (flcf)
-                    setIndices.insert(flcf->index());
+                    fixingMap_[flcf->index()].insert(flcf->fxFixingDate());
 
                 boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
                 if (cpc)
-                    setIndices.insert(cpc->index());
+                    fixingMap_[cpc->index()].insert(cpc->fixingDate());
 
                 boost::shared_ptr<InflationCoupon> ic = boost::dynamic_pointer_cast<InflationCoupon>(cf);
                 if (ic)
-                    setIndices.insert(ic->index());
+                    fixingMap_[ic->index()].insert(ic->fixingDate());
 
                 boost::shared_ptr<CPICashFlow> cpcf = boost::dynamic_pointer_cast<CPICashFlow>(cf);
                 if (cpcf)
-                    setIndices.insert(cpcf->index());
-
-                // add more coupon types here ...
+                    fixingMap_[cpcf->index()].insert(cpcf->fixingDate());
             }
         }
-    }
-    // convert to a vector
-    indices_ = vector<boost::shared_ptr<Index>>(setIndices.begin(), setIndices.end());
-
-    // first pass: init date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A" && fixingMap_.find(indexName) == fixingMap_.end()) {
-                LOG("add index name for fixing history: " << indexName);
-                fixingMap_[indexName] = vector<Date>();
-            }
-        }
-    }
-
-    // second pass: Add to date vectors
-    for (Size j = 0; j < flowList.size(); j++) {
-        FlowList flow = flowList[j];
-        QL_REQUIRE(flow.size() > 0, "flowList " << j << " is empty");
-        for (Size i = 1; i < flow.size(); i++) { // skip header
-            std::string indexName = flow[i][4];
-            if (indexName != "#N/A") {
-                Date fixingDate = ore::data::parseDate(flow[i][3]);
-                fixingMap_[indexName].push_back(fixingDate);
-            }
-        }
-    }
-
-    // third pass: sort date vectors and remove duplicates
-    for (auto it = fixingMap_.begin(); it != fixingMap_.end(); ++it) {
-        std::sort(it->second.begin(), it->second.end());
-        // using default comparison:
-        vector<Date>::iterator it2 = std::unique(it->second.begin(), it->second.end());
-        it->second.resize(it2 - it->second.begin());
     }
 
     // Now cache the original fixings so we can re-write on reset()
-    for (auto index : indices_) {
-        string qlIndexName = index->name();
-        if (fixingMap_.find(qlIndexName) != fixingMap_.end()) {
-            fixingCache_[qlIndexName] = IndexManager::instance().getHistory(qlIndexName);
-        }
+    for (auto m : fixingMap_) {
+        fixingCache_[m.first] = IndexManager::instance().getHistory(m.first->name());
     }
 }
 
@@ -140,7 +135,7 @@ void FixingManager::update(Date d) {
 void FixingManager::reset() {
     if (modifiedFixingHistory_) {
         for (auto& kv : fixingCache_)
-            IndexManager::instance().setHistory(kv.first, kv.second);
+            IndexManager::instance().setHistory(kv.first->name(), kv.second);
         modifiedFixingHistory_ = false;
     }
     fixingsEnd_ = today_;
@@ -148,65 +143,62 @@ void FixingManager::reset() {
 
 void FixingManager::applyFixings(Date start, Date end) {
     // Loop over all indices
-    for (const boost::shared_ptr<Index>& index : indices_) {
-        string qlIndexName = index->name();
-        // Only need to apply fixings if the index is in fixingMap
-        if (fixingMap_.find(qlIndexName) != fixingMap_.end()) {
+    for (auto const& m : fixingMap_) {
+        boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(m.first);
+        boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(m.first);
+        set<Date> fixingDates;
+        Date currentFixingDate;
+        Date fixStart = start;
+        Date fixEnd = end;
+        if (zii) { // for inflation indices we just only add a fixing for the first date in the month
+            fixStart =
+                inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first;
+            fixEnd =
+                inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency()).first +
+                1;
+            currentFixingDate = fixEnd;
+            for (auto const& d : m.second) {
+                fixingDates.insert(inflationPeriod(d, zii->frequency()).first);
+            }
+        } else if (yii) {
+            fixStart =
+                inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first;
+            fixEnd =
+                inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency()).first +
+                1;
+            currentFixingDate = fixEnd;
+            for (auto const& d : m.second) {
+                fixingDates.insert(inflationPeriod(d, yii->frequency()).first);
+            }
+        } else {
+            currentFixingDate = m.first->fixingCalendar().adjust(fixEnd, Following);
+            fixingDates = m.second;
+        }
 
-            boost::shared_ptr<ZeroInflationIndex> zii = boost::dynamic_pointer_cast<ZeroInflationIndex>(index);
-            boost::shared_ptr<YoYInflationIndex> yii = boost::dynamic_pointer_cast<YoYInflationIndex>(index);
-            vector<Date> fixingDates = fixingMap_[qlIndexName];
-            Date currentFixingDate;
-            Date fixStart = start;
-            Date fixEnd = end;
-            if (zii) { // for inflation indices we just only add a fixing for the first date in the month
-                fixStart =
-                    inflationPeriod(fixStart - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
-                        .first;
-                fixEnd = inflationPeriod(fixEnd - zii->zeroInflationTermStructure()->observationLag(), zii->frequency())
-                             .first +
-                         1;
-                currentFixingDate = fixEnd;
-                for (Size i = 0; i < fixingDates.size(); i++) {
-                    fixingDates[i] = inflationPeriod(fixingDates[i], zii->frequency()).first;
+        // Add we have a coupon between start and asof.
+        bool needFixings = false;
+        for (auto const& d : fixingDates) {
+            if (d >= fixStart && d < fixEnd) {
+                needFixings = true;
+                break;
+            }
+        }
+
+        if (needFixings) {
+            Rate currentFixing = m.first->fixing(currentFixingDate);
+            TimeSeries<Real> history;
+            for (auto const& d : fixingDates) {
+                if (d >= fixStart && d < fixEnd) {
+                    history[d] = currentFixing;
+                    modifiedFixingHistory_ = true;
                 }
-            } else if (yii) {
-                fixStart =
-                    inflationPeriod(fixStart - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
-                        .first;
-                fixEnd = inflationPeriod(fixEnd - yii->yoyInflationTermStructure()->observationLag(), yii->frequency())
-                             .first +
-                         1;
-                currentFixingDate = fixEnd;
-                for (Size i = 0; i < fixingDates.size(); i++)
-                    fixingDates[i] = inflationPeriod(fixingDates[i], yii->frequency()).first;
-            } else
-                currentFixingDate = index->fixingCalendar().adjust(fixEnd, Following);
-
-            // Add we have a coupon between start and asof.
-            bool needFixings = false;
-            for (Size i = 0; i < fixingDates.size(); i++) {
-                if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
-                    needFixings = true;
+                if (d >= fixEnd)
                     break;
-                }
             }
-
-            if (needFixings) {
-                Rate currentFixing = index->fixing(currentFixingDate);
-                TimeSeries<Real> history;
-                for (Size i = 0; i < fixingDates.size(); i++) {
-                    if (fixingDates[i] >= fixStart && fixingDates[i] < fixEnd) {
-                        history[fixingDates[i]] = currentFixing;
-                        modifiedFixingHistory_ = true;
-                    }
-                    if (fixingDates[i] >= fixEnd)
-                        break;
-                }
-                index->addFixings(history, true);
-            }
+            m.first->addFixings(history, true);
         }
     }
 }
+
 } // namespace analytics
 } // namespace ore
