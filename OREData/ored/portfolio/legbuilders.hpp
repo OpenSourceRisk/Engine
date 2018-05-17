@@ -70,5 +70,12 @@ public:
                  const string& configuration) const override;
 };
 
+class CMSSpreadLegBuilder : public LegBuilder {
+public:
+    CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 } // namespace data
 } // namespace ore

@@ -104,6 +104,12 @@
     <SwapIndex name="EUR-CMS-1Y">
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
+    <SwapIndex name="EUR-CMS-2Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-10Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
     <SwapIndex name="EUR-CMS-30Y">
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
@@ -188,6 +194,13 @@
       <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
       <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
   </InflationCapFloorPriceSurfaces>
+  <!-- <YYInflationCapFloorPriceSurfaces id="default">
+      <YYInflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_YY_CF</YYInflationCapFloorPriceSurface>
+  </YYInflationCapFloorPriceSurfaces> -->
+  <!-- inflation volatility curves definition -->
+  <YYInflationCapFloorVolatilities id="default">
+    <YYInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF_N</YYInflationCapFloorVolatility>
+  </YYInflationCapFloorVolatilities>
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>

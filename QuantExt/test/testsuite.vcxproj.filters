@@ -86,6 +86,9 @@
     <ClCompile Include="bonds.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -196,6 +199,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="bonds.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="C.hpp">
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp">

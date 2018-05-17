@@ -135,7 +135,7 @@ void InfDkBuilder::buildCapFloorBasket() {
     Date today = Settings::instance().evaluationDate();
     std::string infIndex = data_->infIndex();
 
-    Handle<CPICapFloorTermPriceSurface> infVol = market_->inflationCapFloorPriceSurface(infIndex, configuration_);
+    Handle<CPICapFloorTermPriceSurface> infVol = market_->cpiInflationCapFloorPriceSurface(infIndex, configuration_);
     QL_REQUIRE(!infVol.empty(), "Inf vol termstructure not found for " << infIndex);
 
     std::vector<Time> expiryTimes(data_->optionExpiries().size());

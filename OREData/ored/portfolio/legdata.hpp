@@ -29,6 +29,7 @@
 #include <ored/utilities/parsers.hpp>
 
 #include <ql/cashflow.hpp>
+#include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 
@@ -319,6 +320,65 @@ private:
     bool nakedOption_;
 };
 
+//! Serializable CMS Spread Leg Data
+/*!
+\ingroup tradedata
+*/
+class CMSSpreadLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    CMSSpreadLegData() : LegAdditionalData("CMSSpread"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
+    //! Constructor
+    CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, int fixingDays, bool isInArrears,
+                     const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
+                     const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
+                     const vector<double>& floors = vector<double>(),
+                     const vector<string>& floorDates = vector<string>(),
+                     const vector<double>& gearings = vector<double>(),
+                     const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
+        : LegAdditionalData("CMSSpread"), swapIndex1_(swapIndex1), swapIndex2_(swapIndex2), fixingDays_(fixingDays),
+          isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
+          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
+          nakedOption_(nakedOption) {}
+
+    //! \name Inspectors
+    //@{
+    const string& swapIndex1() const { return swapIndex1_; }
+    const string& swapIndex2() const { return swapIndex2_; }
+    int fixingDays() const { return fixingDays_; }
+    bool isInArrears() const { return isInArrears_; }
+    const vector<double>& spreads() const { return spreads_; }
+    const vector<string>& spreadDates() const { return spreadDates_; }
+    const vector<double>& caps() const { return caps_; }
+    const vector<string>& capDates() const { return capDates_; }
+    const vector<double>& floors() const { return floors_; }
+    const vector<string>& floorDates() const { return floorDates_; }
+    const vector<double>& gearings() const { return gearings_; }
+    const vector<string>& gearingDates() const { return gearingDates_; }
+    bool nakedOption() const { return nakedOption_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    string swapIndex1_;
+    string swapIndex2_;
+    int fixingDays_;
+    bool isInArrears_;
+    vector<double> spreads_;
+    vector<string> spreadDates_;
+    vector<double> caps_;
+    vector<string> capDates_;
+    vector<double> floors_;
+    vector<string> floorDates_;
+    vector<double> gearings_;
+    vector<string> gearingDates_;
+    bool nakedOption_;
+};
+
 //! Serializable object holding amortization rules
 class AmortizationData : public XMLSerializable {
 public:
@@ -443,6 +503,8 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
+Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
+                     const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Real currentNotional(const Leg& leg);
 
 //@}
