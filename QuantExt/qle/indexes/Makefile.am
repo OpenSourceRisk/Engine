@@ -12,7 +12,8 @@ libIndexes_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
-	genericiborindex.hpp \
+	bmaindexwrapper.hpp \
+    genericiborindex.hpp \
     fxindex.hpp \
 	inflationindexwrapper.hpp \
     inflationindexobserver.hpp \
