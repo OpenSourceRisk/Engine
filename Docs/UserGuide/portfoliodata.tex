@@ -1411,6 +1411,52 @@ The CMSLegData block contains the following elements:
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 \end{itemize}
 
+\subsubsection{CMSSpread Leg Data}
+\label{ss:cmsspreadlegdata}
+
+Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>CMSSpread</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+        <CMSLegData>
+          <Index1>EUR-CMS-10Y</Index1>
+          <Index2>EUR-CMS-2Y</Index2>
+          <Spreads>
+            <Spread>0.0010</Spread>
+          </Spreads>
+          <Gearings>
+            <Gearing>8.0</Gearing>
+          </Gearings>
+          <Caps>
+            <Cap>0.05</Cap>
+          </Caps>
+          <Floors>
+            <Floor>0.01</Floor>
+          </Floors>
+        </CMSLegData>
+        <NakedOption>N</NakedOption>
+      </LegData>
+\end{minted}
+\caption{CMS Spread leg data}
+\label{lst:cmsspreadlegdata}
+\end{listing}
+
+The elements of the CMSSpreadLegData block are identical to those of the CMSLegData (see \ref{ss:cmslegdata}), except
+for the index which is defined by two CMS indices as the difference between \verb+Index1+ and \verb+Index2+.
+
 \subsubsection{CPI Leg Data}
 \label{ss:cpilegdata}
 

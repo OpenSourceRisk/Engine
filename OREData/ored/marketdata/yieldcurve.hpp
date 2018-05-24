@@ -137,6 +137,8 @@ private:
                             vector<boost::shared_ptr<RateHelper>>& instruments);
     void addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+                            vector<boost::shared_ptr<RateHelper>>& instruments);
     void addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segment,
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,

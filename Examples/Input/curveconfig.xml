@@ -461,7 +461,7 @@
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
-  </YieldCurve>
+    </YieldCurve>
     <YieldCurve>
       <CurveId>SEK-IN-USD</CurveId>
       <CurveDescription>SEK FX Fwd discount curve</CurveDescription>
@@ -521,7 +521,7 @@
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
-  <YieldCurve>
+    <YieldCurve>
       <CurveId>CAD-IN-USD</CurveId>
       <CurveDescription>CAD collateralised in USD discount curve</CurveDescription>
       <Currency>CAD</Currency>
@@ -888,6 +888,52 @@
       <InterpolationVariable>Discount</InterpolationVariable>
       <InterpolationMethod>LogLinear</InterpolationMethod>
       <YieldCurveDayCounter>A365</YieldCurveDayCounter>
+      <Tolerance>0.000000000001</Tolerance>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>DKK1D</CurveId>
+      <CurveDescription>DKK discount curve bootstrapped from DKK OIS swap rates</CurveDescription>
+      <Currency>DKK</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Simple>
+          <Type>Deposit</Type>
+          <Quotes>
+            <Quote>MM/RATE/DKK/0D/1D</Quote>
+          </Quotes>
+          <Conventions>DKK-OIS-CONVENTIONS</Conventions>
+        </Simple>
+        <Simple>
+          <Type>OIS</Type>
+          <Quotes>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/1M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/2M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/3M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/6M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/9M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/1Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/1Y6M</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/2Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/3Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/4Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/5Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/6Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/7Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/8Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/9Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/10Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/12Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/15Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/20Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/25Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/1D/30Y</Quote>
+          </Quotes>
+          <Conventions>DKK-OIS-CONVENTIONS</Conventions>
+        </Simple>
+      </Segments>
+      <InterpolationVariable>Discount</InterpolationVariable>
+      <InterpolationMethod>LogLinear</InterpolationMethod>
+      <YieldCurveDayCounter>A360</YieldCurveDayCounter>
       <Tolerance>0.000000000001</Tolerance>
     </YieldCurve>
     <YieldCurve>
@@ -1327,6 +1373,37 @@
       </Segments>
     </YieldCurve>
     <YieldCurve>
+      <CurveId>USDBMA</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <DiscountCurve>USD3M</DiscountCurve>
+      <Segments>
+        <Simple>
+          <Type>BMA Basis Swap</Type>
+          <Quotes>
+            <Quote>BMA_SWAP/RATIO/USD/3M/3M</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/1Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/2Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/3Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/4Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/5Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/6Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/7Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/8Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/9Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/10Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/12Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/15Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/20Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/25Y</Quote>
+            <Quote>BMA_SWAP/RATIO/USD/3M/30Y</Quote>
+          </Quotes>
+          <Conventions>USD-LIBOR-SIFMA-3M-BASIS-CONVENTIONS</Conventions>
+          <ProjectionCurve>USD3M</ProjectionCurve>
+        </Simple>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>GBP1D</CurveId>
       <CurveDescription/>
       <Currency>GBP</Currency>
@@ -1670,8 +1747,8 @@
           <ProjectionCurve>JPY3M</ProjectionCurve>
         </Simple>
       </Segments>
-  </YieldCurve>
-   <YieldCurve>
+    </YieldCurve>
+    <YieldCurve>
       <CurveId>JPY-IN-USD</CurveId>
       <CurveDescription>JPY collateralised in USD discount curve</CurveDescription>
       <Currency>JPY</Currency>
@@ -1772,6 +1849,61 @@
           </Quotes>
           <Conventions>SEK-3M-SWAP-CONVENTIONS</Conventions>
           <ProjectionCurve>SEK3M</ProjectionCurve>
+        </Simple>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>DKK3M</CurveId>
+      <CurveDescription/>
+      <Currency>DKK</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Simple>
+          <Type>Deposit</Type>
+          <Quotes>
+            <Quote>MM/RATE/DKK/0D/1D</Quote>
+            <Quote>MM/RATE/DKK/0D/2D</Quote>
+            <Quote>MM/RATE/DKK/2D/3D</Quote>
+            <Quote>MM/RATE/DKK/2D/1M</Quote>
+            <Quote>MM/RATE/DKK/2D/2M</Quote>
+            <Quote>MM/RATE/DKK/2D/3M</Quote>
+          </Quotes>
+          <Conventions>DKK-LIBOR-CONVENTIONS</Conventions>
+          <ProjectionCurve>DKK3M</ProjectionCurve>
+        </Simple>
+        <Simple>
+          <Type>FRA</Type>
+          <Quotes>
+            <Quote>FRA/RATE/DKK/1M/2M</Quote>
+            <Quote>FRA/RATE/DKK/2M/3M</Quote>
+            <Quote>FRA/RATE/DKK/3M/4M</Quote>
+            <Quote>FRA/RATE/DKK/4M/5M</Quote>
+            <Quote>FRA/RATE/DKK/5M/6M</Quote>
+            <Quote>FRA/RATE/DKK/6M/7M</Quote>
+          </Quotes>
+          <Conventions>DKK-3M-FRA-CONVENTIONS</Conventions>
+          <ProjectionCurve>DKK3M</ProjectionCurve>
+        </Simple>
+        <Simple>
+          <Type>Swap</Type>
+          <Quotes>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/2Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/3Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/4Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/5Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/6Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/7Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/8Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/9Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/10Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/12Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/15Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/20Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/25Y</Quote>
+            <Quote>IR_SWAP/RATE/DKK/2D/3M/30Y</Quote>
+          </Quotes>
+          <Conventions>DKK-3M-SWAP-CONVENTIONS</Conventions>
+          <ProjectionCurve>DKK3M</ProjectionCurve>
         </Simple>
       </Segments>
     </YieldCurve>
@@ -2776,6 +2908,26 @@
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
+	  	  
+      <!-- EUHICPXT YY CapFloor-->
+      <InflationCapFloorPriceSurface>
+          <CurveId>EUHICPXT_YY_CF</CurveId>
+          <CurveDescription>Price Surface YY CapFloor EUHICPXT</CurveDescription>
+          <Type>YY</Type>
+          <StartRate>0.10</StartRate>
+          <ObservationLag>3M</ObservationLag>
+          <Calendar>TARGET</Calendar>
+          <BusinessDayConvention>MF</BusinessDayConvention>
+          <DayCounter>A365</DayCounter>
+          <Index>EUHICPXT</Index>
+		  <!-- IndexCurve can be of type Yoy or Zero -->
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+          <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.05,0.06</CapStrikes>
+          <FloorStrikes>-0.02,-0.01,0.00,0.005,0.01,0.015,0.02</FloorStrikes>
+          <Maturities>2Y,5Y,7Y,10Y,15Y,20Y</Maturities>
+      </InflationCapFloorPriceSurface>
       
       <!-- USCPI ZC CapFloor-->
       <InflationCapFloorPriceSurface>
@@ -2796,7 +2948,7 @@
           <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
       </InflationCapFloorPriceSurface>
-      
+	  
       <!-- UKRPI ZC CapFloor-->
       <InflationCapFloorPriceSurface>
           <CurveId>UKRPI_ZC_CF</CurveId>
@@ -2818,7 +2970,26 @@
       </InflationCapFloorPriceSurface>
       
   </InflationCapFloorPriceSurfaces>
-
+  
+  <InflationCapFloorVolatilities>
+      <InflationCapFloorVolatility>
+          <CurveId>EUHICPXT_YY_CF_N</CurveId>
+		  <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
+          <Type>YY</Type>
+		  <VolatilityType>Normal</VolatilityType>
+		  <Extrapolation>TRUE</Extrapolation>
+		  <DayCounter>Actual/365 (Fixed)</DayCounter>
+		  <Calendar>TARGET</Calendar>
+		  <BusinessDayConvention>Following</BusinessDayConvention>
+		  <Tenors>2Y,5Y,7Y,10Y,15Y,20Y</Tenors>
+		  <Strikes>-0.02,-0.01,0,0.01,0.02,0.03</Strikes>
+		  <Index>EUHICPXT</Index>
+          <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
+          <IndexInterpolated>false</IndexInterpolated>
+          <YieldTermStructure>Yield/EUR/EUR1D</YieldTermStructure>
+      </InflationCapFloorVolatility>
+  </InflationCapFloorVolatilities>
+  
   <EquityCurves>
         <EquityCurve>
             <CurveId>SP5</CurveId>

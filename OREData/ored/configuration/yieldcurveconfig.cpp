@@ -30,7 +30,7 @@ using boost::iequals;
 namespace ore {
 namespace data {
 
-YieldCurveSegment::Type parseYieldCurveSegement(const string& s) {
+YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
     if (iequals(s, "Zero"))
         return YieldCurveSegment::Type::Zero;
     else if (iequals(s, "Zero Spread"))
@@ -53,6 +53,8 @@ YieldCurveSegment::Type parseYieldCurveSegement(const string& s) {
         return YieldCurveSegment::Type::TenorBasis;
     else if (iequals(s, "Tenor Basis Two Swaps"))
         return YieldCurveSegment::Type::TenorBasisTwo;
+    else if (iequals(s, "BMA Basis Swap"))
+        return YieldCurveSegment::Type::BMABasis;
     else if (iequals(s, "FX Forward"))
         return YieldCurveSegment::Type::FXForward;
     else if (iequals(s, "Cross Currency Basis Swap"))
@@ -288,11 +290,11 @@ void YieldCurveConfig::populateRequiredYieldCurveIDs() {
 
 YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
                                      const vector<string>& quotes = vector<string>())
-    : quotes_(quotes), type_(parseYieldCurveSegement(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
+    : quotes_(quotes), type_(parseYieldCurveSegment(typeID)), typeID_(typeID), conventionsID_(conventionsID) {}
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
-    type_ = parseYieldCurveSegement(typeID_);
+    type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
 }
 
@@ -447,6 +449,7 @@ void TenorBasisYieldCurveSegment::accept(AcyclicVisitor& v) {
     else
         YieldCurveSegment::accept(v);
 }
+
 
 CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const string& conventionsID,
                                                      const vector<string>& quotes, const string& spotRateID,

@@ -405,6 +405,15 @@
     <ClInclude Include="ored\portfolio\legbuilders.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\inflationcapfloorvolcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
@@ -413,6 +422,9 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\varianceswap.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\cmsspread.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -716,8 +728,20 @@
     <ClCompile Include="ored\portfolio\legbuilders.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\yoycapfloor.cpp">
+      <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\inflationcapfloorvolcurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\inflationcapfloorvolcurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
     <ClCompile Include="ored\portfolio\varianceswap.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\builders\cmsspread.cpp">
+      <Filter>portfolio\builders</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

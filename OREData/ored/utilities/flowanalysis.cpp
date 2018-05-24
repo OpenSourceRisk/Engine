@@ -23,6 +23,7 @@
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
@@ -41,6 +42,7 @@ class AnalysisGenerator : public QuantLib::AcyclicVisitor,
                           public QuantLib::Visitor<QuantLib::Coupon>,
                           public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
                           public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
+                          public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
                           public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
                           public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
                           public QuantLib::Visitor<QuantLib::InflationCoupon> {
@@ -56,6 +58,7 @@ public:
     void visit(QuantLib::Coupon& c);
     void visit(QuantLib::FloatingRateCoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);
+    void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantLib::InflationCoupon& c);
@@ -102,6 +105,14 @@ void AnalysisGenerator::visit(QuantLib::FloatingRateCoupon& c) {
 }
 
 void AnalysisGenerator::visit(QuantExt::AverageONIndexedCoupon& c) {
+    for (auto& d : c.fixingDates()) {
+        visit(static_cast<QuantLib::Coupon&>(c));
+        flowAnalysis_.back()[FIXING_DATE] = to_string(d);
+        flowAnalysis_.back()[INDEX] = c.index()->name();
+    }
+}
+
+void AnalysisGenerator::visit(QuantLib::AverageBMACoupon& c) {
     for (auto& d : c.fixingDates()) {
         visit(static_cast<QuantLib::Coupon&>(c));
         flowAnalysis_.back()[FIXING_DATE] = to_string(d);

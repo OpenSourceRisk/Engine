@@ -673,6 +673,8 @@
     <ClCompile Include="cms.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
+    <ClCompile Include="inflationcapfloor.cpp" />
+    <ClCompile Include="inflationcapfloor.hpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="commodityoption.cpp" />
     <ClCompile Include="commodityvolcurve.cpp" />

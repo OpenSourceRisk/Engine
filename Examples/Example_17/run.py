@@ -21,3 +21,6 @@ oreex.setup_plot("YoY Swap")
 oreex.plot("exposure_trade_YearOnYear_Swap.csv", 2, 3, 'b', "EPE YoY Swap")
 oreex.decorate_plot(title="Example 17", ylabel="Exposure")
 oreex.save_plot_to_file()
+
+oreex.run("Input/ore_capfloor.xml")
+oreex.get_times("Output/log_capfloor.txt")

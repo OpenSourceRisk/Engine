@@ -27,6 +27,7 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 
 using std::string;
@@ -54,6 +55,7 @@ public:
         AverageOIS,
         TenorBasisSwap,
         TenorBasisTwoSwap,
+        BMABasisSwap,
         FX,
         CrossCcyBasis,
         CDS,
@@ -580,6 +582,44 @@ private:
     string strShortFixedDayCounter_;
     string strShortIndex_;
     string strLongMinusShort_;
+};
+
+//! Container for storing Libor-BMA Basis Swap conventions
+/*!
+\ingroup marketdata
+*/
+class BMABasisSwapConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    BMABasisSwapConvention() {}
+    //! Detailed constructor
+    BMABasisSwapConvention(const string& id, const string& liborIndex, const string& bmaIndex);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<IborIndex>& liborIndex() const { return liborIndex_; }
+    const boost::shared_ptr<QuantExt::BMAIndexWrapper>& bmaIndex() const { return bmaIndex_; }
+    const string& liborIndexName() const { return strLiborIndex_; }
+    const string& bmaIndexName() const { return strBmaIndex_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+
+private:
+    boost::shared_ptr<IborIndex> liborIndex_;
+    boost::shared_ptr<QuantExt::BMAIndexWrapper> bmaIndex_;
+
+    // Strings to store the inputs
+    string strLiborIndex_;
+    string strBmaIndex_;
 };
 
 //! Container for storing FX Spot quote conventions

@@ -68,6 +68,7 @@ public:
                              const Handle<YoYInflationTermStructure>& ts = Handle<YoYInflationTermStructure>());
     /*! \warning the forecastTodaysFixing parameter (required by the Index interface) is currently ignored. */
     Rate fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    const boost::shared_ptr<ZeroInflationIndex> zeroIndex() const { return zeroIndex_; }
 
 private:
     Rate forecastFixing(const Date& fixingDate) const;
@@ -82,7 +83,7 @@ class YoYInflationCouponPricer2 : public YoYInflationCouponPricer {
 public:
     YoYInflationCouponPricer2(
         const Handle<YieldTermStructure>& nominalTs,
-        const Handle<YoYOptionletVolatilitySurface>& capletVol = Handle<YoYOptionletVolatilitySurface>())
+        const Handle<QuantLib::YoYOptionletVolatilitySurface>& capletVol = Handle<QuantLib::YoYOptionletVolatilitySurface>())
         : YoYInflationCouponPricer(capletVol), nominalTs_(nominalTs) {}
     //! \name InflationCouponPricer interface
     //@{

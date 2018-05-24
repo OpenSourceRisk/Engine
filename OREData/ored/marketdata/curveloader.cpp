@@ -95,6 +95,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
                 ++it;
             }
         }
+
         QL_REQUIRE(n > yieldCurveSpecs.size(), "missing curve or cycle in yield curve spec");
     }
 

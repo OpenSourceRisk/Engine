@@ -42,6 +42,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
+        {"BMA_SWAP", MarketDatum::InstrumentType::BMA_SWAP },
         {"CDS", MarketDatum::InstrumentType::CDS},
         {"CDS_INDEX", MarketDatum::InstrumentType::CDS_INDEX},
         {"FX", MarketDatum::InstrumentType::FX_SPOT},
@@ -62,6 +63,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
+        {"YY_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR },
         {"SEASONALITY", MarketDatum::InstrumentType::SEASONALITY},
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
@@ -214,6 +216,14 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         return boost::make_shared<BasisSwapQuote>(value, asof, datumName, quoteType, flatTerm, term, ccy, maturity);
     }
 
+    case MarketDatum::InstrumentType::BMA_SWAP: {
+        QL_REQUIRE(tokens.size() == 5, "5 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        Period maturity = parsePeriod(tokens[4]);
+        return boost::make_shared<BMASwapQuote>(value, asof, datumName, quoteType, term, ccy, maturity);
+    }
+
     case MarketDatum::InstrumentType::CC_BASIS_SWAP: {
         QL_REQUIRE(tokens.size() == 7, "7 tokens expected in " << datumName);
         const string& flatCcy = tokens[2];
@@ -344,6 +354,18 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         string strike = tokens[5];
         return boost::make_shared<ZcInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
                                                             strike);
+    }
+
+    case MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR: {
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        const string& index = tokens[2];
+        Period term = parsePeriod(tokens[3]);
+        QL_REQUIRE(tokens[4] == "C" || tokens[4] == "F",
+            "excepted C or F for Cap or Floor at position 5 in " << datumName);
+        bool isCap = tokens[4] == "C";
+        string strike = tokens[5];
+        return boost::make_shared<YyInflationCapFloorQuote>(value, asof, datumName, quoteType, index, term, isCap,
+            strike);
     }
 
     case MarketDatum::InstrumentType::SEASONALITY: {
