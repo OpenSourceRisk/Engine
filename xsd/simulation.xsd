@@ -280,28 +280,15 @@
       <xs:element name="YieldCurves">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Configuration">
+            <xs:element name="Configuration" maxOccurs="unbounded" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="xs:string" name="Tenors"/>
-                  <xs:element type="ycInterpolation" name="Interpolation"/>
-                  <xs:element type="bool" name="Extrapolation"/>
-                  <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
-                    <xs:complexType>
-                      <xs:sequence>
-                        <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
-                          <xs:complexType>
-                            <xs:simpleContent>
-                              <xs:extension base="xs:string">
-                                <xs:attribute name="curve" type="xs:string" use="optional"/>
-                              </xs:extension>
-                            </xs:simpleContent>
-                          </xs:complexType>
-                        </xs:element>
-                      </xs:sequence>
-                    </xs:complexType>
-                  </xs:element>
+                  <xs:element type="xs:string" name="Tenors" maxOccurs="1" minOccurs="1"/>
+                  <xs:element type="ycInterpolation" name="Interpolation" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="bool" name="Extrapolation" maxOccurs="1" minOccurs="0"/>
+                  <xs:element type="dayCounter" name="DayCounter" maxOccurs="1" minOccurs="0"/>
                 </xs:sequence>
+                <xs:attribute name="curve" type="xs:string" use="optional" />
               </xs:complexType>
             </xs:element>
           </xs:sequence>

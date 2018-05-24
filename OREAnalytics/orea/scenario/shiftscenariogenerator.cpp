@@ -43,6 +43,47 @@ string ShiftScenarioGenerator::ScenarioDescription::keyName(RiskFactorKey key) c
     o << keyType << "/" << keyName;
     return o.str();
 }
+ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& description) {
+
+    // Expect string to be possibly three pieces delimited by ":"
+    vector<string> tokens;
+    boost::split(tokens, description, boost::is_any_of(":"));
+
+    if (tokens.size() == 1 && tokens[0] == "Base") {
+        type_ = ScenarioDescription::Type::Base;
+        
+        key1_ = RiskFactorKey();
+        indexDesc1_ = "";
+        
+        key2_ = RiskFactorKey();
+        indexDesc2_ = "";
+
+    } else if (tokens.size() == 2 && (tokens[0] == "Up" || tokens[0] == "Down")) {
+        type_ = tokens[0] == "Up" ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+        
+        auto temp = deconstructFactor(tokens[1]);
+        key1_ = temp.first;
+        indexDesc1_ = temp.second;
+        
+        key2_ = RiskFactorKey();
+        indexDesc2_ = "";
+
+    } else if (tokens.size() == 3 && tokens[0] == "Cross") {
+        type_ = ScenarioDescription::Type::Cross;
+        
+        auto temp = deconstructFactor(tokens[1]);
+        key1_ = temp.first;
+        indexDesc1_ = temp.second;
+        
+        temp = deconstructFactor(tokens[2]);
+        key2_ = temp.first;
+        indexDesc2_ = temp.second;
+
+    } else {
+        QL_FAIL("Could not construct ScenarioDescription from string '" << description << "'");
+    }
+}
+
 string ShiftScenarioGenerator::ScenarioDescription::typeString() const {
     if (type_ == ScenarioDescription::Type::Base)
         return "Base";
@@ -59,7 +100,6 @@ string ShiftScenarioGenerator::ScenarioDescription::factor1() const {
     ostringstream o;
     if (key1_ != RiskFactorKey()) {
         o << key1_;
-        // if (indexDesc1_ != "")
         o << "/" << indexDesc1_;
         return o.str();
     }
@@ -69,22 +109,17 @@ string ShiftScenarioGenerator::ScenarioDescription::factor2() const {
     ostringstream o;
     if (key2_ != RiskFactorKey()) {
         o << key2_;
-        // if (indexDesc2_ != "")
         o << "/" << indexDesc2_;
         return o.str();
     }
     return "";
 }
-string ShiftScenarioGenerator::ScenarioDescription::text() const {
-    string t = typeString();
-    string f1 = factor1();
-    string f2 = factor2();
-    string ret = t;
-    if (f1 != "")
-        ret += ":" + f1;
-    if (f2 != "")
-        ret += ":" + f2;
-    return ret;
+
+string ShiftScenarioGenerator::ScenarioDescription::factors() const {
+    string result = factor1();
+    if (factor2() != "")
+        result += ":" + factor2();
+    return result;
 }
 
 ShiftScenarioGenerator::ShiftScenarioGenerator(const boost::shared_ptr<Scenario>& baseScenario,
@@ -113,6 +148,31 @@ ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s) {
     }
 }
 
+ostream& operator<<(ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription) {
+    out << scenarioDescription.typeString();
+    if (scenarioDescription.factor1() != "")
+        out << ":" << scenarioDescription.factor1();
+    if (scenarioDescription.factor2() != "")
+        out << ":" << scenarioDescription.factor2();
+    return out;
+}
+
+pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
+
+    // If string is empty
+    if (factor.empty()) {
+        return make_pair(RiskFactorKey(), "");
+    }
+
+    // Expect string of form "a/b/c/<anything>" where "a/b/c" can be parsed as RiskFactorKey
+    // The remainder is the index description
+    auto it = boost::find_nth(factor, "/", 2);
+    QL_REQUIRE(!it.empty(), "Could not find 3 '/' in the string " << factor);
+
+    auto pos = distance(factor.begin(), it.begin());
+    return make_pair(parseRiskFactorKey(factor.substr(0, pos)), factor.substr(pos + 1));
+}
+
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& tenors, const vector<Real>& values,
                                         const vector<Real>& times, vector<Real>& shiftedValues, bool initialise) {
@@ -122,24 +182,6 @@ void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftTy
     QL_REQUIRE(shiftedValues.size() == values.size(), "shifted values vector size does not match input");
 
     Time t1 = tenors[j];
-    // FIXME: Handle case where the shift curve is more granular than the original
-    // ostringstream o_tenors;
-    // o_tenors << "{";
-    // for (auto it_tenor : tenors)
-    //     o_tenors << it_tenor << ",";
-    // o_tenors << "}";
-    // ostringstream o_times;
-    // o_times << "{";
-    // for (auto it_time : times)
-    //     o_times << it_time << ",";
-    // o_times << "}";
-    // QL_REQUIRE(tenors.size() <= times.size(),
-    //            "shifted tenor vector " << o_tenors.str() << " cannot be more granular than the base curve tenor
-    //            vector "
-    //                                    << o_times.str());
-    // auto it = std::find(times.begin(), times.end(), t1);
-    // QL_REQUIRE(it != times.end(),
-    //            "shifted tenor node (" << t1 << ") not found in base curve tenor vector " << o_times.str());
 
     if (initialise) {
         for (Size i = 0; i < values.size(); ++i)

@@ -71,14 +71,13 @@ public:
     //! Constructor
     StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
                             const boost::shared_ptr<Scenario>& baseScenario,
-                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData);
+                            const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                            const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory);
     //! Default destructor
-    ~StressScenarioGenerator(){};
-
-    //! generate the scenarios
-    void generateScenarios(const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory);
+    ~StressScenarioGenerator() {}
 
 private:
+    void generateScenarios();
     void addFxShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addEquityShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addDiscountCurveShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
@@ -90,7 +89,8 @@ private:
     void addCapFloorVolShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
     void addSecuritySpreadShifts(StressTestScenarioData::StressTestData& data, boost::shared_ptr<Scenario>& scenario);
 
-    const boost::shared_ptr<StressTestScenarioData> stressData_;
+    boost::shared_ptr<StressTestScenarioData> stressData_;
+    boost::shared_ptr<ScenarioFactory> stressScenarioFactory_;
 };
 } // namespace analytics
 } // namespace ore
