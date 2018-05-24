@@ -74,6 +74,9 @@ public:
     //! save the XML Document to the given file.
     void toFile(const string& filename);
 
+    //! return the XML Document as a string.
+    std::string toString();
+
     XMLNode* getFirstNode(const string& name);
     void appendNode(XMLNode*);
 

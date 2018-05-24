@@ -49,12 +49,12 @@
     <ClInclude Include="orea\cube\cubewriter.hpp" />
     <ClInclude Include="orea\cube\inmemorycube.hpp" />
     <ClInclude Include="orea\cube\npvcube.hpp" />
+    <ClInclude Include="orea\cube\sensitivitycube.hpp" />
     <ClInclude Include="orea\engine\all.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
     <ClInclude Include="orea\engine\parametricvar.hpp" />
     <ClInclude Include="orea\engine\riskfilter.hpp" />
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
-    <ClInclude Include="orea\engine\sensitivitycube.hpp" />
     <ClInclude Include="orea\engine\sensitivitydata.hpp" />
     <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
@@ -94,6 +94,7 @@
     <ClCompile Include="orea\app\reportwriter.cpp" />
     <ClCompile Include="orea\app\sensitivityrunner.cpp" />
     <ClCompile Include="orea\cube\cubewriter.cpp" />
+    <ClCompile Include="orea\cube\sensitivitycube.cpp" />
     <ClCompile Include="orea\engine\parametricvar.cpp" />
     <ClCompile Include="orea\engine\riskfilter.cpp" />
     <ClCompile Include="orea\engine\sensitivityanalysis.cpp" />

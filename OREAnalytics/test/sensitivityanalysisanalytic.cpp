@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "sensitivityanalysis2.hpp"
+#include "sensitivityanalysisanalytic.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
@@ -235,7 +235,7 @@ bool check(const Real reference, const Real value) {
 
 } // anonymous namespace
 
-void SensitivityAnalysis2Test::testSensitivities() {
+void SensitivityAnalysisAnalyticTest::testSensitivities() {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
 
@@ -1322,9 +1322,10 @@ void SensitivityAnalysis2Test::testSensitivities() {
     map<pair<string, string>, Real> deltaMap;
     map<pair<string, string>, Real> gammaMap;
     for (auto p : portfolio->trades()) {
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
     std::vector<ore::analytics::SensitivityScenarioGenerator::ScenarioDescription> scenDesc =
@@ -1391,7 +1392,8 @@ void SensitivityAnalysis2Test::testSensitivities() {
         for (auto const& s : scenDesc) {
             if (s.type() == ShiftScenarioGenerator::ScenarioDescription::Type::Cross) {
                 string key = id + " " + s.factor1() + " " + s.factor2();
-                Real scaledResult = sa->crossGamma(id, s.factor1(), s.factor2()) / (shiftSize * shiftSize);
+                Real crossGamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
+                Real scaledResult = crossGamma / (shiftSize * shiftSize);
                 // BOOST_TEST_MESSAGE(key << " " << scaledResult); // debug
                 if (analyticalResultsCrossGamma.count(key) > 0) {
                     if (!check(analyticalResultsCrossGamma.at(key), scaledResult))
@@ -1401,9 +1403,9 @@ void SensitivityAnalysis2Test::testSensitivities() {
                                     << analyticalResultsCrossGamma.at(key) << ")");
                     ++foundCrossGammas;
                 } else {
-                    if (!check(sa->crossGamma(id, s.factor1(), s.factor2()), 0.0))
+                    if (!check(crossGamma, 0.0))
                         BOOST_ERROR("Sensitivity analysis result " << key << " ("
-                                                                   << sa->crossGamma(id, s.factor1(), s.factor2())
+                                                                   << crossGamma
                                                                    << ") expected to be zero");
                     ++zeroCrossGammas;
                 }
@@ -1427,10 +1429,10 @@ void SensitivityAnalysis2Test::testSensitivities() {
     BOOST_CHECK(true);
 }
 
-test_suite* SensitivityAnalysis2Test::suite() {
+test_suite* SensitivityAnalysisAnalyticTest::suite() {
 
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysis2Test");
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysis2Test::testSensitivities));
+    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisAnalyticTest");
+    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisAnalyticTest::testSensitivities));
     return suite;
 }
 } // namespace testsuite

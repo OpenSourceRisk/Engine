@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/sensitivityanalysis2.hpp
-    \brief Sensitivity analysis tests
+/*! \file test/sensitivityanalysisanalytic.hpp
+    \brief Sensitivity analysis tests against analytic sensitivities
     \ingroup tests
 */
 
@@ -33,7 +33,7 @@ namespace testsuite {
 /*!
   \ingroup tests
 */
-class SensitivityAnalysis2Test {
+class SensitivityAnalysisAnalyticTest {
 public:
     //! Test bucketed deltas, gammas, vegas in a multi curve setting for swap, swaption, fx option
     static void testSensitivities();

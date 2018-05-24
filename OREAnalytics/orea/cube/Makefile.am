@@ -7,13 +7,15 @@ libOREAnalyticsCube_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libOREAnalyticsCube_la_LIBADD =
 
 libOREAnalyticsCube_la_SOURCES = \
-	cubewriter.cpp
+	cubewriter.cpp \
+	sensitivitycube.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	npvcube.hpp \
 	inmemorycube.hpp \
+	sensitivitycube.hpp \
 	cubewriter.hpp
 
 all.hpp: Makefile.am

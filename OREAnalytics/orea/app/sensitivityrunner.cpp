@@ -17,11 +17,11 @@
 */
 
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/app/reportwriter.hpp>
 #include <ored/report/csvreport.hpp>
 
 using namespace std;
 using namespace ore::data;
-using namespace ore::analytics;
 
 namespace ore {
 namespace analytics {
@@ -77,26 +77,26 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     marketConfiguration = params_->get("markets", "pricing");
 
     DLOG("sensiInputInitialize done");
-    
-    return;
 }
 
 void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis) {
 
     string outputPath = params_->get("setup", "outputPath");
-    string outputFile1 = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
     Real sensiThreshold = parseReal(params_->get("sensitivity", "outputSensitivityThreshold"));
-    boost::shared_ptr<Report> scenReport = boost::make_shared<CSVFileReport>(outputFile1);
-    sensiAnalysis->writeScenarioReport(scenReport, sensiThreshold);
 
-    string outputFile2 = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
-    boost::shared_ptr<Report> sensiReport = boost::make_shared<CSVFileReport>(outputFile2);
-    sensiAnalysis->writeSensitivityReport(sensiReport, sensiThreshold);
+    string outputFile = outputPath + "/" + params_->get("sensitivity", "scenarioOutputFile");
+    CSVFileReport scenReport(outputFile);
+    ReportWriter().writeScenarioReport(scenReport, sensiAnalysis->sensiCube(), sensiThreshold);
 
-    string outputFile3 = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
-    boost::shared_ptr<Report> cgReport = boost::make_shared<CSVFileReport>(outputFile3);
-    sensiAnalysis->writeCrossGammaReport(cgReport, sensiThreshold);
-    return;
+    outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
+    CSVFileReport sensiReport(outputFile);
+    ReportWriter().writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), 
+        sensiThreshold, sensiAnalysis->shiftSizes());
+
+    outputFile = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
+    CSVFileReport cgReport(outputFile);
+    ReportWriter().writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), 
+        sensiThreshold, sensiAnalysis->shiftSizes());
 }
 
 } // namespace analytics

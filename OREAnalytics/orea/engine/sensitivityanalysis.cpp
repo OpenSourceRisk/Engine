@@ -88,10 +88,8 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
         initializeCube(cube);
     }
 
-    boost::shared_ptr<vector<ShiftScenarioGenerator::ScenarioDescription>> scenDesc =
-        boost::make_shared<vector<ShiftScenarioGenerator::ScenarioDescription>>(
-            scenarioGenerator_->scenarioDescriptions());
-    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenDesc, portfolio_);
+    sensiCube_ = boost::make_shared<SensitivityCube>(
+        cube, scenarioGenerator_->scenarioDescriptions());
     initialized_ = true;
 }
 
@@ -112,28 +110,30 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube)
 
     computed_ = true;
     LOG("Sensitivity analysis completed");
-    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
 
-    for (auto f : sensiCube_->upFactors()) {
-        Size idx = f.second;
-        RiskFactorKey key = (*scenDesc)[idx].key1();
+    for (auto key : sensiCube_->factors()) {
         factors_[key] = getShiftSize(key);
     }
 }
 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
+    
     LOG("Initialise sim market for sensitivity analysis");
     simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
-    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(sensitivityData_, simMarket_->baseScenario(),
-                                                                          simMarketData_, overrideTenors_);
+    LOG("Sim market initialised for sensitivity analysis");
+
+    LOG("Create scenario factory for sensitivity analysis");
+    boost::shared_ptr<Scenario> baseScenario = simMarket_->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
+    LOG("Scenario factory created for sensitivity analysis");
+
+    LOG("Create scenario generator for sensitivity analysis");
+    scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
+        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_);
+    LOG("Scenario generator created for sensitivity analysis");
+
+    // Set simulation market's scenario generator
     simMarket_->scenarioGenerator() = scenarioGenerator_;
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator_->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenFactory =
-        (scenFact != NULL) ? scenFact
-                           : boost::make_shared<CloneScenarioFactory>(
-                                 baseScen); // needed so that sensi scenarios are consistent with base scenario
-    LOG("Generating sensitivity scenarios");
-    scenarioGenerator_->generateScenarios(scenFactory);
 }
 
 boost::shared_ptr<EngineFactory>
@@ -154,153 +154,6 @@ void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>&
 void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const {
     cube = boost::make_shared<DoublePrecisionInMemoryCube>(asof_, portfolio_->ids(), vector<Date>(1, asof_),
                                                            scenarioGenerator_->samples());
-}
-
-void SensitivityAnalysis::writeScenarioReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
-
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    LOG("writing Scenario report");
-
-    report->addColumn("TradeId", string());
-    report->addColumn("Factor", string());
-    report->addColumn("Up/Down", string());
-    report->addColumn("Base NPV", double(), 2);
-    report->addColumn("Scenario NPV", double(), 2);
-    report->addColumn("Difference", double(), 2);
-
-    Size ps = portfolio_->size();
-    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
-
-    for (Size i = 0; i < ps; ++i) {
-        string id = portfolio_->trades()[i]->id();
-        Real base = sensiCube_->baseNPV(i);
-
-        for (Size j = 0; j < scenarioGenerator_->samples(); ++j) {
-
-            Real npv = sensiCube_->getNPV(i, j);
-            Real sensi = npv - base;
-            ShiftScenarioGenerator::ScenarioDescription desc = (*scenDesc)[j];
-            string type = desc.typeString();
-            ostringstream o;
-            o << desc.factor1();
-            if (desc.factor2() != "")
-                o << ":" << desc.factor2();
-            string factor = o.str();
-
-            if (fabs(sensi) > outputThreshold) {
-                report->next();
-                report->add(id);
-                report->add(factor);
-                report->add(type);
-                report->add(base);
-                report->add(npv);
-                report->add(sensi);
-            } else if (!std::isfinite(sensi)) {
-                ALOG("sensitivity scenario for trade " << id << ", factor " << factor << " is not finite (" << sensi
-                                                       << ")");
-            }
-        }
-    }
-
-    report->end();
-    LOG("Scenario report finished");
-}
-
-void SensitivityAnalysis::writeSensitivityReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
-
-    LOG("writing Sensitivity report");
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-
-    report->addColumn("TradeId", string());
-    report->addColumn("Factor", string());
-    report->addColumn("ShiftSize", double(), 6);
-    report->addColumn("Base NPV", double(), 2);
-    report->addColumn("Delta", double(), 2);
-    report->addColumn("Gamma", double(), 2);
-
-    Size ps = portfolio_->size();
-    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
-
-    for (Size i = 0; i < ps; ++i) {
-        string id = portfolio_->trades()[i]->id();
-        Real base = baseNPV(id);
-
-        for (auto f : sensiCube_->upFactors()) {
-            string factor = f.first;
-
-            Real d = delta(id, factor);
-            Real g = gamma(id, factor);
-
-            if (fabs(d) > outputThreshold || fabs(g) > outputThreshold) {
-                Size idx = f.second;
-                RiskFactorKey key = (*scenDesc)[idx].key1();
-                Real shiftSize = factors_.find(key)->second; // getShiftSize(key);;
-
-                report->next();
-                report->add(id);
-                report->add(factor);
-                report->add(shiftSize);
-                report->add(base);
-                report->add(d);
-                report->add(g);
-            } else if (!std::isfinite(d) || !std::isfinite(g)) {
-                ALOG("sensitivity results for trade " << id << ", factor " << factor << " are not finite (delta = " << d
-                                                      << ", gamma = " << g << ")");
-            }
-        }
-    }
-    report->end();
-    LOG("Sensitivity report finished");
-}
-
-void SensitivityAnalysis::writeCrossGammaReport(const boost::shared_ptr<Report>& report, Real outputThreshold) {
-    LOG("writing CrossGamma report");
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    report->addColumn("TradeId", string());
-    report->addColumn("Factor 1", string());
-    report->addColumn("ShiftSize1", double(), 6);
-    report->addColumn("Factor 2", string());
-    report->addColumn("ShiftSize2", double(), 6);
-    report->addColumn("Base NPV", double(), 2);
-    report->addColumn("CrossGamma", double(), 2);
-
-    Size ps = portfolio_->size();
-    boost::shared_ptr<vector<SensitivityScenarioGenerator::ScenarioDescription>> scenDesc = sensiCube_->scenDesc();
-
-    for (Size i = 0; i < ps; ++i) {
-
-        Real npv0 = sensiCube_->baseNPV(i);
-        string id = portfolio_->trades()[i]->id();
-
-        for (auto f : sensiCube_->crossFactors()) {
-            string factor1 = f.first.first;
-            string factor2 = f.first.second;
-
-            Real cg = crossGamma(id, factor1, factor2);
-
-            if (fabs(cg) > outputThreshold) {
-                Size idx = f.second;
-                RiskFactorKey key1 = (*scenDesc)[idx].key1();
-                RiskFactorKey key2 = (*scenDesc)[idx].key2();
-                Real shiftSize1 = factors_.find(key1)->second; // getShiftSize(key1);
-                Real shiftSize2 = factors_.find(key2)->second; // getShiftSize(key2);
-
-                report->next();
-                report->add(id);
-                report->add(factor1);
-                report->add(shiftSize1);
-                report->add(factor2);
-                report->add(shiftSize2);
-                report->add(npv0);
-                report->add(cg);
-            }  else if (!std::isfinite(cg)) {
-                ALOG("sensitivity result for trade " << id << ", factors " << factor1 << ", " << factor2
-                                                     << " is not finite (cross-gamma = " << cg << ")");
-            }
-        }
-    }
-    report->end();
-    LOG("crossgamma written");
 }
 
 Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
@@ -595,40 +448,5 @@ Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
     return realShift;
 }
 
-Real SensitivityAnalysis::baseNPV(std::string& id) const {
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    return sensiCube_->baseNPV(id);
-}
-
-Real SensitivityAnalysis::delta(const std::string& trade, const std::string& factor) const {
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-
-    Size i = sensiCube_->getTradeIndex(trade);
-    Real npv = sensiCube_->upNPV(i, factor);
-    Real npv0 = sensiCube_->baseNPV(i);
-    return npv - npv0;
-}
-
-Real SensitivityAnalysis::gamma(const std::string& trade, const std::string& factor) const {
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-    Size i = sensiCube_->getTradeIndex(trade);
-    Real u = sensiCube_->upNPV(i, factor);
-    Real d = sensiCube_->downNPV(i, factor);
-    Real npv0 = sensiCube_->baseNPV(i);
-    return u - 2.0 * npv0 + d;
-}
-
-Real SensitivityAnalysis::crossGamma(const std::string& trade, const std::string& factor1,
-                                     const std::string& factor2) const {
-    QL_REQUIRE(computed_, "Sensitivities have not been successfully computed");
-
-    // f_xy(x,y) = (f(x+u,y+v) - f(x,y+v) - f(x+u,y) + f(x,y)) / (u*v)
-    Size i = sensiCube_->getTradeIndex(trade);
-    Real npv = sensiCube_->crossNPV(i, factor1, factor2);
-    Real npv0 = sensiCube_->baseNPV(i);
-    Real up1 = sensiCube_->upNPV(i, factor1);
-    Real up2 = sensiCube_->upNPV(i, factor2);
-    return npv - up1 - up2 + npv0; // f_xy(x,y) * u * v
-}
 } // namespace analytics
 } // namespace ore
