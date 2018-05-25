@@ -99,33 +99,34 @@ public:
     SensitivityScenarioGenerator(const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                  const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                 const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
                                  const bool overrideTenors);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
-    void generateScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory);
 
 private:
-    void generateYieldCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateDiscountCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateIndexCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateFxScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateEquityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateDividendYieldScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateSwaptionVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateFxVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateEquityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateEquityForecastCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateCapFloorVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateSurvivalProbabilityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateCdsVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateZeroInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateYoYInflationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateBaseCorrelationScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateCommodityScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateCommodityCurveScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateCommodityVolScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
-    void generateSecuritySpreadScenarios(const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory, bool up);
+    void generateScenarios();
+    void generateYieldCurveScenarios(bool up);
+    void generateDiscountCurveScenarios(bool up);
+    void generateIndexCurveScenarios(bool up);
+    void generateFxScenarios(bool up);
+    void generateEquityScenarios(bool up);
+    void generateDividendYieldScenarios(bool up);
+    void generateSwaptionVolScenarios(bool up);
+    void generateFxVolScenarios(bool up);
+    void generateEquityVolScenarios(bool up);
+    void generateEquityForecastCurveScenarios(bool up);
+    void generateCapFloorVolScenarios(bool up);
+    void generateSurvivalProbabilityScenarios(bool up);
+    void generateCdsVolScenarios(bool up);
+    void generateZeroInflationScenarios(bool up);
+    void generateYoYInflationScenarios(bool up);
+    void generateBaseCorrelationScenarios(bool up);
+    void generateCommodityScenarios(bool up);
+    void generateCommodityCurveScenarios(bool up);
+    void generateCommodityVolScenarios(bool up);
+    void generateSecuritySpreadScenarios(bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -152,6 +153,7 @@ private:
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
+    boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
     const bool overrideTenors_;
 };
 } // namespace analytics

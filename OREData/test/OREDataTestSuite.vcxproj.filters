@@ -93,6 +93,9 @@
     <ClInclude Include="ored_commodityforward.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="inflationcapfloor.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -179,9 +182,6 @@
     </ClCompile>
     <ClCompile Include="ored_commodityforward.cpp">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="inflationcapfloor.hpp">
-      <Filter>headers</Filter>
     </ClCompile>
     <ClCompile Include="inflationcapfloor.cpp">
       <Filter>source</Filter>

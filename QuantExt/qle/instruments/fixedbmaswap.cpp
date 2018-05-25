@@ -40,8 +40,6 @@ FixedBMASwap::FixedBMASwap(Type type, Real nominal,
                            const DayCounter& bmaDayCount)
     : Swap(2), type_(type), nominal_(nominal), fixedRate_(fixedRate) {
 
-    BusinessDayConvention convention = fixedSchedule.businessDayConvention();
-
     legs_[0] = FixedRateLeg(fixedSchedule)
                    .withNotionals(nominal)
                    .withCouponRates(fixedRate, fixedDayCount)
@@ -143,7 +141,7 @@ MakeFixedBMASwap::MakeFixedBMASwap(const Period& swapTenor, const boost::shared_
       bmaConvention_(ModifiedFollowing), bmaTerminationDateConvention_(ModifiedFollowing),
       fixedRule_(DateGeneration::Backward), bmaRule_(DateGeneration::Backward), fixedEndOfMonth_(false),
       bmaEndOfMonth_(false), fixedFirstDate_(Date()), fixedNextToLastDate_(Date()), bmaFirstDate_(Date()),
-      bmaNextToLastDate_(Date()), bmaSpread_(0.0), bmaDayCount_(index->dayCounter()) {}
+      bmaNextToLastDate_(Date()), bmaDayCount_(index->dayCounter()) {}
 
 MakeFixedBMASwap::operator FixedBMASwap() const {
     boost::shared_ptr<FixedBMASwap> swap = *this;

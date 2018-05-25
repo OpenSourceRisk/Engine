@@ -52,7 +52,7 @@ public:
     virtual void sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                       boost::shared_ptr<SensitivityScenarioData>& sensiData,
                                       boost::shared_ptr<EngineData>& engineData,
-                                      boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration);
+                                      boost::shared_ptr<Portfolio>& sensiPortfolio);
 
     //! Write out some standard sensitivities reports
     virtual void sensiOutputReports(const boost::shared_ptr<SensitivityAnalysis>& sensiAnalysis);
