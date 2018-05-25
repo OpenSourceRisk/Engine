@@ -137,7 +137,6 @@ private:
     bool fixedEndOfMonth_, bmaEndOfMonth_;
     Date fixedFirstDate_, fixedNextToLastDate_;
     Date bmaFirstDate_, bmaNextToLastDate_;
-    Spread bmaSpread_;
     DayCounter fixedDayCount_, bmaDayCount_;
 
     boost::shared_ptr<PricingEngine> engine_;

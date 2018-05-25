@@ -161,7 +161,7 @@
     <ClInclude Include="orea\app\sensitivityrunner.hpp">
       <Filter>app</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\sensitivitycube.hpp">
+    <ClInclude Include="orea\cube\sensitivitycube.hpp">
       <Filter>cube</Filter>
     </ClInclude>
   </ItemGroup>
@@ -264,6 +264,9 @@
     </ClCompile>
     <ClCompile Include="orea\app\sensitivityrunner.cpp">
       <Filter>app</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\cube\sensitivitycube.cpp">
+      <Filter>cube</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

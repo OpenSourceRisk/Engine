@@ -24,7 +24,7 @@
 #pragma once
 
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/sensitivitycube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariodata.hpp>
@@ -54,7 +54,6 @@ class ValuationCalculator;
   - running the scenario "engine" to apply these and compute the NPV impacts of all required shifts
   - compile first and second order sensitivities for all factors and all trades
   - fill result structures that can be queried
-  - write sensitivity report to a file
 
   \ingroup simulation
 */
@@ -74,27 +73,6 @@ public:
 
     //! Generate the Sensitivities
     void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
-
-    //! Return base NPV by trade, before shift
-    Real baseNPV(std::string& id) const;
-
-    //! Return delta/vega (first order sensitivity times shift) for a trade/factor pair
-    Real delta(const std::string& trade, const std::string& factor) const;
-
-    //! Return gamma (second order sensitivity times shift^2) for a trade/factor pair
-    Real gamma(const std::string& trade, const std::string& factor) const;
-
-    //! Return cross gamma (mixed second order sensitivity times shift^2) for a given trade/factor1/factor2
-    Real crossGamma(const std::string& trade, const std::string& factor1, const std::string& factor2) const;
-
-    //! Write "raw" NPV by trade/scenario (contains base, up and down shift scenarios)
-    void writeScenarioReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
-
-    //! Write deltas and gammas by trade/factor pair
-    void writeSensitivityReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
-
-    //! Write cross gammas by trade/factor1/factor2
-    virtual void writeCrossGammaReport(const boost::shared_ptr<ore::data::Report>& report, Real outputThreshold = 0.0);
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -128,6 +106,9 @@ public:
     //! a wrapper for the sensivity results cube
     boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
 
+    //! Return a map containing the risk factor keys and their corresponding shift sizes
+    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return factors_; }
+
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
     virtual void initialize(boost::shared_ptr<NPVCube>& cube);
@@ -146,8 +127,6 @@ protected:
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
 
-    //! archive the actual shift size for each risk factor (so as to interpret results)
-    void storeFactorShifts(const ShiftScenarioGenerator::ScenarioDescription& desc);
     //! returns the shift size corresponding to a particular risk factor
     Real getShiftSize(const RiskFactorKey& desc) const;
 

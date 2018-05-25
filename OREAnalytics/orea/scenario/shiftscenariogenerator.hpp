@@ -29,6 +29,8 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/marketdata/market.hpp>
 
+#include <tuple>
+
 namespace ore {
 using namespace data;
 namespace analytics {
@@ -53,13 +55,16 @@ public:
         ScenarioDescription(ScenarioDescription d1, ScenarioDescription d2)
             : type_(Type::Cross), key1_(d1.key1()), indexDesc1_(d1.indexDesc1()), key2_(d2.key1()),
               indexDesc2_(d2.indexDesc1()) {}
+        //! Construct from string
+        ScenarioDescription(const std::string& description);
+        
         //! Inspectors
         //@{
-        Type type() const { return type_; }
-        RiskFactorKey key1() const { return key1_; }
-        RiskFactorKey key2() const { return key2_; }
-        string indexDesc1() const { return indexDesc1_; }
-        string indexDesc2() const { return indexDesc2_; }
+        const Type& type() const { return type_; }
+        const RiskFactorKey& key1() const { return key1_; }
+        const RiskFactorKey& key2() const { return key2_; }
+        const string& indexDesc1() const { return indexDesc1_; }
+        const string& indexDesc2() const { return indexDesc2_; }
         string keyName1() const { return keyName(key1_); }
         string keyName2() const { return keyName(key2_); }
         //@}
@@ -69,11 +74,12 @@ public:
         string factor1() const;
         //! Return key2 as string with text2 appended as key index description
         string factor2() const;
-        //! Return full description
-        string text() const;
+        //! Return "factor1" and append ":factor2" if factor2 is not empty
+        string factors() const;
 
     private:
         string keyName(RiskFactorKey key) const;
+
         Type type_;
         RiskFactorKey key1_;
         string indexDesc1_;
@@ -187,5 +193,23 @@ protected:
 };
 
 ShiftScenarioGenerator::ShiftType parseShiftType(const std::string& s);
+
+std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::ScenarioDescription& scenarioDescription);
+
+//! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or ScenarioDescription::factor2() 
+std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& factor);
+
+inline bool operator<(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+    return std::tie(lhs.type(), lhs.key1(), lhs.key2()) < std::tie(rhs.type(), rhs.key1(), rhs.key2());
+}
+
+inline bool operator==(const ShiftScenarioGenerator::ScenarioDescription& lhs, const ShiftScenarioGenerator::ScenarioDescription& rhs) {
+    return lhs.type() == rhs.type() && 
+        lhs.key1() == rhs.key1() && 
+        lhs.indexDesc1() == rhs.indexDesc1() &&
+        lhs.key2() == rhs.key2() &&
+        lhs.indexDesc2() == rhs.indexDesc2();
+}
+
 } // namespace analytics
 } // namespace ore

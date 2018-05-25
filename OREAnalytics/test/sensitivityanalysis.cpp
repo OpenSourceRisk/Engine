@@ -41,6 +41,7 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
@@ -81,12 +82,13 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -698,7 +700,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         for (Size j = 1; j < scenarioGenerator->samples(); ++j) { // skip j = 0, this is the base scenario
             Real npv = cube->get(i, 0, j, 0);
             Real sensi = npv - npv0;
-            string label = desc[j].text();
+            string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
                 // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
@@ -730,9 +732,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -832,12 +835,13 @@ void test1dShifts(bool granular) {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
 
     // cache initial zero rates
     vector<Period> tenors = simMarketData->yieldCurveTenors("");
@@ -927,12 +931,13 @@ void SensitivityAnalysisTest::test2dShifts() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries();
@@ -1038,12 +1043,13 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1126,9 +1132,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -1157,7 +1164,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = sa->baseNPV(sensiTrnId);
+            res.baseNpv = sa->sensiCube()->npv(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
@@ -1244,12 +1251,13 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1341,9 +1349,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -1389,7 +1398,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = sa->baseNPV(sensiTrnId);
+            res.baseNpv = sa->sensiCube()->npv(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
@@ -1593,12 +1602,13 @@ void SensitivityAnalysisTest::testCrossGamma() {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1923,7 +1933,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
                 os << id << "_" << factor1 << "_" << factor2;
                 string keyStr = os.str();
                 tuple<string, string, string> key = make_tuple(id, factor1, factor2);
-                Real crossgamma = sa->crossGamma(id, factor1, factor2);
+                Real crossgamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
                 if (fabs(crossgamma) >= threshold) {
                     // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" <<
                     // factor2 <<

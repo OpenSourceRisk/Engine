@@ -429,7 +429,7 @@ void OREApp::writeInitialReports() {
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
-                                       market_);
+                                  market_);
         out_ << "OK" << endl;
     } else {
         LOG("skip curve report");
@@ -444,7 +444,7 @@ void OREApp::writeInitialReports() {
         string fileName = outputPath + "/" + params_->get("npv", "outputFileName");
         CSVFileReport npvReport(fileName);
         getReportWriter()->writeNpv(npvReport, params_->get("npv", "baseCurrency"), market_,
-                                    params_->get("markets", "pricing"), portfolio_);
+                               params_->get("markets", "pricing"), portfolio_);
         out_ << "OK" << endl;
     } else {
         LOG("skip portfolio valuation");
@@ -466,7 +466,9 @@ void OREApp::writeInitialReports() {
     }
 }
 
-boost::shared_ptr<ReportWriter> OREApp::getReportWriter() { return boost::make_shared<ReportWriter>(); }
+boost::shared_ptr<ReportWriter> OREApp::getReportWriter() {
+    return boost::shared_ptr<ReportWriter>(getReportWriterImpl());
+}
 
 boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { 
     return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(), getExtraLegBuilders()); 

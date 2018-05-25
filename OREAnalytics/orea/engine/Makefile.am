@@ -23,7 +23,6 @@ this_include_HEADERS = \
 	valuationcalculator.hpp \
 	sensitivityanalysis.hpp \
 	stresstest.hpp \
-    sensitivitycube.hpp \
 	riskfilter.hpp \
 	parametricvar.hpp \
 	sensitivitydata.hpp
