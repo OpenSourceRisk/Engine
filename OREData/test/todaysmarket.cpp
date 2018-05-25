@@ -724,8 +724,6 @@ boost::shared_ptr<TodaysMarket> market;
 
 void setup() {
     
-    SavedSettings backup;
-
     Date asof(26, February, 2016);
     Settings::instance().evaluationDate() = asof;
 
@@ -747,6 +745,7 @@ void teardown() {
 struct CommonVars {
     CommonVars() { setup(); }
     ~CommonVars() { teardown(); }
+    SavedSettings backup_;
 };
 } // namespace
 
