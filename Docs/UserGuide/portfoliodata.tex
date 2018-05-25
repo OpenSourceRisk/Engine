@@ -325,12 +325,49 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \begin{itemize}
 \item ValueDate: The value date of the FX Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \item BoughtCurrency: The currency to be bought on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-\item BoughtAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
+\item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
 
 \end{itemize}
 
+\subsubsection{FX Swap}
+
+The \lstinline!FXSwapData!  node is the trade data container for the FX Swap trade type.  The structure -
+including example values - of the \lstinline!FXSwapData!  node is shown in Listing 
+\ref{lst:fxswap_data}. 
+It contains no sub-nodes.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxSwapData>
+            <NearDate>2018-09-01</NearDate>
+            <NearBoughtCurrency>EUR</NearBoughtCurrency>
+            <NearBoughtAmount>1000000</NearBoughtAmount>
+            <NearSoldCurrency>USD</NearSoldCurrency>
+            <NearSoldAmount>1140000</NearSoldAmount>
+             <FarDate>2028-09-01</FarDate>
+            <FarBoughtAmount>1300000</FarBoughtAmount>
+            <FarSoldAmount>1000000</FarSoldAmount>
+        </FxSwapData>
+\end{minted}
+\caption{FX Swap data}
+\label{lst:fxswap_data}
+\end{listing}
+
+The meanings and allowable values of the various elements in the \lstinline!FXSwapData!  node follow below.  All elements are required.
+
+\begin{itemize}
+\item NearDate: The date of the initial fx exchange of the FX Swap. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item NearBoughtCurrency: The currency to be bought in the initial exchange at near date, and sold in the final exchange at far date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearBoughtAmount: The amount to be bought on near date.  \\ Allowable values:  Any positive real number.
+\item NearSoldCurrency: The currency to be sold in the initial fx exchange at near date, and bought in the final exchange at far date.   \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearSoldAmount: The amount to be sold on near date.  \\ Allowable values:  Any positive real number.
+\item FarDate: The date of the final fx exchange of the FX Swap. \\ Allowable values:  Any date further into the future than NearDate. See \lstinline!Date! in Table  \ref{tab:allow_stand_data}.
+\item FarBoughtAmount: The amount to be bought on far date.  \\ Allowable values:  Any positive real number.
+\item FarSoldAmount: The amount to be sold on far date.  \\ Allowable values:  Any positive real number.
+\end{itemize}
 
 \subsubsection{FX Option}
 
@@ -380,6 +417,8 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 Allowable values:  Any positive real number.
 
 \end{itemize}
+
+
 
 \subsubsection{Equity Option}
 
