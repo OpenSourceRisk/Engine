@@ -693,13 +693,12 @@ are
 \begin{itemize}
 \item StartDate: A FRA expires/settles on the startDate. \\
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt todaysmarket.xml}.
+
 \item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
 \item Currency: The currency of the FRA notional. \\
 Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
 \item Index: The name of the interest rate index the FRA is benchmarked against.
-\item LongShort: Specifies whether the option position is long  or
-  short.
+\item LongShort: Specifies whether the FRA position is long (one receives the agreed rate) or short (one pays the agreed rate).
 \item Strike: The agreed forward interest rate.
 \item Notional: No accretion or amortisation, just a constant notional.
 \end{itemize}
