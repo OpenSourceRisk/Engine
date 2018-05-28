@@ -229,11 +229,6 @@ void SensitivityScenarioGenerator::generateScenarios() {
 void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer FX risk factors than listed in the market
-    std::vector<string> fxCcyPairs;
-    if (sensitivityData_->fxCcyPairs().size() > 0)
-        fxCcyPairs = sensitivityData_->fxCcyPairs();
-    else
-        fxCcyPairs = simMarketData_->fxCcyPairs();
     // Is this too strict?
     // - implemented to avoid cases where input cross FX rates are not consistent
     // - Consider an example (baseCcy = EUR) of a GBPUSD FX trade - two separate routes to pricing
@@ -245,24 +240,22 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     // - (b) the value of the GBPUSD trade stays the same
     // - in light of the above we restrict the universe of FX pairs that we support here for the time being
     string baseCcy = simMarketData_->baseCcy();
-    for (auto sensi_fx : fxCcyPairs) {
-        string foreign = sensi_fx.substr(0, 3);
-        string domestic = sensi_fx.substr(3);
+    for (auto sensi_fx : sensitivityData_->fxShiftData()) {
+        string foreign = sensi_fx.first.substr(0, 3);
+        string domestic = sensi_fx.first.substr(3);
         QL_REQUIRE((domestic == baseCcy) || (foreign == baseCcy),
                    "SensitivityScenarioGenerator does not support cross FX pairs("
-                       << sensi_fx << ", but base currency is " << baseCcy << ")");
+                       << sensi_fx.first << ", but base currency is " << baseCcy << ")");
     }
     // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxCcyPairs()) {
-        if (std::find(fxCcyPairs.begin(), fxCcyPairs.end(), sim_fx) == fxCcyPairs.end()) {
+        if (sensitivityData_->fxShiftData().find(sim_fx) == sensitivityData_->fxShiftData().end()) {
             ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
-    for (Size k = 0; k < fxCcyPairs.size(); k++) {
-        string ccypair = fxCcyPairs[k]; // foreign + domestic;
-        auto itr = sensitivityData_->fxShiftData().find(ccypair);
-        QL_REQUIRE(itr != sensitivityData_->fxShiftData().end(), "fxShiftData not found for " << ccypair);
-        SensitivityScenarioData::SpotShiftData data = itr->second;
+    for (auto sensi_fx : sensitivityData_->fxShiftData()) {
+        string ccypair = sensi_fx.first; // foreign + domestic;
+        SensitivityScenarioData::SpotShiftData data = sensi_fx.second;
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         // QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
@@ -289,25 +282,17 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
 }
 
 void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
-    // We can choose to shift fewer discount curves than listed in the market
     Date asof = baseScenario_->asof();
-    std::vector<string> equityNames;
-    if (sensitivityData_->equityNames().size() > 0)
-        equityNames = sensitivityData_->equityNames();
-    else
-        equityNames = simMarketData_->equityNames();
-
+    // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_equity : simMarketData_->equityNames()) {
-        if (std::find(equityNames.begin(), equityNames.end(), sim_equity) == equityNames.end()) {
+        if (sensitivityData_->equityShiftData().find(sim_equity) == sensitivityData_->equityShiftData().end()) {
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-    for (Size k = 0; k < equityNames.size(); k++) {
-        string equity = equityNames[k];
-        auto itr = sensitivityData_->equityShiftData().find(equity);
-        QL_REQUIRE(itr != sensitivityData_->equityShiftData().end(), "equityShiftData not found for " << equity);
-        SensitivityScenarioData::SpotShiftData data = itr->second;
+    for (auto e : sensitivityData_->equityShiftData()) {
+        string equity = e.first;
+        SensitivityScenarioData::SpotShiftData data = e.second;
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
@@ -333,32 +318,22 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
-    // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> discountCurrencies;
-    if (sensitivityData_->discountCurrencies().size() > 0)
-        discountCurrencies = sensitivityData_->discountCurrencies();
-    else
-        discountCurrencies = simMarketData_->ccys();
     // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->ccys()) {
-        if (std::find(discountCurrencies.begin(), discountCurrencies.end(), sim_ccy) == discountCurrencies.end()) {
+        if (sensitivityData_->discountCurveShiftData().find(sim_ccy) == sensitivityData_->discountCurveShiftData().end()) {
             ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_ccy = discountCurrencies.size();
-
-    for (Size i = 0; i < n_ccy; ++i) {
-        string ccy = discountCurrencies[i];
+    for (auto c : sensitivityData_->discountCurveShiftData()) {
+        string ccy = c.first;
         Size n_ten = simMarketData_->yieldCurveTenors(ccy).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->discountCurveShiftData().find(ccy);
-        QL_REQUIRE(itr != sensitivityData_->discountCurveShiftData().end(), "CurveShiftData not found for " << ccy);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
 
@@ -415,33 +390,24 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
-
-    // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> indexNames;
-    if (sensitivityData_->indexNames().size() > 0)
-        indexNames = sensitivityData_->indexNames();
-    else
-        indexNames = simMarketData_->indices();
+    
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->indices()) {
-        if (std::find(indexNames.begin(), indexNames.end(), sim_idx) == indexNames.end()) {
+        if (sensitivityData_->indexCurveShiftData().find(sim_idx) == sensitivityData_->indexCurveShiftData().end()) {
             ALOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_indices = indexNames.size();
-
-    for (Size i = 0; i < n_indices; ++i) {
-        string indexName = indexNames[i];
+    for (auto idx : sensitivityData_->indexCurveShiftData()) {
+        string indexName = idx.first;
         Size n_ten = simMarketData_->yieldCurveTenors(indexName).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->indexCurveShiftData().find(indexName);
-        QL_REQUIRE(itr != sensitivityData_->indexCurveShiftData().end(), "CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        
+        SensitivityScenarioData::CurveShiftData data = *idx.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
@@ -497,31 +463,22 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
 void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer yield curves than listed in the market
-    vector<string> yieldCurveNames;
-    if (sensitivityData_->yieldCurveNames().size() > 0)
-        yieldCurveNames = sensitivityData_->yieldCurveNames();
-    else
-        yieldCurveNames = simMarketData_->yieldCurveNames();
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim_yc : simMarketData_->yieldCurveNames()) {
-        if (std::find(yieldCurveNames.begin(), yieldCurveNames.end(), sim_yc) == yieldCurveNames.end()) {
+        if (sensitivityData_->yieldCurveShiftData().find(sim_yc) == sensitivityData_->yieldCurveShiftData().end()) {
             ALOG("Yield Curve " << sim_yc << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_curves = yieldCurveNames.size();
-
-    for (Size i = 0; i < n_curves; ++i) {
-        string name = yieldCurveNames[i];
+    for (auto y : sensitivityData_->yieldCurveShiftData()) {
+        string name = y.first;
         Size n_ten = simMarketData_->yieldCurveTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->yieldCurveShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->yieldCurveShiftData().end(), "CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
@@ -576,32 +533,22 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(bool up) {
     // We can choose to shift fewer yield curves than listed in the market
     Date asof = baseScenario_->asof();
-    vector<string> equityForecastNames;
-    if (sensitivityData_->equityForecastCurveNames().size() > 0)
-        equityForecastNames = sensitivityData_->equityForecastCurveNames();
-    else
-        equityForecastNames = simMarketData_->equityNames();
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim_ec : simMarketData_->equityNames()) {
-        if (std::find(equityForecastNames.begin(), equityForecastNames.end(), sim_ec) == equityForecastNames.end()) {
+        if (sensitivityData_->equityForecastCurveShiftData().find(sim_ec) == sensitivityData_->equityForecastCurveShiftData().end()) {
             ALOG("equityForecast Curve " << sim_ec << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_curves = equityForecastNames.size();
-
-    for (Size i = 0; i < n_curves; ++i) {
-        string name = equityForecastNames[i];
+    for (auto e : sensitivityData_->equityForecastCurveShiftData()) {
+        string name = e.first;
         Size n_ten = simMarketData_->equityForecastTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->equityForecastCurveShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->equityForecastCurveShiftData().end(),
-                   "equityForecast CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *e.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
@@ -657,31 +604,22 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
     Date asof = baseScenario_->asof();
 
     // We can choose to shift fewer yield curves than listed in the market
-    vector<string> dividendYieldNames;
-    if (sensitivityData_->equityNames().size() > 0)
-        dividendYieldNames = sensitivityData_->dividendYieldNames();
-    else
-        dividendYieldNames = simMarketData_->equityNames();
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim : simMarketData_->equityNames()) {
-        if (std::find(dividendYieldNames.begin(), dividendYieldNames.end(), sim) == dividendYieldNames.end()) {
+        if (sensitivityData_->dividendYieldShiftData().find(sim) == sensitivityData_->dividendYieldShiftData().end()) {
             ALOG("Equity " << sim << " in simmarket is not included in dividend yield sensitivity analysis");
         }
     }
 
-    Size n_curves = dividendYieldNames.size();
-    for (Size i = 0; i < n_curves; ++i) {
-        string name = dividendYieldNames[i];
+    for (auto d : sensitivityData_->dividendYieldShiftData()) {
+        string name = d.first;
         Size n_ten = simMarketData_->equityDividendTenors(name).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->dividendYieldShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->dividendYieldShiftData().end(),
-                   "dividendYield CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *d.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
@@ -736,19 +674,13 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> fxVolCcyPairs;
-    if (sensitivityData_->fxVolCcyPairs().size() > 0)
-        fxVolCcyPairs = sensitivityData_->fxVolCcyPairs();
-    else
-        fxVolCcyPairs = simMarketData_->fxVolCcyPairs();
     // Log an ALERT if some FX vol pairs in simmarket are excluded from the list
     for (auto sim_fx : simMarketData_->fxVolCcyPairs()) {
-        if (std::find(fxVolCcyPairs.begin(), fxVolCcyPairs.end(), sim_fx) == fxVolCcyPairs.end()) {
+        if (sensitivityData_->fxVolShiftData().find(sim_fx) == sensitivityData_->fxVolShiftData().end()) {
             ALOG("FX pair " << sim_fx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_fxvol_pairs = fxVolCcyPairs.size();
     Size n_fxvol_exp = simMarketData_->fxVolExpiries().size();
     Size n_fxvol_strikes = simMarketData_->fxVolMoneyness().size();
 
@@ -758,14 +690,11 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
     // buffer for shifted zero curves
     vector<vector<Real>> shiftedValues(n_fxvol_strikes, vector<Real>(n_fxvol_exp, 0.0));
 
-    map<string, SensitivityScenarioData::VolShiftData> shiftDataMap = sensitivityData_->fxVolShiftData();
-    for (Size i = 0; i < n_fxvol_pairs; ++i) {
-        string ccyPair = fxVolCcyPairs[i];
+    for (auto f : sensitivityData_->fxVolShiftData()) {
+        string ccyPair = f.first;
         QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
 
-        QL_REQUIRE(shiftDataMap.find(ccyPair) != shiftDataMap.end(),
-                   "ccy pair " << ccyPair << " not found in VolShiftData");
-        SensitivityScenarioData::VolShiftData data = shiftDataMap[ccyPair];
+        SensitivityScenarioData::VolShiftData data = f.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         std::vector<Period> shiftTenors = data.shiftExpiries;
         std::vector<Time> shiftTimes(shiftTenors.size());
@@ -820,19 +749,12 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> equityVolNames;
-    if (sensitivityData_->equityVolNames().size() > 0)
-        equityVolNames = sensitivityData_->equityVolNames();
-    else
-        equityVolNames = simMarketData_->equityVolNames();
     // Log an ALERT if an Equity in simmarket are excluded from the simulation list
     for (auto sim_equity : simMarketData_->equityVolNames()) {
-        if (std::find(equityVolNames.begin(), equityVolNames.end(), sim_equity) == equityVolNames.end()) {
+        if (sensitivityData_->equityVolShiftData().find(sim_equity) == sensitivityData_->equityVolShiftData().end()) {
             ALOG("Equity " << sim_equity << " in simmarket is not included in sensitivities analysis");
         }
     }
-
-    Size n_eqvol_names = equityVolNames.size();
     Size n_eqvol_exp = simMarketData_->equityVolExpiries().size();
     Size n_eqvol_strikes = simMarketData_->equityVolIsSurface() ? simMarketData_->equityVolMoneyness().size() : 1;
 
@@ -843,12 +765,9 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
     // buffer for shifted vols
     vector<vector<Real>> shiftedValues(n_eqvol_strikes, vector<Real>(n_eqvol_exp, 0.0));
 
-    map<string, SensitivityScenarioData::VolShiftData> shiftDataMap = sensitivityData_->equityVolShiftData();
-    for (Size i = 0; i < n_eqvol_names; ++i) {
-        string equity = equityVolNames[i];
-        QL_REQUIRE(shiftDataMap.find(equity) != shiftDataMap.end(),
-                   "equity " << equity << " not found in VolShiftData");
-        SensitivityScenarioData::VolShiftData data = shiftDataMap[equity];
+    for (auto e : sensitivityData_->equityVolShiftData()) {
+        string equity = e.first;
+        SensitivityScenarioData::VolShiftData data = e.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         vector<Period> shiftTenors = data.shiftExpiries;
         vector<Time> shiftTimes(shiftTenors.size());
@@ -902,20 +821,14 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
     LOG("starting swapVol sgen");
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> swaptionVolCurrencies;
-    if (sensitivityData_->swaptionVolCurrencies().size() > 0)
-        swaptionVolCurrencies = sensitivityData_->swaptionVolCurrencies();
-    else
-        swaptionVolCurrencies = simMarketData_->swapVolCcys();
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->swapVolCcys()) {
-        if (std::find(swaptionVolCurrencies.begin(), swaptionVolCurrencies.end(), sim_ccy) ==
-            swaptionVolCurrencies.end()) {
+        if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) ==
+             sensitivityData_->swaptionVolShiftData().end()) {
             ALOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_swvol_ccy = swaptionVolCurrencies.size();
     Size n_swvol_term = simMarketData_->swapVolTerms().size();
     Size n_swvol_exp = simMarketData_->swapVolExpiries().size();
     Size n_swvol_strike = simMarketData_->swapVolStrikeSpreads().size();
@@ -930,11 +843,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
     shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
 
-    for (Size i = 0; i < n_swvol_ccy; ++i) {
-        std::string ccy = swaptionVolCurrencies[i];
-        auto itr = sensitivityData_->swaptionVolShiftData().find(ccy);
-        QL_REQUIRE(itr != sensitivityData_->swaptionVolShiftData().end(), "SwaptionVolShiftData not found for " << ccy);
-        SensitivityScenarioData::SwaptionVolShiftData data = itr->second;
+    for (auto s :  sensitivityData_->swaptionVolShiftData()) {
+        std::string ccy = s.first;
+        SensitivityScenarioData::SwaptionVolShiftData data = s.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
@@ -1031,29 +942,21 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    vector<string> capFloorVolCurrencies;
-    if (sensitivityData_->capFloorVolCurrencies().size() > 0)
-        capFloorVolCurrencies = sensitivityData_->capFloorVolCurrencies();
-    else
-        capFloorVolCurrencies = simMarketData_->capFloorVolCcys();
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
     for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
-        if (std::find(capFloorVolCurrencies.begin(), capFloorVolCurrencies.end(), sim_cap) ==
-            capFloorVolCurrencies.end()) {
+        if (sensitivityData_->capFloorVolShiftData().find(sim_cap) ==
+            sensitivityData_->capFloorVolShiftData().end()) {
             ALOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_cfvol_ccy = capFloorVolCurrencies.size();
     Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
     vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
 
-    for (Size i = 0; i < n_cfvol_ccy; ++i) {
-        std::string ccy = capFloorVolCurrencies[i];
+    for (auto c : sensitivityData_->capFloorVolShiftData()) {
+        std::string ccy = c.first;
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
-        auto itr = sensitivityData_->capFloorVolShiftData().find(ccy);
-        QL_REQUIRE(itr != sensitivityData_->capFloorVolShiftData().end(), "SwaptionVolShiftData not found for " << ccy);
-        SensitivityScenarioData::CapFloorVolShiftData data = itr->second;
+        SensitivityScenarioData::CapFloorVolShiftData data = c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
         vector<vector<Real>> volData(n_cfvol_exp, vector<Real>(n_cfvol_strikes, 0.0));
@@ -1121,43 +1024,32 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer credit curves than listed in the market
-    std::vector<string> crNames;
-
-    if (sensitivityData_->creditNames().size() > 0)
-        crNames = sensitivityData_->creditNames();
-    else
-        crNames = simMarketData_->defaultNames();
     // Log an ALERT if some names in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->defaultNames()) {
-        if (std::find(crNames.begin(), crNames.end(), sim_name) == crNames.end()) {
+        if (sensitivityData_->creditCurveShiftData().find(sim_name) == sensitivityData_->creditCurveShiftData().end()) {
             ALOG("Credit Name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
-
-    Size n_names = crNames.size();
     Size n_ten;
 
     // original curves' buffer
     std::vector<Real> times;
 
-    for (Size i = 0; i < n_names; ++i) {
-        string name = crNames[i];
-        n_ten = simMarketData_->defaultTenors(crNames[i]).size();
+    for (auto c : sensitivityData_->creditCurveShiftData()) {
+        string name = c.first;
+        n_ten = simMarketData_->defaultTenors(name).size();
         std::vector<Real> hazardRates(n_ten); // integrated hazard rates
         times.clear();
         times.resize(n_ten);
         // buffer for shifted survival prob curves
         std::vector<Real> shiftedHazardRates(n_ten);
-        auto itr = sensitivityData_->creditCurveShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->creditCurveShiftData().end(),
-                   "credit CurveShiftData not found for " << name);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
 
         for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->defaultTenors(crNames[i])[j];
+            Date d = asof + simMarketData_->defaultTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
             Real prob = baseScenario_->get(key);
@@ -1209,30 +1101,22 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
 void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> cdsVolNames;
-    if (sensitivityData_->cdsVolNames().size() > 0)
-        cdsVolNames = sensitivityData_->cdsVolNames();
-    else
-        cdsVolNames = simMarketData_->cdsVolNames();
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_name : simMarketData_->cdsVolNames()) {
-        if (std::find(cdsVolNames.begin(), cdsVolNames.end(), sim_name) == cdsVolNames.end()) {
+        if (sensitivityData_->cdsVolShiftData().find(sim_name) == sensitivityData_->cdsVolShiftData().end()) {
             ALOG("CDS name " << sim_name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_cdsvol_name = cdsVolNames.size();
     Size n_cdsvol_exp = simMarketData_->cdsVolExpiries().size();
 
     vector<Real> volData(n_cdsvol_exp, 0.0);
     vector<Real> volExpiryTimes(n_cdsvol_exp, 0.0);
     vector<Real> shiftedVolData(n_cdsvol_exp, 0.0);
 
-    for (Size i = 0; i < n_cdsvol_name; ++i) {
-        std::string name = cdsVolNames[i];
-        auto itr = sensitivityData_->cdsVolShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->cdsVolShiftData().end(), "CdsVolShiftData not found for " << name);
-        SensitivityScenarioData::CdsVolShiftData data = itr->second;
+    for (auto c : sensitivityData_->cdsVolShiftData()) {
+        std::string name = c.first;
+        SensitivityScenarioData::CdsVolShiftData data = c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
@@ -1281,32 +1165,22 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> zeroInfIndexNames;
-    if (sensitivityData_->zeroInflationIndices().size() > 0)
-        zeroInfIndexNames = sensitivityData_->zeroInflationIndices();
-    else
-        zeroInfIndexNames = simMarketData_->zeroInflationIndices();
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->zeroInflationIndices()) {
-        if (std::find(zeroInfIndexNames.begin(), zeroInfIndexNames.end(), sim_idx) == zeroInfIndexNames.end()) {
+        if (sensitivityData_->zeroInflationCurveShiftData().find(sim_idx) == sensitivityData_->zeroInflationCurveShiftData().end()) {
             ALOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_indices = zeroInfIndexNames.size();
-
-    for (Size i = 0; i < n_indices; ++i) {
-        string indexName = zeroInfIndexNames[i];
+    for (auto z : sensitivityData_->zeroInflationCurveShiftData()) {
+        string indexName = z.first;
         Size n_ten = simMarketData_->zeroInflationTenors(indexName).size();
         // original curves' buffer
         std::vector<Real> zeros(n_ten);
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        auto itr = sensitivityData_->zeroInflationCurveShiftData().find(indexName);
-        QL_REQUIRE(itr != sensitivityData_->zeroInflationCurveShiftData().end(),
-                   "zero inflation CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *z.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
@@ -1362,21 +1236,15 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
 
     // We can choose to shift fewer discount curves than listed in the market
     std::vector<string> yoyInfIndexNames;
-    if (sensitivityData_->yoyInflationIndices().size() > 0)
-        yoyInfIndexNames = sensitivityData_->yoyInflationIndices();
-    else
-        yoyInfIndexNames = simMarketData_->yoyInflationIndices();
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->yoyInflationIndices()) {
-        if (std::find(yoyInfIndexNames.begin(), yoyInfIndexNames.end(), sim_idx) == yoyInfIndexNames.end()) {
+        if (sensitivityData_->yoyInflationCurveShiftData().find(sim_idx) == sensitivityData_->yoyInflationCurveShiftData().end()) {
             ALOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_indices = yoyInfIndexNames.size();
-
-    for (Size i = 0; i < n_indices; ++i) {
-        string indexName = yoyInfIndexNames[i];
+    for (auto y : sensitivityData_->yoyInflationCurveShiftData()) {
+        string indexName = y.first;
         Size n_ten = simMarketData_->yoyInflationTenors(indexName).size();
         // original curves' buffer
         std::vector<Real> yoys(n_ten);
@@ -1386,7 +1254,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         auto itr = sensitivityData_->yoyInflationCurveShiftData().find(indexName);
         QL_REQUIRE(itr != sensitivityData_->yoyInflationCurveShiftData().end(),
                    "yoyinflation CurveShiftData not found for " << indexName);
-        SensitivityScenarioData::CurveShiftData data = *itr->second;
+        SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
         for (Size j = 0; j < n_ten; ++j) {
@@ -1439,19 +1307,13 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
 void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer discount curves than listed in the market
-    std::vector<string> baseCorrelationNames;
-    if (sensitivityData_->baseCorrelationNames().size() > 0)
-        baseCorrelationNames = sensitivityData_->baseCorrelationNames();
-    else
-        baseCorrelationNames = simMarketData_->baseCorrelationNames();
     // Log an ALERT if some names in simmarket are excluded from the list
     for (auto name : simMarketData_->baseCorrelationNames()) {
-        if (std::find(baseCorrelationNames.begin(), baseCorrelationNames.end(), name) == baseCorrelationNames.end()) {
+        if (sensitivityData_->baseCorrelationShiftData().find(name) == sensitivityData_->baseCorrelationShiftData().end()) {
             ALOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
         }
     }
 
-    Size n_bc_names = baseCorrelationNames.size();
     Size n_bc_terms = simMarketData_->baseCorrelationTerms().size();
     Size n_bc_levels = simMarketData_->baseCorrelationDetachmentPoints().size();
 
@@ -1460,12 +1322,9 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     vector<Real> termTimes(n_bc_terms, 0.0);
     vector<Real> levels = simMarketData_->baseCorrelationDetachmentPoints();
 
-    for (Size i = 0; i < n_bc_names; ++i) {
-        std::string name = baseCorrelationNames[i];
-        auto itr = sensitivityData_->baseCorrelationShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->baseCorrelationShiftData().end(),
-                   "BaseCorrelationShiftData not found for " << name);
-        SensitivityScenarioData::BaseCorrelationShiftData data = itr->second;
+    for (auto b : sensitivityData_->baseCorrelationShiftData()) {
+        std::string name = b.first;
+        SensitivityScenarioData::BaseCorrelationShiftData data = b.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
@@ -1534,32 +1393,19 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateCommodityScenarios(bool up) {
     
-    // Commodity spots to be shifted. If a list of names are provided in the 
-    // sensitivity data parameters, use them. If not, use all commodity names in the 
-    // simulation market
-    vector<string> names;
-    if (sensitivityData_->commodityNames().empty()) {
-        names = simMarketData_->commodityNames();
-    } else {
-        auto commodityNames = sensitivityData_->commodityNames();
-        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
-        // Log an ALERT if some commodity curves in simulation market are not in the list
-        for (const string& name : simMarketData_->commodityNames()) {
-            if (find(names.begin(), names.end(), name) == names.end()) {
-                ALOG("Commodity " << name << " in simulation market is not "
-                    "included in commodity sensitivity analysis");
-            }
+    // Log an ALERT if some commodity curves in simulation market are not in the list
+    for (const string& name : simMarketData_->commodityNames()) {
+        if (sensitivityData_->commodityShiftData().find(name) == sensitivityData_->commodityShiftData().end()) {
+            ALOG("Commodity " << name << " in simulation market is not "
+                "included in commodity sensitivity analysis");
         }
     }
     
     // Create the commodity spot shift for each name
     Date asof = baseScenario_->asof();
-    for (const string& name : names) {
-        auto itr = sensitivityData_->commodityShiftData().find(name);
-        QL_REQUIRE(itr != sensitivityData_->equityShiftData().end(), 
-            "commodity shift data not found for " << name);
-        
-        SensitivityScenarioData::SpotShiftData data = itr->second;
+    for (auto c : sensitivityData_->commodityShiftData()) {
+        string name = c.first;
+        SensitivityScenarioData::SpotShiftData data = c.second;
         ShiftType type = parseShiftType(data.shiftType);
         Real shift = up ? data.shiftSize : -data.shiftSize;
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
@@ -1585,29 +1431,20 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
     
     Date asof = baseScenario_->asof();
 
-    // Commodity curves that will be shifted. If a list of names are provided in the 
-    // sensitivity data parameters, use them. If not, use all commodity names in the 
-    // simulation market
-    vector<string> names;
-    if (sensitivityData_->commodityNames().empty()) {
-        names = simMarketData_->commodityNames();
-    } else {
-        auto commodityNames = sensitivityData_->commodityNames();
-        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
-        // Log an ALERT if some commodity curves in simulation market are not in the list
-        for (const string& name : simMarketData_->commodityNames()) {
-            if (find(names.begin(), names.end(), name) == names.end()) {
-                ALOG("Commodity " << name << " in simulation market is not "
-                    "included in commodity sensitivity analysis");
-            }
+    // Log an ALERT if some commodity curves in simulation market are not in the list
+    for (const string& name : simMarketData_->commodityNames()) {
+        if (sensitivityData_->commodityCurveShiftData().find(name) == sensitivityData_->commodityCurveShiftData().end()) {
+            ALOG("Commodity " << name << " in simulation market is not "
+                "included in commodity sensitivity analysis");
         }
     }
     
 
-    for (Size i = 0; i < names.size(); ++i) {
+    for (auto c : sensitivityData_->commodityCurveShiftData()) {
+        string name = c.first;
         // Tenors for this name in simulation market
-        vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(names[i]);
-        DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(names[i]));
+        vector<Period> simMarketTenors = simMarketData_->commodityCurveTenors(name);
+        DayCounter curveDayCounter = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
         vector<Real> times(simMarketTenors.size());
         vector<Real> basePrices(times.size());
         vector<Real> shiftedPrices(times.size());
@@ -1615,20 +1452,17 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         // Get the base prices for this name from the base scenario
         for (Size j = 0; j < times.size(); ++j) {
             times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
-            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, names[i], j);
+            RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
             basePrices[j] = baseScenario_->get(key);
         }
 
         // Get the sensitivity data for this name
-        auto it = sensitivityData_->commodityCurveShiftData().find(names[i]);
-        QL_REQUIRE(it != sensitivityData_->commodityCurveShiftData().end(),
-            "Commodity curve CurveShiftData not found for " << names[i]);
-        SensitivityScenarioData::CurveShiftData data = *it->second;
+        SensitivityScenarioData::CurveShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
 
         // Get the times at which we want to apply the shifts
-        vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasCommodityCurveTenors(names[i])
+        vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasCommodityCurveTenors(name)
             ? simMarketTenors : data.shiftTenors;
 
         QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
@@ -1644,14 +1478,14 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
             boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-            scenarioDescriptions_.push_back(commodityCurveScenarioDescription(names[i], j, up));
+            scenarioDescriptions_.push_back(commodityCurveScenarioDescription(name, j, up));
 
             // Apply shift at tenor point j
             applyShift(j, shiftSize, up, shiftType, shiftTimes, basePrices, times, shiftedPrices, true);
 
             // store shifted commodity price curve in the scenario
             for (Size k = 0; k < times.size(); ++k) {
-                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityCurve, names[i], k), shiftedPrices[k]);
+                scenario->add(RiskFactorKey(RiskFactorKey::KeyType::CommodityCurve, name, k), shiftedPrices[k]);
             }
 
             // Give the scenario a label
@@ -1668,27 +1502,18 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 
-    // Commodity curves that will be shifted. If a list of names are provided in the 
-    // sensitivity data parameters, use them. If not, use all commodity names in the 
-    // simulation market
-    vector<string> names;
-    if (sensitivityData_->commodityNames().empty()) {
-        names = simMarketData_->commodityVolNames();
-    } else {
-        auto commodityNames = sensitivityData_->commodityVolNames();
-        copy(commodityNames.begin(), commodityNames.end(), back_inserter(names));
-        // Log an ALERT if some commodity vol names in simulation market are not in the list
-        for (const string& name : simMarketData_->commodityVolNames()) {
-            if (find(names.begin(), names.end(), name) == names.end()) {
-                ALOG("Commodity volatility " << name << " in simulation market is not "
-                    "included in commodity sensitivity analysis");
-            }
+    // Log an ALERT if some commodity vol names in simulation market are not in the list
+    for (const string& name : simMarketData_->commodityVolNames()) {
+        if (sensitivityData_->commodityVolShiftData().find(name) == sensitivityData_->commodityVolShiftData().end()) {
+            ALOG("Commodity volatility " << name << " in simulation market is not "
+                "included in commodity sensitivity analysis");
         }
     }
 
     // Loop over each commodity and create volatility scenario
     Date asof = baseScenario_->asof();
-    for (const string& name : names) {
+    for (auto c : sensitivityData_->commodityVolShiftData()) {
+        string name = c.first;
         // Simulation market data for the current name
         const vector<Period>& expiries = simMarketData_->commodityVolExpiries(name);
         const vector<Real>& moneyness = simMarketData_->commodityVolMoneyness(name);
@@ -1701,10 +1526,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         // Store shifted scenario volatilities
         vector<vector<Real>> shiftedValues = baseValues;
 
-        // Find the shift data for commodity name
-        QL_REQUIRE(sensitivityData_->commodityVolShiftData().count(name) > 0,
-            "commodity " << name << " not found in volatility shift data");
-        SensitivityScenarioData::VolShiftData sd = sensitivityData_->commodityVolShiftData()[name];
+        SensitivityScenarioData::VolShiftData sd = c.second;
         QL_REQUIRE(!sd.shiftExpiries.empty(), "commodity volatility shift tenors must be specified");
 
         ShiftType shiftType = parseShiftType(sd.shiftType);
@@ -1759,23 +1581,15 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     Date asof = baseScenario_->asof();
-    std::vector<string> securityNames;
-    if (sensitivityData_->securityNames().size() > 0)
-        securityNames = sensitivityData_->securityNames();
-    else
-        securityNames = simMarketData_->securities();
-
     // Log an ALERT if some equities in simmarket are excluded from the sensitivities list
     for (auto sim_security : simMarketData_->securities()) {
-        if (std::find(securityNames.begin(), securityNames.end(), sim_security) == securityNames.end()) {
+        if (sensitivityData_->securityShiftData().find(sim_security) == sensitivityData_->securityShiftData().end()) {
             ALOG("Security " << sim_security << " in simmarket is not included in sensitivities analysis");
         }
     }
-    for (Size k = 0; k < securityNames.size(); k++) {
-        string bond = securityNames[k];
-        auto itr = sensitivityData_->securityShiftData().find(bond);
-        QL_REQUIRE(itr != sensitivityData_->securityShiftData().end(), "securityShiftData not found for " << bond);
-        SensitivityScenarioData::SpotShiftData data = itr->second;
+    for (auto s : sensitivityData_->securityShiftData()) {
+        string bond = s.first;
+        SensitivityScenarioData::SpotShiftData data = s.second;
         ShiftType type = parseShiftType(data.shiftType);
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
