@@ -72,19 +72,6 @@ typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> 
 namespace ore {
 namespace analytics {
 
-namespace {
-ReactionToTimeDecay parseDecayMode(const string& s) {
-    static map<string, ReactionToTimeDecay> m = {{"ForwardVariance", ForwardForwardVariance},
-                                                 {"ConstantVariance", ConstantVariance}};
-
-    auto it = m.find(s);
-    if (it != m.end()) {
-        return it->second;
-    } else {
-        QL_FAIL("Decay mode \"" << s << "\" not recognized");
-    }
-}
-
 RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y) {
 
     if (y == ore::data::YieldCurveType::Discount) {
@@ -99,6 +86,20 @@ RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y) {
         QL_FAIL("yieldCurveType not supported");
     }
 }
+
+namespace {
+ReactionToTimeDecay parseDecayMode(const string& s) {
+    static map<string, ReactionToTimeDecay> m = {{"ForwardVariance", ForwardForwardVariance},
+                                                 {"ConstantVariance", ConstantVariance}};
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Decay mode \"" << s << "\" not recognized");
+    }
+}
+
 } // namespace
 
 void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
