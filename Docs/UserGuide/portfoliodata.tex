@@ -325,12 +325,49 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \begin{itemize}
 \item ValueDate: The value date of the FX Forward. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 \item BoughtCurrency: The currency to be bought on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
-\item BoughtAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
+\item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
 
 \end{itemize}
 
+\subsubsection{FX Swap}
+
+The \lstinline!FXSwapData!  node is the trade data container for the FX Swap trade type.  The structure -
+including example values - of the \lstinline!FXSwapData!  node is shown in Listing 
+\ref{lst:fxswap_data}. 
+It contains no sub-nodes.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxSwapData>
+            <NearDate>2018-09-01</NearDate>
+            <NearBoughtCurrency>EUR</NearBoughtCurrency>
+            <NearBoughtAmount>1000000</NearBoughtAmount>
+            <NearSoldCurrency>USD</NearSoldCurrency>
+            <NearSoldAmount>1140000</NearSoldAmount>
+             <FarDate>2028-09-01</FarDate>
+            <FarBoughtAmount>1300000</FarBoughtAmount>
+            <FarSoldAmount>1000000</FarSoldAmount>
+        </FxSwapData>
+\end{minted}
+\caption{FX Swap data}
+\label{lst:fxswap_data}
+\end{listing}
+
+The meanings and allowable values of the various elements in the \lstinline!FXSwapData!  node follow below.  All elements are required.
+
+\begin{itemize}
+\item NearDate: The date of the initial fx exchange of the FX Swap. \\ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\item NearBoughtCurrency: The currency to be bought in the initial exchange at near date, and sold in the final exchange at far date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearBoughtAmount: The amount to be bought on near date.  \\ Allowable values:  Any positive real number.
+\item NearSoldCurrency: The currency to be sold in the initial fx exchange at near date, and bought in the final exchange at far date.   \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+\item NearSoldAmount: The amount to be sold on near date.  \\ Allowable values:  Any positive real number.
+\item FarDate: The date of the final fx exchange of the FX Swap. \\ Allowable values:  Any date further into the future than NearDate. See \lstinline!Date! in Table  \ref{tab:allow_stand_data}.
+\item FarBoughtAmount: The amount to be bought on far date.  \\ Allowable values:  Any positive real number.
+\item FarSoldAmount: The amount to be sold on far date.  \\ Allowable values:  Any positive real number.
+\end{itemize}
 
 \subsubsection{FX Option}
 
@@ -380,6 +417,8 @@ Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
 Allowable values:  Any positive real number.
 
 \end{itemize}
+
+
 
 \subsubsection{Equity Option}
 
@@ -654,13 +693,12 @@ are
 \begin{itemize}
 \item StartDate: A FRA expires/settles on the startDate. \\
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
-\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt todaysmarket.xml}.
+
 \item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
 \item Currency: The currency of the FRA notional. \\
 Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
 \item Index: The name of the interest rate index the FRA is benchmarked against.
-\item LongShort: Specifies whether the option position is long  or
-  short.
+\item LongShort: Specifies whether the FRA position is long (one receives the agreed rate) or short (one pays the agreed rate).
 \item Strike: The agreed forward interest rate.
 \item Notional: No accretion or amortisation, just a constant notional.
 \end{itemize}
@@ -849,7 +887,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 \item LegType:  Determines which of the available sub-nodes must be
   used. 
 
-Allowable values:  \emph{Fixed, Floating, Cashflow, YY, CPI}
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, YY, CPI}
 
 \item Payer:  The flows of the leg are paid to the counterparty if
   \emph{true}, and received if \emph{false}.  
@@ -972,6 +1010,10 @@ Dates.
 outlined in section \ref{ss:fixedleg_data}.
 \item FloatingLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{floating} It is
 outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
+\item CMSLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMS}. It is
+  outlined in section \ref{ss:cmslegdata}.
+\item CMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMSSpread}. It is
+  outlined in section \ref{ss:cmsspreadlegdata}.
 \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
   outlined in section \ref{ss:cpilegdata}.
 \item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
@@ -1431,7 +1473,7 @@ Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
         <ScheduleData>
           ...
         </ScheduleData>
-        <CMSLegData>
+        <CMSSpreadLegData>
           <Index1>EUR-CMS-10Y</Index1>
           <Index2>EUR-CMS-2Y</Index2>
           <Spreads>
@@ -1446,7 +1488,7 @@ Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
           <Floors>
             <Floor>0.01</Floor>
           </Floors>
-        </CMSLegData>
+        </CMSSpreadLegData>
         <NakedOption>N</NakedOption>
       </LegData>
 \end{minted}
