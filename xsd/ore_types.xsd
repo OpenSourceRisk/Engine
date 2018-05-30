@@ -239,6 +239,7 @@
       <xs:enumeration value="A365"/>
       <xs:enumeration value="A365F"/>
       <xs:enumeration value="Actual/365 (Fixed)"/>
+      <xs:enumeration value="Actual/365 (fixed)"/>
       <xs:enumeration value="ACT/365.FIXED"/>
       <xs:enumeration value="ACT/365"/>
       <xs:enumeration value="T360"/>
@@ -250,11 +251,13 @@
       <xs:enumeration value="30/360 (Italian)"/>
       <xs:enumeration value="ActActISDA"/>
       <xs:enumeration value="Actual/Actual (ISDA)"/>
+      <xs:enumeration value="ActualActual (ISDA)"/>
       <xs:enumeration value="ACT/ACT"/>
       <xs:enumeration value="ACT/ACT.ISDA"/>
       <xs:enumeration value="ACT"/>
       <xs:enumeration value="ActActISMA"/>
       <xs:enumeration value="Actual/Actual (ISMA)"/>
+      <xs:enumeration value="ActualActual (ISMA)"/>
       <xs:enumeration value="ActActAFB"/>
       <xs:enumeration value="Actual/Actual (AFB)"/>
       <xs:enumeration value="1/1"/>
