@@ -204,7 +204,7 @@ void CMSLegData::fromXML(XMLNode* node) {
 XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index1", swapIndex1_);
-    XMLUtils::addChild(doc, node, "Index2", swapIndex1_);
+    XMLUtils::addChild(doc, node, "Index2", swapIndex2_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
     addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);

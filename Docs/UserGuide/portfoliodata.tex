@@ -61,11 +61,11 @@ Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used
 
 
 \item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
-ORE currently supports 11 trade types.
+ORE currently supports 14 trade types.
 
 %Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
 Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
-EquityForward, EquityOption, CreditDefaultSwap, Bond}
+EquityForward, EquityOption, VarianceSwap, CommodityForward, CommodityOption, CreditDefaultSwap, Bond}
 
 \end{itemize}
 
@@ -178,9 +178,9 @@ node is shown in Listing \ref{lst:swap_data}.
 \subsubsection{Cap/Floor}
 
 The \lstinline!CapFloorData! node is the trade data container for trade type CapFloors.  It's a cap, floor or collar
-(i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor rates. The
+(i.e. a portfolio of a long cap and a short floor for a long position in the collar) on a series of Ibor or CMS rates. The
 \lstinline!CapFloorData! node contains a \lstinline!LongShort! sub-node which indicates whether the cap (floor, collar)
-is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating}, plus
+is long or short, and a \lstinline!LegData!  sub-node where the LegType element must be set to \emph{Floating} or \emph{CMS}, plus
 elements for the Cap and Floor rates. An example structure with Cap rates is shown in in Listing
 \ref{lst:capfloor_data}. A \lstinline!CapFloorData! node must have either \lstinline!Caps! or \lstinline!Floors!
 elements, or both.
@@ -212,7 +212,7 @@ The meanings and allowable values of the elements in the \lstinline!CapFloorData
   \lstinline!Short!
 
 \item LegData: This is a trade component sub-node outlined in section \ref{ss:leg_data}. Exactly
-  one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{floating}.
+  one \lstinline!LegData! node is allowed and the LegType element must be set to \emph{Floating} or \emph{CMS}.
 
 \item Caps: This node has child elements of type \lstinline!Rate!
   capping the floating leg. The first rate value corresponds to the
@@ -289,9 +289,9 @@ The structure of an example \lstinline!SwaptionData!  node of a two-legged Europ
     \lstinline!LegData! &  Two \lstinline!LegData! sub-nodes \\ \hline
     \lstinline!LegType! & \emph{Fixed} on one node and \emph{Floating} on the other.\\ \hline    
     \lstinline!Currency! & The same currency for both nodes.\\ \hline 
-    \lstinline!Notionals! & No accretion or amortisation, just a constant notional. Exactly one \lstinline!Notional! child element for each node.\\ \hline
-    \lstinline!Rates! & A constant rate. The fixed rate node should have exactly one \lstinline!Rate! child element.\\ \hline
-    \lstinline!Spreads! &  A constant spread. The floating rate node should have exactly one \lstinline!Spread! child element.\\ \hline
+%    \lstinline!Notionals! & No accretion or amortisation, just a constant notional. Exactly one \lstinline!Notional! child element for each node.\\ \hline
+%   \lstinline!Rates! & A constant rate. The fixed rate node should have exactly one \lstinline!Rate! child element.\\ \hline
+%    \lstinline!Spreads! &  A constant spread. The floating rate node should have exactly one \lstinline!Spread! child element.\\ \hline
 %    \bfseries{ScheduleData} &   \\ \hline   
 %    \lstinline!IsRuleBased! & Must be \emph{true} for both nodes. TBC: Fixed by Henning?\\ \hline      
   \end{tabu}
@@ -449,10 +449,10 @@ The meanings and allowable values of the elements in the \lstinline!EquityOption
 
 \begin{itemize}
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
-	that the FX option type allows for \emph{European} option style only.	
+	that the equity option type allows for \emph{European} option style only.	
 	\item Name: The name of the underlying equity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option. \\
+	\item Currency: The currency of the equity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The option strike price.\\
 	Allowable values:  Any positive real number.	
@@ -485,17 +485,17 @@ Listing \ref{lst:eqfwd_data}.
 The meanings and allowable values of the elements in the \lstinline!EquityForwardData!  node follow below.
 
 \begin{itemize}
-	\item LongShort: Defines whether the trade is long or short the underlying equity. \\
+	\item LongShort: Defines whether the underlying equity will be bought (long) or sold (short). \\
 	Allowable values: Long, Short.
-	\item Maturity: The maturity date of the forward contract. \\
+	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying equity will be bought/sold. \\
 	Allowable values: Any date string.
-	\item Name: The name of the underlying equity. \\
+	\item Name: The name of the underlying equity or equity index. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the equity option. \\
+	\item Currency: The  currency of the equity forward. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
-	\item Strike: The option strike price. \\
+	\item Strike: The agreed buy/sell price of the equity forward. \\
 	Allowable values:  Any positive real number.	
-	\item Quantity: The number of units of the underlying covered by the transaction. \\
+	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
 	Allowable values:  Any positive real number.
 \end{itemize}
 
@@ -668,7 +668,6 @@ A LegData block then defines the cashflow structure of the credit default swap, 
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
       <CreditCurveId>BANK</CreditCurveId>
-      <Qualifier>SECURITY_1</Qualifier>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>
@@ -721,6 +720,87 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \caption{Forward Rate Agreement Data}
 \label{lst:ForwardRateAgreementdata}
 \end{listing}
+
+
+\subsubsection{Commodity Option}
+
+The \lstinline!CommodityOptionData!  node is the trade data container for the commodity option trade type.  Vanilla commodity 
+options are supported, the exercise style must be \emph{European}. The \lstinline!CommodityOptionData!  node includes one and 
+only one \lstinline!OptionData! trade component sub-node plus elements specific to the commodity option. The structure of 
+an example \lstinline!CommodityOptionData! node for a commodity option is shown in Listing
+\ref{lst:comoption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityOptionData>
+    <OptionData>
+      ...
+    </OptionData>
+    <Name>COMDTY_WTI_USD</Name>
+    <Currency>USD</Currency>
+    <Strike>70</Strike>
+    <Quantity>500000</Quantity>
+</CommodityOptionData>
+\end{minted}
+\caption{Commodity Option data}
+\label{lst:comoption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!CommodityOptionData!  node follow below.
+
+\begin{itemize}
+	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
+	that the equity option type allows for \emph{European} option style only.	
+	\item Name: The name of the underlying commodity. \\
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Currency: The currency of the commodity option. \\
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	\item Strike: The option strike price.\\
+	Allowable values:  Any positive real number.	
+	\item Quantity: The number of units of the underlying commodity covered by the transaction. \\
+	Allowable values:  Any positive real number.
+\end{itemize}
+
+\subsubsection{Commodity Forward}
+
+The \lstinline!CommodityForwardData!  node is the trade data container for the commodity forward trade type.   The structure of an example \lstinline!CommodityForwardData! node for an equity option is shown in 
+Listing \ref{lst:comfwd_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+<CommodityForwardData>
+  <LongShort>Long</LongShort>
+  <Maturity>2018-06-30</Maturity>
+  <Name>COMDTY_GOLD_USD</Name>
+  <Currency>USD</Currency>
+  <Strike>1355</Strike>
+  <Quantity>1000</Quantity>
+</CommodityForwardData>
+\end{minted}
+\caption{Commodity Forward data}
+\label{lst:comfwd_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!CommodityForwardData!  node follow below.
+
+\begin{itemize}
+	\item LongShort: Defines whether the underlying commodity will be bought (long) or sold (short). \\
+	Allowable values: Long, Short.
+	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying commodity will be bought/sold. \\
+	Allowable values: Any date string.
+	\item Name: The name of the underlying commodity. \\
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Currency: The  currency of the commodity forward. \\
+	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	\item Strike: The agreed buy/sell price of the commodity forward. \\
+	Allowable values:  Any positive real number.	
+	\item Quantity: The number of units of the underlying commodity to be bought/sold. \\
+	Allowable values:  Any positive real number.
+\end{itemize}
+
+
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Components}
@@ -814,13 +894,31 @@ Allowable values: \emph{Long, LONG, long, L} or \emph{Short, SHORT,
 
 Allowable values: \emph{Call} or \emph{Put} 
 
+The meaning of Call and Put values depend on the asset class of the option, see Table \ref{tab:callput_specs}.
+
+\begin{table}[H]
+\centering
+\begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+      \bfseries{Asset Class}  & \bfseries{Call / Put Specifications} \\  \hline
+Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
+\newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
+ IR Swaption &  \emph{Call/Put} values are ignored. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
+FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the Option Data node. 
+\newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the Option Data node.  \\ \hline
+  \end{tabu}
+  \caption{Specification of Option Type Call / Put}
+  \label{tab:callput_specs}
+\end{table}
+
+
 \item Style: The exercise style of the option. 
 
   Allowable values: \emph{European} or \emph{American} or \emph{Bermudan}. Note that trade type Swaption can have style
   \emph{European} or \emph{Bermudan}, but not \emph{American}. The FX Option trade type can have style \emph{European}
   or \emph{American}, but not \emph{Bermudan}.
 
-\item Settlement: Derlivery type. 
+\item Settlement: Delivery type. 
 
 Allowable values: \emph{Cash} or \emph{Physical} 
 
@@ -838,6 +936,18 @@ Allowable values: \emph{true}, \emph{false}
   single \lstinline!ExerciseDate! child element.  \emph{Bermudan}
   style options must have two or more \lstinline!ExerciseDate! child
   elements.
+
+\item PremiumAmount [Optional]: Option premium amount paid by the option buyer to the option seller.
+
+Allowable values:  Any positive real number.
+
+\item PremiumCurrency [Optional]: Currency of the option premium.
+
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
+
+\item PremiumPayDate [Optional]: Date of the option premium payment.
+
+Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \end{itemize}
 
