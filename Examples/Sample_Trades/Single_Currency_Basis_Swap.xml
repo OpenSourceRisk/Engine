@@ -28,7 +28,6 @@
                 <FixingDays>0</FixingDays>
             </FloatingLegData>
             <ScheduleData>
-                <IsRulesBased>true</IsRulesBased>
                 <Rules>
                     <StartDate>20121205</StartDate>
                     <EndDate>20380407</EndDate>
@@ -61,7 +60,6 @@
                 <FixingDays>2</FixingDays>
             </FloatingLegData>
             <ScheduleData>
-                <IsRulesBased>true</IsRulesBased>
                 <Rules>
                     <StartDate>20121205</StartDate>
                     <EndDate>20380407</EndDate>
