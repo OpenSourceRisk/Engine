@@ -22,5 +22,8 @@
     <!--Additional warnings-->
     <additionalWarning></additionalWarning>
     <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w35038</additionalWarning>
+    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34189</additionalWarning>
+    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34101</additionalWarning>
+    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34701</additionalWarning>
   </PropertyGroup>
 </Project>

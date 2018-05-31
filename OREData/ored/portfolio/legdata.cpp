@@ -39,6 +39,7 @@
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 //I'm guessing I'll need to wrap the bma coupon here...
 #include <ql/cashflows/averagebmacoupon.hpp>
+#include <ql/version.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 
 using namespace QuantLib;
@@ -203,7 +204,7 @@ void CMSLegData::fromXML(XMLNode* node) {
 XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Index1", swapIndex1_);
-    XMLUtils::addChild(doc, node, "Index2", swapIndex1_);
+    XMLUtils::addChild(doc, node, "Index2", swapIndex2_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
     addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
@@ -809,7 +810,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer) {
 #if QL_HEX_VERSION < 0x011300f0
-    WLOG("The CMS Spread implementation in older QL versions has issues, consider upgrading to at least 1.13")
+    WLOG("The CMS Spread implementation in older QL versions has issues (found " << QL_VERSION << "), consider upgrading to at least 1.13")
 #endif
     boost::shared_ptr<CMSSpreadLegData> cmsSpreadData =
         boost::dynamic_pointer_cast<CMSSpreadLegData>(data.concreteLegData());

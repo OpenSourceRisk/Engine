@@ -35,7 +35,7 @@ void SensitivityRunner::runSensitivityAnalysis(
     boost::shared_ptr<Portfolio> sensiPortfolio = boost::make_shared<Portfolio>();
     string marketConfiguration = params_->get("markets", "sensitivity");
 
-    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio, marketConfiguration);
+    sensiInputInitialize(simMarketData, sensiData, engineData, sensiPortfolio);
 
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
@@ -51,7 +51,7 @@ void SensitivityRunner::runSensitivityAnalysis(
 void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                              boost::shared_ptr<SensitivityScenarioData>& sensiData,
                                              boost::shared_ptr<EngineData>& engineData,
-                                             boost::shared_ptr<Portfolio>& sensiPortfolio, string& marketConfiguration) {
+                                             boost::shared_ptr<Portfolio>& sensiPortfolio) {
 
     DLOG("sensiInputInitialize called");
 
@@ -72,9 +72,6 @@ void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarket
     string portfolioFile = inputPath + "/" + params_->get("setup", "portfolioFile");
     // Just load here. We build the portfolio in SensitivityAnalysis, after building SimMarket.
     sensiPortfolio->load(portfolioFile, boost::make_shared<TradeFactory>(extraTradeBuilders_));
-
-    LOG("Build Sensitivity Analysis");
-    marketConfiguration = params_->get("markets", "pricing");
 
     DLOG("sensiInputInitialize done");
 }
