@@ -751,9 +751,9 @@ The meanings and allowable values of the elements in the \lstinline!CommodityOpt
 
 \begin{itemize}
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
-	that the equity option type allows for \emph{European} option style only.	
+	that the commodity option type allows for \emph{European} option style only.	
 	\item Name: The name of the underlying commodity. \\
-	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	Allowable values:  Any string (provided it is the ID of a commodity in the market configuration).
 	\item Currency: The currency of the commodity option. \\
 	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The option strike price.\\
@@ -904,8 +904,8 @@ The meaning of Call and Put values depend on the asset class of the option, see 
 Equity/ Commodity Option & \emph{Call}: The right to buy the underlying equity/commodity at the strike price.
 \newline \emph{Put}: The right to sell the underlying equity/commodity at the strike price. \\  \hline
  IR Swaption &  \emph{Call/Put} values are ignored. Payer/Receiver swaption is determined in the Leg Data nodes of the underlying swap. \\ \hline
-FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the Option Data node. 
-\newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the Option Data node.  \\ \hline
+FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined in the trade data node. 
+\newline \emph{Put}: Bought and Sold currencies/amounts are switched compared to the trade data node.  \\ \hline
   \end{tabu}
   \caption{Specification of Option Type Call / Put}
   \label{tab:callput_specs}
