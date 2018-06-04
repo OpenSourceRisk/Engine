@@ -55,7 +55,12 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     DLOG("Get model data");
     auto calibration = parseCalibrationType(modelParameters_.at("Calibration"));
     auto calibrationStrategy = parseCalibrationStrategy(modelParameters_.at("CalibrationStrategy"));
-    Real lambda = parseReal(modelParameters_.at("Reversion"));
+    Real lambda;
+    // either we have a ccy specific reversion or require a ccy independent reversion parameter
+    if (modelParameters_.find("Reversion_" + ccy) != modelParameters_.end())
+        lambda = parseReal(modelParameters_.at("Reversion_" + ccy));
+    else
+        lambda = parseReal(modelParameters_.at("Reversion"));
     vector<Real> sigma = parseListOfValues<Real>(modelParameters_.at("Volatility"), &parseReal);
     vector<Real> sigmaTimes(0);
     if (modelParameters_.count("VolatilityTimes") > 0)
