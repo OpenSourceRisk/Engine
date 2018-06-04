@@ -23,8 +23,8 @@ using std::make_pair;
 namespace {
 
 // Utility method for lookup in the various maps
-template<class KeyType>
-Size index(const KeyType& k, const map<KeyType, Size>& m) {
+template<class KeyType, class ValueType>
+ValueType index(const KeyType& k, const map<KeyType, ValueType>& m) {
 
     auto it = m.find(k);
     QL_REQUIRE(it != m.end(), "Key, " << k << ", was not found in the sensitivity cube.");
@@ -93,11 +93,13 @@ void SensitivityCube::initialise() {
             QL_REQUIRE(upFactors_.count(des.key1()) == 0, "Cannot have multiple up factors with "
                 "the same risk factor key[" << des.key1() << "]");
             upFactors_[des.key1()] = i;
+            upDownFactorsInv_[i] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Down:
             QL_REQUIRE(downFactors_.count(des.key1()) == 0, "Cannot have multiple down factors with "
                 "the same risk factor key [" << des.key1() << "]");
             downFactors_[des.key1()] = i;
+            upDownFactorsInv_[i] = des.key1();
             break;
         case ShiftScenarioDescription::Type::Cross:
             factorPair = make_pair(des.key1(), des.key2());
@@ -123,6 +125,10 @@ void SensitivityCube::initialise() {
 bool SensitivityCube::hasTrade(const string& tradeId) const {
     return tradeIdx_.count(tradeId) > 0;
 }
+
+Size SensitivityCube::tradeIndex(const string& tradeId) const { return index(tradeId, tradeIdx_); }
+
+RiskFactorKey SensitivityCube::factor(const Size upDownIndex) const { return index(upDownIndex, upDownFactorsInv_); }
 
 bool SensitivityCube::hasScenario(const ShiftScenarioDescription& scenarioDescription) const {
     return scenarioIdx_.count(scenarioDescription) > 0;
