@@ -137,21 +137,25 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 vector<YieldCurveType> yieldCurveTypes = {YieldCurveType::Discount, YieldCurveType::Yield};
                 for (auto& y : yieldCurveTypes) {
                     MarketObject o = static_cast<MarketObject>(y);
-                    for (auto& it : params.mapping(o, configuration.first)) {
-                        if (it.second == spec->name()) {
-                            LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                                     << configuration.first);
-                            yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
+                    if (params.hasMarketObject(o)) {
+                        for (auto& it : params.mapping(o, configuration.first)) {
+                            if (it.second == spec->name()) {
+                                LOG("Adding YieldCurve(" << it.first << ") with spec " << *ycspec << " to configuration "
+                                    << configuration.first);
+                                yieldCurves_[make_tuple(configuration.first, y, it.first)] = itr->second->handle();
+                            }
                         }
                     }
                 }
 
-                for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
-                    if (it.second == spec->name()) {
-                        LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
-                                            << configuration.first);
-                        iborIndices_[make_pair(configuration.first, it.first)] =
-                            Handle<IborIndex>(parseIborIndex(it.first, itr->second->handle()));
+                if (params.hasMarketObject(MarketObject::IndexCurve)) {
+                    for (const auto& it : params.mapping(MarketObject::IndexCurve, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding Index(" << it.first << ") with spec " << *ycspec << " to configuration "
+                                << configuration.first);
+                            iborIndices_[make_pair(configuration.first, it.first)] =
+                                Handle<IborIndex>(parseIborIndex(it.first, itr->second->handle()));
+                        }
                     }
                 }
                 break;
