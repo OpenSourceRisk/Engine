@@ -47,7 +47,7 @@ class SensitivityData {
 public:
     SensitivityData() {}
     virtual ~SensitivityData() {}
-    virtual bool next() = 0;
+    virtual bool next() const = 0;
     virtual void reset() = 0;
     virtual std::string tradeId() const = 0;
     virtual bool isCrossGamma() const = 0;
@@ -69,7 +69,7 @@ public:
     SensitivityDataInMemory() : index_(0) {}
     virtual void add(const std::string& tradeId, const std::string& factor, const std::string& factor2,
                      const double value, const double value2);
-    virtual bool next() override;
+    virtual bool next() const override;
     virtual void reset() override;
     virtual std::string tradeId() const override;
     virtual bool isCrossGamma() const override;
@@ -82,7 +82,7 @@ public:
     virtual bool hasFactor(const RiskFactorKey& key) const override;
 
 private:
-    Size index_;
+    mutable Size index_;
     std::vector<std::string> tradeId_;
     std::vector<std::vector<std::string>> addTokens1_, addTokens2_;
     std::vector<boost::shared_ptr<RiskFactorKey>> keys1_, keys2_;

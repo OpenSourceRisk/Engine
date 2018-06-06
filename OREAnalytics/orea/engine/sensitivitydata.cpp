@@ -74,7 +74,7 @@ void SensitivityDataInMemory::add(const std::string& tradeId, const std::string&
     value2_.push_back(value2);
 };
 
-bool SensitivityDataInMemory::next() {
+bool SensitivityDataInMemory::next() const {
     if (index_ < tradeId_.size()) {
         ++index_;
         return true;
