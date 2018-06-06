@@ -128,7 +128,13 @@ bool SensitivityCube::hasTrade(const string& tradeId) const {
 
 Size SensitivityCube::tradeIndex(const string& tradeId) const { return index(tradeId, tradeIdx_); }
 
-RiskFactorKey SensitivityCube::factor(const Size upDownIndex) const { return index(upDownIndex, upDownFactorsInv_); }
+RiskFactorKey SensitivityCube::upDownFactor(const Size upDownIndex) const {
+    auto it = upDownFactorsInv_.find(upDownIndex);
+    if (it == upDownFactorsInv_.end())
+        return RiskFactorKey();
+    else
+        return it->second;
+}
 
 bool SensitivityCube::hasScenario(const ShiftScenarioDescription& scenarioDescription) const {
     return scenarioIdx_.count(scenarioDescription) > 0;

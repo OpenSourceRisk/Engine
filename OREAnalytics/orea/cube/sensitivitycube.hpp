@@ -68,8 +68,9 @@ public:
     //! Return index for given tradeId (for faster lookup, to be reviewed)
     Size tradeIndex(const string& tradeId) const;
 
-    //! Return factor for given up/down factor scenario index (to be reviewed)
-    RiskFactorKey factor(const Size upDownIndex) const;
+    /*! Return factor for given up/down scenario index or None if given index
+      is not an up/down scenario (to be reviewed) */
+    RiskFactorKey upDownFactor(const Size upDownIndex) const;
 
     //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
     bool hasScenario(const ShiftScenarioDescription& scenarioDescription) const;
