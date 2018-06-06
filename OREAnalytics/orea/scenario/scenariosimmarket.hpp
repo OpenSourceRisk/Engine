@@ -41,6 +41,9 @@ using std::string;
 namespace ore {
 namespace analytics {
 
+//! Map a yield curve type to a risk factor key type
+RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y);
+
 //! A scenario filter can exclude certain key from updating the scenario
 /*! Override this class with to provide custom filtering, by default all keys
  *  are allowed.

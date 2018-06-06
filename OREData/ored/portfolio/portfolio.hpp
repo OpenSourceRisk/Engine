@@ -66,6 +66,9 @@ public:
     void loadFromXMLString(const std::string& xmlString,
                            const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
+    //! Load from XML Node
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+    
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 
@@ -91,9 +94,6 @@ public:
     std::set<std::string> portfolioIds() const;
 
 private:
-    //! Load from XMLDocument
-    void load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& tf);
-
     std::vector<boost::shared_ptr<Trade>> trades_;
 };
 } // namespace data

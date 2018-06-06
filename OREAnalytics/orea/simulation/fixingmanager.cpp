@@ -29,6 +29,7 @@
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -81,6 +82,13 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                     if (avon) {
                         for (auto const& d : avon->fixingDates())
                             fixingMap_[avon->index()].insert(d);
+                        continue;
+                    }
+                    // A3 BMA indices with native fixings
+                    auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(frc);
+                    if (bma) {
+                        for (auto const& d : bma->fixingDates())
+                            fixingMap_[bma->index()].insert(d);
                         continue;
                     }
                     fixingMap_[frc->index()].insert(frc->fixingDate());
