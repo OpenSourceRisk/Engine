@@ -1,7 +1,6 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <xs:include schemaLocation="ore_types.xsd"/>
-
+  <xs:element type="conventions" name="Conventions"/>
 
   <xs:complexType name="conventions">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
