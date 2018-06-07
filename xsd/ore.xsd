@@ -1,14 +1,14 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="ore_types.xsd"/>
 
   <xs:complexType name="ore">
-      <xs:sequence>
-        <xs:element type="parameterListType" name="Setup"/>
-        <xs:element type="parameterListType" name="Markets"/>
-        <xs:element type="analyticsType" name="Analytics"/>
-      </xs:sequence>
-    </xs:complexType>
+    <xs:sequence>
+      <xs:element type="parameterListType" name="Setup"/>
+      <xs:element type="parameterListType" name="Markets"/>
+      <xs:element type="analyticsType" name="Analytics"/>
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="analyticsType">
     <xs:sequence>
@@ -16,7 +16,7 @@
         <xs:complexType>
           <xs:complexContent>
             <xs:extension base="parameterListType">
-             <xs:attribute type="xs:string" name="type"/>
+              <xs:attribute type="xs:string" name="type"/>
             </xs:extension>
           </xs:complexContent>
         </xs:complexType>

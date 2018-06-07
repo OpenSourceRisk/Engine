@@ -1,14 +1,14 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
-<xs:include schemaLocation="sensitivity.xsd"/>
-  
+  <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="sensitivity.xsd"/>
+
   <xs:complexType name="stresstesting">
     <xs:sequence>
       <xs:element type="stresstest" name="StressTest" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="stresstest">
     <xs:sequence>
       <xs:element type="discountcurves" name="DiscountCurves"/>

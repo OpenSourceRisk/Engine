@@ -1,26 +1,26 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
+  <xs:include schemaLocation="ore_types.xsd"/>
 
   <xs:complexType name="curveconfiguration">
-      <xs:sequence>
-        <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
-        <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
-        <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
-        <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
-        <xs:element type="cdsVolatilities" name="CDSVolatilities" minOccurs="0" />
-        <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
-        <xs:element type="yieldCurves" name="YieldCurves" minOccurs="0" />
-        <xs:element type="inflationCurves" name="InflationCurves" minOccurs="0" />
-        <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
-        <xs:element type="inflationCapFloorVolatlities" name="InflationCapFloorVolatilities" minOccurs="0" />
-        <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
-        <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
-        <xs:element type="securities" name="Securities" minOccurs="0" />
-        <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
-        <xs:element type="simCommodityCurves" name="CommodityCurves" minOccurs="0" />
-        <xs:element type="commodityVolatilities" name="CommodityVolatilities" minOccurs="0" />
-      </xs:sequence>
+    <xs:sequence>
+      <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
+      <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
+      <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
+      <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
+      <xs:element type="cdsVolatilities" name="CDSVolatilities" minOccurs="0" />
+      <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
+      <xs:element type="yieldCurves" name="YieldCurves" minOccurs="0" />
+      <xs:element type="inflationCurves" name="InflationCurves" minOccurs="0" />
+      <xs:element type="inflationCapFloorPriceSurfaces" name="InflationCapFloorPriceSurfaces" minOccurs="0" />
+      <xs:element type="inflationCapFloorVolatlities" name="InflationCapFloorVolatilities" minOccurs="0" />
+      <xs:element type="equityCurves" name="EquityCurves" minOccurs="0" />
+      <xs:element type="equityVolatilities" name="EquityVolatilities" minOccurs="0" />
+      <xs:element type="securities" name="Securities" minOccurs="0" />
+      <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
+      <xs:element type="simCommodityCurves" name="CommodityCurves" minOccurs="0" />
+      <xs:element type="commodityVolatilities" name="CommodityVolatilities" minOccurs="0" />
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="fxSpots">
@@ -53,7 +53,7 @@
       <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="equityVolatilities">
     <xs:sequence>
       <xs:element type="equityVolatility" name="EquityVolatility" minOccurs="0" maxOccurs="unbounded"/>
@@ -154,7 +154,7 @@
       <xs:element type="dividendInterpolation" name="DividendInterpolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="defaultCurves">
     <xs:sequence>
       <xs:element type="defaultCurve" name="DefaultCurve" minOccurs="0" maxOccurs="unbounded"/>
@@ -188,7 +188,7 @@
       <xs:enumeration value="Benchmark"/>
     </xs:restriction>
   </xs:simpleType>
-  
+
   <xs:complexType name="inflationCurves">
     <xs:sequence>
       <xs:element type="inflationCurve" name="InflationCurve" minOccurs="0" maxOccurs="unbounded"/>
@@ -247,7 +247,7 @@
       <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="inflationCapFloorVolatlities">
     <xs:sequence>
       <xs:element type="inflationCapFloorVolatility" name="InflationCapFloorVolatility" minOccurs="0" maxOccurs="unbounded"/>
@@ -261,7 +261,7 @@
       <xs:element type="inflationType" name="Type" minOccurs="1" maxOccurs="1"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
       <xs:element type="bool" name="Extrapolation"/>
-	  <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Tenors" minOccurs="1" maxOccurs="1"/>
@@ -328,7 +328,7 @@
       <xs:element type="bool" name="Extrapolate" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="simCommodityCurves">
     <xs:sequence>
       <xs:element type="simCommodityCurve" name="CommodityCurve" minOccurs="0" maxOccurs="unbounded"/>
@@ -346,15 +346,15 @@
       <xs:element name="InterpolationMethod" minOccurs="0" maxOccurs="1">
         <xs:simpleType>
           <xs:restriction base="interpolationMethodType">
-           <xs:enumeration value="Linear"/>
-           <xs:enumeration value="LogLinear"/>
+            <xs:enumeration value="Linear"/>
+            <xs:enumeration value="LogLinear"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityVolatilities">
     <xs:sequence>
       <xs:element type="commodityVolatility" name="CommodityVolatility" minOccurs="0" maxOccurs="unbounded"/>
@@ -517,7 +517,7 @@
       <xs:element type="xs:string" name="Factor" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="dividendInterpolation">
     <xs:sequence>
       <xs:element type="interpolationVariableType" name="InterpolationVariable" minOccurs="0" maxOccurs="1"/>

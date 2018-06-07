@@ -204,7 +204,7 @@
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
-		<xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
+        <xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -347,10 +347,10 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="Dates">
-	    <xs:complexType>
+        <xs:complexType>
           <xs:all>
-		    <xs:element type="calendar" name="Calendar"/>
-		    <xs:element name="Dates">
+            <xs:element type="calendar" name="Calendar"/>
+            <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="calendar" name="Calendar" minOccurs="0"/>
@@ -359,8 +359,8 @@
                   <xs:element type="date" name="Date" maxOccurs="unbounded"/>
                 </xs:sequence>
               </xs:complexType>
-		    </xs:element>
-		  </xs:all>
+            </xs:element>
+          </xs:all>
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -489,7 +489,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="varianceSwapData">
     <xs:sequence>
       <xs:element type="date" name="StartDate"/>
@@ -502,7 +502,7 @@
       <xs:element type="calendar" name="Calendar"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityOptionData">
     <xs:sequence>
       <xs:element type="optionData" name="OptionData"/>
@@ -523,7 +523,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityForwardData">
     <xs:sequence>
       <xs:element type="longShort" name="Position"/>
@@ -534,7 +534,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="creditDefaultSwapData">
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
