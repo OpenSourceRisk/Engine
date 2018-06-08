@@ -106,6 +106,7 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& equityForecastCurveShiftData() const { return equityForecastCurveShiftData_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const { return dividendYieldShiftData_; }
     const map<string, SpotShiftData>& commodityShiftData() const { return commodityShiftData_; }
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
