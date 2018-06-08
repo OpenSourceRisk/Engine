@@ -106,7 +106,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
     for (auto const& i : this->progressIndicators())
         engine.registerProgressIndicator(i);
     LOG("Run Sensitivity Scenarios");
-    engine.buildCube(portfolio_, boost::static_pointer_cast<NPVCube>(cube), calculators);
+    engine.buildCube(portfolio_, cube, calculators);
 
     computed_ = true;
     LOG("Sensitivity analysis completed");
