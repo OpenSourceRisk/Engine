@@ -29,6 +29,9 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+DateGrid::DateGrid() : dates_(1, Settings::instance().evaluationDate()), 
+    tenors_(1, 0 * Days), times_(1, 0.0), timeGrid_(times_.begin(), times_.end()) {}
+
 DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, const QuantLib::DayCounter& dayCounter) {
 
     if (grid == "ALPHA") {
@@ -101,8 +104,10 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
 DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridCalendar,
                    const QuantLib::DayCounter& dayCounter)
     : tenors_(tenors) {
-    if (tenors.size() > 0)
-        buildDates(gridCalendar, dayCounter);
+    QL_REQUIRE(!tenors_.empty(), "DateGrid requires a non-empty vector of tenors");
+    QL_REQUIRE(is_sorted(tenors_.begin(), tenors_.end()),
+        "Construction of DateGrid requires a sorted vector of unique tenors");
+    buildDates(gridCalendar, dayCounter);
 }
 
 DateGrid::DateGrid(const vector<Date>& dates, const DayCounter& dayCounter) : dates_(dates) {

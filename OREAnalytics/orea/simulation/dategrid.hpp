@@ -37,6 +37,9 @@ namespace analytics {
  */
 class DateGrid {
 public:
+    //! Build a date grid with a single date equal to Settings::instance().evaluationDate()
+    DateGrid();
+
     /*! Build a date grid from a string which can be of the form 40,1M or 1D,2D,1W,2W,3Y,5Y or a fixed name (ALPHA,
         BETA) indicating a hard coded grid structure
     */
@@ -44,7 +47,7 @@ public:
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! Build a date grid from the given vector of tenors.
-    DateGrid(const std::vector<QuantLib::Period>& tenors = std::vector<QuantLib::Period>(),
+    DateGrid(const std::vector<QuantLib::Period>& tenors,
              const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
