@@ -85,9 +85,6 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
 
         // We take the first capfloor shift quote that we find in the file matching the
         // currency and index tenor
-        bool haveShiftQuote = false;
-        Real shift = 0.0;
-
         for (auto& md : loader.loadQuotes(asof)) {
             if (md->asofDate() == asof &&
                 (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
