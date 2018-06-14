@@ -20,10 +20,17 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+
+using ore::analytics::RiskFactorKey;
+using std::string;
+
 using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
+
+using RFType = RiskFactorKey::KeyType;
+using ShiftData = SensitivityScenarioData::ShiftData;
 
 void SensitivityScenarioData::shiftDataFromXML(XMLNode* child, ShiftData& data) {
     data.shiftType = XMLUtils::getChildValue(child, "ShiftType", true);
@@ -41,6 +48,54 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
     data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
     if (data.shiftStrikes.size() == 0)
         data.shiftStrikes = {0.0};
+}
+
+const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const string& name) const {
+    // Not nice but not spending time refactoring the class now.
+    switch (keyType) {
+    case RFType::DiscountCurve:
+        return *discountCurveShiftData().at(name);
+    case RFType::IndexCurve:
+        return *indexCurveShiftData().at(name);
+    case RFType::YieldCurve:
+        return *yieldCurveShiftData().at(name);
+    case RFType::FXSpot:
+        return fxShiftData().at(name);
+    case RFType::SwaptionVolatility:
+        return swaptionVolShiftData().at(name);
+    case RFType::OptionletVolatility:
+        return capFloorVolShiftData().at(name);
+    case RFType::FXVolatility:
+        return fxVolShiftData().at(name);
+    case RFType::CDSVolatility:
+        return cdsVolShiftData().at(name);
+    case RFType::BaseCorrelation:
+        return baseCorrelationShiftData().at(name);
+    case RFType::ZeroInflationCurve:
+        return *zeroInflationCurveShiftData().at(name);
+    case RFType::SurvivalProbability:
+        return *creditCurveShiftData().at(name);
+    case RFType::YoYInflationCurve:
+        return *yoyInflationCurveShiftData().at(name);
+    case RFType::EquitySpot:
+        return equityShiftData().at(name);
+    case RFType::EquityVolatility:
+        return equityVolShiftData().at(name);
+    case RFType::EquityForecastCurve:
+        return *equityForecastCurveShiftData().at(name);
+    case RFType::DividendYield:
+        return *dividendYieldShiftData().at(name);
+    case RFType::CommoditySpot:
+        return commodityShiftData().at(name);
+    case RFType::CommodityCurve:
+        return *commodityCurveShiftData().at(name);
+    case RFType::CommodityVolatility:
+        return commodityVolShiftData().at(name);
+    case RFType::SecuritySpread:
+        return securityShiftData().at(name);
+    default:
+        QL_FAIL("Cannot return shift data for key type: " << keyType);
+    }
 }
 
 void SensitivityScenarioData::fromXML(XMLNode* root) {

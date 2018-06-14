@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
@@ -44,8 +45,6 @@ namespace analytics {
  */
 class SensitivityScenarioData : public XMLSerializable {
 public:
-    enum class ShiftType { Absolute, Relative };
-
     struct ShiftData {
         virtual ~ShiftData() {}
         ShiftData() : shiftSize(0.0) {}
@@ -116,6 +115,10 @@ public:
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
+    //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
+    const ShiftData& shiftData(
+        const ore::analytics::RiskFactorKey::KeyType& keyType, 
+        const std::string& name) const;
     //@}
 
     //! \name Setters
