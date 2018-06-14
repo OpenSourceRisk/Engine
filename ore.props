@@ -25,7 +25,5 @@
     <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
     <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
-    <additionalWarning>$(additionalWarning) /w34061</additionalWarning>
-    <additionalWarning>$(additionalWarning) /w34062</additionalWarning>
   </PropertyGroup>
 </Project>
