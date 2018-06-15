@@ -813,12 +813,27 @@ elements:
 
 \begin{itemize}
 \item Index: The underlying zero inflation index.
-\item Rates: The fixed rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
+
+Allowable values:  Any string (provided it is the ID of an inflation index in the market configuration).
+\item Rates: The fixed real rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
   values.
+ 
+ Allowable values: Each rate element can take any  real number. The rate is
+  expressed in decimal form, e.g. 0.05 is a rate of 5\%.
 \item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons.
+
+Allowable values:  Any positive real number.
 \item ObservationLag: The observation lag to be applied.
-\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
-\end{itemize}
+
+Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
+\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings. 
+
+Allowable values:  \emph{true, false} 
+\item SubtractInflationNotional [Optional]: A flag indicating whether the non-inflation adjusted notional amount should be subtracted from the the final inflation-adjusted notional exchange at maturity.  Note that the final coupon payment is not affected by this flag. \\ Final notional payment if \emph{true}: $N \frac{CPI_T}{CPI_Base}-N$. \\ If  \emph{false}: $N \frac{CPI_T}{CPI_Base}$ 
+
+Allowable values:  \emph{true, false} 
+\\Defaults to \emph{false}  if left blank or omitted.
+\end{itemize} 
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -869,9 +884,17 @@ elements:
 
 \begin{itemize}
 \item Index: The underlying zero inflation index.
+
+Allowable values:  Any string (provided it is the ID of an inflation index in the market configuration).
 \item FixingDays: The number of fixing days.
+
+Allowable values: An integer followed by \emph{D},
 \item ObservationLag: The observation lag to be applied.
+
+Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
+
+Allowable values:  \emph{true, false} 
 \end{itemize}
 
 \begin{listing}[H]

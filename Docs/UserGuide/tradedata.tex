@@ -499,48 +499,6 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 	Allowable values:  Any positive real number.
 \end{itemize}
 
-\subsubsection{Variance Swap}
-
-The \lstinline!VarianceSwapData!  node is the trade data container for the variance swap trade type. Only vanilla variance swaps are supported, and only pricing. The structure of an example \lstinline!VarianceSwapData! node for an equity option is shown in Listing \ref{lst:varswap_data}. It should be noted that a variance swap starting today or before today requires fixings to be provided for all business days (according to the calendar provided) from the day before the start date up to the most recent business day.
-
-\begin{listing}[H]
-	%\hrule\medskip
-	\begin{minted}[fontsize=\footnotesize]{xml}
-<VarianceSwapData>
-  <Name>SP5</Name>
-  <Currency>USD</Currency>
-  <StartDate>2016-01-29</StartDate>
-  <EndDate>2016-07-29</EndDate>
-  <Calendar>US</Calendar>
-  <Strike>0.2</Strike>
-  <Notional>50000</Notional>
-  <LongShort>Long<LongShort>
-</VarianceSwapData>
-	\end{minted}
-	\caption{Variance Swap data}
-	\label{lst:varswap_data}
-\end{listing}
-
-The meanings and allowable values of the elements in the \lstinline!VarianceSwapData!  node below.
-
-\begin{itemize}
-	\item Name: The name of the underlying equity. \\
-	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
-	\item Currency: The bought currency of the variance swap. \\
-	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
-	\item StartDate: The variance swap start date. \\
-	Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.	
-	\item EndDate: The variance swap end date. \\
-	Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.	
-	\item Calendar: The calendar according to which variance is accrued. \\
-	Allowable values: See Table \ref{tab:calendar}.
-	\item Strike: The volatility strike of the variance swap quoted absolutely (i.e. not as a percent). If the swap was struck in terms of variance, the square root of that variance should be used here.\\
-	Allowable values:  Any positive real number.
-	\item Notional: The vega notional of the variance swap. This is the notional in terms of volatility units (like the strike). If the swap was struck in terms of a variance notional, the corresponding vega notional is given by $N_{vol} = N_{var} * 2 * 100 * K_{vol}$ (where $K_{vol}$ is in absolute terms).\\
-	Allowable values:  Any positive real number.
-	\item LongShort: Defines whether the trade is long in the equity variance. For the avoidance of doubt, a long variance swap has positive value if the realised variance exceeds the variance strike. \\
-	Allowable values: Long, Short.
-\end{itemize}
 
 \subsubsection{CPI Swap}
 
