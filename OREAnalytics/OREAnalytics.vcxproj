@@ -56,6 +56,7 @@
     <ClInclude Include="orea\engine\riskfilter.hpp" />
     <ClInclude Include="orea\engine\sensitivityanalysis.hpp" />
     <ClInclude Include="orea\engine\sensitivitydata.hpp" />
+    <ClInclude Include="orea\engine\sensitivityrecord.hpp" />
     <ClInclude Include="orea\engine\stresstest.hpp" />
     <ClInclude Include="orea\engine\valuationcalculator.hpp" />
     <ClInclude Include="orea\engine\valuationengine.hpp" />
@@ -99,6 +100,7 @@
     <ClCompile Include="orea\engine\riskfilter.cpp" />
     <ClCompile Include="orea\engine\sensitivityanalysis.cpp" />
     <ClCompile Include="orea\engine\sensitivitydata.cpp" />
+    <ClCompile Include="orea\engine\sensitivityrecord.cpp" />
     <ClCompile Include="orea\engine\stresstest.cpp" />
     <ClCompile Include="orea\engine\valuationcalculator.cpp" />
     <ClCompile Include="orea\engine\valuationengine.cpp" />
