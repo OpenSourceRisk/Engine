@@ -205,6 +205,65 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing() {
     IndexManager::instance().clearHistory("EQ/" + equityName);
 }
 
+void GeneralisedReplicatingVarianceSwapEngineTest::testForwardStartPricing() {
+
+    SavedSettings backup;
+    Date today = Date::todaysDate();
+    Settings::instance().evaluationDate() = today;
+    Calendar cal = TARGET();
+    DayCounter dc = Actual365Fixed();
+    Date exDate = today + Integer(0.246575 * 365 + 0.5);
+    std::vector<Date> dates(1, exDate);
+    Real volatilityStrike = 0.2;
+    Real varianceStrike = volatilityStrike * volatilityStrike;
+    Real vegaNotional = 50000.0;
+    Real varianceNotional = vegaNotional / (2.0 * 100.0 * volatilityStrike);
+
+    // add strikes in C++98 compatible way
+    Real arrStrikes[] = { 50.0,  55.0,  60.0,  65.0,  70.0,  75.0,  80.0, 85.0, 90.0, 95.0, 100.0, // Put Strikes
+                          105.0, 110.0, 115.0, 120.0, 125.0, 130.0, 135.0 };                       // Call Strikes
+    std::vector<Real> strikes(arrStrikes, arrStrikes + sizeof(arrStrikes) / sizeof(Real));
+    // add vols in C++98 compatible way
+    Real arrVols[] = { 0.3,  0.29, 0.28, 0.27, 0.26, 0.25, 0.24, 0.23, 0.22, 0.21, 0.2, // Put Vols
+                       0.19, 0.18, 0.17, 0.16, 0.15, 0.14, 0.13 };                      // Call Vols
+    std::vector<Real> volsVector(arrVols, arrVols + sizeof(arrVols) / sizeof(Real));
+    Matrix vols(18, 1, volsVector.begin(), volsVector.end());
+
+    BOOST_TEST_MESSAGE("Testing future starting pricing of the QuantExt VarSwap engine, as per Demeterfi et. al (1999).");
+    std::string equityName = "STE";
+    boost::shared_ptr<SimpleQuote> spot(new SimpleQuote(0.0));
+    Handle<Quote> equityPrice = Handle<Quote>(boost::make_shared<SimpleQuote>(100.0));
+    Handle<YieldTermStructure> yieldTS =
+        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+    Handle<YieldTermStructure> dividendTS =
+        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0, dc));
+    Handle<BlackVolTermStructure> volTS = Handle<BlackVolTermStructure>(
+        boost::make_shared<BlackVarianceSurface>(today, NullCalendar(), dates, strikes, vols, dc));
+    Handle<YieldTermStructure> discountingTS =
+        Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.05, dc));
+    Size numPuts = 11;
+    Size numCalls = 8;
+    Real stepSize = 0.05 / sqrt(ActualActual().yearFraction(
+                               today, exDate)); // This is % step size between option strikes / Time to Maturity
+
+    boost::shared_ptr<GeneralizedBlackScholesProcess> stochProcess(
+        new BlackScholesMertonProcess(equityPrice, dividendTS, discountingTS, volTS));
+
+    boost::shared_ptr<PricingEngine> engine(new GeneralisedReplicatingVarianceSwapEngine(
+        equityName, stochProcess, discountingTS, cal, numPuts, numCalls, stepSize));
+
+    VarianceSwap varianceSwap(Position::Long, varianceStrike, varianceNotional, today + 7, exDate);
+    varianceSwap.setPricingEngine(engine);
+
+    Real result = varianceSwap.variance();
+    Real expected = 0.041244134;
+    Real tol = 1.0e-4;
+    BOOST_CHECK_CLOSE(result, expected, tol);
+    result = varianceSwap.NPV();
+    expected = 15361.126;
+    BOOST_CHECK_CLOSE(result, expected, tol);
+}
+
 void GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap() {
 
     BOOST_TEST_MESSAGE("Testing variance swap with replicating cost engine...");
@@ -336,6 +395,7 @@ test_suite* GeneralisedReplicatingVarianceSwapEngineTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("QuantExt variance swap engine test");
     suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testReplicatingVarianceSwap));
     suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testT0Pricing));
+    suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testForwardStartPricing));
     suite->add(BOOST_TEST_CASE(&GeneralisedReplicatingVarianceSwapEngineTest::testSeasonedSwapPricing));
     return suite;
 } 

@@ -72,17 +72,27 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     Real variance = 0;
     if (arguments_.startDate > today) {
         // forward starting.
-        boost::shared_ptr<const PricingEngine> thisEngine(shared_from_this());
-        boost::shared_ptr<VarianceSwap> varSwapTs(new VarianceSwap(arguments_.position, arguments_.strike, arguments_.notional, calendar_.advance(today,1,Days), arguments_.startDate));
-        boost::shared_ptr<VarianceSwap> varSwapTe(new VarianceSwap(arguments_.position, arguments_.strike, arguments_.notional, calendar_.advance(today,1,Days), arguments_.maturityDate)); 
-        varSwapTs->setPricingEngine(thisEngine);
-        varSwapTe->setPricingEngine(thisEngine);
+        Date startDate = arguments_.startDate;
+        Date maturityDate = arguments_.maturityDate;
+        Real t0tsVariance;
+        Real t0teVariance;
+
+        arguments_.startDate = today;
         
+        arguments_.maturityDate = startDate;
+        t0tsVariance = this->calculateFutureVariance();
+
+        arguments_.maturityDate = maturityDate;
+        t0teVariance = this->calculateFutureVariance();
+
+        arguments_.startDate = startDate;
+        arguments_.maturityDate = maturityDate;
+
         Real tsTime = calendar_.businessDaysBetween(today, arguments_.startDate, true, true);
         Real teTime = calendar_.businessDaysBetween(today, arguments_.maturityDate, false, true);
         Real fwdTime = calendar_.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
 
-        variance = (varSwapTe->variance() * teTime - varSwapTs->variance() * tsTime) / fwdTime;
+        variance = (t0teVariance * teTime - t0tsVariance * tsTime) / fwdTime;
 
         results_.additionalResults["accruedVariance"] = 0;
         results_.additionalResults["futureVariance"] = variance;
