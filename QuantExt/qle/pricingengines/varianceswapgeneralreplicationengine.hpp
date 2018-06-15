@@ -24,6 +24,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantext_varswap_engine_hpp
 #define quantext_varswap_engine_hpp
 
+#include <boost/enable_shared_from_this.hpp>
 #include <ql/instruments/varianceswap.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -37,7 +38,9 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-class GeneralisedReplicatingVarianceSwapEngine : public VarianceSwap::engine {
+class GeneralisedReplicatingVarianceSwapEngine
+    : public VarianceSwap::engine,
+      public boost::enable_shared_from_this<GeneralisedReplicatingVarianceSwapEngine> {
 public:
     typedef std::vector<std::pair<
         boost::shared_ptr<StrikedTypePayoff>, Real> > weights_type;

@@ -72,7 +72,7 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     Real variance = 0;
     if (arguments_.startDate > today) {
         // forward starting.
-        boost::shared_ptr<PricingEngine> thisEngine(this);
+        boost::shared_ptr<const PricingEngine> thisEngine(shared_from_this());
         boost::shared_ptr<VarianceSwap> varSwapTs(new VarianceSwap(arguments_.position, arguments_.strike, arguments_.notional, calendar_.advance(today,1,Days), arguments_.startDate));
         boost::shared_ptr<VarianceSwap> varSwapTe(new VarianceSwap(arguments_.position, arguments_.strike, arguments_.notional, calendar_.advance(today,1,Days), arguments_.maturityDate)); 
         varSwapTs->setPricingEngine(thisEngine);
