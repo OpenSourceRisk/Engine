@@ -24,29 +24,21 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantext_variance_swap_generalized_replication_engine_hpp
 #define quantext_variance_swap_generalized_replication_engine_hpp
 
-#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/indexes/indexmanager.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
+#include <qle/pricingengines/varianceswapgeneralreplicationengine.hpp>
 
 using std::string;
 using namespace QuantLib;
 
 namespace QuantExt {
 
-GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine( const string& equityName,
-            const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
-            const Handle<YieldTermStructure>& discountingTS,
-            const Calendar& calendar,
-            Size numPuts,
-            Size numCalls,
-            Real stepSize) : 
-        equityName_(equityName),
-        process_(process),
-        discountingTS_(discountingTS),
-        calendar_(calendar),
-        numPuts_(numPuts),
-        numCalls_(numCalls),
-        stepSize_(stepSize) {
+GeneralisedReplicatingVarianceSwapEngine::GeneralisedReplicatingVarianceSwapEngine(
+    const string& equityName, const boost::shared_ptr<GeneralizedBlackScholesProcess>& process,
+    const Handle<YieldTermStructure>& discountingTS, const Calendar& calendar, Size numPuts, Size numCalls,
+    Real stepSize)
+    : equityName_(equityName), process_(process), discountingTS_(discountingTS), calendar_(calendar), numPuts_(numPuts),
+      numCalls_(numCalls), stepSize_(stepSize) {
 
     QL_REQUIRE(process_, "Black-Scholes process not present.");
     QL_REQUIRE(!discountingTS_.empty(), "Empty discounting term structure handle");
@@ -72,39 +64,37 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     Real variance = 0;
     if (arguments_.startDate > today) {
         // forward starting.
-        Date startDate = arguments_.startDate;
-        Date maturityDate = arguments_.maturityDate;
-        Real t0tsVariance;
-        Real t0teVariance;
+        // This calculation uses the (time-weighted) additivity of variance to calculate the result.
+        // Two varswaps are constructed, starting today and maturing at the start and end of our real swap,
+        // respectively. The implementation of this (which we'll call "i)") could be improved. At the moment we actually
+        // create the 2 swaps. It would be more efficient to either: ii) rejig this instance by changing the start date
+        // and maturity to directly access the calculatefuturevariance function or iii) rejig the various methods to
+        // take the dates as arguments. i) is the cleanest to code, and most legible. ii) is the lightest solution but
+        // ugly. iii) would slow down calculation of all pricing scenarios.
 
-        arguments_.startDate = today;
-        
-        arguments_.maturityDate = startDate;
-        t0tsVariance = this->calculateFutureVariance();
-
-        arguments_.maturityDate = maturityDate;
-        t0teVariance = this->calculateFutureVariance();
-
-        arguments_.startDate = startDate;
-        arguments_.maturityDate = maturityDate;
-
+        boost::shared_ptr<PricingEngine> thisEngine =
+            boost::shared_ptr<PricingEngine>(new GeneralisedReplicatingVarianceSwapEngine(*this));
+        boost::shared_ptr<VarianceSwap> varSwapTs(
+            new VarianceSwap(arguments_.position, arguments_.strike, arguments_.notional, today, arguments_.startDate));
+        boost::shared_ptr<VarianceSwap> varSwapTe(new VarianceSwap(
+            arguments_.position, arguments_.strike, arguments_.notional, today, arguments_.maturityDate));
+        varSwapTs->setPricingEngine(thisEngine);
+        varSwapTe->setPricingEngine(thisEngine);
         Real tsTime = calendar_.businessDaysBetween(today, arguments_.startDate, true, true);
         Real teTime = calendar_.businessDaysBetween(today, arguments_.maturityDate, false, true);
         Real fwdTime = calendar_.businessDaysBetween(arguments_.startDate, arguments_.maturityDate, true, true);
 
-        variance = (t0teVariance * teTime - t0tsVariance * tsTime) / fwdTime;
+        variance = (varSwapTe->variance() * teTime - varSwapTs->variance() * tsTime) / fwdTime;
 
         results_.additionalResults["accruedVariance"] = 0;
         results_.additionalResults["futureVariance"] = variance;
 
-    }
-    else if (arguments_.startDate == today) {
+    } else if (arguments_.startDate == today) {
         // The only time the QL price works
         variance = calculateFutureVariance();
         results_.additionalResults["accruedVariance"] = 0;
         results_.additionalResults["futureVariance"] = variance;
-    }
-    else {
+    } else {
         // Get weighted average of Future and Realised variancies.
         Real accVar = calculateAccruedVariance();
         Real futVar = calculateFutureVariance();
@@ -122,7 +112,8 @@ void GeneralisedReplicatingVarianceSwapEngine::calculate() const {
     Real multiplier = arguments_.position == Position::Long ? 1.0 : -1.0;
 
     results_.variance = variance;
-    results_.value = multiplier * df * arguments_.notional * 10000.0 * (variance - arguments_.strike); //factor of 10000 to convert vols to market quotes
+    results_.value = multiplier * df * arguments_.notional * 10000.0 *
+                     (variance - arguments_.strike); // factor of 10000 to convert vols to market quotes
 }
 
 Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance() const {
@@ -138,7 +129,9 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateAccruedVariance() const 
     Size counter = 0;
     Date firstDate = calendar_.advance(arguments_.startDate, -1, Days);
     Real last = history[firstDate];
-    QL_REQUIRE(last != Null<Real>(), "No fixing for " << eqIndex << " on date " << firstDate << ". This is required for fixing the return on the first day of the variance swap.");
+    QL_REQUIRE(last != Null<Real>(),
+               "No fixing for " << eqIndex << " on date " << firstDate
+                                << ". This is required for fixing the return on the first day of the variance swap.");
 
     for (Date d = arguments_.startDate; d < today; d = calendar_.advance(d, 1, Days)) {
         Real price = history[d];
@@ -165,8 +158,10 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
     Real timeToMaturity = ActualActual().yearFraction(today, arguments_.maturityDate);
 
     // We put a minimum range of 10% either side of spot, for the sake of swaps close to maturity
-    Real dMoneyness = std::max(stepSize_ * sqrt(timeToMaturity),0.10/std::min(numCalls_, numPuts_));
-    QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step specified. If #puts * step size * sqrt(timeToMaturity) >=1 this would lead to negative strikes in the replicating options.");
+    Real dMoneyness = std::max(stepSize_ * sqrt(timeToMaturity), 0.10 / std::min(numCalls_, numPuts_));
+    QL_REQUIRE(numPuts_ * dMoneyness < 1, "Variance swap engine: too many puts or too large a moneyness step "
+                                          "specified. If #puts * step size * sqrt(timeToMaturity) >=1 this would lead "
+                                          "to negative strikes in the replicating options.");
 
     std::vector<Real> callStrikes(numCalls_);
     for (Size i = 0; i < numCalls_; i++)
@@ -176,16 +171,14 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
     for (Size i = 0; i < numPuts_; i++)
         putStrikes[i] = process_->x0() * (1 - i * dMoneyness);
 
-    QL_REQUIRE(!callStrikes.empty() && !putStrikes.empty(),
-        "no strike(s) given");
-    QL_REQUIRE(*std::min_element(putStrikes.begin(), putStrikes.end())>0.0,
-        "min put strike must be positive");
+    QL_REQUIRE(!callStrikes.empty() && !putStrikes.empty(), "no strike(s) given");
+    QL_REQUIRE(*std::min_element(putStrikes.begin(), putStrikes.end()) > 0.0, "min put strike must be positive");
     QL_REQUIRE(*std::min_element(callStrikes.begin(), callStrikes.end()) ==
-        *std::max_element(putStrikes.begin(), putStrikes.end()),
-        "min call and max put strikes differ");
+                   *std::max_element(putStrikes.begin(), putStrikes.end()),
+               "min call and max put strikes differ");
 
     weights_type optionWeights;
-    computeOptionWeights(callStrikes, Option::Call, optionWeights, dMoneyness*  100.0);
+    computeOptionWeights(callStrikes, Option::Call, optionWeights, dMoneyness * 100.0);
     computeOptionWeights(putStrikes, Option::Put, optionWeights, dMoneyness * 100.0);
 
     Real variance = computeReplicatingPortfolio(optionWeights);
@@ -195,11 +188,9 @@ Real GeneralisedReplicatingVarianceSwapEngine::calculateFutureVariance() const {
     return variance;
 }
 
-void GeneralisedReplicatingVarianceSwapEngine::computeOptionWeights(
-    const std::vector<Real>& availStrikes,
-    const Option::Type type,
-    weights_type& optionWeights,
-    Real dk) const {
+void GeneralisedReplicatingVarianceSwapEngine::computeOptionWeights(const std::vector<Real>& availStrikes,
+                                                                    const Option::Type type,
+                                                                    weights_type& optionWeights, Real dk) const {
     if (availStrikes.empty())
         return;
 
@@ -220,8 +211,7 @@ void GeneralisedReplicatingVarianceSwapEngine::computeOptionWeights(
     }
 
     // remove duplicate strikes
-    std::vector<Real>::iterator last =
-        std::unique(strikes.begin(), strikes.end());
+    std::vector<Real>::iterator last = std::unique(strikes.begin(), strikes.end());
     strikes.erase(last, strikes.end());
 
     // compute weights
@@ -229,34 +219,25 @@ void GeneralisedReplicatingVarianceSwapEngine::computeOptionWeights(
     Real slope, prevSlope = 0.0;
 
     for (std::vector<Real>::const_iterator k = strikes.begin();
-        // added end-strike discarded
-        k<strikes.end() - 1;
-        ++k) {
-        slope = std::fabs((computeLogPayoff(*(k + 1), f) -
-            computeLogPayoff(*k, f)) /
-            (*(k + 1) - *k));
-        boost::shared_ptr<StrikedTypePayoff> payoff(
-            new PlainVanillaPayoff(type, *k));
+         // added end-strike discarded
+         k < strikes.end() - 1; ++k) {
+        slope = std::fabs((computeLogPayoff(*(k + 1), f) - computeLogPayoff(*k, f)) / (*(k + 1) - *k));
+        boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, *k));
         if (k == strikes.begin())
             optionWeights.push_back(std::make_pair(payoff, slope));
         else
-            optionWeights.push_back(
-                std::make_pair(payoff, slope - prevSlope));
+            optionWeights.push_back(std::make_pair(payoff, slope - prevSlope));
         prevSlope = slope;
     }
 }
 
-Real GeneralisedReplicatingVarianceSwapEngine::computeReplicatingPortfolio(
-    const weights_type& optionWeights) const {
+Real GeneralisedReplicatingVarianceSwapEngine::computeReplicatingPortfolio(const weights_type& optionWeights) const {
 
-    boost::shared_ptr<Exercise> exercise(
-        new EuropeanExercise(arguments_.maturityDate));
-    boost::shared_ptr<PricingEngine> optionEngine(
-        new AnalyticEuropeanEngine(process_, discountingTS_));
+    boost::shared_ptr<Exercise> exercise(new EuropeanExercise(arguments_.maturityDate));
+    boost::shared_ptr<PricingEngine> optionEngine(new AnalyticEuropeanEngine(process_, discountingTS_));
     Real optionsValue = 0.0;
 
-    for (weights_type::const_iterator i = optionWeights.begin();
-        i < optionWeights.end(); ++i) {
+    for (weights_type::const_iterator i = optionWeights.begin(); i < optionWeights.end(); ++i) {
         boost::shared_ptr<StrikedTypePayoff> payoff = i->first;
         EuropeanOption option(payoff, exercise);
         option.setPricingEngine(optionEngine);
@@ -266,18 +247,15 @@ Real GeneralisedReplicatingVarianceSwapEngine::computeReplicatingPortfolio(
 
     Real f = optionWeights.front().first->strike();
     return 2.0 * forecastingRate() -
-        2.0 / residualTime() *
-        (((underlying() / forecastingDiscount() - f) / f) +
-            std::log(f / underlying())) +
-        optionsValue / riskFreeDiscount();
+           2.0 / residualTime() * (((underlying() / forecastingDiscount() - f) / f) + std::log(f / underlying())) +
+           optionsValue / riskFreeDiscount();
 }
 
-Real GeneralisedReplicatingVarianceSwapEngine::computeLogPayoff(
-    const Real strike,
-    const Real callPutStrikeBoundary) const {
+Real GeneralisedReplicatingVarianceSwapEngine::computeLogPayoff(const Real strike,
+                                                                const Real callPutStrikeBoundary) const {
     Real f = callPutStrikeBoundary;
     return (2.0 / residualTime()) * (((strike - f) / f) - std::log(strike / f));
 }
-}
+} // namespace QuantExt
 
 #endif
