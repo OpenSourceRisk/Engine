@@ -108,8 +108,8 @@ inline Rate GeneralisedReplicatingVarianceSwapEngine::riskFreeRate() const {
 }
 
 inline Rate GeneralisedReplicatingVarianceSwapEngine::forecastingRate() const {
-    return process_->riskFreeRate()->zeroRate(residualTime(), Continuous,
-        NoFrequency, true);
+    return process_->riskFreeRate()->zeroRate(residualTime(), Continuous, NoFrequency, true) -
+           process_->dividendYield()->zeroRate(residualTime(), Continuous, NoFrequency, true);
 }
 
 
@@ -118,9 +118,8 @@ inline
     return discountingTS_->discount(residualTime());
 }
 
-inline
-    DiscountFactor GeneralisedReplicatingVarianceSwapEngine::forecastingDiscount() const {
-    return process_->riskFreeRate()->discount(residualTime());
+inline DiscountFactor GeneralisedReplicatingVarianceSwapEngine::forecastingDiscount() const {
+    return process_->riskFreeRate()->discount(residualTime()) / process_->dividendYield()->discount(residualTime());
 }
 
 inline
