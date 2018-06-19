@@ -72,6 +72,10 @@ private:
     std::map<std::string, std::function<bool(std::string)>> categories_;
     //! Sensitivity records aggregated according to <code>categories_</code>
     std::map<std::string, std::set<SensitivityRecord>> aggRecords_;
+    /*! Record the currency for each trade ID. Can't have sensitivities with 
+        different currencies within trade ID.
+    */
+    std::map<std::string, std::string> tradeCurrencies_;
 
     //! Initialise the container of aggregated records
     void init();
