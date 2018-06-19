@@ -38,23 +38,23 @@ namespace analytics {
 struct SensitivityRecord {
     // Public members
     std::string tradeId;
-    bool isPar;
+    bool isPar = false;
     RiskFactorKey key_1;
     std::string desc_1;
-    QuantLib::Real shift_1;
+    QuantLib::Real shift_1 = 0.0;
     RiskFactorKey key_2;
     std::string desc_2;
-    QuantLib::Real shift_2;
+    QuantLib::Real shift_2 = 0.0;
     std::string currency;
-    mutable QuantLib::Real baseNpv;
-    mutable QuantLib::Real delta;
-    mutable QuantLib::Real gamma;
+    mutable QuantLib::Real baseNpv = 0.0;
+    mutable QuantLib::Real delta = 0.0;
+    mutable QuantLib::Real gamma = 0.0;
 
     /*! Default ctor to prevent uninitialised variables
         Could use in class initialisation and avoid ctor but may be confusing
     */
-    SensitivityRecord() : isPar(false), shift_1(0.0), shift_2(0.0), 
-        baseNpv(0.0), delta(0.0), gamma(0.0) {}
+    // SensitivityRecord() : isPar(false), shift_1(0.0), shift_2(0.0), 
+    //    baseNpv(0.0), delta(0.0), gamma(0.0) {}
 
     /*! Comparison operators for SensitivityRecord
     */

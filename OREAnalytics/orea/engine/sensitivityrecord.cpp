@@ -21,7 +21,7 @@
 #include <ql/math/comparison.hpp>
 #include <iomanip>
 
-using QuantLib::close_enough;
+using QuantLib::close;
 using std::ostream;
 using std::boolalpha;
 using std::fixed;
@@ -31,31 +31,44 @@ namespace ore {
 namespace analytics {
 
 bool SensitivityRecord::operator==(const SensitivityRecord& sr) const {
-    // Note the use of close_enough for comparison of shift sizes
-    return tradeId == sr.tradeId &&
-        isPar == sr.isPar &&
-        key_1 == sr.key_1 &&
-        desc_1 == sr.desc_1 &&
-        close_enough(shift_1, sr.shift_1) &&
-        key_2 == sr.key_2 &&
-        desc_2 == sr.desc_2 &&
-        close_enough(shift_2, sr.shift_2) &&
-        currency == sr.currency;
+    // Define in terms of operator<
+    return !(*this < sr) && !(sr < *this);
 }
 
 bool SensitivityRecord::operator<(const SensitivityRecord& sr) const {
-    return tradeId < sr.tradeId &&
-        isPar < sr.isPar &&
-        key_1 < sr.key_1 &&
-        desc_1 < sr.desc_1 &&
-        (!close_enough(shift_1, sr.shift_1) && shift_1 < sr.shift_1) &&
-        key_2 < sr.key_2 &&
-        desc_2 < sr.desc_2 &&
-        (!close_enough(shift_2, sr.shift_2) && shift_2 < sr.shift_2) &&
-        currency < sr.currency;
+    // Verbose, would be nice to use std::tie but want to use close on the shifts
+    if (tradeId < sr.tradeId) return true;
+    if (tradeId > sr.tradeId) return false;
+
+    if (isPar < sr.isPar) return true;
+    if (isPar > sr.isPar) return false;
+
+    if (key_1 < sr.key_1) return true;
+    if (key_1 > sr.key_1) return false;
+
+    if (desc_1 < sr.desc_1) return true;
+    if (desc_1 > sr.desc_1) return false;
+
+    if (!close(shift_1, sr.shift_1) && shift_1 < sr.shift_1) return true;
+    if (!close(shift_1, sr.shift_1) && shift_1 > sr.shift_1) return false;
+
+    if (key_2 < sr.key_2) return true;
+    if (key_2 > sr.key_2) return false;
+
+    if (desc_2 < sr.desc_2) return true;
+    if (desc_2 > sr.desc_2) return false;
+
+    if (!close(shift_2, sr.shift_2) && shift_2 < sr.shift_2) return true;
+    if (!close(shift_2, sr.shift_2) && shift_2 > sr.shift_2) return false;
+
+    if (currency < sr.currency) return true;
+    if (currency > sr.currency) return false;
+
+    return false;
 }
 
 bool SensitivityRecord::operator!=(const SensitivityRecord& sr) const {
+    // Define in terms of operator==
     return !(*this == sr);
 }
 
