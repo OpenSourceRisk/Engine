@@ -173,6 +173,17 @@ pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
     return make_pair(parseRiskFactorKey(factor.substr(0, pos)), factor.substr(pos + 1));
 }
 
+boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {
+    // Use deconstructFactor to split in to pair: [key, additional token str]
+    auto p = deconstructFactor(str);
+
+    // The additional tokens
+    boost::split(addTokens, p.second, boost::is_any_of("/"), boost::token_compress_off);
+    
+    // Return the key value
+    return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
+}
+
 void ShiftScenarioGenerator::applyShift(Size j, Real shiftSize, bool up, ShiftType shiftType,
                                         const vector<Time>& tenors, const vector<Real>& values,
                                         const vector<Real>& times, vector<Real>& shiftedValues, bool initialise) {

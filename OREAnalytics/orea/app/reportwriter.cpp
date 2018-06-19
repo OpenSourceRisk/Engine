@@ -555,8 +555,7 @@ void ReportWriter::writeScenarioReport(Report& report,
 }
 
 void ReportWriter::writeSensitivityReport(Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
-    const map<RiskFactorKey, Real>& shiftSizes) {
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold) {
 
     LOG("Writing Sensitivity report");
 
@@ -576,19 +575,14 @@ void ReportWriter::writeSensitivityReport(Report& report,
             Real gamma = sensitivityCube->gamma(tradeId, factor);
 
             if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
-
-                Real shiftSize = shiftSizes.count(factor) > 0 ? shiftSizes.at(factor) : Null<Real>();
-
                 report.next();
                 report.add(tradeId);
                 report.add(sensitivityCube->factorDescription(factor));
-                report.add(shiftSize);
+                report.add(sensitivityCube->shiftSize(factor));
                 report.add(baseNpv);
                 report.add(delta);
                 report.add(gamma);
-
-            }
-            else if (!std::isfinite(delta) || !std::isfinite(gamma)) {
+            } else if (!std::isfinite(delta) || !std::isfinite(gamma)) {
                 // TODO: Again, is this needed?
                 ALOG("sensitivity results for trade " << tradeId << ", factor " <<
                     sensitivityCube->factorDescription(factor) << " are not finite (delta = " << delta
@@ -602,8 +596,7 @@ void ReportWriter::writeSensitivityReport(Report& report,
 }
 
 void ReportWriter::writeCrossGammaReport(Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
-    const map<RiskFactorKey, Real>& shiftSizes) {
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold) {
 
     LOG("Writing CrossGamma report");
 
@@ -622,21 +615,15 @@ void ReportWriter::writeCrossGammaReport(Report& report,
             Real crossGamma = sensitivityCube->crossGamma(tradeId, crossPair);
 
             if (fabs(crossGamma) > outputThreshold) {
-
-                Real shiftSize_1 = shiftSizes.count(crossPair.first) > 0 ? shiftSizes.at(crossPair.first) : Null<Real>();
-                Real shiftSize_2 = shiftSizes.count(crossPair.second) > 0 ? shiftSizes.at(crossPair.second) : Null<Real>();
-
                 report.next();
                 report.add(tradeId);
                 report.add(sensitivityCube->factorDescription(crossPair.first));
-                report.add(shiftSize_1);
+                report.add(sensitivityCube->shiftSize(crossPair.first));
                 report.add(sensitivityCube->factorDescription(crossPair.second));
-                report.add(shiftSize_2);
+                report.add(sensitivityCube->shiftSize(crossPair.second));
                 report.add(baseNpv);
                 report.add(crossGamma);
-
-            }
-            else if (!std::isfinite(crossGamma)) {
+            } else if (!std::isfinite(crossGamma)) {
                 ALOG("sensitivity result for trade " << tradeId << ", factors "
                     << sensitivityCube->factorDescription(crossPair.first) << ", "
                     << sensitivityCube->factorDescription(crossPair.second)

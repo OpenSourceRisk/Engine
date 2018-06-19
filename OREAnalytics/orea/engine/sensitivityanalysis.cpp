@@ -88,8 +88,8 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
         initializeCube(cube);
     }
 
-    sensiCube_ = boost::make_shared<SensitivityCube>(
-        cube, scenarioGenerator_->scenarioDescriptions());
+    sensiCube_ = boost::make_shared<SensitivityCube>(cube, 
+        scenarioGenerator_->scenarioDescriptions(), scenarioGenerator_->shiftSizes());
     initialized_ = true;
 }
 
@@ -110,10 +110,6 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube)
 
     computed_ = true;
     LOG("Sensitivity analysis completed");
-
-    for (auto key : sensiCube_->factors()) {
-        factors_[key] = getShiftSize(key);
-    }
 }
 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
@@ -154,11 +150,6 @@ void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>&
 void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const {
     cube = boost::make_shared<DoublePrecisionInMemoryCube>(asof_, portfolio_->ids(), vector<Date>(1, asof_),
                                                            scenarioGenerator_->samples());
-}
-
-Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {
-    // Delegate to the free function
-    return ore::analytics::getShiftSize(key, *sensitivityData_, simMarket_, marketConfiguration_);
 }
 
 Real getShiftSize(const RiskFactorKey& key, 

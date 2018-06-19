@@ -17,8 +17,9 @@
 */
 
 #include <orea/engine/parametricvar.hpp>
-#include <orea/engine/riskfilter.hpp>
 
+#include <orea/engine/riskfilter.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>

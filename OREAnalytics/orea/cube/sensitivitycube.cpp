@@ -55,13 +55,16 @@ namespace ore {
 namespace analytics {
 
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube, 
-    const vector<ShiftScenarioDescription>& scenarioDescriptions) 
-    : cube_(cube), scenarioDescriptions_(scenarioDescriptions) {
+    const vector<ShiftScenarioDescription>& scenarioDescriptions, 
+    const map<RiskFactorKey, QuantLib::Real>& shiftsizes)
+    : cube_(cube), scenarioDescriptions_(scenarioDescriptions), shiftSizes_(shiftsizes) {
     initialise();
 }
 
 SensitivityCube::SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
-    const vector<string>& scenarioDescriptions) : cube_(cube) {
+    const vector<string>& scenarioDescriptions, 
+    const map<RiskFactorKey, QuantLib::Real>& shiftsizes) 
+    : cube_(cube), shiftSizes_(shiftsizes) {
 
     // Populate scenarioDescriptions_ from string descriptions
     scenarioDescriptions_.reserve(scenarioDescriptions.size());
@@ -93,6 +96,7 @@ void SensitivityCube::initialise() {
             QL_REQUIRE(upFactors_.count(des.key1()) == 0, "Cannot have multiple up factors with "
                 "the same risk factor key[" << des.key1() << "]");
             upFactors_[des.key1()] = i;
+            factors_.insert(des.key1());
             break;
         case ShiftScenarioDescription::Type::Down:
             QL_REQUIRE(downFactors_.count(des.key1()) == 0, "Cannot have multiple down factors with "
@@ -104,6 +108,7 @@ void SensitivityCube::initialise() {
             QL_REQUIRE(crossFactors_.count(factorPair) == 0, "Cannot have multiple cross factors with "
                 "the same risk factor key pair [" << des.key1() << ", " << des.key2() << "]");
             crossFactors_[factorPair] = i;
+            crossPairs_.insert(factorPair);
             break;
         default:
             // Do nothing
@@ -118,6 +123,16 @@ void SensitivityCube::initialise() {
     auto pred = [](pair<RiskFactorKey, Size> a, pair<RiskFactorKey, Size> b) { return a.first == b.first; };
     QL_REQUIRE(equal(upFactors_.begin(), upFactors_.end(), downFactors_.begin(), pred),
         "The set of risk factor keys with an 'Up' shift and 'Down' shift should match");
+
+    // Check that each factor has a shift size entry and that it is not a Null<Real>()
+    QL_REQUIRE(upFactors_.size() == shiftSizes_.size(),
+        "The number 'Up' shifts does not equal the number of shift sizes supplied");
+    
+    for (auto const& kv : upFactors_) {
+        auto it = shiftSizes_.find(kv.first);
+        QL_REQUIRE(it != shiftSizes_.end(), "No entry for risk factor " << kv.first << " in shift sizes.");
+        QL_REQUIRE(it->second != Null<Real>(), "The shift size for risk factor " << kv.first << " is not valid.");
+    }
 }
 
 bool SensitivityCube::hasTrade(const string& tradeId) const {
@@ -133,24 +148,18 @@ std::string SensitivityCube::factorDescription(const RiskFactorKey & riskFactorK
     return scenarioDescriptions_[scenarioIdx].factor1();
 }
 
-set<RiskFactorKey> SensitivityCube::factors() const {
-    
-    set<RiskFactorKey> factors;
-    for (auto const& factor : upFactors_) {
-        factors.insert(factor.first);
-    }
-    
-    return factors;
+const set<RiskFactorKey>& SensitivityCube::factors() const {
+    return factors_;
 }
 
-set<crossPair> SensitivityCube::crossFactors() const {
+const set<crossPair>& SensitivityCube::crossFactors() const {
+    return crossPairs_;
+}
 
-    set<crossPair> crossFactors;
-    for (auto const& crossFactor : crossFactors_) {
-        crossFactors.insert(crossFactor.first);
-    }
-
-    return crossFactors;
+Real SensitivityCube::shiftSize(const RiskFactorKey& riskFactorKey) const {
+    auto it = shiftSizes_.find(riskFactorKey);
+    QL_REQUIRE(it != shiftSizes_.end(), "Risk factor, " << riskFactorKey << ", was not found in the shift sizes.");
+    return it->second;
 }
 
 Real SensitivityCube::npv(const string& tradeId) const {

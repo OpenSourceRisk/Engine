@@ -20,6 +20,7 @@
 
 #include <orea/engine/sensitivitydata.hpp>
 
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -44,19 +45,6 @@ template <class T> T getData(const std::vector<T>& data, const Size index) {
 } // getData
 
 } // namespace
-
-boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens) {
-    std::vector<std::string> tokens;
-    boost::split(tokens, str, boost::is_any_of("/"), boost::token_compress_off);
-    QL_REQUIRE(tokens.size() >= 3, "parseRiskFactorKey: at least 3 tokens required, string is \"" << str << "\"");
-    RiskFactorKey::KeyType type = parseRiskFactorKeyType(tokens[0]);
-    boost::shared_ptr<RiskFactorKey> key =
-        boost::make_shared<RiskFactorKey>(type, tokens[1], ore::data::parseInteger(tokens[2]));
-    for (Size i = 3; i < tokens.size(); ++i) {
-        addTokens.emplace_back(tokens[i]);
-    }
-    return key;
-} // parseRiskFactorKey
 
 void SensitivityDataInMemory::add(const std::string& tradeId, const std::string& factor, const std::string& factor2,
                                   const double value, const double value2) {

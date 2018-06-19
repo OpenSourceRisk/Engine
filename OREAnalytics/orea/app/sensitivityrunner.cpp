@@ -87,13 +87,11 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
 
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    ReportWriter().writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), 
-        sensiThreshold, sensiAnalysis->shiftSizes());
+    ReportWriter().writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), sensiThreshold);
 
     outputFile = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
     CSVFileReport cgReport(outputFile);
-    ReportWriter().writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), 
-        sensiThreshold, sensiAnalysis->shiftSizes());
+    ReportWriter().writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), sensiThreshold);
 }
 
 } // namespace analytics

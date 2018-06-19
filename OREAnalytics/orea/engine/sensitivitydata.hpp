@@ -89,9 +89,6 @@ private:
     std::vector<double> value_, value2_;
 };
 
-//! risk factor key parser that takes into account additional tokens occuring in sensitivity risk factor keys
-boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
-
 //! utitlity function that loads sensitivity data from a CSV file
 void loadSensitivityDataFromCsv(SensitivityDataInMemory& data, const std::string& fileName, const char delim = '\n');
 

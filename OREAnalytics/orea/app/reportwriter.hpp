@@ -77,12 +77,10 @@ public:
     // TODO: do we really need the actual shift sizes in the sensitivity report? Would it be better to have 
     //       shift size and shift type? Could make these part of Scenario Descriptions - would be cleaner.
     virtual void writeSensitivityReport(ore::data::Report& report,
-        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
+        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0);
 
     virtual void writeCrossGammaReport(ore::data::Report& report,
-        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
+        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0);
 
 };
 } // namespace analytics

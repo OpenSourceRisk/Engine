@@ -106,9 +106,6 @@ public:
     //! a wrapper for the sensivity results cube
     boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
 
-    //! Return a map containing the risk factor keys and their corresponding shift sizes
-    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return factors_; }
-
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
     virtual void initialize(boost::shared_ptr<NPVCube>& cube);
@@ -126,9 +123,6 @@ protected:
 
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
-
-    //! returns the shift size corresponding to a particular risk factor
-    Real getShiftSize(const RiskFactorKey& desc) const;
 
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
@@ -152,8 +146,6 @@ protected:
     std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
     boost::shared_ptr<SensitivityCube> sensiCube_;
-    // unique set of factors
-    std::map<RiskFactorKey, QuantLib::Real> factors_;
 };
 
 /*! Returns the absolute shift size corresponding to a particular risk factor \p key 
