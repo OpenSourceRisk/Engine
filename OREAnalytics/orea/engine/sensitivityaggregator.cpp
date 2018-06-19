@@ -55,10 +55,14 @@ SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(std
 void SensitivityAggregator::aggregate(SensitivityStream& ss) {
     // Loop over stream's records
     while (SensitivityRecord sr = ss.next()) {
+        // "Blank out" trade ID before adding
+        string tradeId = sr.tradeId;
+        sr.tradeId = "";
+
         // Update aggRecords_ for each category
         for (const auto& kv : categories_) {
             // Check if the sensitivity record's trade ID is in the category
-            if (kv.second(sr.tradeId)) {
+            if (kv.second(tradeId)) {
                 DLOG("Updating aggregated sensitivities for category " << kv.first << " with record: " << sr);
                 add(sr, aggRecords_[kv.first]);
             }
@@ -91,9 +95,6 @@ void SensitivityAggregator::init() {
 }
 
 void SensitivityAggregator::add(SensitivityRecord& sr, set<SensitivityRecord>& records) {
-    // "Blank out" the trade Id for aggregation
-    sr.tradeId = "";
-
     // Try to insert sr. This will only pass if sr is not there already.
     auto p = records.insert(sr);
     if (!p.second) {
