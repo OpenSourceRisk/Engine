@@ -155,9 +155,6 @@
     <ClInclude Include="orea\engine\riskfilter.hpp">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\sensitivitydata.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
     <ClInclude Include="orea\app\sensitivityrunner.hpp">
       <Filter>app</Filter>
     </ClInclude>
@@ -165,6 +162,21 @@
       <Filter>cube</Filter>
     </ClInclude>
     <ClInclude Include="orea\engine\sensitivityrecord.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivityfilestream.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivitystream.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivityinmemorystream.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivitycubestream.hpp">
+      <Filter>engine</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\engine\sensitivitydata.hpp">
       <Filter>engine</Filter>
     </ClInclude>
   </ItemGroup>
@@ -262,9 +274,6 @@
     <ClCompile Include="orea\engine\riskfilter.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="orea\engine\sensitivitydata.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
     <ClCompile Include="orea\app\sensitivityrunner.cpp">
       <Filter>app</Filter>
     </ClCompile>
@@ -272,6 +281,18 @@
       <Filter>cube</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\sensitivityrecord.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivityfilestream.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivityinmemorystream.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivitycubestream.cpp">
+      <Filter>engine</Filter>
+    </ClCompile>
+    <ClCompile Include="orea\engine\sensitivitydata.cpp">
       <Filter>engine</Filter>
     </ClCompile>
   </ItemGroup>
