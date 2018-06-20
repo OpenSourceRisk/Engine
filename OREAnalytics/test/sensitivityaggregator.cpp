@@ -30,6 +30,7 @@ using ore::analytics::SensitivityInMemoryStream;
 using ore::analytics::SensitivityAggregator;
 using std::set;
 using std::map;
+using std::function;
 
 namespace testsuite {
 
@@ -140,11 +141,51 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     check(expAggregationAll, res);
 }
 
+void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
+
+    BOOST_TEST_MESSAGE("Testing general aggregation using functions for categories");
+
+    // Streamer
+    SensitivityInMemoryStream ss(records);
+
+    // Category functions for aggregator
+    map<string, function<bool(string)>> categories;
+    // No aggregation, just single trade categories
+    set<string> trades = { "trade_001", "trade_003", "trade_004" };
+    for (const auto& trade : trades) {
+        categories[trade] = [&trade](string tradeId) { return tradeId == trade; };
+    }
+    // Aggregate over all trades except trade_002
+    categories["all_except_002"] = [&trades](string tradeId) { return trades.count(tradeId) > 0; };
+
+    // Create aggregator and call aggregate
+    SensitivityAggregator sAgg(categories);
+    sAgg.aggregate(ss);
+
+    // Containers for expected and actual results respectively below
+    set<SensitivityRecord> exp;
+    set<SensitivityRecord> res;
+
+    // Test results for single trade categories
+    for (const auto& trade : trades) {
+        exp = filter(records, trade);
+        res = sAgg.sensitivities(trade);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
+        check(exp, res);
+    }
+
+    // Test results for the aggregated "All" category
+    BOOST_TEST_MESSAGE("Testing for category 'all_except_002'");
+    res = sAgg.sensitivities("all_except_002");
+    check(expAggregationAll, res);
+}
+
 test_suite* SensitivityAggregatorTest::suite() {
     
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAggregatorTests");
 
     suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testGeneralAggregationSetCategories));
+    suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testGeneralAggregationFunctionCategories));
 
     return suite;
 }

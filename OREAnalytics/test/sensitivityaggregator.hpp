@@ -35,6 +35,8 @@ class SensitivityAggregatorTest {
 public:
     //! General aggregation test over using sets of trades as categories
     static void testGeneralAggregationSetCategories();
+    //! General aggregation test over using functions as categories
+    static void testGeneralAggregationFunctionCategories();
 
     static boost::unit_test_framework::test_suite* suite();
 };
