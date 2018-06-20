@@ -20,10 +20,13 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <orea/scenario/simplescenariofactory.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
+
+using ore::data::to_string;
 
 namespace ore {
 namespace analytics {
@@ -171,6 +174,16 @@ pair<RiskFactorKey, string> deconstructFactor(const string& factor) {
 
     auto pos = distance(factor.begin(), it.begin());
     return make_pair(parseRiskFactorKey(factor.substr(0, pos)), factor.substr(pos + 1));
+}
+
+string reconstructFactor(const RiskFactorKey& key, const string& desc) {
+    // If risk factor is empty
+    if (key == RiskFactorKey()) {
+        return "";
+    }
+
+    // If valid risk factor
+    return to_string(key) + "/" + desc;
 }
 
 boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<string>& addTokens) {

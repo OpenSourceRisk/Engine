@@ -199,6 +199,9 @@ std::ostream& operator<<(std::ostream& out, const ShiftScenarioGenerator::Scenar
 //! Retrieve the RiskFactorKey and index description from the result of ScenarioDescription::factor1() or ScenarioDescription::factor2() 
 std::pair<RiskFactorKey, std::string> deconstructFactor(const std::string& factor);
 
+//! Reconstruct the string description from a risk factor \p key and its index description \p desc 
+std::string reconstructFactor(const RiskFactorKey& key, const std::string& desc);
+
 //! risk factor key parser that takes into account additional tokens occuring in sensitivity risk factor keys
 boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const std::string& str, std::vector<std::string>& addTokens);
 
