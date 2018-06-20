@@ -59,15 +59,6 @@ void SensitivityAggregator::aggregate(SensitivityStream& ss) {
         string tradeId = sr.tradeId;
         sr.tradeId = "";
 
-        // Check the currency of the sensitivity records
-        if (tradeCurrencies_.count(tradeId) > 0) {
-            QL_REQUIRE(tradeCurrencies_[tradeId] == sr.currency, "The trade ID " << tradeId << 
-                " has two different currencies in its sensitivity records " << 
-                tradeCurrencies_[tradeId] << " and " << sr.currency);
-        } else {
-            tradeCurrencies_[tradeId] = sr.currency;
-        }
-
         // Update aggRecords_ for each category
         for (const auto& kv : categories_) {
             // Check if the sensitivity record's trade ID is in the category
@@ -82,7 +73,6 @@ void SensitivityAggregator::aggregate(SensitivityStream& ss) {
 void SensitivityAggregator::reset() {
     // Clear the aggregated sensitivities
     aggRecords_.clear();
-    tradeCurrencies_.clear();
 
     // Initialise the categorised records
     init();

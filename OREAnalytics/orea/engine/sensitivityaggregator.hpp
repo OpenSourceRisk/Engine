@@ -53,7 +53,11 @@ public:
     */
     SensitivityAggregator(const std::map<std::string, std::function<bool(std::string)>>& categories);
 
-    //! Update the aggregator with SensitivityRecords from the stream \p ss
+    /*! Update the aggregator with SensitivityRecords from the stream \p ss
+        
+        \warning No checks are performed for duplicate records from the stream. It is the stream's 
+                 responsibility to guard against duplicates if it needs to.
+    */
     void aggregate(SensitivityStream& ss);
 
     //! Reset the aggregator to it's initial state by clearing all aggregations
@@ -72,10 +76,6 @@ private:
     std::map<std::string, std::function<bool(std::string)>> categories_;
     //! Sensitivity records aggregated according to <code>categories_</code>
     std::map<std::string, std::set<SensitivityRecord>> aggRecords_;
-    /*! Record the currency for each trade ID. Can't have sensitivities with 
-        different currencies within trade ID.
-    */
-    std::map<std::string, std::string> tradeCurrencies_;
 
     //! Initialise the container of aggregated records
     void init();
