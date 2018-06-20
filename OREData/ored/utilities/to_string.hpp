@@ -38,6 +38,12 @@ namespace data {
 */
 std::string to_string(const QuantLib::Date& date);
 
+//! Convert bool to std::string
+/*! Returns "true" for true and "false" for false
+    \ingroup utilities
+*/
+std::string to_string(bool aBool);
+
 //! Convert type to std::string
 /*!
   Utility to give to_string() interface to classes and enums that have ostream<< operators defined.
