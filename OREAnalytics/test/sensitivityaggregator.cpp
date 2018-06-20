@@ -43,6 +43,11 @@ static const set<SensitivityRecord> records = {
     { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -72.54, 0.00 },
     { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -347.52, 0.02 },
     { "trade_001", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -103053.46, -50331.89, 0.00 },
+    { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, 0.26, 0.00 },
+    { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, 14.11, 0.00 },
+    { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, -0.43, 0.00 },
+    { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, -23.32, 0.00 },
+    { "trade_002", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "USD", 393612.36, -6029.41, 0.00 },
     { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 38.13, 0.00 },
     { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 114.53, 0.00 },
     { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0.00 },
@@ -110,8 +115,8 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     for (const auto& trade : trades) {
         categories[trade] = { trade };
     }
-    // Aggregate over all trades
-    categories["All"] = { "trade_001", "trade_003", "trade_004" };
+    // Aggregate over all trades except trade_002
+    categories["all_except_002"] = { "trade_001", "trade_003", "trade_004" };
 
     // Create aggregator and call aggregate
     SensitivityAggregator sAgg(categories);
@@ -130,8 +135,8 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     }
 
     // Test results for the aggregated "All" category
-    BOOST_TEST_MESSAGE("Testing for category 'All'");
-    res = sAgg.sensitivities("All");
+    BOOST_TEST_MESSAGE("Testing for category 'all_except_002'");
+    res = sAgg.sensitivities("all_except_002");
     check(expAggregationAll, res);
 }
 
