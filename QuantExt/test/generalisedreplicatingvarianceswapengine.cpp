@@ -256,11 +256,11 @@ void GeneralisedReplicatingVarianceSwapEngineTest::testForwardStartPricing() {
     varianceSwap.setPricingEngine(engine);
 
     Real result = varianceSwap.variance();
-    Real expected = 0.041902484;
+    Real expected = 0.0405089805;
     Real tol = 1.0e-4;
     BOOST_CHECK_CLOSE(result, expected, tol);
     result = varianceSwap.NPV();
-    expected = 23489.6626;
+    expected = 6284.29909;
     BOOST_CHECK_CLOSE(result, expected, tol);
 }
 
