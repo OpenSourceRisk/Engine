@@ -35,6 +35,42 @@ namespace testsuite {
 
 using RFType = RiskFactorKey::KeyType;
 
+// Sensitivity records for aggregation
+// clang-format off
+static const set<SensitivityRecord> records = {
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, 74.06, 0.00},
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, 354.79, -0.03 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -72.54, 0.00 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -347.52, 0.02 },
+    { "trade_001", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -103053.46, -50331.89, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 38.13, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 114.53, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -156337.99, -91345.92, 0.00 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 27.11, 0.00 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 940.54, -0.09 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -26.81, 0.00 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -930.06, 0.09 },
+    { "trade_004", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -110809.22, -99495.14, 0.00 }
+};
+// clang-format on
+
+// Expected result of aggregation over all elements above
+// clang-format off
+set<SensitivityRecord> expAggregationAll = {
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 38.13, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 114.53, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, 101.17, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, 1295.33, -0.12 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -99.35, 0 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -1277.58, 0.11 },
+    { "", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -370200.67, -241172.95, 0 }
+};
+// clang-format on
+
 // Utility function to filter records by trade ID
 // The aggregated results have trade ID = "" so do that here for comparison
 set<SensitivityRecord> filter(set<SensitivityRecord> records, const string& tradeId) {
@@ -49,40 +85,31 @@ set<SensitivityRecord> filter(set<SensitivityRecord> records, const string& trad
     return res;
 }
 
-void SensitivityAggregatorTest::testSimpleAggregation() {
+// Check the expected result, 'exp', against the actual result, 'res'.
+void check(const set<SensitivityRecord>& exp, const set<SensitivityRecord>& res) {
+    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
+    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin();
+        itExp != exp.end(); itExp++, itRes++) {
+        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
+        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
+        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
+    }
+}
 
-    BOOST_TEST_MESSAGE("Testing simple aggregation over three trades");
+void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
 
-    // Sensitivity records for aggregation
-    set<SensitivityRecord> records = {
-        { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, 74.06, 0.00},
-        { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, 354.79, -0.03 },
-        { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -72.54, 0.00 },
-        { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -347.52, 0.02 },
-        { "trade_001", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -103053.46, -50331.89, 0.00 },
-        { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 38.13, 0.00 },
-        { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 114.53, 0.00 },
-        { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0.00 },
-        { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0.00 },
-        { "trade_003", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -156337.99, -91345.92, 0.00 },
-        { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 27.11, 0.00 },
-        { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 940.54, -0.09 },
-        { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -26.81, 0.00 },
-        { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -930.06, 0.09 },
-        { "trade_004", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -110809.22, -99495.14, 0.00 }
-    };
+    BOOST_TEST_MESSAGE("Testing general aggregation using sets of trades for categories");
 
     // Streamer
     SensitivityInMemoryStream ss(records);
 
     // Categories for aggregator
     map<string, set<string>> categories;
-    // No aggregation, just trade_001
-    categories["trade_001"] = { "trade_001" };
-    // No aggregation, just trade_003
-    categories["trade_003"] = { "trade_003" };
-    // No aggregation, just trade_004
-    categories["trade_004"] = { "trade_004" };
+    // No aggregation, just single trade categories
+    set<string> trades = { "trade_001", "trade_003", "trade_004" };
+    for (const auto& trade : trades) {
+        categories[trade] = { trade };
+    }
     // Aggregate over all trades
     categories["All"] = { "trade_001", "trade_003", "trade_004" };
 
@@ -90,72 +117,29 @@ void SensitivityAggregatorTest::testSimpleAggregation() {
     SensitivityAggregator sAgg(categories);
     sAgg.aggregate(ss);
 
-    // Test results for trade_001 category - should be no aggregation
-    set<SensitivityRecord> exp = filter(records, "trade_001");
-    set<SensitivityRecord> res = sAgg.sensitivities("trade_001");
-    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
-    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin(); 
-        itExp != exp.end(); itExp++, itRes++) {
-        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
-        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
-        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
-    }
+    // Containers for expected and actual results respectively below
+    set<SensitivityRecord> exp;
+    set<SensitivityRecord> res;
 
-    // Test results for trade_003 category - should be no aggregation
-    exp = filter(records, "trade_003");
-    res = sAgg.sensitivities("trade_003");
-    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
-    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin();
-        itExp != exp.end(); itExp++, itRes++) {
-        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
-        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
-        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
+    // Test results for single trade categories
+    for (const auto& trade : trades) {
+        exp = filter(records, trade);
+        res = sAgg.sensitivities(trade);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
+        check(exp, res);
     }
-
-    // Test results for trade_004 category - should be no aggregation
-    exp = filter(records, "trade_004");
-    res = sAgg.sensitivities("trade_004");
-    BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
-    for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin();
-        itExp != exp.end(); itExp++, itRes++) {
-        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
-        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
-        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
-    }
-
-    // Expected results for the aggregated "All" category
-    set<SensitivityRecord> expAll = {
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 38.13, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, 114.53, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, 101.17, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, 1295.33, -0.12 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -99.35, 0 },
-        { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -1277.58, 0.11 },
-        { "", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -370200.67, -241172.95, 0 }
-    };
 
     // Test results for the aggregated "All" category
+    BOOST_TEST_MESSAGE("Testing for category 'All'");
     res = sAgg.sensitivities("All");
-
-    // Check the number and ordering of results
-    BOOST_CHECK_EQUAL(res.size(), expAll.size());
-    BOOST_CHECK_EQUAL_COLLECTIONS(expAll.begin(), expAll.end(), res.begin(), res.end());
-    // Check each of the aggregated records
-    for (set<SensitivityRecord>::iterator itExp = expAll.begin(), itRes = res.begin();
-        itExp != expAll.end(); itExp++, itRes++) {
-        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
-        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
-        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
-    }
+    check(expAggregationAll, res);
 }
 
 test_suite* SensitivityAggregatorTest::suite() {
     
     test_suite* suite = BOOST_TEST_SUITE("SensitivityAggregatorTests");
 
-    suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testSimpleAggregation));
+    suite->add(BOOST_TEST_CASE(&SensitivityAggregatorTest::testGeneralAggregationSetCategories));
 
     return suite;
 }

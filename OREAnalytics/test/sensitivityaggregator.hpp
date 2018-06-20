@@ -33,8 +33,8 @@ namespace testsuite {
 */
 class SensitivityAggregatorTest {
 public:
-    //! Simple aggregation test over two trades
-    static void testSimpleAggregation();
+    //! General aggregation test over using sets of trades as categories
+    static void testGeneralAggregationSetCategories();
 
     static boost::unit_test_framework::test_suite* suite();
 };
