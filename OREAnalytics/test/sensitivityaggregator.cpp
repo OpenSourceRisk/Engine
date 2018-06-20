@@ -44,6 +44,10 @@ static const set<SensitivityRecord> records = {
     { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -72.54, 0.00 },
     { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -103053.46, -347.52, 0.02 },
     { "trade_001", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -103053.46, -50331.89, 0.00 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, "USD", -103053.46, 0, -0.01 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -103053.46, 0, 0.74 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -103053.46, 0, 3.55 },
+    { "trade_001", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -103053.46, 0, 0.01 },
     { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, 0.26, 0.00 },
     { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, 14.11, 0.00 },
     { "trade_002", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", 393612.36, -0.43, 0.00 },
@@ -54,11 +58,19 @@ static const set<SensitivityRecord> records = {
     { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -37.48, 0.00 },
     { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0.00 },
     { "trade_003", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -156337.99, -91345.92, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, "USD", -156337.99, 0, 0.00 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -156337.99, 0, 0.38 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -156337.99, 0, 1.15 },
+    { "trade_003", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, "USD", -156337.99, 0, 0.00 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 27.11, 0.00 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, 940.54, -0.09 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -26.81, 0.00 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -110809.22, -930.06, 0.09 },
-    { "trade_004", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -110809.22, -99495.14, 0.00 }
+    { "trade_004", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -110809.22, -99495.14, 0.00 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, "USD", -110809.22, 0, 0.00 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -110809.22, 0, 0.27 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -110809.22, 0, 9.41 },
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -110809.22, 0, 0.00 }
 };
 // clang-format on
 
@@ -73,7 +85,15 @@ set<SensitivityRecord> expAggregationAll = {
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -156337.99, -112.57, 0 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -99.35, 0 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, RiskFactorKey(), "", 0.0, "USD", -213862.68, -1277.58, 0.11 },
-    { "", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -370200.67, -241172.95, 0 }
+    { "", false, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, RiskFactorKey(), "", 0.0, "USD", -370200.67, -241172.95, 0 }, 
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, "USD", -156337.99, 0.00, 0.00 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 1), "1M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -156337.99, 0.00, 0.38 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 2), "3M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -156337.99, 0.00, 1.15 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, "USD", -213862.68, 0.00, -0.01 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -213862.68, 0.00, 1.01 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -213862.68, 0.00, 12.96 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, "USD", -156337.99, 0.00, 0.00 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -213862.68, 0.00, 0.01 }
 };
 // clang-format on
 
@@ -92,13 +112,19 @@ set<SensitivityRecord> filter(set<SensitivityRecord> records, const string& trad
 }
 
 // Check the expected result, 'exp', against the actual result, 'res'.
-void check(const set<SensitivityRecord>& exp, const set<SensitivityRecord>& res) {
+void check(const set<SensitivityRecord>& exp, const set<SensitivityRecord>& res, const string& category) {
     BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), res.begin(), res.end());
     for (set<SensitivityRecord>::iterator itExp = exp.begin(), itRes = res.begin();
         itExp != exp.end(); itExp++, itRes++) {
-        BOOST_CHECK(QuantLib::close(itExp->baseNpv, itRes->baseNpv));
-        BOOST_CHECK(QuantLib::close(itExp->delta, itRes->delta));
-        BOOST_CHECK(QuantLib::close(itExp->gamma, itRes->gamma));
+        BOOST_CHECK_MESSAGE(QuantLib::close(itExp->baseNpv, itRes->baseNpv), 
+            "Category = " << category << ": Base NPVs (exp = " << itExp->baseNpv << 
+            " vs. actual = " << itRes->baseNpv << ") are not equal for aggregated expected record " << *itExp);
+        BOOST_CHECK_MESSAGE(QuantLib::close(itExp->delta, itRes->delta),
+            "Category = " << category << ": Deltas (exp = " << itExp->delta <<
+            " vs. actual = " << itRes->delta << ") are not equal for aggregated expected record " << *itExp);
+        BOOST_CHECK_MESSAGE(QuantLib::close(itExp->gamma, itRes->gamma),
+            "Category = " << category << ": Gammas (exp = " << itExp->gamma <<
+            " vs. actual = " << itRes->gamma << ") are not equal for aggregated expected record " << *itExp);
     }
 }
 
@@ -132,13 +158,13 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
         exp = filter(records, trade);
         res = sAgg.sensitivities(trade);
         BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res);
+        check(exp, res, trade);
     }
 
     // Test results for the aggregated "All" category
     BOOST_TEST_MESSAGE("Testing for category 'all_except_002'");
     res = sAgg.sensitivities("all_except_002");
-    check(expAggregationAll, res);
+    check(expAggregationAll, res, "all_except_002");
 }
 
 void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
@@ -171,13 +197,13 @@ void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
         exp = filter(records, trade);
         res = sAgg.sensitivities(trade);
         BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res);
+        check(exp, res, trade);
     }
 
     // Test results for the aggregated "All" category
     BOOST_TEST_MESSAGE("Testing for category 'all_except_002'");
     res = sAgg.sensitivities("all_except_002");
-    check(expAggregationAll, res);
+    check(expAggregationAll, res, "all_except_002");
 }
 
 test_suite* SensitivityAggregatorTest::suite() {
