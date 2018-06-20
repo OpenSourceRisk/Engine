@@ -70,7 +70,17 @@ static const set<SensitivityRecord> records = {
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, "USD", -110809.22, 0, 0.00 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -110809.22, 0, 0.27 },
     { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -110809.22, 0, 9.41 },
-    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -110809.22, 0, 0.00 }
+    { "trade_004", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -110809.22, 0, 0.00 },
+    { "trade_005", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 393612.36, 0.26, 0.00 },
+    { "trade_005", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 393612.36, 14.11, 0.00 },
+    { "trade_005", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 393612.36, -0.43, 0.00 },
+    { "trade_005", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 393612.36, -23.32, 0.00 },
+    { "trade_005", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", 393612.36, -6029.41, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, -0.26, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, -14.11, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 0.43, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 23.32, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 6029.41, 0.00 },
 };
 // clang-format on
 
@@ -93,7 +103,12 @@ set<SensitivityRecord> expAggregationAll = {
     { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 3), "6M", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -213862.68, 0.00, 1.01 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "CNY", 4), "1Y", 0.0001, RiskFactorKey(RFType::FXSpot, "CNYUSD", 0), "spot", 0.001534, "USD", -213862.68, 0.00, 12.96 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, "USD", -156337.99, 0.00, 0.00 },
-    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -213862.68, 0.00, 0.01 }
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 3), "6M", 0.0001, RiskFactorKey(RFType::DiscountCurve, "USD", 4), "1Y", 0.0001, "USD", -213862.68, 0.00, 0.01 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
+    { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
+    { "", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
 };
 // clang-format on
 
@@ -138,12 +153,12 @@ void SensitivityAggregatorTest::testGeneralAggregationSetCategories() {
     // Categories for aggregator
     map<string, set<string>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = { "trade_001", "trade_003", "trade_004" };
+    set<string> trades = { "trade_001", "trade_003", "trade_004", "trade_005", "trade_006" };
     for (const auto& trade : trades) {
         categories[trade] = { trade };
     }
     // Aggregate over all trades except trade_002
-    categories["all_except_002"] = { "trade_001", "trade_003", "trade_004" };
+    categories["all_except_002"] = trades;
 
     // Create aggregator and call aggregate
     SensitivityAggregator sAgg(categories);
@@ -177,7 +192,7 @@ void SensitivityAggregatorTest::testGeneralAggregationFunctionCategories() {
     // Category functions for aggregator
     map<string, function<bool(string)>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = { "trade_001", "trade_003", "trade_004" };
+    set<string> trades = { "trade_001", "trade_003", "trade_004", "trade_005", "trade_006" };
     for (const auto& trade : trades) {
         categories[trade] = [&trade](string tradeId) { return tradeId == trade; };
     }
