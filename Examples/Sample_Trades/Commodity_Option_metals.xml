@@ -1,25 +1,16 @@
-<Trade id="CommodityOption_WTI_Oct_21">
-    <TradeType>CommodityOption</TradeType>
+<Trade id="CommodityForward_Gold_1Y">
+    <TradeType>CommodityForward</TradeType>
     <Envelope>
         <CounterParty>CPTY_A</CounterParty>
         <NettingSetId>CPTY_A</NettingSetId>
         <AdditionalFields/>
     </Envelope>
-    <CommodityOptionData>
-        <OptionData>
-            <LongShort>Long</LongShort>
-            <OptionType>Call</OptionType>
-            <Style>European</Style>
-            <Settlement>Cash</Settlement>
-            <PayOffAtExpiry>false</PayOffAtExpiry>
-            <ExerciseDates>
-                <ExerciseDate>2021-10-31</ExerciseDate>
-            </ExerciseDates>
-        </OptionData>
-        <Name>COMDTY_WTI_USD</Name>
+    <CommodityForwardData>
+        <Position>Short</Position>
+        <Maturity>2017-02-05</Maturity>
+        <Name>COMDTY_GOLD_USD</Name>
         <Currency>USD</Currency>
-        <Strike>49.75</Strike>
-        <Quantity>500000</Quantity>
-    </CommodityOptionData>
+        <Strike>1162.0</Strike>
+        <Quantity>1000</Quantity>
+    </CommodityForwardData>
 </Trade>
-
