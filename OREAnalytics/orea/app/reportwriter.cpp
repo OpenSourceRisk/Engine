@@ -571,7 +571,9 @@ void ReportWriter::writeSensitivityReport(Report& report,
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Delta", double(), 2);
     report.addColumn("Gamma", double(), 2);
-
+    
+    // Make sure that we are starting from the start
+    ss->reset();
     while(SensitivityRecord sr = ss->next()) {
         if (fabs(sr.delta) > outputThreshold || fabs(sr.gamma) > outputThreshold) {
             report.next();
