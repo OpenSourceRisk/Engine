@@ -21,9 +21,9 @@
     <qlCompilerTag Condition="'$(VisualStudioVersion)' == '15.0'">vc141</qlCompilerTag>
     <!--Additional warnings-->
     <additionalWarning></additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w35038</additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34189</additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34101</additionalWarning>
-    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">/w34701</additionalWarning>
+    <additionalWarning Condition="'$(VisualStudioVersion)' == '15.0'">$(additionalWarning) /w35038</additionalWarning>
+    <additionalWarning>$(additionalWarning) /w34189</additionalWarning>
+    <additionalWarning>$(additionalWarning) /w34101</additionalWarning>
+    <additionalWarning>$(additionalWarning) /w34701</additionalWarning>
   </PropertyGroup>
 </Project>

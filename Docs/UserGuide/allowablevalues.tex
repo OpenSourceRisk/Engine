@@ -1,0 +1,150 @@
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Allowable Values for Standard Trade Data}
+\label{sec:allowable_values}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    \bfseries{Trade Data} & \bfseries{Allowable Values} \\
+    \hline
+    \lstinline!Date! & \begin{tabular}[l]{@{}l@{}} The following date formats are supported: \\  \emph{yyyymmdd} \\ \emph{yyyy-mm-dd} \\ \emph{yyyy/mm/dd} \\ \emph{yyyy.mm.dd} \\ \emph{dd-mm-yy} \\  \emph{dd/mm/yy} \\  \emph{dd.mm.yy} \\  \emph{dd-mm-yyyy} \\  \emph{dd/mm/yyyy} \\  \emph{dd.mm.yyyy} \\ and \\ Dates as  serial numbers, comparable to Microsoft Excel \\dates, with a minimum of 367 for Jan 1, 1901,\\ and a maximum of 109574 for Dec 31, 2199.  \end{tabular}  \\ \hline
+    \lstinline!Currency! & \emph{ATS, AUD, BEF, BRL, CAD, CHF, CNY,
+      CZK, DEM, DKK, EUR, ESP, FIM, FRF, GBP, GRD, HKD, HUF, IEP, ITL,
+      INR, ISK, JPY, KRW, LUF, NLG, NOK, NZD, PLN, PTE, RON, SEK, SGD,
+      THB, TRY, TWD, USD, ZAR, ARS, CLP, COP, IDR, ILS, KWD, PEN, MXN,
+    SAR, RUB, TND, MYR, UAH, KZT, QAR, MXV, CLF, EGP, BHD, OMR, VND,
+    AED, PHP, NGN, MAD},  Note: Currency codes must also match available currencies in the {\tt simulation.xml} file.  \\ \hline
+    %\lstinline!DayCount!  \lstinline!Convention! & \begin{tabular}[l]{@{}l@{}}\indent Actual 360 can be expressed by:\\ \emph{A360, Actual/360, ACT/360}\\ \indent Actual 365 Fixed can be expressed by: \\ \emph{A365, A365F, Actual/365, Actual/365 (fixed)} \\ \indent Thirty 360 (US) can be expressed by: \\ \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} \\ \indent Thirty 360 (European) can be expressed by: \\ \emph{30E/360, 30E/360 (Eurobond Basis)}\\ \indent Thirty 360 (Italian) is expressed by: \\ \emph{30/360 (Italian)}  \\ \indent Actual Actual (ISDA) can be expressed by: \\ \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} \\ \indent Actual Actual (ISMA) can be expressed by: \\ \emph{ActActISMA, ActualActual (ISMA)} \\ \indent Actual Actual (AFB) can be expressed by:\\ \emph{ActActAFB, Actual/Actual (AFB)} \end{tabular}  \\ \hline
+    \lstinline!Roll Convention! & \begin{tabular}[l]{@{}l@{}} 
+\emph{F,  Following, FOLLOWING}\\ 
+\emph{MF, ModifiedFollowing, Modified Following, MODIFIEDF}\\ 
+\emph{P, Preceding, PRECEDING}\\ 
+\emph{MP, ModifiedPreceding, Modified Preceding, MODIFIEDP}\\ 
+\emph{U, Unadjusted, INDIFF }\end{tabular}  \\ \hline
+  \end{tabu}
+  \caption{Allowable values for standard trade data.}
+  \label{tab:allow_stand_data}
+\end{table}
+
+\begin{table}[H]
+  \centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+%    \multicolumn{2}{|l|} {\lstinline{Calendar} } \\ \hline
+    \multicolumn{2}{|l|} {\tt Calendar}  \\ \hline
+    \bfseries{Allowable Values} & \bfseries{Resulting Calendar} \\
+    \hline
+    \emph{TARGET, TGT, EUR} & Target Calendar  \\ \hline
+    \emph{CA,TRB, CAD} & Canada Calendar \\ \hline
+    \emph{TKB, JP, JPY} & Japan Calendar \\ \hline
+    \emph{ZUB, CHF} & Switzerland Calendar \\ \hline
+    \emph{GB, LNB, UK} & UK Calendar \\ \hline
+    \emph{London stock exchange} & London Stock Exchange Calendar \\ \hline
+    \emph{US, NYB, USD} & US Calendar \\ \hline
+    \emph{US-SET} & US Settlement Calendar \\ \hline
+    \emph{US-GOV} & US Government Bond Calendar \\ \hline    
+    \emph{US-NYSE, New York stock exchange} & US NYSE Calendar \\ \hline
+    \emph{US with Libor impact} & US Calendar for Libor fixings \\ \hline
+    \emph{US-NERC} & US NERC Calendar \\ \hline  
+    \emph{AU, AUD} & Australia Calendar \\ \hline
+    \emph{SA, ZAR} & South Africa Calendar \\ \hline
+    \emph{SS, SEK} & Sweden Calendar \\ \hline
+    \emph{ARS} & Argentina Calendar \\ \hline
+    \emph{BRL} & Brazil Calendar \\ \hline
+    \emph{CNY} & China Calendar \\ \hline
+    \emph{CZK} & Czech Republic Calendar \\ \hline
+    \emph{DEN, DKK} & Denmark Calendar \\ \hline
+    \emph{FIN} & Finland Calendar \\ \hline
+    \emph{HKD} & HongKong Calendar \\ \hline
+    \emph{ISK} & Iceland Calendar \\ \hline
+    \emph{INR} & India Calendar \\ \hline
+    \emph{IDR} & Indonesia Calendar \\ \hline
+    \emph{MXN} & Mexico Calendar \\ \hline
+    \emph{NZD} & New Zealand Calendar\\ \hline
+    \emph{NOK} & Norway Calendar \\ \hline
+    \emph{PLN} & Poland Calendar \\ \hline
+    \emph{RUB} & Russia Calendar \\ \hline
+    \emph{SAR} & Saudi Arabia \\ \hline
+    \emph{SGD} & Singapore Calendar \\ \hline
+    \emph{KRW} & South Korea Calendar \\ \hline
+    \emph{TWD} & Taiwan Calendar \\ \hline
+    \emph{TRY} & Turkey Calendar \\ \hline
+    \emph{UAH} & Ukraine Calendar \\ \hline
+    \emph{WeekendsOnly} & Weekends Only Calendar \\ \hline
+    % \emph{US+TARGET, NYB\_TGT, TGT\_NYB} & US and Target Calendar \\ \hline  
+    % \emph{NYB\_LNB, LNB\_NYB} & US and UK Calendar \\ \hline    
+    % \emph{LNB\_ZUB, ZUB\_LNB} & Switzerland and UK Calendar \\ \hline   
+    % \emph{TGT\_ZUB, ZUB\_TGT} & Switzerland and Target Calendar \\ \hline
+    % \emph{NYB\_SYB} & US and Australia Calendar \\ \hline 
+    % \emph{TGT\_BDP, BDP\_TGT} & Hungary and Target Calendar \\ \hline         
+    % \emph{LNB\_NYB\_TGT} & UK, US and Target Calendar \\ \hline
+    % \emph{TKB\_TGT\_LNB} & Japan, Target and UK Calendar \\ \hline         
+    % \emph{LNB\_NYB\_ZUB} & UK, US and Switzerland Calendar \\ \hline
+    % \emph{LNB\_NYB\_TRB} & UK, US and Canada Calendar \\ \hline 
+    % \emph{LNB\_NYB\_TKB} & UK, US and Japan Calendar \\ \hline   
+    % \emph{NullCalendar} & Null Calendar, i.e. all days are business days \\ \hline                 
+  \end{tabu}
+  \caption{Allowable Values for Calendar. Combinations of up to four
+    calendars can be provided using comma separated calendar names.}
+  \label{tab:calendar}
+\end{table}
+
+\begin{table}[H]
+\centering
+  \begin{tabu} to 0.9\linewidth {| X[-1.5,l,m] | X[-5,l,m] |}
+    \hline
+    %\multicolumn{2}{|l|}{\lstinline{DayCount Convention} }                             \\ \hline
+    \multicolumn{2}{|l|}{\tt DayCount Convention}                          \\ \hline
+    \bfseries{Allowable Values} & \bfseries{Resulting DayCount Convention} \\
+    \hline
+    \emph{A360, Actual/360, ACT/360}& Actual 360  \\ \hline
+    \emph{A365, A365F, Actual/365, Actual/365 (fixed)} & Actual 365 Fixed \\ \hline
+    \emph{T360, 30/360, 30/360 (Bond Basis), ACT/nACT} & Thirty 360 (US) \\ \hline
+    \emph{30E/360, 30E/360 (Eurobond Basis)} & Thirty 360 (European) \\ \hline
+    \emph{30/360 (Italian)} & Thirty 360 (Italian) \\ \hline
+    \emph{ActActISDA, ActualActual (ISDA), ACT/ACT, ACT} & Actual Actual (ISDA) \\ \hline
+    \emph{ActActISMA, ActualActual (ISMA)} & Actual Actual (ISMA) \\ \hline
+    \emph{ActActAFB, Actual/Actual (AFB)} & Actual Actual (AFB) \\ \hline           
+  \end{tabu}
+  \caption{Allowable Values for DayCount Convention}
+  \label{tab:daycount}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+%\multicolumn{2}{|l|}{\lstinline!Index!}   \\ \hline
+\multicolumn{2}{|l|}{\tt Index}   \\ \hline
+\multicolumn{2}{|l|}{On form CCY-INDEX-TENOR, and matching available  }   \\ 
+\multicolumn{2}{|l|}{ indices in the {\tt simulation.xml} file. }   \\ \hline
+\textbf{Index Component} & \textbf{Allowable Values}                                                                                                                                                                                                                                                           \\ \hline
+CCY-INDEX                &
+                           \textit{\begin{tabular}[c]{@{}l@{}}
+EUR-EONIA\\ EUR-EURIBOR\\ EUR-LIBOR\\ 
+USD-FedFunds\\ USD-LIBOR\\ 
+GBP-SONIA\\ GBP-LIBOR\\ 
+JPY-LIBOR\\ JPY-TIBOR \\
+CHF-LIBOR\\ 
+AUD-LIBOR\\ AUD-BBSW\\ 
+CAD-CDOR\\ CAD-BA\\ 
+SEK-STIBOR\\ SEK-LIBOR\\ 
+DKK-LIBOR\\ DKK-CIBOR \\
+SGD-SIBOR\\ SGD-SOR \\
+HKD-HIBOR \\
+NOK-NIBOR \\
+HUF-BUBOR \\
+IDR-IDRFIX \\
+INR-MIFOR \\
+MXN-TIIE \\
+PLN-WIBOR \\
+SKK-BRIBOR \\
+NZD-BKBM \\
+\end{tabular}} \\ \hline
+TENOR                    & An integer followed by \emph{D, W, M or Y}                                                                                                                                                                                                                                                 \\ \hline
+\end{tabular}
+  \caption{Allowable values for Index.}
+  \label{tab:indices}
+\end{table}
