@@ -148,7 +148,7 @@ protected:
         where we have our own special report writer class MyReportWriter that 
         derives from ReportWriter or any class in its hierarchy.
     */
-    boost::shared_ptr<ReportWriter> getReportWriter();
+    boost::shared_ptr<ReportWriter> getReportWriter() const;
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
     //! Add extra engine builders
@@ -181,6 +181,8 @@ protected:
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;
+    std::string inputPath_;
+    std::string outputPath_;
 
     boost::shared_ptr<Market> market_;               // T0 market
     boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market
