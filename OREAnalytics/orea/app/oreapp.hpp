@@ -47,17 +47,14 @@ class SensitivityAnalysis;
 
 class OREApp {
 public:
-    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
-        : params_(params), out_(out), cubeDepth_(0) {
-        tab_ = 40;
-        progressBarWidth_ = 72 - std::min<Size>(tab_, 67);
-
-        asof_ = parseDate(params->get("setup", "asofDate"));
-        Settings::instance().evaluationDate() = asof_;
-    }
-    virtual ~OREApp() {}
+    //! Constructor
+    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout);
+    //! Destructor
+    virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
-    int run();
+    virtual int run();
+
+protected:
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
@@ -126,7 +123,6 @@ public:
     //! write out additional reports
     virtual void writeAdditionalReports() {}
 
-protected:
     //! Get report writer
     /*! This calls the private method getReportWriterImpl() which returns the 
         actual ReportWriter implementation. The private method is virtual and 
@@ -172,9 +168,9 @@ protected:
                                  const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
 
     Size tab_, progressBarWidth_;
-    Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    Date asof_;
     std::ostream& out_;
     bool writeInitialReports_;
     bool simulate_;

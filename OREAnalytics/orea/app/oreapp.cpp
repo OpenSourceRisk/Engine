@@ -58,12 +58,28 @@ vector<string> getFilenames(const string& fileString, const string& path) {
 namespace ore {
 namespace analytics {
 
+OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
+    : tab_(40), progressBarWidth_(72 - std::min<Size>(tab_, 67)), 
+      params_(params), asof_(parseDate(params_->get("setup", "asofDate"))), 
+      out_(out), cubeDepth_(0) {
+
+    // Set global evaluation date
+    Settings::instance().evaluationDate() = asof_;
+
+    // Set up logging
+    setupLog();
+}
+
+OREApp::~OREApp() {
+    // Close logs
+    closeLog();
+}
+
 int OREApp::run() {
 
     boost::timer timer;
 
     try {
-        setupLog();
         out_ << "ORE starting" << std::endl;
         LOG("ORE starting");
         readSetup();
@@ -219,7 +235,6 @@ int OREApp::run() {
     out_ << "ORE done." << endl;
 
     LOG("ORE done.");
-    closeLog();
     return 0;
 }
 
