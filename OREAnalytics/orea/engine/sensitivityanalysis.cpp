@@ -18,7 +18,7 @@
 
 #include <boost/timer.hpp>
 #include <orea/cube/cubewriter.hpp>
-#include <orea/cube/inmemorycube.hpp>
+#include <orea/cube/sensicube.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
 #include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
@@ -71,7 +71,7 @@ std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildVa
     return calculators;
 }
 
-void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
+void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     LOG("Build Sensitivity Scenario Generator and Simulation Market");
     initializeSimMarket();
 
@@ -93,7 +93,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVCube>& cube) {
     initialized_ = true;
 }
 
-void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVCube> cube) {
+void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> cube) {
 
     QL_REQUIRE(!initialized_, "unexpected state of SensitivitiesAnalysis object");
 
@@ -151,9 +151,8 @@ void SensitivityAnalysis::resetPortfolio(const boost::shared_ptr<EngineFactory>&
     portfolio_->build(factory);
 }
 
-void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVCube>& cube) const {
-    cube = boost::make_shared<DoublePrecisionInMemoryCube>(asof_, portfolio_->ids(), vector<Date>(1, asof_),
-                                                           scenarioGenerator_->samples());
+void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const {
+    cube = boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 }
 
 Real SensitivityAnalysis::getShiftSize(const RiskFactorKey& key) const {

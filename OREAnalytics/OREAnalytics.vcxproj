@@ -49,6 +49,8 @@
     <ClInclude Include="orea\cube\cubewriter.hpp" />
     <ClInclude Include="orea\cube\inmemorycube.hpp" />
     <ClInclude Include="orea\cube\npvcube.hpp" />
+    <ClInclude Include="orea\cube\npvsensicube.hpp" />
+    <ClInclude Include="orea\cube\sensicube.hpp" />
     <ClInclude Include="orea\cube\sensitivitycube.hpp" />
     <ClInclude Include="orea\engine\all.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />

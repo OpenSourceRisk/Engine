@@ -24,7 +24,8 @@
 #pragma once
 
 #include <boost/shared_ptr.hpp>
-#include <orea/cube/npvcube.hpp>
+#include <boost/bimap.hpp>
+#include <orea/cube/npvsensicube.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
@@ -42,16 +43,16 @@ public:
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
 
     //! Constructor using a vector of scenario descriptions
-    SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
+    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
         const std::vector<ShiftScenarioDescription>& scenarioDescriptions);
 
     //! Constructor using a vector of scenario description strings
-    SensitivityCube(const boost::shared_ptr<NPVCube>& cube,
+    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
         const std::vector<std::string>& scenarioDescriptions);
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<NPVCube>& npvCube() const { 
+    const boost::shared_ptr<NPVSensiCube>& npvCube() const { 
         return cube_;
     }
     const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const {
@@ -65,6 +66,10 @@ public:
     //! Check if the cube has scenario NPVs for trade with ID \p tradeId
     bool hasTrade(const std::string& tradeId) const;
     
+    /*! Return factor for given up/down scenario index or None if given index
+      is not an up/down scenario (to be reviewed) */
+    RiskFactorKey upDownFactor(const Size upDownIndex) const;
+
     //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
     bool hasScenario(const ShiftScenarioDescription& scenarioDescription) const;
     
@@ -97,14 +102,14 @@ private:
     //! Initialise method used by the constructors
     void initialise();
 
-    boost::shared_ptr<NPVCube> cube_;
+    boost::shared_ptr<NPVSensiCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
 
     // Maps for faster lookup of cube entries. They are populated in the constructor
     // TODO: Review this i.e. could it be done better / using less memory
     std::map<std::string, QuantLib::Size> tradeIdx_;
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
-    std::map<RiskFactorKey, QuantLib::Size> upFactors_;
+    boost::bimap<RiskFactorKey, QuantLib::Size> upFactors_;
     std::map<RiskFactorKey, QuantLib::Size> downFactors_;
     std::map<crossPair, QuantLib::Size> crossFactors_;
 };
