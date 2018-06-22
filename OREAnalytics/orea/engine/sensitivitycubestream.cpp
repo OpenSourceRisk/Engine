@@ -21,6 +21,7 @@
 #include <orea/engine/sensitivitycubestream.hpp>
 
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <ored/utilities/log.hpp>
 
 using QuantLib::Real;
 
@@ -33,22 +34,18 @@ using crossPair = SensitivityCube::crossPair;
 
 SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, 
     const string& currency) 
-    : cube_(cube), currency_(currency), riskFactorIdx_(0), crossPairIdx_(0), tradeIdx_(0) {}
+    : cube_(cube), currency_(currency), itRiskFactor_(cube_->factors().begin()), 
+      itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(0) {}
 
 SensitivityRecord SensitivityCubeStream::next() {
     
     SensitivityRecord sr;
 
-    // If trivial case, i.e. cube has no sensitivities, return empty record
-    if (cube_->factors().size() == 0 && cube_->crossFactors().size() == 0) {
-        return sr;
-    }
-
-    // If exhausted deltas, gammas AND cross gammas, update to next trade and reset sensi index
-    if (riskFactorIdx_ == cube_->factors().size() && crossPairIdx_ == cube_->crossFactors().size()) {
+    // If exhausted deltas, gammas AND cross gammas, update to next trade and reset iterators
+    if (itRiskFactor_ == cube_->factors().end() && itCrossPair_ == cube_->crossFactors().end()) {
         tradeIdx_++;
-        riskFactorIdx_ = 0;
-        crossPairIdx_ = 0;
+        itRiskFactor_ = cube_->factors().begin();
+        itCrossPair_ = cube_->crossFactors().begin();
     }
 
     // Give back next record if we have a valid trade index
@@ -59,47 +56,48 @@ SensitivityRecord SensitivityCubeStream::next() {
         sr.baseNpv = cube_->npv(sr.tradeId);
         
         // Are there more deltas and gammas for current trade ID
-        if (riskFactorIdx_ < cube_->factors().size()) {
-            sr.key_1 = *std::next(cube_->factors().begin(), riskFactorIdx_);
+        if (itRiskFactor_ != cube_->factors().end()) {
+            sr.key_1 = *itRiskFactor_;
             sr.desc_1 = deconstructFactor(cube_->factorDescription(sr.key_1)).second;
             sr.shift_1 = cube_->shiftSize(sr.key_1);
             sr.delta = cube_->delta(sr.tradeId, sr.key_1);
             sr.gamma = cube_->gamma(sr.tradeId, sr.key_1);
             
-            riskFactorIdx_++;
+            itRiskFactor_++;
 
+            TLOG("Next record is: " << sr);
             return sr;
         }
         
         // Are there more cross pairs for current trade ID
-        if (crossPairIdx_ < cube_->crossFactors().size()) {
-            crossPair cp = *std::next(cube_->crossFactors().begin(), crossPairIdx_);
-            
-            sr.key_1 = cp.first;
+        if (itCrossPair_ != cube_->crossFactors().end()) {
+            sr.key_1 = itCrossPair_->first;
             sr.desc_1 = deconstructFactor(cube_->factorDescription(sr.key_1)).second;
             sr.shift_1 = cube_->shiftSize(sr.key_1);
             
-            sr.key_2 = cp.second;
+            sr.key_2 = itCrossPair_->second;
             sr.desc_2 = deconstructFactor(cube_->factorDescription(sr.key_2)).second;
             sr.shift_2 = cube_->shiftSize(sr.key_2);
 
-            sr.gamma = cube_->crossGamma(sr.tradeId, cp);
+            sr.gamma = cube_->crossGamma(sr.tradeId, *itCrossPair_);
 
-            crossPairIdx_++;
+            itCrossPair_++;
 
+            TLOG("Next record is: " << sr);
             return sr;
         }
     }
 
     // If we get to here, no more cube sensitivities to process so return empty record
+    TLOG("Next record is: " << sr);
     return sr;
 }
 
 void SensitivityCubeStream::reset() {
-    // Reset all indices to 0
+    // Reset indices and iterators
     tradeIdx_ = 0;
-    riskFactorIdx_ = 0;
-    crossPairIdx_ = 0;
+    itRiskFactor_ = cube_->factors().begin();
+    itCrossPair_ = cube_->crossFactors().begin();
 }
 
 }

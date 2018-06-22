@@ -57,10 +57,10 @@ private:
     //! Currency of the sensitivities in the SensitivityCube
     std::string currency_;
 
-    //! Offset to current risk factor in cube
-    QuantLib::Size riskFactorIdx_;
-    //! Offset to current cross pair in the cube
-    QuantLib::Size crossPairIdx_;
+    //! Iterator to risk factor keys in the cube
+    std::set<RiskFactorKey>::iterator itRiskFactor_;
+    //! Iterator to cross factors in the cube
+    std::set<SensitivityCube::crossPair>::iterator itCrossPair_;
     //! Index of current trade Id in the cube
     QuantLib::Size tradeIdx_;
 };
