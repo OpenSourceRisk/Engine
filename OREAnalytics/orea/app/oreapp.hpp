@@ -69,9 +69,9 @@ protected:
     void buildMarket();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                                const string& groupName = "setup");
+                                                                const string& groupName = "setup") const;
     //! build trade factory
-    boost::shared_ptr<TradeFactory> buildTradeFactory();
+    boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
 
@@ -152,11 +152,11 @@ protected:
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
     //! Add extra engine builders
-    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() { return {}; };
+    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() const { return {}; };
     //! Add extra leg builders
-    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() { return {}; };
+    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() { return {}; };
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
 
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>

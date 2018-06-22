@@ -341,7 +341,7 @@ void OREApp::getMarketParameters() {
 }
 
 boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                            const string& groupName) {
+                                                            const string& groupName) const {
     map<MarketContext, string> configurations;
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     string pricingEnginesFile = inputPath_ + "/" + params_->get(groupName, "pricingEnginesFile");
@@ -355,7 +355,9 @@ boost::shared_ptr<EngineFactory> OREApp::buildEngineFactory(const boost::shared_
     return factory;
 }
 
-boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() { return boost::make_shared<TradeFactory>(getExtraTradeBuilders()); }
+boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const { 
+    return boost::make_shared<TradeFactory>(getExtraTradeBuilders());
+}
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
     string portfoliosString = params_->get("setup", "portfolioFile");
