@@ -238,6 +238,21 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
+void EquityLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+    returnType_ = XMLUtils::getChildValue(node, "ReturnType");
+    eqName_ = XMLUtils::getChildValue(node, "Name");
+    quantity_ = XMLUtils::getChildValueAsDouble(node, "Quantity");
+}
+
+XMLNode* EquityLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::addChild(doc, node, "ReturnType", returnType_);
+    XMLUtils::addChild(doc, node, "Name", eqName_);
+    XMLUtils::addChild(doc, node, "Quantity", quantity_);
+    return node;
+}
+
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
@@ -344,6 +359,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<CMSLegData>();
     } else if (legType == "CMSSpread") {
         return boost::make_shared<CMSSpreadLegData>();
+    } else if (legType == "Equity") {
+        return boost::make_shared<EquityLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
@@ -863,6 +880,17 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
     }
     return tmpLeg;
+}
+
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<YieldTermStructure>& eqCurve) {
+    /*
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    */
+
+    Leg leg;
+    return leg;
 }
 
 Real currentNotional(const Leg& leg) {

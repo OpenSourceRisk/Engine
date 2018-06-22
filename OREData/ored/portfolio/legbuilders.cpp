@@ -89,5 +89,14 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                             engineFactory);
 }
 
+Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    const string& configuration) const {
+    auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+    QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
+    string eqName = eqData->eqName();
+    auto eqCurve = *engineFactory->market()->equityForecastCurve(eqName, configuration);
+    return makeEquityLeg(data, eqCurve, engineFactory);
+}
+
 } // namespace data
 } // namespace ore
