@@ -18,6 +18,8 @@
 
 #include <orea/cube/sensitivitycube.hpp>
 
+#include <ored/utilities/log.hpp>
+
 using std::make_pair;
 
 // Ease the notation below
@@ -135,14 +137,20 @@ void SensitivityCube::initialise() {
     QL_REQUIRE(equal(upFactors_.left.begin(), upFactors_.left.end(), downFactors_.begin(), pred),
         "The set of risk factor keys with an 'Up' shift and 'Down' shift should match");
 
-    // Check that each factor has a shift size entry and that it is not a Null<Real>()
-    QL_REQUIRE(upFactors_.size() == shiftSizes_.size(),
-        "The number 'Up' shifts does not equal the number of shift sizes supplied");
+    // Log warnings if each factor does not have a shift size entry and that it is not a Null<Real>()
+    if (upFactors_.size() != shiftSizes_.size()) {
+        WLOG("The number of 'Up' shifts (" << upFactors_.size() <<") does not equal " << 
+            "the number of shift sizes (" << shiftSizes_.size() << ") supplied");
+    }
     
     for (auto const& kv : upFactors_.left) {
         auto it = shiftSizes_.find(kv.first);
-        QL_REQUIRE(it != shiftSizes_.end(), "No entry for risk factor " << kv.first << " in shift sizes.");
-        QL_REQUIRE(it->second != Null<Real>(), "The shift size for risk factor " << kv.first << " is not valid.");
+        if (it == shiftSizes_.end()) {
+            WLOG("No entry for risk factor " << kv.first << " in shift sizes.");
+        }
+        if (it->second == Null<Real>()) {
+            WLOG("The shift size for risk factor " << kv.first << " is not valid.")
+        }
     }
 }
 
