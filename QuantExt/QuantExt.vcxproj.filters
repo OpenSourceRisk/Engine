@@ -545,12 +545,9 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
       <Filter>termstructures</Filter>
-    </ClInclude>  
+    </ClInclude>
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
       <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
-      <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\equityindex.hpp">
       <Filter>indexes</Filter>
@@ -978,9 +975,6 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
       <Filter>cashflows</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
-      <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\equityindex.cpp">
       <Filter>indexes</Filter>

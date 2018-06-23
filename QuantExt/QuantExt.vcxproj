@@ -631,7 +631,6 @@
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
-    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp" />
     <ClInclude Include="qle\processes\all.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
@@ -773,7 +772,6 @@
     <ClCompile Include="qle\pricingengines\numericlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\oiccbasisswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\paymentdiscountingengine.cpp" />
-    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp" />
     <ClCompile Include="qle\processes\crossassetstateprocess.cpp" />
     <ClCompile Include="qle\processes\irlgm1fstateprocess.cpp" />
     <ClCompile Include="qle\quotes\logquote.cpp" />

@@ -30,6 +30,5 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/legbuilders.hpp>
-#include <ored/portfolio/varianceswap.hpp>
 
 #include <ored/portfolio/builders/all.hpp>

@@ -161,6 +161,12 @@
     <ClInclude Include="orea\cube\sensitivitycube.hpp">
       <Filter>cube</Filter>
     </ClInclude>
+    <ClInclude Include="orea\cube\npvsensicube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
+    <ClInclude Include="orea\cube\sensicube.hpp">
+      <Filter>cube</Filter>
+    </ClInclude>
     <ClInclude Include="orea\engine\sensitivityrecord.hpp">
       <Filter>engine</Filter>
     </ClInclude>

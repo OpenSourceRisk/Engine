@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <orea/cube/npvcube.hpp>
+#include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -72,7 +72,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
+    void generateSensitivities(boost::shared_ptr<NPVSensiCube> cube = boost::shared_ptr<NPVSensiCube>());
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -108,9 +108,9 @@ public:
 
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
-    virtual void initialize(boost::shared_ptr<NPVCube>& cube);
+    virtual void initialize(boost::shared_ptr<NPVSensiCube>& cube);
     //! initialize the cube with the appropriate dimensions
-    virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
+    virtual void initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const;
     //! build engine factory
     virtual boost::shared_ptr<EngineFactory>
     buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {},
