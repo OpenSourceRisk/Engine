@@ -80,7 +80,7 @@ static const set<SensitivityRecord> records = {
     { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, -14.11, 0.00 },
     { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 0.43, 0.00 },
     { "trade_006", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 23.32, 0.00 },
-    { "trade_006", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 6029.41, 0.00 },
+    { "trade_006", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", -393612.36, 6029.41, 0.00 }
 };
 // clang-format on
 
@@ -108,7 +108,7 @@ set<SensitivityRecord> expAggregationAll = {
     { "", false, RiskFactorKey(RFType::DiscountCurve, "TWD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 1), "1M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
     { "", false, RiskFactorKey(RFType::DiscountCurve, "USD", 2), "3M", 0.0001, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
-    { "", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 },
+    { "", false, RiskFactorKey(RFType::FXSpot, "TWDUSD", 0), "spot", 0.0002, RiskFactorKey(), "", 0.0, "EUR", 0, 0, 0.00 }
 };
 // clang-format on
 
