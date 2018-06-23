@@ -34,11 +34,10 @@ namespace analytics {
 SensitivityAggregator::SensitivityAggregator(const map<string, set<string>>& categories)
     : setCategories_(categories) {
     
-    using namespace std::placeholders;
-    
     // Initialise the category functions
     for (const auto& kv : setCategories_) {
-        categories_[kv.first] = bind(&SensitivityAggregator::inCategory, this, _1, kv.first);
+        categories_[kv.first] = bind(&SensitivityAggregator::inCategory, this, 
+            std::placeholders::_1, kv.first);
     }
 
     // Initialise the categorised records
