@@ -445,7 +445,8 @@ Allowable values and descriptions: See Table \ref{tab:rule} Rule.
 \emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
 \emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
 \emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and log/short stub coupon period (old CDS convention).\\ \hline
-CDS   &   Credit derivatives standard rule since 'Big Bang' changes in 2009.\\ \hline
+CDS   &   Credit derivatives standard rule defined in 'Big Bang' changes in 2009.\\ \hline
+CDS2015   &   Credit derivatives standard rule updated in 2015.\\ \hline
 \end{tabular}
   \caption{Allowable Values for Rule}
   \label{tab:rule}
@@ -551,8 +552,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item Index:  The combination of currency, index and term that
   identifies the relevant fixings and yield curve of the floating leg.  
 
-  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
-    simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W,
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
 \item IsInArrears:  \emph{true} indicates that  fixing is in arrears,

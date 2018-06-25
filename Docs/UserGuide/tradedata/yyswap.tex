@@ -1,0 +1,28 @@
+\subsubsection{Year on Year Inflation Swap}
+
+A Year on Year inflation swap is set up as a swap, with one leg of type {\tt YY}. Listing \ref{lst:yyswap} shows an
+example. The YY leg contains an additional {\tt YYLegData} block. See \ref{ss:yylegdata} for details on the YY leg
+specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>YY</LegType>
+        <Payer>false</Payer>
+        ...
+        <YYLegData>
+        ...
+        </YYLegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{Year on Year Swap Data}
+\label{lst:yyswap}
+\end{listing}
