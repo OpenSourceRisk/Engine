@@ -41,8 +41,10 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/version.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -882,14 +884,22 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<YieldTermStructure>& eqCurve) {
-    /*
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
+                  const boost::shared_ptr<YieldTermStructure>& divYieldCurve) {
+    boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+    QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
+
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-    */
 
-    Leg leg;
+    // floors and caps not suported yet by QL yoy coupon pricer...
+    Leg leg = EquityLeg(schedule, equityRefRateCurve, divYieldCurve)
+        .withNotionals(data.notionals())
+        .withPaymentDayCounter(dc)
+        .withPaymentAdjustment(bdc);
+    QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
+
     return leg;
 }
 

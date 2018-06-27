@@ -95,7 +95,8 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
     auto eqCurve = *engineFactory->market()->equityForecastCurve(eqName, configuration);
-    return makeEquityLeg(data, eqCurve, engineFactory);
+    auto divCurve = *engineFactory->market()->equityDividendCurve(eqName, configuration);
+    return makeEquityLeg(data, eqCurve, divCurve);
 }
 
 } // namespace data

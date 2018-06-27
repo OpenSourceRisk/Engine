@@ -535,7 +535,8 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
-Leg makeEquityLeg(const LegData& data);
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
+                  const boost::shared_ptr<YieldTermStructure>& divYieldCurve);
 Real currentNotional(const Leg& leg);
 
 //@}
