@@ -24,9 +24,13 @@
 #ifndef quantext_equity_coupon_hpp
 #define quantext_equity_coupon_hpp
 
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/indexes/iborindex.hpp>
+#include <ql/cashflows/coupon.hpp>
+#include <ql/patterns/visitor.hpp>
+#include <ql/time/daycounter.hpp>
+#include <ql/handle.hpp>
 #include <ql/time/schedule.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 using namespace QuantLib;
 
@@ -44,13 +48,14 @@ class EquityCouponPricer;
 class EquityCoupon : public Coupon,
                      public Observer {
 public:
+
     EquityCoupon(const Date& paymentDate,
         Real nominal,
         const Date& startDate,
         const Date& endDate,
-        const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
-        const boost::shared_ptr<YieldTermStructure>& divYieldCurve,
+        const boost::shared_ptr<EquityIndex>& equityCurve,
         const DayCounter& dayCounter,
+        bool isTotalReturn = false,
         const Date& refPeriodStart = Date(),
         const Date& refPeriodEnd = Date(),
         const Date& exCouponDate = Date()
@@ -58,7 +63,7 @@ public:
 
     //! \name CashFlow interface
     //@{
-    Real amount() const { return rate() * accrualPeriod() * nominal(); }
+    Real amount() const { return rate() * nominal(); }
     //@}
 
     //! \name Coupon interface
@@ -66,15 +71,15 @@ public:
     //Real price(const Handle<YieldTermStructure>& discountingCurve) const;
     DayCounter dayCounter() const { return dayCounter_; }
     Real accruedAmount(const Date&) const;
+    // calculates the rate for the period, not yearly i.e. (S(t+1)-S(t))/S(t)
     Rate rate() const;
     //@}
 
     //! \name Inspectors
     //@{
     //! equity reference rate curve
-    const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve() const { return equityRefRateCurve_; }
-    //! equity dividend curve
-    const boost::shared_ptr<YieldTermStructure>& divYieldCurve() const { return divYieldCurve_; }
+    const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
+    bool isTotalReturn() const { return isTotalReturn_; }
     //@}
 
     //! \name Observer interface
@@ -88,14 +93,10 @@ public:
     //@}
     void setPricer(const boost::shared_ptr<EquityCouponPricer>&);
     boost::shared_ptr<EquityCouponPricer> pricer() const;
-
-    // use to calculate for fixing date, allows change of
-    Rate equityForwardRate() const;
-
+    
 protected:
     boost::shared_ptr<EquityCouponPricer> pricer_;
-    boost::shared_ptr<YieldTermStructure> equityRefRateCurve_;
-    boost::shared_ptr<YieldTermStructure> divYieldCurve_;
+    boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
     Natural fixingDays_;
     bool isTotalReturn_;
@@ -129,25 +130,23 @@ inline boost::shared_ptr<EquityCouponPricer> EquityCoupon::pricer() const {
 class EquityLeg {
 public:
     EquityLeg(const Schedule& schedule,
-        const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
-        const boost::shared_ptr<YieldTermStructure>& divYieldCurve);
+        const boost::shared_ptr<EquityIndex>& equityCurve);
     EquityLeg& withNotional(Real notional);
     EquityLeg& withNotionals(const std::vector<Real>& notionals);
     EquityLeg& withPaymentDayCounter(const DayCounter& dayCounter);
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
-    EquityLeg& withEquityCouponPricer(const boost::shared_ptr<EquityCouponPricer>& couponPricer);
+    EquityLeg& withTotalReturn(bool);
     operator Leg() const;
 
 private:
     Schedule schedule_;
-    boost::shared_ptr<YieldTermStructure> equityRefRateCurve_;
-    boost::shared_ptr<YieldTermStructure> divYieldCurve_;
+    boost::shared_ptr<EquityIndex> equityCurve_;
     std::vector<Real> notionals_;
     DayCounter paymentDayCounter_;
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
-    boost::shared_ptr<EquityCouponPricer> couponPricer_;
+    bool isTotalReturn_;
 };
 
 } // namespace QuantExt

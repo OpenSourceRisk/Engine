@@ -884,20 +884,21 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     return tmpLeg;
 }
 
-Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
-                  const boost::shared_ptr<YieldTermStructure>& divYieldCurve) {
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
     boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    bool isTotalReturn = eqLegData->returnType() == "Total";
 
     // floors and caps not suported yet by QL yoy coupon pricer...
-    Leg leg = EquityLeg(schedule, equityRefRateCurve, divYieldCurve)
+    Leg leg = EquityLeg(schedule, equityCurve)
         .withNotionals(data.notionals())
         .withPaymentDayCounter(dc)
-        .withPaymentAdjustment(bdc);
+        .withPaymentAdjustment(bdc)
+        .withTotalReturn(isTotalReturn);
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
     return leg;

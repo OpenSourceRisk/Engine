@@ -10,12 +10,12 @@
     <SwapData>
       <LegData>
         <LegType>Equity</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
         <Notionals>
-          <Notional>10000000.000000</Notional>
+          <Notional>100000000</Notional>
         </Notionals>
-        <DayCounter>30/360</DayCounter>
+        <DayCounter>A360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <EquityLegData>
           <ReturnType>Price</ReturnType>
@@ -24,10 +24,10 @@
         </EquityLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>20160301</StartDate>
-            <EndDate>20360301</EndDate>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
+            <Calendar>USD</Calendar>
             <Convention>F</Convention>
             <TermConvention>F</TermConvention>
             <Rule>Forward</Rule>
@@ -44,8 +44,8 @@
         <Notionals>
           <Notional>100000000</Notional>
           <Exchanges>
-            <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>false</NotionalFinalExchange>
           </Exchanges>
         </Notionals>
         <DayCounter>A360</DayCounter>
@@ -63,7 +63,82 @@
             <StartDate>20160205</StartDate>
             <EndDate>20260205</EndDate>
             <Tenor>3M</Tenor>
-            <Calendar>TARGET</Calendar>
+            <Calendar>USD</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+    </SwapData>
+  </Trade>
+  <Trade id="EquitySwap_2">
+    <TradeType>EquitySwap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <LegData>
+        <LegType>Equity</LegType>
+        <Payer>true</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>F</PaymentConvention>
+        <EquityLegData>
+          <ReturnType>Total</ReturnType>
+          <Name>SP5</Name>
+          <Quantity>775</Quantity>
+        </EquityLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>USD</Calendar>
+            <Convention>F</Convention>
+            <TermConvention>F</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
+        <Currency>USD</Currency>
+        <Notionals>
+          <Notional>100000000</Notional>
+          <Exchanges>
+            <NotionalInitialExchange>false</NotionalInitialExchange>
+            <NotionalFinalExchange>false</NotionalFinalExchange>
+          </Exchanges>
+        </Notionals>
+        <DayCounter>A360</DayCounter>
+        <PaymentConvention>MF</PaymentConvention>
+        <FloatingLegData>
+          <Index>USD-LIBOR-3M</Index>
+          <Spreads>
+            <Spread>0.000000</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>20160205</StartDate>
+            <EndDate>20260205</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>USD</Calendar>
             <Convention>MF</Convention>
             <TermConvention>MF</TermConvention>
             <Rule>Forward</Rule>

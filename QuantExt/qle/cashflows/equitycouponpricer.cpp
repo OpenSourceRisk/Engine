@@ -21,12 +21,17 @@
 namespace QuantExt {
 
 Rate EquityCouponPricer::swapletRate() const {
-    return coupon_->equityForwardRate();
+    Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, isTotalReturn_);
+    Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, isTotalReturn_);
+    return (end - start) / start;
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
 
-    coupon_ = dynamic_cast<const EquityCoupon*>(&coupon);
+    coupon_ = &coupon;
+
+    equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
+    isTotalReturn_ = coupon.isTotalReturn();
 }
 
 } // QuantExt

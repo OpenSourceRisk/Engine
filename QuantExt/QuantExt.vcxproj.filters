@@ -573,12 +573,6 @@
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
-    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
-    <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
-    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
-    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\calendars\all.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -600,8 +594,30 @@
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
-    <ClInclude Include="qle\cashflows\equitycoupon.hpp" />
-    <ClInclude Include="qle\cashflows\equitycouponpricer.hpp" />
+    <ClInclude Include="qle\cashflows\equitycoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitycouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\copibr.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1008,7 +1024,11 @@
     <ClCompile Include="qle\calendars\thailand.cpp">
       <Filter>time\calendars</Filter>
     </ClCompile>
-    <ClCompile Include="qle\cashflows\equitycoupon.cpp" />
-    <ClCompile Include="qle\cashflows\equitycouponpricer.cpp" />
+    <ClCompile Include="qle\cashflows\equitycoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\equitycouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

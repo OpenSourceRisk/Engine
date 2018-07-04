@@ -19,8 +19,6 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 
-#include <ql/cashflows/couponpricer.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/utilities/vectors.hpp>
 
 using namespace QuantLib;
@@ -29,15 +27,15 @@ namespace QuantExt {
 
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal,
     const Date& startDate, const Date& endDate,
-    const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
-    const boost::shared_ptr<YieldTermStructure>& divYieldCurve,
-    const DayCounter& dayCounter, const Date& refPeriodStart,
+    const boost::shared_ptr<EquityIndex>& equityCurve,
+    const DayCounter& dayCounter, bool isTotalReturn,
+    const Date& refPeriodStart,
     const Date& refPeriodEnd, const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart,
-        refPeriodEnd, exCouponDate) {
+    refPeriodEnd, exCouponDate), equityCurve_(equityCurve),  dayCounter_(dayCounter),
+    isTotalReturn_(isTotalReturn) {
 
-    registerWith(equityRefRateCurve_);
-    registerWith(divYieldCurve_);
+    registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
 }
 
@@ -56,19 +54,12 @@ Real EquityCoupon::accruedAmount(const Date& d) const {
         return 0.0;
     }
     else {
-        return nominal() * rate() *
-            dayCounter().yearFraction(accrualStartDate_,
-                std::min(d, accrualEndDate_),
-                refPeriodStart_,
-                refPeriodEnd_);
+        Time fullPeriod = dayCounter().yearFraction(accrualStartDate_,
+            accrualEndDate_, refPeriodStart_, refPeriodEnd_);
+        Time thisPeriod = dayCounter().yearFraction(accrualStartDate_,
+            std::min(d, accrualEndDate_), refPeriodStart_, refPeriodEnd_);
+        return nominal() * rate() * thisPeriod / fullPeriod;
     }
-}
-
-
-Rate EquityCoupon::equityForwardRate() const {
-    Real start = divYieldCurve_->discount(accrualStartDate_) / equityRefRateCurve_->discount(accrualStartDate_);
-    Real end = divYieldCurve_->discount(accrualEndDate_) / equityRefRateCurve_->discount(accrualEndDate_);
-    return (end - start) / start;
 }
 
 Rate EquityCoupon::rate() const {
@@ -80,10 +71,9 @@ Rate EquityCoupon::rate() const {
 }
 
 EquityLeg::EquityLeg(const Schedule& schedule,
-                     const boost::shared_ptr<YieldTermStructure>& equityRefRateCurve,
-                     const boost::shared_ptr<YieldTermStructure>& divYieldCurve)
-    : schedule_(schedule), equityRefRateCurve_(equityRefRateCurve), divYieldCurve_(divYieldCurve),
-    paymentAdjustment_(Following), paymentCalendar_(Calendar()) {}
+                     const boost::shared_ptr<EquityIndex>& equityCurve)
+    : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), 
+    paymentCalendar_(Calendar()) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -110,9 +100,8 @@ EquityLeg& EquityLeg::withPaymentCalendar(const Calendar& calendar) {
     return *this;
 }
 
-EquityLeg&
-EquityLeg::withEquityCouponPricer(const boost::shared_ptr<EquityCouponPricer>& couponPricer) {
-    couponPricer_ = couponPricer;
+EquityLeg& EquityLeg::withTotalReturn(bool totalReturn) {
+    isTotalReturn_ = totalReturn;
     return *this;
 }
 
@@ -141,12 +130,11 @@ EquityLeg::operator Leg() const {
 
         boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, 
-            equityRefRateCurve_, divYieldCurve_, paymentDayCounter_));
+            equityCurve_, paymentDayCounter_, isTotalReturn_));
 
-        if (couponPricer_) {
-            cashflow->setPricer(couponPricer_);
-        }
-
+        boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
+        cashflow->setPricer(pricer);
+        
         cashflows.push_back(cashflow);
     }
     return cashflows;

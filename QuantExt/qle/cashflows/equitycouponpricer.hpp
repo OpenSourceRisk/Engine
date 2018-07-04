@@ -50,6 +50,8 @@ public:
     //@}
 protected:
     const EquityCoupon* coupon_;
+    boost::shared_ptr<EquityIndex> equityCurve_;
+    bool isTotalReturn_;
 };
 } // namespace QuantExt
 

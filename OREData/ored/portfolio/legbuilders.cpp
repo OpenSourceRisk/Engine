@@ -19,6 +19,7 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 
+
 namespace ore {
 namespace data {
 
@@ -94,9 +95,8 @@ Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<Engi
     auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
     QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
     string eqName = eqData->eqName();
-    auto eqCurve = *engineFactory->market()->equityForecastCurve(eqName, configuration);
-    auto divCurve = *engineFactory->market()->equityDividendCurve(eqName, configuration);
-    return makeEquityLeg(data, eqCurve, divCurve);
+    auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
+    return makeEquityLeg(data, eqCurve);
 }
 
 } // namespace data
