@@ -101,11 +101,6 @@ protected:
     Natural fixingDays_;
     bool isTotalReturn_;
 
-    //! makes sure you were given the correct type of pricer
-    // this can also done in external pricer setter classes via
-    // accept/visit mechanism
-   // virtual bool checkPricerImpl(const
-    //    boost::shared_ptr<EquityCouponPricer>&) const = 0;
 };
 
 // inline definitions

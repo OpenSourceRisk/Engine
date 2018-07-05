@@ -38,6 +38,7 @@ EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCa
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
 }
+
 Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
     return fixing(fixingDate, forecastTodaysFixing, false);
 }

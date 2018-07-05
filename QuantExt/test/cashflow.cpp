@@ -25,6 +25,9 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/equitycouponpricer.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
@@ -87,9 +90,69 @@ void CashFlowTest::testFXLinkedCashFlow() {
     Settings::instance().evaluationDate() = today;
 }
 
+void CashFlowTest::testEquityCoupon() {
+
+    BOOST_TEST_MESSAGE("Testing Equity Coupon");
+
+    // Test today = 5 Jan 2016
+    Settings::instance().evaluationDate() = Date(5, Jan, 2016);
+    Date today = Settings::instance().evaluationDate();
+
+    Date cfDate1(4, Dec, 2015);
+    Date cfDate2(5, Apr, 2016); // future
+
+    Real nominal = 1000000; // 1M
+    string eqName = "SP5";
+    boost::shared_ptr<SimpleQuote> sq = boost::make_shared<SimpleQuote>(2100);
+    Handle<Quote> spot(sq);
+    DayCounter dc = ActualActual();
+    Calendar cal = TARGET();
+    Handle<YieldTermStructure> dividend(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
+    Handle<YieldTermStructure> equityforecast(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc)));  // Equity Forecast Curve
+
+    boost::shared_ptr<EquityIndex> eqIndex =
+        boost::make_shared<EquityIndex>("EQ-" + eqName, cal, spot, equityforecast, dividend);
+
+    eqIndex->addFixing(cfDate1, 2000);
+
+    // Price Return coupon
+    EquityCoupon eq1(cfDate2, 1000000, today, cfDate2, eqIndex, dc);
+    // Total Return Coupon
+    EquityCoupon eq2(cfDate2, 1000000, today, cfDate2, eqIndex, dc, true);
+    // historical starting coupon
+    EquityCoupon eq3(cfDate2, 1000000, cfDate1, cfDate2, eqIndex, dc);
+
+    boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
+    boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
+    boost::shared_ptr<EquityCouponPricer> pricer3(new EquityCouponPricer());
+    eq1.setPricer(pricer1);
+    eq2.setPricer(pricer2);
+    eq3.setPricer(pricer3);
+
+    // Price Return coupon
+    Time dt = dc.yearFraction(today, cfDate2);
+    Real forward = spot->value() * std::exp((0.02 - 0.01)*dt);
+    Real expectedAmount = nominal * (forward - spot->value()) / spot->value();
+    BOOST_TEST_MESSAGE("Check Price Return is correct");
+    BOOST_CHECK_CLOSE(eq1.amount(), expectedAmount, 1e-10);
+
+    // Total Return Coupon
+    forward = spot->value() * std::exp(0.02*dt);
+    expectedAmount = nominal * (forward - spot->value()) / spot->value();
+    BOOST_TEST_MESSAGE("Check Total Return is correct");
+    BOOST_CHECK_CLOSE(eq2.amount(), expectedAmount, 1e-10);
+    
+    // Historical starting Price Return coupon
+    forward = spot->value() * std::exp((0.02 - 0.01)*dt);
+    expectedAmount = nominal * (forward - eqIndex->fixing(cfDate1)) / eqIndex->fixing(cfDate1);
+    BOOST_TEST_MESSAGE("Check Historical starting Price Return is correct");
+    BOOST_CHECK_CLOSE(eq3.amount(), expectedAmount, 1e-10);
+}
+
 test_suite* CashFlowTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CashFlowTests");
     suite->add(BOOST_TEST_CASE(&CashFlowTest::testFXLinkedCashFlow));
+    suite->add(BOOST_TEST_CASE(&CashFlowTest::testEquityCoupon));
     return suite;
 }
 } // namespace testsuite
