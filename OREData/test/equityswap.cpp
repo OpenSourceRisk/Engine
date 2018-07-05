@@ -101,7 +101,6 @@ struct CommonVars {
     string fixDC;
     string index;
     string eqName;
-    Real quantity;
     bool isinarrears;
     vector<double> notionals;
     vector<double> spread;
@@ -114,7 +113,7 @@ struct CommonVars {
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
             floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, eqName, quantity), isPayer, ccy,
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, eqName), isPayer, ccy,
             eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
@@ -159,7 +158,6 @@ struct CommonVars {
         fixDC = "ACT/ACT";
         index = "USD-LIBOR-3M";
         eqName = "SP5";
-        quantity = 100;
         days = 0;
         isinarrears = false;
         notionals.push_back(10000000);
