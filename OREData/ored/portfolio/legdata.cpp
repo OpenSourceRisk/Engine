@@ -244,14 +244,12 @@ void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     returnType_ = XMLUtils::getChildValue(node, "ReturnType");
     eqName_ = XMLUtils::getChildValue(node, "Name");
-    quantity_ = XMLUtils::getChildValueAsDouble(node, "Quantity");
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "ReturnType", returnType_);
     XMLUtils::addChild(doc, node, "Name", eqName_);
-    XMLUtils::addChild(doc, node, "Quantity", quantity_);
     return node;
 }
 

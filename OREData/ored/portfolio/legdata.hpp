@@ -389,14 +389,13 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, string eqName, double quantity) : LegAdditionalData("Equity"), 
-        returnType_(returnType), eqName_(eqName), quantity_(quantity) {}
+    EquityLegData(string returnType, string eqName) : LegAdditionalData("Equity"), 
+        returnType_(returnType), eqName_(eqName) {}
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
     const string& eqName() const { return eqName_; }
-    double quantity() const { return quantity_; }
     //@}
 
     //! \name Serialisation
@@ -407,7 +406,6 @@ public:
 private:
     string returnType_;
     string eqName_;
-    double quantity_;
 };
 
 //! Serializable object holding amortization rules

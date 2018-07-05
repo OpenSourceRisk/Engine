@@ -20,7 +20,6 @@
         <EquityLegData>
           <ReturnType>Price</ReturnType>
           <Name>SP5</Name>
-          <Quantity>775</Quantity>
         </EquityLegData>
         <ScheduleData>
           <Rules>
