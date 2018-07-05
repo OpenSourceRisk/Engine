@@ -77,6 +77,10 @@ SensitivityRecord::operator bool() const {
     return *this != SensitivityRecord();
 }
 
+bool SensitivityRecord::isCrossGamma() const {
+    return key_2 != RiskFactorKey();
+}
+
 std::ostream& operator<<(ostream& out, const SensitivityRecord& sr) {
     return out << "[" <<
         sr.tradeId << ", " <<

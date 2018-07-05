@@ -23,6 +23,7 @@
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
+using ore::analytics::ScenarioFilter;
 using std::set;
 using std::map;
 using std::string;
@@ -51,9 +52,13 @@ SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(std
     init();
 }
 
-void SensitivityAggregator::aggregate(SensitivityStream& ss) {
+void SensitivityAggregator::aggregate(SensitivityStream& ss, const boost::shared_ptr<ScenarioFilter>& filter) {
     // Loop over stream's records
     while (SensitivityRecord sr = ss.next()) {
+        // Skip this record if the risk factor is not in the filter
+        if ((!sr.isCrossGamma() && !filter->allow(sr.key_1)) || 
+            (!filter->allow(sr.key_1) || !filter->allow(sr.key_2))) continue;
+        
         // "Blank out" trade ID before adding
         string tradeId = sr.tradeId;
         sr.tradeId = "";

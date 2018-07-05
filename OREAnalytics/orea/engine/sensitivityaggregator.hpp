@@ -23,6 +23,7 @@
 #pragma once
 
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/scenario/scenariosimmarket.hpp>
 
 #include <map>
 #include <set>
@@ -53,12 +54,14 @@ public:
     */
     SensitivityAggregator(const std::map<std::string, std::function<bool(std::string)>>& categories);
 
-    /*! Update the aggregator with SensitivityRecords from the stream \p ss
+    /*! Update the aggregator with SensitivityRecords from the stream \p ss after applying the 
+        optional filter. If no filter is specified, all risk factors are aggregated.
         
         \warning No checks are performed for duplicate records from the stream. It is the stream's 
                  responsibility to guard against duplicates if it needs to.
     */
-    void aggregate(SensitivityStream& ss);
+    void aggregate(SensitivityStream& ss, const boost::shared_ptr<ore::analytics::ScenarioFilter>& filter 
+        = boost::make_shared<ore::analytics::ScenarioFilter>());
 
     //! Reset the aggregator to it's initial state by clearing all aggregations
     void reset();

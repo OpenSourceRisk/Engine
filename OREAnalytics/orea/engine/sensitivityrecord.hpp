@@ -75,6 +75,9 @@ struct SensitivityRecord {
     /*! This method will be used to denote the end of a stream of SensitivityRecord objects.
     */
     explicit operator bool() const;
+
+    //! True if a SensitivityRecord is a cross gamma, otherwise false
+    bool isCrossGamma() const;
 };
 
 //! Enable writing of a SensitivityRecord
