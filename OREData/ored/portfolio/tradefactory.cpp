@@ -49,7 +49,6 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("EquityOption", boost::make_shared<TradeBuilder<EquityOption>>());
     addBuilder("EquityForward", boost::make_shared<TradeBuilder<EquityForward>>());
     addBuilder("EquitySwap", boost::make_shared<TradeBuilder<EquitySwap>>());
-    addBuilder("VarianceSwap", boost::make_shared<TradeBuilder<VarSwap>>());
     addBuilder("Bond", boost::make_shared<TradeBuilder<Bond>>());
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());    
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
