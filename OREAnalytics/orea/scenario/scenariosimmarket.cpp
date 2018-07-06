@@ -240,8 +240,20 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     LOG("benchmark yield curves done");
 
     // building equity yield curves
-    LOG("building equity yield curves...");
+    LOG("building equity curves...");
     for (const auto& eqName : parameters->equityNames()) {
+
+        // building equity spots
+        LOG("adding " << eqName << " equity spot...");
+        Real spotVal = initMarket->equitySpot(eqName, configuration)->value();
+        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
+        Handle<Quote> qh(q);
+        equitySpots_.insert(
+            pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
+        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
+            std::forward_as_tuple(q));
+        LOG("adding " << eqName << " equity spot done");
+        
         LOG("building " << eqName << " equity dividend yield curve..");
         vector<Period> divTenors = parameters->equityDividendTenors(eqName);
         addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityDividend, eqName, divTenors,
@@ -252,6 +264,16 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityForecast, eqName, foreTenors,
                       parameters->yieldCurveDayCounter(eqName));
         LOG("building " << eqName << " forecast curve done");
+
+        Handle<EquityIndex> curve = initMarket->equityCurve(eqName, configuration);
+
+        boost::shared_ptr<EquityIndex> ei(curve->clone(equitySpot(eqName, configuration),
+                                                       yieldCurve(YieldCurveType::EquityForecast, eqName, configuration),
+                                                       yieldCurve(YieldCurveType::EquityDividend, eqName, configuration)));
+        Handle<EquityIndex> eh(ei);
+        equityCurves_.insert(
+            pair<pair<string, string>, Handle<EquityIndex>>(make_pair(Market::defaultConfiguration, eqName), eh));
+
     }
     LOG("equity yield curves done");
 
@@ -720,20 +742,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             make_pair(Market::defaultConfiguration, reverse), ifvh));
     }
     LOG("fx volatilities done");
-
-    // building equity spots
-    LOG("building equity spots...");
-    for (const auto& eqName : parameters->equityNames()) {
-        Real spotVal = initMarket->equitySpot(eqName, configuration)->value();
-        DLOG("adding " << eqName << " equity spot price");
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
-        Handle<Quote> qh(q);
-        equitySpots_.insert(
-            pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
-                         std::forward_as_tuple(q));
-    }
-    LOG("equity spots done");
 
     // building eq volatilities
     LOG("building eq volatilities...");

@@ -17,15 +17,16 @@
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
-    <Parameter name="fxcalibration">collateral_eur</Parameter>
-    <Parameter name="pricing">collateral_eur</Parameter>
-    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="lgmcalibration">default</Parameter>
+    <Parameter name="fxcalibration">default</Parameter>
+    <Parameter name="pricing">default</Parameter>
+    <Parameter name="simulation">default</Parameter>
+    <Parameter name="sensitivity">default</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="baseCurrency">USD</Parameter>
       <Parameter name="outputFileName">npv.csv</Parameter>
     </Analytic>
     <Analytic type="cashflow">
@@ -37,6 +38,17 @@
       <Parameter name="configuration">default</Parameter>
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
+    </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">N</Parameter>
