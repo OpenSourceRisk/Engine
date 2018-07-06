@@ -53,6 +53,9 @@ SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(std
 }
 
 void SensitivityAggregator::aggregate(SensitivityStream& ss, const boost::shared_ptr<ScenarioFilter>& filter) {
+    // Ensure at start of stream
+    ss.reset();
+
     // Loop over stream's records
     while (SensitivityRecord sr = ss.next()) {
         // Skip this record if the risk factor is not in the filter
