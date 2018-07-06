@@ -111,7 +111,7 @@ void CashFlowTest::testEquityCoupon() {
     Handle<YieldTermStructure> equityforecast(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc)));  // Equity Forecast Curve
 
     boost::shared_ptr<EquityIndex> eqIndex =
-        boost::make_shared<EquityIndex>("EQ-" + eqName, cal, spot, equityforecast, dividend);
+        boost::make_shared<EquityIndex>(eqName, cal, spot, equityforecast, dividend);
 
     eqIndex->addFixing(cfDate1, 2000);
 
