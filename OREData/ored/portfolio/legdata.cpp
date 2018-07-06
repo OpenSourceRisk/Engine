@@ -508,8 +508,9 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 Real spread = (i < spreads.size() ? spreads[i] : spreads.back());
                 if (schedule[i] < startDate || i == 0) {
                     Real nom = (i < notionals.size() ? notionals[i] : notionals.back());
-                    boost::shared_ptr<IborCoupon> coupon = boost::make_shared<IborCoupon>(
-                        schedule[i + 1], nom, schedule[i], schedule[i + 1], index->fixingDays(), index, 1.0, spread);
+                    boost::shared_ptr<IborCoupon> coupon =
+                        boost::make_shared<IborCoupon>(schedule[i + 1], nom, schedule[i], schedule[i + 1],
+                                                       floatData->fixingDays(), index, 1.0, spread);
                     coupon->setPricer(boost::shared_ptr<IborCouponPricer>(new BlackIborCouponPricer));
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
@@ -521,7 +522,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     boost::shared_ptr<QuantExt::FloatingAnnuityCoupon> coupon =
                         boost::make_shared<QuantExt::FloatingAnnuityCoupon>(
                             annuity, underflow, coupons.back(), schedule[i + 1], schedule[i], schedule[i + 1],
-                            index->fixingDays(), index, 1.0, spread);
+                            floatData->fixingDays(), index, 1.0, spread);
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
                 }

@@ -21,7 +21,6 @@
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
-#include <ored/portfolio/varianceswap.hpp>
 #include <ored/portfolio/forwardrateagreement.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>

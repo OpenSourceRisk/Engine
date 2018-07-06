@@ -81,7 +81,7 @@
       <xs:element type="xs:string" name="LongShort"/>
       <xs:element type="xs:string" name="OptionType"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
-      <xs:element type="xs:string" name="Settlement" minOccurs="0"/>
+      <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
@@ -427,6 +427,7 @@
       <xs:element type="xs:float" name="BoughtAmount"/>
       <xs:element type="currencyCode" name="SoldCurrency"/>
       <xs:element type="xs:float" name="SoldAmount"/>
+      <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

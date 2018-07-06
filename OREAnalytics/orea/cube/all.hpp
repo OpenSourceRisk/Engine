@@ -3,5 +3,8 @@
 
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/cube/cubewriter.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/cube/cubewriter.hpp>
+#include <orea/cube/npvsensicube.hpp>
+#include <orea/cube/sensicube.hpp>
+

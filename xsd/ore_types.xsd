@@ -413,5 +413,12 @@
      </xs:restriction>
    </xs:simpleType>
 
+  <xs:simpleType name="settlementType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Physical"/>
+      <xs:enumeration value="Cash"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 

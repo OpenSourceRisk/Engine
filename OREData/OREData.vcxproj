@@ -117,7 +117,6 @@
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
-    <ClInclude Include="ored\portfolio\builders\varianceswap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
@@ -150,7 +149,6 @@
     <ClInclude Include="ored\portfolio\trade.hpp" />
     <ClInclude Include="ored\portfolio\tradeactions.hpp" />
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
-    <ClInclude Include="ored\portfolio\varianceswap.hpp" />
     <ClInclude Include="ored\report\all.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
@@ -266,7 +264,6 @@
     <ClCompile Include="ored\portfolio\trade.cpp" />
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
-    <ClCompile Include="ored\portfolio\varianceswap.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
