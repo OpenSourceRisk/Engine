@@ -59,8 +59,8 @@ void SensitivityAggregator::aggregate(SensitivityStream& ss, const boost::shared
     // Loop over stream's records
     while (SensitivityRecord sr = ss.next()) {
         // Skip this record if the risk factor is not in the filter
-        if ((!sr.isCrossGamma() && !filter->allow(sr.key_1)) || 
-            (!filter->allow(sr.key_1) || !filter->allow(sr.key_2))) continue;
+        if (!sr.isCrossGamma() && !filter->allow(sr.key_1)) continue;
+        if (sr.isCrossGamma() && (!filter->allow(sr.key_1) || !filter->allow(sr.key_2))) continue;
         
         // "Blank out" trade ID before adding
         string tradeId = sr.tradeId;
