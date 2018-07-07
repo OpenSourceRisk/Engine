@@ -120,9 +120,6 @@ protected:
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
-    //! write out additional reports
-    virtual void writeAdditionalReports() {}
-
     //! Get report writer
     /*! This calls the private method getReportWriterImpl() which returns the 
         actual ReportWriter implementation. The private method is virtual and 

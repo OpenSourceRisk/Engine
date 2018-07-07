@@ -220,11 +220,6 @@ int OREApp::run() {
             out_ << "SKIP" << endl;
         }
 
-        /*****************************
-         * Additional reports
-         */
-        // writeAdditionalReports();
-
     } catch (std::exception& e) {
         ALOG("Error: " << e.what());
         out_ << "Error: " << e.what() << endl;
