@@ -37,12 +37,12 @@ namespace ore {
 namespace analytics {
 
 SensitivityFileStream::SensitivityFileStream(const string& fileName, 
-    char delim, const string& comment) : delim_(delim), comment_(comment) {
+    char delim, const string& comment) : delim_(delim), comment_(comment), lineNo_(0) {
     
     // Open the file
     file_.open(fileName);
     QL_REQUIRE(file_.is_open(), "error opening file " << fileName);
-    LOG("The file " << fileName << "has been opened for streaming");
+    LOG("The file " << fileName << " has been opened for streaming");
 }
 
 SensitivityFileStream::~SensitivityFileStream() {
