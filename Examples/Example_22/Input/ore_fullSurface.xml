@@ -82,7 +82,6 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario_fullSurface.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity_fullSurface.csv</Parameter>
-      <Parameter name="crossGammaOutputFile">crossgamma_fullSurface.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
