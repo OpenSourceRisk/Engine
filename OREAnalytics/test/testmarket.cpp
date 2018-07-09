@@ -23,6 +23,7 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/indexes/equityindex.hpp>
