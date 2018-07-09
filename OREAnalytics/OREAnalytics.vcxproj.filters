@@ -182,9 +182,6 @@
     <ClInclude Include="orea\engine\sensitivitycubestream.hpp">
       <Filter>engine</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\sensitivitydata.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
     <ClInclude Include="orea\engine\sensitivityaggregator.hpp">
       <Filter>engine</Filter>
     </ClInclude>
@@ -299,9 +296,6 @@
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\sensitivitycubestream.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="orea\engine\sensitivitydata.cpp">
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="orea\engine\sensitivityaggregator.cpp">

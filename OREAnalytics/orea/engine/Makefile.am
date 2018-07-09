@@ -13,7 +13,6 @@ libOREAnalyticsEngine_la_SOURCES = \
 	stresstest.cpp \
 	riskfilter.cpp \
 	parametricvar.cpp \
-	sensitivitydata.cpp \
 	sensitivityrecord.cpp \
 	sensitivityaggregator.cpp \
 	sensitivitycubestream.cpp \
@@ -30,7 +29,6 @@ this_include_HEADERS = \
 	stresstest.hpp \
 	riskfilter.hpp \
 	parametricvar.hpp \
-	sensitivitydata.hpp \
 	sensitivityrecord.hpp \
 	sensitivityaggregator.hpp \
 	sensitivitycubestream.hpp \

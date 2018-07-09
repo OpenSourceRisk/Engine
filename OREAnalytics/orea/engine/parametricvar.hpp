@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <orea/engine/sensitivitydata.hpp>
 #include <orea/engine/sensitivitystream.hpp>
 
 #include <ored/report/report.hpp>
