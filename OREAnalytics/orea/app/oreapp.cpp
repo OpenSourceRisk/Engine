@@ -523,11 +523,8 @@ void OREApp::runParametricVar() {
     out_ << setw(tab_) << left << "Parametric VaR Report... " << flush;
 
     LOG("Get sensitivity data");
-    vector<string> sensiInputFiles = parseListOfValues(params_->get("parametricVar", "sensitivityInputFile"));
-    auto sensiData = boost::make_shared<SensitivityDataInMemory>();
-    for (auto const& f : sensiInputFiles) {
-        loadSensitivityDataFromCsv(*sensiData, inputPath_ + "/" + f);
-    }
+    string sensiFile = inputPath_ + "/" + params_->get("parametricVar", "sensitivityInputFile");
+    auto ss = boost::make_shared<SensitivityFileStream>(sensiFile);
 
     LOG("Build trade to portfolio id mapping");
     map<string, set<string>> tradePortfolio;
@@ -551,7 +548,7 @@ void OREApp::runParametricVar() {
 
     LOG("Build parametric var report");
     auto calc =
-        buildParametricVarCalculator(tradePortfolio, portfolioFilter, sensiData, covarData,
+        buildParametricVarCalculator(tradePortfolio, portfolioFilter, ss, covarData,
                                      parseListOfValues<Real>(params_->get("parametricVar", "quantiles"), &parseReal),
                                      method, mcSamples, mcSeed, parseBool(params_->get("parametricVar", "breakdown")),
                                      parseBool(params_->get("parametricVar", "salvageCovarianceMatrix")));
@@ -564,7 +561,7 @@ void OREApp::runParametricVar() {
 boost::shared_ptr<ParametricVarCalculator>
 OREApp::buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
                                      const std::string& portfolioFilter,
-                                     const boost::shared_ptr<SensitivityData>& sensitivities,
+                                     const boost::shared_ptr<SensitivityStream>& sensitivities,
                                      const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                      const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                      const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix) {
