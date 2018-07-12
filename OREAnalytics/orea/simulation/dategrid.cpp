@@ -136,8 +136,15 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
             dates_[i] = cal.adjust(today + tenors_[i]);
         else
             dates_[i] = cal.advance(today, tenors_[i], Following, true);
+        if (i > 0) {
+            QL_REQUIRE(dates_[i] >= dates_[i - 1], "DateGrid::buildDates(): tenors must be monotonic");
+            if (dates_[i] == dates_[i - 1]) {
+                dates_.erase(std::next(dates_.begin(), i));
+                tenors_.erase(std::next(tenors_.begin(), i));
+                --i;
+            }
+        }
     }
-    QL_REQUIRE(dates_.size() == tenors_.size(), "Date/Tenor mismatch");
 
     // Build times
     times_.resize(dates_.size());
