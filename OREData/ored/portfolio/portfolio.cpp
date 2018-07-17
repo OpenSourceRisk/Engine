@@ -161,6 +161,17 @@ bool Portfolio::has(const string& id) {
                    [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; }) != trades_.end();
 }
 
+boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
+    auto it = find_if(trades_.begin(), trades_.end(),
+        [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
+
+    if (it == trades_.end()) {
+        return nullptr;
+    } else {
+        return *it;
+    }
+}
+
 std::set<std::string> Portfolio::portfolioIds() const {
     std::set<std::string> portfolioIds;
     for (auto const& t : trades_)
