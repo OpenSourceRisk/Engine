@@ -42,75 +42,76 @@
 
   <xs:simpleType name="currencyCode">
     <xs:restriction base="xs:string">
-        <xs:enumeration value="ATS"/>
-        <xs:enumeration value="AUD"/>
-        <xs:enumeration value="BEF"/>
-        <xs:enumeration value="BRL"/>
-        <xs:enumeration value="CAD"/>
-        <xs:enumeration value="CHF"/>
-        <xs:enumeration value="CNY"/>
-        <xs:enumeration value="CZK"/>
-        <xs:enumeration value="DEM"/>
-        <xs:enumeration value="DKK"/>
-        <xs:enumeration value="EUR"/>
-        <xs:enumeration value="ESP"/>
-        <xs:enumeration value="FIM"/>
-        <xs:enumeration value="FRF"/>
-        <xs:enumeration value="GBP"/>
-        <xs:enumeration value="GRD"/>
-        <xs:enumeration value="HKD"/>
-        <xs:enumeration value="HUF"/>
-        <xs:enumeration value="IEP"/>
-        <xs:enumeration value="ITL"/>
-        <xs:enumeration value="INR"/>
-        <xs:enumeration value="ISK"/>
-        <xs:enumeration value="JPY"/>
-        <xs:enumeration value="KRW"/>
-        <xs:enumeration value="LUF"/>
-        <xs:enumeration value="NLG"/>
-        <xs:enumeration value="NOK"/>
-        <xs:enumeration value="NZD"/>
-        <xs:enumeration value="PLN"/>
-        <xs:enumeration value="PTE"/>
-        <xs:enumeration value="RON"/>
-        <xs:enumeration value="SEK"/>
-        <xs:enumeration value="SGD"/>
-        <xs:enumeration value="THB"/>
-        <xs:enumeration value="TRY"/>
-        <xs:enumeration value="TWD"/>
-        <xs:enumeration value="USD"/>
-        <xs:enumeration value="ZAR"/>
-        <xs:enumeration value="ARS"/>
-        <xs:enumeration value="CLP"/>
-        <xs:enumeration value="COP"/>
-        <xs:enumeration value="IDR"/>
-        <xs:enumeration value="ILS"/>
-        <xs:enumeration value="KWD"/>
-        <xs:enumeration value="PEN"/>
-        <xs:enumeration value="MXN"/>
-        <xs:enumeration value="SAR"/>
-        <xs:enumeration value="RUB"/>
-        <xs:enumeration value="TND"/>
-        <xs:enumeration value="MYR"/>
-        <xs:enumeration value="UAH"/>
-        <xs:enumeration value="KZT"/>
-        <xs:enumeration value="QAR"/>
-        <xs:enumeration value="MXV"/>
-        <xs:enumeration value="CLF"/>
-        <xs:enumeration value="EGP"/>
-        <xs:enumeration value="BHD"/>
-        <xs:enumeration value="OMR"/>
-        <xs:enumeration value="VND"/>
-        <xs:enumeration value="AED"/>
-        <xs:enumeration value="PHP"/>
-        <xs:enumeration value="NGN"/>
-        <xs:enumeration value="MAD"/>
+      <xs:enumeration value="ATS"/>
+      <xs:enumeration value="AUD"/>
+      <xs:enumeration value="BEF"/>
+      <xs:enumeration value="BRL"/>
+      <xs:enumeration value="CAD"/>
+      <xs:enumeration value="CHF"/>
+      <xs:enumeration value="CNY"/>
+      <xs:enumeration value="CZK"/>
+      <xs:enumeration value="DEM"/>
+      <xs:enumeration value="DKK"/>
+      <xs:enumeration value="EUR"/>
+      <xs:enumeration value="ESP"/>
+      <xs:enumeration value="FIM"/>
+      <xs:enumeration value="FRF"/>
+      <xs:enumeration value="GBP"/>
+      <xs:enumeration value="GRD"/>
+      <xs:enumeration value="HKD"/>
+      <xs:enumeration value="HUF"/>
+      <xs:enumeration value="IEP"/>
+      <xs:enumeration value="ITL"/>
+      <xs:enumeration value="INR"/>
+      <xs:enumeration value="ISK"/>
+      <xs:enumeration value="JPY"/>
+      <xs:enumeration value="KRW"/>
+      <xs:enumeration value="LUF"/>
+      <xs:enumeration value="NLG"/>
+      <xs:enumeration value="NOK"/>
+      <xs:enumeration value="NZD"/>
+      <xs:enumeration value="PLN"/>
+      <xs:enumeration value="PTE"/>
+      <xs:enumeration value="RON"/>
+      <xs:enumeration value="SEK"/>
+      <xs:enumeration value="SGD"/>
+      <xs:enumeration value="THB"/>
+      <xs:enumeration value="TRY"/>
+      <xs:enumeration value="TWD"/>
+      <xs:enumeration value="USD"/>
+      <xs:enumeration value="ZAR"/>
+      <xs:enumeration value="ARS"/>
+      <xs:enumeration value="CLP"/>
+      <xs:enumeration value="COP"/>
+      <xs:enumeration value="IDR"/>
+      <xs:enumeration value="ILS"/>
+      <xs:enumeration value="KWD"/>
+      <xs:enumeration value="PEN"/>
+      <xs:enumeration value="MXN"/>
+      <xs:enumeration value="SAR"/>
+      <xs:enumeration value="RUB"/>
+      <xs:enumeration value="TND"/>
+      <xs:enumeration value="MYR"/>
+      <xs:enumeration value="UAH"/>
+      <xs:enumeration value="KZT"/>
+      <xs:enumeration value="QAR"/>
+      <xs:enumeration value="MXV"/>
+      <xs:enumeration value="CLF"/>
+      <xs:enumeration value="EGP"/>
+      <xs:enumeration value="BHD"/>
+      <xs:enumeration value="OMR"/>
+      <xs:enumeration value="VND"/>
+      <xs:enumeration value="AED"/>
+      <xs:enumeration value="PHP"/>
+      <xs:enumeration value="NGN"/>
+      <xs:enumeration value="MAD"/>
     </xs:restriction>
   </xs:simpleType>
 
   <xs:simpleType name="currencyPair">
     <xs:restriction base="xs:string">
-      <xs:length value="6"/> <!-- FIXME: can we reference above list?-->
+      <xs:length value="6"/>
+      <!-- FIXME: can we reference above list?-->
     </xs:restriction>
   </xs:simpleType>
 
@@ -142,8 +143,8 @@
 
   <xs:simpleType name="calendar">
     <xs:restriction base="xs:string"/>
-      <!-- Removing these for now while we think about Joint Calendars, we allow any string for now -->
-      <!--xs:enumeration value="TGT"/>
+    <!-- Removing these for now while we think about Joint Calendars, we allow any string for now -->
+    <!--xs:enumeration value="TGT"/>
       <xs:enumeration value="TARGET"/>
       <xs:enumeration value="EUR"/>
       <xs:enumeration value="ZUB"/>
@@ -328,90 +329,90 @@
     </xs:restriction>
   </xs:simpleType>
 
-   <xs:simpleType name="interpolationVariableType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Zero"/>
-       <xs:enumeration value="Discount"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="interpolationVariableType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Zero"/>
+      <xs:enumeration value="Discount"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="interpolationMethodType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Linear"/>
-       <xs:enumeration value="LogLinear"/>
-       <xs:enumeration value="NaturalCubic"/>
-       <xs:enumeration value="FinancialCubic"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="interpolationMethodType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="LogLinear"/>
+      <xs:enumeration value="NaturalCubic"/>
+      <xs:enumeration value="FinancialCubic"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="cdsType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="SpreadCDS"/>
-       <xs:enumeration value="HazardRate"/>
-       <xs:enumeration value="Yield"/>
-     </xs:restriction>
-   </xs:simpleType>
-   
-   <xs:simpleType name="equityType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="ForwardPrice"/>
-       <xs:enumeration value="DividendYield"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="cdsType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SpreadCDS"/>
+      <xs:enumeration value="HazardRate"/>
+      <xs:enumeration value="Yield"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="dimensionType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="ATM"/>
-       <xs:enumeration value="Smile"/>
-     </xs:restriction>
-   </xs:simpleType>
-   
-   <xs:simpleType name="commodityVolatilityType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Constant"/>
-       <xs:enumeration value="Curve"/>
-       <xs:enumeration value="Surface"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="equityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ForwardPrice"/>
+      <xs:enumeration value="DividendYield"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="volatilityType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Normal"/>
-       <xs:enumeration value="Lognormal"/>
-       <xs:enumeration value="ShiftedLognormal"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="dimensionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ATM"/>
+      <xs:enumeration value="Smile"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="extrapolationType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Linear"/>
-       <xs:enumeration value="Flat"/>
-       <xs:enumeration value="None"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="commodityVolatilityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Constant"/>
+      <xs:enumeration value="Curve"/>
+      <xs:enumeration value="Surface"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="longShort">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="Long"/>
-       <xs:enumeration value="Short"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="volatilityType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Normal"/>
+      <xs:enumeration value="Lognormal"/>
+      <xs:enumeration value="ShiftedLognormal"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="inflationType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="ZC"/>
-       <xs:enumeration value="YY"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="extrapolationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Linear"/>
+      <xs:enumeration value="Flat"/>
+      <xs:enumeration value="None"/>
+    </xs:restriction>
+  </xs:simpleType>
 
-   <xs:simpleType name="amortizationType">
-     <xs:restriction base="xs:string">
-       <xs:enumeration value="FixedAmount"/>
-       <xs:enumeration value="RelativeToInitialNotional"/>
-       <xs:enumeration value="RelativeToPreviousNotional"/>
-       <xs:enumeration value="Annuity"/>
-     </xs:restriction>
-   </xs:simpleType>
+  <xs:simpleType name="longShort">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Long"/>
+      <xs:enumeration value="Short"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="inflationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="ZC"/>
+      <xs:enumeration value="YY"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="amortizationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="FixedAmount"/>
+      <xs:enumeration value="RelativeToInitialNotional"/>
+      <xs:enumeration value="RelativeToPreviousNotional"/>
+      <xs:enumeration value="Annuity"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="settlementType">
     <xs:restriction base="xs:string">
