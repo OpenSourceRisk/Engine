@@ -1,6 +1,25 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-  <xs:include schemaLocation="ore_types.xsd"/>
+  <xs:element type="portfolio" name="Portfolio"/>
+
+  <xs:element type="trade" name="Trade"/>
+
+  <xs:complexType name="portfolio">
+    <xs:sequence>
+      <xs:element type="trade" name="Trade" maxOccurs="unbounded" minOccurs="0">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="trade">
+    <xs:sequence>
+      <xs:element type="oreTradeType" name="TradeType"/>
+      <xs:element type="envelope" name="Envelope"/>
+      <xs:element type="tradeActions" name="TradeActions" minOccurs="0"/>
+      <xs:group ref="oreTradeData"/>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id" use="required"/>
+  </xs:complexType>
 
   <xs:group name="oreTradeData">
     <xs:choice>
@@ -204,7 +223,7 @@
         <xs:element type="xs:float" name="BaseCPI" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
-		<xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
+        <xs:element type="bool" name="SubtractInflationNotional" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -347,10 +366,10 @@
         </xs:complexType>
       </xs:element>
       <xs:element name="Dates">
-	    <xs:complexType>
+        <xs:complexType>
           <xs:all>
-		    <xs:element type="calendar" name="Calendar"/>
-		    <xs:element name="Dates">
+            <xs:element type="calendar" name="Calendar"/>
+            <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="calendar" name="Calendar" minOccurs="0"/>
@@ -359,8 +378,8 @@
                   <xs:element type="date" name="Date" maxOccurs="unbounded"/>
                 </xs:sequence>
               </xs:complexType>
-		    </xs:element>
-		  </xs:all>
+            </xs:element>
+          </xs:all>
         </xs:complexType>
       </xs:element>
     </xs:choice>
@@ -490,7 +509,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="varianceSwapData">
     <xs:sequence>
       <xs:element type="date" name="StartDate"/>
@@ -503,7 +522,7 @@
       <xs:element type="calendar" name="Calendar"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityOptionData">
     <xs:sequence>
       <xs:element type="optionData" name="OptionData"/>
@@ -524,7 +543,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityForwardData">
     <xs:sequence>
       <xs:element type="longShort" name="Position"/>
@@ -535,7 +554,7 @@
       <xs:element type="xs:float" name="Quantity"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="creditDefaultSwapData">
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
