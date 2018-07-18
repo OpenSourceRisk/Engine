@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#pragma once
-
 #include <orea/engine/sensitivitycubestream.hpp>
 
 #include <orea/scenario/shiftscenariogenerator.hpp>
