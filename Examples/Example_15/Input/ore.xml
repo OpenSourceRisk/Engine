@@ -82,7 +82,6 @@
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
       <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
-      <Parameter name="crossGammaOutputFile">crossgamma.csv</Parameter>
       <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
       <Parameter name="recalibrateModels">Y</Parameter>
     </Analytic>
@@ -96,7 +95,7 @@
     </Analytic>
     <Analytic type="parametricVar">
       <Parameter name="active">Y</Parameter>
-      <Parameter name="sensitivityInputFile">../Output/sensitivity.csv,../Output/crossgamma.csv</Parameter>
+      <Parameter name="sensitivityInputFile">../Output/sensitivity.csv</Parameter>
       <Parameter name="covarianceInputFile">covariance.csv</Parameter>
       <Parameter name="salvageCovarianceMatrix">N</Parameter>
       <Parameter name="quantiles">0.01,0.05,0.95,0.99</Parameter>

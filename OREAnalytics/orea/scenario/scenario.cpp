@@ -79,6 +79,12 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
 }
 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
+    // If empty key just return empty string (not "?//0")
+    if (key == RiskFactorKey()) {
+        return out << "";
+    }
+
+    // If not empty key
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
 

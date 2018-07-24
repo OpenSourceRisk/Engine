@@ -44,11 +44,13 @@ public:
 
     //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
-        const std::vector<ShiftScenarioDescription>& scenarioDescriptions);
+        const std::vector<ShiftScenarioDescription>& scenarioDescriptions, 
+        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
 
     //! Constructor using a vector of scenario description strings
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
-        const std::vector<std::string>& scenarioDescriptions);
+        const std::vector<std::string>& scenarioDescriptions, 
+        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
 
     //! \name Inspectors
     //@{
@@ -78,10 +80,13 @@ public:
     std::string factorDescription(const RiskFactorKey& riskFactorKey) const;
 
     //! Returns the set of risk factor keys for which a delta and gamma can be calculated 
-    std::set<RiskFactorKey> factors() const;
+    const std::set<RiskFactorKey>& factors() const;
     
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available 
-    std::set<crossPair> crossFactors() const;
+    const std::set<crossPair>& crossFactors() const;
+
+    //! Returns the absolute shift size for given risk factor \p key 
+    QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
 
     //! Get the base NPV for trade with ID \p tradeId
     QuantLib::Real npv(const std::string& tradeId) const;
@@ -104,6 +109,12 @@ private:
 
     boost::shared_ptr<NPVSensiCube> cube_;
     std::vector<ShiftScenarioDescription> scenarioDescriptions_;
+    std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
+
+    // Duplication between map keys below and these sets but trade-off
+    // Means that we can return by reference in public inspector methods
+    std::set<RiskFactorKey> factors_;
+    std::set<crossPair> crossPairs_;
 
     // Maps for faster lookup of cube entries. They are populated in the constructor
     // TODO: Review this i.e. could it be done better / using less memory

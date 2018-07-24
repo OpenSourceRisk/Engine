@@ -30,6 +30,7 @@
 #include <orea/cube/npvcube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/simulation/dategrid.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/portfolio/portfolio.hpp>
@@ -72,17 +73,8 @@ public:
     virtual void writeScenarioReport(ore::data::Report& report, 
         const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0);
 
-    // Note: empty braces for default map argument will not work on Visual Studio
-    //       https://stackoverflow.com/a/28837927/1771882
-    // TODO: do we really need the actual shift sizes in the sensitivity report? Would it be better to have 
-    //       shift size and shift type? Could make these part of Scenario Descriptions - would be cleaner.
     virtual void writeSensitivityReport(ore::data::Report& report,
-        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
-
-    virtual void writeCrossGammaReport(ore::data::Report& report,
-        const boost::shared_ptr<SensitivityCube>& sensitivityCube, QuantLib::Real outputThreshold = 0.0,
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes = std::map<RiskFactorKey, QuantLib::Real>());
+        const boost::shared_ptr<SensitivityStream>& ss, QuantLib::Real outputThreshold = 0.0);
 
 };
 } // namespace analytics
