@@ -46,7 +46,10 @@ public:
     std::string name() const;
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
+    // Equity fixing price - can be either fixed hstorical or forecasted. 
+    // Forecasted price can include dividend returns by setting incDividend = true
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
+    Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
     //@}
     //! \name Observer interface
     //@{
@@ -55,11 +58,15 @@ public:
     //! \name Inspectors
     //@{
     std::string familyName() const { return familyName_; }
+    const Handle<YieldTermStructure>& equityForecastCurve() const { return rate_; }
+    const Handle<YieldTermStructure>& equityDividendCurve() const { return dividend_; }
     //@}
     //! \name Fixing calculations
     //@{
     virtual Real forecastFixing(const Date& fixingDate) const;
     virtual Real forecastFixing(const Time& fixingTime) const;
+    virtual Real forecastFixing(const Date& fixingDate, bool incDividend) const;
+    virtual Real forecastFixing(const Time& fixingTime, bool incDividend) const;
     Real pastFixing(const Date& fixingDate) const;
     // @}
     //! \name Additional methods

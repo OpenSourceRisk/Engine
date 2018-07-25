@@ -41,8 +41,10 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/version.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -238,6 +240,19 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
+void EquityLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+    returnType_ = XMLUtils::getChildValue(node, "ReturnType");
+    eqName_ = XMLUtils::getChildValue(node, "Name");
+}
+
+XMLNode* EquityLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::addChild(doc, node, "ReturnType", returnType_);
+    XMLUtils::addChild(doc, node, "Name", eqName_);
+    return node;
+}
+
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
@@ -344,6 +359,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<CMSLegData>();
     } else if (legType == "CMSSpread") {
         return boost::make_shared<CMSSpreadLegData>();
+    } else if (legType == "Equity") {
+        return boost::make_shared<EquityLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
@@ -864,6 +881,26 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
     }
     return tmpLeg;
+}
+
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
+    boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+    QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
+
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    bool isTotalReturn = eqLegData->returnType() == "Total";
+
+    // floors and caps not suported yet by QL yoy coupon pricer...
+    Leg leg = EquityLeg(schedule, equityCurve)
+        .withNotionals(data.notionals())
+        .withPaymentDayCounter(dc)
+        .withPaymentAdjustment(bdc)
+        .withTotalReturn(isTotalReturn);
+    QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
+
+    return leg;
 }
 
 Real currentNotional(const Leg& leg) {

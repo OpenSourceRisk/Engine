@@ -278,6 +278,14 @@
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="EquityLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:all>
+        <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
+        <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
 
   <xs:complexType name="amortizationData">
     <xs:sequence>
@@ -396,6 +404,7 @@
       <xs:enumeration value="CapFloor"/>
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
+      <xs:enumeration value="EquitySwap"/>
       <xs:enumeration value="VarianceSwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
@@ -414,6 +423,7 @@
       <xs:enumeration value="CMS"/>
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="Cashflow"/>
+      <xs:enumeration value="Equity"/>
     </xs:restriction>
   </xs:simpleType>
 

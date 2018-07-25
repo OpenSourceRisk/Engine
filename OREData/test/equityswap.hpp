@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,26 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/cashflow.hpp
-    \brief Cashflow tests
+/*! \file test/equityswap.hpp
+    \brief Equity Swap test
     \ingroup tests
 */
 
-#ifndef quantext_test_cashflow_hpp
-#define quantext_test_cashflow_hpp
+#pragma once
 
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
 
-//! CashFlow test
-/*! \ingroup tests
- */
-class CashFlowTest {
-public:
-    static void testFXLinkedCashFlow();
-    static void testEquityCoupon();
-    static boost::unit_test_framework::test_suite* suite();
-};
+    //! Test Equity Swap pricing
+    /*!
+    \ingroup tests
+    */
+    class EquitySwapTest {
+    public:
+        //! Test Equity Swap pricing
+        static void testEquitySwapPriceReturn();
+        static void testEquitySwapTotalReturn();
+        static boost::unit_test_framework::test_suite* suite();
+    };
 } // namespace testsuite
-
-#endif

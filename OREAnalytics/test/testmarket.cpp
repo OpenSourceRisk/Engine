@@ -23,13 +23,16 @@
 #include <ql/termstructures/inflation/piecewiseyoyinflationcurve.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
+#include <ql/time/calendars/unitedstates.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/pricecurve.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 #include <test/testmarket.hpp>
 
 using QuantExt::InterpolatedPriceCurve;
 using QuantExt::PriceTermStructure;
+using QuantExt::EquityIndex;
 
 namespace testsuite {
 
@@ -156,6 +159,12 @@ TestMarket::TestMarket(Date asof) {
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = flatRateYts(0.03);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "Lufthansa")] =
         flatRateYts(0.02);
+
+    equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>("SP5", UnitedStates(),
+        equitySpot("SP5"), yieldCurve(YieldCurveType::EquityForecast, "SP5"), yieldCurve(YieldCurveType::EquityDividend, "SP5")));
+    equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>("Lufthansa", TARGET(),
+        equitySpot("Lufthansa"), yieldCurve(YieldCurveType::EquityForecast, "Lufthansa"), yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
+
     // build swaption vols
     swaptionCurves_[make_pair(Market::defaultConfiguration, "EUR")] = flatRateSvs(0.20);
     swaptionCurves_[make_pair(Market::defaultConfiguration, "USD")] = flatRateSvs(0.30);

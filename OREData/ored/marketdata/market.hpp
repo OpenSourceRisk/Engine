@@ -39,6 +39,7 @@
 
 #include <qle/termstructures/pricetermstructure.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 using namespace QuantLib;
 using std::string;
@@ -156,18 +157,16 @@ public:
                                      const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0; 
+    virtual Handle<QuantExt::EquityIndex>
+    equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Equity volatilities
     //@{
     virtual Handle<BlackVolTermStructure>
     equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
-    //@}
-
-    //! \name Equity volatilities
-    //@{
-    virtual Handle<YieldTermStructure>
-    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

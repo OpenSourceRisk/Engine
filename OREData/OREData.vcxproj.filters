@@ -420,6 +420,9 @@
     <ClInclude Include="ored\portfolio\builders\cmsspread.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\equityswap.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -733,6 +736,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\cmsspread.cpp">
       <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\equityswap.cpp">
+      <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
