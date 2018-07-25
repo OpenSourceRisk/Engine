@@ -557,6 +557,12 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // build naked option leg if required
     if (floatData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
 } // namespace data
@@ -804,6 +810,12 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // build naked option leg if required
     if (cmsData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
 }
@@ -862,6 +874,12 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     // build naked option leg if required
     if (cmsSpreadData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
 }
