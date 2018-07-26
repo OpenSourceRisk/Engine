@@ -643,6 +643,7 @@
     <ClInclude Include="cms.hpp" />
     <ClInclude Include="commoditycurve.hpp" />
     <ClInclude Include="commoditycurveconfig.hpp" />
+    <ClInclude Include="equityswap.hpp" />
     <ClInclude Include="inflationcapfloor.hpp" />
     <ClInclude Include="ored_commodityforward.hpp" />
     <ClInclude Include="commodityvolcurve.hpp" />
@@ -674,6 +675,7 @@
     <ClCompile Include="cms.cpp" />
     <ClCompile Include="commoditycurve.cpp" />
     <ClCompile Include="commoditycurveconfig.cpp" />
+    <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="commodityoption.cpp" />

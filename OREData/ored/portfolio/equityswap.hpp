@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,55 +16,47 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/swap.hpp
-    \brief Swap trade data model and serialization
+/*! \file portfolio/equityswap.hpp
+    \brief Equity Swap data model and serialization
     \ingroup tradedata
 */
 
 #pragma once
 
-#include <ored/portfolio/legdata.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/trade.hpp>
+
+using std::string;
 
 namespace ore {
 namespace data {
 
-//! Serializable Swap, Single and Cross Currency
+//! Serializable Equity Forward contract
 /*!
-  \ingroup tradedata
+\ingroup tradedata
 */
-class Swap : public Trade {
+class EquitySwap: public Swap {
 public:
     //! Deault constructor
-    Swap(const string swapType = "Swap") : Trade(swapType) {}
+    EquitySwap() : Swap("EquitySwap") {}
 
     //! Constructor with vector of LegData
-    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap") 
-        : Trade(swapType, env), legData_(legData) {}
+    EquitySwap(const Envelope& env, const vector<LegData>& legData);
 
     //! Constructor with two legs
-    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap") 
-        : Trade(swapType, env), legData_({leg0, leg1}) {}
+    EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1);
+
+    void checkEquitySwap(const vector<LegData>& legData);
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&);
+    //virtual void build(const boost::shared_ptr<EngineFactory>&);
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    //virtual void fromXML(XMLNode* node);
+    //virtual XMLNode* toXML(XMLDocument& doc);
     //@}
 
-    //! \name Inspectors
-    //@{
-    const vector<LegData>& legData() { return legData_; }
-    //@}
-
-protected:
-    virtual boost::shared_ptr<LegData> createLegData() const;
-    vector<LegData> legData_;
-
-private:
 };
 } // namespace data
 } // namespace ore

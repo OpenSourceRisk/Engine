@@ -96,6 +96,9 @@
     <ClInclude Include="inflationcapfloor.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="equityswap.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -184,6 +187,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="inflationcapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="equityswap.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

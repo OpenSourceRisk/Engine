@@ -32,6 +32,7 @@
 #include <ql/experimental/coupons/swapspreadindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 #include <vector>
 
@@ -379,6 +380,34 @@ private:
     bool nakedOption_;
 };
 
+//! Serializable Fixed Leg Data
+/*!
+\ingroup tradedata
+*/
+class EquityLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    EquityLegData() : LegAdditionalData("Equity") {}
+    //! Constructor
+    EquityLegData(string returnType, string eqName) : LegAdditionalData("Equity"), 
+        returnType_(returnType), eqName_(eqName) {}
+
+    //! \name Inspectors
+    //@{
+    const string& returnType() const { return returnType_; }
+    const string& eqName() const { return eqName_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    string returnType_;
+    string eqName_;
+};
+
 //! Serializable object holding amortization rules
 class AmortizationData : public XMLSerializable {
 public:
@@ -505,6 +534,7 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve);
 Real currentNotional(const Leg& leg);
 
 //@}

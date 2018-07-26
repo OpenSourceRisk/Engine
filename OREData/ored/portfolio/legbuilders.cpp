@@ -19,6 +19,7 @@
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/portfolio/legdata.hpp>
 
+
 namespace ore {
 namespace data {
 
@@ -87,6 +88,15 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                             boost::make_shared<QuantLib::SwapSpreadIndex>(
                                 "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
                             engineFactory);
+}
+
+Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+    const string& configuration) const {
+    auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+    QL_REQUIRE(eqData, "Wrong LegType, expected Equity");
+    string eqName = eqData->eqName();
+    auto eqCurve = *engineFactory->market()->equityCurve(eqName, configuration);
+    return makeEquityLeg(data, eqCurve);
 }
 
 } // namespace data
