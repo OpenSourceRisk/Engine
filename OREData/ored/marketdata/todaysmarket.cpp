@@ -739,7 +739,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             // Assumes we build all yield curves before anything else (which order() does)
             // Once we have a non-Yield curve spec, we make sure to build all swap indices
             // add add them to requiredSwapIndices for later.
-            if (swapIndicesBuilt == false &&
+            if (swapIndicesBuilt == false && params.hasMarketObject(MarketObject::SwapIndexCurve) &&
                 (count == specs.size() - 1 || specs[count + 1]->baseType() != CurveSpec::CurveType::Yield)) {
                 LOG("building swap indices...");
                 for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
