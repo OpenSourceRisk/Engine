@@ -230,5 +230,14 @@ Real SensitivityCube::crossGamma(const string& tradeId, const crossPair& riskFac
     return crossNpv - upNpv_1 - upNpv_2 + baseNpv;
 }
 
+std::set<RiskFactorKey> SensitivityCube::relevantRiskFactors() {
+    std::set<RiskFactorKey> result;
+    for (auto const i : cube_->relevantScenarios()) {
+        result.insert(scenarioDescriptions_[i].key1());
+        if(scenarioDescriptions_[i].type() == ShiftScenarioDescription::Type::Cross)
+            result.insert(scenarioDescriptions_[i].key2());
+    }
+    return result;
+}
 }
 }

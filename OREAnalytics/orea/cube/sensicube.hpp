@@ -103,12 +103,15 @@ public:
     void set(QuantLib::Real value, QuantLib::Size i, QuantLib::Size j, QuantLib::Size k, QuantLib::Size ) override {
         this->check(i, j, k);
         this->tradeNPVs_[i][k] = static_cast<T>(value);
+        relevantScenarios_.insert(k);
     }
 
     const std::map<QuantLib::Size, QuantLib::Real>& getTradeNPVs(QuantLib::Size i) const override {
         return tradeNPVs_[i];
     }
-    
+
+    const std::set<QuantLib::Size>& relevantScenarios() const override { return relevantScenarios_; }
+
 private:
     friend class boost::serialization::access;
     template <class Archive> void serialize(Archive& ar, const unsigned int) {
@@ -127,6 +130,7 @@ private:
 protected:
     std::vector<T> t0Data_;
     std::vector<std::map<QuantLib::Size, T>> tradeNPVs_;
+    std::set<QuantLib::Size> relevantScenarios_;
 
     void check(QuantLib::Size i, QuantLib::Size j, QuantLib::Size k) const {
         QL_REQUIRE(i < numIds(), "Out of bounds on ids (i=" << i << ")");

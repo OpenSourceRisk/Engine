@@ -103,6 +103,9 @@ public:
     //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p riskFactorKeyPair
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
+    //! Get the relevant risk factors
+   std::set<RiskFactorKey> relevantRiskFactors();
+
 private:
     //! Initialise method used by the constructors
     void initialise();

@@ -230,7 +230,7 @@ void SensitivityScenarioGenerator::generateScenarios() {
         string factor = scenarioDescriptions_[i].factor1();
         keyToFactor_[key] = factor;
         factorToKey_[factor] = key;
-        LOG("KeyToFactor map: " << key << " to " << factor);
+        DLOG("KeyToFactor map: " << key << " to " << factor);
     }
 
     LOG("sensitivity scenario generator initialised");
