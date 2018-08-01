@@ -95,7 +95,7 @@ public:
     //! is risk factor key simulated by this sim market instance?
     bool isSimulated(const RiskFactorKey::KeyType& factor) const;
 
-private:
+protected:
     void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
                        const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors,
