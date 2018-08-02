@@ -207,7 +207,7 @@ void InterpolatedYoYCapFloorTermPriceSurface<I2D, I1D>::performCalculations() co
             yiiWrapper->zeroIndex()->zeroInflationTermStructure().currentLink();
         Real fairSwap1Y = zeroTs->zeroRate(yoyOptionDateFromTenor(Period(1, Years)));
 
-        Real k;
+        Real k = Null<Real>();
         if (fairSwap1Y < overlappingStrikes.back()) {
             for (Size i = 0; i < overlappingStrikes.size(); i++) {
                 if (overlappingStrikes[i] > fairSwap1Y) {
