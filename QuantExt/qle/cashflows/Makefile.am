@@ -31,8 +31,8 @@ this_include_HEADERS =  \
 	floatingratefxlinkednotionalcoupon.hpp \
 	floatingannuitycoupon.hpp \
 	floatingannuitynominal.hpp \
-	quantocouponpricer.hpp \ 
-	equitycouponpricer.hpp \ 
+	quantocouponpricer.hpp \
+	equitycouponpricer.hpp \
 	equitycoupon.hpp
 
 all.hpp: Makefile.am
