@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,22 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/cashflow.hpp
-    \brief Cashflow tests
-    \ingroup tests
-*/
+#include <qle/cashflows/equitycouponpricer.hpp>
 
-#ifndef quantext_test_cashflow_hpp
-#define quantext_test_cashflow_hpp
+namespace QuantExt {
 
-#include <boost/test/unit_test.hpp>
+Rate EquityCouponPricer::swapletRate() const {
+    Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, isTotalReturn_);
+    Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, isTotalReturn_);
+    return (end - start) / start;
+}
 
-namespace testsuite {
+void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
 
-//! CashFlow test
-/*! \ingroup tests
- */
-class CashFlowTest {
-public:
-    static void testFXLinkedCashFlow();
-    static void testEquityCoupon();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
+    coupon_ = &coupon;
 
-#endif
+    equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
+    isTotalReturn_ = coupon.isTotalReturn();
+}
+
+} // QuantExt

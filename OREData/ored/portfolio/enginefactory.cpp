@@ -125,6 +125,7 @@ void EngineFactory::addDefaultBuilders() {
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
+    registerLegBuilder(boost::make_shared<EquityLegBuilder>());
 }
 
 

@@ -180,6 +180,10 @@ Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configurat
     return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
 }
 
+Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<QuantExt::EquityIndex>>(equityCurves_, key, configuration, "equity curve");
+};
+
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration,
                                               "dividend yield curve");
@@ -320,6 +324,16 @@ void MarketImpl::refresh(const string& configuration) {
         for (auto& x : equityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
+        }
+        for (auto& x : equityCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                Handle<YieldTermStructure> y = x.second->equityForecastCurve();
+                if (!y.empty())
+                    it->second.insert(*y);
+                y = x.second->equityDividendCurve();
+                if (!y.empty())
+                    it->second.insert(*y);
+            }
         }
         for (auto& x : baseCpis_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)

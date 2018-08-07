@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oreap/simm/sensitivityrecord.hpp
+/*! \file orea/engine/sensitivityrecord.hpp
     \brief Struct for holding a sensitivity record
 */
 

@@ -14,4 +14,5 @@
 #include <orea/engine/sensitivityfilestream.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 
