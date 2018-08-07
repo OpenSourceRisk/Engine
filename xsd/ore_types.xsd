@@ -357,6 +357,7 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ForwardPrice"/>
       <xs:enumeration value="DividendYield"/>
+      <xs:enumeration value="NoDividends"/>
     </xs:restriction>
   </xs:simpleType>
 
