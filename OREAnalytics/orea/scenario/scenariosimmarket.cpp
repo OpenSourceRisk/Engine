@@ -177,27 +177,18 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityVolatility);
     if (!parameters->simulateBaseCorrelations())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::BaseCorrelation);
-    if (!parameters->simulateEquityForecastCurve()) {
+    if (!parameters->simulateEquityForecastCurve())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::EquityForecastCurve);
-    }
-    if (!parameters->simulateDividendYield()) {
+    if (!parameters->simulateDividendYield())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::DividendYield);
-    }
-
-    if (!parameters->commodityCurveSimulate()) {
+    if (!parameters->commodityCurveSimulate())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityCurve);
-    }
-
-    if (!parameters->commodityVolSimulate()) {
+    if (!parameters->commodityVolSimulate())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::CommodityVolatility);
-    }
-
-    if (!parameters->securitySpreadsSimulate()) {
+    if (!parameters->securitySpreadsSimulate())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SecuritySpread);
-    }
-    if (!parameters->simulateFxSpots()) {
+    if (!parameters->simulateFxSpots())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::FXSpot);
-    }
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
