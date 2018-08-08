@@ -1159,7 +1159,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
             count++;
         }
     }
-    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
+    //QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
 
     if (count != simData_.size()) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
