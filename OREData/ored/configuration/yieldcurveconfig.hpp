@@ -67,7 +67,8 @@ public:
         TenorBasisTwo,
         BMABasis,
         FXForward,
-        CrossCcyBasis
+        CrossCcyBasis,
+        DiscountRatio
     };
     //! Default destructor
     virtual ~YieldCurveSegment() {}
@@ -325,7 +326,7 @@ private:
 */
 class ZeroSpreadedYieldCurveSegment : public YieldCurveSegment {
 public:
-    //! \name COnstructors/Destructors
+    //! \name Constructors/Destructors
     //@{
     //! Default constructor
     ZeroSpreadedYieldCurveSegment() {}
@@ -354,6 +355,54 @@ public:
 
 private:
     string referenceCurveID_;
+};
+
+//! Discount ratio yield curve segment
+/*! Used to configure a QuantExt::DiscountRatioModifiedCurve.
+    
+    \ingroup configuration
+*/
+class DiscountRatioYieldCurveSegment : public YieldCurveSegment {
+public:
+    //! \name Constructors/Destructors
+    //@{
+    //! Default constructor
+    DiscountRatioYieldCurveSegment() {}
+    //! Detailed constructor
+    DiscountRatioYieldCurveSegment(const std::string& typeId, const std::string& baseCurveId, 
+        const std::string& baseCurveCurrency, const std::string& numeratorCurveId, 
+        const std::string& numeratorCurveCurrency, const std::string& denominatorCurveId, 
+        const std::string& denominatorCurveCurrency);
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const string& baseCurveId() const { return baseCurveId_; }
+    const string& baseCurveCurrency() const { return baseCurveCurrency_; }
+    const string& numeratorCurveId() const { return numeratorCurveId_; }
+    const string& numeratorCurveCurrency() const { return numeratorCurveCurrency_; }
+    const string& denominatorCurveId() const { return denominatorCurveId_; }
+    const string& denominatorCurveCurrency() const { return denominatorCurveCurrency_; }
+    //@}
+
+    //! \name Visitability
+    //@{
+    void accept(QuantLib::AcyclicVisitor& v);
+    //@}
+
+private:
+    std::string baseCurveId_;
+    std::string baseCurveCurrency_;
+    std::string numeratorCurveId_;
+    std::string numeratorCurveCurrency_;
+    std::string denominatorCurveId_;
+    std::string denominatorCurveCurrency_;
 };
 
 //! Yield Curve configuration

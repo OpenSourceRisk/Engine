@@ -615,6 +615,9 @@
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1023,6 +1026,9 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\equitycouponpricer.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
