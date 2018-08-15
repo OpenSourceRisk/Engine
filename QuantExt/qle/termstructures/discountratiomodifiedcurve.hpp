@@ -48,6 +48,12 @@ namespace QuantExt {
     \f]
     The assumption here is that forward FX rates remain the same if the FX forward's collateral currency is switched 
     from the reference currency to currency 2.
+
+    \warning One must be careful about mixing floating reference date and fixed reference date curves together as the 
+             underlying curves in this yield curve and then moving Settings::instance().evaluationDate(). This is 
+             alluded to in the corresponding unit tests. If the <code>moving_</code> member variable of TermStructure 
+             had an inspector method, then we could enforce that all underlying curves here are either floating or fixed 
+             reference date curves.
 */
 class DiscountRatioModifiedCurve : public QuantLib::YieldTermStructure {
 public:
