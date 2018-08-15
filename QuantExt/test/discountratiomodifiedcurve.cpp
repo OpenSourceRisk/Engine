@@ -168,15 +168,15 @@ void DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow() {
     BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve));
 
     // Switching base curve to empty handle should give a failure
-    BOOST_CHECK_THROW(baseCurve.linkTo(nullptr), QuantLib::Error);
+    BOOST_CHECK_THROW(baseCurve.linkTo(NULL), QuantLib::Error);
     BOOST_CHECK_NO_THROW(baseCurve.linkTo(*numCurve));
 
     // Switching numerator curve to empty handle should give a failure
-    BOOST_CHECK_THROW(numCurve.linkTo(nullptr), QuantLib::Error);
+    BOOST_CHECK_THROW(numCurve.linkTo(NULL), QuantLib::Error);
     BOOST_CHECK_NO_THROW(numCurve.linkTo(*denCurve));
 
     // Switching denominator curve to empty handle should give a failure
-    BOOST_CHECK_THROW(denCurve.linkTo(nullptr), QuantLib::Error);
+    BOOST_CHECK_THROW(denCurve.linkTo(NULL), QuantLib::Error);
 }
 
 test_suite* DiscountingRatioModifiedCurveTest::suite() {
