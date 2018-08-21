@@ -1144,21 +1144,21 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
     const vector<RiskFactorKey>& keys = scenario->keys();
 
     Size count = 0;
-    bool missingPoint = false;
     for (const auto& key : keys) {
-        // TODO: Is this really an error?
+        // Loop through the scenario keys and check which keys are present in simData_,
+        // adding to the count when a match is identified
+        // Then check that the count=simData_.size - this ensures that simData_ is a valid
+        // subset of the scenario - fails is a member of simData is not present in the 
+        // scenario
         auto it = simData_.find(key);
         if (it == simData_.end()) {
             ALOG("simulation data point missing for key " << key);
-            missingPoint = true;
         } else {
-            // LOG("simulation data point found for key " << key);
             if (filter_->allow(key))
                 it->second->setValue(scenario->get(key));
             count++;
         }
     }
-    QL_REQUIRE(!missingPoint, "simulation data points missing from scenario, exit.");
 
     if (count != simData_.size()) {
         ALOG("mismatch between scenario and sim data size, " << count << " vs " << simData_.size());
