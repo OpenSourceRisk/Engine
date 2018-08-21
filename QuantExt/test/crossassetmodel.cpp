@@ -4056,7 +4056,7 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
     Array infVols(14, 0.0030), infRev(14, 1.0); // init vol and rev !!
     Real strike = 0.00;                         // strike !!
 
-    Time T;
+    Time T = Null<Time>();
     for (Size i = 1; i <= nMat; ++i) {
         Date mat = refDate + maturity[i - 1];
         boost::shared_ptr<CpiCapFloorHelper> h(new CpiCapFloorHelper(Option::Put, baseCPI, mat, TARGET(),
@@ -4178,7 +4178,7 @@ void CrossAssetModelTest::testCrCalibration() {
     Array volStepTimes(nMat - 1), noTimes(0);
     Array crVols(nMat, 0.0030), crRev(nMat, 0.01); // init vol and rev
 
-    Time T;
+    Time T = Null<Time>();
     Date lastMat;
     for (Size i = 1; i <= nMat; ++i) {
         Date mat = refDate + maturity[i - 1];

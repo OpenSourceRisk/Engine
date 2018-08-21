@@ -130,19 +130,20 @@ void ParseTest::testFrequencyParsing() {
     Size len = sizeof(freq_data) / sizeof(freq_data[0]);
     for (Size i = 0; i < len; ++i) {
         string str(freq_data[i].str);
-        QuantLib::Frequency f;
-
+        
         try {
-            f = ore::data::parseFrequency(str);
-        } catch (...) {
+            QuantLib::Frequency f = ore::data::parseFrequency(str);
+            if (f) {
+                if (f != freq_data[i].freq)
+                    BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
+                        << freq_data[i].freq);
+                BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
+            }
+        }
+        catch (...) {
             BOOST_FAIL("Frequency Parser failed to parse " << str);
         }
-        if (f) {
-            if (f != freq_data[i].freq)
-                BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
-                                               << freq_data[i].freq);
-            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
-        }
+
     }
 }
 
@@ -152,19 +153,20 @@ void ParseTest::testCompoundingParsing() {
     Size len = sizeof(comp_data) / sizeof(comp_data[0]);
     for (Size i = 0; i < len; ++i) {
         string str(comp_data[i].str);
-        QuantLib::Compounding c;
 
         try {
-            c = ore::data::parseCompounding(str);
-        } catch (...) {
+            QuantLib::Compounding c = ore::data::parseCompounding(str);
+            if (c) {
+                if (c != comp_data[i].comp)
+                    BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
+                        << comp_data[i].comp);
+                BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
+            }
+        }
+        catch (...) {
             BOOST_FAIL("Compounding Parser failed to parse " << str);
         }
-        if (c) {
-            if (c != comp_data[i].comp)
-                BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
-                                                 << comp_data[i].comp);
-            BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
-        }
+
     }
 }
 
