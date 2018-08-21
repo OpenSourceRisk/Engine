@@ -295,7 +295,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             index = Handle<IborIndex>(parseIborIndex(ind, initMarket->discountCurve(indexTokens[0], configuration)));
         } else {
             index = initMarket->iborIndex(ind, configuration);
-        }
+        }  
         QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
         Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
