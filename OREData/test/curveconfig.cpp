@@ -302,9 +302,72 @@ void CurveConfigTest::testCurveConfigQuotes() {
                    "quote " << q << " not found");
 }
 
+void CurveConfigTest::testDiscountRatioSegmentFromXml() {
+
+    // XML string
+    string xml;
+    xml.append("<DiscountRatio>");
+    xml.append("  <Type>Discount Ratio</Type>");
+    xml.append("  <BaseCurve currency=\"EUR\">EUR1D</BaseCurve>");
+    xml.append("  <NumeratorCurve currency=\"BRL\">BRL-IN-USD</NumeratorCurve>");
+    xml.append("  <DenominatorCurve currency=\"EUR\">EUR-IN-USD</DenominatorCurve>");
+    xml.append("</DiscountRatio>");
+
+    // XMLDocument from string
+    XMLDocument doc;
+    doc.fromXMLString(xml);
+
+    // Populate empty segment from XML node
+    DiscountRatioYieldCurveSegment seg;
+    seg.fromXML(doc.getFirstNode(""));
+
+    // Perform the checks
+    BOOST_CHECK(seg.type() == YieldCurveSegment::Type::DiscountRatio);
+    BOOST_CHECK_EQUAL(seg.typeID(), "Discount Ratio");
+    BOOST_CHECK_EQUAL(seg.conventionsID(), "");
+    BOOST_CHECK(seg.quotes().empty());
+
+    BOOST_CHECK_EQUAL(seg.baseCurveId(), "EUR1D");
+    BOOST_CHECK_EQUAL(seg.baseCurveCurrency(), "EUR");
+    BOOST_CHECK_EQUAL(seg.numeratorCurveId(), "BRL-IN-USD");
+    BOOST_CHECK_EQUAL(seg.numeratorCurveCurrency(), "BRL");
+    BOOST_CHECK_EQUAL(seg.denominatorCurveId(), "EUR-IN-USD");
+    BOOST_CHECK_EQUAL(seg.denominatorCurveCurrency(), "EUR");
+}
+
+void CurveConfigTest::testDiscountRatioSegmentToXml() {
+    // Create a discount ratio segment
+    DiscountRatioYieldCurveSegment seg("Discount Ratio", "EUR1D", "EUR", 
+        "BRL-IN-USD", "BRL", "EUR-IN-USD", "EUR");
+
+    // Create an XML document from the segment using toXML
+    XMLDocument doc;
+    doc.appendNode(seg.toXML(doc));
+
+    // Create new segment using fromXML and check entries
+    DiscountRatioYieldCurveSegment newSeg;
+    BOOST_CHECK_NO_THROW(newSeg.fromXML(doc.getFirstNode("")));
+    BOOST_CHECK(newSeg.type() == YieldCurveSegment::Type::DiscountRatio);
+    BOOST_CHECK_EQUAL(newSeg.typeID(), "Discount Ratio");
+    BOOST_CHECK_EQUAL(newSeg.conventionsID(), "");
+    BOOST_CHECK(newSeg.quotes().empty());
+
+    BOOST_CHECK_EQUAL(newSeg.baseCurveId(), "EUR1D");
+    BOOST_CHECK_EQUAL(newSeg.baseCurveCurrency(), "EUR");
+    BOOST_CHECK_EQUAL(newSeg.numeratorCurveId(), "BRL-IN-USD");
+    BOOST_CHECK_EQUAL(newSeg.numeratorCurveCurrency(), "BRL");
+    BOOST_CHECK_EQUAL(newSeg.denominatorCurveId(), "EUR-IN-USD");
+    BOOST_CHECK_EQUAL(newSeg.denominatorCurveCurrency(), "EUR");
+}
+
+
 test_suite* CurveConfigTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CurveConfigTest");
+
     suite->add(BOOST_TEST_CASE(&CurveConfigTest::testCurveConfigQuotes));
+    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testDiscountRatioSegmentFromXml));
+    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testDiscountRatioSegmentToXml));
+
     return suite;
 }
 } // namespace testsuite

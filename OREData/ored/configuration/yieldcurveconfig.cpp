@@ -59,6 +59,8 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::FXForward;
     else if (iequals(s, "Cross Currency Basis Swap"))
         return YieldCurveSegment::Type::CrossCcyBasis;
+    else if (iequals(s, "Discount Ratio"))
+        return YieldCurveSegment::Type::DiscountRatio;
     else
         QL_FAIL("Yield curve segment type " << s << " not recognized");
 }
@@ -69,7 +71,8 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<AverageOISYieldCurveSegment>,
                         public Visitor<TenorBasisYieldCurveSegment>,
                         public Visitor<CrossCcyYieldCurveSegment>,
-                        public Visitor<ZeroSpreadedYieldCurveSegment> {
+                        public Visitor<ZeroSpreadedYieldCurveSegment>, 
+                        public Visitor<DiscountRatioYieldCurveSegment> {
 
 public:
     SegmentIDGetter(const string& curveID, set<string>& requiredYieldCurveIDs)
@@ -81,6 +84,7 @@ public:
     void visit(TenorBasisYieldCurveSegment& s);
     void visit(CrossCcyYieldCurveSegment& s);
     void visit(ZeroSpreadedYieldCurveSegment& s);
+    void visit(DiscountRatioYieldCurveSegment& s);
 
 private:
     string curveID_;
@@ -138,6 +142,18 @@ void SegmentIDGetter::visit(ZeroSpreadedYieldCurveSegment& s) {
     }
 }
 
+void SegmentIDGetter::visit(DiscountRatioYieldCurveSegment& s) {
+    if (curveID_ != s.baseCurveId() && !s.baseCurveId().empty()) {
+        requiredYieldCurveIDs_.insert(s.baseCurveId());
+    }
+    if (curveID_ != s.numeratorCurveId() && !s.numeratorCurveId().empty()) {
+        requiredYieldCurveIDs_.insert(s.numeratorCurveId());
+    }
+    if (curveID_ != s.denominatorCurveId() && !s.denominatorCurveId().empty()) {
+        requiredYieldCurveIDs_.insert(s.denominatorCurveId());
+    }
+}
+
 // YieldCurveConfig
 YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                    const string& discountCurveID,
@@ -192,6 +208,8 @@ void YieldCurveConfig::fromXML(XMLNode* node) {
                 segment.reset(new CrossCcyYieldCurveSegment());
             } else if (childName == "ZeroSpread") {
                 segment.reset(new ZeroSpreadedYieldCurveSegment());
+            } else if (childName == "DiscountRatio") {
+                segment.reset(new DiscountRatioYieldCurveSegment());
             } else {
                 QL_FAIL("Yield curve segment node name not recognized.");
             }
@@ -518,5 +536,60 @@ void ZeroSpreadedYieldCurveSegment::accept(AcyclicVisitor& v) {
     else
         YieldCurveSegment::accept(v);
 }
+
+DiscountRatioYieldCurveSegment::DiscountRatioYieldCurveSegment(const string& typeId, 
+    const string& baseCurveId, const string& baseCurveCurrency, const string& numeratorCurveId,
+    const string& numeratorCurveCurrency, const string& denominatorCurveId,
+    const string& denominatorCurveCurrency)
+    : YieldCurveSegment(typeId, ""), baseCurveId_(baseCurveId), baseCurveCurrency_(baseCurveCurrency), 
+      numeratorCurveId_(numeratorCurveId), numeratorCurveCurrency_(numeratorCurveCurrency), 
+      denominatorCurveId_(denominatorCurveId), denominatorCurveCurrency_(denominatorCurveCurrency) {}
+
+void DiscountRatioYieldCurveSegment::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, "DiscountRatio");
+    YieldCurveSegment::fromXML(node);
+
+    XMLNode* aNode = XMLUtils::getChildNode(node, "BaseCurve");
+    QL_REQUIRE(aNode, "Discount ratio segment needs a BaseCurve node");
+    baseCurveId_ = XMLUtils::getNodeValue(aNode);
+    baseCurveCurrency_ = XMLUtils::getAttribute(aNode, "currency");
+
+    aNode = XMLUtils::getChildNode(node, "NumeratorCurve");
+    QL_REQUIRE(aNode, "Discount ratio segment needs a NumeratorCurve node");
+    numeratorCurveId_ = XMLUtils::getNodeValue(aNode);
+    numeratorCurveCurrency_ = XMLUtils::getAttribute(aNode, "currency");
+
+    aNode = XMLUtils::getChildNode(node, "DenominatorCurve");
+    QL_REQUIRE(aNode, "Discount ratio segment needs a DenominatorCurve node");
+    denominatorCurveId_ = XMLUtils::getNodeValue(aNode);
+    denominatorCurveCurrency_ = XMLUtils::getAttribute(aNode, "currency");
+}
+
+XMLNode* DiscountRatioYieldCurveSegment::toXML(XMLDocument& doc) {
+    XMLNode* node = YieldCurveSegment::toXML(doc);
+    XMLUtils::setNodeName(doc, node, "DiscountRatio");
+
+    XMLNode* baseCurveNode = doc.allocNode("BaseCurve", baseCurveId_);
+    XMLUtils::appendNode(node, baseCurveNode);
+    XMLUtils::addAttribute(doc, baseCurveNode, "currency", baseCurveCurrency_);
+
+    XMLNode* numCurveNode = doc.allocNode("NumeratorCurve", numeratorCurveId_);
+    XMLUtils::appendNode(node, numCurveNode);
+    XMLUtils::addAttribute(doc, numCurveNode, "currency", numeratorCurveCurrency_);
+
+    XMLNode* denCurveNode = doc.allocNode("DenominatorCurve", denominatorCurveId_);
+    XMLUtils::appendNode(node, denCurveNode);
+    XMLUtils::addAttribute(doc, denCurveNode, "currency", denominatorCurveCurrency_);
+
+    return node;
+}
+
+void DiscountRatioYieldCurveSegment::accept(AcyclicVisitor& v) {
+    if (Visitor<DiscountRatioYieldCurveSegment>* v1 = dynamic_cast<Visitor<DiscountRatioYieldCurveSegment>*>(&v))
+        v1->visit(*this);
+    else
+        YieldCurveSegment::accept(v);
+}
+
 } // namespace data
 } // namespace ore
