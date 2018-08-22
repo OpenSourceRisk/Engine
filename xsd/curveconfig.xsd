@@ -395,6 +395,7 @@
       <xs:element type="tenorBasisSegmentType" name="TenorBasis"/>
       <xs:element type="crossCurrencySegmentType" name="CrossCurrency"/>
       <xs:element type="zeroSpreadType" name="ZeroSpread"/>
+      <xs:element type="discountRatioType" name="DiscountRatio"/>
     </xs:choice>
   </xs:complexType>
 
@@ -492,6 +493,29 @@
       <xs:enumeration value="Zero Spread"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:complexType name="discountRatioType">
+    <xs:sequence>
+      <xs:element type="discountRatioTypeType" name="Type"/>
+      <xs:element type="discountRatioCurveElement" name="BaseCurve"/>
+      <xs:element type="discountRatioCurveElement" name="NumeratorCurve"/>
+      <xs:element type="discountRatioCurveElement" name="DenominatorCurve"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:simpleType name="discountRatioTypeType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Discount Ratio"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:complexType name="discountRatioCurveElement">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="currency" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
 
   <xs:complexType name="quoteType">
     <xs:sequence>

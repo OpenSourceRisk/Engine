@@ -102,6 +102,10 @@ private:
     void buildZeroCurve();
     void buildZeroSpreadedCurve();
     void buildBootstrappedCurve();
+    //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
+    void buildDiscountRatioCurve();
+    //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
+    boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 
     boost::shared_ptr<YieldCurveConfig> curveConfig_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;

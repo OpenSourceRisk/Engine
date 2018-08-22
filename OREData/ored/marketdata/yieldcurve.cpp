@@ -36,6 +36,7 @@
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -131,6 +132,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::ZeroSpread) {
             DLOG("Building ZeroSpreadedCurve " << curveSpec_);
             buildZeroSpreadedCurve();
+        } else if (curveSegments_[0]->type() == YieldCurveSegment::Type::DiscountRatio) {
+            DLOG("Building discount ratio yield curve " << curveSpec_);
+            buildDiscountRatioCurve();
         } else {
             DLOG("Bootstrapping YieldCurve " << curveSpec_);
             buildBootstrappedCurve();
@@ -664,6 +668,38 @@ void YieldCurve::buildBootstrappedCurve() {
     QL_REQUIRE(instruments.size() > 0,
                "Empty instrument list for date = " << io::iso_date(asofDate_) << " and curve = " << curveSpec_.name());
     p_ = piecewisecurve(instruments);
+}
+
+void YieldCurve::buildDiscountRatioCurve() {
+    QL_REQUIRE(curveSegments_.size() == 1, "A discount ratio curve must contain exactly one segment");
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::DiscountRatio, "The curve segment is not of type 'DiscountRatio'.");
+
+    boost::shared_ptr<DiscountRatioYieldCurveSegment> segment =
+        boost::dynamic_pointer_cast<DiscountRatioYieldCurveSegment>(curveSegments_[0]);
+
+    // Find the underlying curves in the reference curves
+    boost::shared_ptr<YieldCurve> baseCurve = getYieldCurve(segment->baseCurveCurrency(), segment->baseCurveId());
+    QL_REQUIRE(baseCurve, "The base curve '" << segment->baseCurveId() << "' cannot be empty");
+
+    boost::shared_ptr<YieldCurve> numCurve = getYieldCurve(segment->numeratorCurveCurrency(), segment->numeratorCurveId());
+    QL_REQUIRE(numCurve, "The numerator curve '" << segment->numeratorCurveId() << "' cannot be empty");
+
+    boost::shared_ptr<YieldCurve> denCurve = getYieldCurve(segment->denominatorCurveCurrency(), segment->denominatorCurveId());
+    QL_REQUIRE(denCurve, "The denominator curve '" << segment->denominatorCurveId() << "' cannot be empty");
+
+    p_ = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve->handle(), numCurve->handle(), denCurve->handle());
+}
+
+boost::shared_ptr<YieldCurve> YieldCurve::getYieldCurve(const string& ccy, const string& id) const {
+    if (id != curveConfig_->curveID() && !id.empty()) {
+        string idLookup = yieldCurveKey(parseCurrency(ccy), id, asofDate_);
+        map<string, boost::shared_ptr<YieldCurve>>::const_iterator it = requiredYieldCurves_.find(idLookup);
+        QL_REQUIRE(it != requiredYieldCurves_.end(), "The curve '" << idLookup <<
+            "' required in the building of the curve '" << curveSpec_.name() << "' was not found.");
+        return it->second;
+    } else {
+        return nullptr;
+    }
 }
 
 void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,

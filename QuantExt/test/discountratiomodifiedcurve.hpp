@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,30 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/curveconfig.hpp
-    \brief test curve config quotes method
-    \ingroup tests
+/*! \file test/discountratiomodifiedcurve.hpp
+    \brief Testing discount ratio modified curve
 */
 
-#pragma once
+#ifndef quantext_test_discount_ratio_modified_curve_hpp
+#define quantext_test_discount_ratio_modified_curve_hpp
 
 #include <boost/test/unit_test.hpp>
 
 namespace testsuite {
 
-//! Test CurveConfig construction
-/*!
-  \ingroup tests
-*/
-class CurveConfigTest {
+//! Discount ratio modified curve tests
+class DiscountingRatioModifiedCurveTest {
 public:
-    //! Testing curve config quotes method
-    static void testCurveConfigQuotes();
-    //! Test fromXML for DiscountRatioYieldCurveSegment
-    static void testDiscountRatioSegmentFromXml();
-    //! Test toXML for DiscountRatioYieldCurveSegment
-    static void testDiscountRatioSegmentToXml();
+    //! Test results with some standard curve setups
+    static void testStandardCurves();
+    //! Test extrapolation settings
+    static void testExtrapolationSettings();
+    //! Test construction with null underlying curves throw
+    static void testConstructionNullUnderlyingCurvesThrow();
+    //! Test linking with null underlying curves throw
+    static void testLinkingNullUnderlyingCurvesThrow();
 
     static boost::unit_test_framework::test_suite* suite();
 };
-} // namespace testsuite
+}
+
+#endif
