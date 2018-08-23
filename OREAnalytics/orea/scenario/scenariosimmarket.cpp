@@ -287,7 +287,15 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     LOG("building index curves...");
     for (const auto& ind : parameters->indices()) {
         LOG("building " << ind << " index curve");
-        Handle<IborIndex> index = initMarket->iborIndex(ind, configuration);
+        std::vector<string> indexTokens;
+        split(indexTokens, ind, boost::is_any_of("-"));
+        Handle<IborIndex> index;
+        if (indexTokens[1] == "GENERIC") {
+            // If we have a generic curve build the index using the index currency's discount curve
+            index = Handle<IborIndex>(parseIborIndex(ind, initMarket->discountCurve(indexTokens[0], configuration)));
+        } else {
+            index = initMarket->iborIndex(ind, configuration);
+        }  
         QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
         Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
         QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
