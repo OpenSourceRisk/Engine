@@ -89,7 +89,7 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
     if (tokens.size() == 2) {
-        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+        return boost::make_shared<EquityIndex>(tokens[1], NullCalendar());
     }
     else {
         QL_FAIL("Error parsing equity string " + s);
