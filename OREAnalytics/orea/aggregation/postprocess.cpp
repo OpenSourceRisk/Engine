@@ -130,6 +130,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         string tradeId = trade->id();
         nidMap[tradeId] = trade->envelope().nettingSetId();
         cidMap[tradeId] = trade->envelope().counterparty();
+        QL_REQUIRE(cidMap[tradeId] == nettingSetManager_->get(nidMap[tradeId])->counterparty(),
+            "counterparty from trade (" << cidMap[tradeId] << ") is not the same as counterparty from trade's nettingset: " << nettingSetManager_->get(nidMap[tradeId])->counterparty());
         matMap[tradeId] = trade->maturity();
     }
 
