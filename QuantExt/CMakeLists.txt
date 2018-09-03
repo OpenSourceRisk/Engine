@@ -12,8 +12,9 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# specify library search path (for all-in builds or local builds)
+# specify library search path for all-in builds ...
 link_directories("${CMAKE_BINARY_DIR}/QuantLib/ql")
+# ... and for local builds
 link_directories("${QUANTLIB_SOURCE_DIR}/build/ql")
 
 add_subdirectory("qle")
