@@ -16,11 +16,6 @@ include_directories(${ORETEST_SOURCE_DIR})
 include_directories(${RAPIDXML_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# specify library search path for all-in builds ...
-link_directories("${CMAKE_BINARY_DIR}/QuantLib/ql")
-link_directories("${CMAKE_BINARY_DIR}/QuantExt/qle")
-link_directories("${CMAKE_BINARY_DIR}/OREData/ored")
-# ... and for local builds
 link_directories("${QUANTLIB_SOURCE_DIR}/build/ql")
 link_directories("${QUANTEXT_SOURCE_DIR}/build/qle")
 link_directories("${OREDATA_SOURCE_DIR}/build/ored")
