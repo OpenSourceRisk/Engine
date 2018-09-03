@@ -18,4 +18,3 @@ link_directories("${QUANTLIB_SOURCE_DIR}/build/ql")
 
 add_subdirectory("qle")
 add_subdirectory("test")
-
