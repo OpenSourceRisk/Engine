@@ -124,7 +124,8 @@ void XMLSerializable::fromFile(const string& filename) {
 
 void XMLSerializable::toFile(const string& filename) {
     XMLDocument doc;
-    toXML(doc);
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
     doc.toFile(filename);
 }
 
