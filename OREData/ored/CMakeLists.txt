@@ -57,13 +57,6 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
-portfolio/builders/capfloor.cpp
-portfolio/builders/capfloorediborleg.cpp
-portfolio/builders/cms.cpp
-portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
-portfolio/builders/swaption.cpp
-portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
@@ -92,6 +85,13 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
+portfolio/builders/capfloor.cpp
+portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/cms.cpp
+portfolio/builders/cmsspread.cpp
+portfolio/builders/commodityoption.cpp
+portfolio/builders/swaption.cpp
+portfolio/builders/yoycapfloor.cpp
 report/csvreport.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
@@ -109,6 +109,7 @@ utilities/xmlutils.cpp)
 # hpp files, this list is maintained manually
 
 set(OREData_HDR auto_link.hpp
+version.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
@@ -171,22 +172,6 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
-portfolio/builders/bond.hpp
-portfolio/builders/cachingenginebuilder.hpp
-portfolio/builders/capfloor.hpp
-portfolio/builders/capfloorediborleg.hpp
-portfolio/builders/cms.hpp
-portfolio/builders/cmsspread.hpp
-portfolio/builders/commodityforward.hpp
-portfolio/builders/commodityoption.hpp
-portfolio/builders/creditdefaultswap.hpp
-portfolio/builders/equityforward.hpp
-portfolio/builders/equityoption.hpp
-portfolio/builders/fxforward.hpp
-portfolio/builders/fxoption.hpp
-portfolio/builders/swap.hpp
-portfolio/builders/swaption.hpp
-portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
@@ -216,6 +201,22 @@ portfolio/swaption.hpp
 portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
+portfolio/builders/bond.hpp
+portfolio/builders/cachingenginebuilder.hpp
+portfolio/builders/capfloor.hpp
+portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/cms.hpp
+portfolio/builders/cmsspread.hpp
+portfolio/builders/commodityforward.hpp
+portfolio/builders/commodityoption.hpp
+portfolio/builders/creditdefaultswap.hpp
+portfolio/builders/equityforward.hpp
+portfolio/builders/equityoption.hpp
+portfolio/builders/fxforward.hpp
+portfolio/builders/fxoption.hpp
+portfolio/builders/swap.hpp
+portfolio/builders/swaption.hpp
+portfolio/builders/yoycapfloor.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
@@ -233,8 +234,7 @@ utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
-utilities/xmlutils.hpp
-version.hpp)
+utilities/xmlutils.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
 add_library(OREData ${OREData_SRC})

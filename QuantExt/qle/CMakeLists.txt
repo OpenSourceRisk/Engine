@@ -123,6 +123,7 @@ termstructures/yoyinflationoptionletvolstripper.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
+version.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
 calendars/malaysia.hpp
@@ -148,6 +149,8 @@ indexes/bmaindexwrapper.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
+indexes/inflationindexobserver.hpp
+indexes/inflationindexwrapper.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
@@ -179,8 +182,6 @@ indexes/ibor/skkbribor.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
-indexes/inflationindexobserver.hpp
-indexes/inflationindexwrapper.hpp
 instruments/averageois.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
@@ -309,8 +310,7 @@ termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp
-version.hpp)
+termstructures/zeroinflationcurveobserverstatic.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(QuantExt ${QuantExt_SRC})
