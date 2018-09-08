@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.8)
 
 project(QuantExt CXX)
 
+enable_testing()
+
 include("../cmake/writeAll.cmake")
 include("../cmake/writeTestSuiteMain.cmake")
 include("../cmake/commonSettings.cmake")

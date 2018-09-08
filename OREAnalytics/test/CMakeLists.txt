@@ -21,3 +21,5 @@ writeTestSuiteMain("main.cpp")
 
 add_executable(orea-test-suite ${OREAnalytics-Test_SRC})
 target_link_libraries(orea-test-suite OREAnalytics OREData QuantExt QuantLib ${Boost_LIBRARIES})
+
+add_test(orea-test-suite orea-test-suite)

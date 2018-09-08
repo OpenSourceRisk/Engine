@@ -37,3 +37,5 @@ writeTestSuiteMain("main.cpp")
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
 target_link_libraries(ored-test-suite OREData QuantExt QuantLib ${Boost_LIBRARIES})
+
+add_test(ored-test-suite ored-test-suite)
