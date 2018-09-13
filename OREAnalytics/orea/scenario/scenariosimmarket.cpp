@@ -132,7 +132,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         // Check if the risk factor is simulated before adding it
         if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
             simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
-            LOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
         }
     }
 
@@ -325,7 +325,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                              std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
                              std::forward_as_tuple(q));
 
-            LOG("ScenarioSimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
         }
         // FIXME interpolation fixed to linear, added to xml??
         boost::shared_ptr<YieldTermStructure> indexCurve;
@@ -587,6 +587,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 simData_.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
                                  std::forward_as_tuple(q));
+                DLOG("ScenarioSimMarket default curve " << name << " survival[" << i << "]=" << prob);
             }
             Handle<Quote> qh(q);
             quotes.push_back(qh);
@@ -932,7 +933,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             simData_.emplace(std::piecewise_construct,
                              std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i - 1),
                              std::forward_as_tuple(q));
-            LOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
         }
 
         // FIXME: Settlement days set to zero - needed for floating term structure implementation
@@ -992,7 +993,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             simData_.emplace(std::piecewise_construct,
                              std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
                              std::forward_as_tuple(q));
-            LOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
+            DLOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
         }
 
         boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
