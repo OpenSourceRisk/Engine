@@ -721,9 +721,10 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     if (cpiLegData->interpolated())
         interpolationMethod = CPI::Linear;
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     Leg leg = CPILeg(schedule, index, cpiLegData->baseCPI(), observationLag)
-                  .withNotionals(data.notionals())
+                  .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
@@ -756,10 +757,11 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     Period observationLag = parsePeriod(yoyLegData->observationLag());
     vector<double> gearings = buildScheduledVector(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule);
     vector<double> spreads = buildScheduledVector(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
-                  .withNotionals(data.notionals())
+                  .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withFixingDays(yoyLegData->fixingDays())
@@ -782,9 +784,10 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
 
     vector<double> spreads = ore::data::buildScheduledVector(cmsData->spreads(), cmsData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     CmsLeg cmsLeg = CmsLeg(schedule, swapIndex)
-                        .withNotionals(data.notionals())
+                        .withNotionals(notionals)
                         .withSpreads(spreads)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
@@ -851,8 +854,9 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     vector<double> spreads =
         ore::data::buildScheduledVector(cmsSpreadData->spreads(), cmsSpreadData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     CmsSpreadLeg cmsSpreadLeg = CmsSpreadLeg(schedule, swapSpreadIndex)
-                                    .withNotionals(data.notionals())
+                                    .withNotionals(notionals)
                                     .withSpreads(spreads)
                                     .withPaymentDayCounter(dc)
                                     .withPaymentAdjustment(bdc)
@@ -909,10 +913,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = EquityLeg(schedule, equityCurve)
-        .withNotionals(data.notionals())
+        .withNotionals(notionals)
         .withPaymentDayCounter(dc)
         .withPaymentAdjustment(bdc)
         .withTotalReturn(isTotalReturn);
