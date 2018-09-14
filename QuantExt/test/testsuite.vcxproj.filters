@@ -95,6 +95,9 @@
     <ClCompile Include="discountratiomodifiedcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="crossccyfixfloatswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -205,6 +208,9 @@
       <Filter>headers</Filter>
     </ClInclude>
     <ClInclude Include="discountratiomodifiedcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossccyfixfloatswap.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
