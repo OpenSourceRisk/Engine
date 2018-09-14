@@ -63,4 +63,11 @@ PHPCurrency::PHPCurrency() {
         new Data("Philippine peso", "PHP", 608, "PHP", "", 100, Rounding(), "1$.2f %3%"));
     data_ = phpData;
 }
+
+// Chinese yuan (Hong Kong)
+CNHCurrency::CNHCurrency() {
+    static boost::shared_ptr<Data> cnhData(
+        new Data("Chinese yuan (Hong Kong)", "CNH", 156, "CNH", "", 100, Rounding(), "%3% %1$.2f"));
+    data_ = cnhData;
+}
 } // namespace QuantExt
