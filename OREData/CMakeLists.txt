@@ -17,8 +17,8 @@ include_directories(${ORETEST_SOURCE_DIR})
 include_directories(${RAPIDXML_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-link_directories("${QUANTLIB_SOURCE_DIR}/build/ql") 
-link_directories("${QUANTEXT_SOURCE_DIR}/build/qle")
+add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
+add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 
 add_subdirectory("ored")
 add_subdirectory("test")

@@ -13,10 +13,10 @@ include_directories(${OREDATA_SOURCE_DIR})
 include_directories(${OREANALYTICS_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-link_directories("${QUANTLIB_SOURCE_DIR}/build/ql")
-link_directories("${QUANTEXT_SOURCE_DIR}/build/qle")
-link_directories("${OREDATA_SOURCE_DIR}/build/ored")
-link_directories("${OREANALYTICS_SOURCE_DIR}/build/orea")
+add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
+add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
+add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
+add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
 find_package (Boost COMPONENTS unit_test_framework regex date_time serialization filesystem REQUIRED)
 

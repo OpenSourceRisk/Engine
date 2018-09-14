@@ -14,7 +14,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-link_directories("${QUANTLIB_SOURCE_DIR}/build/ql")
+add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
 
 add_subdirectory("qle")
 add_subdirectory("test")
