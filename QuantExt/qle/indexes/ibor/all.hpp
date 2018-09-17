@@ -2,6 +2,7 @@
 /* Add the files to be included into Makefile.am instead. */
 
 #include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/indexes/ibor/chftois.hpp>
 #include <qle/indexes/ibor/corra.hpp>
 #include <qle/indexes/ibor/czkpribor.hpp>
