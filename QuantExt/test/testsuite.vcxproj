@@ -645,6 +645,7 @@
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
     <ClCompile Include="crossccyfixfloatswap.cpp" />
+    <ClCompile Include="crossccyfixfloatswaphelper.cpp" />
     <ClCompile Include="currency.cpp" />
     <ClCompile Include="deltagammavar.cpp" />
     <ClCompile Include="deposit.cpp" />
@@ -680,6 +681,7 @@
     <ClInclude Include="crossassetmodel.hpp" />
     <ClInclude Include="crossassetmodel2.hpp" />
     <ClInclude Include="crossassetmodelparametrizations.hpp" />
+    <ClInclude Include="crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="crossccyfixfloatswap.hpp" />
     <ClInclude Include="currency.hpp" />
     <ClInclude Include="deltagammavar.hpp" />
