@@ -97,7 +97,7 @@ struct CommonVars {
     string calStr;
     string conv;
     string rule;
-    Size days;
+    Natural days;
     string fixDC;
     string index;
     string eqName;
