@@ -59,6 +59,8 @@ YieldCurveSegment::Type parseYieldCurveSegment(const string& s) {
         return YieldCurveSegment::Type::FXForward;
     else if (iequals(s, "Cross Currency Basis Swap"))
         return YieldCurveSegment::Type::CrossCcyBasis;
+    else if (iequals(s, "Cross Currency Fix Float Swap"))
+        return YieldCurveSegment::Type::CrossCcyFixFloat;
     else if (iequals(s, "Discount Ratio"))
         return YieldCurveSegment::Type::DiscountRatio;
     else
