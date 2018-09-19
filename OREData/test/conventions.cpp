@@ -1,0 +1,150 @@
+/*
+ Copyright (C) 2018 Quaternion Risk Management Ltd
+ All rights reserved.
+
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
+
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
+
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
+*/
+
+#include <test/conventions.hpp>
+
+#include <ored/configuration/conventions.hpp>
+#include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/all.hpp>
+#include <ql/currencies/all.hpp>
+#include <boost/make_shared.hpp>
+#include <regex>
+
+using namespace std;
+using namespace boost::unit_test_framework;
+using namespace QuantLib;
+using namespace ore::data;
+
+namespace testsuite {
+
+void ConventionsTest::testCrossCcyFixFloatSwapConventionConstruction() {
+
+    BOOST_TEST_MESSAGE("Testing cross currency fix float convention construction");
+
+    // Check construction raises no errors
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
+
+    // Check object
+    BOOST_CHECK_EQUAL(convention->id(), "USD-TRY-XCCY-FIX-FLOAT");
+    BOOST_CHECK_EQUAL(convention->settlementDays(), 2);
+    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(), UnitedKingdom(), Turkey()));
+    BOOST_CHECK_EQUAL(convention->settlementConvention(), Following);
+    BOOST_CHECK_EQUAL(convention->fixedCurrency(), TRYCurrency());
+    BOOST_CHECK_EQUAL(convention->fixedFrequency(), Annual);
+    BOOST_CHECK_EQUAL(convention->fixedConvention(), Following);
+    BOOST_CHECK_EQUAL(convention->fixedDayCounter(), Actual360());
+    BOOST_CHECK_EQUAL(convention->index()->name(), "USDLibor3M Actual/360");
+    BOOST_CHECK(!convention->eom());
+
+    // Check end of month when not default
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "false"));
+    BOOST_CHECK(!convention->eom());
+
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "true"));
+    BOOST_CHECK(convention->eom());
+}
+
+void ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml() {
+
+    BOOST_TEST_MESSAGE("Testing parsing of cross currency fix float convention from XML");
+
+    // XML string convention
+    string xml;
+    xml.append("<CrossCurrencyFixFloat>");
+    xml.append("  <Id>USD-TRY-XCCY-FIX-FLOAT</Id>");
+    xml.append("  <SettlementDays>2</SettlementDays>");
+    xml.append("  <SettlementCalendar>US,UK,TRY</SettlementCalendar>");
+    xml.append("  <SettlementConvention>F</SettlementConvention>");
+    xml.append("  <FixedCurrency>TRY</FixedCurrency>");
+    xml.append("  <FixedFrequency>Annual</FixedFrequency>");
+    xml.append("  <FixedConvention>F</FixedConvention>");
+    xml.append("  <FixedDayCounter>A360</FixedDayCounter>");
+    xml.append("  <Index>USD-LIBOR-3M</Index>");
+    xml.append("</CrossCurrencyFixFloat>");
+
+    // Parse convention from XML
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention = boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    BOOST_CHECK_NO_THROW(convention->fromXMLString(xml));
+
+    // Check parsed object
+    BOOST_CHECK_EQUAL(convention->id(), "USD-TRY-XCCY-FIX-FLOAT");
+    BOOST_CHECK_EQUAL(convention->settlementDays(), 2);
+    BOOST_CHECK_EQUAL(convention->settlementCalendar(), JointCalendar(UnitedStates(), UnitedKingdom(), Turkey()));
+    BOOST_CHECK_EQUAL(convention->settlementConvention(), Following);
+    BOOST_CHECK_EQUAL(convention->fixedCurrency(), TRYCurrency());
+    BOOST_CHECK_EQUAL(convention->fixedFrequency(), Annual);
+    BOOST_CHECK_EQUAL(convention->fixedConvention(), Following);
+    BOOST_CHECK_EQUAL(convention->fixedDayCounter(), Actual360());
+    BOOST_CHECK_EQUAL(convention->index()->name(), "USDLibor3M Actual/360");
+    BOOST_CHECK(!convention->eom());
+
+    // Check end of month also
+    xml = regex_replace(xml, regex("</CrossCurrencyFixFloat>"), "<EOM>false</EOM></CrossCurrencyFixFloat>");
+    convention->fromXMLString(xml);
+    BOOST_CHECK(!convention->eom());
+
+    xml = regex_replace(xml, regex("<EOM>false</EOM>"), "<EOM>true</EOM>");
+    convention->fromXMLString(xml);
+    BOOST_CHECK(convention->eom());
+}
+
+void ConventionsTest::testCrossCcyFixFloatSwapConventionToXml() {
+
+    BOOST_TEST_MESSAGE("Testing writing of cross currency fix float convention to XML");
+
+    // Construct the convention
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
+    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
+
+    // Write the convention to a string
+    string xml = convention->toXMLString();
+
+    // Read the convention back from the string using fromXMLString
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> readConvention = boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    BOOST_CHECK_NO_THROW(readConvention->fromXMLString(xml));
+
+    // The read convention should equal the original convention
+    BOOST_CHECK_EQUAL(convention->id(), readConvention->id());
+    BOOST_CHECK_EQUAL(convention->settlementDays(), readConvention->settlementDays());
+    BOOST_CHECK_EQUAL(convention->settlementCalendar(), readConvention->settlementCalendar());
+    BOOST_CHECK_EQUAL(convention->settlementConvention(), readConvention->settlementConvention());
+    BOOST_CHECK_EQUAL(convention->fixedCurrency(), readConvention->fixedCurrency());
+    BOOST_CHECK_EQUAL(convention->fixedFrequency(), readConvention->fixedFrequency());
+    BOOST_CHECK_EQUAL(convention->fixedConvention(), readConvention->fixedConvention());
+    BOOST_CHECK_EQUAL(convention->fixedDayCounter(), readConvention->fixedDayCounter());
+    BOOST_CHECK_EQUAL(convention->index()->name(), readConvention->index()->name());
+    BOOST_CHECK_EQUAL(convention->eom(), readConvention->eom());
+}
+
+test_suite* ConventionsTest::suite() {
+
+    test_suite* suite = BOOST_TEST_SUITE("ConventionsTests");
+
+    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionConstruction));
+    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml));
+    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionToXml));
+
+    return suite;
+}
+
+}
