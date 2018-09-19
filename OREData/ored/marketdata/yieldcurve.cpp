@@ -36,6 +36,7 @@
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
@@ -655,6 +656,9 @@ void YieldCurve::buildBootstrappedCurve() {
             break;
         case YieldCurveSegment::Type::CrossCcyBasis:
             addCrossCcyBasisSwaps(curveSegments_[i], instruments);
+            break;
+        case YieldCurveSegment::Type::CrossCcyFixFloat:
+            addCrossCcyFixFloatSwaps(curveSegments_[i], instruments);
             break;
         default:
             QL_FAIL("Yield curve segment type not recognized.");
@@ -1557,5 +1561,87 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         instruments.push_back(basisSwapHelper);
     }
 }
+void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment, 
+    vector<boost::shared_ptr<RateHelper>>& instruments) {
+
+    DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
+
+    // Get the conventions associated with the segment
+    boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
+    QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
+    QL_REQUIRE(convention->type() == Convention::Type::CrossCcyFixFloat, 
+        "Conventions ID does not give cross currency fix float swap conventions.");
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> swapConvention =
+        boost::dynamic_pointer_cast<CrossCcyFixFloatSwapConvention>(convention);
+
+    QL_REQUIRE(swapConvention->fixedCurrency() == currency_, "The yield curve currency must " << 
+        "equal the cross currency fix float swap's fixed leg currency");
+
+    // Cast the segment
+    boost::shared_ptr<CrossCcyYieldCurveSegment> swapSegment =
+        boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(segment);
+
+    // Retrieve the discount curve on the float leg
+    boost::shared_ptr<IborIndex> floatIndex = swapConvention->index();
+    Currency floatLegCcy = floatIndex->currency();
+    string floatLegDiscId = yieldCurveKey(floatLegCcy, swapSegment->foreignDiscountCurveID(), asofDate_);
+    auto it = requiredYieldCurves_.find(floatLegDiscId);
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "The discount curve " << floatLegDiscId << 
+        " required in the building of curve " << curveSpec_.name() << " was not found.");
+    Handle<YieldTermStructure> floatLegDisc = it->second->handle();
+
+    // Retrieve the projection curve on the float leg. If empty, use discount curve.
+    string floatLegProjId = swapSegment->foreignProjectionCurveID();
+    if (floatLegProjId.empty()) {
+        floatIndex = floatIndex->clone(floatLegDisc);
+    } else {
+        floatLegProjId = yieldCurveKey(floatLegCcy, floatLegProjId, asofDate_);
+        it = requiredYieldCurves_.find(floatLegProjId);
+        QL_REQUIRE(it != requiredYieldCurves_.end(), "The projection curve " << floatLegProjId <<
+            " required in the building of curve " << curveSpec_.name() << " was not found.");
+        floatIndex = floatIndex->clone(it->second->handle());
+    }
+
+    // Create the FX spot quote for the helper. The quote needs to be number of units of fixed leg 
+    // currency for 1 unit of float leg currency. We convert the market quote here if needed.
+    string fxSpotId = swapSegment->spotRateID();
+    boost::shared_ptr<MarketDatum> md = loader_.get(fxSpotId, asofDate_);
+    boost::shared_ptr<FXSpotQuote> fxSpotMd = boost::dynamic_pointer_cast<FXSpotQuote>(md);
+    QL_REQUIRE(fxSpotMd, "Market quote " << fxSpotId << " should be of type 'FXSpotQuote'");
+    Currency mdUnitCcy = parseCurrency(fxSpotMd->unitCcy());
+    Currency mdCcy = parseCurrency(fxSpotMd->ccy());
+    Handle<Quote> fxSpotQuote;
+    if (mdUnitCcy == floatLegCcy && mdCcy == currency_) {
+        fxSpotQuote = fxSpotMd->quote();
+    } else if (mdUnitCcy == currency_ && mdCcy == floatLegCcy) {
+        fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0 / fxSpotMd->quote()->value()));
+    } else {
+        QL_FAIL("The FX spot market quote " << mdUnitCcy << "/" << mdCcy << " cannot be used " << 
+            "in the building of the curve " << curveSpec_.name() << ".");
+    }
+
+    // Create the helpers
+    vector<string> quoteIds = swapSegment->quotes();
+    for (Size i = 0; i < quoteIds.size(); i++) {
+        
+        // Throws if quote not found
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIds[i], asofDate_);
+
+        // Check that we have a valid basis swap quote
+        boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote = 
+            boost::dynamic_pointer_cast<CrossCcyFixFloatSwapQuote>(marketQuote);
+        QL_REQUIRE(swapQuote, "Market quote should be of type 'CrossCcyFixFloatSwapQuote'");
+
+        // Create the helper
+        Period basisSwapTenor = swapQuote->maturity();
+        boost::shared_ptr<RateHelper> helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
+            swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(), 
+            swapConvention->settlementConvention(), swapQuote->maturity(), currency_, swapConvention->fixedFrequency(), 
+            swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
+
+        instruments.push_back(helper);
+    }
+}
+
 } // namespace data
 } // namespace ore

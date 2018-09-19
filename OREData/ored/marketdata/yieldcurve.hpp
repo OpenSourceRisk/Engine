@@ -147,6 +147,8 @@ private:
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+        vector<boost::shared_ptr<RateHelper>>& instruments);
 };
 
 //! Helper function for parsing interpolation method
