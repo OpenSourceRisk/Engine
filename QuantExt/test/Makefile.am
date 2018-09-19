@@ -35,6 +35,8 @@ QLE_TESTS = \
 	interpolatedyoycapfloortermpricesurface.hpp interpolatedyoycapfloortermpricesurface.cpp \
 	qle_calendars.hpp qle_calendars.cpp \
 	discountratiomodifiedcurve.hpp discountratiomodifiedcurve.cpp \
+	crossccyfixfloatswap.hpp crossccyfixfloatswap.cpp \
+	crossccyfixfloatswaphelper.hpp crossccyfixfloatswaphelper.cpp \
 	utilities.hpp
 
 dist-hook:

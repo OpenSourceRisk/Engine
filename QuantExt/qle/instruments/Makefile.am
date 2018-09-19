@@ -23,7 +23,8 @@ libInstruments_la_SOURCES = \
 	payment.cpp \
 	commodityforward.cpp \
 	impliedbondspread.cpp \
-    fixedbmaswap.cpp
+    fixedbmaswap.cpp \
+	crossccyfixfloatswap.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -46,7 +47,8 @@ this_include_HEADERS = \
 	payment.hpp \
 	commodityforward.hpp \
 	impliedbondspread.hpp \
-    fixedbmaswap.hpp
+    fixedbmaswap.hpp \
+	crossccyfixfloatswap.hpp
 
 noinst_LTLIBRARIES = libInstruments.la
 
