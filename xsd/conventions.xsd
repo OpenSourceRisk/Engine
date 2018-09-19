@@ -17,6 +17,7 @@
       <xs:element type="bmaBasisSwapType" name="BMABasisSwap"/>
       <xs:element type="fxType" name="FX"/>
       <xs:element type="crossCurrencyBasisType" name="CrossCurrencyBasis"/>
+      <xs:element type="crossCurrencyFixFloatType" name="CrossCurrencyFixFloat"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
       <xs:element type="inflationswapType" name="InflationSwap"/>
     </xs:choice>
@@ -178,6 +179,21 @@
       <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="FlatIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="SpreadIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="crossCurrencyFixFloatType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SettlementCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="SettlementConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="FixedCurrency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>

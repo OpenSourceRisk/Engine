@@ -475,6 +475,7 @@
   <xs:simpleType name="crossCurrencySegmentTypeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Cross Currency Basis Swap"/>
+      <xs:enumeration value="Cross Currency Fix Float Swap"/>
       <xs:enumeration value="FX Forward"/>
     </xs:restriction>
   </xs:simpleType>
