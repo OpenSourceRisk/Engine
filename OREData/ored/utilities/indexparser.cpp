@@ -96,6 +96,16 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     }
 }
 
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
+    try {
+        index = parseIborIndex(s);
+    }
+    catch (...) {
+        return false;
+    }
+    return true;
+}
+
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
 
     std::vector<string> tokens;

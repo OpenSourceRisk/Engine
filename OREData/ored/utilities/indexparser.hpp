@@ -58,6 +58,12 @@ boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
                                             const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
+//! Try to convert std::string to QuantLib::IborIndex
+/*!
+    \ingroup utilities
+*/
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
+
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!
 \ingroup utilities
