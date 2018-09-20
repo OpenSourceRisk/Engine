@@ -168,9 +168,16 @@ public:
     //@}
 
 protected:
-    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
+    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
+
+    //! toXML helper methods
+    //@{
+    void shiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const ShiftData& data) const;
+    void curveShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const;
+    void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
+    //@}
 
     map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
     map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_; // key: indexName
