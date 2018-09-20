@@ -98,11 +98,11 @@ void ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml() {
     BOOST_CHECK(!convention->eom());
 
     // Check end of month also
-    xml = regex_replace(xml, regex("</CrossCurrencyFixFloat>"), "<EOM>false</EOM></CrossCurrencyFixFloat>");
+    xml = regex_replace(xml, regex("</CrossCurrencyFixFloat>"), string("<EOM>false</EOM></CrossCurrencyFixFloat>"));
     convention->fromXMLString(xml);
     BOOST_CHECK(!convention->eom());
 
-    xml = regex_replace(xml, regex("<EOM>false</EOM>"), "<EOM>true</EOM>");
+    xml = regex_replace(xml, regex("<EOM>false</EOM>"), string("<EOM>true</EOM>"));
     convention->fromXMLString(xml);
     BOOST_CHECK(convention->eom());
 }

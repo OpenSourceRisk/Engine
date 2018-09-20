@@ -100,15 +100,15 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars, con
 
     // Fixed TRY schedule
     Schedule fixedSchedule(start, end, Period(vars.fixedFrequency), vars.payCalendar, 
-        vars.payConvention, vars.payConvention, DateGeneration::Rule::Backward, false);
+        vars.payConvention, vars.payConvention, DateGeneration::Backward, false);
 
     // Float USD schedule
     Schedule floatSchedule(start, end, vars.index->tenor(), vars.payCalendar, vars.payConvention,
-        vars.payConvention, DateGeneration::Rule::Backward, false);
+        vars.payConvention, DateGeneration::Backward, false);
 
     // Create swap
-    boost::shared_ptr<CrossCcyFixFloatSwap> swap = boost::make_shared<CrossCcyFixFloatSwap>(
-        CrossCcyFixFloatSwap::Type::Payer,
+    boost::shared_ptr<CrossCcyFixFloatSwap> swap(new CrossCcyFixFloatSwap(
+        CrossCcyFixFloatSwap::Payer,
         vars.usdNominal * vars.spotFx->value(),
         vars.fixedCurrency,
         fixedSchedule,
@@ -124,7 +124,7 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars, con
         vars.spread->value(),
         vars.payConvention,
         vars.payLag,
-        vars.payCalendar);
+        vars.payCalendar));
 
     // Attach pricing engine
     boost::shared_ptr<PricingEngine> engine = boost::make_shared<CrossCcySwapEngine>(
@@ -139,10 +139,10 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Create a helper
     vector<boost::shared_ptr<RateHelper> > helpers(1);
-    vars.helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
+    vars.helper.reset(new CrossCcyFixFloatSwapHelper(
         vars.rate, Handle<Quote>(vars.spotFx), vars.settlementDays, vars.payCalendar, vars.payConvention, 
         vars.tenor, vars.fixedCurrency, vars.fixedFrequency, vars.payConvention, vars.fixedDayCount, 
-        vars.index, vars.usdDiscCurve, Handle<Quote>(vars.spread));
+        vars.index, vars.usdDiscCurve, Handle<Quote>(vars.spread)));
     helpers[0] = vars.helper;
 
     // Create a yield curve referencing the helper
