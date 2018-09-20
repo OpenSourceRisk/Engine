@@ -23,12 +23,13 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/currencies/all.hpp>
 #include <boost/make_shared.hpp>
-#include <regex>
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
+using boost::algorithm::replace_all_copy;
 
 namespace testsuite {
 
@@ -98,11 +99,12 @@ void ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml() {
     BOOST_CHECK(!convention->eom());
 
     // Check end of month also
-    xml = regex_replace(xml, regex("</CrossCurrencyFixFloat>"), string("<EOM>false</EOM></CrossCurrencyFixFloat>"));
+    xml = replace_all_copy(xml, "</CrossCurrencyFixFloat>", "<EOM>false</EOM></CrossCurrencyFixFloat>");
+    BOOST_TEST_MESSAGE("xml is: " << xml);
     convention->fromXMLString(xml);
     BOOST_CHECK(!convention->eom());
 
-    xml = regex_replace(xml, regex("<EOM>false</EOM>"), string("<EOM>true</EOM>"));
+    xml = replace_all_copy(xml, "<EOM>false</EOM>", "<EOM>true</EOM>");
     convention->fromXMLString(xml);
     BOOST_CHECK(convention->eom());
 }
