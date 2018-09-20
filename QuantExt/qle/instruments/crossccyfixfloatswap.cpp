@@ -167,4 +167,16 @@ void CrossCcyFixFloatSwap::setupExpired() const {
     fairSpread_ = Null<Spread>();
 }
 
+void CrossCcyFixFloatSwap::arguments::validate() const {
+    CrossCcySwap::arguments::validate();
+    QL_REQUIRE(fixedRate != Null<Rate>(), "Fixed rate cannot be null");
+    QL_REQUIRE(spread != Null<Spread>(), "Spread cannot be null");
+}
+
+void CrossCcyFixFloatSwap::results::reset() {
+    CrossCcySwap::results::reset();
+    fairFixedRate = Null<Rate>();
+    fairSpread = Null<Spread>();
+}
+
 }

@@ -121,18 +121,18 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     
     // Fixed schedule
     Schedule fixedSchedule(start, end, Period(fixedFrequency_), paymentCalendar_, 
-        fixedConvention_, fixedConvention_, DateGeneration::Rule::Backward, endOfMonth_);
+        fixedConvention_, fixedConvention_, DateGeneration::Backward, endOfMonth_);
 
     // Float schedule
     Schedule floatSchedule(start, end, index_->tenor(), paymentCalendar_, 
-        paymentConvention_, paymentConvention_, DateGeneration::Rule::Backward, endOfMonth_);
+        paymentConvention_, paymentConvention_, DateGeneration::Backward, endOfMonth_);
 
     // Create the swap
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    swap_ = boost::make_shared<CrossCcyFixFloatSwap>(CrossCcyFixFloatSwap::Type::Payer, 
+    swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, 
         fixedNominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, 
-        floatNominal, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_, paymentLag, paymentCalendar_);
+        floatNominal, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_, paymentLag, paymentCalendar_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();

@@ -154,33 +154,34 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spr
 
     // Fixed TRY schedule
     Schedule fixedSchedule(start, end, 1 * Years, payCalendar, ModifiedFollowing,
-        ModifiedFollowing, DateGeneration::Rule::Backward, false);
+        ModifiedFollowing, DateGeneration::Backward, false);
 
     // Float USD schedule
     Schedule floatSchedule(start, end, 3 * Months, payCalendar, ModifiedFollowing,
-        ModifiedFollowing, DateGeneration::Rule::Backward, false);
+        ModifiedFollowing, DateGeneration::Backward, false);
 
     boost::shared_ptr<IborIndex> index = boost::make_shared<USDLibor>(3 * Months, usdProjectionCurve());
 
     // Create swap
-    return boost::make_shared<CrossCcyFixFloatSwap>(
-        CrossCcyFixFloatSwap::Type::Payer,
-        usdNominal * spotFx,
-        TRYCurrency(),
-        fixedSchedule,
-        rate,
-        Actual360(),
-        payConvention,
-        payLag,
-        payCalendar,
-        usdNominal,
-        USDCurrency(),
-        floatSchedule,
-        index,
-        spread,
-        payConvention,
-        payLag,
-        payCalendar);
+    return boost::shared_ptr<CrossCcyFixFloatSwap>(
+        new CrossCcyFixFloatSwap(
+           CrossCcyFixFloatSwap::Payer,
+           usdNominal * spotFx,
+           TRYCurrency(),
+           fixedSchedule,
+           rate,
+           Actual360(),
+           payConvention,
+           payLag,
+           payCalendar,
+           usdNominal,
+           USDCurrency(),
+           floatSchedule,
+           index,
+           spread,
+           payConvention,
+           payLag,
+           payCalendar));
 }
 
 }
