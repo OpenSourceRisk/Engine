@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file crossccyfixfloatswap.hpp
+/*! \file qle/instruments/crossccyfixfloatswap.hpp
     \brief Cross currency fixed vs float swap instrument
     \ingroup instruments
 */
