@@ -9,7 +9,6 @@
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/makeaverageois.hpp>
-#include <qle/instruments/fixedbmaswap.hpp>
 #include <qle/instruments/oibasisswap.hpp>
 #include <qle/instruments/oiccbasisswap.hpp>
 #include <qle/instruments/tenorbasisswap.hpp>
@@ -18,5 +17,8 @@
 #include <qle/instruments/makecds.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/payment.hpp>
+#include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
+#include <qle/instruments/fixedbmaswap.hpp>
+#include <qle/instruments/crossccyfixfloatswap.hpp>
 

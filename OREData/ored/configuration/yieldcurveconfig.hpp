@@ -68,6 +68,7 @@ public:
         BMABasis,
         FXForward,
         CrossCcyBasis,
+        CrossCcyFixFloat,
         DiscountRatio
     };
     //! Default destructor

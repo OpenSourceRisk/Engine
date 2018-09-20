@@ -686,6 +686,81 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
+    const string& id,
+    const string& settlementDays,
+    const string& settlementCalendar,
+    const string& settlementConvention,
+    const string& fixedCurrency,
+    const string& fixedFrequency,
+    const string& fixedConvention,
+    const string& fixedDayCounter,
+    const string& index,
+    const string& eom)
+    : Convention(id, Type::CrossCcyFixFloat),
+      strSettlementDays_(settlementDays),
+      strSettlementCalendar_(settlementCalendar),
+      strSettlementConvention_(settlementConvention),
+      strFixedCurrency_(fixedCurrency),
+      strFixedFrequency_(fixedFrequency),
+      strFixedConvention_(fixedConvention),
+      strFixedDayCounter_(fixedDayCounter),
+      strIndex_(index),
+      strEom_(eom) {
+    
+    build();
+}
+
+void CrossCcyFixFloatSwapConvention::build() {
+    settlementDays_ = lexical_cast<Natural>(strSettlementDays_);
+    settlementCalendar_ = parseCalendar(strSettlementCalendar_);
+    settlementConvention_ = parseBusinessDayConvention(strSettlementConvention_);
+    fixedCurrency_ = parseCurrency(strFixedCurrency_);
+    fixedFrequency_ = parseFrequency(strFixedFrequency_);
+    fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
+    fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
+    index_ = parseIborIndex(strIndex_);
+    eom_ = strEom_.empty() ? false : parseBool(strEom_);
+}
+
+void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "CrossCurrencyFixFloat");
+    type_ = Type::CrossCcyFixFloat;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
+    strSettlementCalendar_ = XMLUtils::getChildValue(node, "SettlementCalendar", true);
+    strSettlementConvention_ = XMLUtils::getChildValue(node, "SettlementConvention", true);
+    strFixedCurrency_ = XMLUtils::getChildValue(node, "FixedCurrency", true);
+    strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", true);
+    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
+    strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
+
+    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strEom_ = XMLUtils::getChildValue(node, "EOM", false);
+
+    build();
+}
+
+XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("CrossCurrencyFixFloat");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "SettlementDays", strSettlementDays_);
+    XMLUtils::addChild(doc, node, "SettlementCalendar", strSettlementCalendar_);
+    XMLUtils::addChild(doc, node, "SettlementConvention", strSettlementConvention_);
+    XMLUtils::addChild(doc, node, "FixedCurrency", strFixedCurrency_);
+    XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
+    XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
+    XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
+    XMLUtils::addChild(doc, node, "Index", strIndex_);
+    XMLUtils::addChild(doc, node, "EOM", strEom_);
+
+    return node;
+}
+
 CdsConvention::CdsConvention(const string& id, const string& strSettlementDays, const string& strCalendar,
                              const string& strFrequency, const string& strPaymentConvention, const string& strRule,
                              const string& strDayCounter, const string& strSettlesAccrual,
@@ -904,6 +979,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new FXConvention());
         } else if (childName == "CrossCurrencyBasis") {
             convention.reset(new CrossCcyBasisSwapConvention());
+        } else if (childName == "CrossCurrencyFixFloat") {
+            convention.reset(new CrossCcyFixFloatSwapConvention());
         } else if (childName == "CDS") {
             convention.reset(new CdsConvention());
         } else if (childName == "SwapIndex") {
