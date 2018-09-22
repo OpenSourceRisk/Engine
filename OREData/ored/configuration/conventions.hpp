@@ -763,8 +763,8 @@ public:
 
     //! \name Serialisation interface
     //@{
-    void fromXML(XMLNode* node) override;
-    XMLNode* toXML(XMLDocument& doc) override;
+    void fromXML(XMLNode* node);
+    XMLNode* toXML(XMLDocument& doc);
     //@}
 
     //! \name Convention interface
