@@ -579,6 +579,12 @@
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyfixfloatswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -989,6 +995,12 @@
       <Filter>cashflows</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyfixfloatswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccyfixfloatswaphelper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

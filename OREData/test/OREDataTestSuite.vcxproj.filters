@@ -99,6 +99,9 @@
     <ClInclude Include="equityswap.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="conventions.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="calendars.cpp">
@@ -190,6 +193,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="equityswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="conventions.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

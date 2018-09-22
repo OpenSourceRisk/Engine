@@ -55,7 +55,6 @@ void CreditDefaultSwapData::fromXML(XMLNode* node) {
 
 XMLNode* CreditDefaultSwapData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("CreditDefaultSwapData");
-    XMLUtils::appendNode(node, node);
     XMLUtils::addChild(doc, node, "IssuerId", issuerId_);
     XMLUtils::addChild(doc, node, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, node, "SettlesAccrual", settlesAccrual_);

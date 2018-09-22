@@ -42,6 +42,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"IR_SWAP", MarketDatum::InstrumentType::IR_SWAP},
         {"BASIS_SWAP", MarketDatum::InstrumentType::BASIS_SWAP},
         {"CC_BASIS_SWAP", MarketDatum::InstrumentType::CC_BASIS_SWAP},
+        {"CC_FIX_FLOAT_SWAP", MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP},
         {"BMA_SWAP", MarketDatum::InstrumentType::BMA_SWAP },
         {"CDS", MarketDatum::InstrumentType::CDS},
         {"CDS_INDEX", MarketDatum::InstrumentType::CDS_INDEX},
@@ -233,6 +234,18 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Period maturity = parsePeriod(tokens[6]);
         return boost::make_shared<CrossCcyBasisSwapQuote>(value, asof, datumName, quoteType, flatCcy, flatTerm, ccy,
                                                           term, maturity);
+    }
+
+    case MarketDatum::InstrumentType::CC_FIX_FLOAT_SWAP: {
+        // CC_FIX_FLOAT_SWAP/RATE/USD/3M/TRY/1Y/5Y
+        QL_REQUIRE(tokens.size() == 7, "7 tokens expected in " << datumName);
+        Currency floatCurrency = parseCurrency(tokens[2]);
+        Period floatTenor = parsePeriod(tokens[3]);
+        Currency fixedCurrency = parseCurrency(tokens[4]);
+        Period fixedTenor = parsePeriod(tokens[5]);
+        Period maturity = parsePeriod(tokens[6]);
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, 
+            floatCurrency, floatTenor, fixedCurrency, fixedTenor, maturity);
     }
 
     case MarketDatum::InstrumentType::CDS: {

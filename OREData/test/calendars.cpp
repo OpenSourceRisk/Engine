@@ -52,6 +52,7 @@ static struct test_data cal_data[] = {
     {"SEK", Sweden()},
     {"ARS", Argentina()},
     {"BRL", Brazil()},
+    {"CNH", China()},
     {"CNY", China()},
     {"CZK", CzechRepublic()},
     {"DKK", Denmark()},

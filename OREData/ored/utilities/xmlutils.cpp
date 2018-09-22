@@ -128,6 +128,19 @@ void XMLSerializable::toFile(const string& filename) {
     doc.toFile(filename);
 }
 
+void XMLSerializable::fromXMLString(const string& xml) {
+    ore::data::XMLDocument doc;
+    doc.fromXMLString(xml);
+    fromXML(doc.getFirstNode(""));
+}
+
+string XMLSerializable::toXMLString() {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toString();
+}
+
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
     QL_REQUIRE(node, "XML Node is NULL (expected " << expectedName << ")");
     QL_REQUIRE(node->name() == expectedName,
