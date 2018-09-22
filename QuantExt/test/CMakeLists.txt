@@ -8,6 +8,8 @@ commodityforward.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
+crossccyfixfloatswap.cpp
+crossccyfixfloatswaphelper.cpp
 currency.cpp
 deltagammavar.cpp
 deposit.cpp

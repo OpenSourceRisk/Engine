@@ -10,6 +10,7 @@ commoditycurveconfig.cpp
 commodityoption.cpp
 commodityvolcurve.cpp
 commodityvolcurveconfig.cpp
+conventions.cpp
 cpiswap.cpp
 crossassetmodeldata.cpp
 curveconfig.cpp
