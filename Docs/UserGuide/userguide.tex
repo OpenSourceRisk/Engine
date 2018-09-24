@@ -3713,7 +3713,7 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
     <Dimension>ATM</Dimension>
     <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
-    <!-- Flat or Linear -->
+    <!-- Flat, Linear, None -->
     <Extrapolation>Flat</Extrapolation>
     <!-- Day counter for date to time conversion -->
     <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -3752,8 +3752,8 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->

@@ -40,7 +40,7 @@ namespace QuantExt {
 */
 class DatedStrippedOptionletAdapter : public OptionletVolatilityStructure, public LazyObject {
 public:
-    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s);
+    DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s, const bool flatExtrapolation);
 
     //! \name TermStructure interface
     //@{
@@ -71,6 +71,7 @@ private:
     const boost::shared_ptr<DatedStrippedOptionletBase> optionletStripper_;
     Size nInterpolations_;
     mutable vector<boost::shared_ptr<Interpolation> > strikeInterpolations_;
+    bool flatExtrapolation_;
 };
 
 inline void DatedStrippedOptionletAdapter::update() {
