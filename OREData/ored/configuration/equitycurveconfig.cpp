@@ -48,7 +48,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
-    fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
+    fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
     quotes_ = fwdQuotes_;
     quotes_.insert(quotes_.begin(), equitySpotQuoteID_);
 
@@ -66,6 +66,8 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     if (type_ == Type::NoDividends) {
         QL_REQUIRE(fwdQuotes_.size() == 0, "Invalid EquityCurveConfig, no Quotes should be present when type=NoDividends");
         QL_REQUIRE(divInterpNode == nullptr, "Invalid EquityCurveConfig, no DividendInterpolation should be present when type=NoDividends");
+    } else {
+        QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }
 }
 
