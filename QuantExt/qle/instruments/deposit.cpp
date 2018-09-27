@@ -59,6 +59,7 @@ void Deposit::setupArguments(PricingEngine::arguments* args) const {
     QL_REQUIRE(arguments, "wrong argument type in deposit");
     arguments->leg = leg_;
     arguments->index = index_;
+    arguments->maturityDate = maturityDate_;
 }
 
 void Deposit::fetchResults(const PricingEngine::results* r) const {

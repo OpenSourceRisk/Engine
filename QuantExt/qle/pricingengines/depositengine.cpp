@@ -62,7 +62,13 @@ void DepositEngine::calculate() const {
     results_.value =
         CashFlows::npv(arguments_.leg, **discountCurve_, includeRefDateFlows, settlementDate, valuationDate);
 
-    results_.fairRate = arguments_.index->clone(discountCurve_)->fixing(refDate);
+    // calculate the fair rate of a hypothetical deposit instrument traded on the refDate with maturity as the original
+    // instrument; this is only possible if the maturity date is later than the start date of that new deposit
+    Date startDate = arguments_.index->valueDate(arguments_.index->fixingCalendar().adjust(refDate));
+    if (arguments_.maturityDate > startDate)
+        results_.fairRate =
+            (discountCurve_->discount(startDate) / discountCurve_->discount(arguments_.maturityDate) - 1.0) /
+            arguments_.index->dayCounter().yearFraction(startDate, arguments_.maturityDate);
 
 } // calculate
 } // namespace QuantExt
