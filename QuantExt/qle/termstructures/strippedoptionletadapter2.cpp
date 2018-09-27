@@ -95,8 +95,12 @@ void StrippedOptionletAdapter2::performCalculations() const {
         //                              //endCriteria_,
         //                              //optMethod_
         //                              ));
-        strikeInterpolations_[i] = boost::shared_ptr<LinearInterpolation>(
+        auto tmp = boost::shared_ptr<LinearInterpolation>(
             new LinearInterpolation(optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin()));
+        if(flatExtrapolation_)
+            strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
+        else
+            strikeInterpolations_[i] = tmp;
 
         // QL_ENSURE(strikeInterpolations_[i]->endCriteria()!=EndCriteria::MaxIterations,
         //          "section calibration failed: "
