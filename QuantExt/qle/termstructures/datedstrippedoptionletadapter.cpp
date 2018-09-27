@@ -80,7 +80,7 @@ void DatedStrippedOptionletAdapter::performCalculations() const {
     for (Size i = 0; i < nInterpolations_; ++i) {
         const vector<Rate>& optionletStrikes = optionletStripper_->optionletStrikes(i);
         const vector<Volatility>& optionletVolatilities = optionletStripper_->optionletVolatilities(i);
-        auto tmp = boost::make_shared<LinearInterpolation>(
+        boost::shared_ptr<Interpolation> tmp = boost::make_shared<LinearInterpolation>(
             optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin());
         if(flatExtrapolation_)
             strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);

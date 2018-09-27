@@ -95,7 +95,7 @@ void StrippedOptionletAdapter2::performCalculations() const {
         //                              //endCriteria_,
         //                              //optMethod_
         //                              ));
-        auto tmp = boost::shared_ptr<LinearInterpolation>(
+        boost::shared_ptr<Interpolation> tmp = boost::shared_ptr<LinearInterpolation>(
             new LinearInterpolation(optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin()));
         if(flatExtrapolation_)
             strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
