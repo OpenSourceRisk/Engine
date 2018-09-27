@@ -63,7 +63,7 @@ void CurveConfigTest::testCurveConfigQuotes() {
     // add capfloors
     boost::shared_ptr<CapFloorVolatilityCurveConfig> capFloorVolatilityConfig =
         boost::make_shared<CapFloorVolatilityCurveConfig>(
-            "EUR_CF_N", "", CapFloorVolatilityCurveConfig::VolatilityType::Normal, true, false, tenors, strikes,
+            "EUR_CF_N", "", CapFloorVolatilityCurveConfig::VolatilityType::Normal, true, false, false, tenors, strikes,
             parseDayCounter("Actual/365 (Fixed)"), 0, parseCalendar("TARGET"), parseBusinessDayConvention("MF"),
             "EUR-EURIBOR-6M", "Yield/GBP/GBP1D");
 

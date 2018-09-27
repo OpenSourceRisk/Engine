@@ -16,21 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/math/flatextrapolation.hpp>
+
 #include <ql/math/interpolations/cubicinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/sabrinterpolation.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
-StrippedOptionletAdapter2::StrippedOptionletAdapter2(const boost::shared_ptr<StrippedOptionletBase>& s)
+StrippedOptionletAdapter2::StrippedOptionletAdapter2(const boost::shared_ptr<StrippedOptionletBase>& s,
+                                                     const bool flatExtrapolation)
     : OptionletVolatilityStructure(s->settlementDays(), s->calendar(), s->businessDayConvention(), s->dayCounter()),
-      optionletStripper_(s), nInterpolations_(s->optionletMaturities()), strikeInterpolations_(nInterpolations_) {
+      optionletStripper_(s), nInterpolations_(s->optionletMaturities()), strikeInterpolations_(nInterpolations_),
+      flatExtrapolation_(flatExtrapolation) {
     registerWith(optionletStripper_);
 }
 
@@ -38,17 +42,18 @@ boost::shared_ptr<SmileSection> StrippedOptionletAdapter2::smileSectionImpl(Time
     std::vector<Rate> optionletStrikes =
         optionletStripper_->optionletStrikes(0); // strikes are the same for all times ?!
     std::vector<Real> stddevs;
+    Real tEff = flatExtrapolation_ ? std::min(t, optionletStripper_->optionletFixingTimes().back()) : t;
     for (Size i = 0; i < optionletStrikes.size(); i++) {
-        stddevs.push_back(volatilityImpl(t, optionletStrikes[i]) * std::sqrt(t));
+        stddevs.push_back(volatilityImpl(tEff, optionletStrikes[i]) * std::sqrt(tEff));
     }
-    // Extrapolation may be a problem with splines, but since minStrike()
-    // and maxStrike() are set, we assume that no one will use stddevs for
-    // strikes outside these strikes
-    CubicInterpolation::BoundaryCondition bc =
-        optionletStrikes.size() >= 4 ? CubicInterpolation::Lagrange : CubicInterpolation::SecondDerivative;
-    return boost::make_shared<InterpolatedSmileSection<Cubic> >(
-        t, optionletStrikes, stddevs, Null<Real>(), Cubic(CubicInterpolation::Spline, false, bc, 0.0, bc, 0.0),
-        Actual365Fixed(), volatilityType(), displacement());
+    // Use a linear interpolated smile section.
+    // TODO: possibly make this configurable?
+    if (flatExtrapolation_)
+        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(
+            t, optionletStrikes, stddevs, Null<Real>(), LinearFlat(), Actual365Fixed(), volatilityType(), displacement());
+    else
+        return boost::make_shared<InterpolatedSmileSection<Linear> >(
+            t, optionletStrikes, stddevs, Null<Real>(), Linear(), Actual365Fixed(), volatilityType(), displacement());
 }
 
 Volatility StrippedOptionletAdapter2::volatilityImpl(Time length, Rate strike) const {
@@ -61,7 +66,8 @@ Volatility StrippedOptionletAdapter2::volatilityImpl(Time length, Rate strike) c
     const std::vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
     boost::shared_ptr<LinearInterpolation> timeInterpolator(
         new LinearInterpolation(optionletTimes.begin(), optionletTimes.end(), vol.begin()));
-    return timeInterpolator->operator()(length, true);
+    Real lengthEff = flatExtrapolation_ ? std::min(length, optionletStripper_->optionletFixingTimes().back()) : length;
+    return timeInterpolator->operator()(lengthEff, true);
 }
 
 void StrippedOptionletAdapter2::performCalculations() const {
@@ -89,8 +95,12 @@ void StrippedOptionletAdapter2::performCalculations() const {
         //                              //endCriteria_,
         //                              //optMethod_
         //                              ));
-        strikeInterpolations_[i] = boost::shared_ptr<LinearInterpolation>(
+        auto tmp = boost::shared_ptr<LinearInterpolation>(
             new LinearInterpolation(optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin()));
+        if(flatExtrapolation_)
+            strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
+        else
+            strikeInterpolations_[i] = tmp;
 
         // QL_ENSURE(strikeInterpolations_[i]->endCriteria()!=EndCriteria::MaxIterations,
         //          "section calibration failed: "
