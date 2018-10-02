@@ -45,6 +45,15 @@ public:
 
     virtual const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const = 0;
 
+    //! Default implementation, returns false if get throws or returns a null pointer
+    virtual bool has(const std::string& name, const QuantLib::Date& d) const {
+        try {
+            return get(name, d) != nullptr;
+        } catch(...) {
+            return false;
+        }
+    }
+
     virtual const std::vector<Fixing>& loadFixings() const = 0;
     //@}
 };

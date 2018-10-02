@@ -520,7 +520,15 @@
 
   <xs:complexType name="quoteType">
     <xs:sequence>
-      <xs:element type="xs:string" name="Quote" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Quote" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="optional" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 
