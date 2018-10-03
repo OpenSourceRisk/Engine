@@ -388,7 +388,7 @@ void YieldCurve::buildZeroCurve() {
     auto zeroQuoteIDs = zeroCurveSegment->quotes();
 
     for (Size i = 0; i < zeroQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(zeroQuoteIDs[i].first, asofDate_, zeroQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(zeroQuoteIDs[i], asofDate_);
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::ZERO,
                        "Market quote not of type zero.");
@@ -504,7 +504,7 @@ void YieldCurve::buildZeroSpreadedCurve() {
     vector<Date> dates;
     vector<Handle<Quote>> quoteHandles;
     for (Size i = 0; i < quoteIDs.size(); ++i) {
-        if (boost::shared_ptr<MarketDatum> md = loader_.get(quoteIDs[i].first, asofDate_, quoteIDs[i].second)) {
+        if (boost::shared_ptr<MarketDatum> md = loader_.get(quoteIDs[i], asofDate_)) {
             QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZERO,
                        "Market quote not of type zero.");
             QL_REQUIRE(md->quoteType() == MarketDatum::QuoteType::YIELD_SPREAD,
@@ -561,7 +561,7 @@ void YieldCurve::buildDiscountCurve() {
     auto discountQuoteIDs = discountCurveSegment->quotes();
 
     for (Size i = 0; i < discountQuoteIDs.size(); ++i) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i].first, asofDate_, discountQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(discountQuoteIDs[i], asofDate_);
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::DISCOUNT,
                        "Market quote not of type Discount.");
@@ -716,7 +716,7 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
     auto depositQuoteIDs = depositSegment->quotes();
 
     for (Size i = 0; i < depositQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(depositQuoteIDs[i].first, asofDate_, depositQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(depositQuoteIDs[i], asofDate_);
 
         // Check that we have a valid deposit quote
         if (marketQuote) {
@@ -784,7 +784,7 @@ void YieldCurve::addFutures(const boost::shared_ptr<YieldCurveSegment>& segment,
     auto futureQuoteIDs = futureSegment->quotes();
 
     for (Size i = 0; i < futureQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(futureQuoteIDs[i].first, asofDate_, futureQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(futureQuoteIDs[i], asofDate_);
 
         // Check that we have a valid future quote
         if (marketQuote) {
@@ -820,7 +820,7 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
     auto fraQuoteIDs = fraSegment->quotes();
 
     for (Size i = 0; i < fraQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fraQuoteIDs[i].first, asofDate_, fraQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fraQuoteIDs[i], asofDate_);
 
         // Check that we have a valid FRA quote
         if (marketQuote) {
@@ -887,7 +887,7 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
 
     auto oisQuoteIDs = oisSegment->quotes();
     for (Size i = 0; i < oisQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(oisQuoteIDs[i].first, asofDate_, oisQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(oisQuoteIDs[i], asofDate_);
 
         // Check that we have a valid OIS quote
         if (marketQuote) {
@@ -929,7 +929,7 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
     auto swapQuoteIDs = swapSegment->quotes();
 
     for (Size i = 0; i < swapQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(swapQuoteIDs[i].first, asofDate_, swapQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(swapQuoteIDs[i], asofDate_);
 
         // Check that we have a valid swap quote
         if (marketQuote) {
@@ -1003,7 +1003,7 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
         /* An average OIS quote is a composite of a swap quote and a basis
            spread quote. Check first that we have these. */
         // Firstly, the rate quote.
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(averageOisQuoteIDs[i].first, asofDate_, averageOisQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(averageOisQuoteIDs[i], asofDate_);
         boost::shared_ptr<SwapQuote> swapQuote;
         if (marketQuote) {
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::IR_SWAP,
@@ -1011,7 +1011,7 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
             swapQuote = boost::dynamic_pointer_cast<SwapQuote>(marketQuote);
 
             // Secondly, the basis spread quote.
-            marketQuote = loader_.get(averageOisQuoteIDs[i + 1].first, asofDate_, averageOisQuoteIDs[i + 1].second);
+            marketQuote = loader_.get(averageOisQuoteIDs[i + 1], asofDate_);
             boost::shared_ptr<BasisSwapQuote> basisQuote;
             if (marketQuote) {
                 QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BASIS_SWAP,
@@ -1093,7 +1093,7 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
 
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i].first, asofDate_, basisSwapQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
 
         // Check that we have a valid basis swap quote
         if (marketQuote) {
@@ -1180,7 +1180,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
 
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i].first, asofDate_, basisSwapQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
 
         // Check that we have a valid basis swap quote
         boost::shared_ptr<BasisSwapQuote> basisSwapQuote;
@@ -1246,7 +1246,7 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
 
     auto bmaBasisSwapQuoteIDs = bmaBasisSwapSegment->quotes();
     for (Size i = 0; i < bmaBasisSwapQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i].first, asofDate_, bmaBasisSwapQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(bmaBasisSwapQuoteIDs[i], asofDate_);
 
         // Check that we have a valid bma basis swap quote
         if (marketQuote) {
@@ -1338,7 +1338,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     LOG("YieldCurve::addFXForwards(), create FX forward quotes and helpers");
     auto fxForwardQuoteIDs = fxForwardSegment->quotes();
     for (Size i = 0; i < fxForwardQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i].first, asofDate_, fxForwardQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(fxForwardQuoteIDs[i], asofDate_);
 
         // Check that we have a valid FX forward quote
         if (marketQuote) {
@@ -1495,7 +1495,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
 
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i].first, asofDate_, basisSwapQuoteIDs[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
 
         // Check that we have a valid basis swap quote
         if (marketQuote) {
@@ -1581,7 +1581,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     for (Size i = 0; i < quoteIds.size(); i++) {
         
         // Throws if quote not found
-        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIds[i].first, asofDate_, quoteIds[i].second);
+        boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIds[i], asofDate_);
 
         // Check that we have a valid basis swap quote
         if (marketQuote) {

@@ -99,7 +99,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS || 
             config->type() == DefaultCurveConfig::Type::HazardRate) {
             for (const auto& p : config->cdsQuotes()) {
-                if (boost::shared_ptr<MarketDatum> md = loader.get(p.first, asof, p.second)) {
+                if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
                     Period tenor;
                     if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
                         tenor = boost::dynamic_pointer_cast<CdsSpreadQuote>(md)->term();
