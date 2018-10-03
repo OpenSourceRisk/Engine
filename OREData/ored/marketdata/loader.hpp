@@ -26,6 +26,7 @@
 #include <boost/shared_ptr.hpp>
 #include <ored/marketdata/fixings.hpp>
 #include <ored/marketdata/marketdatum.hpp>
+#include <ored/utilities/log.hpp>
 #include <ql/time/date.hpp>
 #include <vector>
 
@@ -51,6 +52,26 @@ public:
             return get(name, d) != nullptr;
         } catch(...) {
             return false;
+        }
+    }
+
+    /*! Default implementation for get that allows for the market data item to be \p optional
+        - if the quote with ID \p name is in the loader for date \p d, it is returned
+        - if the quote with ID \p name is not in the loader for date \p d and \p optional is true, 
+          a warning is logged and a <code>boost::shared_ptr<MarketDatum>()</code> is returned
+        - if the quote with ID \p name is not in the loader for date \p d and \p optional is false, 
+          an exception is thrown
+     */ 
+    virtual boost::shared_ptr<MarketDatum> get(const std::string& name, const QuantLib::Date& d, bool optional) const {
+        if (has(name, d)) {
+            return get(name, d);
+        } else {
+            if (optional) {
+                WLOG("Could not find quote for ID " << name << " with as of date " << QuantLib::io::iso_date(d) << ".");
+                return boost::shared_ptr<MarketDatum>();
+            } else {
+                QL_FAIL("Could not find quote for Mandatory ID " << name << " with as of date " << QuantLib::io::iso_date(d));
+            }
         }
     }
 

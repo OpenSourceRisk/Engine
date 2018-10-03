@@ -21,6 +21,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using QuantLib::Visitor;
 using QuantLib::Size;
@@ -335,7 +336,7 @@ void YieldCurveSegment::loadQuotesFromXML(XMLNode *parent) {
     if (quotesNode) {
         for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
             string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
-            bool opt = attr == "true";
+            bool opt = (!attr.empty() && parseBool(attr));
             quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
         }
     }

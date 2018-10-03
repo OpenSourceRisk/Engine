@@ -124,12 +124,6 @@ private:
     boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
                                                        const DayCounter& dayCounter);
 
-    // get a quote from the loader.
-    // If quote is in the loader, it is returned.
-    // If not in the loader and optional is true, logs a warning and returns a null ptr
-    // If not in the loader and optional is false, logs a warning & throws an exception
-    boost::shared_ptr<MarketDatum> getDatum(const pair<string, bool>&, const Date&);
-
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
                      vector<boost::shared_ptr<RateHelper>>& instruments);
