@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file sekcpi.hpp
+/*! \file secpi.hpp
     \brief SEK CPI index
 */
 
