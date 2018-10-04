@@ -50,11 +50,11 @@ public:
 
     CapFloorVolatilityCurveConfig() {}
     CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                  const VolatilityType& volatilityType, const bool extrapolate, bool inlcudeAtm,
-                                  const vector<Period>& tenors, const vector<double>& strikes,
-                                  const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-                                  const BusinessDayConvention& businessDayConvention, const string& iborIndex,
-                                  const string& discountCurve);
+                                  const VolatilityType& volatilityType, const bool extrapolate,
+                                  const bool flatExtrapolation, bool inlcudeAtm, const vector<Period>& tenors,
+                                  const vector<double>& strikes, const DayCounter& dayCounter, Natural settleDays,
+                                  const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
+                                  const string& iborIndex, const string& discountCurve);
 
     //! \name XMLSerializable interface
     //@{
@@ -66,6 +66,7 @@ public:
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
+    const bool& flatExtrapolation() const { return flatExtrapolation_; }
     const bool& includeAtm() const { return includeAtm_; }
     const vector<Period>& tenors() const { return tenors_; }
     const vector<double>& strikes() const { return strikes_; }
@@ -82,6 +83,7 @@ public:
     //@{
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate() { return extrapolate_; }
+    bool& flatExtrapolation() { return flatExtrapolation_; }
     bool& includeAtm() { return includeAtm_; }
     vector<Period>& tenors() { return tenors_; }
     vector<double>& strikes() { return strikes_; }
@@ -94,7 +96,7 @@ public:
 
 private:
     VolatilityType volatilityType_;
-    bool extrapolate_, includeAtm_;
+    bool extrapolate_, flatExtrapolation_, includeAtm_;
     vector<Period> tenors_;
     vector<double> strikes_;
     DayCounter dayCounter_;

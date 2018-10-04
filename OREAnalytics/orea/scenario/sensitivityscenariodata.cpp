@@ -394,7 +394,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!indexCurveShiftData_.empty()) {
@@ -405,7 +404,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "index", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
@@ -426,7 +424,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             curveShiftDataToXML(doc, node, *kv.second);
         }
     }
-    XMLUtils::appendNode(root, yieldCurvesNode);
 
     if (!dividendYieldShiftData_.empty()) {
         LOG("toXML for DividendYieldCurves");
@@ -436,7 +433,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "equity", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!fxShiftData_.empty()) {
@@ -447,7 +443,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "ccypair", kv.first);
             shiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!swaptionVolShiftData_.empty()) {
@@ -459,7 +454,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addGenericChildAsList(doc, node, "ShiftTerms", kv.second.shiftTerms);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!capFloorVolShiftData_.empty()) {
@@ -471,7 +465,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!fxVolShiftData_.empty()) {
@@ -482,7 +475,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "ccypair", kv.first);
             volShiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!creditCurveShiftData_.empty()) {
@@ -494,7 +486,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, node, "Currency", creditCcys_[kv.first]);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!cdsVolShiftData_.empty()) {
@@ -506,7 +497,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             shiftDataToXML(doc, node, kv.second);
             XMLUtils::addGenericChildAsList(doc, node, "ShiftExpiries", kv.second.shiftExpiries);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!baseCorrelationShiftData_.empty()) {
@@ -519,7 +509,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addGenericChildAsList(doc, node, "ShiftTerms", kv.second.shiftTerms);
             XMLUtils::addChild(doc, node, "ShiftLossLevels", kv.second.shiftLossLevels);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!equityShiftData_.empty()) {
@@ -530,7 +519,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "equity", kv.first);
             shiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!equityVolShiftData_.empty()) {
@@ -541,7 +529,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "equity", kv.first);
             volShiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!zeroInflationCurveShiftData_.empty()) {
@@ -552,7 +539,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "index", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!yoyInflationCurveShiftData_.empty()) {
@@ -563,7 +549,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "index", kv.first);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!commodityShiftData_.empty()) {
@@ -574,7 +559,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "name", kv.first);
             shiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!commodityCurveShiftData_.empty()) {
@@ -586,7 +570,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, node, "Currency", commodityCurrencies_[kv.first]);
             curveShiftDataToXML(doc, node, *kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!commodityVolShiftData_.empty()) {
@@ -597,7 +580,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "name", kv.first);
             volShiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!securityShiftData_.empty()) {
@@ -608,7 +590,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "security", kv.first);
             shiftDataToXML(doc, node, kv.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     if (!crossGammaFilter_.empty()) {
@@ -617,7 +598,6 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& crossGamma : crossGammaFilter_) {
             XMLUtils::addChild(doc, parent, "Pair", crossGamma.first + "," + crossGamma.second);
         }
-        XMLUtils::appendNode(root, parent);
     }
 
     return root;

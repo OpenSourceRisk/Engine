@@ -302,7 +302,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
-        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
+        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

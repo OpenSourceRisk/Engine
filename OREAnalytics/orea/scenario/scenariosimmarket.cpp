@@ -544,7 +544,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
                 optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
             boost::shared_ptr<StrippedOptionletAdapter2> adapter =
-                boost::make_shared<StrippedOptionletAdapter2>(optionlet);
+                boost::make_shared<StrippedOptionletAdapter2>(optionlet, true); // FIXME always flat extrapolation
             hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
         } else {
             string decayModeString = parameters->capFloorVolDecayMode();
