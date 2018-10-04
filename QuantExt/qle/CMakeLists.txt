@@ -23,6 +23,7 @@ currencies/asia.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/inflationindexwrapper.cpp
+indexes/region.cpp
 instruments/averageois.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
@@ -148,11 +149,14 @@ currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
 indexes/bmaindexwrapper.hpp
+indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
 indexes/inflationindexobserver.hpp
 indexes/inflationindexwrapper.hpp
+indexes/region.hpp
+indexes/secpi.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
