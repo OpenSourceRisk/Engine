@@ -77,8 +77,11 @@ void CurveConfigTest::testCurveConfigQuotes() {
     curveConfigs.cdsVolCurveConfig("CDXIG") = cdsVolatilityConfig;
 
     // add default curves
-    vector<string> cdsQuotes = {"CDS/CREDIT_SPREAD/BANK/SR/USD/1Y", "CDS/CREDIT_SPREAD/BANK/SR/USD/2Y",
-                                "CDS/CREDIT_SPREAD/BANK/SR/USD/3Y"};
+    vector<pair<string, bool>> cdsQuotes = {
+        { "CDS/CREDIT_SPREAD/BANK/SR/USD/1Y", false },
+        { "CDS/CREDIT_SPREAD/BANK/SR/USD/2Y", false },
+        { "CDS/CREDIT_SPREAD/BANK/SR/USD/3Y", false }
+    };
     boost::shared_ptr<DefaultCurveConfig> defaultConfig = boost::make_shared<DefaultCurveConfig>(
         "BANK_SR_USD", "", "USD", DefaultCurveConfig::Type::SpreadCDS, "Yield/USD/USD3M",
         "RECOVERY_RATE/RATE/BANK/SR/USD", parseDayCounter("A365"), "CDS-STANDARD-CONVENTIONS", cdsQuotes, true);

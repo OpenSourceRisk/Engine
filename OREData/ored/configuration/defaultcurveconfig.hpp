@@ -53,7 +53,7 @@ public:
     //! Detailed constructor
     DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
-                       const string& conventionID, const std::vector<string>& quotes, bool extrapolation = true,
+                       const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation = true,
                        const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<Period>& pillars = std::vector<Period>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0);
@@ -81,7 +81,7 @@ public:
     const Calendar& calendar() const { return calendar_; }
     const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
-    const vector<string>& cdsQuotes() { return cdsQuotes_; }
+    const std::vector<std::pair<std::string, bool>>& cdsQuotes() { return cdsQuotes_; }
 
     //@}
 
@@ -102,7 +102,8 @@ public:
     //@}
 
 private:
-    vector<string> cdsQuotes_;
+    //! Quote and optional flag pair 
+    std::vector<std::pair<std::string, bool>> cdsQuotes_;
     string currency_;
     Type type_;
     string discountCurveID_;
