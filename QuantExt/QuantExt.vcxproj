@@ -516,6 +516,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\indexes\all.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
@@ -553,6 +554,8 @@
     <ClInclude Include="qle\indexes\ibor\twdtaibor.hpp" />
     <ClInclude Include="qle\indexes\inflationindexobserver.hpp" />
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\region.hpp" />
+    <ClInclude Include="qle\indexes\secpi.hpp" />
     <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
@@ -718,6 +721,7 @@
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
+    <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
