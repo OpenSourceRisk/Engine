@@ -27,6 +27,7 @@
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
@@ -63,6 +64,8 @@
 #include <qle/indexes/ibor/twdtaibor.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/indexes/region.hpp>
+#include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityforward.hpp>
