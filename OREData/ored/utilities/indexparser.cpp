@@ -32,6 +32,8 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/dkcpi.hpp>
+#include <qle/indexes/secpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/genericiborindex.hpp>
