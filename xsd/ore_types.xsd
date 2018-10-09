@@ -49,6 +49,7 @@
       <xs:enumeration value="CAD"/>
       <xs:enumeration value="CHF"/>
       <xs:enumeration value="CNY"/>
+      <xs:enumeration value="CNH"/>
       <xs:enumeration value="CZK"/>
       <xs:enumeration value="DEM"/>
       <xs:enumeration value="DKK"/>
