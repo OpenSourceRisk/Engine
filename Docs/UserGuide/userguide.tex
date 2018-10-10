@@ -4094,7 +4094,42 @@ a SpreadQuote and a RecoveryRateQuote.
 %========================================================
 %\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-\include{tradedata}
+\include{introenvelope}
+
+%\include{tradedata}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Trade Specific Data}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+After the envelope node, trade-specific data for each trade type supported by
+ORE is included. 
+Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
+configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
+sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
+
+\vspace{1em}
+
+Details of  trade-specific data for all trade types follow below.
+
+\input{tradedata/swap}
+\input{../../Docs/UserGuide/tradedata/capfloor}
+\input{../../Docs/UserGuide/tradedata/forwardrateagreement}
+\input{../../Docs/UserGuide/tradedata/swaption}
+\input{../../Docs/UserGuide/tradedata/fxforward}
+\input{../../Docs/UserGuide/tradedata/fxswap}
+\input{../../Docs/UserGuide/tradedata/fxoption}
+\input{../../Docs/UserGuide/tradedata/equityoption}
+\input{../../Docs/UserGuide/tradedata/equityforward}
+\input{../../Docs/UserGuide/tradedata/equityswap}
+\input{../../Docs/UserGuide/tradedata/cpiswap}
+\input{../../Docs/UserGuide/tradedata/yyswap}
+\input{../../Docs/UserGuide/tradedata/bond}
+\input{../../Docs/UserGuide/tradedata/creditdefaultswap}
+\input{../../Docs/UserGuide/tradedata/commodityoption}
+\input{../../Docs/UserGuide/tradedata/commodityforward}
+
+
 \include{tradecomponents}
 \include{allowablevalues}
 
