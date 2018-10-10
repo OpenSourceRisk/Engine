@@ -47,17 +47,14 @@ class SensitivityAnalysis;
 
 class OREApp {
 public:
-    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout)
-        : params_(params), out_(out), cubeDepth_(0) {
-        tab_ = 40;
-        progressBarWidth_ = 72 - std::min<Size>(tab_, 67);
-
-        asof_ = parseDate(params->get("setup", "asofDate"));
-        Settings::instance().evaluationDate() = asof_;
-    }
-    virtual ~OREApp() {}
+    //! Constructor
+    OREApp(boost::shared_ptr<Parameters> params, std::ostream& out = std::cout);
+    //! Destructor
+    virtual ~OREApp();
     //! generates XVA reports for a given portfolio and market
-    int run();
+    virtual int run();
+
+protected:
     //! read setup from params_
     virtual void readSetup();
     //! set up logging
@@ -72,9 +69,9 @@ public:
     void buildMarket();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
-                                                                const string& groupName = "setup");
+                                                                const string& groupName = "setup") const;
     //! build trade factory
-    boost::shared_ptr<TradeFactory> buildTradeFactory();
+    boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
 
@@ -123,10 +120,6 @@ public:
     //! load in nettingSet data
     boost::shared_ptr<NettingSetManager> initNettingSetManager();
 
-    //! write out additional reports
-    virtual void writeAdditionalReports() {}
-
-protected:
     //! Get report writer
     /*! This calls the private method getReportWriterImpl() which returns the 
         actual ReportWriter implementation. The private method is virtual and 
@@ -152,29 +145,29 @@ protected:
         where we have our own special report writer class MyReportWriter that 
         derives from ReportWriter or any class in its hierarchy.
     */
-    boost::shared_ptr<ReportWriter> getReportWriter();
+    boost::shared_ptr<ReportWriter> getReportWriter() const;
     //! Get sensitivity runner
     virtual boost::shared_ptr<SensitivityRunner> getSensitivityRunner();
     //! Add extra engine builders
-    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() { return {}; };
+    virtual std::vector<boost::shared_ptr<EngineBuilder>> getExtraEngineBuilders() const { return {}; };
     //! Add extra leg builders
-    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() { return {}; };
+    virtual std::vector<boost::shared_ptr<LegBuilder>> getExtraLegBuilders() const { return {}; };
     //! Add extra trade builders
-    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() { return {}; };
+    virtual std::map<std::string, boost::shared_ptr<AbstractTradeBuilder>> getExtraTradeBuilders() const { return {}; };
 
     //! Get parametric var calculator
     virtual boost::shared_ptr<ParametricVarCalculator>
     buildParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
                                  const std::string& portfolioFilter,
-                                 const boost::shared_ptr<SensitivityData>& sensitivities,
+                                 const boost::shared_ptr<SensitivityStream>& sensitivities,
                                  const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                                  const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                                  const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);
 
     Size tab_, progressBarWidth_;
-    Date asof_;
     //! ORE Input parameters
     boost::shared_ptr<Parameters> params_;
+    Date asof_;
     std::ostream& out_;
     bool writeInitialReports_;
     bool simulate_;
@@ -185,6 +178,8 @@ protected:
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;
+    std::string inputPath_;
+    std::string outputPath_;
 
     boost::shared_ptr<Market> market_;               // T0 market
     boost::shared_ptr<EngineFactory> engineFactory_; // engine factory linked to T0 market

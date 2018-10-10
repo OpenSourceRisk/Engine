@@ -1,33 +1,33 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
+  <xs:element type="todaysmarket" name="TodaysMarket"/>
 
   <xs:complexType name="todaysmarket">
-      <xs:sequence>
-        <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
-        <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
-        <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="fxVolatilitiesType" name="FxVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="yyInflationCapFloorPriceSurfacesType" name="YYInflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="yyInflationCapFloorVolatilitiesType" name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="baseCorrelationsType" name="BaseCorrelations" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="commodityCurvesType" name="CommodityCurves" maxOccurs="unbounded" minOccurs="0"/>
-        <xs:element type="commodityVolatilitiesType" name="CommodityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
-     </xs:sequence>
-    </xs:complexType>
+    <xs:sequence>
+      <xs:element type="configurationType" name="Configuration" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="fxVolatilitiesType" name="FxVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="inflationCapFloorPriceSurfacesType" name="InflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yyInflationCapFloorPriceSurfacesType" name="YYInflationCapFloorPriceSurfaces" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yyInflationCapFloorVolatilitiesType" name="YYInflationCapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="equityCurvesType" name="EquityCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="equityVolatilitiesType" name="EquityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="securitiesType" name="Securities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="baseCorrelationsType" name="BaseCorrelations" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="commodityCurvesType" name="CommodityCurves" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="commodityVolatilitiesType" name="CommodityVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
 
   <xs:complexType name="configurationType">
     <xs:all>
@@ -60,7 +60,8 @@
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
-              <xs:attribute type="xs:string" name="name" use="required"/> <!-- FIXME: should be currencyCode -->
+              <xs:attribute type="xs:string" name="name" use="required"/>
+              <!-- FIXME: should be currencyCode -->
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>
@@ -75,7 +76,8 @@
         <xs:complexType>
           <xs:simpleContent>
             <xs:extension base="xs:string">
-              <xs:attribute type="xs:string" name="currency" use="required"/> <!-- FIXME: should be currencyCode -->
+              <xs:attribute type="xs:string" name="currency" use="required"/>
+              <!-- FIXME: should be currencyCode -->
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>
@@ -203,7 +205,7 @@
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
 
-    <xs:complexType name="cdsVolatilitiesType">
+  <xs:complexType name="cdsVolatilitiesType">
     <xs:sequence>
       <xs:element name="CDSVolatility" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
@@ -323,7 +325,7 @@
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
 
-<xs:complexType name="baseCorrelationsType">
+  <xs:complexType name="baseCorrelationsType">
     <xs:sequence>
       <xs:element name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0">
         <xs:complexType>
@@ -337,7 +339,7 @@
     </xs:sequence>
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityCurvesType">
     <xs:sequence>
       <xs:element name="CommodityCurve" maxOccurs="unbounded" minOccurs="0">
@@ -352,7 +354,7 @@
     </xs:sequence>
     <xs:attribute type="xs:string" name="id"/>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityVolatilitiesType">
     <xs:sequence>
       <xs:element name="CommodityVolatility" maxOccurs="unbounded" minOccurs="0">

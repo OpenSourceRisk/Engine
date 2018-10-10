@@ -29,6 +29,9 @@ using namespace std;
 namespace ore {
 namespace analytics {
 
+DateGrid::DateGrid() : dates_(1, Settings::instance().evaluationDate()), 
+    tenors_(1, 0 * Days), times_(1, 0.0), timeGrid_(times_.begin(), times_.end()) {}
+
 DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, const QuantLib::DayCounter& dayCounter) {
 
     if (grid == "ALPHA") {
@@ -101,8 +104,10 @@ DateGrid::DateGrid(const string& grid, const QuantLib::Calendar& gridCalendar, c
 DateGrid::DateGrid(const vector<Period>& tenors, const QuantLib::Calendar& gridCalendar,
                    const QuantLib::DayCounter& dayCounter)
     : tenors_(tenors) {
-    if (tenors.size() > 0)
-        buildDates(gridCalendar, dayCounter);
+    QL_REQUIRE(!tenors_.empty(), "DateGrid requires a non-empty vector of tenors");
+    QL_REQUIRE(is_sorted(tenors_.begin(), tenors_.end()),
+        "Construction of DateGrid requires a sorted vector of unique tenors");
+    buildDates(gridCalendar, dayCounter);
 }
 
 DateGrid::DateGrid(const vector<Date>& dates, const DayCounter& dayCounter) : dates_(dates) {
@@ -136,8 +141,15 @@ void DateGrid::buildDates(const QuantLib::Calendar& cal, const QuantLib::DayCoun
             dates_[i] = cal.adjust(today + tenors_[i]);
         else
             dates_[i] = cal.advance(today, tenors_[i], Following, true);
+        if (i > 0) {
+            QL_REQUIRE(dates_[i] >= dates_[i - 1], "DateGrid::buildDates(): tenors must be monotonic");
+            if (dates_[i] == dates_[i - 1]) {
+                dates_.erase(std::next(dates_.begin(), i));
+                tenors_.erase(std::next(tenors_.begin(), i));
+                --i;
+            }
+        }
     }
-    QL_REQUIRE(dates_.size() == tenors_.size(), "Date/Tenor mismatch");
 
     // Build times
     times_.resize(dates_.size());

@@ -49,6 +49,12 @@ public:
     //! Check if a trade id is already in the porfolio
     bool has(const string& id);
 
+    /*! Get a Trade with the given \p id from the portfolio
+        
+        \remark returns a `nullptr` if no trade found with the given \p id
+    */
+    boost::shared_ptr<Trade> get(const std::string& id) const;
+
     //! Clear the portfolio
     void clear() { trades_.clear(); }
 

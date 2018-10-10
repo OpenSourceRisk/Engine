@@ -21,6 +21,7 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
@@ -77,20 +78,27 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                         continue;
                     }
 
-                    // A2 indices with native fixings
+                    // A2 indices with native fixings, but no only on the standard fixing date
+                    auto on = boost::dynamic_pointer_cast<OvernightIndexedCoupon>(frc);
+                    if (on) {
+                        for (auto const& d : on->fixingDates())
+                            fixingMap_[on->index()].insert(d);
+                        continue;
+                    }
                     auto avon = boost::dynamic_pointer_cast<AverageONIndexedCoupon>(frc);
                     if (avon) {
                         for (auto const& d : avon->fixingDates())
                             fixingMap_[avon->index()].insert(d);
                         continue;
                     }
-                    // A3 BMA indices with native fixings
                     auto bma = boost::dynamic_pointer_cast<AverageBMACoupon>(frc);
                     if (bma) {
                         for (auto const& d : bma->fixingDates())
                             fixingMap_[bma->index()].insert(d);
                         continue;
                     }
+
+                    // A3 standard case
                     fixingMap_[frc->index()].insert(frc->fixingDate());
                 }
 

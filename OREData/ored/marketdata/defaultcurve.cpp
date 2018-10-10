@@ -85,65 +85,38 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             }
         }
 
-        // We loop over all market data, looking for quotes that match the configuration
-        // until we found the whole set of quotes or do not have more quotes in the
-        // market data
-
-        map<Period, Real> quotes;
+        // Get the market points listed in the curve config
+        // Get the recovery rate if needed
         recoveryRate_ = Null<Real>();
-
-        for (auto& md : loader.loadQuotes(asof)) {
-
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
-
-                boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
-
-                if (q->name() == config->recoveryRateQuote()) {
-                    QL_REQUIRE(recoveryRate_ == Null<Real>(),
-                               "duplicate recovery rate quote " << q->name() << " found.");
-                    recoveryRate_ = q->quote()->value();
-                }
-            }
-
-            if (config->type() == DefaultCurveConfig::Type::SpreadCDS && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-                md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD) {
-
-                boost::shared_ptr<CdsSpreadQuote> q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
-
-                vector<string>::const_iterator it =
-                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it != config->cdsQuotes().end()) {
-                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
-
-                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
-                                               << q->term() << ") while loading default curve " << config->curveID());
-                }
-            }
-
-            if (config->type() == DefaultCurveConfig::Type::HazardRate && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE) {
-                boost::shared_ptr<HazardRateQuote> q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
-
-                vector<string>::const_iterator it =
-                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it != config->cdsQuotes().end()) {
-                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
-
-                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
-                                               << q->term() << ") while loading default curve " << config->curveID());
-                }
-            }
+        if (!config->recoveryRateQuote().empty()) {
+            QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof), 
+                "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
+            recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
         }
 
-        LOG("DefaultCurve: read " << quotes.size() << " default quotes");
+        // Get the spread/hazard rate quotes
+        map<Period, Real> quotes;
+        if (config->type() == DefaultCurveConfig::Type::SpreadCDS || 
+            config->type() == DefaultCurveConfig::Type::HazardRate) {
+            for (const auto& p : config->cdsQuotes()) {
+                if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
+                    Period tenor;
+                    if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
+                        tenor = boost::dynamic_pointer_cast<CdsSpreadQuote>(md)->term();
+                    } else {
+                        tenor = boost::dynamic_pointer_cast<HazardRateQuote>(md)->term();
+                    }
+                    
+                    // Add to quotes, with a check that we have no duplicate tenors
+                    auto res = quotes.insert(make_pair(tenor, md->quote()->value()));
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                        << tenor << ") while loading default curve " << config->curveID());
+                }
+            }
 
-        QL_REQUIRE(quotes.size() == config->cdsQuotes().size(),
-                   "read " << quotes.size() << ", but " << config->cdsQuotes().size() << " required.");
+            QL_REQUIRE(!quotes.empty(), "No market points found for curve config " << config->curveID());
+            LOG("DefaultCurve: using " << quotes.size() << " default quotes of " << config->cdsQuotes().size() << " requested quotes.");
+        }
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "

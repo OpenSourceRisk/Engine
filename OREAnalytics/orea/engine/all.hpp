@@ -8,5 +8,11 @@
 #include <orea/engine/stresstest.hpp>
 #include <orea/engine/riskfilter.hpp>
 #include <orea/engine/parametricvar.hpp>
-#include <orea/engine/sensitivitydata.hpp>
+#include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sensitivityinmemorystream.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 

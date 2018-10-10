@@ -50,10 +50,9 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     QL_REQUIRE(length > 0, "File " << fileName << " is empty.");
     t.seekg(0, std::ios::beg);      // go back to the beginning
     _buffer = new char[length + 1]; // allocate memory for a buffer of appropriate dimension
-    memset(_buffer, 0, length + 1); // Wipe the buffer (caused problems on windows release build)
     t.read(_buffer, length);        // read the whole file into the buffer
+    _buffer[static_cast<int>(t.gcount())] = '\0';
     t.close();                      // close file handle
-    _buffer[length] = '\0';
     try {
         _doc->parse<0>(_buffer);
     } catch (rapidxml::parse_error& pe) {
@@ -124,8 +123,22 @@ void XMLSerializable::fromFile(const string& filename) {
 
 void XMLSerializable::toFile(const string& filename) {
     XMLDocument doc;
-    toXML(doc);
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
     doc.toFile(filename);
+}
+
+void XMLSerializable::fromXMLString(const string& xml) {
+    ore::data::XMLDocument doc;
+    doc.fromXMLString(xml);
+    fromXML(doc.getFirstNode(""));
+}
+
+string XMLSerializable::toXMLString() {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toString();
 }
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {

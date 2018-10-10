@@ -7,5 +7,8 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/indexes/inflationindexobserver.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/region.hpp>
+#include <qle/indexes/secpi.hpp>
+#include <qle/indexes/dkcpi.hpp>
 
 #include <qle/indexes/ibor/all.hpp>

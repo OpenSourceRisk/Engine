@@ -48,6 +48,9 @@
     <ClInclude Include="sensitivityanalysisanalytic.hpp">
       <Filter>headers</Filter>
     </ClInclude>
+    <ClInclude Include="sensitivityaggregator.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cube.cpp">
@@ -88,6 +91,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="sensitivityanalysisanalytic.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityaggregator.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

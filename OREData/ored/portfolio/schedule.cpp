@@ -177,7 +177,7 @@ Schedule makeSchedule(const ScheduleData& data) {
 
         // 2) check if meta data is present, and if yes if it is consistent across schedules;
         //    the only exception is the term date convention, this is taken from the last schedule always
-        BusinessDayConvention convention, termConvention = Unadjusted; // initialization prevents gcc warning
+        BusinessDayConvention convention = Null<BusinessDayConvention>(), termConvention = Unadjusted; // initialization prevents gcc warning
         Calendar calendar;
         Period tenor;
         DateGeneration::Rule rule = DateGeneration::Zero; // initialization prevents gcc warning

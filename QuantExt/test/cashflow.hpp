@@ -34,6 +34,7 @@ namespace testsuite {
 class CashFlowTest {
 public:
     static void testFXLinkedCashFlow();
+    static void testEquityCoupon();
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite

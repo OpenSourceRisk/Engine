@@ -89,11 +89,21 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
     if (tokens.size() == 2) {
-        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+        return boost::make_shared<EquityIndex>(tokens[1], NullCalendar());
     }
     else {
         QL_FAIL("Error parsing equity string " + s);
     }
+}
+
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
+    try {
+        index = parseIborIndex(s);
+    }
+    catch (...) {
+        return false;
+    }
+    return true;
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
@@ -159,7 +169,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
-        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()}};
+        {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
+        {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
+        {"CLP-CAMARA", boost::make_shared<IborIndexParserWithPeriod<CLPCamara>>()}
+    };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
@@ -255,7 +268,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
-        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
+        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

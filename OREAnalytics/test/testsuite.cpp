@@ -67,6 +67,7 @@ using boost::unit_test::test_suite;
 #include "shiftscenariogenerator.hpp"
 #include "stresstest.hpp"
 #include "swapperformance.hpp"
+#include "sensitivityaggregator.hpp"
 
 namespace {
 
@@ -115,6 +116,7 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::StressTestingTest::suite());
     test->add(testsuite::ObservationModeTest::suite());
     test->add(testsuite::ShiftScenarioGeneratorTest::suite());
+    test->add(testsuite::SensitivityAggregatorTest::suite());
 
     if (enablePerformanceTests) {
         test->add(testsuite::SensitivityPerformanceTest::suite());

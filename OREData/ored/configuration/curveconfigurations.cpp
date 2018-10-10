@@ -65,41 +65,41 @@ void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<strin
 }
 
 std::set<string> CurveConfigurations::quotes() const {
-    vector<string> quotes;
+    set<string> quotes;
     for (auto m : yieldCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : fxVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : swaptionVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : capFloorVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : defaultCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : cdsVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : baseCorrelationCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : inflationCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : inflationCapFloorPriceSurfaceConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : inflationCapFloorVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : equityCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : equityVolCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : securityConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : fxSpotConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : commodityCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
     for (auto m : commodityVolatilityCurveConfigs_)
-        quotes.insert(quotes.end(), m.second->quotes().begin(), m.second->quotes().end());
+        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
 
-    return std::set<string>(quotes.begin(), quotes.end());
+    return quotes;
 }
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
     return get(curveID, yieldCurveConfigs_);

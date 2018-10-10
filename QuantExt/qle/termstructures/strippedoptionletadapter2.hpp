@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/termstructures/strippedoptionletadapter2.hpp
-    \brief StrippedOptionlet Adapter (with a deeper update method)
+    \brief StrippedOptionlet Adapter (with a deeper update method, linear interpolation and optional flat extrapolation)
     \ingroup termstructures
 */
 
@@ -38,7 +38,8 @@ namespace QuantExt {
 */
 class StrippedOptionletAdapter2 : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 public:
-    StrippedOptionletAdapter2(const boost::shared_ptr<QuantLib::StrippedOptionletBase>&);
+    StrippedOptionletAdapter2(const boost::shared_ptr<QuantLib::StrippedOptionletBase>&,
+                              const bool flatExtrapolation = false);
 
     //! \name TermStructure interface
     //@{
@@ -69,6 +70,7 @@ private:
     const boost::shared_ptr<QuantLib::StrippedOptionletBase> optionletStripper_;
     QuantLib::Size nInterpolations_;
     mutable std::vector<boost::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
+    const bool flatExtrapolation_;
 };
 
 inline void StrippedOptionletAdapter2::update() {

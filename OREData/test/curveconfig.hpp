@@ -35,6 +35,11 @@ class CurveConfigTest {
 public:
     //! Testing curve config quotes method
     static void testCurveConfigQuotes();
+    //! Test fromXML for DiscountRatioYieldCurveSegment
+    static void testDiscountRatioSegmentFromXml();
+    //! Test toXML for DiscountRatioYieldCurveSegment
+    static void testDiscountRatioSegmentToXml();
+
     static boost::unit_test_framework::test_suite* suite();
 };
 } // namespace testsuite

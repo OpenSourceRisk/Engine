@@ -41,8 +41,10 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/version.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
 
 using namespace QuantLib;
+using namespace QuantExt;
 
 namespace ore {
 namespace data {
@@ -238,6 +240,19 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
         nakedOption_ = false;
 }
 
+void EquityLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+    returnType_ = XMLUtils::getChildValue(node, "ReturnType");
+    eqName_ = XMLUtils::getChildValue(node, "Name");
+}
+
+XMLNode* EquityLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::addChild(doc, node, "ReturnType", returnType_);
+    XMLUtils::addChild(doc, node, "Name", eqName_);
+    return node;
+}
+
 void AmortizationData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AmortizationData");
     type_ = XMLUtils::getChildValue(node, "Type");
@@ -344,6 +359,8 @@ boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const st
         return boost::make_shared<CMSLegData>();
     } else if (legType == "CMSSpread") {
         return boost::make_shared<CMSSpreadLegData>();
+    } else if (legType == "Equity") {
+        return boost::make_shared<EquityLegData>();
     } else {
         QL_FAIL("Unkown leg type " << legType);
     }
@@ -413,7 +430,7 @@ Leg makeSimpleLeg(const LegData& data) {
 
 namespace {
 void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
-                       const std::vector<Real>& rates = std::vector<Real>()) {
+                       const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()) {
     Date lastEndDate = Date::minDate();
     for (auto const& amort : data.amortizationData()) {
         if (!amort.initialized())
@@ -431,6 +448,7 @@ void applyAmortization(std::vector<Real>& notionals, const LegData& data, const 
         else if (amortizationType == AmortizationType::RelativeToPreviousNotional)
             notionals = buildAmortizationScheduleRelativeToPreviousNotional(notionals, schedule, amort);
         else if (amortizationType == AmortizationType::Annuity) {
+            QL_REQUIRE(annuityAllowed, "Amortization type Annuity not allowed for leg type " << data.legType());
             if (!rates.empty())
                 notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
                                                                   parseDayCounter(data.dayCounter()));
@@ -455,7 +473,7 @@ Leg makeFixedLeg(const LegData& data) {
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    applyAmortization(notionals, data, schedule, rates);
+    applyAmortization(notionals, data, schedule, true, rates);
     Leg leg = FixedRateLeg(schedule).withNotionals(notionals).withCouponRates(rates, dc).withPaymentAdjustment(bdc);
     return leg;
 }
@@ -473,7 +491,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
 
-    applyAmortization(notionals, data, schedule);
+    applyAmortization(notionals, data, schedule, true);
     // handle float annuity, which is not done in applyAmortization, for this we can only have one block
     if (!data.amortizationData().empty()) {
         AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
@@ -491,8 +509,9 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 Real spread = (i < spreads.size() ? spreads[i] : spreads.back());
                 if (schedule[i] < startDate || i == 0) {
                     Real nom = (i < notionals.size() ? notionals[i] : notionals.back());
-                    boost::shared_ptr<IborCoupon> coupon = boost::make_shared<IborCoupon>(
-                        schedule[i + 1], nom, schedule[i], schedule[i + 1], index->fixingDays(), index, 1.0, spread);
+                    boost::shared_ptr<IborCoupon> coupon =
+                        boost::make_shared<IborCoupon>(schedule[i + 1], nom, schedule[i], schedule[i + 1],
+                                                       floatData->fixingDays(), index, 1.0, spread);
                     coupon->setPricer(boost::shared_ptr<IborCouponPricer>(new BlackIborCouponPricer));
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
@@ -504,7 +523,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                     boost::shared_ptr<QuantExt::FloatingAnnuityCoupon> coupon =
                         boost::make_shared<QuantExt::FloatingAnnuityCoupon>(
                             annuity, underflow, coupons.back(), schedule[i + 1], schedule[i], schedule[i + 1],
-                            index->fixingDays(), index, 1.0, spread);
+                            floatData->fixingDays(), index, 1.0, spread);
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
                 }
@@ -556,6 +575,12 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     // build naked option leg if required
     if (floatData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
 } // namespace data
@@ -574,13 +599,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
 
-    applyAmortization(notionals, data, schedule);
-    // amortization type annuit is not allowed, check this
-    if (!data.amortizationData().empty()) {
-        AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
-        QL_REQUIRE(amortizationType != AmortizationType::Annuity,
-                   "AmortizationType " << data.amortizationData().front().type() << " not supported for OIS legs");
-    }
+    applyAmortization(notionals, data, schedule, false);
 
     if (floatData->isAveraged()) {
 
@@ -630,13 +649,7 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
     vector<Real> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
     vector<Real> gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
 
-    applyAmortization(notionals, data, schedule);
-    // amortization type annuity is not allowed, check this
-    if (!data.amortizationData().empty()) {
-        AmortizationType amortizationType = parseAmortizationType(data.amortizationData().front().type());
-        QL_REQUIRE(amortizationType == AmortizationType::None,
-            "Amortization is not supported for BMA legs");
-    }
+    applyAmortization(notionals, data, schedule, false);
 
     AverageBMALeg leg = AverageBMALeg(schedule, index)
         .withNotionals(notionals)
@@ -697,9 +710,12 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     if (cpiLegData->interpolated())
         interpolationMethod = CPI::Linear;
     vector<double> rates = buildScheduledVector(cpiLegData->rates(), cpiLegData->rateDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    applyAmortization(notionals, data, schedule, false);
 
     Leg leg = CPILeg(schedule, index, cpiLegData->baseCPI(), observationLag)
-                  .withNotionals(data.notionals())
+                  .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withPaymentCalendar(schedule.calendar())
@@ -732,10 +748,13 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     Period observationLag = parsePeriod(yoyLegData->observationLag());
     vector<double> gearings = buildScheduledVector(yoyLegData->gearings(), yoyLegData->gearingDates(), schedule);
     vector<double> spreads = buildScheduledVector(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    applyAmortization(notionals, data, schedule,false);
 
     // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
-                  .withNotionals(data.notionals())
+                  .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withFixingDays(yoyLegData->fixingDays())
@@ -758,9 +777,12 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     bool nakedCapFloor = caps.size() > 0 || floors.size() > 0;
 
     vector<double> spreads = ore::data::buildScheduledVector(cmsData->spreads(), cmsData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    applyAmortization(notionals, data, schedule, false);
 
     CmsLeg cmsLeg = CmsLeg(schedule, swapIndex)
-                        .withNotionals(data.notionals())
+                        .withNotionals(notionals)
                         .withSpreads(spreads)
                         .withPaymentDayCounter(dc)
                         .withPaymentAdjustment(bdc)
@@ -803,6 +825,12 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
     // build naked option leg if required
     if (cmsData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
 }
@@ -821,8 +849,12 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     vector<double> spreads =
         ore::data::buildScheduledVector(cmsSpreadData->spreads(), cmsSpreadData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    applyAmortization(notionals, data, schedule, false);
+
     CmsSpreadLeg cmsSpreadLeg = CmsSpreadLeg(schedule, swapSpreadIndex)
-                                    .withNotionals(data.notionals())
+                                    .withNotionals(notionals)
                                     .withSpreads(spreads)
                                     .withPaymentDayCounter(dc)
                                     .withPaymentAdjustment(bdc)
@@ -861,8 +893,37 @@ Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::Swap
     // build naked option leg if required
     if (cmsSpreadData->nakedOption()) {
         tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
+        // fix for missing registration in ql 1.13
+        for(auto const &t: tmpLeg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+            if(s!=nullptr)
+                s->registerWith(s->underlying());
+        }
     }
     return tmpLeg;
+}
+
+Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equityCurve) {
+    boost::shared_ptr<EquityLegData> eqLegData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());
+    QL_REQUIRE(eqLegData, "Wrong LegType, expected Equity, got " << data.legType());
+
+    Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    bool isTotalReturn = eqLegData->returnType() == "Total";
+    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+
+    applyAmortization(notionals, data, schedule, false);
+
+    // floors and caps not suported yet by QL yoy coupon pricer...
+    Leg leg = EquityLeg(schedule, equityCurve)
+        .withNotionals(notionals)
+        .withPaymentDayCounter(dc)
+        .withPaymentAdjustment(bdc)
+        .withTotalReturn(isTotalReturn);
+    QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
+
+    return leg;
 }
 
 Real currentNotional(const Leg& leg) {

@@ -1249,7 +1249,7 @@
     <SpotDays>2</SpotDays>
     <SourceCurrency>USD</SourceCurrency>
     <TargetCurrency>IDR</TargetCurrency>
-    <PointsFactor>10000</PointsFactor>
+    <PointsFactor>1</PointsFactor>
     <AdvanceCalendar>US</AdvanceCalendar>
     <SpotRelative>true</SpotRelative>
     <AdditionalSettleCalendar/>
@@ -1445,6 +1445,18 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>TWD-GENERIC-3M</SpreadIndex>
   </CrossCurrencyBasis>
+  <!-- Cross Currency Fix Float Swaps -->
+  <CrossCurrencyFixFloat>
+    <Id>USD-TRY-XCCY-FIX-FLOAT-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>US,UK,TRY</SettlementCalendar>
+    <SettlementConvention>F</SettlementConvention>
+    <FixedCurrency>TRY</FixedCurrency>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>F</FixedConvention>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <Index>USD-LIBOR-3M</Index>
+  </CrossCurrencyFixFloat>
   <!-- Inflation Swaps -->
   <InflationSwap>
       <Id>EUHICP_INFLATIONSWAP</Id>

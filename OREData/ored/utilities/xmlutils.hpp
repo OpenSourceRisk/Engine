@@ -103,6 +103,11 @@ public:
 
     void fromFile(const std::string& filename);
     void toFile(const std::string& filename);
+
+    //! Parse from XML string
+    void fromXMLString(const std::string& xml);
+    //! Parse from XML string
+    std::string toXMLString();
 };
 
 //! XML Utilities Class
