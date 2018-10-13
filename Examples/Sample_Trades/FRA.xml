@@ -1,3 +1,4 @@
+<Portfolio>
   <Trade id="FRA">
     <TradeType>ForwardRateAgreement</TradeType>
     <Envelope>
@@ -15,3 +16,4 @@
       <Notional>100000000</Notional>
     </ForwardRateAgreementData>
   </Trade>
+</Portfolio>

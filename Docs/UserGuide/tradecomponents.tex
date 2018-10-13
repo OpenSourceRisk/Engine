@@ -155,13 +155,12 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 The \lstinline!LegData! trade component node is used within the
 \lstinline!CapFloorData!,  \lstinline!SwapData! and
 \lstinline!SwaptionData! trade data containers. It contains a
-\lstinline!ScheduleData! trade component sub-node, and depending on
-the value of the \lstinline!LegType! element, one out of the following
-sub-nodes:  \lstinline!FixedLegData!, \lstinline!FloatingLegData!. The
+\lstinline!ScheduleData! trade component sub-node, and a sub-node that depends on
+the value of the \lstinline!LegType! element, e.g.:  \lstinline!FixedLegData! for \lstinline!LegType! \emph{Fixed} or \lstinline!FloatingLegData! for \lstinline!LegType! \emph{Floating}. The
 \lstinline!LegData! node also includes a \lstinline!Notionals!
 sub-node  with \lstinline!Notional! child elements described below. An
 example structure of a \lstinline!LegData! node of \lstinline!LegType!
-floating is shown in Listing \ref{lst:leg_data}.
+\emph{Floating} is shown in Listing \ref{lst:leg_data}.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -193,7 +192,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 \item LegType:  Determines which of the available sub-nodes must be
   used. 
 
-Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, YY, CPI}
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, Equity, YY, CPI}
 
 \item Payer:  The flows of the leg are paid to the counterparty if
   \emph{true}, and received if \emph{false}.  
@@ -328,8 +327,9 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
 
 \subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
 
-The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. When
-\lstinline!IsRulesBased! is set to \emph{false}, the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. 
+%When \lstinline!IsRulesBased! is set to \emph{false}, 
+The \lstinline!ScheduleData! node can include a \lstinline!Dates! sub-node
 where the schedule is determined directly by \lstinline!Date! child elements. The schedule can also be generated from a
 set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
 elements.  Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
@@ -413,10 +413,22 @@ Allowable values: See \lstinline!Roll Convention! in Table
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item Rules: Rules for the generation of the schedule using given
+\item Rule [Optional]: Rules for the generation of the schedule using given
   start and end dates, tenor, calendar and business day conventions. 
 
-Allowable values and descriptions: See Table \ref{tab:rule} Rule.
+Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if left blank or omitted.
+
+\item EndOfMonth [Optional]: Specifies whether the date generation rule is different for end of month. 
+
+Allowable values: \emph{True, False}. Defaults to \emph{False} if left blank or omitted
+
+\item FirstDate [Optional]: Date for initial stub period.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+
+\item LastDate [Optional]: Date for final stub period.
+
+Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item Dates: This is a sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
@@ -445,7 +457,8 @@ Allowable values and descriptions: See Table \ref{tab:rule} Rule.
 \emph{Twentieth}   &   All dates but the effective date are taken to be the twentieth of their month (used for CDS schedules in emerging markets.)  The termination date is also modified. \\ \hline
 \emph{TwentiethIMM}   &   All dates but the effective date are  taken to be the twentieth of an IMM month (used for CDS schedules.)  The termination date is also modified. \\ \hline
 \emph{OldCDS}   &   Same as TwentiethIMM with unrestricted date ends and log/short stub coupon period (old CDS convention).\\ \hline
-CDS   &   Credit derivatives standard rule since 'Big Bang' changes in 2009.\\ \hline
+CDS   &   Credit derivatives standard rule defined in 'Big Bang' changes in 2009.\\ \hline
+CDS2015   &   Credit derivatives standard rule updated in 2015.\\ \hline
 \end{tabular}
   \caption{Allowable Values for Rule}
   \label{tab:rule}
@@ -551,24 +564,27 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
 \item Index:  The combination of currency, index and term that
   identifies the relevant fixings and yield curve of the floating leg.  
 
-  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM, matching available Ibor indices in the {\tt
-    simulation.xml} file. CCY, INDEX and TERM must be separated by dashes (-). TERM must be an integer followed by D, W,
+  Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
-\item IsInArrears:  \emph{true} indicates that  fixing is in arrears,
+\item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by compounding the fixings. 
+
+Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
+
+\item IsInArrears [Optional]:  \emph{true} indicates that  fixing is in arrears,
   i.e. the fixing gap is calculated in relation to the current period
   end date.\\ \emph{false} indicates that  fixing is in advance,
   i.e. the fixing gap is calculated in relation to the previous period
   end date.  
 
-Allowable values:  \emph{true, false}
+Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
-\item FixingDays: This is the fixing gap, i.e. the number of days
+\item FixingDays [Optional]: This is the fixing gap, i.e. the number of days
   before the period end date an index fixing is taken.   
 
-Allowable values:  Positive integers.  
+Allowable values:  Positive integers.  Defaults to \emph{0} if left blank or omitted.
 
-\item Spreads: This node contains child elements of type
+\item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
   floating leg, only one spread value should be entered. If two or more
   coupons have different spreads, multiple spread values are required,
@@ -599,17 +615,17 @@ in Listing \ref{lst:spreads_dates}.
 \label{lst:spreads_dates}
 \end{listing}
 
-\item Gearings: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+\item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
   multiplied by the given factors. The mode of specification is analogous to spreads, see above.
 
-\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
 
-\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+\item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see
   above.
 
-\item NakedOption: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
+\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. 
 By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 
 \end{itemize}
@@ -804,6 +820,65 @@ Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
 
 The elements of the CMSSpreadLegData block are identical to those of the CMSLegData (see \ref{ss:cmslegdata}), except
 for the index which is defined by two CMS indices as the difference between \verb+Index1+ and \verb+Index2+.
+
+\subsubsection{Equity Leg Data}
+\label{ss:equitylegdata}
+
+Listing \ref{lst:equitylegdata} shows an example of a leg of type Equity. The EquityLegData block contains the following
+elements:
+
+\begin{itemize}
+\item ReturnType: \emph{Price} indicates that the coupons on the equity leg are determined by the price movement of the underlying equity, whereas  \emph{Total} indicates that coupons are determined by the total return of the underlying equity including dividends.
+
+Allowable values:  \emph{Price} or  \emph{Total}
+
+\item Name: The identifier of the underlying equity or equity index.
+ 
+ Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
+%\item Quantity: The number of units of the underlying equity.
+
+%Allowable values:  Any positive real number.
+\end{itemize} 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>Equity</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-03-01</StartDate>
+            <EndDate>2036-03-01</EndDate>
+            <Tenor>3M</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <EquityLegData>
+          <ReturnType>Price</ReturnType>
+          <Name>ISIN:US78378X1072</Name>
+        </EquityLegData>
+      </LegData>
+\end{minted}
+\caption{Equity leg data}
+\label{lst:equitylegdata}
+\end{listing}
+
+
+
+
 
 \subsubsection{CPI Leg Data}
 \label{ss:cpilegdata}
