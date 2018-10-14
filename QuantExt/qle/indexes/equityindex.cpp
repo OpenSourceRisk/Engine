@@ -108,10 +108,9 @@ Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDa
     const TimeSeries<Real>& history = dividendFixings();
     Real dividends = Null<Real>();
 
-    auto fd = history.begin();
-    while (fd != history.end() && fd->first >= startDate && fd->first <= endDate) {
-        dividends += fd->second;
-        ++fd;
+    // FIXME: should not be auto
+    for(auto fd = history.begin(); fd != history.end(); ++fd){
+        if(fd->first >= startDate && fd->first <= endDate) dividends += fd->second;
     }
     return dividends;
 }
