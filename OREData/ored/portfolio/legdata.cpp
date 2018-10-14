@@ -915,7 +915,6 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
 
     applyAmortization(notionals, data, schedule, false);
 
-    // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = EquityLeg(schedule, equityCurve)
         .withNotionals(notionals)
         .withPaymentDayCounter(dc)
