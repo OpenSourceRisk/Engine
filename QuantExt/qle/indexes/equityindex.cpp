@@ -104,9 +104,21 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     return forward;
 }
 
+Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
+    const TimeSeries<Real>& history = dividendFixings();
+    Real dividends = Null<Real>();
+
+    auto fd = history.begin();
+    while (fd != history.end() && fd->first >= startDate && fd->first <= endDate) {
+        dividends += fd->second;
+        ++fd;
+    }
+    return dividends;
+}
+
 boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
     return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), spotQuote, rate, dividend);
 }
 
-} // namespace QuantLib
+} // namespace QuantExt

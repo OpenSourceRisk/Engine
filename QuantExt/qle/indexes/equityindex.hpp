@@ -51,9 +51,9 @@ public:
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
     // Dividend Fixings
-    //const TimeSeries<Real>& dividendFixings() const {
-    //    return IndexManager::instance().getHistory(name() + "_div");
-        //@}
+    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(name() + "_div"); }
+    Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
+    //@}
     //! \name Observer interface
     //@{
     void update();

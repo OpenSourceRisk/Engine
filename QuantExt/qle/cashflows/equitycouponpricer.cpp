@@ -23,7 +23,9 @@ namespace QuantExt {
 Rate EquityCouponPricer::swapletRate() const {
     Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, isTotalReturn_);
     Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, isTotalReturn_);
-    return (end - start) / start;
+
+    Real dividends = equityCurve_->dividendsBetweenDates(coupon_->accrualStartDate(), coupon_->accrualEndDate());
+    return (end + dividends - start) / start;
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
