@@ -389,13 +389,14 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, string eqName) : LegAdditionalData("Equity"), 
-        returnType_(returnType), eqName_(eqName) {}
+    EquityLegData(string returnType, Real dividendFactor, string eqName)
+        : LegAdditionalData("Equity"), returnType_(returnType), eqName_(eqName) {}
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
     const string& eqName() const { return eqName_; }
+    Real dividendFactor() const { return dividendFactor_; }
     //@}
 
     //! \name Serialisation
@@ -405,6 +406,7 @@ public:
     //@}
 private:
     string returnType_;
+    Real dividendFactor_ = 1.0;
     string eqName_;
 };
 

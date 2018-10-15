@@ -29,7 +29,7 @@ Rate EquityCouponPricer::swapletRate() const {
     if (isTotalReturn_)
         dividends = equityCurve_->dividendsBetweenDates(coupon_->accrualStartDate(), coupon_->accrualEndDate());
 
-    return (end + dividends - start) / start;
+    return (end + dividends * dividendFactor_ - start) / start;
 }
 
 void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
@@ -38,6 +38,7 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
 
     equityCurve_ = boost::dynamic_pointer_cast<EquityIndex>(coupon.equityCurve());
     isTotalReturn_ = coupon.isTotalReturn();
+    dividendFactor_ = coupon.dividendFactor();
 }
 
 } // QuantExt

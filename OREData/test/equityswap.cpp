@@ -106,14 +106,14 @@ struct CommonVars {
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType) {
+    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType, Real dividendFactor=1.0) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
         
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
             floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, eqName), isPayer, ccy,
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName), isPayer, ccy,
             eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");

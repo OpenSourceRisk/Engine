@@ -56,6 +56,7 @@ public:
         const boost::shared_ptr<EquityIndex>& equityCurve,
         const DayCounter& dayCounter,
         bool isTotalReturn = false,
+        Real dividendFactor = 1.0,
         const Date& refPeriodStart = Date(),
         const Date& refPeriodEnd = Date(),
         const Date& exCouponDate = Date()
@@ -80,6 +81,7 @@ public:
     //! equity reference rate curve
     const boost::shared_ptr<EquityIndex>& equityCurve() const { return equityCurve_; }
     bool isTotalReturn() const { return isTotalReturn_; }
+    Real dividendFactor() const { return dividendFactor_; }
     //@}
 
     //! \name Observer interface
@@ -100,7 +102,7 @@ protected:
     DayCounter dayCounter_;
     Natural fixingDays_;
     bool isTotalReturn_;
-
+    Real dividendFactor_;
 };
 
 // inline definitions
@@ -132,6 +134,7 @@ public:
     EquityLeg& withPaymentAdjustment(BusinessDayConvention convention);
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
+    EquityLeg& withDividendFactor(Real);
     operator Leg() const;
 
 private:
@@ -142,6 +145,7 @@ private:
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    Real dividendFactor_ = 1.0;
 };
 
 } // namespace QuantExt
