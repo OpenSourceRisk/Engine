@@ -24,7 +24,7 @@ Rate EquityCouponPricer::swapletRate() const {
     Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, isTotalReturn_);
     Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, isTotalReturn_);
 
-    Real dividends = Null<Real>();
+    Real dividends = 0.0;
     
     if (isTotalReturn_)
         dividends = equityCurve_->dividendsBetweenDates(coupon_->accrualStartDate(), coupon_->accrualEndDate());

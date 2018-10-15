@@ -106,7 +106,7 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
 
 Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
     const TimeSeries<Real>& history = dividendFixings();
-    Real dividends = Null<Real>();
+    Real dividends = 0.0;
 
     if (!history.empty() && history.firstDate() <= endDate && history.lastDate() >= startDate) {
         for (TimeSeries<Real>::const_iterator fd = history.begin(); fd != history.end() && fd->first <= endDate; ++fd) {
