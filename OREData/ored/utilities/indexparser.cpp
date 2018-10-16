@@ -103,7 +103,7 @@ boost::shared_ptr<DividendIndex> parseEquityDividend(const string& s) {
     if (tokens.size() == 2) {
         return boost::make_shared<DividendIndex>(tokens[1], NullCalendar());
     } else {
-        QL_FAIL("Error parsing equity string " + s);
+        QL_FAIL("Error parsing equity dividend string " + s);
     }
 }
 
