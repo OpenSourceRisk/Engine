@@ -243,10 +243,10 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     returnType_ = XMLUtils::getChildValue(node, "ReturnType");
-    if (returnType_ == "Total") {
-        // we set the dividend factor to be mandatory for TRS... otherwise we would prefer a default value of 1.
+    if (returnType_ == "Total"  && XMLUtils::getChildNode(node, "DividendFactor"))
         dividendFactor_ = XMLUtils::getChildValueAsDouble(node, "DividendFactor", true);
-    }
+    else
+        dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
 }
 
