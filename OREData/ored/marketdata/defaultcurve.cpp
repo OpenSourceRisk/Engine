@@ -220,9 +220,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
 
         QL_FAIL("unknown default curve type");
     } catch (std::exception& e) {
-        QL_FAIL("default curve building failed: " << e.what());
+        QL_FAIL("default curve building failed for " << spec.curveConfigID() << ": " << e.what());
     } catch (...) {
-        QL_FAIL("default curve building failed: unknown error");
+        QL_FAIL("default curve building failed for " << spec.curveConfigID() << ": unknown error");
     }
 }
 } // namespace data
