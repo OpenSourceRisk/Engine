@@ -101,8 +101,11 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+    boost::shared_ptr<ore::data::Market> market,
+    const std::string& configuration) {
     Date asof = Settings::instance().evaluationDate();
+    bool write_discount_factor = market ? true : false;
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
@@ -118,6 +121,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
 
+    if (write_discount_factor)
+        report.addColumn("DiscountFactor", double(), 10);
+
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -131,6 +137,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trades[k]->legPayers()[i];
                 string ccy = trades[k]->legCurrencies()[i];
+                Handle<YieldTermStructure> discountCurve;
+                if (write_discount_factor)
+                    discountCurve = market->discountCurve(ccy, configuration);		
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
@@ -215,6 +224,11 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(fixingDate)
                             .add(fixingValue)
                             .add(notional);
+
+                        if (write_discount_factor) {
+                            Real discountFactor = discountCurve->discount(payDate);
+                            report.add(discountFactor);
+                        }
                     }
                 }
             }
