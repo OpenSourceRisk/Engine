@@ -51,7 +51,9 @@ public:
                             boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
                             boost::shared_ptr<Portfolio> portfolio);
 
-    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+                                 boost::shared_ptr<ore::data::Market> market = boost::shared_ptr<ore::data::Market>(),
+                                 const std::string& configuration = ore::data::Market::defaultConfiguration);
 
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
                             const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
