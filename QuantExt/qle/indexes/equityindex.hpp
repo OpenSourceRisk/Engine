@@ -44,6 +44,8 @@ public:
     //! \name Index interface
     //@{
     std::string name() const;
+    void resetName() { name_ = familyName(); }
+    std::string dividendName() const { return name() + "_div"; }
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
     // Equity fixing price - can be either fixed hstorical or forecasted. 
@@ -51,7 +53,12 @@ public:
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
     // Dividend Fixings
-    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(name() + "_div"); }
+    //! stores the historical dividend fixing at the given date
+        /*! the date passed as arguments must be the actual calendar
+            date of the fixing; no settlement days must be used.
+        */
+    virtual void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false);
+    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
     Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
     //@}
     //! \name Observer interface

@@ -104,8 +104,15 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     return forward;
 }
 
+void EquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
+    name_ = dividendName();
+    Index::addFixing(fixingDate, fixing, forceOverwrite);
+    resetName();
+}
+
 Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
     const Date& today = Settings::instance().evaluationDate();
+
     const TimeSeries<Real>& history = dividendFixings();
     Real dividends = 0.0;
 

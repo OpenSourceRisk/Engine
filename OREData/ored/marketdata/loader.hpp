@@ -77,6 +77,7 @@ public:
     }
 
     virtual const std::vector<Fixing>& loadFixings() const = 0;
+    virtual const std::vector<Fixing>& loadDividends() const = 0;
     //@}
 };
 } // namespace data

@@ -63,6 +63,8 @@ public:
 
     //! Load fixings
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
+    //! Load dividends
+    const std::vector<Fixing>& loadDividends() const { return dividends_; }
     //@}
 
 private:
@@ -71,6 +73,7 @@ private:
     bool implyTodaysFixings_;
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
+    std::vector<Fixing> dividends_;
 };
 } // namespace data
 } // namespace ore
