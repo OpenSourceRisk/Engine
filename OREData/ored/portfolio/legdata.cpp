@@ -243,12 +243,19 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
 void EquityLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     returnType_ = XMLUtils::getChildValue(node, "ReturnType");
+    if (returnType_ == "Total"  && XMLUtils::getChildNode(node, "DividendFactor"))
+        dividendFactor_ = XMLUtils::getChildValueAsDouble(node, "DividendFactor", true);
+    else
+        dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "ReturnType", returnType_);
+    if (returnType_ == "Total") {
+        XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
+    }
     XMLUtils::addChild(doc, node, "Name", eqName_);
     return node;
 }
@@ -911,16 +918,17 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
+    Real dividendFactor = eqLegData->dividendFactor();
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     applyAmortization(notionals, data, schedule, false);
 
-    // floors and caps not suported yet by QL yoy coupon pricer...
     Leg leg = EquityLeg(schedule, equityCurve)
         .withNotionals(notionals)
         .withPaymentDayCounter(dc)
         .withPaymentAdjustment(bdc)
-        .withTotalReturn(isTotalReturn);
+        .withTotalReturn(isTotalReturn)
+        .withDividendFactor(dividendFactor);
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
     return leg;

@@ -25,15 +25,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal,
-    const Date& startDate, const Date& endDate,
-    const boost::shared_ptr<EquityIndex>& equityCurve,
-    const DayCounter& dayCounter, bool isTotalReturn,
-    const Date& refPeriodStart,
-    const Date& refPeriodEnd, const Date& exCouponDate)
-    : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart,
-    refPeriodEnd, exCouponDate), equityCurve_(equityCurve),  dayCounter_(dayCounter),
-    isTotalReturn_(isTotalReturn) {
+EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                           const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
+                           bool isTotalReturn, Real dividendFactor, const Date& refPeriodStart,
+                           const Date& refPeriodEnd, const Date& exCouponDate)
+    : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
+      equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn) {
 
     registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
@@ -105,6 +102,11 @@ EquityLeg& EquityLeg::withTotalReturn(bool totalReturn) {
     return *this;
 }
 
+EquityLeg& EquityLeg::withDividendFactor(Real dividendFactor) {
+    dividendFactor_ = dividendFactor;
+    return *this;
+}
+
 EquityLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
@@ -130,7 +132,7 @@ EquityLeg::operator Leg() const {
 
         boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, 
-            equityCurve_, paymentDayCounter_, isTotalReturn_));
+            equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);

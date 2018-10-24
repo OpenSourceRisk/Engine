@@ -43,14 +43,14 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) cons
     return fixing(fixingDate, forecastTodaysFixing, false);
 }
 
-Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDiviend) const {
+Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
 
     QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
 
     Date today = Settings::instance().evaluationDate();
 
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        return forecastFixing(fixingDate, incDiviend);
+        return forecastFixing(fixingDate, incDividend);
 
     Real result = Null<Decimal>();
 
@@ -67,7 +67,7 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool
             ; // fall through and forecast
         }
         if (result == Null<Real>())
-            return forecastFixing(fixingDate, incDiviend);
+            return forecastFixing(fixingDate, incDividend);
     }
 
     return result;
@@ -104,9 +104,24 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     return forward;
 }
 
+Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
+    const Date& today = Settings::instance().evaluationDate();
+    const TimeSeries<Real>& history = dividendFixings();
+    Real dividends = 0.0;
+
+    if (!history.empty() && history.firstDate() <= endDate && history.lastDate() >= startDate) {
+        for (TimeSeries<Real>::const_iterator fd = history.begin();
+             fd != history.end() && fd->first <= std::min(endDate, today); ++fd) {
+            if (fd->first >= startDate)
+                dividends += fd->second;
+        }
+    }
+    return dividends;
+}
+
 boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
     return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), spotQuote, rate, dividend);
 }
 
-} // namespace QuantLib
+} // namespace QuantExt
