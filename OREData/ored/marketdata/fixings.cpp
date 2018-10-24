@@ -68,7 +68,7 @@ void applyDividends(const vector<Fixing>& dividends) {
         try {
             auto it = cache.find(f.name);
             if (it == cache.end()) {
-                index = parseEquityIndex(f.name);
+                index = boost::make_shared<EquityIndex>(f.name, NullCalendar());
                 cache[f.name] = index;
             }
             else {
