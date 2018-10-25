@@ -95,5 +95,8 @@ simulation/fixingmanager.hpp
 simulation/simmarket.hpp)
 
 writeAll("orea" "orea.hpp" "auto_link.hpp" "${OREAnalytics_HDR}")
-add_library(OREAnalytics ${OREAnalytics_SRC})
-target_link_libraries(OREAnalytics OREData QuantExt QuantLib ${Boost_LIBRARIES})
+add_library(${OREA_LIB_NAME} ${OREAnalytics_SRC})
+target_link_libraries(${OREA_LIB_NAME} ${QL_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME} ${QLE_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME} ${ORED_LIB_NAME})
+target_link_libraries(${OREA_LIB_NAME} ${Boost_LIBRARIES})

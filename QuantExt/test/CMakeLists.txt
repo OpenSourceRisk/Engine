@@ -39,6 +39,8 @@ testsuite.cpp)
 writeTestSuiteMain("main.cpp")
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
-target_link_libraries(quantext-test-suite QuantExt QuantLib ${Boost_LIBRARIES})
+target_link_libraries(quantext-test-suite ${QL_LIB_NAME})
+target_link_libraries(quantext-test-suite ${QLE_LIB_NAME})
+target_link_libraries(quantext-test-suite ${Boost_LIBRARIES})
 
 add_test(quantext-test-suite quantext-test-suite)
