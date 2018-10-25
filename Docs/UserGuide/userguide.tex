@@ -620,7 +620,7 @@ strings.
 Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
 
 \begin{enumerate}
-\item Create subdirectory {\tt build} in your project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; change to subdirectory {\tt build}
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake by invoking \\
 \medskip
 {\tt cmake -DBOOST\_ROOT=\${BOOST} -DBOOST\_LIBRARYDIR=\${BOOST}/stage/lib ..} \\
@@ -631,34 +631,35 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 {\tt cmake ..} \\
 \medskip
 \item Build all ORE libraries including QuantLib by invoking \\
-  \medskip
-  {\tt make -j4} \\
-  \medskip
-\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test
-  suites below, in order not to override the rpath information embedded into the libaries built with CMake
+\medskip
+{\tt make -j4} \\
+\medskip
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
 \item Run all test suites by invoking \\
-  \medskip {\tt ctest -j4}
+\medskip
+{\tt ctest -j4}
 \end{enumerate}
 
-The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt
-  CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for
-the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this
-process.
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
 
-The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster
-than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds.
-
+The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+ 
 \subsubsection*{Building on Windows with CMake}
 
-The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual C++ compiler and linker. 
+The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
 
 \begin{enumerate}
-\item Create subdirectory {\tt build} in your project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; change to subdirectory {\tt build}
+\item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
+\medskip
+{\tt vcvarsall.bat x64} \\
+\medskip
+to initialize the compiler-related environment.
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
 \item Configure CMake e.g. by invoking \\
 \medskip
-{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \\
-{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\\
-{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \\
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
 {\tt \hspace{2cm} -G Ninja ..} \\
 \medskip
 where the -G option allows choosing the desired build system generator.
