@@ -303,6 +303,35 @@ void CurveConfigTest::testCurveConfigQuotes() {
     for (auto q : quotes)
         QL_REQUIRE(std::find(expectedQuotes.begin(), expectedQuotes.end(), q) != expectedQuotes.end(),
                    "quote " << q << " not found");
+
+    std::vector<boost::shared_ptr<CurveSpec>> specs;
+    specs.push_back(boost::make_shared<BaseCorrelationCurveSpec>("CDXIG"));
+    specs.push_back(boost::make_shared<CapFloorVolatilityCurveSpec>("EUR", "EUR_CF_N"));
+    specs.push_back(boost::make_shared<CDSVolatilityCurveSpec>("CDXIG"));
+    specs.push_back(boost::make_shared<DefaultCurveSpec>("USD", "BANK_SR_USD"));
+    specs.push_back(boost::make_shared<EquityCurveSpec>("USD", "SP5"));
+    specs.push_back(boost::make_shared<EquityVolatilityCurveSpec>("USD", "SP5"));
+    specs.push_back(boost::make_shared<EquityVolatilityCurveSpec>("USD", "SP5_Smile"));
+    specs.push_back(boost::make_shared<FXVolatilityCurveSpec>("EUR", "USD", "EURUSD"));
+    specs.push_back(boost::make_shared<FXVolatilityCurveSpec>("EUR", "USD", "EURUSD_Smile"));
+    specs.push_back(boost::make_shared<InflationCapFloorPriceSurfaceSpec>("EUHICPXT", "EUHICPXT_ZC_CF"));
+    specs.push_back(boost::make_shared<InflationCurveSpec>("EUHICPXT", "EUHICPXT_ZC_Swaps"));
+    specs.push_back(boost::make_shared<SwaptionVolatilityCurveSpec>("EUR", "EUR_SW_N"));
+    specs.push_back(boost::make_shared<SwaptionVolatilityCurveSpec>("EUR", "EUR_SW_N_Smile"));
+    specs.push_back(boost::make_shared<YieldCurveSpec>("JPY", "JPY6M"));
+    specs.push_back(boost::make_shared<SecuritySpec>("SECURITY_1"));
+    specs.push_back(boost::make_shared<FXSpotSpec>("EUR", "USD"));
+    
+    curveConfigs = CurveConfigurations(curveConfigs, specs);
+    quotes = curveConfigs.quotes();
+    QL_REQUIRE(quotes.size() == expectedQuotes.size(), "size of generate quotes, "
+                                                           << quotes.size() << ", does not match the expected size "
+                                                           << expectedQuotes.size());
+
+    for (auto q : quotes)
+        QL_REQUIRE(std::find(expectedQuotes.begin(), expectedQuotes.end(), q) != expectedQuotes.end(),
+                   "quote " << q << " not found");
+
 }
 
 void CurveConfigTest::testDiscountRatioSegmentFromXml() {
