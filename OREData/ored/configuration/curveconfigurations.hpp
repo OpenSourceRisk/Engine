@@ -39,6 +39,7 @@
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/marketdata/curvespec.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 using ore::data::XMLSerializable;
@@ -55,6 +56,8 @@ class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
     CurveConfigurations(){};
+    
+    CurveConfigurations(CurveConfigurations& curveConfig, std::vector<boost::shared_ptr<CurveSpec>>& specs);
 
     //! \name Setters and Getters
     //@{

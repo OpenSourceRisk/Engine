@@ -64,6 +64,187 @@ void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<strin
         XMLUtils::appendNode(node, it.second->toXML(doc));
 }
 
+CurveConfigurations::CurveConfigurations(CurveConfigurations& configs, std::vector<boost::shared_ptr<CurveSpec>>& specs) {
+    for(const auto& spec : specs) {
+
+        switch (spec->baseType()) {
+
+        case CurveSpec::CurveType::Yield: {
+            const boost::shared_ptr<YieldCurveSpec> ycspec = boost::dynamic_pointer_cast<YieldCurveSpec>(spec);
+            QL_REQUIRE(ycspec, "Failed to convert spec " << *spec << " to yield curve spec");
+            const std::string configId = ycspec->curveConfigID();
+            const boost::shared_ptr<YieldCurveConfig> curveConfig = configs.yieldCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find yiled curve " << configId);
+            yieldCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::FX: {
+            const boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
+            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
+            const std::string configId = fxspec->unitCcy() + fxspec->ccy();
+            const boost::shared_ptr<FXSpotConfig> curveConfig(new FXSpotConfig(configId, "")); //  do not extract, just create
+            fxSpotConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::FXVolatility: {
+            const boost::shared_ptr<FXVolatilityCurveSpec> fxvolspec = boost::dynamic_pointer_cast<FXVolatilityCurveSpec>(spec);
+            QL_REQUIRE(fxvolspec, "Failed to convert spec " << *spec << " to fx vol curve spec");
+            const std::string configId = fxvolspec->curveConfigID();
+            const boost::shared_ptr<FXVolatilityCurveConfig> curveConfig = configs.fxVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find fx vol curve " << configId);
+            fxVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::SwaptionVolatility: {
+            const boost::shared_ptr<SwaptionVolatilityCurveSpec> swvolspec = 
+                boost::dynamic_pointer_cast<SwaptionVolatilityCurveSpec>(spec);
+            QL_REQUIRE(swvolspec, "Failed to convert spec " << *spec << " to swaption vol curve spec");
+            const std::string configId = swvolspec->curveConfigID();
+            const boost::shared_ptr<SwaptionVolatilityCurveConfig> curveConfig = configs.swaptionVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find swaption vol curve " );
+            swaptionVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::CapFloorVolatility: {
+            const boost::shared_ptr<CapFloorVolatilityCurveSpec> cfvolspec = 
+                boost::dynamic_pointer_cast<CapFloorVolatilityCurveSpec>(spec);
+            QL_REQUIRE(cfvolspec, "Failed to convert spec " << *spec << " to cap floor vol curve spec");
+            const std::string configId = cfvolspec->curveConfigID();
+            const boost::shared_ptr<CapFloorVolatilityCurveConfig> curveConfig = configs.capFloorVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find cap floor vol curve " << configId);
+            capFloorVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::Default: {
+            const boost::shared_ptr<DefaultCurveSpec> defaultspec = boost::dynamic_pointer_cast<DefaultCurveSpec>(spec);
+            QL_REQUIRE(defaultspec, "Failed to convert spec " << *spec << " to default curve spec");
+            const std::string configId = defaultspec->curveConfigID();
+            const boost::shared_ptr<DefaultCurveConfig> curveConfig = configs.defaultCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find default curve " << configId);
+            defaultCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::CDSVolatility: {
+            const boost::shared_ptr<CDSVolatilityCurveSpec> cdsvolspec = boost::dynamic_pointer_cast<CDSVolatilityCurveSpec>(spec);
+            QL_REQUIRE(cdsvolspec, "Failed to convert spec " << *spec << " to cds vol curve spec");
+            const std::string configId = cdsvolspec->curveConfigID();
+            const boost::shared_ptr<CDSVolatilityCurveConfig> curveConfig = configs.cdsVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find cds vol curve " << configId);
+            cdsVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::BaseCorrelation: {            
+            const boost::shared_ptr<BaseCorrelationCurveSpec> basecorrelationspec = 
+                boost::dynamic_pointer_cast<BaseCorrelationCurveSpec>(spec);
+            QL_REQUIRE(basecorrelationspec, "Failed to convert spec " << *spec << " to base correlation curve spec");
+            const std::string configId = basecorrelationspec->curveConfigID();
+            const boost::shared_ptr<BaseCorrelationCurveConfig> curveConfig = configs.baseCorrelationCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find base correlation curve " << configId);
+            baseCorrelationCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::Inflation: {
+            const boost::shared_ptr<InflationCurveSpec> inflationspec = boost::dynamic_pointer_cast<InflationCurveSpec>(spec);
+            QL_REQUIRE(inflationspec, "Failed to convert spec " << *spec << " to inflation curve spec");
+            const std::string configId = inflationspec->curveConfigID();
+            const boost::shared_ptr<InflationCurveConfig> curveConfig = configs.inflationCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find inflation curve " << configId);
+            inflationCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::InflationCapFloorPrice: {
+            const boost::shared_ptr<InflationCapFloorPriceSurfaceSpec> infcapfloorspec =
+                boost::dynamic_pointer_cast<InflationCapFloorPriceSurfaceSpec>(spec);
+            QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor price surface spec");
+            const std::string configId = infcapfloorspec->curveConfigID();
+            const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig> curveConfig = 
+                configs.inflationCapFloorPriceSurfaceConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find inflation cap floor price surface " << configId);
+            inflationCapFloorPriceSurfaceConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::InflationCapFloorVolatility: {
+            const boost::shared_ptr<InflationCapFloorVolatilityCurveSpec> infcapfloorvolspec =
+                boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveSpec>(spec);
+            QL_REQUIRE(infcapfloorvolspec, "Failed to convert spec " << *spec << " to inf cap floor vol curve spec");
+            const std::string configId = infcapfloorvolspec->curveConfigID();
+            const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig> curveConfig = 
+                configs.inflationCapFloorVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find inflation cap floor vol curve " << configId);
+            inflationCapFloorVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::Equity: {
+            const boost::shared_ptr<EquityCurveSpec> equityspec = boost::dynamic_pointer_cast<EquityCurveSpec>(spec);
+            QL_REQUIRE(equityspec, "Failed to convert spec " << *spec << " to equity curve spec");
+            const std::string configId = equityspec->curveConfigID();
+            const boost::shared_ptr<EquityCurveConfig> curveConfig = configs.equityCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find equity curve " << configId);
+            equityCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::EquityVolatility: {
+            const boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
+                boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
+            QL_REQUIRE(eqvolspec, "failed to convert spec " << *spec << " to equity vol curve spec");
+            const std::string configId = eqvolspec->curveConfigID();
+            const boost::shared_ptr<EquityVolatilityCurveConfig> curveConfig = configs.equityVolCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find equity vol curve " << configId);
+            equityVolCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::Security: {
+            const boost::shared_ptr<SecuritySpec> securityspec = boost::dynamic_pointer_cast<SecuritySpec>(spec);
+            QL_REQUIRE(securityspec, "failed to convert spec " << *spec << " to security spec");
+            const std::string configId = securityspec->securityID();
+            const boost::shared_ptr<SecurityConfig> curveConfig = configs.securityConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find security " << configId);
+            securityConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::Commodity: {
+            const boost::shared_ptr<CommodityCurveSpec> commodityspec = boost::dynamic_pointer_cast<CommodityCurveSpec>(spec);
+            QL_REQUIRE(commodityspec, "Failed to convert spec, " << *spec << ", to commodity spec");
+            const std::string configId = commodityspec->curveConfigId();
+            const boost::shared_ptr<CommodityCurveConfig> curveConfig = configs.commodityCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find commodity curve " << configId);
+            commodityCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        case CurveSpec::CurveType::CommodityVolatility: {
+            const boost::shared_ptr<CommodityVolatilityCurveSpec> commodityvolspec =
+                boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
+            QL_REQUIRE(commodityvolspec, "Failed to convert spec " << *spec << " to commodity vol spec");
+            const std::string configId = commodityvolspec->curveConfigId();
+            const boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = configs.commodityVolatilityCurveConfig(configId);
+            QL_REQUIRE(curveConfig, "Cannot find commodity vol curve " << configId);
+            commodityVolatilityCurveConfigs_[configId] = curveConfig;
+            break;
+        }
+
+        default: {
+            QL_FAIL("Unhandled spec " << *spec);
+        }
+        }
+
+    }
+}
+
 std::set<string> CurveConfigurations::quotes() const {
     set<string> quotes;
     for (auto m : yieldCurveConfigs_)
