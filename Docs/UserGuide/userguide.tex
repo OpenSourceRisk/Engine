@@ -648,6 +648,30 @@ process.
 The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster
 than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds.
 
+\subsubsection*{Building on Windows with CMake}
+
+The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual C++ compiler and linker. 
+
+\begin{enumerate}
+\item Create subdirectory {\tt build} in your project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; change to subdirectory {\tt build}
+\item Configure CMake e.g. by invoking \\
+\medskip
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \\
+{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \\
+{\tt \hspace{2cm} -G Ninja ..} \\
+\medskip
+where the -G option allows choosing the desired build system generator.
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+  {\tt ninja} \\
+\medskip
+Ninja automatically utilizes all available threads, unless specified with the -j option.
+
+\item Run all test suites by invoking \\
+  \medskip {\tt ctest -j4}
+\end{enumerate}
+
 \subsection{Python and Jupyter}\label{sec:python}
 
 Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
