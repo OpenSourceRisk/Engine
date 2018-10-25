@@ -516,7 +516,6 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\indexes\all.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
-    <ClInclude Include="qle\indexes\dividendindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
@@ -719,7 +718,6 @@
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
-    <ClCompile Include="qle\indexes\dividendindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />

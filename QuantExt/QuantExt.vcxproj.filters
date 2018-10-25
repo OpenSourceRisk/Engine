@@ -633,9 +633,6 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
-    <ClInclude Include="qle\indexes\dividendindex.hpp">
-      <Filter>indexes</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1055,9 +1052,6 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\indexes\region.cpp">
-      <Filter>indexes</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\indexes\dividendindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
