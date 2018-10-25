@@ -42,11 +42,13 @@ public:
     const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const { return data_; }
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const { return dummyDatum_; }
     const vector<Fixing>& loadFixings() const { return dummyFixings_; }
+    const vector<Fixing>& loadDividends() const { return dummyDividends_; }
 
 private:
     vector<boost::shared_ptr<MarketDatum>> data_;
     boost::shared_ptr<MarketDatum> dummyDatum_;
     vector<Fixing> dummyFixings_;
+    vector<Fixing> dummyDividends_;
 };
 
 MockLoader::MockLoader() {
