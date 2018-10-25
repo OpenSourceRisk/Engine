@@ -322,7 +322,7 @@ void CurveConfigTest::testCurveConfigQuotes() {
     specs.push_back(boost::make_shared<SecuritySpec>("SECURITY_1"));
     specs.push_back(boost::make_shared<FXSpotSpec>("EUR", "USD"));
     
-    curveConfigs = CurveConfigurations(curveConfigs, specs);
+    curveConfigs = curveConfigs.subset(specs);
     quotes = curveConfigs.quotes();
     QL_REQUIRE(quotes.size() == expectedQuotes.size(), "size of generate quotes, "
                                                            << quotes.size() << ", does not match the expected size "

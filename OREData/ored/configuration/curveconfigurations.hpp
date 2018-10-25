@@ -56,8 +56,9 @@ class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
     CurveConfigurations(){};
-    
-    CurveConfigurations(CurveConfigurations& curveConfig, std::vector<boost::shared_ptr<CurveSpec>>& specs);
+
+    //! Creates a subset of current instance
+    CurveConfigurations subset(const std::vector<boost::shared_ptr<CurveSpec>>& specs);
 
     //! \name Setters and Getters
     //@{
