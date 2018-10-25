@@ -13,7 +13,7 @@ get_library_name("QuantExt" QLE_LIB_NAME)
 get_library_name("QuantLib" QL_LIB_NAME)
 configure_msvc_runtime()
 
-find_package (Boost COMPONENTS unit_test_framework regex date_time REQUIRED)
+find_package (Boost COMPONENTS unit_test_framework regex system date_time serialization REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${QUANTLIB_SOURCE_DIR})
