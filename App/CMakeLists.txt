@@ -28,6 +28,7 @@ add_link_directory_if_exists("${QUANTEXT_SOURCE_DIR}/build/qle")
 add_link_directory_if_exists("${OREDATA_SOURCE_DIR}/build/ored")
 add_link_directory_if_exists("${OREANALYTICS_SOURCE_DIR}/build/orea")
 
+
 add_executable(ore ore.cpp)
 target_link_libraries(ore ${OREA_LIB_NAME})
 target_link_libraries(ore ${ORED_LIB_NAME})
