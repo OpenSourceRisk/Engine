@@ -121,7 +121,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
-            std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
+            std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helper;
             for (auto quote : quotes) {
                 helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
