@@ -17,6 +17,7 @@
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
+        <PaymentLag>0</PaymentLag>
 		<FixedLegData>
 		  <Rates>
 			<Rate>0</Rate>
@@ -44,6 +45,7 @@
 		  <Notional>1000000.000000</Notional>
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
+        <PaymentLag>0</PaymentLag>
 		<PaymentConvention>MF</PaymentConvention>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
@@ -122,6 +124,7 @@
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
+        <PaymentLag>0</PaymentLag>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
@@ -157,6 +160,7 @@
         </Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
+        <PaymentLag>0</PaymentLag>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>

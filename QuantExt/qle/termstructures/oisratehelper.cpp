@@ -65,7 +65,7 @@ void OISRateHelper::initializeDates() {
                 .withRule(rule_)
                 // TODO: patch QL?
                 //.withFixedAccrualConvention(fixedConvention_)
-                //.withFixedPaymentConvention(paymentAdjustment_)
+                .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
                 .withTelescopicValueDates(telescopicValueDates_);
@@ -145,7 +145,7 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 .withRule(rule_)
                 // TODO: patch QL
                 //.withFixedAccrualConvention(fixedConvention_)
-                //.withFixedPaymentConvention(paymentAdjustment_)
+                .withPaymentAdjustment(paymentAdjustment_)
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(termStructureHandle_)
                 .withTelescopicValueDates(telescopicValueDates_);

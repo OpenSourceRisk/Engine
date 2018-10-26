@@ -36,7 +36,8 @@
     <Analytic type="curves">
       <Parameter name="active">Y</Parameter>
       <Parameter name="configuration">default</Parameter>
-      <Parameter name="grid">240,1M</Parameter>
+      <!-- <Parameter name="grid">240,1M</Parameter> -->
+      <Parameter name="grid">270,1D</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
   </Analytics>
