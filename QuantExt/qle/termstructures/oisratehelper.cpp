@@ -22,8 +22,6 @@
 
 #include <qle/termstructures/oisratehelper.hpp>
 
-#include <iostream>
-
 namespace QuantExt {
 
 namespace {
