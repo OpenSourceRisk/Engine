@@ -302,7 +302,7 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     termConvention = ""
     payer = "false"
     rule = ""
-    paymentLag = ""
+    paymentLag = "0"
     currency = details[2]
     fixingDays = details[3]
     maturity = details[5]

@@ -473,6 +473,7 @@ Leg makeFixedLeg(const LegData& data) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar = schedule.calendar();
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     Natural paymentLag = data.paymentLag();
@@ -481,7 +482,8 @@ Leg makeFixedLeg(const LegData& data) {
                 .withNotionals(notionals)
                 .withCouponRates(rates, dc)
                 .withPaymentAdjustment(bdc)
-                .withPaymentLag(paymentLag);
+                .withPaymentLag(paymentLag)
+                .withPaymentCalendar(paymentCalendar);
     return leg;
 }
 
@@ -603,6 +605,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     Natural paymentLag = data.paymentLag();
+    Calendar paymentCalendar = index->fixingCalendar();
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
 
@@ -632,6 +635,7 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                .withSpreads(spreads)
                                .withPaymentDayCounter(dc)
                                .withPaymentAdjustment(bdc)
+                               .withPaymentCalendar(paymentCalendar)
                                .withPaymentLag(paymentLag);
 
         if (floatData->gearings().size() > 0)
