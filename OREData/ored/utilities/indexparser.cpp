@@ -125,6 +125,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"AUD-AONIA", boost::make_shared<IborIndexParserOIS<Aonia>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
         {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
