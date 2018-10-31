@@ -101,19 +101,21 @@ struct CommonVars {
     string fixDC;
     string index;
     string eqName;
+    Real dividendFactor;
+    Integer settlementDays;
     bool isinarrears;
     vector<double> notionals;
     vector<double> spread;
 
     // utilities
-    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType, Real dividendFactor=1.0) {
+    boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
         
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
             floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName), isPayer, ccy,
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, settlementDays), isPayer, ccy,
             eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
@@ -158,6 +160,8 @@ struct CommonVars {
         fixDC = "ACT/ACT";
         index = "USD-LIBOR-3M";
         eqName = "SP5";
+        dividendFactor = 1.0;
+        settlementDays = 0;
         days = 0;
         isinarrears = false;
         notionals.push_back(10000000);
