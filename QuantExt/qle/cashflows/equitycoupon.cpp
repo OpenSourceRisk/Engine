@@ -107,6 +107,11 @@ EquityLeg& EquityLeg::withDividendFactor(Real dividendFactor) {
     return *this;
 }
 
+EquityLeg& EquityLeg::withSettlementLag(const Period& settlementLag) {
+    settlementLag_ = settlementLag;
+    return *this;
+}
+
 EquityLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
@@ -128,7 +133,7 @@ EquityLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.adjust(endDate, paymentAdjustment_);
+        paymentDate = calendar.adjust(calendar.advance(endDate, settlementLag_), paymentAdjustment_);
 
         boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
             paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, 

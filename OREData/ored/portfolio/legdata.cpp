@@ -248,6 +248,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     else
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
+    settlementDays_ = XMLUtils::getChildValueAsInt(node, "SettlementDays");
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -257,6 +258,8 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
+    if (settlementDays_ != 0)
+        XMLUtils::addChild(doc, node, "SettlementDays", settlementDays_);
     return node;
 }
 
@@ -919,6 +922,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
     Real dividendFactor = eqLegData->dividendFactor();
+    Period settlementLag = Period(eqLegData->settlementDays(), Days);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     applyAmortization(notionals, data, schedule, false);
@@ -928,7 +932,8 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
         .withPaymentDayCounter(dc)
         .withPaymentAdjustment(bdc)
         .withTotalReturn(isTotalReturn)
-        .withDividendFactor(dividendFactor);
+        .withDividendFactor(dividendFactor)
+        .withSettlementLag(settlementLag);
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
     return leg;

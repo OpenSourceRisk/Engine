@@ -135,6 +135,7 @@ public:
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
+    EquityLeg& withSettlementLag(const Period&);
     operator Leg() const;
 
 private:
@@ -146,6 +147,7 @@ private:
     Calendar paymentCalendar_;
     bool isTotalReturn_;
     Real dividendFactor_ = 1.0;
+    Period settlementLag_ = Period(0, Days);
 };
 
 } // namespace QuantExt
