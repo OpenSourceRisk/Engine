@@ -30,7 +30,7 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
                            bool isTotalReturn, Real dividendFactor, const Date& refPeriodStart,
                            const Date& refPeriodEnd, const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
-      equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn) {
+      equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor) {
 
     registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
