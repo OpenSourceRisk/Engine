@@ -545,12 +545,9 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp">
       <Filter>termstructures</Filter>
-    </ClInclude>  
+    </ClInclude>
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp">
       <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\pricingengines\varianceswapgeneralreplicationengine.hpp">
-      <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\equityindex.hpp">
       <Filter>indexes</Filter>
@@ -573,12 +570,6 @@
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp" />
-    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
-    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
-    <ClInclude Include="qle\indexes\ibor\copibr.hpp" />
-    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp" />
-    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\calendars\all.hpp">
       <Filter>time\calendars</Filter>
     </ClInclude>
@@ -599,6 +590,48 @@
     </ClInclude>
     <ClInclude Include="qle\calendars\thailand.hpp">
       <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitycoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\equitycouponpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\brlcdi.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\clpcamara.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\copibr.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\thbbibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\phpphiref.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\crossccyfixfloatswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\region.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\secpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\dkcpi.hpp">
+      <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -979,9 +1012,6 @@
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\varianceswapgeneralreplicationengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
     <ClCompile Include="qle\indexes\equityindex.cpp">
       <Filter>indexes</Filter>
     </ClCompile>
@@ -1005,6 +1035,24 @@
     </ClCompile>
     <ClCompile Include="qle\calendars\thailand.cpp">
       <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\equitycoupon.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\equitycouponpricer.cpp">
+      <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccyfixfloatswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccyfixfloatswaphelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\region.cpp">
+      <Filter>indexes</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

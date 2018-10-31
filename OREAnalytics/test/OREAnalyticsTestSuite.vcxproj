@@ -40,6 +40,7 @@
     <ClInclude Include="observationmode.hpp" />
     <ClInclude Include="scenariogenerator.hpp" />
     <ClInclude Include="scenariosimmarket.hpp" />
+    <ClInclude Include="sensitivityaggregator.hpp" />
     <ClInclude Include="sensitivityanalysis.hpp" />
     <ClInclude Include="sensitivityanalysisanalytic.hpp" />
     <ClInclude Include="sensitivityperformance.hpp" />
@@ -55,6 +56,7 @@
     <ClCompile Include="observationmode.cpp" />
     <ClCompile Include="scenariogenerator.cpp" />
     <ClCompile Include="scenariosimmarket.cpp" />
+    <ClCompile Include="sensitivityaggregator.cpp" />
     <ClCompile Include="sensitivityanalysis.cpp" />
     <ClCompile Include="sensitivityanalysisanalytic.cpp" />
     <ClCompile Include="sensitivityperformance.cpp" />

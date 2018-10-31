@@ -58,6 +58,7 @@ public:
         BMABasisSwap,
         FX,
         CrossCcyBasis,
+        CrossCcyFixFloat,
         CDS,
         SwapIndex,
         InflationSwap,
@@ -721,6 +722,77 @@ private:
     string strFlatIndex_;
     string strSpreadIndex_;
     string strEom_;
+};
+
+/*! Container for storing Cross Currency Fix vs Float Swap quote conventions
+    \ingroup marketdata
+ */
+class CrossCcyFixFloatSwapConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CrossCcyFixFloatSwapConvention() {}
+    
+    //! Detailed constructor
+    CrossCcyFixFloatSwapConvention(
+        const std::string& id, 
+        const std::string& settlementDays,
+        const std::string& settlementCalendar,
+        const std::string& settlementConvention,
+        const std::string& fixedCurrency,
+        const std::string& fixedFrequency,
+        const std::string& fixedConvention,
+        const std::string& fixedDayCounter,
+        const std::string& index,
+        const std::string& eom = "");
+    //@}
+
+    //! \name Inspectors
+    //@{
+    QuantLib::Natural settlementDays() const { return settlementDays_; }
+    const QuantLib::Calendar& settlementCalendar() const { return settlementCalendar_; }
+    QuantLib::BusinessDayConvention settlementConvention() const { return settlementConvention_; }
+    const QuantLib::Currency& fixedCurrency() const { return fixedCurrency_; }
+    QuantLib::Frequency fixedFrequency() const { return fixedFrequency_; }
+    QuantLib::BusinessDayConvention fixedConvention() const { return fixedConvention_; }
+    const QuantLib::DayCounter& fixedDayCounter() const { return fixedDayCounter_; }
+    const boost::shared_ptr<QuantLib::IborIndex>& index() const { return index_; }
+    bool eom() const { return eom_; }
+    //@}
+
+    //! \name Serialisation interface
+    //@{
+    void fromXML(XMLNode* node);
+    XMLNode* toXML(XMLDocument& doc);
+    //@}
+
+    //! \name Convention interface
+    //@{
+    void build();
+    //@}
+
+private:
+    QuantLib::Natural settlementDays_;
+    QuantLib::Calendar settlementCalendar_;
+    QuantLib::BusinessDayConvention settlementConvention_;
+    QuantLib::Currency fixedCurrency_;
+    QuantLib::Frequency fixedFrequency_;
+    QuantLib::BusinessDayConvention fixedConvention_;
+    QuantLib::DayCounter fixedDayCounter_;
+    boost::shared_ptr<QuantLib::IborIndex> index_;
+    bool eom_;
+
+    // Strings to store the inputs
+    std::string strSettlementDays_;
+    std::string strSettlementCalendar_;
+    std::string strSettlementConvention_;
+    std::string strFixedCurrency_;
+    std::string strFixedFrequency_;
+    std::string strFixedConvention_;
+    std::string strFixedDayCounter_;
+    std::string strIndex_;
+    std::string strEom_;
 };
 
 //! Container for storing Credit Default Swap quote conventions

@@ -829,7 +829,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
 
         if (defaultCurveCalendars_.size() > 0) {
-            XMLNode* node = XMLUtils::addChild(doc, defaultCurvesNode, "Calendarss");
+            XMLNode* node = XMLUtils::addChild(doc, defaultCurvesNode, "Calendars");
             for (auto dc : defaultCurveCalendars_) {
                 XMLNode* c = doc.allocNode("Calendar", dc.second);
                 XMLUtils::addAttribute(doc, c, "name", dc.first);

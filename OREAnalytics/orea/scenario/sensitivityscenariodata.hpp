@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
@@ -44,8 +45,6 @@ namespace analytics {
  */
 class SensitivityScenarioData : public XMLSerializable {
 public:
-    enum class ShiftType { Absolute, Relative };
-
     struct ShiftData {
         virtual ~ShiftData() {}
         ShiftData() : shiftSize(0.0) {}
@@ -106,6 +105,7 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
     const map<string, VolShiftData>& equityVolShiftData() const { return equityVolShiftData_; }
+    const map<string, boost::shared_ptr<CurveShiftData>>& equityForecastCurveShiftData() const { return equityForecastCurveShiftData_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() const { return dividendYieldShiftData_; }
     const map<string, SpotShiftData>& commodityShiftData() const { return commodityShiftData_; }
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
@@ -115,6 +115,10 @@ public:
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
 
+    //! Give back the shift data for the given risk factor type, \p keyType, with the given \p name
+    const ShiftData& shiftData(
+        const ore::analytics::RiskFactorKey::KeyType& keyType, 
+        const std::string& name) const;
     //@}
 
     //! \name Setters
@@ -164,9 +168,16 @@ public:
     //@}
 
 protected:
-    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
+    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
+
+    //! toXML helper methods
+    //@{
+    void shiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const ShiftData& data) const;
+    void curveShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const;
+    void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
+    //@}
 
     map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
     map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_; // key: indexName

@@ -138,7 +138,6 @@ void InflationCapFloorTest::testYoYCapFloor() {
     ScheduleData scheduleYY(ScheduleRules(start, end, "1Y", "TARGET", conv, conv, rule));
 
     // Leg variables
-    bool isInArrears = false;
     string dc = "ACT/ACT";
     vector<Real> notional(1, 10000000);
     string paymentConvention = "F";
@@ -146,7 +145,6 @@ void InflationCapFloorTest::testYoYCapFloor() {
     // EUR YoY Leg
     bool isPayerYY = false;
     string indexYY = "EUHICPXT";
-    Real baseYY = 100.0;
     string lag = "3M";
     bool interpolated = false;
     LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, interpolated, 0), isPayerYY,

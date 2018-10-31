@@ -80,6 +80,8 @@ using boost::unit_test::test_suite;
 #include "xmlmanipulation.hpp"
 #include "yieldcurve.hpp"
 #include "inflationcapfloor.hpp"
+#include "equityswap.hpp"
+#include "conventions.hpp"
 
 namespace {
 
@@ -143,6 +145,8 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::CommodityOptionTest::suite());
     test->add(testsuite::CommodityVolatilityCurveConfigTest::suite());
     test->add(testsuite::CommodityVolCurveTest::suite());
+    test->add(testsuite::EquitySwapTest::suite());
+    test->add(testsuite::ConventionsTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -89,10 +89,16 @@
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp">
+    <ClCompile Include="qle_calendars.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="qle_calendars.cpp">
+    <ClCompile Include="discountratiomodifiedcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswaphelper.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -201,13 +207,16 @@
     <ClInclude Include="bonds.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="C.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="qle_calendars.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="discountratiomodifiedcurve.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossccyfixfloatswap.hpp">
+      <Filter>headers</Filter>
+    </ClInclude>
+    <ClInclude Include="crossccyfixfloatswaphelper.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

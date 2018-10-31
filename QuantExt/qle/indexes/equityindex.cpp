@@ -40,13 +40,17 @@ EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCa
 }
 
 Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const {
+    return fixing(fixingDate, forecastTodaysFixing, false);
+}
+
+Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDiviend) const {
 
     QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
 
     Date today = Settings::instance().evaluationDate();
 
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        return forecastFixing(fixingDate);
+        return forecastFixing(fixingDate, incDiviend);
 
     Real result = Null<Decimal>();
 
@@ -63,18 +67,26 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) cons
             ; // fall through and forecast
         }
         if (result == Null<Real>())
-            return forecastFixing(fixingDate);
+            return forecastFixing(fixingDate, incDiviend);
     }
 
     return result;
 }
 
 Real EquityIndex::forecastFixing(const Date& fixingDate) const {
+    return forecastFixing(fixingDate, false);
+}
+
+Real EquityIndex::forecastFixing(const Date& fixingDate, bool incDividend) const {
     QL_REQUIRE(!rate_.empty(), "null term structure set to this instance of " << name());
-    return forecastFixing(rate_->timeFromReference(fixingDate));
+    return forecastFixing(rate_->timeFromReference(fixingDate), incDividend);
 }
 
 Real EquityIndex::forecastFixing(const Time& fixingTime) const {
+    return forecastFixing(fixingTime, false);
+}
+
+Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const {
     QL_REQUIRE(!spotQuote_.empty(), "null spot quote set to this instance of " << name());
     QL_REQUIRE(!rate_.empty() && !dividend_.empty(), "null term structure set to this instance of " << name());
 
@@ -82,7 +94,13 @@ Real EquityIndex::forecastFixing(const Time& fixingTime) const {
     Real price = spotQuote_->value();
 
     // compute the forecast applying the usual no arbitrage principle
-    Real forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime);
+    Real forward;
+    if (incDividend) {
+        forward = price / rate_->discount(fixingTime);
+    }
+    else {
+        forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime);
+    }
     return forward;
 }
 

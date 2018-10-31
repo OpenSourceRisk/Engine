@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <orea/cube/npvcube.hpp>
+#include <orea/cube/npvsensicube.hpp>
 #include <orea/cube/sensitivitycube.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -72,7 +72,7 @@ public:
     virtual ~SensitivityAnalysis() {}
 
     //! Generate the Sensitivities
-    void generateSensitivities(boost::shared_ptr<NPVCube> cube = boost::shared_ptr<NPVCube>());
+    void generateSensitivities(boost::shared_ptr<NPVSensiCube> cube = boost::shared_ptr<NPVSensiCube>());
 
     //! The ASOF date for the sensitivity analysis
     virtual const QuantLib::Date asof() const { return asof_; }
@@ -106,14 +106,11 @@ public:
     //! a wrapper for the sensivity results cube
     boost::shared_ptr<SensitivityCube> sensiCube() const { return sensiCube_; }
 
-    //! Return a map containing the risk factor keys and their corresponding shift sizes
-    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return factors_; }
-
 protected:
     //! initialize the various components that will be passed to the sensitivities valuation engine
-    virtual void initialize(boost::shared_ptr<NPVCube>& cube);
+    virtual void initialize(boost::shared_ptr<NPVSensiCube>& cube);
     //! initialize the cube with the appropriate dimensions
-    virtual void initializeCube(boost::shared_ptr<NPVCube>& cube) const;
+    virtual void initializeCube(boost::shared_ptr<NPVSensiCube>& cube) const;
     //! build engine factory
     virtual boost::shared_ptr<EngineFactory>
     buildFactory(const std::vector<boost::shared_ptr<EngineBuilder>> extraBuilders = {},
@@ -126,9 +123,6 @@ protected:
 
     //! build valuation calculators for valuation engine
     std::vector<boost::shared_ptr<ValuationCalculator>> buildValuationCalculators() const;
-
-    //! returns the shift size corresponding to a particular risk factor
-    Real getShiftSize(const RiskFactorKey& desc) const;
 
     boost::shared_ptr<ore::data::Market> market_;
     std::string marketConfiguration_;
@@ -152,8 +146,15 @@ protected:
     std::set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
     //! sensitivityCube
     boost::shared_ptr<SensitivityCube> sensiCube_;
-    // unique set of factors
-    std::map<RiskFactorKey, QuantLib::Real> factors_;
 };
+
+/*! Returns the absolute shift size corresponding to a particular risk factor \p key 
+    given sensitivity parameters \p sensiParams and a simulation market \p simMarket 
+*/
+Real getShiftSize(const RiskFactorKey& key, 
+    const SensitivityScenarioData& sensiParams, 
+    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
+    const std::string& marketConfiguration = "");
+
 } // namespace analytics
 } // namespace ore

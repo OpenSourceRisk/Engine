@@ -71,7 +71,9 @@ using boost::unit_test::test_suite;
 #include "swaptionvolconstantspread.hpp"
 #include "pricetermstructureadapter.hpp"
 #include "interpolatedyoycapfloortermpricesurface.hpp"
-#include "generalisedreplicatingvarianceswapengine.hpp"
+#include "discountratiomodifiedcurve.hpp"
+#include "crossccyfixfloatswap.hpp"
+#include "crossccyfixfloatswaphelper.hpp"
 
 namespace {
 
@@ -133,7 +135,9 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::BondsTest::suite());
     test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
     test->add(testsuite::CalendarsTest::suite());
-    test->add(testsuite::GeneralisedReplicatingVarianceSwapEngineTest::suite());
+    test->add(testsuite::DiscountingRatioModifiedCurveTest::suite());
+    test->add(testsuite::CrossCurrencyFixFloatSwapTest::suite());
+    test->add(testsuite::CrossCurrencyFixFloatSwapHelperTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -644,11 +644,14 @@
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />
     <ClCompile Include="crossassetmodelparametrizations.cpp" />
+    <ClCompile Include="crossccyfixfloatswap.cpp" />
+    <ClCompile Include="crossccyfixfloatswaphelper.cpp" />
     <ClCompile Include="currency.cpp" />
     <ClCompile Include="deltagammavar.cpp" />
     <ClCompile Include="deposit.cpp" />
     <ClCompile Include="discountcurve.cpp" />
     <ClCompile Include="discountingcommodityforwardengine.cpp" />
+    <ClCompile Include="discountratiomodifiedcurve.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
@@ -667,7 +670,6 @@
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />
     <ClCompile Include="testsuite.cpp" />
-    <ClCompile Include="generalisedreplicatingvarianceswapengine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="analyticlgmswaptionengine.hpp" />
@@ -679,17 +681,18 @@
     <ClInclude Include="crossassetmodel.hpp" />
     <ClInclude Include="crossassetmodel2.hpp" />
     <ClInclude Include="crossassetmodelparametrizations.hpp" />
+    <ClInclude Include="crossccyfixfloatswaphelper.hpp" />
+    <ClInclude Include="crossccyfixfloatswap.hpp" />
     <ClInclude Include="currency.hpp" />
     <ClInclude Include="deltagammavar.hpp" />
     <ClInclude Include="deposit.hpp" />
     <ClInclude Include="discountcurve.hpp" />
     <ClInclude Include="discountingcommodityforwardengine.hpp" />
+    <ClInclude Include="discountratiomodifiedcurve.hpp" />
     <ClInclude Include="dynamicblackvoltermstructure.hpp" />
     <ClInclude Include="dynamicswaptionvolmatrix.hpp" />
     <ClInclude Include="fxvolsmile.hpp" />
-    <ClInclude Include="generalisedreplicatingvarianceswapengine.hpp" />
     <ClInclude Include="index.hpp" />
-    <ClInclude Include="C.hpp" />
     <ClInclude Include="logquote.hpp" />
     <ClInclude Include="optionletstripper.hpp" />
     <ClInclude Include="payment.hpp" />

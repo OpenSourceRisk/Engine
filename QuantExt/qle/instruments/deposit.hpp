@@ -65,6 +65,7 @@ public:
     Date maturityDate() const { return maturityDate_; }
     Real fairRate() const {
         calculate();
+        QL_REQUIRE(fairRate_ != Null<Real>(), "Deposit::fairRate(): not provided");
         return fairRate_;
     }
     const Leg& leg() const { return leg_; }
@@ -86,6 +87,7 @@ private:
 class Deposit::arguments : public virtual PricingEngine::arguments {
 public:
     boost::shared_ptr<IborIndex> index;
+    Date maturityDate;
     Leg leg;
     void validate() const;
 };

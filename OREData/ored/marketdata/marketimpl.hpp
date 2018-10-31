@@ -127,6 +127,9 @@ public:
 
     //! Equity curves
     Handle<Quote> equitySpot(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+    Handle<QuantExt::EquityIndex>
+        equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const;
+
     Handle<YieldTermStructure> equityDividendCurve(const string& eqName,
                                                    const string& configuration = Market::defaultConfiguration) const;
 
@@ -193,6 +196,7 @@ protected:
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
+    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     Conventions conventions_;
 
     //! add a swap index to the market

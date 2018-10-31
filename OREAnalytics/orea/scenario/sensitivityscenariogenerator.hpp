@@ -30,6 +30,8 @@
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/marketdata/market.hpp>
 
+#include <map>
+
 namespace ore {
 using namespace data;
 namespace analytics {
@@ -104,6 +106,17 @@ public:
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
+    /*! Return the map of absolute shift sizes by risk factor key for this generator
+        
+        \warning Where there are tenor specific shifts the shift size is only meaningful 
+                 if the tenors in the sensitivity configuration line up with the tenors in 
+                 the simulation market configuration. If this is not the case, an absolute 
+                 shift size of <code>Null<Real>()</code> is added for the given risk factor 
+                 key
+    */
+    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const {
+        return shiftSizes_;
+    }
 
 private:
     void generateScenarios();
@@ -155,6 +168,9 @@ private:
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
     const bool overrideTenors_;
+    
+    //! Holds the shift sizes for each risk factor key
+    std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
 };
 } // namespace analytics
 } // namespace ore

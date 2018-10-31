@@ -29,7 +29,9 @@ OREDATA_TESTS = \
 	commodityvolcurveconfig.hpp commodityvolcurveconfig.cpp \
 	commodityvolcurve.hpp commodityvolcurve.cpp \
 	cds.hpp cds.cpp \
-	inflationcapfloor.hpp inflationcapfloor.cpp 
+	inflationcapfloor.hpp inflationcapfloor.cpp \
+	equityswap.hpp equityswap.cpp \
+	conventions.hpp conventions.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

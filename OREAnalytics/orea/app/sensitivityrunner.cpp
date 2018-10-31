@@ -17,6 +17,7 @@
 */
 
 #include <orea/app/sensitivityrunner.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <ored/report/csvreport.hpp>
 
@@ -85,15 +86,13 @@ void SensitivityRunner::sensiOutputReports(const boost::shared_ptr<SensitivityAn
     CSVFileReport scenReport(outputFile);
     ReportWriter().writeScenarioReport(scenReport, sensiAnalysis->sensiCube(), sensiThreshold);
 
+    // Create a stream from the sensitivity cube
+    auto baseCurrency = sensiAnalysis->simMarketData()->baseCcy();
+    auto ss = boost::make_shared<SensitivityCubeStream>(sensiAnalysis->sensiCube(), baseCurrency);
+
     outputFile = outputPath + "/" + params_->get("sensitivity", "sensitivityOutputFile");
     CSVFileReport sensiReport(outputFile);
-    ReportWriter().writeSensitivityReport(sensiReport, sensiAnalysis->sensiCube(), 
-        sensiThreshold, sensiAnalysis->shiftSizes());
-
-    outputFile = outputPath + "/" + params_->get("sensitivity", "crossGammaOutputFile");
-    CSVFileReport cgReport(outputFile);
-    ReportWriter().writeCrossGammaReport(cgReport, sensiAnalysis->sensiCube(), 
-        sensiThreshold, sensiAnalysis->shiftSizes());
+    ReportWriter().writeSensitivityReport(sensiReport, ss, sensiThreshold);
 }
 
 } // namespace analytics

@@ -19,6 +19,7 @@
 */
 
 #include <orea/app/reportwriter.hpp>
+
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ostream>
@@ -32,6 +33,7 @@
 using std::string;
 using std::vector;
 using QuantLib::Date;
+using ore::data::to_string;
 
 namespace ore {
 namespace analytics {
@@ -555,98 +557,44 @@ void ReportWriter::writeScenarioReport(Report& report,
 }
 
 void ReportWriter::writeSensitivityReport(Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
-    const map<RiskFactorKey, Real>& shiftSizes) {
+    const boost::shared_ptr<SensitivityStream>& ss, Real outputThreshold) {
 
     LOG("Writing Sensitivity report");
 
     report.addColumn("TradeId", string());
-    report.addColumn("Factor", string());
-    report.addColumn("ShiftSize", double(), 6);
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), 6);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), 6);
+    report.addColumn("Currency", string());
     report.addColumn("Base NPV", double(), 2);
     report.addColumn("Delta", double(), 2);
     report.addColumn("Gamma", double(), 2);
-
-    for (const auto& tradeId : sensitivityCube->tradeIds()) {
-        Real baseNpv = sensitivityCube->npv(tradeId);
-
-        for (const auto& factor : sensitivityCube->factors()) {
-
-            Real delta = sensitivityCube->delta(tradeId, factor);
-            Real gamma = sensitivityCube->gamma(tradeId, factor);
-
-            if (fabs(delta) > outputThreshold || fabs(gamma) > outputThreshold) {
-
-                Real shiftSize = shiftSizes.count(factor) > 0 ? shiftSizes.at(factor) : Null<Real>();
-
-                report.next();
-                report.add(tradeId);
-                report.add(sensitivityCube->factorDescription(factor));
-                report.add(shiftSize);
-                report.add(baseNpv);
-                report.add(delta);
-                report.add(gamma);
-
-            }
-            else if (!std::isfinite(delta) || !std::isfinite(gamma)) {
-                // TODO: Again, is this needed?
-                ALOG("sensitivity results for trade " << tradeId << ", factor " <<
-                    sensitivityCube->factorDescription(factor) << " are not finite (delta = " << delta
-                    << ", gamma = " << gamma << ")");
-            }
+    
+    // Make sure that we are starting from the start
+    ss->reset();
+    while(SensitivityRecord sr = ss->next()) {
+        if (fabs(sr.delta) > outputThreshold || fabs(sr.gamma) > outputThreshold) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add(to_string(sr.isPar));
+            report.add(reconstructFactor(sr.key_1, sr.desc_1));
+            report.add(sr.shift_1);
+            report.add(reconstructFactor(sr.key_2, sr.desc_2));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
         }
     }
 
     report.end();
     LOG("Sensitivity report finished");
-}
-
-void ReportWriter::writeCrossGammaReport(Report& report,
-    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold,
-    const map<RiskFactorKey, Real>& shiftSizes) {
-
-    LOG("Writing CrossGamma report");
-
-    report.addColumn("TradeId", string());
-    report.addColumn("Factor 1", string());
-    report.addColumn("ShiftSize1", double(), 6);
-    report.addColumn("Factor 2", string());
-    report.addColumn("ShiftSize2", double(), 6);
-    report.addColumn("Base NPV", double(), 2);
-    report.addColumn("CrossGamma", double(), 2);
-
-    for (const auto& tradeId : sensitivityCube->tradeIds()) {
-        Real baseNpv = sensitivityCube->npv(tradeId);
-
-        for (const auto& crossPair : sensitivityCube->crossFactors()) {
-            Real crossGamma = sensitivityCube->crossGamma(tradeId, crossPair);
-
-            if (fabs(crossGamma) > outputThreshold) {
-
-                Real shiftSize_1 = shiftSizes.count(crossPair.first) > 0 ? shiftSizes.at(crossPair.first) : Null<Real>();
-                Real shiftSize_2 = shiftSizes.count(crossPair.second) > 0 ? shiftSizes.at(crossPair.second) : Null<Real>();
-
-                report.next();
-                report.add(tradeId);
-                report.add(sensitivityCube->factorDescription(crossPair.first));
-                report.add(shiftSize_1);
-                report.add(sensitivityCube->factorDescription(crossPair.second));
-                report.add(shiftSize_2);
-                report.add(baseNpv);
-                report.add(crossGamma);
-
-            }
-            else if (!std::isfinite(crossGamma)) {
-                ALOG("sensitivity result for trade " << tradeId << ", factors "
-                    << sensitivityCube->factorDescription(crossPair.first) << ", "
-                    << sensitivityCube->factorDescription(crossPair.second)
-                    << " is not finite (cross-gamma = " << crossGamma << ")");
-            }
-        }
-    }
-
-    report.end();
-    LOG("Cross gamma written");
 }
 
 } // namespace analytics

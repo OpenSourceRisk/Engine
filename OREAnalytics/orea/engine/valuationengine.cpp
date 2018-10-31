@@ -49,7 +49,7 @@ ValuationEngine::ValuationEngine(const Date& today, const boost::shared_ptr<Date
 }
 
 void ValuationEngine::buildCube(const boost::shared_ptr<data::Portfolio>& portfolio,
-                                boost::shared_ptr<analytics::NPVCube>& outputCube,
+                                boost::shared_ptr<analytics::NPVCube> outputCube,
                                 vector<boost::shared_ptr<ValuationCalculator>> calculators) {
 
     QL_REQUIRE(portfolio->size() > 0, "ValuationEngine: Error portfolio is empty");

@@ -54,7 +54,6 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         boost::shared_ptr<IborIndex> index = parseIborIndex(index_);
         Currency ccy = index->currency();
-        Period tenor = index->tenor();
 
         string type;
         if (type_ == Type::ZC)

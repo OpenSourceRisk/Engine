@@ -2737,7 +2737,11 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <ModelParameters>
       <Parameter name="Calibration">Bootstrap</Parameter>
       <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
-      <Parameter name="Reversion">0.03</Parameter>
+      <!-- ccy specific reversions -->
+      <Parameter name="Reversion_EUR">0.03</Parameter>
+      <Parameter name="Reversion_USD">0.04</Parameter>
+      <!-- reversion to use if no ccy specific value is given -->
+      <Parameter name="Reversion">0.02</Parameter>
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
@@ -2802,6 +2806,8 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <EngineParameters>
       <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
       <Parameter name="YieldCurveModel">Standard</Parameter> 
+      <Parameter name="MeanReversion_EUR">0.01</Parameter>
+      <Parameter name="MeanReversion_USD">0.02</Parameter>
       <Parameter name="MeanReversion">0.0</Parameter>
     </EngineParameters>
   </Product>
@@ -2821,13 +2827,13 @@ For example, in case of the Bermudan Swaption, the parameters are interpreted as
 
 \item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
   the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
-    Hagan}. Calibration and BermudanStrategy can be set to {\em None} in order to skip model calibration. Alternatively,
-  Calibration is set to {\em Bootstrap} and BermudanStrategy to {\em CoterminalATM} in order to calibrate to
-  instrument-specific co-terminal ATM Swaptions, i.e. chosen to match the instruments first expiry and final maturity.
-  If {\em CoterminalDealStrike} is chosen, the co-terminal swaptions will match the fixed rate of the deal (if the deal
-  has changing fixed rates, the first rate is matched). Finally if the ShiftHorizon parameter is given, its value times
-  the remaining maturity time of the deal is chosen as the horizon shift parameter for the LGM model. If not given, this
-  parameter defaults to $0.5$.
+    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
+  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
+  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
+  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
+  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
+  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
+  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
 
 \item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
   number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
@@ -3707,7 +3713,7 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
     <Dimension>ATM</Dimension>
     <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
-    <!-- Flat or Linear -->
+    <!-- Flat, Linear, None -->
     <Extrapolation>Flat</Extrapolation>
     <!-- Day counter for date to time conversion -->
     <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -3746,8 +3752,8 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->

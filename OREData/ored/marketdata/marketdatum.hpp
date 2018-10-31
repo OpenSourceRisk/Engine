@@ -28,6 +28,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
+#include <ql/currency.hpp>
 #include <string>
 
 using std::string;
@@ -74,6 +75,7 @@ public:
         BASIS_SWAP,
         BMA_SWAP,
         CC_BASIS_SWAP,
+        CC_FIX_FLOAT_SWAP,
         CDS,
         CDS_INDEX,
         FX_SPOT,
@@ -467,6 +469,49 @@ private:
     string ccy_;
     Period term_;
     Period maturity_;
+};
+
+//! Cross Currency Fix Float Swap quote holder
+/*! Holds the quote for the fair fixed rate on a fixed against float 
+    cross currency swap.
+
+    \ingroup marketdata
+*/
+class CrossCcyFixFloatSwapQuote : public MarketDatum {
+public:
+    //! Constructor
+    CrossCcyFixFloatSwapQuote(
+        QuantLib::Real value, 
+        const QuantLib::Date& asof,
+        const std::string& name, 
+        QuoteType quoteType, 
+        const QuantLib::Currency& floatCurrency, 
+        const QuantLib::Period& floatTenor, 
+        const QuantLib::Currency& fixedCurrency, 
+        const QuantLib::Period& fixedTenor,
+        const QuantLib::Period& maturity)
+        : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), 
+          floatCurrency_(floatCurrency), 
+          floatTenor_(floatTenor), 
+          fixedCurrency_(fixedCurrency), 
+          fixedTenor_(fixedTenor), 
+          maturity_(maturity) {}
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::Currency& floatCurrency() const { return floatCurrency_; }
+    const QuantLib::Period& floatTenor() const { return floatTenor_; }
+    const QuantLib::Currency& fixedCurrency() const { return fixedCurrency_; }
+    const QuantLib::Period& fixedTenor() const { return fixedTenor_; }
+    const QuantLib::Period& maturity() const { return maturity_; }
+    //@}
+
+private:
+    QuantLib::Currency floatCurrency_;
+    QuantLib::Period floatTenor_;
+    QuantLib::Currency fixedCurrency_;
+    QuantLib::Period fixedTenor_;
+    QuantLib::Period maturity_;
 };
 
 //! CDS Spread data class

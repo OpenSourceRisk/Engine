@@ -17,6 +17,7 @@
 */
 
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
+#include <qle/math/flatextrapolation.hpp>
 
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
@@ -24,14 +25,16 @@
 #include <algorithm>
 #include <boost/make_shared.hpp>
 
-using std::min;
 using std::max;
+using std::min;
 
 namespace QuantExt {
 
-DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s)
+DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared_ptr<DatedStrippedOptionletBase>& s,
+                                                             const bool flatExtrapolation)
     : OptionletVolatilityStructure(s->referenceDate(), s->calendar(), s->businessDayConvention(), s->dayCounter()),
-      optionletStripper_(s), nInterpolations_(s->optionletMaturities()), strikeInterpolations_(nInterpolations_) {
+      optionletStripper_(s), nInterpolations_(s->optionletMaturities()), strikeInterpolations_(nInterpolations_),
+      flatExtrapolation_(flatExtrapolation) {
     registerWith(optionletStripper_);
 }
 
@@ -44,13 +47,19 @@ boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(
     // Still possibility of arbitrary externally provided strike rows where (0) does not include all
     vector<Rate> optionletStrikes = optionletStripper_->optionletStrikes(0);
     vector<Real> stdDevs(optionletStrikes.size());
-    for (Size i = 0; i < optionletStrikes.size(); ++i)
-        stdDevs[i] = volatilityImpl(t, optionletStrikes[i]) * sqrt(t);
+    Real tEff = flatExtrapolation_ ? std::min(t, optionletStripper_->optionletFixingTimes().back()) : t;
+    for (Size i = 0; i < optionletStrikes.size(); ++i) {
+        stdDevs[i] = volatilityImpl(tEff, optionletStrikes[i]) * sqrt(tEff);
+    }
 
     // Use a linear interpolated smile section.
     // TODO: possibly make this configurable?
-    return boost::make_shared<InterpolatedSmileSection<Linear> >(t, optionletStrikes, stdDevs, Null<Real>(), Linear(),
-                                                                 Actual365Fixed(), volatilityType(), displacement());
+    if (flatExtrapolation_)
+        return boost::make_shared<InterpolatedSmileSection<LinearFlat> >(
+            t, optionletStrikes, stdDevs, Null<Real>(), LinearFlat(), Actual365Fixed(), volatilityType(), displacement());
+    else
+        return boost::make_shared<InterpolatedSmileSection<Linear> >(
+            t, optionletStrikes, stdDevs, Null<Real>(), Linear(), Actual365Fixed(), volatilityType(), displacement());
 }
 
 Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strike) const {
@@ -63,15 +72,20 @@ Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strik
     const vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
     boost::shared_ptr<LinearInterpolation> timeInterpolator =
         boost::make_shared<LinearInterpolation>(optionletTimes.begin(), optionletTimes.end(), vol.begin());
-    return timeInterpolator->operator()(length, true);
+    Real lengthEff = flatExtrapolation_ ? std::min(length, optionletStripper_->optionletFixingTimes().back()) : length;
+    return timeInterpolator->operator()(lengthEff, true);
 }
 
 void DatedStrippedOptionletAdapter::performCalculations() const {
     for (Size i = 0; i < nInterpolations_; ++i) {
         const vector<Rate>& optionletStrikes = optionletStripper_->optionletStrikes(i);
         const vector<Volatility>& optionletVolatilities = optionletStripper_->optionletVolatilities(i);
-        strikeInterpolations_[i] = boost::make_shared<LinearInterpolation>(
+        boost::shared_ptr<Interpolation> tmp = boost::make_shared<LinearInterpolation>(
             optionletStrikes.begin(), optionletStrikes.end(), optionletVolatilities.begin());
+        if(flatExtrapolation_)
+            strikeInterpolations_[i] = boost::make_shared<FlatExtrapolation>(tmp);
+        else
+            strikeInterpolations_[i] = tmp;
     }
 }
 
