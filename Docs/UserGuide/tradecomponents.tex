@@ -285,10 +285,29 @@ and an amortising exchange can be specified using an \lstinline!Exchanges! child
 \label{lst:notional_exchange}
 \end{listing}
 
-FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
-\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
-\lstinline!FixingDays! (integer) subelements, see Listing
-\ref{lst:notional_fxreset} for an example
+FX Resets,  used for Rebalancing Cross-currency swaps, can be specified using an \lstinline!FXReset! child element with the following subelements:  See Listing \ref{lst:notional_fxreset} for an example. \break
+
+\item ForeignCurrency: The foreign currency the notional of the leg resets to.  
+
+Allowable values:  See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+
+\item ForeignAmount: The notional amount in the foreign currency that the notional of the leg resets to.  
+
+Allowable values:  Any positive real number.
+
+\item FXIndex: A reference to an FX Index source for the FX reset fixing. 
+
+Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
+
+\item FixingDays: The FX fixing lag in business days
+
+Allowable values:  Any integer.
+
+\item FixingCalendar[Optional]: The calendar associated with the FX Index. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null calendar if left blank or omitted.
+
+
 
  \begin{listing}[H]
 %\hrule\medskip
@@ -299,15 +318,18 @@ FX Resets can be specified using an \lstinline!FXReset! child element with subel
                     <FXReset>
                       <ForeignCurrency> EUR </ForeignCurrency>
                       <ForeignAmount> 60000000 </ForeignAmount>
-                      <FXIndex> FX-SOURCE-USD-EUR </FXIndex>
+                      <FXIndex> FX-ECB-USD-EUR </FXIndex>
                       <FixingDays> 2 </FixingDays>
+                      <FixingCalendar>TARGET</FixingCalendar>
                     </FXReset>
                 </Notionals>
 \end{minted}
-\caption{Notional list with exchange}
+\caption{Notional list with fx reset}
 \label{lst:notional_fxreset}
 \end{listing}
 
+
+After the \lstinline!Notional! sub-node the \lstinline!LegData! node includes a \lstinline!ScheduleData! sub-node, and a sub-node based on the choice of \lstinline!LegType! as per below:
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.
