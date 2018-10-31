@@ -123,6 +123,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 
     if (write_discount_factor)
         report.addColumn("DiscountFactor", double(), 10);
+        report.addColumn("PresentValue" , double(), 10);
 
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
@@ -139,7 +140,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                 string ccy = trades[k]->legCurrencies()[i];
                 Handle<YieldTermStructure> discountCurve;
                 if (write_discount_factor)
-                    discountCurve = market->discountCurve(ccy, configuration);		
+                    discountCurve = market->discountCurve(ccy, configuration);
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
@@ -228,6 +229,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         if (write_discount_factor) {
                             Real discountFactor = discountCurve->discount(payDate);
                             report.add(discountFactor);
+                            Real PresentValue = discountFactor*amount;
+                            report.add(PresentValue);
                         }
                     }
                 }
