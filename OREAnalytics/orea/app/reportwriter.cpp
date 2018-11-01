@@ -121,10 +121,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
 
-    if (write_discount_factor)
+    if (write_discount_factor) {
         report.addColumn("DiscountFactor", double(), 10);
-        report.addColumn("PresentValue" , double(), 10);
-
+        report.addColumn("PresentValue", double(), 10);
+     }
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -229,8 +229,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
                         if (write_discount_factor) {
                             Real discountFactor = discountCurve->discount(payDate);
                             report.add(discountFactor);
-                            Real PresentValue = discountFactor*amount;
-                            report.add(PresentValue);
+                            Real presentValue = discountFactor * amount;
+                            report.add(presentValue);
                         }
                     }
                 }
