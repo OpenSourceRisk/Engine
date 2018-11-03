@@ -116,11 +116,11 @@ void CashFlowTest::testEquityCoupon() {
     eqIndex->addFixing(cfDate1, 2000);
 
     // Price Return coupon
-    EquityCoupon eq1(cfDate2, 1000000, today, cfDate2, eqIndex, dc);
+    EquityCoupon eq1(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc);
     // Total Return Coupon
-    EquityCoupon eq2(cfDate2, 1000000, today, cfDate2, eqIndex, dc, true);
+    EquityCoupon eq2(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc, true);
     // historical starting coupon
-    EquityCoupon eq3(cfDate2, 1000000, cfDate1, cfDate2, eqIndex, dc);
+    EquityCoupon eq3(cfDate2, 1000000, cfDate1, cfDate2, 0, eqIndex, dc);
 
     boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
