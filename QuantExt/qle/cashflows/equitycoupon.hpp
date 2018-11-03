@@ -53,6 +53,7 @@ public:
         Real nominal,
         const Date& startDate,
         const Date& endDate,
+		Natural fixingDays,
         const boost::shared_ptr<EquityIndex>& equityCurve,
         const DayCounter& dayCounter,
         bool isTotalReturn = false,
@@ -74,6 +75,7 @@ public:
     Real accruedAmount(const Date&) const;
     // calculates the rate for the period, not yearly i.e. (S(t+1)-S(t))/S(t)
     Rate rate() const;
+    Date fixingDate() const;
     //@}
 
     //! \name Inspectors
@@ -135,7 +137,7 @@ public:
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
-    EquityLeg& withSettlementLag(const Period&);
+    EquityLeg& withFixingDays(Natural);
     operator Leg() const;
 
 private:
@@ -147,7 +149,7 @@ private:
     Calendar paymentCalendar_;
     bool isTotalReturn_;
     Real dividendFactor_ = 1.0;
-    Period settlementLag_ = Period(0, Days);
+    Natural fixingDays_ = 0;
 };
 
 } // namespace QuantExt

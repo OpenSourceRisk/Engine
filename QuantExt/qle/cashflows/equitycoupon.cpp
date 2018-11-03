@@ -26,11 +26,12 @@ using namespace QuantLib;
 namespace QuantExt {
 
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
-                           const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                           bool isTotalReturn, Real dividendFactor, const Date& refPeriodStart,
-                           const Date& refPeriodEnd, const Date& exCouponDate)
+                           Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
+                           const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor,
+                           const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
-      equityCurve_(equityCurve), dayCounter_(dayCounter), isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor) {
+      equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), isTotalReturn_(isTotalReturn),
+      dividendFactor_(dividendFactor) {
 
     registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
@@ -65,6 +66,11 @@ Rate EquityCoupon::rate() const {
     // in general pricer_ will be a derived class, as will *this on calling
     pricer_->initialize(*this);
     return pricer_->swapletRate();
+}
+
+Date EquityCoupon::fixingDate() const {
+    Date refDate = accrualEndDate();
+    return equityCurve_->fixingCalendar().advance(refDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
 }
 
 EquityLeg::EquityLeg(const Schedule& schedule,
@@ -107,8 +113,8 @@ EquityLeg& EquityLeg::withDividendFactor(Real dividendFactor) {
     return *this;
 }
 
-EquityLeg& EquityLeg::withSettlementLag(const Period& settlementLag) {
-    settlementLag_ = settlementLag;
+EquityLeg& EquityLeg::withFixingDays(Natural fixingDays) {
+    fixingDays_ = fixingDays;
     return *this;
 }
 
@@ -133,10 +139,10 @@ EquityLeg::operator Leg() const {
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
         endDate = schedule_.date(i + 1);
-        paymentDate = calendar.adjust(calendar.advance(endDate, settlementLag_), paymentAdjustment_);
+        paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
         boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
-            paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, 
+            paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, fixingDays_, 
             equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
