@@ -23,16 +23,16 @@ namespace QuantExt {
 Rate EquityCouponPricer::swapletRate() const {
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
-    Real start = equityCurve_->fixing(coupon_->accrualStartDate(), false, false);
-    Real end = equityCurve_->fixing(coupon_->accrualEndDate(), false, false);
+    Real start = equityCurve_->fixing(coupon_->fixingStartDate(), false, false);
+    Real end = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
 
     Real dividends = 0.0;
-    
+
     // Dividends that are already fixed dividends + yield accrued over remaining period.
     // yield accrued = Forward without dividend yield - Forward with dividend yield
     if (isTotalReturn_)
-        dividends = (equityCurve_->fixing(coupon_->accrualEndDate(), false, true) - end) +
-                    equityCurve_->dividendsBetweenDates(coupon_->accrualStartDate(), coupon_->accrualEndDate());
+        dividends = (equityCurve_->fixing(coupon_->fixingEndDate(), false, true) - end) +
+                    equityCurve_->dividendsBetweenDates(coupon_->fixingStartDate(), coupon_->fixingEndDate());
 
     return (end + dividends * dividendFactor_ - start) / start;
 }

@@ -32,6 +32,13 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
       equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), isTotalReturn_(isTotalReturn),
       dividendFactor_(dividendFactor) {
+    QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
+    QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
+
+	fixingStartDate_ =
+        equityCurve_->fixingCalendar().advance(startDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
+    fixingEndDate_ =
+        equityCurve_->fixingCalendar().advance(endDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
 
     registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
@@ -68,10 +75,14 @@ Rate EquityCoupon::rate() const {
     return pricer_->swapletRate();
 }
 
-Date EquityCoupon::fixingDate() const {
-    Date refDate = accrualEndDate();
-    return equityCurve_->fixingCalendar().advance(refDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
-}
+std::vector<Date> EquityCoupon::fixingDates() const {
+    std::vector<Date> fixingDates;
+
+    fixingDates.push_back(fixingStartDate_);
+    fixingDates.push_back(fixingEndDate_);
+
+    return fixingDates;
+};
 
 EquityLeg::EquityLeg(const Schedule& schedule,
                      const boost::shared_ptr<EquityIndex>& equityCurve)
