@@ -100,6 +100,8 @@ void CashFlowTest::testEquityCoupon() {
 
     Date cfDate1(4, Dec, 2015);
     Date cfDate2(5, Apr, 2016); // future
+    Date fixingDate1(31, Dec, 2015);
+    Date fixingDate2(1, Apr, 2016);
 
     Real nominal = 1000000; // 1M
     string eqName = "SP5";
@@ -107,6 +109,8 @@ void CashFlowTest::testEquityCoupon() {
     Handle<Quote> spot(sq);
     DayCounter dc = ActualActual();
     Calendar cal = TARGET();
+    Natural fixingLag = 2;
+    Real divFactor = 1.0;
     Handle<YieldTermStructure> dividend(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
     Handle<YieldTermStructure> equityforecast(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc)));  // Equity Forecast Curve
 
@@ -114,39 +118,52 @@ void CashFlowTest::testEquityCoupon() {
         boost::make_shared<EquityIndex>(eqName, cal, spot, equityforecast, dividend);
 
     eqIndex->addFixing(cfDate1, 2000);
+    eqIndex->addFixing(fixingDate1, 1980);
 
     // Price Return coupon
     EquityCoupon eq1(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc);
     // Total Return Coupon
-    EquityCoupon eq2(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc, true);
+    EquityCoupon eq2(cfDate2, 1000000, today, cfDate2, 0, eqIndex, dc, true, divFactor);
     // historical starting coupon
     EquityCoupon eq3(cfDate2, 1000000, cfDate1, cfDate2, 0, eqIndex, dc);
+    // Total Return Coupon with fixing lag
+    EquityCoupon eq4(cfDate2, 1000000, today, cfDate2, fixingLag, eqIndex, dc, true);
 
     boost::shared_ptr<EquityCouponPricer> pricer1(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer2(new EquityCouponPricer());
     boost::shared_ptr<EquityCouponPricer> pricer3(new EquityCouponPricer());
+    boost::shared_ptr<EquityCouponPricer> pricer4(new EquityCouponPricer());
     eq1.setPricer(pricer1);
     eq2.setPricer(pricer2);
     eq3.setPricer(pricer3);
+    eq4.setPricer(pricer4);
 
     // Price Return coupon
     Time dt = dc.yearFraction(today, cfDate2);
     Real forward = spot->value() * std::exp((0.02 - 0.01)*dt);
     Real expectedAmount = nominal * (forward - spot->value()) / spot->value();
-    BOOST_TEST_MESSAGE("Check Price Return is correct");
+    BOOST_TEST_MESSAGE("Check Price Return is correct.");
     BOOST_CHECK_CLOSE(eq1.amount(), expectedAmount, 1e-10);
 
     // Total Return Coupon
-    forward = spot->value() * std::exp(0.02*dt);
-    expectedAmount = nominal * (forward - spot->value()) / spot->value();
+    forward = spot->value() * std::exp((0.02 - 0.01) * dt);
+    Real div = spot->value() * std::exp((0.02) * dt)  - forward;
+    expectedAmount = nominal * (forward + divFactor * div - spot->value()) / spot->value();
     BOOST_TEST_MESSAGE("Check Total Return is correct");
     BOOST_CHECK_CLOSE(eq2.amount(), expectedAmount, 1e-10);
     
     // Historical starting Price Return coupon
     forward = spot->value() * std::exp((0.02 - 0.01)*dt);
     expectedAmount = nominal * (forward - eqIndex->fixing(cfDate1)) / eqIndex->fixing(cfDate1);
-    BOOST_TEST_MESSAGE("Check Historical starting Price Return is correct");
+    BOOST_TEST_MESSAGE("Check Historical starting Price Return is correct.");
     BOOST_CHECK_CLOSE(eq3.amount(), expectedAmount, 1e-10);
+
+    // Total Return Coupon with fixing lag
+    dt = dc.yearFraction(today, fixingDate2);
+    forward = spot->value() * std::exp(0.02 * dt);
+    expectedAmount = nominal * (forward - eqIndex->fixing(fixingDate1)) / eqIndex->fixing(fixingDate1);
+    BOOST_TEST_MESSAGE("Check Total Return fixing lag handling is correct.");
+    BOOST_CHECK_CLOSE(eq4.amount(), expectedAmount, 1e-10);
 }
 
 test_suite* CashFlowTest::suite() {
