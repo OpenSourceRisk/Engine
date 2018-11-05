@@ -123,6 +123,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     static map<string, boost::shared_ptr<IborIndexParser>> m = {
         {"EUR-EONIA", boost::make_shared<IborIndexParserOIS<Eonia>>()},
         {"GBP-SONIA", boost::make_shared<IborIndexParserOIS<Sonia>>()},
+        {"AUD-AONIA", boost::make_shared<IborIndexParserOIS<Aonia>>()},
         {"JPY-TONAR", boost::make_shared<IborIndexParserOIS<Tonar>>()},
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
