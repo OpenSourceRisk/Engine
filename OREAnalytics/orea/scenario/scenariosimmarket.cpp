@@ -271,17 +271,39 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // building security spreads
     LOG("building security spreads...");
     for (const auto& name : parameters->securities()) {
-        DLOG("Adding security spread " << name <<" from configuration " << configuration);
-        boost::shared_ptr<SimpleQuote> spreadQuote(new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+        DLOG("Adding security spread " << name << " from configuration " << configuration);
+        // we have a security spread for each security, so no try-catch block required
+        boost::shared_ptr<SimpleQuote> spreadQuote(
+            new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
         if (parameters->securitySpreadsSimulate()) {
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
-                std::forward_as_tuple(spreadQuote));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
+                             std::forward_as_tuple(spreadQuote));
         }
         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                           Handle<Quote>(spreadQuote)));
     }
     LOG("security spreads done...");
+
+    // building security recovery rates
+    LOG("building security recovery rates...");
+    for (const auto& name : parameters->securities()) {
+        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+        // security recovery rates are optional, so we need a try-catch block
+        try {
+            boost::shared_ptr<SimpleQuote> recoveryQuote(
+                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+            if (parameters->simulateRecoveryRates()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                 std::forward_as_tuple(recoveryQuote));
+            }
+            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+        } catch (...) {
+        }
+    }
+    LOG("security recovery rates done...");
 
     // constructing index curves
     LOG("building index curves...");
