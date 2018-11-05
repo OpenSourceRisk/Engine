@@ -220,12 +220,15 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             dayCounter = currencyDaycountConvention(currency)
         else:
             spotLag = details[3][0:-1]
+            currency = details[2]
             if tradeType == "Swap":
                 convention = swapConventions[curve]
                 calendar = convention.find("FixedCalendar").text
                 fixingDays = spotLag
                 tenor = details[4]
             elif tradeType == "OIS":
+                if currency == "USD":
+                    calendar = "US-FED"
                 convention = oisConventions[curve]
                 rule = convention.find("Rule").text
                 spotLag = convention.find("SpotLag").text
@@ -237,7 +240,6 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 debugPrint("Failed to find convention for " + curve)
                 return False
             index = convention.find("Index").text
-            currency = details[2]
 
             dayCounter = currencyDaycountConvention(currency)
             payer = True
@@ -312,6 +314,8 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
             calendar = convention.find("FixedCalendar").text
             fixingDays = getFixingDaysForCCY(currency)
         elif tradeType == "OIS":
+            if currency == "USD":
+                calendar = "US-FED"
             convention = oisConventions[curve]
             rule = convention.find("Rule").text
             paymentLag = convention.find("PaymentLag").text
@@ -347,7 +351,6 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
         except:
             debugPrint("FX rate not found for EUR/" + currency)
             return False
-
     legroot.find("Notionals/Notional").text = str(notional)
     legroot.find("Currency").text = currency
     legroot.find("DayCounter").text = dayCounter
