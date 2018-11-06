@@ -153,6 +153,7 @@ Calendar parseCalendar(const string& s) {
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
+                                      {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
                                       {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
