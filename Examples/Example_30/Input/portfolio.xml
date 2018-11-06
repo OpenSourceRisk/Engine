@@ -94,6 +94,8 @@
         <EquityLegData>
           <ReturnType>Total</ReturnType>
           <Name>SP5</Name>
+          <DividendFactor>1.0</DividendFactor>
+          <FixingDays>0</FixingDays>
         </EquityLegData>
         <ScheduleData>
           <Rules>
