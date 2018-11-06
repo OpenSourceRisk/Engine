@@ -81,6 +81,19 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
+void ZCFixedLegData::fromXML(XMLNode* node) {
+    XMLUtils::checkNode(node, legNodeName());
+    rate_ = XMLUtils::getChildValueAsDouble(node, "Rate", true);
+    years_ = XMLUtils::getChildValueAsInt(node, "Years", true);
+}
+
+XMLNode* ZCFixedLegData::toXML(XMLDocument& doc) {
+    XMLNode* node = doc.allocNode(legNodeName());
+    XMLUtils::addChild(doc, node, "Rate", rate_);
+    XMLUtils::addChild(doc, node, "Years", years_);
+    return node;
+}
+
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
@@ -475,6 +488,33 @@ Leg makeFixedLeg(const LegData& data) {
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     applyAmortization(notionals, data, schedule, true, rates);
     Leg leg = FixedRateLeg(schedule).withNotionals(notionals).withCouponRates(rates, dc).withPaymentAdjustment(bdc);
+    return leg;
+}
+
+Leg makeZCFixedLeg(const LegData& data) {
+    boost::shared_ptr<ZCFixedLegData> zcFixedLegData = boost::dynamic_pointer_cast<ZCFixedLegData>(data.concreteLegData());
+    QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
+
+    Schedule schedule = makeSchedule(data.schedule());
+    BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    
+    // check we have a single notional and two dates in the schedule
+    vector<double> notionals = data.notionals();
+    int numNotionals = notionals.size();
+    int numDates = schedule.size();
+    QL_REQUIRE(numNotionals == 1, "Incorrect number of notional values entered, expected 1, got " << numNotionals);
+    QL_REQUIRE(numDates == 2, "Incorrect number of schedule dates entered, expected 2, got " << numDates);
+    
+    // coupon
+    Rate fixedRate = zcFixedLegData->rate();
+    int T = zcFixedLegData->years();
+    Real fixedAmount = notionals[0] * (pow(1.0 + fixedRate, T) - 1.0);
+    Date maturity = schedule.endDate();
+    Date fixedPayDate = schedule.calendar().adjust(maturity, bdc);
+
+    Leg leg;
+    leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(fixedAmount, fixedPayDate)));
+
     return leg;
 }
 

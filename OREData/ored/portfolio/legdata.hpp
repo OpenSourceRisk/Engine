@@ -119,6 +119,34 @@ private:
     vector<string> rateDates_;
 };
 
+//! Serializable Fixed Leg Data
+/*!
+  \ingroup tradedata
+*/
+class ZCFixedLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    ZCFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
+    //! Constructor
+    ZCFixedLegData(const Rate& rate, const int& years)
+        : LegAdditionalData("ZeroCouponFixed"), rate_(rate), years_(years) {}
+
+    //! \name Inspectors
+    //@{
+    const Rate& rate() const { return rate_; }
+    const int& years() const { return years_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    Rate rate_;
+    int years_;
+};
+
 //! Serializable Floating Leg Data
 /*!
   \ingroup tradedata
@@ -521,6 +549,7 @@ private:
 //! \name Utilities for building QuantLib Legs
 //@{
 Leg makeFixedLeg(const LegData& data);
+Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);

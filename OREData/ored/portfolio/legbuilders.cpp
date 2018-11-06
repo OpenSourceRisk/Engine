@@ -25,7 +25,11 @@ namespace data {
 
 Leg FixedLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                               const string& configuration) const {
-    return makeFixedLeg(data);
+    auto ZCFixedData = boost::dynamic_pointer_cast<ZCFixedLegData>(data.concreteLegData());
+    if (ZCFixedData != nullptr)
+        return makeZCFixedLeg(data);
+    else
+        return makeFixedLeg(data);
 }
 
 Leg FloatingLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
