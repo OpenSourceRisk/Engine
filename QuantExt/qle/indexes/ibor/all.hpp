@@ -33,4 +33,5 @@
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/thbbibor.hpp>
+#include <qle/indexes/ibor/nowa.hpp>
 
