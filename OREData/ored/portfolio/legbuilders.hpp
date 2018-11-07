@@ -35,6 +35,13 @@ public:
                  const string& configuration) const override;
 };
 
+class ZeroCouponFixedLegBuilder : public LegBuilder {
+public:
+    ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 class FloatingLegBuilder : public LegBuilder {
 public:
     FloatingLegBuilder() : LegBuilder("Floating") {}

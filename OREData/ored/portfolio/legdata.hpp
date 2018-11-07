@@ -123,12 +123,12 @@ private:
 /*!
   \ingroup tradedata
 */
-class ZCFixedLegData : public LegAdditionalData {
+class ZeroCouponFixedLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    ZCFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
+    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
     //! Constructor
-    ZCFixedLegData(const Rate& rate, const int& years)
+    ZeroCouponFixedLegData(const Rate& rate, const int& years)
         : LegAdditionalData("ZeroCouponFixed"), rate_(rate), years_(years) {}
 
     //! \name Inspectors

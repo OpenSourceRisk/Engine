@@ -81,13 +81,13 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
     return node;
 }
 
-void ZCFixedLegData::fromXML(XMLNode* node) {
+void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     rate_ = XMLUtils::getChildValueAsDouble(node, "Rate", true);
     years_ = XMLUtils::getChildValueAsInt(node, "Years", true);
 }
 
-XMLNode* ZCFixedLegData::toXML(XMLDocument& doc) {
+XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChild(doc, node, "Rate", rate_);
     XMLUtils::addChild(doc, node, "Years", years_);
@@ -360,6 +360,8 @@ void LegData::fromXML(XMLNode* node) {
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {
     if (legType == "Fixed") {
         return boost::make_shared<FixedLegData>();
+    } else if (legType == "ZeroCouponFixed") {
+        return boost::make_shared<ZeroCouponFixedLegData>();
     } else if (legType == "Floating") {
         return boost::make_shared<FloatingLegData>();
     } else if (legType == "Cashflow") {
@@ -492,7 +494,7 @@ Leg makeFixedLeg(const LegData& data) {
 }
 
 Leg makeZCFixedLeg(const LegData& data) {
-    boost::shared_ptr<ZCFixedLegData> zcFixedLegData = boost::dynamic_pointer_cast<ZCFixedLegData>(data.concreteLegData());
+    boost::shared_ptr<ZeroCouponFixedLegData> zcFixedLegData = boost::dynamic_pointer_cast<ZeroCouponFixedLegData>(data.concreteLegData());
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule());
