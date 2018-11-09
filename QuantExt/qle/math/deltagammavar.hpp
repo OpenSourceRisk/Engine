@@ -36,7 +36,7 @@
 #endif
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/framework/accumulator_set.hpp>
-#include <boost/accumulators/statistics.hpp>
+//#include <boost/accumulators/statistics.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/foreach.hpp>
 
