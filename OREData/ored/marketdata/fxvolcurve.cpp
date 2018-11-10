@@ -137,8 +137,12 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
             for (Size i = 0; i < numExpiries; i++) {
                 dates[i] = asof + quotes[0][i]->expiry();
-                for (Size idx = 0; idx < n; idx++)
+                DLOG("Spec Tenor Vol Variance");
+                for (Size idx = 0; idx < n; idx++) {
                     vols[idx][i] = quotes[idx][i]->quote()->value();
+                    Real variance = vols[idx][i] * vols[idx][i] * (dates[i] - asof) / 365.0; // approximate variance
+                    DLOG(spec << " " << quotes[0][i]->expiry() << " " << vols[idx][i] << " " << variance);
+                }
             }
 
             if (isATM) {
