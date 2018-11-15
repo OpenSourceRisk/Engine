@@ -225,8 +225,8 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
     QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
     QuantLib::Calendar calender = convention ? convention->fixedCalendar() : NullCalendar();
     Period fixedLegTenor = convention ? Period(convention->fixedFrequency()) : Period(1, Months);
-    BusinessDayConvention fixedConvention = convention ? convention->fixedConvention() : ModifiedFollowing;
-    DayCounter fixDayCounter = convention ? convention->fixedDayCounter() : ActualActual();
+    BusinessDayConvention fixedLegConvention = convention ? convention->fixedConvention() : ModifiedFollowing;
+    DayCounter fixedLegDayCounter = convention ? convention->fixedDayCounter() : ActualActual();
 
     if (d.empty())
         return boost::make_shared<SwapIndex>(familyName,
@@ -234,12 +234,18 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
                                              settlementDays,
                                              ccy, calender,
                                              fixedLegTenor,
-                                             fixedConvention,
-                                             fixDayCounter,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
                                              index);
     else
-        return boost::make_shared<SwapIndex>(familyName, p, index->fixingDays(), ccy, convention->fixedCalendar(),
-                                             fixedLegTenor, convention->fixedConvention(), convention->fixedDayCounter(), index,
+        return boost::make_shared<SwapIndex>(familyName,
+                                             p,
+                                             settlementDays,
+                                             ccy, calender,
+                                             fixedLegTenor,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
+                                             index,
                                              d);
 }
 
