@@ -283,6 +283,8 @@
       <xs:all>
         <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
         <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+		<xs:element type="xs:float" name="DividendFactor" minOccurs="0" maxOccurs="1"/>
+		<xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
       </xs:all>
     </xs:complexType>
   </xs:element>
