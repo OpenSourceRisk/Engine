@@ -40,7 +40,7 @@ CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const boost::share
         QL_FAIL("CmsSpreadCouponPricerBuilder(" << ccy << "): correlation parameter required");
     }
 
-    return boost::make_shared<LognormalCmsSpreadPricer>(
+    return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(
         cmsPricer, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)),
         market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
         parseInteger(engineParameters_.at("IntegrationPoints")));

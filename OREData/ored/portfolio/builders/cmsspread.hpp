@@ -28,7 +28,7 @@
 
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/lineartsrpricer.hpp>
-#include <ql/experimental/coupons/lognormalcmsspreadpricer.hpp>
+#include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 
 using namespace ore::data;
 
