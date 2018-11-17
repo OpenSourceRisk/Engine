@@ -80,29 +80,16 @@ namespace QuantExt {
         virtual Rate capletRate(Rate effectiveCap) const;
         virtual Real floorletPrice(Rate effectiveFloor) const;
         virtual Rate floorletRate(Rate effectiveFloor) const;
-        /* */
-        void flushCache();
 
       private:
-        class PrivateObserver : public Observer {
-          public:
-            explicit PrivateObserver(LognormalCmsSpreadPricer *t) : t_(t) {}
-            void update() { t_->flushCache(); }
-
-          private:
-            LognormalCmsSpreadPricer *t_;
-        };
-
-        boost::shared_ptr<PrivateObserver> privateObserver_;
-
-        typedef std::map<std::pair<std::string, Date>, std::pair<Real, Real> >
-        CacheType;
-
         void initialize(const FloatingRateCoupon &coupon);
         Real optionletPrice(Option::Type optionType, Real strike) const;
 
         Real integrand(const Real) const;
         Real integrand_normal(const Real) const;
+
+        class integrand_f;
+        friend class integrand_f;
 
         boost::shared_ptr<CmsCouponPricer> cmsPricer_;
 
@@ -138,8 +125,6 @@ namespace QuantExt {
         mutable Option::Type optionType_;
 
         boost::shared_ptr<CmsCoupon> c1_, c2_;
-
-        CacheType cache_;
     };
 }
 
