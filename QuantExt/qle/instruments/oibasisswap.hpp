@@ -59,10 +59,10 @@ public:
     std::vector<Real> nominals() const { return nominals_; }
 
     const Schedule& oisSchedule() { return oisSchedule_; }
-    const boost::shared_ptr<OvernightIndex>& overnightIndex();
+    const boost::shared_ptr<OvernightIndex>& overnightIndex() { return overnightIndex_; }
 
     const Schedule& iborSchedule() { return iborSchedule_; }
-    const boost::shared_ptr<IborIndex>& iborIndex();
+    const boost::shared_ptr<IborIndex>& iborIndex() { return iborIndex_; }
 
     Spread oisSpread() { return oisSpread_; }
     Spread iborSpread() { return iborSpread_; }
