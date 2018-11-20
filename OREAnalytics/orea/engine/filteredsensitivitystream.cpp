@@ -30,6 +30,13 @@ FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<Sen
     deltaThreshold_(deltaThreshold), gammaThreshold_(gammaThreshold) {
     // Reset the underlying stream in case
     ss_->reset();
+    while (SensitivityRecord sr = ss_->next()) {
+        if (sr.isCrossGamma() && fabs(sr.gamma) > gammaThreshold_) {
+            deltaKeys_.insert(sr.key_1);
+            deltaKeys_.insert(sr.key_2);
+        }
+    }
+    ss_->reset();
 }
 
 FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
@@ -39,7 +46,8 @@ SensitivityRecord FilteredSensitivityStream::next() {
     // Return the next sensitivity record in the underlying stream that satisfies 
     // the threshold conditions
     while (SensitivityRecord sr = ss_->next()) {
-        if (fabs(sr.delta) > deltaThreshold_ || fabs(sr.gamma) > gammaThreshold_) {
+        if(fabs(sr.delta) > deltaThreshold_ || fabs(sr.gamma) > gammaThreshold_ || 
+            (!sr.isCrossGamma() && deltaKeys_.find(sr.key_1) != deltaKeys_.end())) {
             return sr;
         }
     }
