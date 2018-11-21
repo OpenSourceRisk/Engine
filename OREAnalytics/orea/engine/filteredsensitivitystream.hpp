@@ -26,6 +26,7 @@
 
 #include <fstream>
 #include <string>
+#include <set>
 
 namespace ore {
 namespace analytics {
@@ -54,6 +55,8 @@ private:
     QuantLib::Real deltaThreshold_;
     //! The gamma threshold
     QuantLib::Real gammaThreshold_;
+    //! Set to hold Delta Keys appearing in CrossGammas
+    std::set<RiskFactorKey> deltaKeys_;
 };
 
 }

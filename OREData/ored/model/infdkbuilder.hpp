@@ -58,7 +58,7 @@ public:
     //@{
     std::string infIndex() { return data_->infIndex(); }
     boost::shared_ptr<QuantExt::InfDkParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
     //@}
 private:
     void buildCapFloorBasket();
@@ -68,7 +68,7 @@ private:
     boost::shared_ptr<InfDkData> data_;
     boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
     boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
 } // namespace data

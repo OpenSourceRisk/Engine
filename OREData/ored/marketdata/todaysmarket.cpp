@@ -664,8 +664,10 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (it.second == spec->name()) {
                         LOG("Adding Security (" << it.first << ") with spec " << *securityspec << " to configuration "
                                                 << configuration.first);
-                        securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
-                        recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
+                        if (!itr->second->spread().empty())
+                            securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
+                        if (!itr->second->recoveryRate().empty())
+                            recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
                     }
                 }
 

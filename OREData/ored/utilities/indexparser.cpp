@@ -127,6 +127,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"AUD-AONIA", boost::make_shared<IborIndexParserOIS<Aonia>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
         {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
@@ -171,7 +172,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
-        {"CLP-CAMARA", boost::make_shared<IborIndexParserWithPeriod<CLPCamara>>()}
+        {"CLP-CAMARA", boost::make_shared<IborIndexParserWithPeriod<CLPCamara>>()},
+        {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
     };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
