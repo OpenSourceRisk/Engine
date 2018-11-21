@@ -14,6 +14,7 @@ cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
 cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
+cashflows/lognormalcmsspreadpricer.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
@@ -142,6 +143,7 @@ cashflows/floatingannuitycoupon.hpp
 cashflows/floatingannuitynominal.hpp
 cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
+cashflows/lognormalcmsspreadpricer.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
@@ -176,6 +178,7 @@ indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
 indexes/ibor/myrklibor.hpp
 indexes/ibor/noknibor.hpp
+indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnwibor.hpp
