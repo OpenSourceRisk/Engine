@@ -56,6 +56,7 @@
 #include <qle/indexes/ibor/mxntiie.hpp>
 #include <qle/indexes/ibor/myrklibor.hpp>
 #include <qle/indexes/ibor/noknibor.hpp>
+#include <qle/indexes/ibor/nowa.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
