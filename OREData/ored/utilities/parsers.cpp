@@ -217,7 +217,7 @@ Calendar parseCalendar(const string& s) {
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
                                       {"CLP", Chile()},
-                                      {"THB", Thailand()},
+                                      {"THB", QuantExt::Thailand()},
                                       {"COP", Colombia()},
                                       {"PEN", Peru()},
                                       {"MYR", Malaysia()},

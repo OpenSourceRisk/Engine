@@ -255,12 +255,12 @@ void CrossAssetModelTest::testLgm1fCalibration() {
 
     // coterminal basket 1y-9y, 2y-8y, ... 9y-1y
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > basket;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basket;
     Real impliedVols[] = { 0.4, 0.39, 0.38, 0.35, 0.35, 0.34, 0.33, 0.32, 0.31 };
     std::vector<Date> expiryDates;
 
     for (Size i = 0; i < 9; ++i) {
-        boost::shared_ptr<CalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
+        boost::shared_ptr<BlackCalibrationHelper> helper = boost::make_shared<SwaptionHelper>(
             (i + 1) * Years, (9 - i) * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(impliedVols[i])), euribor6m,
             1 * Years, Thirty360(), Actual360(), yts);
         basket.push_back(helper);
@@ -880,13 +880,13 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
 
     // while the initial fx vol starts at 0.2 for usd and 0.15 for gbp
     // we calibrate to helpers with 0.15 and 0.2 target implied vol
-    std::vector<boost::shared_ptr<CalibrationHelper> > helpersUsd, helpersGbp;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > helpersUsd, helpersGbp;
     for (Size i = 0; i <= d.volstepdatesFx.size(); ++i) {
-        boost::shared_ptr<CalibrationHelper> tmpUsd = boost::make_shared<FxEqOptionHelper>(
+        boost::shared_ptr<BlackCalibrationHelper> tmpUsd = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 0.90, d.fxEurUsd,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.15)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(1)->termStructure());
-        boost::shared_ptr<CalibrationHelper> tmpGbp = boost::make_shared<FxEqOptionHelper>(
+        boost::shared_ptr<BlackCalibrationHelper> tmpGbp = boost::make_shared<FxEqOptionHelper>(
             i < d.volstepdatesFx.size() ? d.volstepdatesFx[i] : d.volstepdatesFx.back() + 365, 1.35, d.fxEurGbp,
             Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.ccLgm->irlgm1f(0)->termStructure(),
             d.ccLgm->irlgm1f(2)->termStructure());
@@ -962,7 +962,7 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
 
     // calibration baskets
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > basketEur, basketUsd, basketGbp, basketEurUsd, basketEurGbp;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basketEur, basketUsd, basketGbp, basketEurUsd, basketEurGbp;
 
     boost::shared_ptr<IborIndex> euribor6m = boost::make_shared<Euribor>(6 * Months, d.eurYts);
     boost::shared_ptr<IborIndex> usdLibor3m = boost::make_shared<USDLibor>(3 * Months, d.usdYts);
@@ -973,15 +973,15 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
         // EUR: atm+200bp, 150bp normal vol
         basketEur.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.015)), euribor6m, 1 * Years, Thirty360(),
-            Actual360(), d.eurYts, CalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
+            Actual360(), d.eurYts, BlackCalibrationHelper::RelativePriceError, 0.04, 1.0, Normal)));
         // USD: atm, 20%, lognormal vol
         basketUsd.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), usdLibor3m, 1 * Years, Thirty360(),
-            Actual360(), d.usdYts, CalibrationHelper::RelativePriceError, Null<Real>(), 1.0, ShiftedLognormal, 0.0)));
+            Actual360(), d.usdYts, BlackCalibrationHelper::RelativePriceError, Null<Real>(), 1.0, ShiftedLognormal, 0.0)));
         // GBP: atm-200bp, 10%, shifted lognormal vol with shift = 2%
         basketGbp.push_back(boost::shared_ptr<SwaptionHelper>(new SwaptionHelper(
             tmp, 10 * Years, Handle<Quote>(boost::make_shared<SimpleQuote>(0.30)), gbpLibor3m, 1 * Years, Thirty360(),
-            Actual360(), d.usdYts, CalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal, 0.02)));
+            Actual360(), d.usdYts, BlackCalibrationHelper::RelativePriceError, 0.02, 1.0, ShiftedLognormal, 0.02)));
     }
 
     for (Size i = 0; i < d.volstepdatesFx.size(); ++i) {
@@ -989,11 +989,11 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
         // EUR-USD: atm, 30% (lognormal) vol
         basketEurUsd.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurUsd, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.usdYts,
-            CalibrationHelper::RelativePriceError));
+            BlackCalibrationHelper::RelativePriceError));
         // EUR-GBP: atm, 10% (lognormal) vol
         basketEurGbp.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.fxEurGbp, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.gbpYts,
-            CalibrationHelper::RelativePriceError));
+            BlackCalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
@@ -3174,19 +3174,19 @@ void CrossAssetModelTest::testEqLgm5fCalibration() {
     Settings::instance().evaluationDate() = d.referenceDate;
 
     // calibration baskets
-    std::vector<boost::shared_ptr<CalibrationHelper> > basketSp, basketLh;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > basketSp, basketLh;
 
     for (Size i = 0; i < d.volstepdatesEqSp.size(); ++i) {
         Date tmp = i < d.volstepdatesEqSp.size() ? d.volstepdatesEqSp[i] : d.volstepdatesEqSp.back() + 365;
         basketSp.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.spSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.usdYts, d.eqDivSp,
-            CalibrationHelper::RelativePriceError));
+            BlackCalibrationHelper::RelativePriceError));
     }
     for (Size i = 0; i < d.volstepdatesEqLh.size(); ++i) {
         Date tmp = i < d.volstepdatesEqLh.size() ? d.volstepdatesEqLh[i] : d.volstepdatesEqLh.back() + 365;
         basketLh.push_back(boost::make_shared<FxEqOptionHelper>(
             tmp, Null<Real>(), d.lhSpotToday, Handle<Quote>(boost::make_shared<SimpleQuote>(0.20)), d.eurYts, d.eqDivLh,
-            CalibrationHelper::RelativePriceError));
+            BlackCalibrationHelper::RelativePriceError));
     }
 
     // pricing engines
@@ -3920,7 +3920,7 @@ void CrossAssetModelTest::testCpiCalibrationByAlpha() {
 
     Real premium[] = { 0.0044, 0.0085, 0.0127, 0.0160, 0.0186 };
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > cpiHelpers;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
     Array volStepTimes(4), noTimes(0);
     Array infVols(5, 0.01), infRev(1, 1.5); // !!
 
@@ -4051,7 +4051,7 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
     Period maturity[] = { 1 * Years, 2 * Years, 3 * Years,  4 * Years,  5 * Years,  6 * Years,  7 * Years,
                           8 * Years, 9 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years, 30 * Years };
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > cpiHelpers;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cpiHelpers;
     Array volStepTimes(13), noTimes(0);
     Array infVols(14, 0.0030), infRev(14, 1.0); // init vol and rev !!
     Real strike = 0.00;                         // strike !!
@@ -4174,7 +4174,7 @@ void CrossAssetModelTest::testCrCalibration() {
     Period maturity[] = { 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
                           6 * Years, 7 * Years, 8 * Years, 9 * Years, 10 * Years };
 
-    std::vector<boost::shared_ptr<CalibrationHelper> > cdsoHelpers;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper> > cdsoHelpers;
     Array volStepTimes(nMat - 1), noTimes(0);
     Array crVols(nMat, 0.0030), crRev(nMat, 0.01); // init vol and rev
 
