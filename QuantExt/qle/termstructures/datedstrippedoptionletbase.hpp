@@ -33,10 +33,9 @@
 
 #include <vector>
 
+namespace QuantExt {
 using namespace QuantLib;
 using std::vector;
-
-namespace QuantExt {
 //! Stripped Optionlet base class interface
 /*! Abstract base class interface for a (time indexed) vector of (strike indexed) optionlet
     (i.e. caplet/floorlet) volatilities with a fixed reference date.
