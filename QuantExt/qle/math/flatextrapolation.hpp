@@ -29,9 +29,8 @@
 
 #include <boost/make_shared.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Flat extrapolation given a base interpolation
 /*! \ingroup math

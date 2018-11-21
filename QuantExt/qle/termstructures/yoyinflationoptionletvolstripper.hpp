@@ -29,9 +29,8 @@
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
     
 /*! Helper class to strip yoy inlfation optionlet (i.e. caplet/floorlet) volatilities
     from the (cap/floor) term volatilities of a CapFloorTermVolSurface.

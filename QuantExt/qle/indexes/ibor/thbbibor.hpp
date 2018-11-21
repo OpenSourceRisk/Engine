@@ -29,9 +29,8 @@
 #include <qle/calendars/thailand.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! THB-BIBOR index/
 /*! THB-BIBOR rate.

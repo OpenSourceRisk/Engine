@@ -30,9 +30,8 @@
 
 #include <qle/cashflows/subperiodscoupon.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 //! Single currency tenor basis swap
 /*! \ingroup instruments
  */

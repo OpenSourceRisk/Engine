@@ -29,9 +29,8 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/time/schedule.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 //! floating annuity coupon
 /*! %Coupon paying a Libor-type index on a variable nominal such that total flows are constant
     \ingroup cashflows

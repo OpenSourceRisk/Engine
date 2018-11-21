@@ -29,9 +29,8 @@
 
 #include <ql/currency.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Mexican Unidad de Inversion
 /*! The ISO three-letter code is MXV; the numeric code is 979.

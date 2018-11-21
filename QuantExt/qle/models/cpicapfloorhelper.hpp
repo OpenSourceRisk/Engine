@@ -27,9 +27,8 @@
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/models/calibrationhelper.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 /* Note that calibration helpers that are not based on a implied volatility but directly on
    a premium are part of QL PR 18 */

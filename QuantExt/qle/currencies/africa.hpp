@@ -30,9 +30,8 @@
 
 #include <ql/currency.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Tunisian dinar
 /*! The ISO three-letter code is TND; the numeric code is 788.

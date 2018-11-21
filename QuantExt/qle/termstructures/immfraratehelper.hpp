@@ -26,9 +26,8 @@
 
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 typedef RelativeDateBootstrapHelper<YieldTermStructure> RelativeDateRateHelper;
 

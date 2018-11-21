@@ -27,9 +27,8 @@
 #include <ql/stochasticprocess.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Ir Lgm 1f State Process
 /*! \ingroup processes

@@ -31,9 +31,8 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 // class Schedule;
 // class OvernightIndex;

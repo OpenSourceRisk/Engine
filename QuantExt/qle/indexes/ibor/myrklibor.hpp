@@ -29,9 +29,8 @@
 #include <qle/calendars/malaysia.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! MYR-KLIBOR index
 /*! MYR-KLIBOR rate.

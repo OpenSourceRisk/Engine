@@ -28,9 +28,8 @@
 
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Lgm Implied Yield Term Structure
 /*! The termstructure has the reference date of the model's

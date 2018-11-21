@@ -29,9 +29,8 @@
 
 #include <ql/cashflows/couponpricer.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Pricer for average overnight indexed coupons
 /*! \ingroup cashflows

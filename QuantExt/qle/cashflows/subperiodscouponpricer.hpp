@@ -29,9 +29,8 @@
 
 #include <qle/cashflows/subperiodscoupon.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 //! Pricer for sub-period coupons
 /*! \ingroup cashflows
  */

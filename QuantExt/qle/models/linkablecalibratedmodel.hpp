@@ -31,9 +31,8 @@
 #include <ql/option.hpp>
 #include <ql/patterns/observable.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Calibrated model class with linkable parameters
 /*! \ingroup models

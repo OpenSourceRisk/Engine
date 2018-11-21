@@ -26,9 +26,8 @@
 
 #include <qle/termstructures/fxsmilesection.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 /*! Vanna Volga Smile section
  *

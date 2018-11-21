@@ -29,9 +29,8 @@
 #include <ql/time/calendars/singapore.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! SGD-SOR index
 /*! SGD-SOR rate published by ABS.

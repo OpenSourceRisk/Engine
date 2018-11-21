@@ -28,9 +28,8 @@
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! YoY Inflation volatility surface
 /*! \ingroup termstructures */
