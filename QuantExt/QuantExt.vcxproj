@@ -505,6 +505,7 @@
     <ClInclude Include="qle\cashflows\floatingannuitynominal.hpp" />
     <ClInclude Include="qle\cashflows\floatingratefxlinkednotionalcoupon.hpp" />
     <ClInclude Include="qle\cashflows\fxlinkedcashflow.hpp" />
+    <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp" />
     <ClInclude Include="qle\cashflows\quantocouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
@@ -535,6 +536,7 @@
     <ClInclude Include="qle\indexes\ibor\mxntiie.hpp" />
     <ClInclude Include="qle\indexes\ibor\myrklibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\noknibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\nowa.hpp" />
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
@@ -699,6 +701,7 @@
     <ClCompile Include="qle\cashflows\floatingannuitycoupon.cpp" />
     <ClCompile Include="qle\cashflows\floatingannuitynominal.cpp" />
     <ClCompile Include="qle\cashflows\fxlinkedcashflow.cpp" />
+    <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp" />
     <ClCompile Include="qle\cashflows\quantocouponpricer.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscoupon.cpp" />
     <ClCompile Include="qle\cashflows\subperiodscouponpricer.cpp" />

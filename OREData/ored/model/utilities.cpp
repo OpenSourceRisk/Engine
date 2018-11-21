@@ -28,7 +28,7 @@
 namespace ore {
 namespace data {
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<IrLgm1fParametrization>& parametrization) {
     LOG("# time   modelVol marketVol (diff) modelValue marketValue (diff) irlgm1fAlpha irlgm1fKappa irlgm1fHwSigma");
     Real rmse = 0;
@@ -79,7 +79,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     return rmse;
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<FxBsParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     LOG("# time    modelVol marketVol (diff) modelValue marketValue (diff) fxbsSigma");
@@ -123,7 +123,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     return rmse;
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<EqBsParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     LOG("# modelVol marketVol (diff) modelValue marketValue (diff) eqbsSigma");
@@ -165,7 +165,7 @@ Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>
     return rmse;
 }
 
-Real logCalibrationErrors(const std::vector<boost::shared_ptr<CalibrationHelper>>& basket,
+Real logCalibrationErrors(const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,
                           const boost::shared_ptr<InfDkParametrization>& parametrization,
                           const boost::shared_ptr<IrLgm1fParametrization>& domesticLgm) {
     LOG("# modelValue marketValue (diff) infdkAlpha infdkH");

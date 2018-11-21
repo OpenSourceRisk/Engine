@@ -594,6 +594,12 @@
     <ClInclude Include="qle\indexes\dkcpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\nowa.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1014,6 +1020,9 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\region.cpp">
       <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

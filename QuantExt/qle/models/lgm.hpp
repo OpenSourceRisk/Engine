@@ -62,14 +62,14 @@ public:
 
     /*! calibrate volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
-    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    void calibrateVolatilitiesIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
-    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    void calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                       OptimizationMethod& method, const EndCriteria& endCriteria,
                                       const Constraint& constraint = Constraint(),
                                       const std::vector<Real>& weights = std::vector<Real>());
@@ -169,20 +169,20 @@ inline Real LinearGaussMarkovModel::discountBondOption(Option::Type type, const 
 }
 
 inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
-    const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers, OptimizationMethod& method,
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
     const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveVolatility(i));
     }
 }
 
 inline void
-LinearGaussMarkovModel::calibrateReversionsIterative(const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+LinearGaussMarkovModel::calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                                      OptimizationMethod& method, const EndCriteria& endCriteria,
                                                      const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
-        std::vector<boost::shared_ptr<CalibrationHelper> > h(1, helpers[i]);
+        std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveReversion(i));
     }
 }

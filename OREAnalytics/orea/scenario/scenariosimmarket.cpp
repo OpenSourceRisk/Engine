@@ -455,7 +455,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     for (Size j = 0; j < swapTenors.size(); ++j) {
                         Real strike =
                             atmOnly ? Null<Real>() : cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
-                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
                         Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;

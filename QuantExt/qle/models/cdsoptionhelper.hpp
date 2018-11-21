@@ -37,7 +37,7 @@ namespace QuantExt {
 /*!
  \ingroup models
  */
-class CdsOptionHelper : public CalibrationHelper {
+class CdsOptionHelper : public BlackCalibrationHelper {
 public:
     CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
                     const Schedule& schedule, const BusinessDayConvention paymentConvention,
@@ -47,7 +47,7 @@ public:
                     const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
                     const Date protectionStart = Date(), const Date upfrontDate = Date(),
                     const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
-                    const CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                    const BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
 
     virtual void addTimesTo(std::list<Time>& times) const {}
     virtual Real modelValue() const;
