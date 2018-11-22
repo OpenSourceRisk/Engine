@@ -111,8 +111,8 @@ protected:
 
     //! Utility method to read quotes from XML
     void loadQuotesFromXML(XMLNode * node);
-    //! Utility method to write quotes to XML
-    XMLNode *writeQuotesToXML(XMLDocument& doc);
+    //! Utility method to write quotes to XML with an optional set of IDs to ignore
+    XMLNode * writeQuotesToXML(XMLDocument& doc, const std::set<std::string>& exclusions = {});
 
 
 private:

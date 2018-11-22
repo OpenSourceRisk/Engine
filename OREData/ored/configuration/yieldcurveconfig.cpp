@@ -343,12 +343,15 @@ void YieldCurveSegment::loadQuotesFromXML(XMLNode *parent) {
 }
 
 
-XMLNode *YieldCurveSegment::writeQuotesToXML(XMLDocument& doc) {
+XMLNode *YieldCurveSegment::writeQuotesToXML(XMLDocument& doc, const set<string>& exclusions) {
     // Was:
     //  XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     // Now add optional="true" when this is present
     XMLNode* node = doc.allocNode("Quotes");
     for (auto q : quotes_) {
+        // If quote is for exclusion, skip to next
+        if (exclusions.count(q.first)) continue;
+
         XMLNode* qNode = doc.allocNode("Quote", q.first);
         if (q.second)
             XMLUtils::addAttribute(doc, qNode, "optional", "true");
@@ -511,13 +514,18 @@ CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const s
                                                      const string& foreignProjectionCurveID)
     : YieldCurveSegment(type, conventionsID, quotes), spotRateID_(spotRateID),
       foreignDiscountCurveID_(foreignDiscountCurveID), domesticProjectionCurveID_(domesticProjectionCurveID),
-      foreignProjectionCurveID_(foreignProjectionCurveID) {}
+      foreignProjectionCurveID_(foreignProjectionCurveID) {
+    
+    // Add the spot quote to the list of quotes also
+    quotes_.emplace_back(quote(spotRateID_));
+}
 
 void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CrossCurrency");
     YieldCurveSegment::fromXML(node);
     loadQuotesFromXML(node);
     spotRateID_ = XMLUtils::getChildValue(node, "SpotRate", true);
+    quotes_.emplace_back(quote(spotRateID_));
     foreignDiscountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
     domesticProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveDomestic", false);
     foreignProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveForeign", false);
@@ -526,7 +534,7 @@ void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* CrossCcyYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "CrossCurrency");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
+    XMLUtils::appendNode(node, writeQuotesToXML(doc, { spotRateID_ }));
     XMLUtils::addChild(doc, node, "SpotRate", spotRateID_);
     XMLUtils::addChild(doc, node, "DiscountCurve", foreignDiscountCurveID_);
     if (!domesticProjectionCurveID_.empty())
