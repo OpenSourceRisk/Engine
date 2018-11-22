@@ -84,10 +84,10 @@ public:
     //@}
 
 private:
-    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> swaptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> fxOptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> eqOptionBaskets_;
-    std::vector<std::vector<boost::shared_ptr<CalibrationHelper>>> infCapFloorBaskets_;
+    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> swaptionBaskets_;
+    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> fxOptionBaskets_;
+    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> eqOptionBaskets_;
+    std::vector<std::vector<boost::shared_ptr<BlackCalibrationHelper>>> infCapFloorBaskets_;
     std::vector<Array> optionExpiries_;
     std::vector<Array> swaptionMaturities_;
     std::vector<Array> fxOptionExpiries_;

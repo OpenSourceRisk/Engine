@@ -196,7 +196,7 @@ public:
     /*! calibrate irlgm1f volatilities to a sequence of ir options with
         expiry times equal to step times in the parametrization */
     void calibrateIrLgm1fVolatilitiesIterative(const Size ccy,
-                                               const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                                OptimizationMethod& method, const EndCriteria& endCriteria,
                                                const Constraint& constraint = Constraint(),
                                                const std::vector<Real>& weights = std::vector<Real>());
@@ -204,14 +204,14 @@ public:
     /*! calibrate irlgm1f reversion to a sequence of ir options with
         maturities equal to step times in the parametrization */
     void calibrateIrLgm1fReversionsIterative(const Size ccy,
-                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate irlgm1f parameters for one ccy globally to a set
         of ir options */
-    void calibrateIrLgm1fGlobal(const Size ccy, const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+    void calibrateIrLgm1fGlobal(const Size ccy, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                 OptimizationMethod& method, const EndCriteria& endCriteria,
                                 const Constraint& constraint = Constraint(),
                                 const std::vector<Real>& weights = std::vector<Real>());
@@ -219,14 +219,14 @@ public:
     /*! calibrate eq or fx volatilities to a sequence of options with
             expiry times equal to step times in the parametrization */
     void calibrateBsVolatilitiesIterative(const AssetType& assetType, const Size aIdx,
-                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                           OptimizationMethod& method, const EndCriteria& endCriteria,
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate eq/fx volatilities globally to a set of fx options */
     void calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
-                                       const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                       const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                        OptimizationMethod& method, const EndCriteria& endCriteria,
                                        const Constraint& constraint = Constraint(),
                                        const std::vector<Real>& weights = std::vector<Real>());
@@ -234,7 +234,7 @@ public:
     /*! calibrate infdk volatilities to a sequence of cpi options with
         expiry times equal to step times in the parametrization */
     void calibrateInfDkVolatilitiesIterative(const Size index,
-                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
@@ -242,21 +242,21 @@ public:
     /*! calibrate infdk reversions to a sequence of cpi options with
         maturity times equal to step times in the parametrization */
     void calibrateInfDkReversionsIterative(const Size index,
-                                           const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                           const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                            OptimizationMethod& method, const EndCriteria& endCriteria,
                                            const Constraint& constraint = Constraint(),
                                            const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate infdk volatilities globally to a sequence of cpi cap/floors */
     void calibrateInfDkVolatilitiesGlobal(const Size index,
-                                          const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                          const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                           OptimizationMethod& method, const EndCriteria& endCriteria,
                                           const Constraint& constraint = Constraint(),
                                           const std::vector<Real>& weights = std::vector<Real>());
 
     /*! calibrate infdk reversions globally to a sequence of cpi cap/floors */
     void calibrateInfDkReversionsGlobal(const Size index,
-                                        const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                        const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                         OptimizationMethod& method, const EndCriteria& endCriteria,
                                         const Constraint& constraint = Constraint(),
                                         const std::vector<Real>& weights = std::vector<Real>());
@@ -264,7 +264,7 @@ public:
     /*! calibrate crlgm1f volatilities to a sequence of cds options with
         expiry times equal to step times in the parametrization */
     void calibrateCrLgm1fVolatilitiesIterative(const Size index,
-                                               const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                               const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                                OptimizationMethod& method, const EndCriteria& endCriteria,
                                                const Constraint& constraint = Constraint(),
                                                const std::vector<Real>& weights = std::vector<Real>());
@@ -272,7 +272,7 @@ public:
     /*! calibrate crlgm1f reversions to a sequence of cds options with
         maturity times equal to step times in the parametrization */
     void calibrateCrLgm1fReversionsIterative(const Size index,
-                                             const std::vector<boost::shared_ptr<CalibrationHelper> >& helpers,
+                                             const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
                                              OptimizationMethod& method, const EndCriteria& endCriteria,
                                              const Constraint& constraint = Constraint(),
                                              const std::vector<Real>& weights = std::vector<Real>());
