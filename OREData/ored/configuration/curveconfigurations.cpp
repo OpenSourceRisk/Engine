@@ -18,6 +18,7 @@
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 
 #include <ql/errors.hpp>
 
@@ -64,223 +65,75 @@ void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<strin
         XMLUtils::appendNode(node, it.second->toXML(doc));
 }
 
-CurveConfigurations CurveConfigurations::subset(const std::vector<boost::shared_ptr<CurveSpec>>& specs) {
-    CurveConfigurations curveConfigs;
-    for(const auto& spec : specs) {
+// Utility function for constructing the set of quotes needed by CurveConfigs
+// Used in the quotes(...) method
+template <class T>
+void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& configs, bool insertAll, 
+    CurveSpec::CurveType curveType, const map<CurveSpec::CurveType, set<string>>& configIds) {
 
-        switch (spec->baseType()) {
-
-        case CurveSpec::CurveType::Yield: {
-            const boost::shared_ptr<YieldCurveSpec> ycspec = boost::dynamic_pointer_cast<YieldCurveSpec>(spec);
-            QL_REQUIRE(ycspec, "Failed to convert spec " << *spec << " to yield curve spec");
-            const std::string configId = ycspec->curveConfigID();
-            const boost::shared_ptr<YieldCurveConfig> curveConfig = yieldCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find yiled curve " << configId);
-            curveConfigs.yieldCurveConfigs_[configId] = curveConfig;
-            break;
+    // For each config in configs, add its quotes to the set if the config's id is in the map configIds
+    for (auto m : configs) {
+        if (insertAll || (configIds.count(curveType) && configIds.at(curveType).count(m.second->curveID()))) {
+            quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
         }
-
-        case CurveSpec::CurveType::FX: {
-            const boost::shared_ptr<FXSpotSpec> fxspec = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
-            QL_REQUIRE(fxspec, "Failed to convert spec " << *spec << " to fx spot spec");
-            const std::string configId = fxspec->unitCcy() + fxspec->ccy();
-            const boost::shared_ptr<FXSpotConfig> curveConfig(new FXSpotConfig(configId, "")); //  do not extract, just create
-            curveConfigs.fxSpotConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::FXVolatility: {
-            const boost::shared_ptr<FXVolatilityCurveSpec> fxvolspec = boost::dynamic_pointer_cast<FXVolatilityCurveSpec>(spec);
-            QL_REQUIRE(fxvolspec, "Failed to convert spec " << *spec << " to fx vol curve spec");
-            const std::string configId = fxvolspec->curveConfigID();
-            const boost::shared_ptr<FXVolatilityCurveConfig> curveConfig = fxVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find fx vol curve " << configId);
-            curveConfigs.fxVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::SwaptionVolatility: {
-            const boost::shared_ptr<SwaptionVolatilityCurveSpec> swvolspec = 
-                boost::dynamic_pointer_cast<SwaptionVolatilityCurveSpec>(spec);
-            QL_REQUIRE(swvolspec, "Failed to convert spec " << *spec << " to swaption vol curve spec");
-            const std::string configId = swvolspec->curveConfigID();
-            const boost::shared_ptr<SwaptionVolatilityCurveConfig> curveConfig = swaptionVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find swaption vol curve " );
-            curveConfigs.swaptionVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::CapFloorVolatility: {
-            const boost::shared_ptr<CapFloorVolatilityCurveSpec> cfvolspec = 
-                boost::dynamic_pointer_cast<CapFloorVolatilityCurveSpec>(spec);
-            QL_REQUIRE(cfvolspec, "Failed to convert spec " << *spec << " to cap floor vol curve spec");
-            const std::string configId = cfvolspec->curveConfigID();
-            const boost::shared_ptr<CapFloorVolatilityCurveConfig> curveConfig = capFloorVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find cap floor vol curve " << configId);
-            curveConfigs.capFloorVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::Default: {
-            const boost::shared_ptr<DefaultCurveSpec> defaultspec = boost::dynamic_pointer_cast<DefaultCurveSpec>(spec);
-            QL_REQUIRE(defaultspec, "Failed to convert spec " << *spec << " to default curve spec");
-            const std::string configId = defaultspec->curveConfigID();
-            const boost::shared_ptr<DefaultCurveConfig> curveConfig = defaultCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find default curve " << configId);
-            curveConfigs.defaultCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::CDSVolatility: {
-            const boost::shared_ptr<CDSVolatilityCurveSpec> cdsvolspec = boost::dynamic_pointer_cast<CDSVolatilityCurveSpec>(spec);
-            QL_REQUIRE(cdsvolspec, "Failed to convert spec " << *spec << " to cds vol curve spec");
-            const std::string configId = cdsvolspec->curveConfigID();
-            const boost::shared_ptr<CDSVolatilityCurveConfig> curveConfig = cdsVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find cds vol curve " << configId);
-            curveConfigs.cdsVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::BaseCorrelation: {            
-            const boost::shared_ptr<BaseCorrelationCurveSpec> basecorrelationspec = 
-                boost::dynamic_pointer_cast<BaseCorrelationCurveSpec>(spec);
-            QL_REQUIRE(basecorrelationspec, "Failed to convert spec " << *spec << " to base correlation curve spec");
-            const std::string configId = basecorrelationspec->curveConfigID();
-            const boost::shared_ptr<BaseCorrelationCurveConfig> curveConfig = baseCorrelationCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find base correlation curve " << configId);
-            curveConfigs.baseCorrelationCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::Inflation: {
-            const boost::shared_ptr<InflationCurveSpec> inflationspec = boost::dynamic_pointer_cast<InflationCurveSpec>(spec);
-            QL_REQUIRE(inflationspec, "Failed to convert spec " << *spec << " to inflation curve spec");
-            const std::string configId = inflationspec->curveConfigID();
-            const boost::shared_ptr<InflationCurveConfig> curveConfig = inflationCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find inflation curve " << configId);
-            curveConfigs.inflationCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::InflationCapFloorPrice: {
-            const boost::shared_ptr<InflationCapFloorPriceSurfaceSpec> infcapfloorspec =
-                boost::dynamic_pointer_cast<InflationCapFloorPriceSurfaceSpec>(spec);
-            QL_REQUIRE(infcapfloorspec, "Failed to convert spec " << *spec << " to inf cap floor price surface spec");
-            const std::string configId = infcapfloorspec->curveConfigID();
-            const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig> curveConfig = 
-                inflationCapFloorPriceSurfaceConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find inflation cap floor price surface " << configId);
-            curveConfigs.inflationCapFloorPriceSurfaceConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::InflationCapFloorVolatility: {
-            const boost::shared_ptr<InflationCapFloorVolatilityCurveSpec> infcapfloorvolspec =
-                boost::dynamic_pointer_cast<InflationCapFloorVolatilityCurveSpec>(spec);
-            QL_REQUIRE(infcapfloorvolspec, "Failed to convert spec " << *spec << " to inf cap floor vol curve spec");
-            const std::string configId = infcapfloorvolspec->curveConfigID();
-            const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig> curveConfig = 
-                inflationCapFloorVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find inflation cap floor vol curve " << configId);
-            curveConfigs.inflationCapFloorVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::Equity: {
-            const boost::shared_ptr<EquityCurveSpec> equityspec = boost::dynamic_pointer_cast<EquityCurveSpec>(spec);
-            QL_REQUIRE(equityspec, "Failed to convert spec " << *spec << " to equity curve spec");
-            const std::string configId = equityspec->curveConfigID();
-            const boost::shared_ptr<EquityCurveConfig> curveConfig = equityCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find equity curve " << configId);
-            curveConfigs.equityCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::EquityVolatility: {
-            const boost::shared_ptr<EquityVolatilityCurveSpec> eqvolspec =
-                boost::dynamic_pointer_cast<EquityVolatilityCurveSpec>(spec);
-            QL_REQUIRE(eqvolspec, "failed to convert spec " << *spec << " to equity vol curve spec");
-            const std::string configId = eqvolspec->curveConfigID();
-            const boost::shared_ptr<EquityVolatilityCurveConfig> curveConfig = equityVolCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find equity vol curve " << configId);
-            curveConfigs.equityVolCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::Security: {
-            const boost::shared_ptr<SecuritySpec> securityspec = boost::dynamic_pointer_cast<SecuritySpec>(spec);
-            QL_REQUIRE(securityspec, "failed to convert spec " << *spec << " to security spec");
-            const std::string configId = securityspec->securityID();
-            const boost::shared_ptr<SecurityConfig> curveConfig = securityConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find security " << configId);
-            curveConfigs.securityConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::Commodity: {
-            const boost::shared_ptr<CommodityCurveSpec> commodityspec = boost::dynamic_pointer_cast<CommodityCurveSpec>(spec);
-            QL_REQUIRE(commodityspec, "Failed to convert spec, " << *spec << ", to commodity spec");
-            const std::string configId = commodityspec->curveConfigID();
-            const boost::shared_ptr<CommodityCurveConfig> curveConfig = commodityCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find commodity curve " << configId);
-            curveConfigs.commodityCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        case CurveSpec::CurveType::CommodityVolatility: {
-            const boost::shared_ptr<CommodityVolatilityCurveSpec> commodityvolspec =
-                boost::dynamic_pointer_cast<CommodityVolatilityCurveSpec>(spec);
-            QL_REQUIRE(commodityvolspec, "Failed to convert spec " << *spec << " to commodity vol spec");
-            const std::string configId = commodityvolspec->curveConfigID();
-            const boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = commodityVolatilityCurveConfig(configId);
-            QL_REQUIRE(curveConfig, "Cannot find commodity vol curve " << configId);
-            curveConfigs.commodityVolatilityCurveConfigs_[configId] = curveConfig;
-            break;
-        }
-
-        default: {
-            QL_FAIL("Unhandled spec " << *spec);
-        }
-        }
-        
     }
-    return curveConfigs;
 }
 
-std::set<string> CurveConfigurations::quotes() const {
+std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarketParameters> todaysMarketParams,
+    const set<string>& configurations) const {
+    
+    // If tmparams is not null, organise its specs in to a map [CurveType, set of CurveConfigID]
+    map<CurveSpec::CurveType, set<string>> curveConfigIds;
+    // This set of FXSpotSpec is used below
+    set<boost::shared_ptr<FXSpotSpec>> fxSpotSpecs;
+    
+    if (todaysMarketParams) {
+        for (const auto& config : configurations) {
+            for (const auto& strSpec : todaysMarketParams->curveSpecs(config)) {
+                auto spec = parseCurveSpec(strSpec);
+                if (curveConfigIds.count(spec->baseType())) {
+                    curveConfigIds[spec->baseType()].insert(spec->curveConfigID());
+                } else {
+                    curveConfigIds[spec->baseType()] = { spec->curveConfigID() };
+                }
+
+                if (spec->baseType() == CurveSpec::CurveType::FX) {
+                    boost::shared_ptr<FXSpotSpec> fxss = boost::dynamic_pointer_cast<FXSpotSpec>(spec);
+                    QL_REQUIRE(fxss, "Expected an FXSpotSpec but did not get one");
+                    fxSpotSpecs.insert(fxss);
+                }
+            }
+        }
+    }
+
+    // Populate the set of quotes that will be returned
     set<string> quotes;
-    for (auto m : yieldCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : fxVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : swaptionVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : capFloorVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : defaultCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : cdsVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : baseCorrelationCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : inflationCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : inflationCapFloorPriceSurfaceConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : inflationCapFloorVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : equityCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : equityVolCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : securityConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : fxSpotConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : commodityCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
-    for (auto m : commodityVolatilityCurveConfigs_)
-        quotes.insert(m.second->quotes().begin(), m.second->quotes().end());
+    bool insertAll = !todaysMarketParams;
+    addQuotes(quotes, yieldCurveConfigs_, insertAll, CurveSpec::CurveType::Yield, curveConfigIds);
+    addQuotes(quotes, fxVolCurveConfigs_, insertAll, CurveSpec::CurveType::FXVolatility, curveConfigIds);
+    addQuotes(quotes, swaptionVolCurveConfigs_, insertAll, CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
+    addQuotes(quotes, capFloorVolCurveConfigs_, insertAll, CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
+    addQuotes(quotes, defaultCurveConfigs_, insertAll, CurveSpec::CurveType::Default, curveConfigIds);
+    addQuotes(quotes, cdsVolCurveConfigs_, insertAll, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
+    addQuotes(quotes, baseCorrelationCurveConfigs_, insertAll, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
+    addQuotes(quotes, inflationCurveConfigs_, insertAll, CurveSpec::CurveType::Inflation, curveConfigIds);
+    addQuotes(quotes, inflationCapFloorPriceSurfaceConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorPrice, curveConfigIds);
+    addQuotes(quotes, inflationCapFloorVolCurveConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
+    addQuotes(quotes, equityCurveConfigs_, insertAll, CurveSpec::CurveType::Equity, curveConfigIds);
+    addQuotes(quotes, equityVolCurveConfigs_, insertAll, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
+    addQuotes(quotes, securityConfigs_, insertAll, CurveSpec::CurveType::Security, curveConfigIds);
+    addQuotes(quotes, fxSpotConfigs_, insertAll, CurveSpec::CurveType::FX, curveConfigIds);
+    addQuotes(quotes, commodityCurveConfigs_, insertAll, CurveSpec::CurveType::Commodity, curveConfigIds);
+    addQuotes(quotes, commodityVolatilityCurveConfigs_, insertAll, CurveSpec::CurveType::CommodityVolatility, curveConfigIds);
+
+    // FX spot is special in that we generally do not enter a curve configuration for it. Above, we ran over the 
+    // curve configurations asking each for its quotes. We may end up missing FX spot quotes that are specified in a 
+    // TodaysMarketParameters but do not have a CurveConfig. If we have a TodaysMarketParameters instance we can add 
+    // them here directly using it.
+    for (const auto& fxss : fxSpotSpecs) {
+        string strQuote = "FX/RATE/" + fxss->unitCcy() + "/" + fxss->ccy();
+        quotes.insert(strQuote);
+    }
 
     return quotes;
 }
