@@ -37,7 +37,7 @@ CommodityVolCurve::CommodityVolCurve(const Date& asof, const CommodityVolatility
 
     try {
         boost::shared_ptr<CommodityVolatilityCurveConfig> config =
-            curveConfigs.commodityVolatilityCurveConfig(spec.curveConfigId());
+            curveConfigs.commodityVolatilityCurveConfig(spec.curveConfigID());
 
         // Do different things depending on the type of volatility configured
         switch (config->type()) {
