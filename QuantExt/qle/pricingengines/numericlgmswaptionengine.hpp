@@ -42,7 +42,7 @@ namespace QuantExt {
     option expiry are considered to be
     part of the exercise into right.
 
-    \warning Cash settled swaptions are not supported
+    \warning Cash ParYieldCurve-settled swaptions are not supported
 
     Reference: Hagan, Methodology for callable swaps and Bermudan
                “exercise into” swaptions

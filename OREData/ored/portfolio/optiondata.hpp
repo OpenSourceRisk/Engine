@@ -39,8 +39,9 @@ public:
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                // notice days ?
-               string settlement = "Cash", double premium = 0, string premiumCcy = "", string premiumPayDate = "",
-               vector<double> exerciseFees = vector<Real>(), vector<double> exercisePrices = vector<Real>())
+               string settlement = "Cash", string settlementMethod = "ParYieldCurve", double premium = 0,
+               string premiumCcy = "", string premiumPayDate = "", vector<double> exerciseFees = vector<Real>(),
+               vector<double> exercisePrices = vector<Real>())
         : longShort_(longShort), callPut_(callPut), style_(style), payoffAtExpiry_(payoffAtExpiry),
           exerciseDates_(exerciseDates), noticePeriod_("0D"), // FIXME ?
           settlement_(settlement), premium_(premium), premiumCcy_(premiumCcy), premiumPayDate_(premiumPayDate),
@@ -55,6 +56,7 @@ public:
     const vector<string>& exerciseDates() const { return exerciseDates_; }
     const string& noticePeriod() const { return noticePeriod_; }
     const string& settlement() const { return settlement_; }
+    const string& settlementMethod() const { return settlementMethod_; }
     double premium() const { return premium_; }
     const string& premiumCcy() const { return premiumCcy_; }
     const string& premiumPayDate() const { return premiumPayDate_; }
@@ -76,6 +78,7 @@ private:
     vector<string> exerciseDates_;
     string noticePeriod_;
     string settlement_; // Cash or Physical, default Cash.
+    string settlementMethod_; // QuantLib::Settlement::Method, default ParYieldCurve
     double premium_;
     string premiumCcy_;
     string premiumPayDate_;

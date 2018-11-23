@@ -146,6 +146,12 @@ QuantLib::Position::Type parsePositionType(const string& s);
 */
 QuantLib::Settlement::Type parseSettlementType(const string& s);
 
+//! Convert text to QuantLib::Settlement::Method
+/*!
+\ingroup utilities
+*/
+QuantLib::Settlement::Type parseSettlementMethod(const string& s);
+
 //! Convert text to QuantLib::Exercise::Type
 /*!
 \ingroup utilities

@@ -32,6 +32,7 @@ void OptionData::fromXML(XMLNode* node) {
     exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
     noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
+    settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
     premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
     premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
     premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
@@ -48,6 +49,7 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
     XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     XMLUtils::addChild(doc, node, "Settlement", settlement_);
+    XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
     XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
     XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
     XMLUtils::addChild(doc, node, "PremiumPayDate", premiumPayDate_);

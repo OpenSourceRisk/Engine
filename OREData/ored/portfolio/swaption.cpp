@@ -74,12 +74,11 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 }
 
 namespace {
-// FIXME add support for settlement method, for the time being we just default to the QL < 1.14 behaviour
 QuantLib::Settlement::Method defaultMethod(const QuantLib::Settlement::Type t) {
     if (t == QuantLib::Settlement::Physical)
         return QuantLib::Settlement::PhysicalOTC;
     else
-        return QuantLib::Settlement::ParYieldCurve;
+        return QuantLib::Settlement::ParYieldCurve; // ql < 1.14 behaviour
 }
 } // namespace
 
@@ -89,6 +88,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // Swaption details
     Settlement::Type settleType = parseSettlementType(option_.settlement());
+    Settlement::Method settleMethod =
+        option_.settlement() == "" ? defaultMethod(settleType) : parseSettlementType(option_.settlement());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Only one exercise date expected for European Option");
     Date exDate = parseDate(option_.exerciseDates().front());
     QL_REQUIRE(exDate >= Settings::instance().evaluationDate(), "Exercise date expected in the future.");
@@ -101,8 +102,7 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<Exercise> exercise(new EuropeanExercise(exDate));
 
     // Build Swaption
-    boost::shared_ptr<QuantLib::Swaption> swaption(
-        new QuantLib::Swaption(swap, exercise, settleType, defaultMethod(settleType)));
+    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise, settleType, settleMethod));
 
     // Add Engine
     string tt("EuropeanSwaption");
@@ -197,23 +197,25 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<Exercise> exercise(new BermudanExercise(exDates));
 
     Settlement::Type delivery = parseSettlementType(option_.settlement());
+    Settlement::Method deliveryMethod =
+        option_.settlement() == "" ? defaultMethod(delivery) : parseSettlementType(option_.settlement());
 
-    if (delivery != Settlement::Physical)
+    if (delivery == Settlement::Cash && deliveryMethod == Settlement::ParYieldCurve)
         WLOG("Cash-settled Bermudan Swaption (id = "
-             << id() << ") not supported by Lgm engine. "
-             << "Approximate pricing using physical settlement pricing methodology");
+             << id() << ") with ParYieldCurve settlement method not supported by Lgm engine. "
+             << "Approximate pricing using CollateralizedCashPrice pricing methodology");
 
     // Build swaption
     DLOG("Build Swaption instrument");
     boost::shared_ptr<QuantLib::Instrument> swaption;
     if (isNonStandard) {
         swaption = boost::shared_ptr<QuantLib::Instrument>(
-            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery, defaultMethod(delivery)));
+            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery, deliveryMethod));
         // workaround for missing registration in QL versions < 1.13
         swaption->registerWithObservables(nonstandardSwap);
     } else
         swaption = boost::shared_ptr<QuantLib::Instrument>(
-            new QuantLib::Swaption(vanillaSwap, exercise, delivery, defaultMethod(delivery)));
+            new QuantLib::Swaption(vanillaSwap, exercise, delivery, deliveryMethod));
 
     QuantLib::Position::Type positionType = parsePositionType(option_.longShort());
     if (delivery == Settlement::Physical)

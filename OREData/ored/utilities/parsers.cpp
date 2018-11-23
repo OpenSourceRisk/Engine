@@ -494,6 +494,22 @@ Settlement::Type parseSettlementType(const std::string& s) {
     }
 }
 
+Settlement::Method parseSettlementMethod(const std::string& s) {
+    static map<string, Settlement::Method> m = {
+        {"PhysicalOTC", Settlement::PhysicalOTC},
+        {"PhysicalCleared", Settlement::PhysicalCleared},
+        {"CollateralizedCashPrice", Settlement::CollateralizedCashPrice},
+        {"ParYieldCurve", Settlement::ParYieldCurve},
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Settlement method \"" << s << "\" not recognized");
+    }
+}
+
 Exercise::Type parseExerciseType(const std::string& s) {
     static map<string, Exercise::Type> m = {
         {"European", Exercise::European}, {"Bermudan", Exercise::Bermudan}, {"American", Exercise::American},
