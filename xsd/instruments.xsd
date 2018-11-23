@@ -101,6 +101,7 @@
       <xs:element type="xs:string" name="OptionType"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
+      <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
