@@ -423,6 +423,9 @@
     <ClInclude Include="ored\portfolio\equityswap.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\marketdata\memoryloader.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -739,6 +742,9 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\equityswap.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\memoryloader.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
