@@ -88,8 +88,9 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
 
     // Swaption details
     Settlement::Type settleType = parseSettlementType(option_.settlement());
-    Settlement::Method settleMethod =
-        option_.settlement() == "" ? defaultMethod(settleType) : parseSettlementType(option_.settlement());
+    Settlement::Method settleMethod = option_.settlementMethod() == ""
+                                          ? defaultMethod(settleType)
+                                          : parseSettlementMethod(option_.settlementMethod());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Only one exercise date expected for European Option");
     Date exDate = parseDate(option_.exerciseDates().front());
     QL_REQUIRE(exDate >= Settings::instance().evaluationDate(), "Exercise date expected in the future.");
@@ -198,7 +199,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
 
     Settlement::Type delivery = parseSettlementType(option_.settlement());
     Settlement::Method deliveryMethod =
-        option_.settlement() == "" ? defaultMethod(delivery) : parseSettlementType(option_.settlement());
+        option_.settlementMethod() == "" ? defaultMethod(delivery) : parseSettlementMethod(option_.settlementMethod());
 
     if (delivery == Settlement::Cash && deliveryMethod == Settlement::ParYieldCurve)
         WLOG("Cash-settled Bermudan Swaption (id = "

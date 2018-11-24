@@ -150,7 +150,7 @@ QuantLib::Settlement::Type parseSettlementType(const string& s);
 /*!
 \ingroup utilities
 */
-QuantLib::Settlement::Type parseSettlementMethod(const string& s);
+QuantLib::Settlement::Method parseSettlementMethod(const string& s);
 
 //! Convert text to QuantLib::Exercise::Type
 /*!
