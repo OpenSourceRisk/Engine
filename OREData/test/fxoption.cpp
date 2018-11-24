@@ -77,10 +77,10 @@ void FXOptionTest::testFXOptionPrice() {
 
     // build FXOption - expiry in 1 Year
     OptionData optionData("Long", "Call", "European", true, vector<string>(1, "20170203"));
-    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
-                                    "USD", "20170203");
-    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
-                                    "EUR", "20170203");
+    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", "",
+                                    10000.0, "USD", "20170203");
+    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", "",
+                                    10000.0, "EUR", "20170203");
     Envelope env("CP1");
     FxOption fxOption(env, optionData, "EUR", 1000000, // bought
                       "USD", 1250000);                 // sold

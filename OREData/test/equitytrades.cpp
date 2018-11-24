@@ -99,10 +99,10 @@ void EquityTradesTest::testEquityTradePrices() {
 
     // build EquityOption - expiry in 1 Year
     OptionData callData("Long", "Call", "European", true, vector<string>(1, exp_str));
-    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", 1.0, "EUR",
+    OptionData callDataPremium("Long", "Call", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                                exp_str);
     OptionData putData("Short", "Put", "European", true, vector<string>(1, exp_str));
-    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", 1.0, "EUR",
+    OptionData putDataPremium("Short", "Put", "European", true, vector<string>(1, exp_str), "Cash", "", 1.0, "EUR",
                               exp_str);
     Envelope env("CP1");
     EquityOption eqCall(env, callData, "zzzCorp", "EUR", 95.0, 1.0);

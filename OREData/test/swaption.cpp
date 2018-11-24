@@ -104,8 +104,8 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     OptionData optionData("Long", "Call", "European", true, vector<string>(1, startDate), "Cash");
     OptionData optionDataPhysical("Long", "Call", "European", true, vector<string>(1, startDate), "Physical");
     Real premium = 700.0;
-    OptionData optionDataPremium("Long", "Call", "European", true, vector<string>(1, startDate), "Cash", premium, "EUR",
-                                 startDate);
+    OptionData optionDataPremium("Long", "Call", "European", true, vector<string>(1, startDate), "Cash", "", premium,
+                                 "EUR", startDate);
     ore::data::Swaption swaptionCash(env, optionData, legs);
     ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
