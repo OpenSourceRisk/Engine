@@ -827,16 +827,16 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     if (conventionsXML == "")
         getConventions();
     else
-        conventions_.loadFromXMLString(conventionsXML);
+        conventions_.fromXMLString(conventionsXML);
 
     if (todaysMarketXML == "")
         getMarketParameters();
     else
-        marketParameters_.loadFromXMLString(todaysMarketXML);
+        marketParameters_.fromXMLString(todaysMarketXML);
 
     CurveConfigurations curveConfigs;
     if (curveConfigXML != "")
-        curveConfigs.loadFromXMLString(curveConfigXML);
+        curveConfigs.fromXMLString(curveConfigXML);
     else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
         out_ << endl << setw(tab_) << left << "Curve configuration... " << flush;
         string inputPath = params_->get("setup", "inputPath");
