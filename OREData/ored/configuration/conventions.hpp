@@ -285,7 +285,7 @@ public:
     OisConvention(const string& id, const string& spotLag, const string& index, const string& fixedDayCounter,
                   const string& paymentLag = "", const string& eom = "", const string& fixedFrequency = "",
                   const string& fixedConvention = "", const string& fixedPaymentConvention = "",
-                  const string& rule = "");
+                  const string& rule = "", const std::string& paymentCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -300,6 +300,7 @@ public:
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
+    QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
     //@}
 
     //! \name Serialisation
@@ -319,6 +320,7 @@ private:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
+    QuantLib::Calendar paymentCal_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -330,6 +332,7 @@ private:
     string strFixedConvention_;
     string strFixedPaymentConvention_;
     string strRule_;
+    std::string strPaymentCal_;
 };
 
 //! Container for storing Swap Index conventions
