@@ -13,5 +13,4 @@
 #include <qle/cashflows/quantocouponpricer.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
-#include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 

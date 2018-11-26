@@ -29,8 +29,9 @@
 #include <ql/time/calendars/slovakia.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! SKK-BRIBOR index
 /*! SKK-BRIBOR rate overseen by the central bank of the Slovak Republic.

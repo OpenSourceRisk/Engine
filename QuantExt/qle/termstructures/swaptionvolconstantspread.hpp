@@ -30,8 +30,9 @@
 
 #include <iostream>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 namespace {
 class ConstantSpreadSmileSection : public SmileSection {

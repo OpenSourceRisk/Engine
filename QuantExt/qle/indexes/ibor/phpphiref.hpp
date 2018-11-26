@@ -29,8 +29,9 @@
 #include <qle/calendars/philippines.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! PHP-PHIREF index
 /*! PHP-PHIREF rate.

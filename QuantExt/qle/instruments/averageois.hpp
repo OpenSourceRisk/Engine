@@ -34,8 +34,9 @@
 
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Average overnight index swap
 /*! Swap with first leg fixed and the second

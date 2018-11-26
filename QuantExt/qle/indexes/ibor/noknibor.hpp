@@ -29,8 +29,9 @@
 #include <ql/time/calendars/norway.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! NOK-NIBOR index
 /*! NOK-NIBOR rate published by Oslo Boers.

@@ -28,8 +28,9 @@
 
 #include <ql/termstructures/inflationtermstructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Dk Implied Zero Inflation Term Structure
 /*! The termstructure has the reference date of the model's

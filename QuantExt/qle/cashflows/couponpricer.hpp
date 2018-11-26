@@ -31,8 +31,9 @@
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 /*!	\addtogroup cashflows
     @{
 */

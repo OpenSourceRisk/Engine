@@ -31,8 +31,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Abstract Black volatility surface based on moneyness (moneyness defined in subclasses)
 //!  \ingroup termstructures

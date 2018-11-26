@@ -30,8 +30,9 @@
 
 #include <boost/unordered_map.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Statically Corrected Yield Term Structure
 /*! This termstructure takes a floating reference date term structure

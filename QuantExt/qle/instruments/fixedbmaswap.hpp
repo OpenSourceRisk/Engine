@@ -28,8 +28,9 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/instruments/swap.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! swap paying a fixed rate against BMA coupons
 class FixedBMASwap : public Swap {

@@ -28,8 +28,9 @@
 
 #include <qle/instruments/averageois.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Average OIS Rate Helper
 /*! Rate helper to facilitate the usage of an AverageOIS instrument in

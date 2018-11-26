@@ -27,8 +27,9 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/credit/hazardratestructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 // FIXME: why do we need this?
 //! HazardS preaded Default Term Structure

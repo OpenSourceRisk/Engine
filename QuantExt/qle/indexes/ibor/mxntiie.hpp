@@ -29,8 +29,9 @@
 #include <ql/time/calendars/mexico.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! MXN-TIIE index
 /*! MXN-TIIE rate published by Banco de Mexico.

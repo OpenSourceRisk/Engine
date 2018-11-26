@@ -31,8 +31,9 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Inflation term structure based on the interpolation of zero rates.
 /*! \ingroup inflationtermstructures */

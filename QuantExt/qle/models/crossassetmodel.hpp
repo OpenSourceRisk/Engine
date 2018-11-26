@@ -39,8 +39,9 @@
 
 #include <boost/bind.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 namespace CrossAssetModelTypes {
 //! Cross Asset Type

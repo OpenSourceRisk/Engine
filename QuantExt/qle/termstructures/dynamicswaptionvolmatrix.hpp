@@ -30,8 +30,9 @@
 
 #include <boost/make_shared.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 //! Takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date term
 // structure.
 /*! This class takes a SwaptionVolatilityMatrix with fixed reference date and turns it into a floating reference date

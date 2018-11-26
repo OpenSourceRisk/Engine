@@ -29,8 +29,9 @@
 #include <ql/time/calendars/russia.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! RUB-MOSPRIME index
 //! RUB-MOSPRIME rate

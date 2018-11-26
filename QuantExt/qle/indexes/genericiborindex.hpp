@@ -28,8 +28,9 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Generic Ibor Index
 /*! This Ibor Index allows you to wrap any arbitary currency in a generic index.

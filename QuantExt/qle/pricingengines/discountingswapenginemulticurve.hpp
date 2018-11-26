@@ -28,8 +28,9 @@
 #include <ql/instruments/swap.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Discounting Swap Engine - Multi Curve
 /*! This class prices a swap with numerous simplifications in the case of

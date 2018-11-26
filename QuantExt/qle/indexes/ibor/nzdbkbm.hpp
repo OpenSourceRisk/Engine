@@ -29,8 +29,9 @@
 #include <ql/time/calendars/newzealand.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! NZD-BKBM index
 /*! NZD-BKBM rate published by NZFMA.

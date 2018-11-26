@@ -27,8 +27,9 @@
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/models/calibrationhelper.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! FxEq Option Helper
 /*! \ingroup models

@@ -29,8 +29,9 @@
 #include <ql/time/calendars/hongkong.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! HKD-HIBOR index
 /*! HKD-HIBOR rate overseen by The Hong Kong Association of Banks.

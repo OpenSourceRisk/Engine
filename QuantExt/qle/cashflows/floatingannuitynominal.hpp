@@ -27,8 +27,9 @@
 #include <ql/cashflow.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Nominal flows associated with the FloatingAnnuityCoupon
 //! \ingroup cashflows

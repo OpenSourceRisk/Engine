@@ -29,8 +29,9 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Black volatility curve modelled as variance curve
 /*! This class calculates time-dependent Black volatilities using

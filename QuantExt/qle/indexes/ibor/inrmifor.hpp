@@ -29,8 +29,9 @@
 #include <ql/time/calendars/india.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! INR-MIFOR index
 /*! INR-MIFOR rate overseen by FIMMDA.

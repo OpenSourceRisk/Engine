@@ -27,8 +27,9 @@
 
 #include <qle/instruments/averageois.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! helper class
 /*! This class provides a more comfortable way to instantiate standard

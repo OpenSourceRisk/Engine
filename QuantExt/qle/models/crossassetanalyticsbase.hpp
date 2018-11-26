@@ -28,8 +28,9 @@
 
 #include <qle/models/crossassetmodel.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 namespace CrossAssetAnalytics {
 

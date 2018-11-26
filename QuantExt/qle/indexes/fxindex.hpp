@@ -44,8 +44,8 @@
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
-namespace QuantExt {
 using namespace QuantLib;
+namespace QuantExt {
 
 //! FX Index
 /*! \ingroup indexes */

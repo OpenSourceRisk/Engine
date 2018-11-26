@@ -32,8 +32,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/indexes/equityindex.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! equity coupon pricer
 /*! \ingroup cashflows

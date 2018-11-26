@@ -28,8 +28,9 @@
 
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 /*! The termstructure has the reference date of the model's
     termstructure at construction, but you can vary this

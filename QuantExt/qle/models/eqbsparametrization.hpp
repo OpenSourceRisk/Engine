@@ -28,8 +28,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/models/parametrization.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! EQ Black Scholes parametrizations
 /*! Base class for EQ Black Scholes parametrizations

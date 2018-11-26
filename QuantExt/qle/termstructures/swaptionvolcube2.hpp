@@ -44,8 +44,9 @@
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolcube.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 class SwaptionVolCube2 : public SwaptionVolatilityCube {
 public:

@@ -29,8 +29,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Discounting Risky Bond Engine
 /*! WARNING: Only covers Vanilla coupon bonds (floating and fixed rate), and

@@ -34,8 +34,9 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! %Currency Interest Rate Swap
 /*!

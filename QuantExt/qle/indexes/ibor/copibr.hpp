@@ -29,8 +29,9 @@
 #include <qle/calendars/colombia.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! COP-IBR index
 //! COP-IBR rate

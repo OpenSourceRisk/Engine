@@ -31,8 +31,9 @@
 #include <ql/math/comparison.hpp>
 #include <ql/time/date.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Piecewise Constant Helper 1
 /*! \ingroup models

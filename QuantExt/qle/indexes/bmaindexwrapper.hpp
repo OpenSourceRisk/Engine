@@ -27,8 +27,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/indexes/bmaindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Wrapper that adapts the quantlib BMAIndex into a class inheriting from IborIndex
 /*!

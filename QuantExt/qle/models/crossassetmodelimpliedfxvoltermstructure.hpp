@@ -28,8 +28,9 @@
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Analytic Cross Currency CC LGM FX Option Enfine
 /*! \ingroup crossassetmodel

@@ -28,8 +28,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/quotes/logquote.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors
 /*! InterpolatedDiscountCurve based on loglinear interpolation of DiscountFactors,

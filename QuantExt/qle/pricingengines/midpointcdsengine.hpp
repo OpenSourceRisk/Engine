@@ -45,8 +45,9 @@
 
 #include <qle/instruments/creditdefaultswap.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 //! Mid point CDS engine base
 //! \ingroup engines
 class MidPointCdsEngineBase {

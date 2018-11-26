@@ -29,9 +29,7 @@
 #include <qle/calendars/chile.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-
 namespace QuantExt {
-using namespace QuantLib;
 
 //! CLP-CAMARA index
 //! CLP-CAMARA rate

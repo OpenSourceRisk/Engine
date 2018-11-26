@@ -30,8 +30,9 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Fx Black volatility surface
 /*! This class calculates time/strike dependent Black volatilities

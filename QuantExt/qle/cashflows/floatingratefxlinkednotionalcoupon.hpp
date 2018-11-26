@@ -28,8 +28,9 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! %Coupon paying a Libor-type index on an fx-linked nominal
 //! \ingroup cashflows

@@ -28,8 +28,9 @@
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Adapter class for turning a DatedStrippedOptionletBase object into an OptionletVolatilityStructure
 /*! Takes a DatedStrippedOptionletBase and converts it into an OptionletVolatilityStructure with a fixed

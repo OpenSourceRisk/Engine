@@ -32,8 +32,9 @@
 #include <ql/position.hpp>
 #include <ql/quote.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 /*! This class holds the term sheet data for an Equity Forward instrument.
 

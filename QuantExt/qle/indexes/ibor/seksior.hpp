@@ -29,8 +29,9 @@
 #include <ql/time/calendars/sweden.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! %SEK SIOR
 /*! %SEK T/N rate

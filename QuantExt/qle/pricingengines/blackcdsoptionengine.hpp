@@ -47,8 +47,9 @@
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
+
+namespace QuantExt {
 
 //! Black-formula CDS-option engine base class
 //! \ingroup engines
