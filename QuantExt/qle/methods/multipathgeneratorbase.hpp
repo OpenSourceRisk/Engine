@@ -76,7 +76,8 @@ for the use of the seed, see ql/math/randomnumbers/sobolrsg.cpp
 */
 class MultiPathGeneratorSobol : public MultiPathGeneratorBase {
 public:
-    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0);
+    MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>&, const TimeGrid&, BigNatural seed = 0,
+                            SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7);
     const Sample<MultiPath>& next() const;
     void reset();
 
@@ -84,6 +85,7 @@ private:
     const boost::shared_ptr<StochasticProcess> process_;
     TimeGrid grid_;
     BigNatural seed_;
+    SobolRsg::DirectionIntegers directionIntegers_;
 
     boost::shared_ptr<MultiPathGenerator<LowDiscrepancy::rsg_type> > pg_;
 };

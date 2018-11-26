@@ -96,6 +96,16 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
     samples_ = XMLUtils::getChildValueAsInt(node, "Samples", true);
     LOG("ScenarioGeneratorData samples = " << samples_);
 
+    if(auto n = XMLUtils::getChildNode(node, "Ordering"))
+        ordering_ = parseSobolBrownianGeneratorOrdering(XMLUtils::getNodeValue(n));
+    else
+        ordering_ = SobolBrownianGenerator::Steps;
+
+    if(auto n = XMLUtils::getChildNode(node, "DirectionIntegers"))
+        directionIntegers_ = parseSobolRsgDirectionIntegers(XMLUtils::getNodeValue(n));
+    else
+        directionIntegers_ = SobolRsg::JoeKuoD7;
+
     LOG("ScenarioGeneratorData done.");
 }
 

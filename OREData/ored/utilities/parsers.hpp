@@ -170,6 +170,18 @@ void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, 
 */
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s);
 
+//! Convert text to QuantLib::SobolBrownianGenerator::Ordering
+/*!
+\ingroup utilities
+*/
+QuantLib::SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s);
+
+//! Convert text to QuantLib::SobolRsg::DirectionIntegers
+/*!
+\ingroup utilities
+*/
+QuantLib::SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s);
+
 //! Convert comma separated list of values to vector of values
 /*!
 \ingroup utilities

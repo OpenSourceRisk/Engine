@@ -22,12 +22,37 @@
       <!-- FIXME: remove this -->
       <xs:element type="xs:integer" name="Seed"/>
       <xs:element type="xs:positiveInteger" name="Samples"/>
+      <xs:element type="SobolBrownianGeneratorOrdering" name="Ordering" minOccurs="0"/>
+      <xs:element type="SobolRsgDirectionIntegers" name="DirectionIntegers" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:simpleType name="discretizationType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Exact"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SobolBrownianGeneratorOrdering">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Factors"/>
+      <xs:enumeration value="Steps"/>
+      <xs:enumeration value="Diagonal"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SobolRsgDirectionIntegers">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Unit"/>
+      <xs:enumeration value="Jaeckel"/>
+      <xs:enumeration value="SobolLevitan"/>
+      <xs:enumeration value="SobolLevitanLemieux"/>
+      <xs:enumeration value="JoeKuoD5"/>
+      <xs:enumeration value="JoeKuoD6"/>
+      <xs:enumeration value="JoeKuoD7"/>
+      <xs:enumeration value="Kuo"/>
+      <xs:enumeration value="Kuo2"/>
+      <xs:enumeration value="Kuo3"/>
     </xs:restriction>
   </xs:simpleType>
 

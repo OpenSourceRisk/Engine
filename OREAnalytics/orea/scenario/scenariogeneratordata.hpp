@@ -52,14 +52,18 @@ namespace analytics {
  */
 class ScenarioGeneratorData : public XMLSerializable {
 public:
-    ScenarioGeneratorData() {}
+    ScenarioGeneratorData()
+        : discretization_(CrossAssetStateProcess::discretization::exact), grid_(boost::make_shared<DateGrid>()),
+          sequenceType_(SobolBrownianBridge), seed_(0), samples_(0), ordering_(SobolBrownianGenerator::Steps),
+          directionIntegers_(SobolRsg::JoeKuoD7) {}
 
     //! Constructor
     ScenarioGeneratorData(CrossAssetStateProcess::discretization discretization,
                           boost::shared_ptr<ore::analytics::DateGrid> dateGrid, SequenceType sequenceType, long seed,
-                          Size samples)
+                          Size samples, SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
+                          SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
         : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed),
-          samples_(samples) {}
+          samples_(samples), ordering_(ordering), directionIntegers_(directionIntegers) {}
 
     void clear();
 
@@ -76,6 +80,8 @@ public:
     SequenceType sequenceType() const { return sequenceType_; }
     long seed() const { return seed_; }
     Size samples() const { return samples_; }
+    SobolBrownianGenerator::Ordering ordering() const { return ordering_; }
+    SobolRsg::DirectionIntegers directionIntegers() const { return directionIntegers_; }
     //@}
 
     //! \name Setters
@@ -85,6 +91,8 @@ public:
     SequenceType& sequenceType() { return sequenceType_; }
     long& seed() { return seed_; }
     Size& samples() { return samples_; }
+    SobolBrownianGenerator::Ordering& ordering() { return ordering_; }
+    SobolRsg::DirectionIntegers& directionIntegers() { return directionIntegers_; }
     //@}
 private:
     CrossAssetStateProcess::discretization discretization_;
@@ -92,6 +100,8 @@ private:
     SequenceType sequenceType_;
     long seed_;
     Size samples_;
+    SobolBrownianGenerator::Ordering ordering_;
+    SobolRsg::DirectionIntegers directionIntegers_;
 };
 
 //! Enum parsers used in ScenarioGeneratorBuilder's fromXML
