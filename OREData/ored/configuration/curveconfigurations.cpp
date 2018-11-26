@@ -233,7 +233,6 @@ void CurveConfigurations::fromXML(XMLNode* node) {
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
-    doc.appendNode(parent);
 
     addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
     addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
