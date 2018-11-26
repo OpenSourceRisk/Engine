@@ -49,6 +49,8 @@
 #include <ql/time/schedule.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
 
+using namespace QuantExt;
+
 namespace QuantExt {
 
 //! alias for default-probability bootstrap helpers

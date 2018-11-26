@@ -37,10 +37,10 @@
 
 #include <vector>
 
-
-namespace QuantExt {
 using namespace QuantLib;
 using namespace boost::accumulators;
+
+namespace QuantExt {
 
 //! Numerically stabilised general linear least squares
 /*! The input data is lineaerly transformed before performing the linear least squares fit.
