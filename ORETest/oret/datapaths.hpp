@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/inputfilepath.hpp
+/*! \file oret/datapaths.hpp
     \brief Utility to retrieve the path for a unit test's input files
 */
 
@@ -24,7 +24,9 @@
 
 #include <boost/filesystem.hpp>
 
-using namespace boost::filesystem;
+using boost::filesystem::path;
+using boost::filesystem::exists;
+using boost::filesystem::create_directories;
 
 #ifdef BOOST_MSVC
 #define BOOST_LIB_NAME boost_system
@@ -39,8 +41,14 @@ using namespace boost::filesystem;
 // Expands to give the Boost path for an input file, with name 'filename', for the test xpp file in which it is called 
 #define TEST_INPUT_FILE_PATH(filename) TEST_INPUT_PATH / filename
 
-// Expands to give the Boost path for the output directory for the test xpp file in which it is called 
-#define TEST_OUTPUT_PATH path(__FILE__).parent_path() / "output" / path(__FILE__).stem()
+// Expands to give the Boost path for the output directory for the test xpp file in which it is called
+// If the path does not exist, then it is created
+#define TEST_OUTPUT_PATH \
+    []() { \
+        path outputPath = path(__FILE__).parent_path() / "output" / path(__FILE__).stem(); \
+        if (!exists(outputPath)) create_directories(outputPath); \
+        return outputPath; \
+    }()
 
 // Expands to give the Boost path for an output file, with name 'filename', for the test xpp file in which it is called 
 #define TEST_OUTPUT_FILE_PATH(filename) TEST_OUTPUT_PATH / filename
