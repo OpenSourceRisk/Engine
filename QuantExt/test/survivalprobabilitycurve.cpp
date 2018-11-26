@@ -30,7 +30,6 @@
 
 using namespace boost::unit_test_framework;
 using std::vector;
-using namespace QuantLib;
 
 namespace testsuite {
 

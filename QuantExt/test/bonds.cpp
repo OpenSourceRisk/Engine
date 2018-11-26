@@ -30,7 +30,6 @@
 #include <boost/make_shared.hpp>
 
 using namespace boost::unit_test_framework;
-using namespace QuantLib;
 
 namespace testsuite {
 

@@ -23,7 +23,6 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 
-using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using std::vector;
 
