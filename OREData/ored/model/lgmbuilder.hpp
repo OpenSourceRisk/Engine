@@ -67,7 +67,7 @@ public:
     }
     boost::shared_ptr<QuantExt::IrLgm1fParametrization>& parametrization() { return parametrization_; }
     RelinkableHandle<YieldTermStructure> discountCurve() { return discountCurve_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket() {
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket() {
         calculate();
         return swaptionBasket_;
     }
@@ -86,7 +86,7 @@ private:
     boost::shared_ptr<QuantLib::PricingEngine> swaptionEngine_;
     boost::shared_ptr<QuantExt::IrLgm1fParametrization> parametrization_;
     RelinkableHandle<YieldTermStructure> discountCurve_;
-    mutable std::vector<boost::shared_ptr<CalibrationHelper>> swaptionBasket_;
+    mutable std::vector<boost::shared_ptr<BlackCalibrationHelper>> swaptionBasket_;
     mutable Array swaptionExpiries_;
     mutable Array swaptionMaturities_;
 
@@ -96,7 +96,7 @@ private:
     // TODO: Move CalibrationErrorType, optimizer and end criteria parameters to data
     boost::shared_ptr<OptimizationMethod> optimizationMethod_;
     EndCriteria endCriteria_;
-    CalibrationHelper::CalibrationErrorType calibrationErrorType_;
+    BlackCalibrationHelper::CalibrationErrorType calibrationErrorType_;
 };
 } // namespace data
 } // namespace ore

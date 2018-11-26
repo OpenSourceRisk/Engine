@@ -86,7 +86,7 @@ static struct test_data cal_data[] = {
     {"PHP", Philippines()},
     {"QAR", TARGET()},
     {"RON", TARGET()},
-    {"THB", Thailand()},
+    {"THB", QuantExt::Thailand()},
     {"TND", TARGET()},
     {"VND", TARGET()},
     // joint calendars

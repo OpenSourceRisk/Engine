@@ -29,13 +29,13 @@ CpiCapFloorHelper::CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date
                                      BusinessDayConvention payConvention, Real strike,
                                      const Handle<ZeroInflationIndex>& infIndex, const Period& observationLag,
                                      Real marketPremium, CPI::InterpolationType observationInterpolation,
-                                     CalibrationHelper::CalibrationErrorType errorType)
-    : CalibrationHelper(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Handle<YieldTermStructure>(), errorType),
+                                     BlackCalibrationHelper::CalibrationErrorType errorType)
+    : BlackCalibrationHelper(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0)), Handle<YieldTermStructure>(), errorType),
       // start date does not really matter ?
       instrument_(boost::shared_ptr<CPICapFloor>(new CPICapFloor(
           type, 1.0, Settings::instance().evaluationDate(), baseCPI, maturity, fixCalendar, fixConvention, payCalendar,
           payConvention, strike, infIndex, observationLag, observationInterpolation))) {
-    QL_REQUIRE(errorType == CalibrationHelper::PriceError || errorType == CalibrationHelper::RelativePriceError,
+    QL_REQUIRE(errorType == BlackCalibrationHelper::PriceError || errorType == BlackCalibrationHelper::RelativePriceError,
                "CpiCapFloorHelper supports only PriceError and "
                "RelativePriceError error types");
     QL_REQUIRE(marketPremium > 0.0 && !close_enough(marketPremium, 0.0),

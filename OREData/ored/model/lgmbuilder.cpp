@@ -45,7 +45,7 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     : market_(market), configuration_(configuration), data_(data), bootstrapTolerance_(bootstrapTolerance),
       optimizationMethod_(boost::shared_ptr<OptimizationMethod>(new LevenbergMarquardt(1E-8, 1E-8, 1E-8))),
       endCriteria_(EndCriteria(1000, 500, 1E-8, 1E-8, 1E-8)),
-      calibrationErrorType_(CalibrationHelper::RelativePriceError) {
+      calibrationErrorType_(BlackCalibrationHelper::RelativePriceError) {
 
     QuantLib::Currency ccy = parseCurrency(data_->ccy());
     LOG("LgmCalibration for ccy " << ccy << ", configuration is " << configuration_);

@@ -33,7 +33,7 @@ using namespace QuantLib;
 //! FxEq Option Helper
 /*! \ingroup models
  */
-class FxEqOptionHelper : public CalibrationHelper {
+class FxEqOptionHelper : public BlackCalibrationHelper {
 public:
     /*! the spot is interpreted as of today (or discounted spot)
         if strike is null, an (fwd-) atm option is constructed,
@@ -43,11 +43,11 @@ public:
     FxEqOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> spot,
                      const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                      const Handle<YieldTermStructure>& foreignYield,
-                     CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
     FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
                      const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
                      const Handle<YieldTermStructure>& foreignYield,
-                     CalibrationHelper::CalibrationErrorType errorType = CalibrationHelper::RelativePriceError);
+                     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
     void addTimesTo(std::list<Time>&) const {}
     void performCalculations() const;
     Real modelValue() const;
