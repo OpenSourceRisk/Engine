@@ -22,9 +22,17 @@
 
 #pragma once
 
+#include <fstream>
+#include <iterator>
+#include <string>
+#include <algorithm>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 
+using std::ifstream;
+using std::string;
+using std::istreambuf_iterator;
+using std::equal;
 using boost::filesystem::path;
 using boost::filesystem::exists;
 using boost::filesystem::remove_all;
@@ -55,6 +63,30 @@ bool clearOutput(const path& outputPath) {
             outputPath << ", failed with error " << err.what());
         return false;
     }
+}
+
+// Basic comparison of two files based on the post:
+// https://stackoverflow.com/a/37575457/1771882
+bool compareFiles(const string& p1, const string& p2) {
+    
+    ifstream f1(p1, ifstream::binary|ifstream::ate);
+    ifstream f2(p2, ifstream::binary|ifstream::ate);
+    
+    if (f1.fail() || f2.fail()) {
+        BOOST_TEST_MESSAGE("Attempt to compare file, " << p1 << ", with file, " << p2 << " failed.");
+        return false;
+    }
+    
+    if (f1.tellg() != f2.tellg()) {
+        BOOST_TEST_MESSAGE("File size of " << p1 << " is not equal to file size of " << p2 << ".");
+        return false;
+    }
+    
+    // Seek back to beginning and use std::equal to compare contents
+    f1.seekg(0, ifstream::beg);
+    f2.seekg(0, ifstream::beg);
+    return std::equal(istreambuf_iterator<char>(f1.rdbuf()),
+        istreambuf_iterator<char>(), istreambuf_iterator<char>(f2.rdbuf()));
 }
 
 }

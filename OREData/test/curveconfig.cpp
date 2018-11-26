@@ -16,8 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/curveconfig.hpp>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
@@ -37,6 +35,7 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <oret/datapaths.hpp>
+#include <oret/fileutilities.hpp>
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -49,6 +48,15 @@ using namespace ore;
 using namespace ore::data;
 
 namespace {
+
+// Simple class to ensure that output files for this test are removed on suite exit
+class CleanUp {
+public:
+    CleanUp() {}
+    ~CleanUp() {
+        clearOutput(TEST_OUTPUT_PATH);
+    }
+};
 
 set<string> readQuotes(const string& filename) {
     // Read the quotes from the file
@@ -65,9 +73,35 @@ set<string> readQuotes(const string& filename) {
 
 }
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CurveConfigTest::testCurveConfigQuotesAll() {
+BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, CleanUp)
+
+BOOST_AUTO_TEST_CASE(testFromToXml) {
+
+    SavedSettings backup;
+
+    // Read curve configurations from file
+    CurveConfigurations curveConfigs;
+    curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
+
+    // Write the curve configurations to file
+    string outputFile_1 = TEST_OUTPUT_FILE("curve_config_out_1.xml");
+    curveConfigs.toFile(outputFile_1);
+
+    // Read curve configurations from output file
+    CurveConfigurations curveConfigsNew;
+    curveConfigsNew.fromFile(outputFile_1);
+
+    // Write curve configurations to file again
+    string outputFile_2 = TEST_OUTPUT_FILE("curve_config_out_2.xml");
+    curveConfigsNew.toFile(outputFile_2);
+
+    // Compare contents of the output files
+    BOOST_CHECK(compareFiles(outputFile_1, outputFile_2));
+}
+
+BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
     SavedSettings backup;
 
@@ -86,7 +120,7 @@ void CurveConfigTest::testCurveConfigQuotesAll() {
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), expectedQuotes.begin(), expectedQuotes.end());
 }
 
-void CurveConfigTest::testCurveConfigQuotesSimpleTodaysMarket() {
+BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
 
     SavedSettings backup;
 
@@ -122,7 +156,7 @@ void CurveConfigTest::testCurveConfigQuotesSimpleTodaysMarket() {
     }
 }
 
-void CurveConfigTest::testCurveConfigQuotesTodaysMarketMultipleConfigs() {
+BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
 
     SavedSettings backup;
 
@@ -159,7 +193,7 @@ void CurveConfigTest::testCurveConfigQuotesTodaysMarketMultipleConfigs() {
     }
 }
 
-void CurveConfigTest::testDiscountRatioSegmentFromXml() {
+BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 
     // XML string
     string xml;
@@ -192,7 +226,7 @@ void CurveConfigTest::testDiscountRatioSegmentFromXml() {
     BOOST_CHECK_EQUAL(seg.denominatorCurveCurrency(), "EUR");
 }
 
-void CurveConfigTest::testDiscountRatioSegmentToXml() {
+BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     // Create a discount ratio segment
     DiscountRatioYieldCurveSegment seg("Discount Ratio", "EUR1D", "EUR", 
         "BRL-IN-USD", "BRL", "EUR-IN-USD", "EUR");
@@ -217,16 +251,6 @@ void CurveConfigTest::testDiscountRatioSegmentToXml() {
     BOOST_CHECK_EQUAL(newSeg.denominatorCurveCurrency(), "EUR");
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 
-test_suite* CurveConfigTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CurveConfigTest");
-
-    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testCurveConfigQuotesAll));
-    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testCurveConfigQuotesSimpleTodaysMarket));
-    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testCurveConfigQuotesTodaysMarketMultipleConfigs));
-    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testDiscountRatioSegmentFromXml));
-    suite->add(BOOST_TEST_CASE(&CurveConfigTest::testDiscountRatioSegmentToXml));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

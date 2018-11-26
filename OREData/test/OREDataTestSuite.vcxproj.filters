@@ -69,9 +69,6 @@
     <ClInclude Include="portfolio.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="curveconfig.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="cds.hpp">
       <Filter>headers</Filter>
     </ClInclude>

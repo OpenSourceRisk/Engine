@@ -651,7 +651,6 @@
     <ClInclude Include="commodityvolcurveconfig.hpp" />
     <ClInclude Include="cpiswap.hpp" />
     <ClInclude Include="crossassetmodeldata.hpp" />
-    <ClInclude Include="curveconfig.hpp" />
     <ClInclude Include="equitymarketdata.hpp" />
     <ClInclude Include="equitytrades.hpp" />
     <ClInclude Include="fxoption.hpp" />
