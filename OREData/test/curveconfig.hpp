@@ -33,8 +33,16 @@ namespace testsuite {
 */
 class CurveConfigTest {
 public:
-    //! Testing curve config quotes method
-    static void testCurveConfigQuotes();
+    //! Testing curve config quotes method with no restrictions
+    static void testCurveConfigQuotesAll();
+    /*! Testing curve config quotes method. The quotes are filtered by a simple TodaysMarketParameters instance 
+        with a single default configuration
+    */
+    static void testCurveConfigQuotesSimpleTodaysMarket();
+    /*! Testing curve config quotes method. The quotes are filtered by a TodaysMarketParameters instance with a 
+        number of configurations
+    */
+    static void testCurveConfigQuotesTodaysMarketMultipleConfigs();
     //! Test fromXML for DiscountRatioYieldCurveSegment
     static void testDiscountRatioSegmentFromXml();
     //! Test toXML for DiscountRatioYieldCurveSegment
