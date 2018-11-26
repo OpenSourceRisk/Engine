@@ -27,9 +27,10 @@
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 
-namespace QuantExt {
 using namespace QuantLib;
 using std::vector;
+
+namespace QuantExt {
 
 /*! Helper class to extend an OptionletStripper1 object stripping
     additional optionlet (i.e. caplet/floorlet) volatilities (a.k.a.

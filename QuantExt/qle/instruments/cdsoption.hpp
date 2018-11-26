@@ -47,13 +47,14 @@
 
 #include <ql/option.hpp>
 
+using namespace QuantLib;
+
 namespace QuantLib {
 class Quote;
 class YieldTermStructure;
 } // namespace QuantLib
 
 namespace QuantExt {
-using namespace QuantLib;
 
 //! CDS option
 /*! The side of the swaption is set by choosing the side of the CDS.
