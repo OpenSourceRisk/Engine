@@ -151,6 +151,8 @@ LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s) {
 std::ostream& operator<<(std::ostream& oss, const LgmData::CalibrationStrategy& type) {
     if (type == LgmData::CalibrationStrategy::CoterminalATM)
         oss << "COTERMINALATM";
+    else if (type == LgmData::CalibrationStrategy::CoterminalDealStrike)
+        oss << "COTERMINALDEALSTRIKE";
     else if (type == LgmData::CalibrationStrategy::None)
         oss << "NONE";
     else
