@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ored\auto_link.hpp" />
-    <ClInclude Include="ored\configuration\all.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\cdsvolcurveconfig.hpp" />
@@ -56,7 +55,6 @@
     <ClInclude Include="ored\configuration\securityconfig.hpp" />
     <ClInclude Include="ored\configuration\swaptionvolcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\yieldcurveconfig.hpp" />
-    <ClInclude Include="ored\marketdata\all.hpp" />
     <ClInclude Include="ored\marketdata\basecorrelationcurve.hpp" />
     <ClInclude Include="ored\marketdata\capfloorvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\cdsvolcurve.hpp" />
@@ -86,7 +84,6 @@
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
     <ClInclude Include="ored\marketdata\yieldcurve.hpp" />
     <ClInclude Include="ored\marketdata\inflationcapfloorvolcurve.hpp" />
-    <ClInclude Include="ored\model\all.hpp" />
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp" />
     <ClInclude Include="ored\model\crossassetmodeldata.hpp" />
     <ClInclude Include="ored\model\eqbsbuilder.hpp" />
@@ -101,9 +98,7 @@
     <ClInclude Include="ored\model\modelbuilder.hpp" />
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
-    <ClInclude Include="ored\portfolio\all.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
-    <ClInclude Include="ored\portfolio\builders\all.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
@@ -149,11 +144,9 @@
     <ClInclude Include="ored\portfolio\trade.hpp" />
     <ClInclude Include="ored\portfolio\tradeactions.hpp" />
     <ClInclude Include="ored\portfolio\tradefactory.hpp" />
-    <ClInclude Include="ored\report\all.hpp" />
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
-    <ClInclude Include="ored\utilities\all.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />

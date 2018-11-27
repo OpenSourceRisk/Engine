@@ -18,7 +18,9 @@
 
 #include "currency.hpp"
 #include <ql/currency.hpp>
-#include <qle/currencies/all.hpp>
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

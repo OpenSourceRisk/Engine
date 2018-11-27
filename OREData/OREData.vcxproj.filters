@@ -24,9 +24,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ored\configuration\all.hpp">
-      <Filter>configuration</Filter>
-    </ClInclude>
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp">
       <Filter>configuration</Filter>
     </ClInclude>
@@ -47,9 +44,6 @@
     </ClInclude>
     <ClInclude Include="ored\configuration\yieldcurveconfig.hpp">
       <Filter>configuration</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\marketdata\all.hpp">
-      <Filter>marketdata</Filter>
     </ClInclude>
     <ClInclude Include="ored\marketdata\capfloorvolcurve.hpp">
       <Filter>marketdata</Filter>
@@ -108,9 +102,6 @@
     <ClInclude Include="ored\marketdata\yieldcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
-    <ClInclude Include="ored\model\all.hpp">
-      <Filter>model</Filter>
-    </ClInclude>
     <ClInclude Include="ored\model\crossassetmodelbuilder.hpp">
       <Filter>model</Filter>
     </ClInclude>
@@ -131,9 +122,6 @@
     </ClInclude>
     <ClInclude Include="ored\model\utilities.hpp">
       <Filter>model</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\utilities\all.hpp">
-      <Filter>utilities</Filter>
     </ClInclude>
     <ClInclude Include="ored\utilities\correlationmatrix.hpp">
       <Filter>utilities</Filter>
@@ -164,9 +152,6 @@
     </ClInclude>
     <ClInclude Include="ored\utilities\xmlutils.hpp">
       <Filter>utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\portfolio\all.hpp">
-      <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\capfloor.hpp">
       <Filter>portfolio</Filter>
@@ -227,9 +212,6 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\tradefactory.hpp">
       <Filter>portfolio</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\all.hpp">
-      <Filter>portfolio\builders</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp">
       <Filter>portfolio\builders</Filter>
@@ -292,9 +274,6 @@
       <Filter>report</Filter>
     </ClInclude>
     <ClInclude Include="ored\report\csvreport.hpp">
-      <Filter>report</Filter>
-    </ClInclude>
-    <ClInclude Include="ored\report\all.hpp">
       <Filter>report</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\bond.hpp">
