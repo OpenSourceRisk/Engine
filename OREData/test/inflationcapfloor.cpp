@@ -16,6 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/enginedata.hpp>
@@ -33,8 +34,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <ql/termstructures/volatility/inflation/yoyinflationoptionletvolatilitystructure.hpp>
 #include <ql/pricingengines/inflation/inflationcapfloorengines.hpp>
-
-#include <test/inflationcapfloor.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -100,11 +99,14 @@ public:
 };
 
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void InflationCapFloorTest::testYoYCapFloor() {
+BOOST_AUTO_TEST_SUITE(InflationCapFloorTests)
+
+BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
 
     BOOST_TEST_MESSAGE("Testing YoY Cap Price...");
+
     QuantLib::SavedSettings backup;
 
     // build market
@@ -189,10 +191,6 @@ void InflationCapFloorTest::testYoYCapFloor() {
 
 }
 
-test_suite* InflationCapFloorTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("InflationCapFloorTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&InflationCapFloorTest::testYoYCapFloor));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "legdata.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ored/portfolio/legdata.hpp>
 
 #include <boost/make_shared.hpp>
@@ -25,9 +25,12 @@ using namespace QuantLib;
 using namespace ore::data;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void LegDataTest::testLegDataNotionals() {
+BOOST_AUTO_TEST_SUITE(LegDataTests)
+
+BOOST_AUTO_TEST_CASE(testLegDataNotionals) {
+
     BOOST_TEST_MESSAGE("Testing LegData Notionals...");
 
     vector<double> notionals = {100, 200, 300};
@@ -62,7 +65,8 @@ void LegDataTest::testLegDataNotionals() {
     }
 }
 
-void LegDataTest::testLegDataCashflows() {
+BOOST_AUTO_TEST_CASE(testLegDataCashflows) {
+
     BOOST_TEST_MESSAGE("Testing LegData Cashflows...");
 
     vector<double> amounts = {1000000, 2000000, 3000000};
@@ -83,10 +87,6 @@ void LegDataTest::testLegDataCashflows() {
     BOOST_CHECK_EQUAL(leg[2]->date(), parseDate("2017-01-01"));
 }
 
-test_suite* LegDataTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("LegDataTests");
-    suite->add(BOOST_TEST_CASE(&LegDataTest::testLegDataNotionals));
-    suite->add(BOOST_TEST_CASE(&LegDataTest::testLegDataCashflows));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

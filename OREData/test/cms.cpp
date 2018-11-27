@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -30,11 +31,8 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/cms.hpp>
 
 #include <iostream>
-
-using std::string;
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -234,9 +232,11 @@ void outputCoupons(boost::shared_ptr<ore::data::Swap> cmsSwap) {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CmsTest::testCMSAnalyticHagan() {
+BOOST_AUTO_TEST_SUITE(CmsTests)
+
+BOOST_AUTO_TEST_CASE(testCMSAnalyticHagan) {
     BOOST_TEST_MESSAGE("Testing CMS Analytic Hagan price...");
 
     // build market
@@ -271,7 +271,7 @@ void CmsTest::testCMSAnalyticHagan() {
     BOOST_CHECK_CLOSE(npv, expectedNPV, 1.0);
 }
 
-void CmsTest::testCMSNumericalHagan() {
+BOOST_AUTO_TEST_CASE(testCMSNumericalHagan) {
     BOOST_TEST_MESSAGE("Testing CMS Numerical Hagan price...");
 
     // build market
@@ -310,7 +310,7 @@ void CmsTest::testCMSNumericalHagan() {
     BOOST_CHECK_CLOSE(npv, expectedNPV, 1.0);
 }
 
-void CmsTest::testCMSLinearTsr() {
+BOOST_AUTO_TEST_CASE(testCMSLinearTsr) {
     BOOST_TEST_MESSAGE("Testing CMS Linear TSR price...");
 
     // build market
@@ -348,7 +348,7 @@ void CmsTest::testCMSLinearTsr() {
     BOOST_CHECK_CLOSE(npv, expectedNPV, 1.0);
 }
 
-void CmsTest::cmsCapFloor() {
+BOOST_AUTO_TEST_CASE(cmsCapFloor) {
     BOOST_TEST_MESSAGE("Testing CMS CapFloor price...");
 
     // build market
@@ -440,12 +440,7 @@ void CmsTest::cmsCapFloor() {
     BOOST_CHECK_CLOSE(capFloorNpv, swapNpv, 1.0);
 }
 
-test_suite* CmsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CmsTest");
-    suite->add(BOOST_TEST_CASE(&CmsTest::testCMSAnalyticHagan));
-    suite->add(BOOST_TEST_CASE(&CmsTest::testCMSNumericalHagan));
-    suite->add(BOOST_TEST_CASE(&CmsTest::testCMSLinearTsr));
-    suite->add(BOOST_TEST_CASE(&CmsTest::cmsCapFloor));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+

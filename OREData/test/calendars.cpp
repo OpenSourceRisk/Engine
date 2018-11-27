@@ -16,24 +16,33 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <qle/calendars/all.hpp>
-#include <test/calendars.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+namespace bdata = boost::unit_test::data;
 
-struct test_data {
-    const char* name;
-    Calendar cal;
+using std::ostream;
+
+namespace {
+
+struct TestDatum {
+    const char* calendarName;
+    Calendar calendar;
 };
 
-static struct test_data cal_data[] = {
-    // Name, QL Cal
+// Needed for BOOST_DATA_TEST_CASE below as it writes out the TestDatum
+ostream& operator<<(ostream& os, const TestDatum& testDatum) {
+    return os << "[" << testDatum.calendarName << "," << testDatum.calendar.name() << "]";
+}
+
+TestDatum calendarData[] = {
     {"TGT", TARGET()},
     {"EUR", TARGET()},
     {"CHF", Switzerland()},
@@ -98,34 +107,25 @@ static struct test_data cal_data[] = {
     {"NYB,ZUB,LNB", JointCalendar(UnitedStates(), Switzerland(), UnitedKingdom())},
     {"NYB,TRB,LNB", JointCalendar(UnitedStates(), Canada(), UnitedKingdom())},
     {"TKB,USD,LNB", JointCalendar(Japan(), UnitedStates(), UnitedKingdom())},
-    {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}};
+    {"NYB,SYB", JointCalendar(UnitedStates(), Australia())}
+};
 
-void CalendarNameTest::testCalendarNameParsing() {
-    BOOST_TEST_MESSAGE("Testing Calendar name parsing...");
-
-    Size len = sizeof(cal_data) / sizeof(cal_data[0]);
-    for (Size i = 0; i < len; ++i) {
-        string name(cal_data[i].name);
-        Calendar ql_cal = cal_data[i].cal;
-
-        Calendar cal;
-        try {
-            cal = ore::data::parseCalendar(name);
-        } catch (...) {
-            BOOST_FAIL("ore::data::parseCalendar() failed to parse " << name);
-        }
-
-        if (cal.empty() || cal != ql_cal)
-            BOOST_FAIL("ore::data::parseCalendar(" << name << ") returned cal " << cal.name() << " expected "
-                                                   << ql_cal.name());
-
-        BOOST_TEST_MESSAGE("Parsed " << name << " and got " << cal.name());
-    }
 }
 
-test_suite* CalendarNameTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CalendarNameTest");
-    suite->add(BOOST_TEST_CASE(&CalendarNameTest::testCalendarNameParsing));
-    return suite;
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_AUTO_TEST_SUITE(CalendarTests)
+
+BOOST_DATA_TEST_CASE(testCalendarNameParsing, bdata::make(calendarData), calendarDatum) {
+    
+    Calendar calendar;
+    BOOST_REQUIRE_NO_THROW(calendar = ore::data::parseCalendar(calendarDatum.calendarName));
+    BOOST_REQUIRE(!calendar.empty());
+    BOOST_CHECK_EQUAL(calendar, calendarDatum.calendar);
+
+    BOOST_TEST_MESSAGE("Parsed " << calendarDatum.calendarName << " and got " << calendar.name());
 }
-} // namespace testsuite
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,8 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commoditycurve.hpp>
-
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 
 #include <ql/time/daycounters/actualactual.hpp>
@@ -65,9 +64,11 @@ MockLoader::MockLoader() {
 
 }
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CommodityCurveTest::testCommodityCurveConstruction() {
+BOOST_AUTO_TEST_SUITE(CommodityCurveTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
 
     BOOST_TEST_MESSAGE("Testing commodity curve building");
 
@@ -131,13 +132,6 @@ void CommodityCurveTest::testCommodityCurveConstruction() {
     BOOST_CHECK(checkCurveInterpolation);
 }
 
-test_suite* CommodityCurveTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CommodityCurveTest");
-
-    suite->add(BOOST_TEST_CASE(&CommodityCurveTest::testCommodityCurveConstruction));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,11 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file testsuite.cpp
-    \brief wrapper calling all individual test cases
-    \ingroup
-*/
-
 #include <iomanip>
 #include <iostream>
 using namespace std;
@@ -31,12 +26,14 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/parameterized_test.hpp>
-#include <boost/test/test_tools.hpp>
+#define BOOST_TEST_MODULE OREDataTestSuite
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
+using boost::unit_test::framework::master_test_suite;
 
 #include <oret/oret.hpp>
+using ore::test::setupTestLogging;
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>
@@ -50,103 +47,35 @@ using boost::unit_test::test_suite;
 #include <boost/config/auto_link.hpp>
 #endif
 
-// Lib test suites
-#include "bond.hpp"
-#include "calendars.hpp"
-#include "ccyswapwithresets.hpp"
-#include "cds.hpp"
-#include "cms.hpp"
-#include "commoditycurve.hpp"
-#include "commoditycurveconfig.hpp"
-#include "ored_commodityforward.hpp"
-#include "commodityoption.hpp"
-#include "commodityvolcurve.hpp"
-#include "commodityvolcurveconfig.hpp"
-#include "cpiswap.hpp"
-#include "crossassetmodeldata.hpp"
-#include "equitymarketdata.hpp"
-#include "equitytrades.hpp"
-#include "fxoption.hpp"
-#include "fxswap.hpp"
-#include "fxtriangulation.hpp"
-#include "indices.hpp"
-#include "legdata.hpp"
-#include "parser.hpp"
-#include "portfolio.hpp"
-#include "schedule.hpp"
-#include "swaption.hpp"
-#include "todaysmarket.hpp"
-#include "xmlmanipulation.hpp"
-#include "yieldcurve.hpp"
-#include "inflationcapfloor.hpp"
-#include "equityswap.hpp"
-#include "conventions.hpp"
+class OredGlobalFixture {
+public:
+    OredGlobalFixture() {
+        // Set up test logging
+        setupTestLogging(master_test_suite().argc, master_test_suite().argv);
+    }
 
-namespace {
+    ~OredGlobalFixture() {
+        stopTimer();
+    }
 
-boost::timer t;
+    // Method called in destructor to log time taken
+    void stopTimer() {
+        double seconds = t.elapsed();
+        int hours = int(seconds / 3600);
+        seconds -= hours * 3600;
+        int minutes = int(seconds / 60);
+        seconds -= minutes * 60;
+        cout << endl << "OREData tests completed in ";
+        if (hours > 0)
+            cout << hours << " h ";
+        if (hours > 0 || minutes > 0)
+            cout << minutes << " m ";
+        cout << fixed << setprecision(0) << seconds << " s" << endl;
+    }
 
-void startTimer() { t.restart(); }
-void stopTimer() {
-    double seconds = t.elapsed();
-    int hours = int(seconds / 3600);
-    seconds -= hours * 3600;
-    int minutes = int(seconds / 60);
-    seconds -= minutes * 60;
-    std::cout << endl << " OREData tests completed in ";
-    if (hours > 0)
-        cout << hours << " h ";
-    if (hours > 0 || minutes > 0)
-        cout << minutes << " m ";
-    cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
-}
-} // namespace
+private:
+    // Timing the test run
+    boost::timer t;
+};
 
-test_suite* init_unit_test_suite(int, char* []) {
-
-    // Get command line arguments
-    int argc = boost::unit_test::framework::master_test_suite().argc;
-    char** argv = boost::unit_test::framework::master_test_suite().argv;
-
-    // Set up test logging
-    ore::test::setupTestLogging(argc, argv);
-
-    test_suite* test = BOOST_TEST_SUITE("OREDataTestSuite");
-
-    test->add(BOOST_TEST_CASE(startTimer));
-
-    test->add(testsuite::InflationCapFloorTest::suite());
-    test->add(testsuite::FXSwapTest::suite());
-    test->add(testsuite::FXOptionTest::suite());
-    test->add(testsuite::CcySwapWithResetsTest::suite());
-    test->add(testsuite::CPISwapTest::suite());
-    test->add(testsuite::FXTriangulationTest::suite());
-    test->add(testsuite::CalendarNameTest::suite());
-    test->add(testsuite::IndexTest::suite());
-    test->add(testsuite::ParseTest::suite());
-    test->add(testsuite::XMLManipulationTest::suite());
-    test->add(testsuite::LegDataTest::suite());
-    test->add(testsuite::ScheduleDataTest::suite());
-    test->add(testsuite::TodaysMarketTest::suite());
-    test->add(testsuite::CrossAssetModelDataTest::suite());
-    test->add(testsuite::YieldCurveTest::suite());
-    test->add(testsuite::EquityMarketDataTest::suite());
-    test->add(testsuite::EquityTradesTest::suite());
-    test->add(testsuite::BondTest::suite());
-    test->add(testsuite::CmsTest::suite());
-    test->add(testsuite::SwaptionTest::suite());
-    test->add(testsuite::PortfolioTest::suite());
-    test->add(testsuite::CreditDefaultSwapTest::suite());
-    test->add(testsuite::CommodityForwardTest::suite());
-    test->add(testsuite::CommodityCurveConfigTest::suite());
-    test->add(testsuite::CommodityCurveTest::suite());
-    test->add(testsuite::CommodityOptionTest::suite());
-    test->add(testsuite::CommodityVolatilityCurveConfigTest::suite());
-    test->add(testsuite::CommodityVolCurveTest::suite());
-    test->add(testsuite::EquitySwapTest::suite());
-    test->add(testsuite::ConventionsTest::suite());
-
-    test->add(BOOST_TEST_CASE(stopTimer));
-
-    return test;
-}
+BOOST_TEST_GLOBAL_FIXTURE(OredGlobalFixture);

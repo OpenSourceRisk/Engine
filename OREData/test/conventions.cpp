@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/conventions.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <ored/configuration/conventions.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -31,9 +31,11 @@ using namespace QuantLib;
 using namespace ore::data;
 using boost::algorithm::replace_all_copy;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void ConventionsTest::testCrossCcyFixFloatSwapConventionConstruction() {
+BOOST_AUTO_TEST_SUITE(ConventionsTests)
+
+BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
 
     BOOST_TEST_MESSAGE("Testing cross currency fix float convention construction");
 
@@ -64,7 +66,7 @@ void ConventionsTest::testCrossCcyFixFloatSwapConventionConstruction() {
     BOOST_CHECK(convention->eom());
 }
 
-void ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml() {
+BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of cross currency fix float convention from XML");
 
@@ -109,7 +111,7 @@ void ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml() {
     BOOST_CHECK(convention->eom());
 }
 
-void ConventionsTest::testCrossCcyFixFloatSwapConventionToXml() {
+BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionToXml) {
 
     BOOST_TEST_MESSAGE("Testing writing of cross currency fix float convention to XML");
 
@@ -138,15 +140,6 @@ void ConventionsTest::testCrossCcyFixFloatSwapConventionToXml() {
     BOOST_CHECK_EQUAL(convention->eom(), readConvention->eom());
 }
 
-test_suite* ConventionsTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("ConventionsTests");
-
-    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionConstruction));
-    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionFromXml));
-    suite->add(BOOST_TEST_CASE(&ConventionsTest::testCrossCcyFixFloatSwapConventionToXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

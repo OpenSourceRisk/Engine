@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commoditycurveconfig.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <ored/configuration/commoditycurveconfig.hpp>
 
@@ -25,9 +25,11 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CommodityCurveConfigTest::testConstructionQuotes() {
+BOOST_AUTO_TEST_SUITE(CommodityCurveConfigTests)
+
+BOOST_AUTO_TEST_CASE(testConstructionQuotes) {
     
     BOOST_TEST_MESSAGE("Testing commodity curve configuration quote vector construction");
 
@@ -50,7 +52,7 @@ void CommodityCurveConfigTest::testConstructionQuotes() {
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), config.quotes().begin(), config.quotes().end());
 }
 
-void CommodityCurveConfigTest::testParseFromXml() {
+BOOST_AUTO_TEST_CASE(testParseFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity curve configuration from XML");
 
@@ -97,14 +99,6 @@ void CommodityCurveConfigTest::testParseFromXml() {
     BOOST_CHECK_EQUAL(config.extrapolation(), true);
 }
 
-test_suite* CommodityCurveConfigTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityCurveConfigTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityCurveConfigTest::testConstructionQuotes));
-    suite->add(BOOST_TEST_CASE(&CommodityCurveConfigTest::testParseFromXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

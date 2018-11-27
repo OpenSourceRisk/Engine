@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
@@ -31,16 +33,13 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/time/daycounters/simpledaycounter.hpp>
-#include <test/cds.hpp>
-
-using std::string;
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-// Bond test
+namespace bdata = boost::unit_test::data;
 
 namespace {
 
@@ -123,19 +122,36 @@ struct CommonVars {
         spread.push_back(0.0);
     }
 };
-} // namespace
 
-namespace testsuite {
+struct MarketInputs {
+    Real hazardRate;
+    Real recoveryRate;
+    Real liborRate;
+};
 
-void checkCreditDefaultSwapNPV(Real hazardRate, Real recoveryRate, Real liborRate, string endDate, Real fixedRate,
-                               Real expectedNpv) {
+// Needed for BOOST_DATA_TEST_CASE below as it writes out the MarketInputs
+ostream& operator<<(ostream& os, const MarketInputs& m) {
+    return os << "[" << m.hazardRate << "," << m.recoveryRate << "," << m.liborRate << "]";
+}
+
+struct TradeInputs {
+    string endDate;
+    Real fixedRate;
+};
+
+// Needed for BOOST_DATA_TEST_CASE below as it writes out the TradeInputs
+ostream& operator<<(ostream& os, const TradeInputs& t) {
+    return os << "[" << t.endDate << "," << t.fixedRate << "]";
+}
+
+Real cdsNpv(const MarketInputs& m, const TradeInputs& t) {
 
     // build market
-    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(hazardRate, recoveryRate, liborRate);
+    boost::shared_ptr<Market> market = boost::make_shared<TestMarket>(m.hazardRate, m.recoveryRate, m.liborRate);
     Settings::instance().evaluationDate() = market->asofDate();
 
     CommonVars vars;
-    boost::shared_ptr<ore::data::CreditDefaultSwap> cds = vars.makeCDS(endDate, fixedRate);
+    boost::shared_ptr<ore::data::CreditDefaultSwap> cds = vars.makeCDS(t.endDate, t.fixedRate);
 
     // Build and price
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -146,31 +162,46 @@ void checkCreditDefaultSwapNPV(Real hazardRate, Real recoveryRate, Real liborRat
 
     cds->build(engineFactory);
 
-    Real npv = cds->instrument()->NPV();
-
-    BOOST_CHECK_CLOSE(npv, expectedNpv, 0.01);
+    return cds->instrument()->NPV();
 }
 
-void CreditDefaultSwapTest::testCreditDefaultSwap() {
-    BOOST_TEST_MESSAGE("Testing CDS...");
+// Cases below:
+// 1) HazardRate = 0, couponRate = 0. ExpectedNpv = 0
+// 2) RecoveryRate = 1, couponRate = 0. ExpectedNpv = 0
+// 3) Example from Hull, Ch 21 (pp. 510 - 513). Take RR = 1 to show only couponNPV.
+// 4) Example from Hull, Ch 21 (pp. 510 - 513). Take coupon rate = 0 to show only defaultNPV.
 
-    // Case: HazardRate = 0, couponRate = 0. ExpectedNpv = 0
-    checkCreditDefaultSwapNPV(0, 1, 0, "20170203", 0, 0);
-    // Case: RecoveryRate = 1, couponRate = 0. ExpectedNpv = 0
-    checkCreditDefaultSwapNPV(1, 1, 0, "20170203", 0, 0);
-    // Case: Example from Hull, Ch 21 (pp. 510 - 513).
-    // 5Y CDS, RR=0.04, spread =  0.012424884, hazardRate = 0.02
-    // Expected Payments from the Default Protection Buyer to the Default Protection Seller
-    // Take RR = 1 to show only couponNPV
-    checkCreditDefaultSwapNPV(0.02, 1, 0.05, "20210203", 0.0124248849209095, 0.050659);
-    // Expected Value of the Default Protection Buyer
-    // Take coupon rate = 0 to show only defaultNPV
-    checkCreditDefaultSwapNPV(0.02, 0.4, 0.05, "20210203", 0.0, -0.05062);
+// Market inputs used in the test below
+MarketInputs marketInputs[] = {
+    { 0, 1, 0 },
+    { 1, 1, 0 },
+    { 0.02, 1, 0.05 },
+    { 0.02, 0.4, 0.05 }
+};
+
+// Trade inputs used in the test below
+TradeInputs tradeInputs[] = {
+    { "20170203", 0 },
+    { "20170203", 0 },
+    { "20210203", 0.0124248849209095 },
+    { "20210203", 0.0 }
+};
+
+// Expected NPVs given the market and trade inputs above
+Real expNpvs[] = { 0, 0, 0.050659, -0.05062 };
+
 }
 
-test_suite* CreditDefaultSwapTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CreditDefaultSwapTest");
-    suite->add(BOOST_TEST_CASE(&CreditDefaultSwapTest::testCreditDefaultSwap));
-    return suite;
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_AUTO_TEST_SUITE(CreditDefaultSwapTests)
+
+BOOST_DATA_TEST_CASE(testCreditDefaultSwap, 
+    bdata::make(marketInputs) ^ bdata::make(tradeInputs) ^ bdata::make(expNpvs), mkt, trd, exp) {
+    
+    BOOST_CHECK_CLOSE(cdsNpv(mkt, trd), exp, 0.01);
 }
-} // namespace testsuite
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

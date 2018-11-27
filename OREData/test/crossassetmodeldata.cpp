@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodeldata.hpp"
+#include <boost/test/unit_test.hpp>
+
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 
@@ -255,9 +256,12 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 }
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CrossAssetModelDataTest::testToXMLFromXML() {
+BOOST_AUTO_TEST_SUITE(CrossAssetModelDataTests)
+
+BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
+    
     BOOST_TEST_MESSAGE("Testing toXML/fromXML...");
 
     data::CrossAssetModelData data = *crossAssetData();
@@ -283,9 +287,6 @@ void CrossAssetModelDataTest::testToXMLFromXML() {
     remove("simulationtest.xml");
 }
 
-test_suite* CrossAssetModelDataTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAssetModelDataTests");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelDataTest::testToXMLFromXML));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

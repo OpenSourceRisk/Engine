@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commodityvolcurve.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -66,9 +66,11 @@ MockLoader::MockLoader() {
 
 }
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CommodityVolCurveTest::testCommodityVolCurveTypeConstant() {
+BOOST_AUTO_TEST_SUITE(CommodityVolCurveTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with a single configured volatility");
 
@@ -109,7 +111,7 @@ void CommodityVolCurveTest::testCommodityVolCurveTypeConstant() {
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 50 * Years, 1200.0), configuredVolatility, testTolerance);
 }
 
-void CommodityVolCurveTest::testCommodityVolCurveTypeCurve() {
+BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with time dependent volatilities");
 
@@ -174,7 +176,7 @@ void CommodityVolCurveTest::testCommodityVolCurveTypeCurve() {
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 6 * Years, 1200.0), v_e, testTolerance);
 }
 
-void CommodityVolCurveTest::testCommodityVolCurveTypeSurface() {
+BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with time and strike dependent volatilities");
 
@@ -217,15 +219,6 @@ void CommodityVolCurveTest::testCommodityVolCurveTypeSurface() {
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 5 * Years, 1190.0), 0.095, testTolerance);
 }
 
-test_suite* CommodityVolCurveTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CommodityVolCurveTest");
-
-    suite->add(BOOST_TEST_CASE(&CommodityVolCurveTest::testCommodityVolCurveTypeConstant));
-    suite->add(BOOST_TEST_CASE(&CommodityVolCurveTest::testCommodityVolCurveTypeCurve));
-    suite->add(BOOST_TEST_CASE(&CommodityVolCurveTest::testCommodityVolCurveTypeSurface));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

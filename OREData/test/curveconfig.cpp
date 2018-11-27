@@ -101,6 +101,7 @@ BOOST_AUTO_TEST_CASE(testFromToXml) {
     BOOST_CHECK(compareFiles(outputFile_1, outputFile_2));
 }
 
+// Testing curve config quotes method with no restrictions
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
     SavedSettings backup;
@@ -120,6 +121,7 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), expectedQuotes.begin(), expectedQuotes.end());
 }
 
+// Testing curve config quotes method for various TodaysMarketParameters
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
 
     SavedSettings backup;
@@ -156,6 +158,7 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
     }
 }
 
+// Testing curve config quotes method for a TodaysMarketParameters with multiple configurations
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
 
     SavedSettings backup;
@@ -193,6 +196,7 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
     }
 }
 
+// Test fromXML for DiscountRatioYieldCurveSegment
 BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 
     // XML string
@@ -226,6 +230,7 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
     BOOST_CHECK_EQUAL(seg.denominatorCurveCurrency(), "EUR");
 }
 
+// Test toXML for DiscountRatioYieldCurveSegment
 BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     // Create a discount ratio segment
     DiscountRatioYieldCurveSegment seg("Discount Ratio", "EUR1D", "EUR", 

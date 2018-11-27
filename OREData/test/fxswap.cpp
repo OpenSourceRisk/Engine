@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/enginedata.hpp>
@@ -25,7 +26,7 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/fxswap.hpp>
+
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
@@ -114,10 +115,14 @@ void test(string nearDate, string farDate, string nearBoughtCurrency, double nea
 }
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void FXSwapTest::testFXSwap() {
+BOOST_AUTO_TEST_SUITE(FXSwapTests)
+
+BOOST_AUTO_TEST_CASE(testFXSwap) {
+
     BOOST_TEST_MESSAGE("Testing FXSwap...");
+    
     string nearDate = "2015-10-27";
     string farDate = "2015-11-03";
     string nearBoughtCurrency = "EUR";
@@ -155,10 +160,6 @@ void FXSwapTest::testFXSwap() {
          farSoldAmount);
 }
 
-test_suite* FXSwapTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FXSwapTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&FXSwapTest::testFXSwap));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

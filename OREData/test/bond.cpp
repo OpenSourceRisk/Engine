@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -30,7 +31,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/bond.hpp>
 
 using std::string;
 
@@ -272,9 +272,11 @@ void checkNominalSchedule(const boost::shared_ptr<ore::data::Bond>& b, const std
 
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void BondTest::testZeroBond() {
+BOOST_AUTO_TEST_SUITE(BondTests)
+
+BOOST_AUTO_TEST_CASE(testZeroBond) {
     BOOST_TEST_MESSAGE("Testing Zero Bond...");
 
     // build market
@@ -303,7 +305,7 @@ void BondTest::testZeroBond() {
     BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
 
-void BondTest::testAmortizingBond() {
+BOOST_AUTO_TEST_CASE(testAmortizingBond) {
     BOOST_TEST_MESSAGE("Testing Amortising Bonds...");
 
     // build market
@@ -383,7 +385,7 @@ void BondTest::testAmortizingBond() {
     BOOST_CHECK(std::fabs(amount - expectedAmount) < npvTol);
 }
 
-void BondTest::testAmortizingBondWithChangingAmortisation() {
+BOOST_AUTO_TEST_CASE(testAmortizingBondWithChangingAmortisation) {
     BOOST_TEST_MESSAGE("Testing Amortising Bonds with changing amortisation...");
 
     // build market
@@ -447,7 +449,7 @@ void BondTest::testAmortizingBondWithChangingAmortisation() {
     BOOST_CHECK_THROW(bond7->build(engineFactory), QuantLib::Error);
 }
 
-void BondTest::testMultiPhaseBond() {
+BOOST_AUTO_TEST_CASE(testMultiPhaseBond) {
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
     Date today = Date(30, Jan, 2021);
@@ -489,7 +491,7 @@ void BondTest::testMultiPhaseBond() {
     BOOST_CHECK_EQUAL(qlInstr->cashflows()[6]->date(), Date(5, Feb, 2020));
 }
 
-void BondTest::testBondZeroSpreadDefault() {
+BOOST_AUTO_TEST_CASE(testBondZeroSpreadDefault) {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
     // build market
@@ -518,7 +520,7 @@ void BondTest::testBondZeroSpreadDefault() {
     BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
 
-void BondTest::testBondCompareDefault() {
+BOOST_AUTO_TEST_CASE(testBondCompareDefault) {
     BOOST_TEST_MESSAGE("Testing Bond price...");
 
     // build market
@@ -554,15 +556,6 @@ void BondTest::testBondCompareDefault() {
     //   BOOST_CHECK_CLOSE(npv, expectedNpv, 1.0);
 }
 
-test_suite* BondTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("BondTest");
-    // TODO: work out expected value properly
-    // suite->add(BOOST_TEST_CASE(&BondTest::testZeroBond));
-    suite->add(BOOST_TEST_CASE(&BondTest::testBondZeroSpreadDefault));
-    suite->add(BOOST_TEST_CASE(&BondTest::testBondCompareDefault));
-    suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBond));
-    suite->add(BOOST_TEST_CASE(&BondTest::testAmortizingBondWithChangingAmortisation));
-    suite->add(BOOST_TEST_CASE(&BondTest::testMultiPhaseBond));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

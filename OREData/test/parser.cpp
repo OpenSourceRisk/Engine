@@ -16,18 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <test/parser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-namespace testsuite {
+namespace {
 
 struct test_daycounter_data {
     const char* str;
@@ -102,7 +102,24 @@ static struct test_comp_data comp_data[] = {
     {"SimpleThenCompounded", SimpleThenCompounded},
 };
 
-void ParseTest::testDayCounterParsing() {
+void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
+    if (ore::data::parseStrike(s).type != expectedType) {
+        BOOST_FAIL("unexpected strike type parsed from input string " << s);
+    }
+    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
+        BOOST_FAIL("unexpected strike value parsed from input string " << s);
+    }
+    return;
+}
+
+}
+
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_AUTO_TEST_SUITE(ParserTests)
+
+BOOST_AUTO_TEST_CASE(testDayCounterParsing) {
+
     BOOST_TEST_MESSAGE("Testing day counter parsing...");
 
     Size len = sizeof(daycounter_data) / sizeof(daycounter_data[0]);
@@ -124,7 +141,8 @@ void ParseTest::testDayCounterParsing() {
     }
 }
 
-void ParseTest::testFrequencyParsing() {
+BOOST_AUTO_TEST_CASE(testFrequencyParsing) {
+
     BOOST_TEST_MESSAGE("Testing frequency parsing...");
 
     Size len = sizeof(freq_data) / sizeof(freq_data[0]);
@@ -147,7 +165,8 @@ void ParseTest::testFrequencyParsing() {
     }
 }
 
-void ParseTest::testCompoundingParsing() {
+BOOST_AUTO_TEST_CASE(testCompoundingParsing) {
+
     BOOST_TEST_MESSAGE("Testing Compounding parsing...");
 
     Size len = sizeof(comp_data) / sizeof(comp_data[0]);
@@ -170,19 +189,8 @@ void ParseTest::testCompoundingParsing() {
     }
 }
 
-namespace {
-void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expectedType, const Real expectedValue) {
-    if (ore::data::parseStrike(s).type != expectedType) {
-        BOOST_FAIL("unexpected strike type parsed from input string " << s);
-    }
-    if (!close_enough(ore::data::parseStrike(s).value, expectedValue)) {
-        BOOST_FAIL("unexpected strike value parsed from input string " << s);
-    }
-    return;
-}
-} // namespace
+BOOST_AUTO_TEST_CASE(testStrikeParsing) {
 
-void ParseTest::testStrikeParsing() {
     BOOST_TEST_MESSAGE("Testing Strike parsing...");
 
     checkStrikeParser("ATM", ore::data::Strike::Type::ATM, 0.0);
@@ -219,7 +227,8 @@ void ParseTest::testStrikeParsing() {
     BOOST_CHECK(true);
 }
 
-void ParseTest::testDatePeriodParsing() {
+BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
+
     BOOST_TEST_MESSAGE("Testing Date and Period parsing...");
 
     BOOST_CHECK_EQUAL(ore::data::parseDate("20170605"), Date(5, Jun, 2017));
@@ -236,12 +245,12 @@ void ParseTest::testDatePeriodParsing() {
     BOOST_CHECK_EQUAL(ore::data::parseDate("05/06/17"), Date(5, Jun, 2017));
     BOOST_CHECK_EQUAL(ore::data::parseDate("05.06.17"), Date(5, Jun, 2017));
     //
-    BOOST_CHECK_THROW(ore::data::parseDate("1Y"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("05-06-1Y"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("X5-06-17"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05-"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("-2017-06-05"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDate("xx17-06-05"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDate("1Y"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("05-06-1Y"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("X5-06-17"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("2017-06-05-"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("-2017-06-05"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDate("xx17-06-05"), QuantLib::Error);
 
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("3Y"), 3 * Years);
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("3y"), 3 * Years);
@@ -256,11 +265,11 @@ void ParseTest::testDatePeriodParsing() {
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0W"), 6 * Months + 0 * Weeks);
     BOOST_CHECK_EQUAL(ore::data::parsePeriod("6M0D"), 6 * Months + 0 * Days);
     //
-    BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), std::exception);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("20170605"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3X"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("xY"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod(".3M"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parsePeriod("3M."), QuantLib::Error);
 
     Date d;
     Period p;
@@ -281,20 +290,13 @@ void ParseTest::testDatePeriodParsing() {
     ore::data::parseDateOrPeriod("20170605D", d, p, isDate);
     BOOST_CHECK(!isDate && p == 20170605 * Days);
     //
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("5Y2017", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("2017-06-05D", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod(".3M", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
 }
 
-test_suite* ParseTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ParseTest");
-    suite->add(BOOST_TEST_CASE(&ParseTest::testDayCounterParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testFrequencyParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testCompoundingParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testStrikeParsing));
-    suite->add(BOOST_TEST_CASE(&ParseTest::testDatePeriodParsing));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

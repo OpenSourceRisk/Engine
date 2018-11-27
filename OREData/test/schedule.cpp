@@ -16,16 +16,19 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <ored/portfolio/schedule.hpp>
-#include <test/schedule.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
 using namespace QuantLib;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void ScheduleDataTest::testScheduleData() {
+BOOST_AUTO_TEST_SUITE(ScheduleDataTests)
+
+BOOST_AUTO_TEST_CASE(testScheduleData) {
+
     BOOST_TEST_MESSAGE("Testing ScheduleData...");
 
     ScheduleDates dates1("TARGET", "", "", {"2015-01-09", "2015-02-09", "2015-03-09", "2015-04-09"});
@@ -65,9 +68,6 @@ void ScheduleDataTest::testScheduleData() {
         BOOST_CHECK_EQUAL(s[i], s3[i]);
 }
 
-test_suite* ScheduleDataTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ScheduleDataTest");
-    suite->add(BOOST_TEST_CASE(&ScheduleDataTest::testScheduleData));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

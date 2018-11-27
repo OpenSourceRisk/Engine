@@ -16,78 +16,114 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "fxtriangulation.hpp"
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 using namespace ore::data;
-using namespace boost::unit_test_framework;
-using namespace std;
 using namespace QuantLib;
+using namespace std;
 
-namespace testsuite {
+namespace {
 
-void FXTriangulationTest::testFXTriangulation() {
+// Test data from ECB as of 8 Jan 2016
+vector<pair<string, Real>> data() {
 
-    // ECB asof 8 Jan 2016
-    vector<pair<string, Real>> testData = {
-        {"EURUSD", 1.0861},      {"EURJPY", 128.51}, {"EURCZK", 27.022}, {"EURDKK", 7.4598}, {"EURGBP", 0.74519},
-        {"EURHUF", 315.53},      {"EURPLN", 4.3523}, {"EURSEK", 9.2640}, {"EURCHF", 1.0860}, {"EURNOK", 9.6810},
-        {"EURAUD", 1.5495},      {"ZZZEUR", 3.141}, // just to test reverse quotes
-        {"AUDNZD", 1.0616327848}                    // Should be enough for USDNZD (value = 1.645 / 1.5495)
+    // clang-format off
+    vector<pair<string, Real>> testData{
+        { "EURUSD", 1.0861 },
+        { "EURJPY", 128.51 },
+        { "EURCZK", 27.022 },
+        { "EURDKK", 7.4598 },
+        { "EURGBP", 0.74519 },
+        { "EURHUF", 315.53 },
+        { "EURPLN", 4.3523 },
+        { "EURSEK", 9.2640 },
+        { "EURCHF", 1.0860 },
+        { "EURNOK", 9.6810 },
+        { "EURAUD", 1.5495 },
+        { "ZZZEUR", 3.141 }, // just to test reverse quotes
+        { "AUDNZD", 1.0616327848 } // Should be enough for USDNZD (value = 1.645 / 1.5495)
     };
+    // clang-format on
+    
+    return testData;
+}
 
-    // Initialise FX data
+// Provide the FXTriangulation object for the tests
+struct FxTriFixture {
     FXTriangulation fx;
-    for (const auto& it : testData) {
-        Handle<Quote> q(boost::make_shared<SimpleQuote>(it.second));
-        fx.addQuote(it.first, q);
+    
+    FxTriFixture() {
+        // Initialise FX data
+        for (const auto& p : data()) {
+            Handle<Quote> q(boost::make_shared<SimpleQuote>(p.second));
+            fx.addQuote(p.first, q);
+        }
     }
 
-    // First check that we got everything back
-    for (const auto& it : testData) {
-        BOOST_CHECK_EQUAL(fx.getQuote(it.first)->value(), it.second);
-    }
+    ~FxTriFixture() {}
+};
 
-    // Check EUREUR
+}
+
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_FIXTURE_TEST_SUITE(FXTriangulationTests, FxTriFixture)
+
+BOOST_AUTO_TEST_CASE(testDataLoaded) {
+    for (const auto& p : data()) {
+        BOOST_CHECK_EQUAL(fx.getQuote(p.first)->value(), p.second);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testUnity) {
     BOOST_CHECK_EQUAL(fx.getQuote("EUREUR")->value(), 1.0);
     BOOST_CHECK_EQUAL(fx.getQuote("USDUSD")->value(), 1.0);
+}
+
+BOOST_AUTO_TEST_CASE(testValues) {
+
+    // Tolerance for comparisons
+    Real tol = 1e-12;
 
     // Check inverse
-    //    BOOST_CHECK_CLOSE(fx.getQuote("USDEUR")->value(), 1.0 / 1.0861, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("JPYEUR")->value(), 1.0 / 128.51, 1e-12);
+    BOOST_CHECK_CLOSE(fx.getQuote("USDEUR")->value(), 1.0 / 1.0861, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("JPYEUR")->value(), 1.0 / 128.51, tol);
 
     // Check Triangulation
-    BOOST_CHECK_CLOSE(fx.getQuote("USDJPY")->value(), 128.51 / 1.0861, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("JPYUSD")->value(), 1.0861 / 128.51, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("USDGBP")->value(), 0.74519 / 1.0861, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("GBPUSD")->value(), 1.0861 / 0.74519, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("NOKSEK")->value(), 9.2640 / 9.6810, 1e-12);
+    BOOST_CHECK_CLOSE(fx.getQuote("USDJPY")->value(), 128.51 / 1.0861, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("JPYUSD")->value(), 1.0861 / 128.51, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("USDGBP")->value(), 0.74519 / 1.0861, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("GBPUSD")->value(), 1.0861 / 0.74519, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("NOKSEK")->value(), 9.2640 / 9.6810, tol);
 
     // Check Triangulation where the EUR quote is reversed
-    BOOST_CHECK_CLOSE(fx.getQuote("ZZZUSD")->value(), 3.141 * 1.0861, 1e-12);
-    BOOST_CHECK_CLOSE(fx.getQuote("USDZZZ")->value(), 1 / (3.141 * 1.0861), 1e-12);
+    BOOST_CHECK_CLOSE(fx.getQuote("ZZZUSD")->value(), 3.141 * 1.0861, tol);
+    BOOST_CHECK_CLOSE(fx.getQuote("USDZZZ")->value(), 1 / (3.141 * 1.0861), tol);
+}
 
+BOOST_AUTO_TEST_CASE(testMoreThanOneStep) {
+    
+    // Larger tolerance for multiple steps
+    Real tol = 1e-8;
+    
     // Check that we don't handle more than one step
     // EURUSD + EURAUD + AUDNZD => USDNZD
-    BOOST_CHECK_THROW(fx.getQuote("USDNZD"), std::exception);
+    BOOST_CHECK_THROW(fx.getQuote("USDNZD"), QuantLib::Error);
     // but if we cache EURNZD first....
-    BOOST_CHECK_CLOSE(fx.getQuote("EURNZD")->value(), 1.6450, 1e-8); // larger tolerance
+    BOOST_CHECK_CLOSE(fx.getQuote("EURNZD")->value(), 1.6450, tol);
     // then we should be able to get it with one step
-    BOOST_CHECK_CLOSE(fx.getQuote("USDNZD")->value(), 1.6450 / 1.0861, 1e-8); // larger tolerance
-
-    // Check that we don't return false data on bad inputs
-    BOOST_CHECK_THROW(fx.getQuote("BadInput"), std::exception);
-    BOOST_CHECK_THROW(fx.getQuote(""), std::exception);
-    BOOST_CHECK_THROW(fx.getQuote("MXNZAR"), std::exception);
+    BOOST_CHECK_CLOSE(fx.getQuote("USDNZD")->value(), 1.6450 / 1.0861, tol);
 }
 
-test_suite* FXTriangulationTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FXTriangulation tests");
-
-    suite->add(BOOST_TEST_CASE(&FXTriangulationTest::testFXTriangulation));
-
-    return suite;
+BOOST_AUTO_TEST_CASE(testBadInputsThrow) {
+    BOOST_CHECK_THROW(fx.getQuote("BadInput"), QuantLib::Error);
+    BOOST_CHECK_THROW(fx.getQuote(""), QuantLib::Error);
+    BOOST_CHECK_THROW(fx.getQuote("MXNZAR"), QuantLib::Error);
 }
-} // namespace testsuite
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

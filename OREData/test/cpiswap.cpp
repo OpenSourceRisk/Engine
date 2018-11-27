@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -34,20 +35,6 @@
 #include <ql/time/calendars/unitedkingdom.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/cpiswap.hpp>
-
-//#include <ql/types.hpp>
-//#include <ql/termstructures/bootstraphelper.hpp>
-//#include <ql/termstructures/yield/zerocurve.hpp>
-//#include <ql/indexes/ibor/gbplibor.hpp>
-
-//#include <ql/cashflows/indexedcashflow.hpp>
-//#include <ql/pricingengines/swap/discountingswapengine.hpp>
-//#include <ql/instruments/zerocouponinflationswap.hpp>
-//#include <ql/pricingengines/bond/discountingbondengine.hpp>
-//#include "utilities.hpp"
-//#include <ql/instruments/cpiswap.hpp>
-//#include <ql/instruments/bonds/cpibond.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -184,15 +171,13 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CPISwapTest::testCPISwapPrice() {
+BOOST_AUTO_TEST_SUITE(CPISwapTests)
+
+BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
+    
     BOOST_TEST_MESSAGE("Testing CPI Swap Price...");
-
-    /*
-    Log::instance().registerLogger(boost::make_shared<StderrLogger>());
-    Log::instance().switchOn();
-    */
 
     QuantLib::SavedSettings backup;
 
@@ -307,9 +292,6 @@ void CPISwapTest::testCPISwapPrice() {
     BOOST_CHECK_CLOSE(CPIswap->instrument()->NPV(), qlSwap.NPV(), 1E-8); // this is 1E-10 rel diff
 }
 
-test_suite* CPISwapTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CPISwapTest");
-    suite->add(BOOST_TEST_CASE(&CPISwapTest::testCPISwapPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

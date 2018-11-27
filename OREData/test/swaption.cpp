@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -28,7 +29,6 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/swaption.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -67,9 +67,12 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void SwaptionTest::testEuropeanSwaptionPrice() {
+BOOST_AUTO_TEST_SUITE(EuropeanSwaptionTests)
+
+BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
+
     BOOST_TEST_MESSAGE("Testing Swaption Price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -143,9 +146,6 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* SwaptionTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("EuropeanSwaptionTest");
-    suite->add(BOOST_TEST_CASE(&SwaptionTest::testEuropeanSwaptionPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "equitymarketdata.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -114,9 +114,11 @@ std::string eqBadConfigString =
 
 }
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void EquityMarketDataTest::testMarketDatumParser() {
+BOOST_AUTO_TEST_SUITE(EquityMarketDataTests)
+
+BOOST_AUTO_TEST_CASE(testMarketDatumParser) {
 
     BOOST_TEST_MESSAGE("Testing equity market data parsing...");
     std::vector<std::string> marketDataStrings = getMarketDataStrings();
@@ -137,7 +139,7 @@ void EquityMarketDataTest::testMarketDatumParser() {
     }
 }
 
-void EquityMarketDataTest::testBadMarketDatumStrings() {
+BOOST_AUTO_TEST_CASE(testBadMarketDatumStrings) {
 
     BOOST_TEST_MESSAGE("Testing equity market data parsing (bad strings)...");
     std::vector<std::string> marketDataStrings = getBadMarketDataStrings();
@@ -152,7 +154,7 @@ void EquityMarketDataTest::testBadMarketDatumStrings() {
     }
 }
 
-void EquityMarketDataTest::testEqCurveConfigLoad() {
+BOOST_AUTO_TEST_CASE(testEqCurveConfigLoad) {
 
     BOOST_TEST_MESSAGE("Testing equity curve config load...");
     ore::data::XMLDocument testDoc;
@@ -189,10 +191,10 @@ void EquityMarketDataTest::testEqCurveConfigLoad() {
     // now test the toXML member function
     ore::data::XMLDocument testDumpDoc;
     BOOST_CHECK_NO_THROW(cc.toXML(testDumpDoc));
-    //! TODO - query the XML to ensure that the curve configuration objects have been dumped correctly
+    // TODO - query the XML to ensure that the curve configuration objects have been dumped correctly
 }
 
-void EquityMarketDataTest::testEqCurveConfigBadLoad() {
+BOOST_AUTO_TEST_CASE(testEqCurveConfigBadLoad) {
 
     BOOST_TEST_MESSAGE("Testing equity curve config load (bad input)...");
     ore::data::XMLDocument testBadDoc;
@@ -206,13 +208,6 @@ void EquityMarketDataTest::testEqCurveConfigBadLoad() {
     BOOST_CHECK(!ec); // this checks that the XML did not actually get loaded
 }
 
-boost::unit_test_framework::test_suite* EquityMarketDataTest::suite() {
-    boost::unit_test_framework::test_suite* suite = BOOST_TEST_SUITE("EquityMarketDataTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testMarketDatumParser));
-    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testBadMarketDatumStrings));
-    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testEqCurveConfigLoad));
-    suite->add(BOOST_TEST_CASE(&EquityMarketDataTest::testEqCurveConfigBadLoad));
-    return suite;
-}
-}
+BOOST_AUTO_TEST_SUITE_END()

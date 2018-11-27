@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
@@ -27,15 +28,12 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/equitytrades.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 using namespace ore::data;
-
-// Equity option/forward test, example from Haug, Chapter 1
 
 namespace {
 
@@ -82,9 +80,13 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void EquityTradesTest::testEquityTradePrices() {
+BOOST_AUTO_TEST_SUITE(EquityTradesTests)
+
+// Equity option/forward test, example from Haug, Chapter 1
+BOOST_AUTO_TEST_CASE(testEquityTradePrices) {
+
     BOOST_TEST_MESSAGE("Testing EquityOption Price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -147,9 +149,6 @@ void EquityTradesTest::testEquityTradePrices() {
     Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* EquityTradesTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("EquityTradesTest");
-    suite->add(BOOST_TEST_CASE(&EquityTradesTest::testEquityTradePrices));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

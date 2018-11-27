@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commodityvolcurveconfig.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 
@@ -25,9 +25,11 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml() {
+BOOST_AUTO_TEST_SUITE(CommodityVolatilityCurveConfigTests)
+
+BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of constant commodity vol curve configuration from XML");
 
@@ -65,7 +67,7 @@ void CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml() {
     BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), false);
 }
 
-void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
+BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity vol curve configuration from XML");
 
@@ -131,7 +133,7 @@ void CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml() {
     BOOST_CHECK_EQUAL(config.extrapolate(), false);
 }
 
-void CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml() {
+BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity vol surface configuration from XML");
 
@@ -197,15 +199,6 @@ void CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml() {
     BOOST_CHECK_EQUAL(config.upperStrikeConstantExtrapolation(), true);
 }
 
-test_suite* CommodityVolatilityCurveConfigTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityVolatilityCurveConfigTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseConstantVolFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseVolCurveFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityVolatilityCurveConfigTest::testParseVolSurfaceFromXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
@@ -24,15 +25,12 @@
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/fxoption.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 using namespace ore::data;
-
-// FX Option test, example from Wystup, section 1.2.6, page 28
 
 namespace {
 
@@ -64,9 +62,13 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void FXOptionTest::testFXOptionPrice() {
+BOOST_AUTO_TEST_SUITE(FXOptionTests)
+
+// FX Option test, example from Wystup, section 1.2.6, page 28
+BOOST_AUTO_TEST_CASE(testFXOptionPrice) {
+
     BOOST_TEST_MESSAGE("Testing FXOption Price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -130,9 +132,6 @@ void FXOptionTest::testFXOptionPrice() {
     Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* FXOptionTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FXOptionTest");
-    suite->add(BOOST_TEST_CASE(&FXOptionTest::testFXOptionPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

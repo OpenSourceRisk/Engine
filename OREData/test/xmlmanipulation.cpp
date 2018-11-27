@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "xmlmanipulation.hpp"
+#include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -28,41 +28,49 @@ using namespace std;
 using namespace QuantLib;
 
 namespace {
-void loadXMLDocument(XMLDocument& testDoc) {
-    // dummy xml test string
-    string testXML = "<root>"
-                     "<level1>"
-                     "<level1a>"
-                     "<data1a attr = \"0.7736\">17.5</data1a>"
-                     "</level1a>"
-                     "<level1b>"
-                     "<vector1b>"
-                     "<vector1bval>12.3</vector1bval><vector1bval>45.6</vector1bval><vector1bval>78.9</vector1bval>"
-                     "</vector1b>"
-                     "</level1b>"
-                     "</level1>"
-                     "<level2>"
-                     "<level2aDuplicates></level2aDuplicates>"
-                     "<level2aDuplicates></level2aDuplicates>"
-                     "<level2aDuplicates></level2aDuplicates>"
-                     "<level2aDuplicates></level2aDuplicates>"
-                     "</level2>"
-                     "</root>";
 
-    // test creation of XML document from hardcoded string
-    testDoc.fromXMLString(testXML);
-    return;
+// Fixture used in each test case below
+struct F {
+    XMLDocument testDoc;
+
+    F() {
+        // dummy xml test string
+        string testXML = "<root>"
+                         "<level1>"
+                         "<level1a>"
+                         "<data1a attr = \"0.7736\">17.5</data1a>"
+                         "</level1a>"
+                         "<level1b>"
+                         "<vector1b>"
+                         "<vector1bval>12.3</vector1bval><vector1bval>45.6</vector1bval><vector1bval>78.9</vector1bval>"
+                         "</vector1b>"
+                         "</level1b>"
+                         "</level1>"
+                         "<level2>"
+                         "<level2aDuplicates></level2aDuplicates>"
+                         "<level2aDuplicates></level2aDuplicates>"
+                         "<level2aDuplicates></level2aDuplicates>"
+                         "<level2aDuplicates></level2aDuplicates>"
+                         "</level2>"
+                         "</root>";
+
+        // test creation of XML document from hardcoded string
+        testDoc.fromXMLString(testXML);
+    }
+
+    ~F() {}
+};
+
 }
-} // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void XMLManipulationTest::testXMLDataGetters() {
+BOOST_AUTO_TEST_SUITE(XmlManipulationTests)
+
+BOOST_FIXTURE_TEST_CASE(testXMLDataGetters, F) {
 
     BOOST_TEST_MESSAGE("Testing XML (scalar) data getters");
 
-    XMLDocument testDoc;
-    loadXMLDocument(testDoc);
     // check that the root node is as expected
     XMLNode* root = testDoc.getFirstNode("root");
     BOOST_CHECK_NO_THROW(XMLUtils::checkNode(root, "root"));
@@ -81,7 +89,7 @@ void XMLManipulationTest::testXMLDataGetters() {
     Real data1a_real = XMLUtils::getChildValueAsDouble(level1a, "data1a");
     BOOST_CHECK_EQUAL(data1a_real, expectedReal);
     // ensure that error thrown if value cast fails
-    BOOST_CHECK_THROW(XMLUtils::getChildValueAsInt(level1a, "data1a"), std::exception);
+    BOOST_CHECK_THROW(XMLUtils::getChildValueAsInt(level1a, "data1a"), QuantLib::Error);
     // ensure that error thrown if mandatory element is not found
     BOOST_CHECK_THROW(XMLUtils::getChildValue(level1a, "data1b", true), QuantLib::Error);
     // ensure that no error thrown if element is not mandatory
@@ -98,12 +106,10 @@ void XMLManipulationTest::testXMLDataGetters() {
     BOOST_CHECK_NO_THROW(XMLUtils::getAttribute(data1a, "garbagename"));
 }
 
-void XMLManipulationTest::testXMLVectorDataGetters() {
+BOOST_FIXTURE_TEST_CASE(testXMLVectorDataGetters, F) {
 
     BOOST_TEST_MESSAGE("Testing XML vector data getters");
 
-    XMLDocument testDoc;
-    loadXMLDocument(testDoc);
     // check that the root node is as expected
     XMLNode* root = testDoc.getFirstNode("root");
     BOOST_CHECK_NO_THROW(XMLUtils::checkNode(root, "root"));
@@ -132,12 +138,10 @@ void XMLManipulationTest::testXMLVectorDataGetters() {
                                   expVecStr.end());
 }
 
-void XMLManipulationTest::testXMLDataSetters() {
+BOOST_FIXTURE_TEST_CASE(testXMLDataSetters, F) {
 
     BOOST_TEST_MESSAGE("Testing XML data setters");
 
-    XMLDocument testDoc;
-    loadXMLDocument(testDoc);
     // check that the root node is as expected
     XMLNode* root = testDoc.getFirstNode("root");
     BOOST_CHECK_NO_THROW(XMLUtils::checkNode(root, "root"));
@@ -156,12 +160,10 @@ void XMLManipulationTest::testXMLDataSetters() {
     BOOST_CHECK_EQUAL_COLLECTIONS(nodesVecCheck.begin(), nodesVecCheck.end(), nodesVec.begin(), nodesVec.end());
 }
 
-void XMLManipulationTest::testXMLAttributes() {
+BOOST_FIXTURE_TEST_CASE(testXMLAttributes, F) {
 
     BOOST_TEST_MESSAGE("Testing XML attributes");
 
-    XMLDocument testDoc;
-    loadXMLDocument(testDoc);
     // check that the root node is as expected
     XMLNode* root = testDoc.getFirstNode("root");
     BOOST_CHECK_NO_THROW(XMLUtils::checkNode(root, "root"));
@@ -184,14 +186,6 @@ void XMLManipulationTest::testXMLAttributes() {
     BOOST_CHECK_EQUAL(level1aAttrValExract, level1aAttrVal);
 }
 
-test_suite* XMLManipulationTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("XML manipulation tests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&XMLManipulationTest::testXMLDataGetters));
-    suite->add(BOOST_TEST_CASE(&XMLManipulationTest::testXMLVectorDataGetters));
-    suite->add(BOOST_TEST_CASE(&XMLManipulationTest::testXMLDataSetters));
-    suite->add(BOOST_TEST_CASE(&XMLManipulationTest::testXMLAttributes));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

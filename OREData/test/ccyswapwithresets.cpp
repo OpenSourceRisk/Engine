@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -28,14 +29,11 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-#include <test/ccyswapwithresets.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace ore::data;
 using std::vector;
-
-// Ccy Swap with notional resets test, example from Bloomberg
 
 namespace {
 
@@ -118,15 +116,14 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
+BOOST_AUTO_TEST_SUITE(CcySwapWithResetsTest)
+
+// Ccy Swap with notional resets test, example from Bloomberg
+BOOST_AUTO_TEST_CASE(testCcySwapWithResetsPrice) {
+
     BOOST_TEST_MESSAGE("Testing CcySwapWithResets Price...");
-
-    /*
-    Log::instance().registerLogger(boost::make_shared<StderrLogger>());
-    Log::instance().switchOn();
-    */
 
     // Bloomberg CCYswap and CCYswapReset prices (in USD)
     Real npvCCYswap = -349.69;
@@ -250,78 +247,8 @@ void CcySwapWithResetsTest::testCcySwapWithResetsPrice() {
         }
     }
     BOOST_CHECK_EQUAL(sumXNL, 0);
-
-    // print Cash Flows (taken from ore.cpp and slightly modified). Uncomment the below to get them printed.
-    /*
-    BOOST_TEST_MESSAGE("CcySwapWithResets " << "#ID" << "," << "Type" << "," << "LegNo" << "," << "PayDate" << "," <<
-    "Amount" << "," << "Currency" << "," << "Coupon" << "," << "Accrual" << "," << "fixingDate" << "," << "fixingValue"
-    << ",");
-    const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
-    for (Size k = 0; k < trades.size(); k++) {
-      const vector<Leg>& legs = trades[k]->legs();
-      for (Size i = 0; i < legs.size(); i++) {
-        const QuantLib::Leg& leg = legs[i];
-        bool payer = trades[k]->legPayers()[i];
-        string ccy = trades[k]->legCurrencies()[i];
-        for (Size j = 0; j < leg.size(); j++) {
-          boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
-          Date payDate = ptrFlow->date();
-          if (payDate >= today) {
-            Real amount = ptrFlow->amount();
-            if (payer)
-              amount *= -1.0;
-
-            std::string ccy = trades[k]->legCurrencies()[i];
-
-            boost::shared_ptr<QuantLib::Coupon> ptrCoupon =
-            boost::dynamic_pointer_cast<QuantLib::Coupon>(ptrFlow);
-            if (ptrCoupon) {
-              Real coupon = ptrCoupon->rate();
-              Real accrual = ptrCoupon->accrualPeriod();
-              boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-              boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-              if (ptrFloat) {
-                Date fixingDate = ptrFloat->fixingDate();
-                Real fixingValue = ptrFloat->index()->fixing(fixingDate);
-                BOOST_TEST_MESSAGE("CcySwapWithResets " << std::setprecision(0) << trades[k]->id() << "," <<
-    trades[k]->tradeType() << "," << i << ","
-                                   << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-    ccy << "," << std::setprecision(10) << coupon << "," << std::setprecision(10) << accrual << "," <<
-    QuantLib::io::iso_date(fixingDate) << "," << fixingValue);
-              } else {
-                BOOST_TEST_MESSAGE("CcySwapWithResets " << std::setprecision(0) << trades[k]->id() << "," <<
-    trades[k]->tradeType() << "," << i << ","
-                                   << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-    ccy << "," << std::setprecision(10) << coupon << "," << std::setprecision(10) << accrual << "," << "," << ",");
-              }
-            } else {
-              boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
-              boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
-              if (ptrFloat) {
-                Date fixingDate = ptrFloat->fixingDate();
-                Real fixingValue = ptrFloat->index()->fixing(fixingDate);
-                BOOST_TEST_MESSAGE("CcySwapWithResets " << std::setprecision(0) << trades[k]->id() << "," <<
-    trades[k]->tradeType() << "," << i << ","
-                                   << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-    ccy << "," << "," << "," << QuantLib::io::iso_date(fixingDate) << "," << fixingValue);
-              } else {
-                BOOST_TEST_MESSAGE("CcySwapWithResets " << std::setprecision(0) << trades[k]->id() << "," <<
-    trades[k]->tradeType() << "," << i << ","
-                                   << QuantLib::io::iso_date(payDate) << "," << std::setprecision(4) << amount << "," <<
-    ccy << "," << "," << "," << ",");
-              }
-            }
-          }
-        }
-      }
-    }
-    */
 }
 
-test_suite* CcySwapWithResetsTest::suite() {
-    // Uncomment the below to get detailed output TODO: custom logger that uses BOOST_MESSAGE
-    test_suite* suite = BOOST_TEST_SUITE("CcySwapWithResetsTest");
-    suite->add(BOOST_TEST_CASE(&CcySwapWithResetsTest::testCcySwapWithResetsPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

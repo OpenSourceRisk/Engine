@@ -16,13 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "indices.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexparser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace ore;
+
+namespace {
 
 boost::shared_ptr<data::Conventions> convs() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -83,8 +85,6 @@ boost::shared_ptr<data::Conventions> convs() {
 
     return conventions;
 }
-
-namespace testsuite {
 
 struct test_data {
     const char* str;
@@ -319,7 +319,14 @@ static struct test_data swap_index_data[] = {
     {"JPY-CMS-30Y", "JPYLiborSwapIsdaFix30Y Actual/365 (Fixed)", 30 * Years},
 };
 
-void IndexTest::testIborIndexParsing() {
+}
+
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_AUTO_TEST_SUITE(IndexTests)
+
+BOOST_AUTO_TEST_CASE(testIborIndexParsing) {
+
     BOOST_TEST_MESSAGE("Testing Ibor Index name parsing...");
 
     Size len = sizeof(index_data) / sizeof(index_data[0]);
@@ -346,17 +353,19 @@ void IndexTest::testIborIndexParsing() {
     }
 }
 
-void IndexTest::testIborIndexParsingFails() {
+BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
+
     BOOST_TEST_MESSAGE("Testing Ibor Index parsing fails...");
 
     // Test invalid strings
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), std::exception);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), std::exception);
+    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }
 
-void IndexTest::testSwapIndexParsing() {
+BOOST_AUTO_TEST_CASE(testSwapIndexParsing) {
+
     BOOST_TEST_MESSAGE("Testing Swap Index name parsing...");
 
     Handle<YieldTermStructure> h; // dummy
@@ -393,11 +402,6 @@ void IndexTest::testSwapIndexParsing() {
     }
 }
 
-test_suite* IndexTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("IndexTests");
-    suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndexParsing));
-    suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndexParsingFails));
-    suite->add(BOOST_TEST_CASE(&IndexTest::testSwapIndexParsing));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

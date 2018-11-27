@@ -16,25 +16,21 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "portfolio.hpp"
+#include <boost/test/unit_test.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
-#include <test/portfolio.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-namespace testsuite {
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
 
-void PortfolioTest::testConstructor() {
-    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
-    // BOOST_CHECK_EQUAL(portfolio, true);
-}
+BOOST_AUTO_TEST_SUITE(PortfolioTests)
 
-void PortfolioTest::testAddTrades() {
+BOOST_AUTO_TEST_CASE(testAddTrades) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
@@ -50,7 +46,7 @@ void PortfolioTest::testAddTrades() {
     BOOST_CHECK_EQUAL(portfolio->size(), 2);
 }
 
-void PortfolioTest::testAddTradeWithExistingId() {
+BOOST_AUTO_TEST_CASE(testAddTradeWithExistingId) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
@@ -58,7 +54,7 @@ void PortfolioTest::testAddTradeWithExistingId() {
     BOOST_CHECK_THROW(portfolio->add(trade2), exception);
 }
 
-void PortfolioTest::testClear() {
+BOOST_AUTO_TEST_CASE(testClear) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
     portfolio->add(trade);
@@ -67,7 +63,7 @@ void PortfolioTest::testClear() {
     BOOST_CHECK_EQUAL(portfolio->size(), 0);
 }
 
-void PortfolioTest::testSize() {
+BOOST_AUTO_TEST_CASE(testSize) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
@@ -80,7 +76,7 @@ void PortfolioTest::testSize() {
     BOOST_CHECK_EQUAL(portfolio->size(), 2);
 }
 
-void PortfolioTest::testRemove() {
+BOOST_AUTO_TEST_CASE(testRemove) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade = boost::make_shared<FxForward>();
     BOOST_CHECK_EQUAL(portfolio->has(trade->id()), false);
@@ -90,7 +86,7 @@ void PortfolioTest::testRemove() {
     BOOST_CHECK_EQUAL(portfolio->has(trade->id()), false);
 }
 
-void PortfolioTest::testTrades() {
+BOOST_AUTO_TEST_CASE(testTrades) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
@@ -106,7 +102,7 @@ void PortfolioTest::testTrades() {
     BOOST_CHECK(portfolio->trades() == trade_list);
 }
 
-void PortfolioTest::testIds() {
+BOOST_AUTO_TEST_CASE(testIds) {
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     boost::shared_ptr<FxForward> trade1 = boost::make_shared<FxForward>();
     boost::shared_ptr<FxForward> trade2 = boost::make_shared<FxForward>();
@@ -122,17 +118,6 @@ void PortfolioTest::testIds() {
     BOOST_CHECK(portfolio->ids() == trade_ids);
 }
 
-test_suite* PortfolioTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("Portfolio Unittests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testConstructor));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTrades));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testAddTradeWithExistingId));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testClear));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testSize));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testRemove));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testTrades));
-    suite->add(BOOST_TEST_CASE(&PortfolioTest::testIds));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

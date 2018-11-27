@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <test/todaysmarket.hpp>
 
 #include <ql/time/calendars/all.hpp>
 #include <ql/utilities/dataformatters.hpp>
@@ -38,25 +38,25 @@ using namespace ore::data;
 
 namespace {
 
-class MarketDataLoader : public data::Loader {
+class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
-    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const;
-    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
-    const std::vector<Fixing>& loadFixings() const { return fixings_; }
+    const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const;
+    const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const;
+    const vector<Fixing>& loadFixings() const { return fixings_; }
 
 private:
-    std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
-    std::vector<Fixing> fixings_;
+    map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
+    vector<Fixing> fixings_;
 };
 
-const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const QuantLib::Date& d) const {
+const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const QuantLib::Date& d) const {
+const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const Date& d) const {
     for (auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;
@@ -399,15 +399,16 @@ MarketDataLoader::MarketDataLoader() {
         boost::split(tokens, s, boost::is_any_of(" "), boost::token_compress_on);
 
         QL_REQUIRE(tokens.size() == 3, "Invalid market data line, 3 tokens expected " << s);
-        Date date = data::parseDate(tokens[0]);
+        Date date = parseDate(tokens[0]);
         const string& key = tokens[1];
-        Real value = data::parseReal(tokens[2]);
+        Real value = parseReal(tokens[2]);
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
 
-boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
-    boost::shared_ptr<data::TodaysMarketParameters> parameters(new data::TodaysMarketParameters());
+boost::shared_ptr<TodaysMarketParameters> marketParameters() {
+    
+    boost::shared_ptr<TodaysMarketParameters> parameters = boost::make_shared<TodaysMarketParameters>();
 
     // define three curves
     map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"}, {"USD", "Yield/USD/USD1D"}};
@@ -461,18 +462,18 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     return parameters;
 }
 
-boost::shared_ptr<data::Conventions> conventions() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
+boost::shared_ptr<Conventions> conventions() {
+    boost::shared_ptr<Conventions> conventions(new Conventions());
 
-    boost::shared_ptr<data::Convention> zeroConv(new data::ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED",
+    boost::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED",
                                                                               "A365", "TARGET", "Continuous", "Daily",
                                                                               "2", "TARGET", "Following", "false"));
     conventions->add(zeroConv);
 
-    boost::shared_ptr<data::Convention> depositConv(new data::DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
+    boost::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
     conventions->add(depositConv);
 
-    boost::shared_ptr<data::Convention> oisConv(new data::OisConvention(
+    boost::shared_ptr<Convention> oisConv(new OisConvention(
         "EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1", "false", "Annual", "Following", "Following", "Backward"));
     conventions->add(oisConv);
 
@@ -494,8 +495,8 @@ boost::shared_ptr<data::Conventions> conventions() {
     return conventions;
 }
 
-boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
-    boost::shared_ptr<data::CurveConfigurations> configs(new data::CurveConfigurations());
+boost::shared_ptr<CurveConfigurations> curveConfigurations() {
+    boost::shared_ptr<CurveConfigurations> configs(new CurveConfigurations());
 
     // Vectors to hold quote strings and segments
     vector<string> quotes;
@@ -721,39 +722,38 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     return configs;
 }
 
-boost::shared_ptr<TodaysMarket> market;
+// Fixture to use for this test suite
+struct F {
 
-void setup() {
-    
-    Date asof(26, February, 2016);
-    Settings::instance().evaluationDate() = asof;
-
-    MarketDataLoader loader;
-    data::TodaysMarketParameters params = *marketParameters();
-    data::CurveConfigurations configs = *curveConfigurations();
-    data::Conventions convs = *conventions();
-
-    BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
-    market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);
-}
-
-void teardown() {
-    BOOST_TEST_MESSAGE("Destroying TodaysMarket instance");
-    market.reset();
-}
-
-// More of a guard class, as older boost versions don't have fixtures
-struct CommonVars {
-    CommonVars() { setup(); }
-    ~CommonVars() { teardown(); }
+    boost::shared_ptr<TodaysMarket> market;
     SavedSettings backup_;
+
+    F() {
+        Date asof(26, February, 2016);
+        Settings::instance().evaluationDate() = asof;
+
+        MarketDataLoader loader;
+        TodaysMarketParameters params = *marketParameters();
+        CurveConfigurations configs = *curveConfigurations();
+        Conventions convs = *conventions();
+
+        BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
+        market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);
+    }
+
+    ~F() {
+        BOOST_TEST_MESSAGE("Destroying TodaysMarket instance");
+        market.reset();
+    }
 };
-} // namespace
 
-namespace testsuite {
+}
 
-void TodaysMarketTest::testZeroSpreadedYieldCurve() {
-    CommonVars vars;
+BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+
+BOOST_FIXTURE_TEST_SUITE(TodaysMarketTests, F)
+
+BOOST_AUTO_TEST_CASE(testZeroSpreadedYieldCurve) {
 
     BOOST_TEST_MESSAGE("Testing zero spreaded yield curve rates...");
 
@@ -780,8 +780,7 @@ void TodaysMarketTest::testZeroSpreadedYieldCurve() {
     }
 }
 
-void TodaysMarketTest::testNormalOptionletVolatility() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
 
     BOOST_TEST_MESSAGE("Testing normal optionlet volatilities...");
 
@@ -820,10 +819,10 @@ void TodaysMarketTest::testNormalOptionletVolatility() {
     }
 }
 
-void TodaysMarketTest::testEquityCurve() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testEquityCurve) {
 
     BOOST_TEST_MESSAGE("Testing equity curve...");
+
     Handle<YieldTermStructure> divTs = market->equityDividendCurve("SP5");
     BOOST_CHECK(divTs.currentLink());
     Handle<YieldTermStructure> equityIrTs = market->discountCurve("USD");
@@ -857,10 +856,10 @@ void TodaysMarketTest::testEquityCurve() {
     BOOST_CHECK_EQUAL(spotVal, fwd_0);
 }
 
-void TodaysMarketTest::testEquityVolCurve() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testEquityVolCurve) {
 
     BOOST_TEST_MESSAGE("Testing equity vol curve...");
+
     Handle<BlackVolTermStructure> eqVol = market->equityVol("SP5");
     BOOST_CHECK(eqVol.currentLink());
 
@@ -881,10 +880,8 @@ void TodaysMarketTest::testEquityVolCurve() {
     BOOST_CHECK_CLOSE(v_5y_atm, v_50y_atm, 1.e-10);
 }
 
-void TodaysMarketTest::testCommodityCurve() {
+BOOST_AUTO_TEST_CASE(testCommodityCurve) {
     
-    CommonVars vars;
-
     BOOST_TEST_MESSAGE("Testing commodity price curve");
 
     // Just test that the building suceeded - the curve itself has been tested elsewhere
@@ -892,15 +889,6 @@ void TodaysMarketTest::testCommodityCurve() {
     BOOST_CHECK(*commodityCurve);
 }
 
-test_suite* TodaysMarketTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("TodaysMarketTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testZeroSpreadedYieldCurve));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testNormalOptionletVolatility));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityCurve));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityVolCurve));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testCommodityCurve));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
