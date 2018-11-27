@@ -21,8 +21,8 @@
     \ingroup models
 */
 
-#ifndef quantextplus_crlgm1f_parametrization_hpp
-#define quantextplus_crlgm1f_parametrization_hpp
+#ifndef quantext_crlgm1f_parametrization_hpp
+#define quantext_crlgm1f_parametrization_hpp
 
 #include <ql/handle.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
