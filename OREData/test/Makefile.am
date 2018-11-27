@@ -1,76 +1,54 @@
 
 OREDATA_TESTS = \
 	testsuite.cpp \
-	bond.hpp bond.cpp \
-	calendars.hpp calendars.cpp \
-	fxoption.hpp fxoption.cpp \
-	ccyswapwithresets.hpp ccyswapwithresets.cpp \
-	cpiswap.hpp cpiswap.cpp \
-	cms.hpp cms.cpp \
-	fxtriangulation.hpp fxtriangulation.cpp \
-	indices.hpp indices.cpp \
-	parser.hpp parser.cpp \
-	schedule.hpp schedule.cpp \
-	xmlmanipulation.hpp xmlmanipulation.cpp \
-	legdata.hpp legdata.cpp \
-	todaysmarket.hpp todaysmarket.cpp \
-	fxswap.hpp fxswap.cpp \
-	yieldcurve.hpp yieldcurve.cpp \
-	crossassetmodeldata.hpp crossassetmodeldata.cpp \
-	equitymarketdata.hpp equitymarketdata.cpp \
-	equitytrades.hpp equitytrades.cpp \
-	swaption.hpp swaption.cpp \
-	portfolio.hpp portfolio.cpp \
-    curveconfig.hpp curveconfig.cpp \
-	ored_commodityforward.hpp ored_commodityforward.cpp \
-	commoditycurveconfig.hpp commoditycurveconfig.cpp \
-	commoditycurve.hpp commoditycurve.cpp \
-	commodityoption.hpp commodityoption.cpp \
-	commodityvolcurveconfig.hpp commodityvolcurveconfig.cpp \
-	commodityvolcurve.hpp commodityvolcurve.cpp \
-	cds.hpp cds.cpp \
-	inflationcapfloor.hpp inflationcapfloor.cpp \
-	equityswap.hpp equityswap.cpp \
-	conventions.hpp conventions.cpp
+	bond.cpp \
+	calendars.cpp \
+	fxoption.cpp \
+	ccyswapwithresets.cpp \
+	cpiswap.cpp \
+	cms.cpp \
+	fxtriangulation.cpp \
+	indices.cpp \
+	parser.cpp \
+	schedule.cpp \
+	xmlmanipulation.cpp \
+	legdata.cpp \
+	todaysmarket.cpp \
+	fxswap.cpp \
+	yieldcurve.cpp \
+	crossassetmodeldata.cpp \
+	equitymarketdata.cpp \
+	equitytrades.cpp \
+	swaption.cpp \
+	portfolio.cpp \
+	curveconfig.cpp \
+	ored_commodityforward.cpp \
+	commoditycurveconfig.cpp \
+	commoditycurve.cpp \
+	commodityoption.cpp \
+	commodityvolcurveconfig.cpp \
+	commodityvolcurve.cpp \
+	cds.cpp \
+	inflationcapfloor.cpp \
+	equityswap.cpp \
+	conventions.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
-#	mkdir -p $(distdir)/bin
-#	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
 	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
 
-noinst_LTLIBRARIES = libUnitMain.la
-libUnitMain_la_SOURCES = main.cpp
-libUnitMain_la_CXXFLAGS = ${BOOST_UNIT_TEST_MAIN_CXXFLAGS}
-
-main.cpp: Makefile.am
-	echo "#ifdef BOOST_TEST_DYN_LINK" > $@
-	echo "#include <boost/test/unit_test.hpp>" >> $@
-	echo "#include <boost/test/framework.hpp>" >> $@
-	echo "using namespace boost::unit_test;" >> $@
-	echo "test_suite* init_unit_test_suite(int, char* []);" >> $@
-	echo "bool init_function() {" >> $@
-	echo "framework::master_test_suite().add(init_unit_test_suite(0,0));" >> $@
-	echo "return true;" >> $@
-	echo "}" >> $@
-	echo "int main( int argc, char* argv[] ) {" >> $@
-	echo "return ::boost::unit_test::unit_test_main( &init_function, argc, argv );" >> $@
-	echo "}" >> $@
-	echo "#endif" >> $@
-
 bin_PROGRAMS = ored-test-suite
 
 ored_test_suite_SOURCES = ${OREDATA_TESTS}
-ored_test_suite_LDADD = libUnitMain.la
+ored_test_suite_LDADD = 
 ored_test_suite_LDFLAGS = \
     -lQuantLib \
-    -l${BOOST_UNIT_TEST_LIB} \
     -L../../QuantExt/qle -lQuantExt \
-    -L../ored -lOREData -lboost_date_time -lboost_serialization -lboost_regex
+    -L../ored -lOREData -lboost_date_time -lboost_serialization -lboost_regex -lboost_system -lboost_filesystem
 
 TESTS = ored-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
