@@ -25,7 +25,9 @@
 
 #include <boost/make_shared.hpp>
 #include <iostream>
-#include <orea/aggregation/all.hpp>
+#include <orea/aggregation/collateralaccount.hpp>
+#include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>

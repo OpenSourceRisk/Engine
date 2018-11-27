@@ -490,14 +490,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="qle\auto_link.hpp" />
-    <ClInclude Include="qle\calendars\all.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\thailand.hpp" />
-    <ClInclude Include="qle\cashflows\all.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp" />
     <ClInclude Include="qle\cashflows\averageonindexedcouponpricer.hpp" />
     <ClInclude Include="qle\cashflows\couponpricer.hpp" />
@@ -512,16 +510,13 @@
     <ClInclude Include="qle\cashflows\subperiodscoupon.hpp" />
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp" />
     <ClInclude Include="qle\currencies\africa.hpp" />
-    <ClInclude Include="qle\currencies\all.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
-    <ClInclude Include="qle\indexes\all.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
     <ClInclude Include="qle\indexes\genericiborindex.hpp" />
-    <ClInclude Include="qle\indexes\ibor\all.hpp" />
     <ClInclude Include="qle\indexes\ibor\audbbsw.hpp" />
     <ClInclude Include="qle\indexes\ibor\brlcdi.hpp" />
     <ClInclude Include="qle\indexes\ibor\chfsaron.hpp" />
@@ -558,7 +553,6 @@
     <ClInclude Include="qle\indexes\inflationindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\region.hpp" />
     <ClInclude Include="qle\indexes\secpi.hpp" />
-    <ClInclude Include="qle\instruments\all.hpp" />
     <ClInclude Include="qle\instruments\averageois.hpp" />
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
@@ -579,16 +573,13 @@
     <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
-    <ClInclude Include="qle\math\all.hpp" />
     <ClInclude Include="qle\math\cumulativenormaldistribution.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
     <ClInclude Include="qle\math\trace.hpp" />
-    <ClInclude Include="qle\methods\all.hpp" />
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp" />
-    <ClInclude Include="qle\models\all.hpp" />
     <ClInclude Include="qle\models\cdsoptionhelper.hpp" />
     <ClInclude Include="qle\models\cpicapfloorhelper.hpp" />
     <ClInclude Include="qle\models\crlgm1fparametrization.hpp" />
@@ -620,7 +611,6 @@
     <ClInclude Include="qle\models\parametrization.hpp" />
     <ClInclude Include="qle\models\piecewiseconstanthelper.hpp" />
     <ClInclude Include="qle\models\pseudoparameter.hpp" />
-    <ClInclude Include="qle\pricingengines\all.hpp" />
     <ClInclude Include="qle\pricingengines\analyticcclgmfxoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticdkcpicapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmcdsoptionengine.hpp" />
@@ -639,13 +629,10 @@
     <ClInclude Include="qle\pricingengines\numericlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp" />
-    <ClInclude Include="qle\processes\all.hpp" />
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp" />
     <ClInclude Include="qle\processes\irlgm1fstateprocess.hpp" />
-    <ClInclude Include="qle\quotes\all.hpp" />
     <ClInclude Include="qle\quotes\logquote.hpp" />
     <ClInclude Include="qle\quantext.hpp" />
-    <ClInclude Include="qle\termstructures\all.hpp" />
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp" />
     <ClInclude Include="qle\termstructures\basistwoswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\blackinvertedvoltermstructure.hpp" />
