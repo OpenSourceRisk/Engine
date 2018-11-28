@@ -24,6 +24,7 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace QuantLib;
 using std::vector;
 
 namespace testsuite {
