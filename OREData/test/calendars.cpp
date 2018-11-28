@@ -33,6 +33,8 @@ using namespace boost::unit_test_framework;
 
 namespace testsuite {
 
+	using std::string;
+
 struct test_data {
     const char* name;
     Calendar cal;
