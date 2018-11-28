@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
@@ -78,7 +79,7 @@ MarketDataLoader::MarketDataLoader() {
 }
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(YieldCurveTests)
 

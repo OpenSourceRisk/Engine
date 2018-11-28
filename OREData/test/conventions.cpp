@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/configuration/conventions.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -31,7 +32,7 @@ using namespace QuantLib;
 using namespace ore::data;
 using boost::algorithm::replace_all_copy;
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ConventionsTests)
 

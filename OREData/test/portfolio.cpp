@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/portfolio.hpp>
@@ -26,7 +27,7 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PortfolioTests)
 

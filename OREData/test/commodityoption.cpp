@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -117,7 +118,7 @@ public:
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityOptionTests)
 

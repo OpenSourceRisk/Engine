@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -24,6 +25,8 @@
 using namespace ore::data;
 using namespace QuantLib;
 using namespace std;
+
+using ore::test::TopLevelFixture;
 
 namespace {
 
@@ -52,7 +55,8 @@ vector<pair<string, Real>> data() {
 }
 
 // Provide the FXTriangulation object for the tests
-struct FxTriFixture {
+class FxTriFixture : public TopLevelFixture {
+public:
     FXTriangulation fx;
     
     FxTriFixture() {
@@ -68,7 +72,7 @@ struct FxTriFixture {
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(FXTriangulationTests, FxTriFixture)
 

@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/lexical_cast.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -27,10 +28,13 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace QuantLib;
 
+using ore::test::TopLevelFixture;
+
 namespace {
 
 // Fixture used in each test case below
-struct F {
+class F : public TopLevelFixture {
+public:
     XMLDocument testDoc;
 
     F() {
@@ -63,7 +67,7 @@ struct F {
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(XmlManipulationTests)
 

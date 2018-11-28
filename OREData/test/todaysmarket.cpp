@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -35,6 +36,8 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
 using namespace ore::data;
+
+using ore::test::TopLevelFixture;
 
 namespace {
 
@@ -723,7 +726,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 }
 
 // Fixture to use for this test suite
-struct F {
+class F : public TopLevelFixture {
+public:
 
     boost::shared_ptr<TodaysMarket> market;
     SavedSettings backup_;
@@ -749,7 +753,7 @@ struct F {
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(TodaysMarketTests, F)
 

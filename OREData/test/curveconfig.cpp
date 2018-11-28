@@ -36,6 +36,7 @@
 #include <ored/utilities/csvfilereader.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/fileutilities.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
@@ -47,10 +48,12 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
+using ore::test::TopLevelFixture;
+
 namespace {
 
 // Simple class to ensure that output files for this test are removed on suite exit
-class CleanUp {
+class CleanUp : public TopLevelFixture {
 public:
     CleanUp() {}
     ~CleanUp() {
@@ -73,7 +76,7 @@ set<string> readQuotes(const string& filename) {
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, CleanUp)
 

@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
@@ -192,7 +193,7 @@ Real expNpvs[] = { 0, 0, 0.050659, -0.05062 };
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CreditDefaultSwapTests)
 

@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
@@ -117,7 +118,7 @@ TestDatum calendarData[] = {
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CalendarTests)
 

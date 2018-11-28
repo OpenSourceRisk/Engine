@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 
@@ -25,7 +26,7 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace ore::data;
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityVolatilityCurveConfigTests)
 

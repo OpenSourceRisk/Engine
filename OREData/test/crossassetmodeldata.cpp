@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -256,7 +257,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 }
 } // namespace
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossAssetModelDataTests)
 

@@ -17,6 +17,8 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/bond.hpp>
@@ -272,7 +274,7 @@ void checkNominalSchedule(const boost::shared_ptr<ore::data::Bond>& b, const std
 
 } // namespace
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BondTests)
 

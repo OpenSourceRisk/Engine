@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <iostream>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
@@ -114,7 +115,7 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
 
 }
 
-BOOST_AUTO_TEST_SUITE(OREDataTestSuite)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ParserTests)
 
