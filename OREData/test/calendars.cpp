@@ -34,8 +34,6 @@ using namespace std;
 
 namespace testsuite {
 
-	using std::string;
-
 struct test_data {
     const char* name;
     Calendar cal;
