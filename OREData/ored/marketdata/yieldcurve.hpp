@@ -35,7 +35,7 @@
 
 namespace ore {
 namespace data {
-using QuantLib::Date;
+using namespace QuantLib;
 using ore::data::YieldCurveSegment;
 using ore::data::YieldCurveConfig;
 using ore::data::YieldCurveConfigMap;

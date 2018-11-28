@@ -37,6 +37,7 @@ using std::string;
 using std::map;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
+using namespace QuantLib;
 
 //! Abstract base class for convention objects
 /*!

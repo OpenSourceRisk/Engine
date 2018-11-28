@@ -41,13 +41,12 @@
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/indexes/equityindex.hpp>
 
-
-typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
 using std::string;
+
+typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
