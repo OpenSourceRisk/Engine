@@ -32,6 +32,7 @@ namespace ore {
 namespace analytics {
 using QuantLib::Period;
 using QuantLib::Rate;
+using QuantLib::Real;
 using std::vector;
 using std::string;
 using std::pair;
