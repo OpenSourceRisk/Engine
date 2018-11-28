@@ -42,6 +42,8 @@ namespace data {
 
   \ingroup marketdata
  */
-void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs);
+void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, 
+    const CurveConfigurations& curveConfigs, 
+    std::map<std::string, std::string>& errors);
 } // namespace data
 } // namespace ore

@@ -50,7 +50,7 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
     return true;
 }
 
-void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs) {
+void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs, std::map<std::string, std::string>& errors) {
 
     /* Order the curve specs and remove duplicates (i.e. those with same name).
      * The sort() call relies on CurveSpec::operator< which ensures a few properties:
@@ -96,10 +96,17 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
             }
         }
 
-        QL_REQUIRE(n > yieldCurveSpecs.size(), "missing curve or cycle in yield curve spec");
+        if (n == yieldCurveSpecs.size()) {
+            for (auto ycs : yieldCurveSpecs) {
+                ALOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
+                errors[ycs->name()] = "dependent curves missing";
+            }
+            break;
+        }
     }
 
     /* Now put them into the front of curveSpecs */
+    curveSpecs.resize(sortedYieldCurveSpecs.size());
     curveSpecs.insert(curveSpecs.begin(), sortedYieldCurveSpecs.begin(), sortedYieldCurveSpecs.end());
 
     DLOG("Ordered Curves (" << curveSpecs.size() << ")")
