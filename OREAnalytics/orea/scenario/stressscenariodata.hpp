@@ -35,6 +35,7 @@ using QuantLib::Rate;
 using std::vector;
 using std::string;
 using std::pair;
+using std::map;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;

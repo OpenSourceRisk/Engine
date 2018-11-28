@@ -22,6 +22,7 @@
 
 using namespace QuantLib;
 
+
 namespace ore {
 namespace analytics {
 
