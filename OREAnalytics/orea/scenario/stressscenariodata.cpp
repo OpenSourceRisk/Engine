@@ -21,10 +21,12 @@
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
+using namespace std;
 
 
 namespace ore {
 namespace analytics {
+using namespace ore::data;
 
 void StressTestScenarioData::fromXML(XMLNode* root) {
     data_.clear();
