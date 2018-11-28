@@ -23,6 +23,7 @@
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace ore;
+using namespace std; 
 
 boost::shared_ptr<data::Conventions> convs() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
