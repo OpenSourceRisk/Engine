@@ -237,5 +237,7 @@ utilities/vectorutils.hpp
 utilities/xmlutils.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
-add_library(OREData ${OREData_SRC})
-target_link_libraries(OREData QuantExt QuantLib ${Boost_LIBRARIES})
+add_library(${ORED_LIB_NAME} ${OREData_SRC})
+target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
+target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
+target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
