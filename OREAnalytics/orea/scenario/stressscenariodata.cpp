@@ -26,7 +26,6 @@ using namespace std;
 
 namespace ore {
 namespace analytics {
-using namespace ore::data;
 
 void StressTestScenarioData::fromXML(XMLNode* root) {
     data_.clear();
