@@ -51,7 +51,7 @@ void moments(const Matrix& omega, const Array& delta, const Matrix& gamma, Real&
     // see Carol Alexander, Market Risk, Vol IV
     // Formulas IV5.30 and IV5.31 are buggy though:
     // IV.5.30 should have ... + 3 \delta' \Omega \Gamma \Omega \delta in the numerator
-    // IV.5.31 should have ... + 12 \delta’ \Omega (\Gamma \Omega)^2 \delta + 3\sigma^4 in the numerator
+    // IV.5.31 should have ... + 12 \delta \Omega (\Gamma \Omega)^2 \delta + 3\sigma^4 in the numerator
 
     num = std::max(QuantExt::detail::absMax(delta), QuantExt::detail::absMax(gamma));
     if (close_enough(num, 0.0))

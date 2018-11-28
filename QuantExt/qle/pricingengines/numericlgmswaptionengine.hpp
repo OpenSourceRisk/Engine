@@ -45,7 +45,7 @@ namespace QuantExt {
     \warning Cash settled swaptions are not supported
 
     Reference: Hagan, Methodology for callable swaps and Bermudan
-               “exercise into” swaptions
+               exercise into swaptions
 */
 
 /*! Base class from which we derive the engines for both the Swaption

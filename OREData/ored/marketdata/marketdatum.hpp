@@ -444,7 +444,7 @@ private:
   with spread zero and receives the reference index of "currency" in
   "currency" plus the quoted spread.
 
-  \ingroup marketdata‚
+  \ingroup marketdata
 */
 class CrossCcyBasisSwapQuote : public MarketDatum {
 public:
