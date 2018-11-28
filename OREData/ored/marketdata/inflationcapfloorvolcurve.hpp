@@ -30,13 +30,13 @@
 
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
+
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using QuantLib::IborIndex;
 using QuantLib::YieldTermStructure;
 using ore::data::CurveConfigurations;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building CapFloor volatility structures
 //! \ingroup curves

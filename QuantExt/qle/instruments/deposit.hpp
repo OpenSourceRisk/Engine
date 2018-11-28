@@ -31,9 +31,9 @@
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Deposit Instrument
 

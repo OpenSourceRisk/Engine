@@ -28,9 +28,9 @@
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Wrapper that changes the interpolation of an underlying ZC inflation index
 /*! The (possible) change in the interpolation is _not_ reflected in the index class itself,

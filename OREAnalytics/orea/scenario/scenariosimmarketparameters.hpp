@@ -29,6 +29,9 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Date;
 using QuantLib::Period;
 using QuantLib::Rate;
@@ -38,9 +41,6 @@ using std::pair;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace analytics {
 
 //! ScenarioSimMarket description
 /*! \ingroup scenario

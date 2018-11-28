@@ -29,9 +29,9 @@
 #include <ql/time/calendars/australia.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! AUD-BBSW index
 /*! AUD-BBSW rate fixed by the AFMA.

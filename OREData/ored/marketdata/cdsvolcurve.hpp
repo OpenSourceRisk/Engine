@@ -29,12 +29,12 @@
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-using QuantLib::Date;
-using QuantLib::BlackVolTermStructure;
-using ore::data::CurveConfigurations;
 
 namespace ore {
 namespace data {
+using QuantLib::Date;
+using QuantLib::BlackVolTermStructure;
+using ore::data::CurveConfigurations;
 
 //! Wrapper class for building CDS Option volatility structures
 /*!

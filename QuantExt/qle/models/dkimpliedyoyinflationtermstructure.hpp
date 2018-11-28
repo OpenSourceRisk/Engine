@@ -30,9 +30,9 @@
 #include <ql/instruments/yearonyearinflationswap.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Dk Implied yoy Inflation Term Structure
 /*! The termstructure has the reference date of the model's

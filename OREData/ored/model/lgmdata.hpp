@@ -34,10 +34,10 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Supported calibration parameter type
 enum class ParamType {

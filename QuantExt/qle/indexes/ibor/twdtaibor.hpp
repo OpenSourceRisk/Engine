@@ -29,9 +29,9 @@
 #include <ql/time/calendars/taiwan.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! TWD-TAIBOR index
 /*! TWD-TAIBOR rate.

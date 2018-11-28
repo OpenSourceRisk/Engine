@@ -30,13 +30,13 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::map;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
-
-namespace ore {
-namespace data {
 
 //! Abstract base class for convention objects
 /*!

@@ -29,9 +29,9 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Equity cube that combines an ATM matrix and vol spreads from a cube
 /*! Notice that the TS has a floating reference date and accesses the source TS only via

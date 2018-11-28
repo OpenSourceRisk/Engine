@@ -29,9 +29,9 @@
 #include <ql/time/calendars/singapore.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! SGD-SIBOR index
 /*! SGD-SIBOR rate published by ABS.

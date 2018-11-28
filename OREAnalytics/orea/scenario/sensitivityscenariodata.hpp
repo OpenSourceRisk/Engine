@@ -28,6 +28,9 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Period;
 using QuantLib::Rate;
 using std::vector;
@@ -36,9 +39,6 @@ using std::pair;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace analytics {
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario

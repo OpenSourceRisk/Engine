@@ -31,11 +31,11 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/timegrid.hpp>
 
-using std::vector;
-using QuantLib::TimeGrid;
 
 namespace ore {
 namespace analytics {
+using std::vector;
+using QuantLib::TimeGrid;
 
 //! Scenario generator base class
 /*! \ingroup scenario

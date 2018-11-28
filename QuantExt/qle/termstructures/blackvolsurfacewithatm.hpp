@@ -29,9 +29,9 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Wrapper class for a BlackVolTermStructure that easily exposes ATM vols.
 /*! This class implements BlackVolatilityTermStructure and takes a surface (well, any BlackVolTermStructure) as an

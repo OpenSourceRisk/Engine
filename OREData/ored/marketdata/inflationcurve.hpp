@@ -32,14 +32,14 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
+
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using QuantLib::InflationTermStructure;
 using ore::data::CurveConfigurations;
 using ore::data::Conventions;
-
-namespace ore {
 using namespace data;
-namespace data {
 
 //! Wrapper class for building inflation curves
 /*!

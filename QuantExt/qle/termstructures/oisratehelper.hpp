@@ -27,9 +27,9 @@
 #include <ql/instruments/overnightindexedswap.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Rate helper for bootstrapping using Overnight Indexed Swaps
 /*! \ingroup termstructures

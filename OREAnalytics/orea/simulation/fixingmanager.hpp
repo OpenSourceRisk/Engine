@@ -24,13 +24,13 @@
 
 #include <ored/portfolio/portfolio.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Date;
 using QuantLib::Real;
 using QuantLib::Index;
 using ore::data::Portfolio;
-
-namespace ore {
-namespace analytics {
 
 //! Pseudo Fixings Manager
 /*!

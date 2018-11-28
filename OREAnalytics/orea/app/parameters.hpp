@@ -28,12 +28,12 @@
 
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace ore::data;
-using std::map;
-using std::string;
 
 namespace ore {
 namespace analytics {
+using namespace ore::data;
+using std::map;
+using std::string;
 
 class Parameters : public XMLSerializable {
 public:

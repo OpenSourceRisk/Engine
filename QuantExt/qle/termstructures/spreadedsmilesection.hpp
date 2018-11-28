@@ -26,13 +26,13 @@
 
 #include <ql/termstructures/volatility/spreadedsmilesection.hpp>
 
+
+namespace QuantExt {
 using QuantLib::Handle;
 using QuantLib::Quote;
 using QuantLib::Rate;
 using QuantLib::SmileSection;
 using QuantLib::Volatility;
-
-namespace QuantExt {
 
 class SpreadedSmileSection : public QuantLib::SpreadedSmileSection {
 public:

@@ -28,9 +28,9 @@
 #include <ql/currency.hpp>
 #include <ql/instruments/swap.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Cross currency swap
 /*! The first leg holds the pay currency cashflows and second leg holds

@@ -35,10 +35,10 @@
 #include <ored/model/lgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! INF Model Parameters
 /*!

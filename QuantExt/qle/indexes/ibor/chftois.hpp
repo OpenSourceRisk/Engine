@@ -29,9 +29,9 @@
 #include <ql/time/calendars/switzerland.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %CHF TOIS rate
 /*! %CHF T/N rate appearing on page CHFTOIS and calculated by Cosmorex AG,

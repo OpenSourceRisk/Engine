@@ -29,14 +29,14 @@
 
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
+
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using QuantLib::IborIndex;
 using QuantLib::YieldTermStructure;
 using QuantLib::OptionletVolatilityStructure;
 using ore::data::CurveConfigurations;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building CapFloor volatility structures
 //! \ingroup curves

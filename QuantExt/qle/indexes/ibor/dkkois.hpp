@@ -29,9 +29,9 @@
 #include <ql/time/calendars/denmark.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %DKK OIS
 /*! %DKK T/N rate 

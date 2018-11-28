@@ -26,10 +26,10 @@
 #include <map>
 #include <ql/math/matrix.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Correlation matrix builder class
 /*! Can be loaded with sets of individual correlations

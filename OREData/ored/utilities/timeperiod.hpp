@@ -26,11 +26,11 @@
 #include <ql/errors.hpp>
 #include <ql/time/date.hpp>
 
-using QuantLib::Date;
-using QuantLib::Size;
 
 namespace ore {
 namespace data {
+using QuantLib::Date;
+using QuantLib::Size;
 
 //! Handles non-contiguous time period
 /*!

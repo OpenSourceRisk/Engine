@@ -30,9 +30,9 @@
 
 #include <qle/cashflows/subperiodscoupon.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 //! Single currency sub periods swap
 /*! \ingroup instruments
  */
