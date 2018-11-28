@@ -36,42 +36,59 @@ using std::string;
 namespace ore {
 namespace test {
 
+// Default value for base data path used in function below
+#ifdef BOOST_MSVC
+string initialPath = "..";
+#else
+string initialPath = ".";
+#endif
+
+
 /*! Gets passed the command line arguments from a unit test suite
-    and checks that the base data path has been provided
+    and checks if a base data path has been provided
 
     Specify the base data path as --base_data_path. The base data path
     should have a child 'input' directory containing any input files for
     the tests. Any output from the tests will be added to child 'output'
     directory under this base data path.
 
-    \warning this function raises an exception if base data path is not
-             provided.
+    A default base data path of ".." and "." on Windows and Unix respectively 
+    is returned.
 */
 string getBaseDataPath(int argc, char** argv) {
 
+    // Default initial value for the base data path
+    // Allows a standard run on Unix or Windows from the executable directory without having 
+    // to specify a base_data_path on the command line
+#ifdef BOOST_MSVC
+    string strPath = "..";
+#else
+    string strPath = ".";
+#endif
+    BOOST_TEST_MESSAGE("The default base data path is: " << strPath);
+
+    // Check if a base data path has been provided in the command line arguments
     for (int i = 1; i < argc; ++i) {
         if (boost::starts_with(argv[i], "--base_data_path")) {
             vector<string> strs;
             boost::split(strs, argv[i], boost::is_any_of("="));
             if (strs.size() > 1) {
-                // Test that we have a valid path and it contains an 'input' folder
-                string strPath = strs[1];
-                path p(strPath);
-                QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
-                    strPath << "' is not a directory");
-                QL_REQUIRE(is_directory(p / path("input")), "Test set up failed: the path '" <<
-                    strPath << "' does not contain an 'input' directory");
-
-                BOOST_TEST_MESSAGE("Got a valid base data path: " << strPath);
-
-                return strPath;
+                strPath = strs[1];
+                BOOST_TEST_MESSAGE("Got base data path from command line: " << strPath);
             }
         }
     }
 
-    // If we get to here, it is an error
-    QL_FAIL("Test set up failed: did not get a base_data_path parameter");
-}
+    // Test that we have a valid path and it contains an 'input' folder
+    BOOST_TEST_MESSAGE("The final base data path is: " << strPath);
+    path p(strPath);
+    QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
+        strPath << "' is not a directory");
+    QL_REQUIRE(is_directory(p / path("input")), "Test set up failed: the path '" <<
+        strPath << "' does not contain an 'input' directory");
+
+    return strPath;
 }
 
+}
 }
