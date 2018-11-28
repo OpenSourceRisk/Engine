@@ -31,7 +31,6 @@ namespace ore {
 namespace analytics {
 using namespace QuantLib;
 using ore::data::XMLNode;
-using ore::data::XMLNode;
 using ore::data::XMLSerializable;
 using ore::data::XMLUtils;
 using std::map;
