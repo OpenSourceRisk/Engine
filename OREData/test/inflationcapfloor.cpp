@@ -108,8 +108,6 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
 
     BOOST_TEST_MESSAGE("Testing YoY Cap Price...");
 
-    QuantLib::SavedSettings backup;
-
     // build market
     Date today(18, July, 2016);
     Settings::instance().evaluationDate() = today;

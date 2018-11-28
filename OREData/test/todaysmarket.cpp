@@ -730,7 +730,6 @@ class F : public TopLevelFixture {
 public:
 
     boost::shared_ptr<TodaysMarket> market;
-    SavedSettings backup_;
 
     F() {
         Date asof(26, February, 2016);

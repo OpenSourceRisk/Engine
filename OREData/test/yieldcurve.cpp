@@ -85,8 +85,6 @@ BOOST_AUTO_TEST_SUITE(YieldCurveTests)
 
 BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
 
-    SavedSettings backup;
-
     Date asof(31, August, 2015);
     Settings::instance().evaluationDate() = asof;
 

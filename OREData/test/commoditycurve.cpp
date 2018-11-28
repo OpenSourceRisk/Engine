@@ -73,9 +73,6 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
 
     BOOST_TEST_MESSAGE("Testing commodity curve building");
 
-    // Ensure settings are restored after this test
-    SavedSettings backup;
-
     // As of date
     Date asof(5, Feb, 2016);
 

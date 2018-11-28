@@ -73,9 +73,6 @@ BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
     
     BOOST_TEST_MESSAGE("Testing commodity forward trade building");
 
-    // Ensure settings are restored after this test
-    SavedSettings backup;
-
     // Create market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
     Settings::instance().evaluationDate() = market->asofDate();

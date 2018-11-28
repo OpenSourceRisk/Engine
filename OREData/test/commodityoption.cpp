@@ -86,8 +86,6 @@ public:
 
 class CommonData {
 public:
-    SavedSettings backup;
-
     Envelope envelope;
     string commodityName;
     string currency;

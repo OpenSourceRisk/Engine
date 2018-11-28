@@ -82,8 +82,6 @@ BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, CleanUp)
 
 BOOST_AUTO_TEST_CASE(testFromToXml) {
 
-    SavedSettings backup;
-
     // Read curve configurations from file
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
@@ -107,8 +105,6 @@ BOOST_AUTO_TEST_CASE(testFromToXml) {
 // Testing curve config quotes method with no restrictions
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
-    SavedSettings backup;
-
     // Read curve configurations from file
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
@@ -126,8 +122,6 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
 // Testing curve config quotes method for various TodaysMarketParameters
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
-
-    SavedSettings backup;
 
     // Read curve configurations from file
     CurveConfigurations curveConfigs;
@@ -163,8 +157,6 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
 
 // Testing curve config quotes method for a TodaysMarketParameters with multiple configurations
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
-
-    SavedSettings backup;
 
     // Read curve configurations from file
     CurveConfigurations curveConfigs;

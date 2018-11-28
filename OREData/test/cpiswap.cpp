@@ -180,8 +180,6 @@ BOOST_AUTO_TEST_CASE(testCPISwapPrice) {
     
     BOOST_TEST_MESSAGE("Testing CPI Swap Price...");
 
-    QuantLib::SavedSettings backup;
-
     // build market
     Date today(18, July, 2016);
     Settings::instance().evaluationDate() = today;

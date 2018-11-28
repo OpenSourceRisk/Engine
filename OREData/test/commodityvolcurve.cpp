@@ -75,9 +75,6 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with a single configured volatility");
 
-    // Ensure settings are restored after this test
-    SavedSettings backup;
-
     // As of date
     Date asof(5, Feb, 2016);
 
@@ -115,9 +112,6 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeConstant) {
 BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with time dependent volatilities");
-
-    // Ensure settings are restored after this test
-    SavedSettings backup;
 
     // As of date
     Date asof(5, Feb, 2016);
@@ -180,9 +174,6 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     BOOST_TEST_MESSAGE("Testing commodity vol curve building with time and strike dependent volatilities");
-
-    // Ensure settings are restored after this test
-    SavedSettings backup;
 
     // As of date
     Date asof(5, Feb, 2016);

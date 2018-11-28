@@ -175,8 +175,6 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
 
     BOOST_TEST_MESSAGE("Testing Equity Swap Price Return...");
     
-    QuantLib::SavedSettings backup;
-
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
     Date today = market->asofDate();
@@ -215,8 +213,6 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
 BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
 
     BOOST_TEST_MESSAGE("Testing Equity Swap Total Return...");
-
-    QuantLib::SavedSettings backup;
 
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
