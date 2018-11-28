@@ -42,7 +42,7 @@ template <typename T>
 class SensiCube : public ore::analytics::NPVSensiCube {
 public:
     SensiCube(const std::vector<std::string>& ids, const QuantLib::Date& asof, QuantLib::Size samples, const T& t = T()) :
-        ids_(ids), asof_(asof), dates_(1, asof_), samples_(samples), t0Data_(ids.size(), t), tradeNPVs_(ids.size(), map<Size,T>()) {
+        ids_(ids), asof_(asof), dates_(1, asof_), samples_(samples), t0Data_(ids.size(), t), tradeNPVs_(ids.size(), std::map<Size,T>()) {
     }
 
     //! load cube from an archive
