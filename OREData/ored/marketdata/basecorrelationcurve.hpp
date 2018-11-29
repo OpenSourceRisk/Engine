@@ -29,13 +29,12 @@
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 
-
-typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
-
 namespace ore {
 namespace data {
 using QuantLib::Date;
 using ore::data::CurveConfigurations;
+
+typedef QuantLib::BaseCorrelationTermStructure<QuantLib::BilinearInterpolation> BilinearBaseCorrelationTermStructure;
 
 //! Wrapper class for building Base Correlation structures
 //! \ingroup curves
