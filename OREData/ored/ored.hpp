@@ -48,6 +48,7 @@
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
+#include <ored/marketdata/memoryloader.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
