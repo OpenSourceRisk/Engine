@@ -31,9 +31,9 @@
 #include <boost/math/special_functions/erf.hpp>
 #endif
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 /*! Cumulative normal distribution
     This implementation relies on std::erf if c++11 is supported,

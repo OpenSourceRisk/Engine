@@ -20,6 +20,10 @@
 
 #include <ored/utilities/log.hpp>
 
+using namespace QuantLib;
+using namespace std;
+
+
 using std::make_pair;
 
 // Ease the notation below

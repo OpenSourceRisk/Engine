@@ -25,6 +25,9 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/assign/list_of.hpp>
 
+using namespace std;
+using namespace QuantLib;
+
 namespace {
 
 std::vector<std::string> getMarketDataStrings() {

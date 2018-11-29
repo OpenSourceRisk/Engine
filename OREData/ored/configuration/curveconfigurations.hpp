@@ -41,11 +41,11 @@
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
 
 namespace ore {
 namespace data {
+using ore::data::XMLSerializable;
+using ore::data::XMLNode;
 
 //! Container class for all Curve Configurations
 /*!

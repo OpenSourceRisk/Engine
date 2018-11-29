@@ -26,10 +26,10 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/period.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Netting Set Definition
 /*!

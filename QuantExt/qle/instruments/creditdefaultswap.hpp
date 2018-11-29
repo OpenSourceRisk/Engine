@@ -49,7 +49,6 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/time/schedule.hpp>
 
-using namespace QuantLib;
 
 namespace QuantLib {
 class YieldTermStructure;
@@ -57,6 +56,7 @@ class Claim;
 } // namespace QuantLib
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Credit default swap
 /*! \note This instrument currently assumes that the issuer did

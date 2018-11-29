@@ -18,12 +18,19 @@
 
 #include <ored/utilities/parsers.hpp>
 #include <ql/time/calendars/all.hpp>
-#include <qle/calendars/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+
 #include <test/calendars.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
+using namespace std; 
 
 namespace testsuite {
 

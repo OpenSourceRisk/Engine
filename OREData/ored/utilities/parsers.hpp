@@ -42,10 +42,10 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
 
-using std::string;
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! Convert std::string to QuantLib::Date
 /*!

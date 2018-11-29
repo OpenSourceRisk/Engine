@@ -29,9 +29,9 @@
 #include <ql/time/calendars/poland.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! PLN-WIBOR index
 /*! PLN-WIBOR rate published by ACI Polska.

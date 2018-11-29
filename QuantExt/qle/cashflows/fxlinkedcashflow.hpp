@@ -32,9 +32,9 @@
 #include <ql/time/date.hpp>
 #include <qle/indexes/fxindex.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! FX Linked cash-flow
 /*!

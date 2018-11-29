@@ -34,10 +34,10 @@
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Cross Asset Model Builder
 /*!

@@ -38,6 +38,7 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
+using namespace ore::data;
 
 namespace {
 

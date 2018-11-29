@@ -34,10 +34,10 @@
 #include <map>
 #include <set>
 
-using std::set;
 
 namespace ore {
 namespace analytics {
+using std::set;
 
 //! Valuation Engine
 /*!

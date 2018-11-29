@@ -29,6 +29,9 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -37,9 +40,6 @@ using QuantLib::DayCounter;
 using QuantLib::Natural;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
-
-namespace ore {
-namespace data {
 
 //! CapFloor volatility curve configuration class
 /*! \ingroup configuration

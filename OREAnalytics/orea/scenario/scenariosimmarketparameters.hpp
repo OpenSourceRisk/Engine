@@ -29,18 +29,16 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-using QuantLib::Date;
-using QuantLib::Period;
-using QuantLib::Rate;
-using std::vector;
-using std::string;
-using std::pair;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
-using ore::data::XMLUtils;
-
 namespace ore {
 namespace analytics {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using ore::data::XMLUtils;
+using namespace QuantLib;
+using std::map;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! ScenarioSimMarket description
 /*! \ingroup scenario
@@ -49,13 +47,14 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), fxSpotSimulate_(true), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
-          swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false), survivalProbabilitySimulate_(false),
-          recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
-          dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
-          equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          securitySpreadsSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
-        
+        : extrapolate_(false), fxSpotSimulate_(true), swapVolSimulate_(false), swapVolIsCube_(false),
+          swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false),
+          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
+          equityForecastCurveSimulate_(true), dividendYieldSimulate_(false), fxVolSimulate_(false),
+          fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false),
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), securitySpreadsSimulate_(false),
+          baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
+
         // set defaults
         setDefaults();
     }
@@ -243,7 +242,7 @@ public:
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
-    bool& securitySpreadsSimulate() { return securitySpreadsSimulate_;  }
+    bool& securitySpreadsSimulate() { return securitySpreadsSimulate_; }
     vector<string>& securities() { return securities_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
@@ -273,8 +272,12 @@ public:
     bool& commodityVolSimulate() { return commodityVolSimulate_; }
     std::string& commodityVolDecayMode() { return commodityVolDecayMode_; }
     std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
-    std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) { return commodityVolExpiries_[commodityName]; }
-    std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) { return commodityVolMoneyness_[commodityName]; }
+    std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) {
+        return commodityVolExpiries_[commodityName];
+    }
+    std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) {
+        return commodityVolMoneyness_[commodityName];
+    }
     void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
     //@}
 
@@ -388,7 +391,7 @@ private:
     std::vector<std::string> commodityNames_;
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
     std::map<std::string, std::string> commodityCurveDayCounters_;
-    
+
     // Commodity volatility data
     bool commodityVolSimulate_;
     std::string commodityVolDecayMode_;

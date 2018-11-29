@@ -29,9 +29,9 @@
 #include <ql/time/calendars/hungary.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! HUF-BUBOR index
 /*! HUF-BUBOR rate overseen by MFT in association with the National

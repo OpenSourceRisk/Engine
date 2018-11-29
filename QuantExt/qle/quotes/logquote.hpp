@@ -26,9 +26,9 @@
 
 #include <ql/quote.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Class for storing logs of quotes for log-linear interpolation.
 /*! \test the correctness of the returned values is tested by

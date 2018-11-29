@@ -26,11 +26,11 @@
 
 #include <ql/math/matrix.hpp>
 
+
+namespace QuantExt {
 using QuantLib::Size;
 using QuantLib::Real;
 using QuantLib::Matrix;
-
-namespace QuantExt {
 
 inline Real Trace(const Matrix& m) {
     QL_REQUIRE(m.rows() == m.columns(), "Trace: input matrix must be quadratic");

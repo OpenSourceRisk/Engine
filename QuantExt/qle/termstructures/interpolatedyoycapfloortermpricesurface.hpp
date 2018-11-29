@@ -30,9 +30,9 @@
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Interpolated YoY Inflation Cap floor term price surface
 /*! \ingroup termstructures */

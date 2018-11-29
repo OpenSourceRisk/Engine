@@ -29,10 +29,10 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
-using std::string;
 
 namespace ore {
 namespace analytics {
+using std::string;
 
 //-----------------------------------------------------------------------------------------------
 //! Simple Scenario class

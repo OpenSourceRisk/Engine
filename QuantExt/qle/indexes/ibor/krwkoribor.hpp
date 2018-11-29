@@ -29,9 +29,9 @@
 #include <ql/time/calendars/southkorea.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! KRW-KORIBOR index
 /*! KRW-KORIIBOR rate.
