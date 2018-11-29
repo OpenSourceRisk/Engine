@@ -32,10 +32,10 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/modelbuilder.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Linear Gauss Markov model component
 /*!

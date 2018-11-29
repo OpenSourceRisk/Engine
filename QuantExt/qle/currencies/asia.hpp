@@ -29,9 +29,9 @@
 
 #include <ql/currency.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Kazakhstani tenge
 /*! The ISO three-letter code is KZT; the numeric code is 398.

@@ -31,9 +31,9 @@
 
 #include <boost/make_shared.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 //! InterpolatedDiscountCurve2 as in QuantLib, but with floating discount quotes and floating reference date
 /*! InterpolatedDiscountCurve2 as in QuantLib, but with
     floating discount quotes and floating reference date,

@@ -31,10 +31,10 @@
 #include <ored/model/fxbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal FX model component
 /*!

@@ -31,10 +31,10 @@
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 
-using namespace QuantLib;
-using namespace QuantExt;
 
 namespace QuantExt {
+using namespace QuantLib;
+using namespace QuantExt;
 
 typedef Lgm1fParametrization<ZeroInflationTermStructure> InfDkParametrization;
 

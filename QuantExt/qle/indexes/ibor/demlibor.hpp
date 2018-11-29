@@ -29,9 +29,9 @@
 #include <ql/time/calendars/germany.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! DEM-LIBOR index
 /*! DEM LIBOR.

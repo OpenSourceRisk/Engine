@@ -29,9 +29,9 @@
 #include <ql/time/calendars/switzerland.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %CHF %SARON rate
 /*! Swiss Average Rate Overnight published by SNB.

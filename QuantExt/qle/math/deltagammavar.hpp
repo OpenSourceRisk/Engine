@@ -39,9 +39,9 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/foreach.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! function that computes a delta VaR
 /*! For a given covariance matrix and a delta vector this function computes a parametric var w.r.t. a given

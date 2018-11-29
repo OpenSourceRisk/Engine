@@ -31,9 +31,9 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/stochasticprocess.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 //! Linear Gauss Morkov Model
 /*! LGM 1f interest rate model
     Basically the same remarks as for CrossAssetModel hold

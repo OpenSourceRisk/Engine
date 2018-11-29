@@ -30,10 +30,10 @@
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/lgm.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace analytics {
+using namespace QuantLib;
 
 //! Scenario Generator using LGM model paths
 /*!

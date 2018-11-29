@@ -35,12 +35,12 @@
 
 #include <boost/shared_ptr.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
-using namespace data;
-using namespace data;
 namespace analytics {
+using namespace QuantLib;
+using namespace data;
+using namespace data;
 
 enum class AllocationMethod {
     None,

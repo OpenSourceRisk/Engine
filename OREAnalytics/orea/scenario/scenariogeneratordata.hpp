@@ -33,11 +33,11 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
-using namespace QuantExt;
 
 namespace ore {
 namespace analytics {
+using namespace QuantLib;
+using namespace QuantExt;
 
 //! Scenario Generator description
 /*! ScenarioGeneratorData wraps the specification of how to build a scenario generator

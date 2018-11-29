@@ -28,11 +28,11 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/date.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace QuantLib;
+using namespace data;
 
 //! Collateral Exposure Helper
 /*!

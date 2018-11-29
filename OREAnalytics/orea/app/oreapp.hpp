@@ -39,10 +39,10 @@
 #include <ored/ored.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
-using namespace ore::data;
 
 namespace ore {
 namespace analytics {
+using namespace ore::data;
 
 class SensitivityScenarioData;
 class SensitivityAnalysis;

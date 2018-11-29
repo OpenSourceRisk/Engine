@@ -30,9 +30,9 @@
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 //! CDS option helper
 /*!
  \ingroup models

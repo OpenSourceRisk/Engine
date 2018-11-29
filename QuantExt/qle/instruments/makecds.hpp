@@ -45,9 +45,9 @@
 #include <boost/optional.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! helper class
 /*! This class provides a more comfortable way

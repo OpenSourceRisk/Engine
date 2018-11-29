@@ -30,10 +30,10 @@
 
 #include <boost/optional.hpp>
 
-using namespace QuantLib;
-using boost::optional;
 
 namespace QuantExt {
+using namespace QuantLib;
+using boost::optional;
 
 typedef std::vector<std::vector<boost::shared_ptr<CapFloor> > > CapFloorMatrix;
 

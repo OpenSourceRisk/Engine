@@ -27,14 +27,14 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+
+namespace ore {
+namespace data {
 using std::vector;
 using std::string;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace data {
 
 //! Pricing engine description
 /*! \ingroup tradedata

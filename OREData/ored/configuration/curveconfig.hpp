@@ -24,11 +24,11 @@
 #pragma once
 
 #include <ored/utilities/xmlutils.hpp>
-using std::string;
-using ore::data::XMLSerializable;
 
 namespace ore {
 namespace data {
+using std::string;
+using ore::data::XMLSerializable;
 
 //! Base curve configuration
 /*!

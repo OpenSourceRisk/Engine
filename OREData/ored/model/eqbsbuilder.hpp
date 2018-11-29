@@ -31,10 +31,10 @@
 #include <ored/model/eqbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal EQ model component
 /*!

@@ -23,6 +23,7 @@
 #include <ql/math/comparison.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace std;
 
 using ore::analytics::RiskFactorKey;
 using ore::analytics::SensitivityRecord;
