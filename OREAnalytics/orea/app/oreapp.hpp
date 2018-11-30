@@ -65,6 +65,7 @@ public:
         const std::vector<std::string>& fixingData = std::vector<std::string>());
 
     //! Get the t0 market
+    // TODO: This should return a market, not market impl
     boost::shared_ptr<ore::data::MarketImpl> getMarket() const;
 
     //! build engine factory for a given market from an XML String

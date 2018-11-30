@@ -27,7 +27,7 @@ libOREDataMarketData_la_SOURCES = \
 	marketdatum.cpp \
 	marketdatumparser.cpp \
 	marketimpl.cpp \
-	memoryloader.cpp \
+	inmemoryloader.cpp \
 	swaptionvolcurve.cpp \
 	security.cpp \
 	todaysmarket.cpp \
@@ -61,7 +61,7 @@ this_include_HEADERS = \
 	marketdatum.hpp \
 	marketdatumparser.hpp \
 	marketimpl.hpp \
-	memoryloader.hpp \
+	inmemoryloader.hpp \
 	swaptionvolcurve.hpp \
 	security.hpp \
 	todaysmarket.hpp \

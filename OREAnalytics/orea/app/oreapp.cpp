@@ -872,7 +872,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     }
     else {
         LOG("Load market and fixing data from string vectors");
-        MemoryLoader loader(marketData, fixingData, implyTodaysFixings);
+        InMemoryLoader loader;
+        loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
         market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
     }
     DLOG("market built");
