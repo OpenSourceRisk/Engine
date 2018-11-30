@@ -78,6 +78,7 @@
     <ClInclude Include="ored\marketdata\marketdatum.hpp" />
     <ClInclude Include="ored\marketdata\marketdatumparser.hpp" />
     <ClInclude Include="ored\marketdata\marketimpl.hpp" />
+    <ClInclude Include="ored\marketdata\inmemoryloader.hpp" />
     <ClInclude Include="ored\marketdata\security.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
@@ -203,6 +204,7 @@
     <ClCompile Include="ored\marketdata\marketdatum.cpp" />
     <ClCompile Include="ored\marketdata\marketdatumparser.cpp" />
     <ClCompile Include="ored\marketdata\marketimpl.cpp" />
+    <ClCompile Include="ored\marketdata\inmemoryloader.cpp" />
     <ClCompile Include="ored\marketdata\security.cpp" />
     <ClCompile Include="ored\marketdata\swaptionvolcurve.cpp" />
     <ClCompile Include="ored\marketdata\todaysmarket.cpp" />
