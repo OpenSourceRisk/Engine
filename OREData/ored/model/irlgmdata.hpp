@@ -75,6 +75,13 @@ public:
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
     //@}
+    void clear() {
+        LgmData::clear();        
+    }
+    void reset() { 
+        LgmData::reset();
+        ccy_ = "";
+    }
 
 private:
     std::string ccy_;

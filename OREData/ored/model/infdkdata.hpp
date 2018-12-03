@@ -79,6 +79,15 @@ public:
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
     //@}
+    void clear() { 
+        LgmData::clear(); 
+    }
+    void reset() {
+        LgmData::reset();
+        index_ = "";
+        currency_ = "";
+        capfloor_ = "";
+    }
 
 private:
     std::string index_;
