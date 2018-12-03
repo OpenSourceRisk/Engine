@@ -385,7 +385,7 @@
       <CurveDescription/>
       <Dimension>Smile</Dimension>
       <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/RATE/EUR/USD</FXSpotID>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
       <FXForeignCurveID>Yield/EUR/EUR-IN-USD</FXForeignCurveID>
       <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
     </FXVolatility>
@@ -394,14 +394,14 @@
       <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/RATE/EUR/USD</FXSpotID>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>GBPUSD_ATM</CurveId>
       <CurveDescription/>
       <Dimension>ATM</Dimension>
       <Expiries>6M,1Y</Expiries>
-      <FXSpotID>FX/RATE/GBP/USD</FXSpotID>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
     </FXVolatility>
   </FXVolatilities>
 </CurveConfiguration>

@@ -41,7 +41,7 @@ const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         vector<string> tokens;
         boost::split(tokens, fxSpotID(), boost::is_any_of("/"));
-        string base = "FX_OPTION/RATE_LNVOL/" + tokens[2] + "/" + tokens[3] + "/";
+        string base = "FX_OPTION/RATE_LNVOL/" + tokens[1] + "/" + tokens[2] + "/";
         for (auto e : expiries_) {
             quotes_.push_back(base + to_string(e) + "/ATM");
             if (dimension_ == Dimension::Smile) {
