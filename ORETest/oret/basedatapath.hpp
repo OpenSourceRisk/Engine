@@ -33,6 +33,13 @@ using boost::filesystem::exists;
 using boost::filesystem::is_directory;
 using std::string;
 
+#ifdef BOOST_MSVC
+#define BOOST_LIB_NAME boost_system
+#include <boost/config/auto_link.hpp>
+#define BOOST_LIB_NAME boost_filesystem
+#include <boost/config/auto_link.hpp>
+#endif
+
 namespace ore {
 namespace test {
 
