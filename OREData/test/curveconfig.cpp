@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -49,6 +50,9 @@ using namespace ore;
 using namespace ore::data;
 
 using ore::test::TopLevelFixture;
+using std::ostream;
+
+namespace bdata = boost::unit_test::data;
 
 namespace {
 
@@ -74,6 +78,29 @@ set<string> readQuotes(const string& filename) {
     return quotes;
 }
 
+// Todays market input and expected quotes output file
+vector<pair<string, string>> files = {
+    make_pair("todays_market_only_ir.xml", "expected_quotes_only_ir.csv"),
+    make_pair("todays_market_with_fx_vol_smile.xml", "expected_quotes_with_fx_vol_smile.csv"),
+    make_pair("todays_market_with_fx_vol_atm.xml", "expected_quotes_with_fx_vol_atm.csv"),
+    make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")
+};
+
+}
+
+// Needed for BOOST_DATA_TEST_CASE below as it writes out the string pair
+// https://stackoverflow.com/a/33965517/1771882
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template<>
+struct print_log_value<pair<string, string>> {
+    void operator()(std::ostream& os, const pair<string, string>& p) {
+        os << "[" << p.first << "," << p.second << "]";
+    }
+};
+}
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
@@ -121,38 +148,27 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 }
 
 // Testing curve config quotes method for various TodaysMarketParameters
-BOOST_AUTO_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket) {
+BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files), filePair) {
 
     // Read curve configurations from file
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
 
-    // TodayMarketParameters input files and expected output files
-    vector<pair<string, string>> files = {
-        make_pair("todays_market_only_ir.xml", "expected_quotes_only_ir.csv"),
-        make_pair("todays_market_with_fx_vol_smile.xml", "expected_quotes_with_fx_vol_smile.csv"),
-        make_pair("todays_market_with_fx_vol_atm.xml", "expected_quotes_with_fx_vol_atm.csv"),
-        make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")
-    };
+    BOOST_TEST_MESSAGE("Testing with todaysmarket file: " << filePair.first);
 
-    for (const auto& p : files) {
+    // Read the simple, single default configuration, TodaysMarketParameters instance from file
+    boost::shared_ptr<TodaysMarketParameters> tmp = boost::make_shared<TodaysMarketParameters>();
+    tmp->fromFile(TEST_INPUT_FILE(filePair.first));
 
-        BOOST_TEST_MESSAGE("Testing with todaysmarket file: " << p.first);
+    // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters instance
+    set<string> quotes = curveConfigs.quotes(tmp, { Market::defaultConfiguration });
 
-        // Read the simple, single default configuration, TodaysMarketParameters instance from file
-        boost::shared_ptr<TodaysMarketParameters> tmp = boost::make_shared<TodaysMarketParameters>();
-        tmp->fromFile(TEST_INPUT_FILE(p.first));
+    // Read the expected set of quotes from the file
+    set<string> expectedQuotes = readQuotes(TEST_INPUT_FILE(filePair.second));
 
-        // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters instance
-        set<string> quotes = curveConfigs.quotes(tmp, { Market::defaultConfiguration });
-
-        // Read the expected set of quotes from the file
-        set<string> expectedQuotes = readQuotes(TEST_INPUT_FILE(p.second));
-
-        // Check that the quotes match the expected quotes
-        BOOST_REQUIRE_EQUAL(quotes.size(), expectedQuotes.size());
-        BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), expectedQuotes.begin(), expectedQuotes.end());
-    }
+    // Check that the quotes match the expected quotes
+    BOOST_REQUIRE_EQUAL(quotes.size(), expectedQuotes.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), expectedQuotes.begin(), expectedQuotes.end());
 }
 
 // Testing curve config quotes method for a TodaysMarketParameters with multiple configurations
