@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
     ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
 
-    Real expectedNpvCash = 615.03;
+    Real expectedNpvCash = 565.19;
     Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));
     Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
