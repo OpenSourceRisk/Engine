@@ -131,7 +131,7 @@ void CurveConfigTest::testCurveConfigQuotes() {
         boost::make_shared<InflationCapFloorPriceSurfaceConfig>(
             "EUHICPXT_ZC_CF", "", InflationCapFloorPriceSurfaceConfig::Type::ZC, ob, parseCalendar("TARGET"),
             parseBusinessDayConvention("MF"), parseDayCounter("A365"), "EUHICPXT",
-            "Inflation/EUHICPXT/EUHICPXT_ZC_Swaps", "Yield/EUR/EUR1D", strikes, strikes, tenors);
+            "Inflation/EUHICPXT/EUHICPXT_ZC_Swaps", "Yield/EUR/EUR1D", strikes, strikes, tenors, true);
 
     curveConfigs.inflationCapFloorPriceSurfaceConfig("EUHICPXT_ZC_CF") = inflationCapFloorConfig;
 

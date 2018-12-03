@@ -468,7 +468,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         cpiInflationCapFloorPriceSurfaces_[make_pair(configuration.first, it.first)] =
                             Handle<CPICapFloorTermPriceSurface>(
                                 boost::dynamic_pointer_cast<CPICapFloorTermPriceSurface>(itr->second->inflationCapFloorPriceSurface()));
-                    }
+
+                        LOG("Adding InflationCapFloorVolatilitySurface (" << it.first << ") with spec " 
+                                                                          << *infcapfloorspec << " to configuration " 
+                                                                          << configuration.first); 
+                        cpiInflationCapVolatilitySurfaces_[make_pair(configuration.first, it.first)] = 
+                            Handle<CPIVolatilitySurface>(boost::dynamic_pointer_cast<CPIVolatilitySurface>( 
+                                itr->second->cpiInflationCapVolSurface())); 
+                        cpiInflationFloorVolatilitySurfaces_[make_pair(configuration.first, it.first)] = 
+                            Handle<CPIVolatilitySurface>(boost::dynamic_pointer_cast<CPIVolatilitySurface>( 
+                                itr->second->cpiInflationFloorVolSurface())); 
+
+		    }
                 }
 
                 map<string, string> yyInfMap;

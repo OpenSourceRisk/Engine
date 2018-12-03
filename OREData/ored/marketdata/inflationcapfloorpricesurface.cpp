@@ -28,6 +28,7 @@
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
 #include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp> 
 
 #include <algorithm>
 
@@ -208,6 +209,58 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                     config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, capStrikes, floorStrikes, terms, cPrice,
                     fPrice));
 
+	                boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>> cpiPriceSurfacePtr = 
+                boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<QuantLib::Bilinear>>( 
+                    1.0, config->startRate(), config->observationLag(), config->calendar(), 
+                    config->businessDayConvention(), config->dayCounter(), Handle<ZeroInflationIndex>(index), yts, 
+                    capStrikes, floorStrikes, terms, cPrice, fPrice); 
+ 
+            // cast 
+            surface_ = cpiPriceSurfacePtr; 
+ 
+            Handle<YieldTermStructure> nominalTS = index->zeroInflationTermStructure()->nominalTermStructure(); 
+            boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> engine = 
+                boost::make_shared<QuantExt::CPIBlackCapFloorEngine>( 
+                    nominalTS, QuantLib::Handle<QuantLib::CPIVolatilitySurface>()); // vol surface can be empty, will be 
+                                                                                    // set in the striping process 
+ 
+            try { 
+ 
+                QuantLib::Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(cpiPriceSurfacePtr); 
+                boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>> cpiCapVolSurface, 
+                    cpiFloorVolSurface; 
+ 
+                if (config->implySeparateCapFloorVolSurfaces()) { 
+                    cpiCapVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>( 
+                        QuantExt::PriceQuotePreference::Cap, cpiPriceSurfaceHandle, index, engine); 
+                    cpiFloorVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>( 
+                        QuantExt::PriceQuotePreference::Floor, cpiPriceSurfaceHandle, index, engine); 
+                } else { 
+                    cpiCapVolSurface = boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear>>( 
+                        QuantExt::PriceQuotePreference::CapFloor, cpiPriceSurfaceHandle, index, engine); 
+                    cpiFloorVolSurface = cpiCapVolSurface; 
+                } 
+ 
+		// cast 
+		cpiCapVolSurface_ = cpiCapVolSurface; 
+		cpiFloorVolSurface_ = cpiFloorVolSurface; 
+ 
+		cpiCapVolSurface_->enableExtrapolation(); 
+                cpiFloorVolSurface_->enableExtrapolation(); 
+ 
+                for (Size i = 0; i < cpiCapVolSurface->strikes().size(); ++i) { 
+                    for (Size j = 0; j < cpiCapVolSurface->maturities().size(); ++j) { 
+                        DLOG("Implied CPI CapFloor BlackVol,strike," 
+                             << cpiCapVolSurface->strikes()[i] << ",maturity," << cpiCapVolSurface->maturities()[j] 
+                             << ",index," << index->name() << ",CapVol," << cpiCapVolSurface->volData()[i][j] 
+                             << ",FloorVol," << cpiFloorVolSurface->volData()[i][j]); 
+                    } 
+                } 
+ 
+                DLOG("CPIVolSurfaces built for spec " << spec.name()); 
+            } catch (std::exception& e) { 
+                ALOG("Building CPIVolSurfaces failed for spec " << spec.name() << ": " << e.what()); 
+            } 
         }
         if (config->type() == InflationCapFloorPriceSurfaceConfig::Type::YY) {
 

@@ -1,0 +1,112 @@
+<?xml version="1.0"?>
+<Portfolio>
+
+  <Trade id="CPI_EUHICPXT_Cap">
+    <TradeType>CPICapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CPICapFloorData>
+      <LongShort>Long</LongShort>
+      <CapFloor>Cap</CapFloor>
+      <Currency>EUR</Currency>
+      <Nominal>10000</Nominal>
+      <StartDate>2018-11-05</StartDate>
+      <MaturityDate>2028-11-05</MaturityDate>
+      <Index>EUHICPXT</Index>
+      <ObservationLag>3M</ObservationLag>
+      <BaseCPI>103.72</BaseCPI>
+      <!-- Enter strikeg rate r => Strike index =(1+r)^T -->
+      <!-- ATM: 10Y EUHICPXT ZCIIS is 0.01605 -->
+      <Strike>0.01605</Strike>
+      <FixCalendar>TARGET</FixCalendar>
+      <PayCalendar>TARGET</PayCalendar>
+      <FixConvention>F</FixConvention>
+      <PayConvention>F</PayConvention>
+    </CPICapFloorData>
+  </Trade>
+
+  <Trade id="CPI_EUHICPXT_Floor">
+    <TradeType>CPICapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CPICapFloorData>
+      <LongShort>Long</LongShort>
+      <CapFloor>Floor</CapFloor>
+      <Currency>EUR</Currency>
+      <Nominal>10000</Nominal>
+      <StartDate>2018-11-05</StartDate>
+      <MaturityDate>2028-11-05</MaturityDate>
+      <Index>EUHICPXT</Index>
+      <ObservationLag>3M</ObservationLag>
+      <BaseCPI>103.72</BaseCPI>
+      <!-- Enter strike rate r => Strike index =(1+r)^T -->
+      <!-- ATM: 10Y EUHICPXT ZCIIS is 0.01605 -->
+      <Strike>0.01605</Strike>
+      <FixCalendar>TARGET</FixCalendar>
+      <PayCalendar>TARGET</PayCalendar>
+      <FixConvention>F</FixConvention>
+      <PayConvention>F</PayConvention>
+    </CPICapFloorData>
+  </Trade>
+
+  <Trade id="CPI_UKRPI_Cap">
+    <TradeType>CPICapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CPICapFloorData>
+      <LongShort>Long</LongShort>
+      <CapFloor>Cap</CapFloor>
+      <Currency>GBP</Currency>
+      <Nominal>10000</Nominal>
+      <StartDate>2018-11-05</StartDate>
+      <MaturityDate>2028-11-05</MaturityDate>
+      <Index>UKRPI</Index>
+      <ObservationLag>2M</ObservationLag>
+      <BaseCPI>284.1</BaseCPI>
+      <!-- Enter strikeg rate r => Strike index =(1+r)^T -->
+      <!-- ATM: 10Y UKRPI ZCIIS is 0.03498 -->
+      <Strike>0.03498</Strike>
+      <FixCalendar>UK</FixCalendar>
+      <PayCalendar>UK</PayCalendar>
+      <FixConvention>MF</FixConvention>
+      <PayConvention>U</PayConvention>
+    </CPICapFloorData>
+  </Trade>
+
+  <Trade id="CPI_UKRPI_Floor">
+    <TradeType>CPICapFloor</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_B</CounterParty>
+      <NettingSetId>CPTY_B</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <CPICapFloorData>
+      <LongShort>Long</LongShort>
+      <CapFloor>Floor</CapFloor>
+      <Currency>GBP</Currency>
+      <Nominal>10000</Nominal>
+      <StartDate>2018-11-05</StartDate>
+      <MaturityDate>2028-11-05</MaturityDate>
+      <Index>UKRPI</Index>
+      <ObservationLag>2M</ObservationLag>
+      <BaseCPI>284.1</BaseCPI>
+      <!-- Enter strike rate r => Strike index =(1+r)^T -->
+      <!-- ATM: 10Y UKRPI ZCIIS is 0.03498 -->
+      <Strike>0.03498</Strike>
+      <FixCalendar>UK</FixCalendar>
+      <PayCalendar>UK</PayCalendar>
+      <FixConvention>MF</FixConvention>
+      <PayConvention>U</PayConvention>
+    </CPICapFloorData>
+  </Trade>
+
+</Portfolio>

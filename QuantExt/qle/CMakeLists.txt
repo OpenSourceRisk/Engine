@@ -75,6 +75,8 @@ pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
+pricingengines/cpiblackcapfloorengine.cpp
+pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -255,6 +257,8 @@ pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
+pricingengines/cpiblackcapfloorengine.hpp
+pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -315,6 +319,7 @@ termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
+termstructures/strippedcpivolatilitystructure.hpp
 termstructures/tenorbasisswaphelper.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp

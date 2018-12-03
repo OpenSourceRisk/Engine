@@ -43,12 +43,12 @@
 #include <ored/marketdata/inflationcapfloorpricesurface.hpp>
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
 #include <ored/marketdata/inflationcurve.hpp>
+#include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketdatum.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/marketimpl.hpp>
-#include <ored/marketdata/inmemoryloader.hpp>
 #include <ored/marketdata/security.hpp>
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
@@ -76,6 +76,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -87,6 +88,7 @@
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/cpicapfloor.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/enginedata.hpp>

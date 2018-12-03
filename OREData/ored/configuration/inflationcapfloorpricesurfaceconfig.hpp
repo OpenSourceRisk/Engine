@@ -51,7 +51,8 @@ public:
                                         const BusinessDayConvention& businessDayConvention,
                                         const DayCounter& dayCounter, const string& index, const string& indexCurve,
                                         const string& yieldTermStructure, const vector<Real>& capStrikes,
-                                        const vector<Real>& floorStrikes, const vector<Period>& maturities);
+                                        const vector<Real>& floorStrikes, const vector<Period>& maturities,
+					bool implySeparateCapFloorVolSurfaces);
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
@@ -70,6 +71,7 @@ public:
     const vector<Real>& floorStrikes() const { return floorStrikes_; }
     const vector<Period>& maturities() const { return maturities_; }
     const vector<string>& quotes() override;
+    const bool& implySeparateCapFloorVolSurfaces() const { return implySeparateCapFloorVolSurfaces_; } 
 
     // Setters
     Type& type() { return type_; }
@@ -84,6 +86,7 @@ public:
     vector<Real>& capStrikes() { return capStrikes_; }
     vector<Real>& floorStrikes() { return floorStrikes_; }
     vector<Period>& maturities() { return maturities_; }
+    bool& implySeparateCapFloorVolSurfaces() { return implySeparateCapFloorVolSurfaces_; } 
 
 private:
     Type type_;
@@ -98,6 +101,7 @@ private:
     vector<Real> capStrikes_;
     vector<Real> floorStrikes_;
     vector<Period> maturities_;
+    bool implySeparateCapFloorVolSurfaces_;
 };
 } // namespace data
 } // namespace ore
