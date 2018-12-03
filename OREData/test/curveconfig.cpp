@@ -56,11 +56,19 @@ namespace bdata = boost::unit_test::data;
 
 namespace {
 
-// Simple class to ensure that output files for this test are removed on suite exit
-class CleanUp : public TopLevelFixture {
+// Suite level fixture that:
+// - loads curve configurations
+// - cleans up output files
+class F : public TopLevelFixture {
 public:
-    CleanUp() {}
-    ~CleanUp() {
+    CurveConfigurations curveConfigs;
+
+    F() {
+        // Read curve configurations from file
+        curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
+    }
+
+    ~F() {
         clearOutput(TEST_OUTPUT_PATH);
     }
 };
@@ -105,13 +113,9 @@ struct print_log_value<pair<string, string>> {
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
-BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, CleanUp)
+BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, F)
 
 BOOST_AUTO_TEST_CASE(testFromToXml) {
-
-    // Read curve configurations from file
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
 
     // Write the curve configurations to file
     string outputFile_1 = TEST_OUTPUT_FILE("curve_config_out_1.xml");
@@ -132,10 +136,6 @@ BOOST_AUTO_TEST_CASE(testFromToXml) {
 // Testing curve config quotes method with no restrictions
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
-    // Read curve configurations from file
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
-
     // Ask the curve configurations object for all of its quotes
     set<string> quotes = curveConfigs.quotes();
 
@@ -149,10 +149,6 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesAll) {
 
 // Testing curve config quotes method for various TodaysMarketParameters
 BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files), filePair) {
-
-    // Read curve configurations from file
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
 
     BOOST_TEST_MESSAGE("Testing with todaysmarket file: " << filePair.first);
 
@@ -173,10 +169,6 @@ BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files)
 
 // Testing curve config quotes method for a TodaysMarketParameters with multiple configurations
 BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
-
-    // Read curve configurations from file
-    CurveConfigurations curveConfigs;
-    curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
 
     // Read the TodaysMarketParameters instance, containing multiple configurations, from file
     boost::shared_ptr<TodaysMarketParameters> tmp = boost::make_shared<TodaysMarketParameters>();
