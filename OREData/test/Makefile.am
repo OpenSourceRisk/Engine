@@ -39,7 +39,7 @@ dist-hook:
 
 if BOOST_UNIT_TEST_FOUND
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
+AM_CPPFLAGS = -DBOOST_ALL_DYN_LINK -DBOOST_TEST_DYN_LINK -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE}
 
 bin_PROGRAMS = ored-test-suite
 
@@ -48,7 +48,7 @@ ored_test_suite_LDADD =
 ored_test_suite_LDFLAGS = \
     -lQuantLib \
     -L../../QuantExt/qle -lQuantExt \
-    -L../ored -lOREData -lboost_date_time -lboost_serialization -lboost_regex -lboost_system -lboost_filesystem
+    -L../ored -lOREData -lboost_date_time -lboost_serialization -lboost_regex -lboost_system -lboost_filesystem -lboost_unit_test_framework
 
 TESTS = ored-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message

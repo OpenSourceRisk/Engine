@@ -27,7 +27,6 @@ using namespace boost;
 
 // Boost.Test
 #define BOOST_TEST_MODULE OREDataTestSuite
-#include <boost/test/included/unit_test.hpp>
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
