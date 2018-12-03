@@ -62,9 +62,7 @@ public:
         setupTestLogging(argc, argv);
 
         // Set the base data path for the unit tests
-        BOOST_TEST_MESSAGE("Test suite setup: base data path was: " << basePath);
         basePath = getBaseDataPath(argc, argv);
-        BOOST_TEST_MESSAGE("Test suite setup: base data path is now: " << basePath);
     }
 
     ~OredGlobalFixture() {

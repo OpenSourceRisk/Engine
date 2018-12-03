@@ -24,7 +24,6 @@
 
 #include <ql/errors.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <string>
 
@@ -72,7 +71,6 @@ string getBaseDataPath(int argc, char** argv) {
 #else
     string strPath = ".";
 #endif
-    BOOST_TEST_MESSAGE("The default base data path is: " << strPath);
 
     // Check if a base data path has been provided in the command line arguments
     for (int i = 1; i < argc; ++i) {
@@ -81,13 +79,11 @@ string getBaseDataPath(int argc, char** argv) {
             boost::split(strs, argv[i], boost::is_any_of("="));
             if (strs.size() > 1) {
                 strPath = strs[1];
-                BOOST_TEST_MESSAGE("Got base data path from command line: " << strPath);
             }
         }
     }
 
     // Test that we have a valid path and it contains an 'input' folder
-    BOOST_TEST_MESSAGE("The final base data path is: " << strPath);
     path p(strPath);
     QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
         strPath << "' is not a directory");
