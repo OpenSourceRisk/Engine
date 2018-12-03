@@ -28,7 +28,6 @@ INHERIT_DOCS           = YES
 SEPARATE_MEMBER_PAGES  = NO
 TAB_SIZE               = 4
 ALIASES                = "warning=\xrefitem caveats \"Warning\" \"Caveats\" " \
-                         "test=\xrefitem test \"Tests\" \"Test Suite\" " \
                          "bug=\xrefitem bug \"Bug\" \"Known Bugs\" " \
                          "deprecated=\xrefitem deprecated \"Deprecated\" \"Deprecated Features\" "
 TCL_SUBST              =
@@ -78,7 +77,7 @@ SORT_GROUP_NAMES       = YES
 SORT_BY_SCOPE_NAME     = YES
 STRICT_PROTO_MATCHING  = NO
 GENERATE_TODOLIST      = NO
-GENERATE_TESTLIST      = YES
+GENERATE_TESTLIST      = NO
 GENERATE_BUGLIST       = YES
 GENERATE_DEPRECATEDLIST= YES
 ENABLED_SECTIONS       =
@@ -103,8 +102,7 @@ WARN_LOGFILE           =
 # Configuration options related to the input files
 #---------------------------------------------------------------------------
 INPUT                  = ./pages \
-                         ../ored \
-			 ../test
+                         ../ored
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.docs \
                          *.hpp \
