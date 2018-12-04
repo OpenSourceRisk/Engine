@@ -39,6 +39,8 @@
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
 
@@ -54,7 +56,7 @@ using ore::data::XMLNode;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations(){};
+    CurveConfigurations() { }
 
     //! \name Setters and Getters
     //@{
@@ -133,8 +135,15 @@ public:
         return commodityVolatilityCurveConfigs_[curveID];
     };
     const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
-
-    std::set<string> quotes() const;
+    
+    /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
+        
+        If \p todaysMarketParams is a `nullptr`, the set of quotes required by all CurveConfig elements is returned.
+        If \p todaysMarketParams is provided, the set of quotes required by only those CurveConfig elements appearing 
+        in \p todaysMarketParams for the given configuration(s) is returned. 
+    */
+    std::set<string> quotes(boost::shared_ptr<const TodaysMarketParameters> todaysMarketParams = nullptr, 
+        const std::set<std::string>& configurations = { "" }) const;
     //@}
 
     //! \name Serialisation

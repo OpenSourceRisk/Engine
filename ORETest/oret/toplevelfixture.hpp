@@ -16,30 +16,40 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/bond.hpp
-    \brief bond test
-    \ingroup tests
+/*! \file oret/toplevelfixture.hpp
+    \brief Fixture that can be used at top level
 */
 
 #pragma once
 
+#include <ql/indexes/indexmanager.hpp>
+#include <ql/settings.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/test/unit_test.hpp>
 
-namespace testsuite {
+using QuantLib::IndexManager;
+using QuantLib::SavedSettings;
 
-//! Test Bond pricing
-/*!
-    \ingroup tests
-*/
-class BondTest {
+namespace ore {
+namespace test {
+
+//! Top level fixture
+class TopLevelFixture {
 public:
-    //! Test Bond pricing
-    static void testZeroBond();
-    static void testBondZeroSpreadDefault();
-    static void testBondCompareDefault();
-    static void testAmortizingBond();
-    static void testAmortizingBondWithChangingAmortisation();
-    static void testMultiPhaseBond();
-    static boost::unit_test_framework::test_suite* suite();
+    SavedSettings savedSettings;
+
+    /*! Constructor
+        Add things here that you want to happen at the start of every test case
+    */
+    TopLevelFixture() {}
+    /*! Destructor
+        Add things here that you want to happen after _every_ test case
+    */
+    ~TopLevelFixture() {
+        // Clear and fixings that have been added
+        IndexManager::instance().clearHistories();
+    }
 };
-} // namespace testsuite
+
+}
+}
