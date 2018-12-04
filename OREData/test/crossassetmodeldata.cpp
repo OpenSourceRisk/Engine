@@ -18,6 +18,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <oret/datapaths.hpp>
+#include <oret/fileutilities.hpp>
 
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -28,6 +30,8 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
 using namespace ore::data;
+
+using ore::test::TopLevelFixture;
 
 namespace {
 
@@ -255,11 +259,20 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     return crossAssetData;
 }
+
+// Fixture to remove output files
+class F : public TopLevelFixture {
+public:
+    F() {}
+    ~F() {
+        clearOutput(TEST_OUTPUT_PATH);
+    }
+};
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(CrossAssetModelDataTests)
+BOOST_FIXTURE_TEST_SUITE(CrossAssetModelDataTests, F)
 
 BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
     
@@ -274,7 +287,7 @@ BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
     XMLNode* crossAssetModelNode = data.toXML(OutDoc);
     XMLUtils::appendNode(simulationNode, crossAssetModelNode);
 
-    std::string filename = "simulationtest.xml";
+    std::string filename = TEST_OUTPUT_FILE("simulationtest.xml");
     OutDoc.toFile(filename);
 
     data::CrossAssetModelData newData;
@@ -284,8 +297,6 @@ BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
 
     newData.irConfigs() = {};
     BOOST_CHECK(data != newData);
-
-    remove("simulationtest.xml");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
