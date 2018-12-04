@@ -32,8 +32,8 @@
 #include <tuple>
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace data;
 
 //! Shift Scenario Generator
 /*!

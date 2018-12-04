@@ -30,10 +30,10 @@
 
 #include <boost/shared_ptr.hpp>
 
-using namespace QuantLib;
-using std::vector;
 
 namespace QuantExt {
+using namespace QuantLib;
+using std::vector;
 
 //! Container for holding swap conventions needed by the SwaptionVolatilityConverter
 //! \ingroup termstructures

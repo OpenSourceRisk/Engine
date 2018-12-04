@@ -24,6 +24,7 @@
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace ore;
+using namespace std; 
 
 namespace {
 

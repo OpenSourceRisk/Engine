@@ -27,10 +27,10 @@
 #include <ostream>
 #include <string>
 
-using std::string;
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! Curve Specification
 /*!

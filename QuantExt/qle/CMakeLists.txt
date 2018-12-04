@@ -324,5 +324,5 @@ termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
-add_library(QuantExt ${QuantExt_SRC})
-target_link_libraries(QuantExt QuantLib ${Boost_LIBRARIES})
+add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
+target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})

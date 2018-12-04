@@ -31,10 +31,10 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/model/infdkdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal INF model component
 /*!

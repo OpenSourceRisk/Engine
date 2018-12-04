@@ -36,8 +36,8 @@
 #include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace data;
 
 //! Scenario Generator using cross asset model paths
 /*!

@@ -28,12 +28,12 @@
 #include <ql/types.hpp>
 #include <string>
 
-using std::string;
-using QuantLib::Real;
-using QuantLib::Date;
 
 namespace ore {
 namespace data {
+using std::string;
+using QuantLib::Real;
+using QuantLib::Date;
 
 //! Function to parse a market datum
 /*! \ingroup marketdata

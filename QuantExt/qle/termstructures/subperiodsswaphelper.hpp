@@ -28,9 +28,9 @@
 
 #include <qle/instruments/subperiodsswap.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Rate helper for bootstrapping using Sub Periods Swaps
 /*! \ingroup termstructures

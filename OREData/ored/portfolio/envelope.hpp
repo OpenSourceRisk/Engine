@@ -27,15 +27,15 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <set>
 
+
+
+namespace ore {
+namespace data {
 using std::string;
 using std::map;
 using std::set;
 using ore::data::XMLSerializable;
-
 using ore::data::XMLNode;
-
-namespace ore {
-namespace data {
 
 //! Serializable object holding generic trade data, reporting dimensions
 /*!

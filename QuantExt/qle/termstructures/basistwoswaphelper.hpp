@@ -26,9 +26,9 @@
 
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Basis Two Swap Helper
 /*! Rate helper for bootstrapping using Libor tenor basis as the

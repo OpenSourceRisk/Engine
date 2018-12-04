@@ -31,6 +31,7 @@
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
+using namespace std; 
 
 namespace bdata = boost::unit_test::data;
 

@@ -25,10 +25,10 @@
 
 #include <string>
 
-using std::string;
 
 namespace ore {
 namespace data {
+using std::string;
 //! Currency Check
 /*! check whether string is ISO 4217 compliant
     \ingroup utilities

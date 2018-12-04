@@ -30,10 +30,10 @@
 #include <ql/cashflows/lineartsrpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 
-using namespace ore::data;
 
 namespace ore {
 namespace data {
+using namespace ore::data;
 
 //! CouponPricer Builder for CmsSpreadLeg
 /*! The coupon pricers are cached by currency

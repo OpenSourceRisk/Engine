@@ -37,6 +37,10 @@ yieldcurve.cpp)
 writeTestSuiteMain("main.cpp")
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
-target_link_libraries(ored-test-suite OREData QuantExt QuantLib ${Boost_LIBRARIES})
+#target_link_libraries(ored-test-suite OREData QuantExt QuantLib ${Boost_LIBRARIES})
+target_link_libraries(ored-test-suite ${ORED_LIB_NAME})
+target_link_libraries(ored-test-suite ${QLE_LIB_NAME})
+target_link_libraries(ored-test-suite ${QL_LIB_NAME})
+target_link_libraries(ored-test-suite ${Boost_LIBRARIES})
 
 add_test(ored-test-suite ored-test-suite)

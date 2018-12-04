@@ -31,6 +31,9 @@
 #include <ql/currency.hpp>
 #include <string>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using QuantLib::Real;
 using QuantLib::Size;
@@ -43,9 +46,6 @@ using QuantLib::DayCounter;
 using QuantLib::Natural;
 using QuantLib::Month;
 using QuantLib::Months;
-
-namespace ore {
-namespace data {
 
 //! Base market data class
 /*!
@@ -444,7 +444,7 @@ private:
   with spread zero and receives the reference index of "currency" in
   "currency" plus the quoted spread.
 
-  \ingroup marketdata‚
+  \ingroup marketdata
 */
 class CrossCcyBasisSwapQuote : public MarketDatum {
 public:

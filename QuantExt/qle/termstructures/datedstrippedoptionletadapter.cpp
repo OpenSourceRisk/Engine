@@ -72,7 +72,9 @@ Volatility DatedStrippedOptionletAdapter::volatilityImpl(Time length, Rate strik
     const vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
     boost::shared_ptr<LinearInterpolation> timeInterpolator =
         boost::make_shared<LinearInterpolation>(optionletTimes.begin(), optionletTimes.end(), vol.begin());
-    Real lengthEff = flatExtrapolation_ ? std::min(length, optionletStripper_->optionletFixingTimes().back()) : length;
+    Real lengthEff = flatExtrapolation_ ? 
+        std::max(std::min(length, optionletStripper_->optionletFixingTimes().back()), optionletStripper_->optionletFixingTimes().front())
+        : length;
     return timeInterpolator->operator()(lengthEff, true);
 }
 
