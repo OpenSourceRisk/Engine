@@ -76,7 +76,8 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
 
     BOOST_TEST_MESSAGE("Testing Swaption Price...");
 
-    Date today = Settings::instance().evaluationDate();
+    Date today(3, Dec, 2018);
+    Settings::instance().evaluationDate() = today;
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -143,8 +144,6 @@ BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
 
     BOOST_CHECK_SMALL(npvCash - expectedNpvCash, 0.01);
     BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
-
-    Settings::instance().evaluationDate() = today; // reset
 }
 
 BOOST_AUTO_TEST_SUITE_END()
