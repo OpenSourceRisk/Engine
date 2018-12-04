@@ -1501,7 +1501,7 @@
       <DayCounter>30/360</DayCounter>
       <Index>UKRPI</Index>
       <Interpolated>false</Interpolated>
-      <ObservationLag>3M</ObservationLag>
+      <ObservationLag>2M</ObservationLag>
       <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
       <InflationCalendar>UK</InflationCalendar>
       <InflationConvention>MF</InflationConvention>
