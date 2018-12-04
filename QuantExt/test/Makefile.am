@@ -37,6 +37,7 @@ QLE_TESTS = \
 	discountratiomodifiedcurve.hpp discountratiomodifiedcurve.cpp \
 	crossccyfixfloatswap.hpp crossccyfixfloatswap.cpp \
 	crossccyfixfloatswaphelper.hpp crossccyfixfloatswaphelper.cpp \
+	cpicapfloor.hpp cpicapfloor.cpp \
 	utilities.hpp
 
 dist-hook:
