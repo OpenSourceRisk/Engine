@@ -403,5 +403,14 @@
       <Expiries>6M,1Y</Expiries>
       <FXSpotID>FX/GBP/USD</FXSpotID>
     </FXVolatility>
+    <FXVolatility>
+      <CurveId>GBPUSD_SMILE</CurveId>
+      <CurveDescription/>
+      <Dimension>Smile</Dimension>
+      <Expiries>6M,1Y</Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
+      <FXForeignCurveID>Yield/GBP/GBP-IN-USD</FXForeignCurveID>
+      <FXDomesticCurveID>Yield/USD/USD-FedFunds</FXDomesticCurveID>
+    </FXVolatility>
   </FXVolatilities>
 </CurveConfiguration>

@@ -39,9 +39,10 @@
   </SwapIndexCurves>
   <FxSpots id="default">
     <FxSpot pair="EURUSD">FX/EUR/USD</FxSpot>
-    <FxSpot pair="EURGBP">FX/GBP/USD</FxSpot>
+    <FxSpot pair="GBPUSD">FX/GBP/USD</FxSpot>
   </FxSpots>
   <FxVolatilities id="default">
     <FxVolatility pair="EURUSD">FXVolatility/EUR/USD/EURUSD_SMILE</FxVolatility>
+    <FxVolatility pair="GBPUSD">FXVolatility/GBP/USD/GBPUSD_SMILE</FxVolatility>
   </FxVolatilities>
 </TodaysMarket>
