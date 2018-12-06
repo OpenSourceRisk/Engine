@@ -104,7 +104,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(const CommonVars& vars
                       vars.payConvention, DateGeneration::Backward, false);
     // Create swap
     boost::shared_ptr<FxIndex> fxIndex
-        = boost::make_shared<FxIndex>("dummy", 0, vars.fgnCurrency, vars.domCurrency, 
+        = boost::make_shared<FxIndex>("dummy", vars.settlementDays, vars.fgnCurrency, vars.domCurrency, 
                                       vars.payCalendar, Handle<Quote>(vars.spotFxQuote), 
                                       fgnDiscCurve, vars.domDiscCurve);
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap
@@ -151,7 +151,6 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
 
     // Create the helper swap manually and price it using curve bootstrapped from helper
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
-    cout << swap->NPV();
 
     // Print out cashflow to validate. Remove later
     /*
@@ -161,7 +160,6 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
         }
     };
     */
-
     // Swap should have NPV = 0.0. 
     Real tol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), tol);
