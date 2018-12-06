@@ -23,7 +23,6 @@ fxtriangulation.cpp
 indices.cpp
 inflationcapfloor.cpp
 legdata.cpp
-main.cpp
 ored_commodityforward.cpp
 parser.cpp
 portfolio.cpp
@@ -34,10 +33,7 @@ todaysmarket.cpp
 xmlmanipulation.cpp
 yieldcurve.cpp)
 
-writeTestSuiteMain("main.cpp")
-
 add_executable(ored-test-suite ${OREData-Test_SRC})
-#target_link_libraries(ored-test-suite OREData QuantExt QuantLib ${Boost_LIBRARIES})
 target_link_libraries(ored-test-suite ${ORED_LIB_NAME})
 target_link_libraries(ored-test-suite ${QLE_LIB_NAME})
 target_link_libraries(ored-test-suite ${QL_LIB_NAME})
