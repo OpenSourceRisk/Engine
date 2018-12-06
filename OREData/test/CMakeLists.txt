@@ -39,4 +39,4 @@ target_link_libraries(ored-test-suite ${QLE_LIB_NAME})
 target_link_libraries(ored-test-suite ${QL_LIB_NAME})
 target_link_libraries(ored-test-suite ${Boost_LIBRARIES})
 
-add_test(ored-test-suite ored-test-suite)
+add_test(NAME ored-test-suite COMMAND ored-test-suite WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
