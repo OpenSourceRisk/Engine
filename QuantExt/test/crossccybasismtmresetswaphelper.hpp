@@ -32,6 +32,9 @@ class CrossCcyBasisMtMResetSwapHelperTest {
 public:
     // Test bootstrap works
     static void testBootstrap();
+    static void testSpotFxChange();
+    static void testSpreadChange();
+    static void testMovingEvaluationDate();
 
     static boost::unit_test_framework::test_suite* suite();
 };

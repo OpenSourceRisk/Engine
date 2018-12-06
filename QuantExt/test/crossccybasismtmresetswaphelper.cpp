@@ -52,7 +52,6 @@ struct CommonVars {
     Currency fgnCurrency, domCurrency;
     DayCounter dayCount;
     Real fgnNominal;
-    Spread spread;
     boost::shared_ptr<SimpleQuote> spotFxQuote;
     boost::shared_ptr<SimpleQuote> spreadQuote;
     Handle<YieldTermStructure> domProjCurve;
@@ -76,8 +75,8 @@ struct CommonVars {
         dayCount = Actual360();
         fgnNominal = 10000000.0;
         spotFxQuote = boost::make_shared<SimpleQuote>(1.2);
-        spreadQuote = boost::make_shared<SimpleQuote>(spread);
-        spread = 0.0;
+        spreadQuote = boost::make_shared<SimpleQuote>(-0.0015);
+
 
         // curves
         domProjCurve = Handle<YieldTermStructure>
@@ -109,7 +108,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(const CommonVars& vars
                                       fgnDiscCurve, vars.domDiscCurve);
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap
         = boost::make_shared<CrossCcyBasisMtMResetSwap>(vars.fgnNominal, vars.fgnCurrency, schedule, 
-                                                        vars.fgnIndex, vars.spread, vars.domCurrency, schedule,
+                                                        vars.fgnIndex, vars.spreadQuote->value(), vars.domCurrency, schedule,
                                                         vars.domIndex, 0.0, fxIndex, false);
     // Attach pricing engine
     boost::shared_ptr<PricingEngine> engine 
@@ -163,6 +162,157 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
     // Swap should have NPV = 0.0. 
     Real tol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), tol);
+
+    // Check fair spreads match. Bootstrap uses 1e-12 accuracy.
+    Real relTol = 1e-10;
+    BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
+
+    // Check the 5Y discount factor
+    DiscountFactor expDisc = 0.91155574393806327;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+}
+
+void CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange() {
+
+    BOOST_TEST_MESSAGE("Test rebootstrap under spot FX change");
+
+    SavedSettings backup;
+
+    CommonVars vars;
+
+    Settings::instance().evaluationDate() = vars.asof;
+
+    // Create a helper and bootstrapped curve
+    Handle<YieldTermStructure> discCurve = bootstrappedCurve(vars);
+
+    // Create the helper swap manually and price it using curve bootstrapped from helper
+    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
+
+    // Check NPV = 0.0
+    Real absTol = 1e-5;
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check fair spreads match. Bootstrap uses 1e-12 accuracy.
+    Real relTol = 1e-10;
+    BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
+
+    // Check the 5Y discount factor
+    DiscountFactor expDisc = 0.91155574393806327;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Check the nominal of the helper swap
+    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), 
+        std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
+
+    // Bump the spot rate by 10%
+    vars.spotFxQuote->setValue(vars.spotFxQuote->value() * 1.1);
+
+    // Build a new swap using the updated spot FX rate
+    swap = makeTestSwap(vars, discCurve);
+
+    // Check that the new swap's NPV is 0.0
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check the 5Y discount factor again. It should be the same.
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Check the nominal of the helper swap. Should now be the bumped amount
+    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), 
+        std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
+}
+
+void CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange() {
+
+    BOOST_TEST_MESSAGE("Test rebootstrap under helper spread change");
+
+    SavedSettings backup;
+
+    CommonVars vars;
+
+    Settings::instance().evaluationDate() = vars.asof;
+
+    // Create a helper and bootstrapped curve
+    Handle<YieldTermStructure> discCurve = bootstrappedCurve(vars);
+
+    // Create the helper swap manually and price it using curve bootstrapped from helper
+    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
+
+    // Check NPV = 0.0
+    Real absTol = 1e-5;
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check fair spreads match. Bootstrap uses 1e-12 accuracy.
+    Real relTol = 1e-10;
+    BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
+
+    // Check the 5Y discount factor
+    DiscountFactor expDisc = 0.91155574393806327;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Add a 10bps spread
+    vars.spreadQuote->setValue(0.0015);
+
+    // Build a new swap using the updated spread of 10bps
+    swap = makeTestSwap(vars, discCurve);
+
+    // Check that the new swap's NPV is 0.0
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check the 5Y discount factor again. More spread on foreign leg => more significant discount factor.
+    expDisc = 0.89807856632258765;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Check the spread of the helper swap. Should now be 15bps.
+    BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
+}
+
+void CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate() {
+
+    BOOST_TEST_MESSAGE("Test rebootstrap after moving evaluation date");
+
+    SavedSettings backup;
+
+    CommonVars vars;
+
+    Settings::instance().evaluationDate() = vars.asof;
+
+    // Create a helper and bootstrapped curve
+    Handle<YieldTermStructure> discCurve = bootstrappedCurve(vars);
+
+    // Create the helper swap manually and price it using curve bootstrapped from helper
+    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
+
+    // Check NPV = 0.0
+    Real absTol = 1e-5;
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check fair spreads match. Bootstrap uses 1e-12 accuracy.
+    Real relTol = 1e-10;
+    BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
+
+    // Check the 5Y discount factor
+    DiscountFactor expDisc = 0.91155574393806327;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Check the start date of the helper swap
+    BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
+
+    // Move evaluation date forward
+    vars.asof = vars.asof + 1 * Days;
+    Settings::instance().evaluationDate() = vars.asof;
+
+    // Build a new swap using new evaluation date
+    swap = makeTestSwap(vars, discCurve);
+
+    // Check that the new swap's NPV is 0.0
+    BOOST_CHECK_SMALL(swap->NPV(), absTol);
+
+    // Check the 5Y discount factor again. Changes slightly due to helper holidays/weekends.
+    expDisc = 0.91155562449173388;
+    BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
+
+    // Check the start date of the helper swap. Should be 1 day greater. 
+    BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
 }
 
 test_suite* CrossCcyBasisMtMResetSwapHelperTest::suite() {
@@ -170,6 +320,9 @@ test_suite* CrossCcyBasisMtMResetSwapHelperTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("CrossCcyBasisMtMResetSwapHelperTests");
 
     suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testBootstrap));
+    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange));
+    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange));
+    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate));
 
     return suite;
 }
