@@ -346,33 +346,10 @@ void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
     swap->setPricingEngine(engine);
 
     // Check values
-    Real usdTolerance = 0.01;
+    Real tol = 0.01;
 
-    // Real expNpv = -5604220;
-    // BOOST_CHECK_SMALL(swap->NPV() - expNpv, usdTolerance);
-
-    // std::cout << swap->NPV() << "\n";
-    // std::cout << swap->legNPV(0) << "\n";
-    // std::cout << swap->legNPV(1) << "\n";
-
-    /*
-    Real expPayLegNpv = -12286.45;
-    Real expPayLegBps = -2628.39;
-    BOOST_CHECK_SMALL(swap->legNPV(0) - expPayLegNpv, usdTolerance);
-    BOOST_CHECK_SMALL(swap->legBPS(0) - expPayLegBps, usdTolerance);
-    BOOST_CHECK_SMALL(swap->inCcyLegNPV(0) - expPayLegNpv * spotFx, usdTolerance * spotFx);
-    BOOST_CHECK_SMALL(swap->inCcyLegBPS(0) - expPayLegBps * spotFx, usdTolerance * spotFx);
-
-    Real expRecLegNpv = 142064.36;
-    Real expRecLegBps = 4735.03;
-    BOOST_CHECK_SMALL(swap->legNPV(1) - expRecLegNpv, usdTolerance);
-    BOOST_CHECK_SMALL(swap->legBPS(1) - expRecLegBps, usdTolerance);
-    BOOST_CHECK_SMALL(swap->inCcyLegNPV(1) - expRecLegNpv, usdTolerance);
-    BOOST_CHECK_SMALL(swap->inCcyLegBPS(1) - expRecLegBps, usdTolerance);
-
-    BOOST_CHECK_SMALL(0.253937551076 - swap->fairFixedRate(), 1e-10);
-    BOOST_CHECK_SMALL(-0.002740802104 - swap->fairSpread(), 1e-10);
-    */
+    // Real expNpv = ;
+    // BOOST_CHECK_SMALL(swap->NPV() - expNpv, tol);
 }
 
 test_suite* CrossCcyBasisMtMResetSwapTest::suite() {

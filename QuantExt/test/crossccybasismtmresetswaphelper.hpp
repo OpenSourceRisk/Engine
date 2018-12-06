@@ -32,12 +32,6 @@ class CrossCcyBasisMtMResetSwapHelperTest {
 public:
     // Test bootstrap works
     static void testBootstrap();
-    // Test changing spot FX changes curve
-    //static void testSpotFxChange();
-    // Test changing helper floating spread
-    //static void testSpreadChange();
-    // Test moving the evaluation date
-    //static void testMovingEvaluationDate();
 
     static boost::unit_test_framework::test_suite* suite();
 };
