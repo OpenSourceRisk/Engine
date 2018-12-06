@@ -134,7 +134,7 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     boost::shared_ptr<FxIndex> fxIdx = 
         boost::make_shared<FxIndex>("dummy", 0, fgnCurrency_, domCurrency_, NullCalendar(), 
-            fgnCcyFxFwdRateCurveRLH_, domCcyFxFwdRateCurveRLH_);
+                                     spotFX_, fgnCcyFxFwdRateCurveRLH_, domCcyFxFwdRateCurveRLH_);
 
     swap_ = boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
         new CrossCcyBasisMtMResetSwap(fgnNominal, fgnCurrency_, fgnLegSchedule, fgnCcyIndex_, 0.0,
