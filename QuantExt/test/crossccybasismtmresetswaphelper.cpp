@@ -106,10 +106,9 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(const CommonVars& vars
         = boost::make_shared<FxIndex>("dummy", vars.settlementDays, vars.fgnCurrency, vars.domCurrency, 
                                       vars.payCalendar, Handle<Quote>(vars.spotFxQuote), 
                                       fgnDiscCurve, vars.domDiscCurve);
-    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap
-        = boost::make_shared<CrossCcyBasisMtMResetSwap>(vars.fgnNominal, vars.fgnCurrency, schedule, 
+    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap(new CrossCcyBasisMtMResetSwap(vars.fgnNominal, vars.fgnCurrency, schedule, 
                                                         vars.fgnIndex, vars.spreadQuote->value(), vars.domCurrency, schedule,
-                                                        vars.domIndex, 0.0, fxIndex, false);
+                                                        vars.domIndex, 0.0, fxIndex, false));
     // Attach pricing engine
     boost::shared_ptr<PricingEngine> engine 
         = boost::make_shared<CrossCcySwapEngine>(vars.domCurrency, vars.domDiscCurve, 
