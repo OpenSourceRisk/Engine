@@ -348,8 +348,11 @@ void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
     // Check values
     Real tol = 0.01;
 
-    // Real expNpv = ;
-    // BOOST_CHECK_SMALL(swap->NPV() - expNpv, tol);
+    Real expNpv = -9.9134377108421177; // cached value. Not exactly zero, due to QL_USE_INDEXED_COUPON discrepancy
+    BOOST_CHECK_SMALL(swap->NPV() - expNpv, tol);
+
+    Real expBps = -4670.170509677384; // cached value
+    BOOST_CHECK_SMALL(swap->legBPS(0) - expBps, tol);
 }
 
 test_suite* CrossCcyBasisMtMResetSwapTest::suite() {
