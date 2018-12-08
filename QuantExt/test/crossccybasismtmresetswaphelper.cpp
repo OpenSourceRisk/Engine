@@ -122,7 +122,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(const CommonVars& vars
 Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Create a helper
-    vector<boost::shared_ptr<RateHelper>> helpers(1);
+    vector<boost::shared_ptr<RateHelper> > helpers(1);
     vars.helper.reset(new CrossCcyBasisMtMResetSwapHelper(Handle<Quote>(vars.spreadQuote), Handle<Quote>(vars.spotFxQuote), 
                                                           vars.settlementDays, vars.payCalendar, vars.tenor, vars.payConvention, 
                                                           vars.fgnIndex, vars.domIndex, Handle<YieldTermStructure>(), vars.domDiscCurve));
@@ -130,7 +130,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Build yield curve referencing the helper
     return Handle<YieldTermStructure>(
-        boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear>>(0, NullCalendar(), helpers, Actual365Fixed()));
+        boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(0, NullCalendar(), helpers, Actual365Fixed()));
 }
 } // namespace
 
