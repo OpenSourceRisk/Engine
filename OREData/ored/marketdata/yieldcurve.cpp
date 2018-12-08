@@ -31,6 +31,7 @@
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
@@ -1507,13 +1508,33 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
 
             // Create a cross currency basis swap helper if we do.
             Period basisSwapTenor = basisSwapQuote->maturity();
-            boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisSwapHelper(
-                basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
-                basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(), flatIndex,
-                spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
-                flatIndex->currency().code() != fxSpotQuote->unitCcy()));
-
-            instruments.push_back(basisSwapHelper);
+            bool isMtmResettableSwap = basisSwapConvention->isMtmResettable();
+            if (!isMtmResettableSwap) {
+                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisSwapHelper(
+                    basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
+                    basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(), flatIndex,
+                    spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
+                    flatIndex->currency().code() != fxSpotQuote->unitCcy()));
+                instruments.push_back(basisSwapHelper);
+            }
+            else { // the quote is for a cross currency basis swap with a resetting notional
+                bool resetsOnFlatLeg = basisSwapConvention->flatIsResettableLeg();
+                // the convention here is to call the resetting leg the "domestic leg", 
+                // and the constant notional leg the "foreign leg"
+                bool spreadOnFgnCcy = resetsOnFlatLeg ? true : false;
+                boost::shared_ptr<IborIndex> fgnIdx = resetsOnFlatLeg ? spreadIndex : flatIndex;
+                Handle<YieldTermStructure> fgnDiscount = resetsOnFlatLeg ? spreadDiscountCurve : flatDiscountCurve;
+                boost::shared_ptr<IborIndex> domIdx = resetsOnFlatLeg ? flatIndex : spreadIndex;
+                Handle<YieldTermStructure> domDiscount = resetsOnFlatLeg ? flatDiscountCurve : spreadDiscountCurve;
+                bool invertFxQuote = (fgnIdx->currency().code() != fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
+                // Use fgn and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
+                boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
+                    basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
+                    basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
+                    fgnIdx, domIdx, fgnDiscount, domDiscount, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
+                    basisSwapConvention->eom(), spreadOnFgnCcy, invertFxQuote));
+                instruments.push_back(basisSwapHelper);
+            }
         }
     }
 }

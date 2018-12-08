@@ -60,7 +60,8 @@ public:
                             const Handle<YieldTermStructure>& fgnCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
                             const Handle<YieldTermStructure>& domCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
                             bool eom = false,
-                            bool spreadOnFgnCcy = true);
+                            bool spreadOnFgnCcy = true,
+                            bool invertFxIndex = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -89,7 +90,7 @@ protected:
     Handle<YieldTermStructure> domCcyDiscountCurve_;
     Handle<YieldTermStructure> fgnCcyFxFwdRateCurve_;
     Handle<YieldTermStructure> domCcyFxFwdRateCurve_;
-    bool eom_, spreadOnFgnCcy_;
+    bool eom_, spreadOnFgnCcy_, invertFxIndex_;
 
     Currency fgnCurrency_;
     Currency domCurrency_;

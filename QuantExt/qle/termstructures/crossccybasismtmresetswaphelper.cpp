@@ -42,12 +42,14 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<YieldTermStructure>& fgnCcyFxFwdRateCurve,
     const Handle<YieldTermStructure>& domCcyFxFwdRateCurve,
     bool eom,
-    bool spreadOnFgnCcy) 
+    bool spreadOnFgnCcy,
+    bool invertFxIndex) 
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention), 
       fgnCcyIndex_(fgnCcyIndex), domCcyIndex_(domCcyIndex), fgnCcyDiscountCurve_(fgnCcyDiscountCurve),
       domCcyDiscountCurve_(domCcyDiscountCurve), fgnCcyFxFwdRateCurve_(fgnCcyFxFwdRateCurve),
-      domCcyFxFwdRateCurve_(domCcyFxFwdRateCurve), eom_(eom), spreadOnFgnCcy_(spreadOnFgnCcy) {
+      domCcyFxFwdRateCurve_(domCcyFxFwdRateCurve), eom_(eom), spreadOnFgnCcy_(spreadOnFgnCcy),
+      invertFxIndex_(invertFxIndex) {
 
     fgnCurrency_ = fgnCcyIndex_->currency();
     domCurrency_ = domCcyIndex_->currency();
@@ -138,10 +140,15 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 
     swap_ = boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
         new CrossCcyBasisMtMResetSwap(fgnNominal, fgnCurrency_, fgnLegSchedule, fgnCcyIndex_, 0.0,
-            domCurrency_, domLegSchedule, domCcyIndex_, 0.0, fxIdx, false));
+            domCurrency_, domLegSchedule, domCcyIndex_, 0.0, fxIdx, invertFxIndex_));
 
-    boost::shared_ptr<PricingEngine> engine = 
-        boost::make_shared<CrossCcySwapEngine>(domCurrency_, domDiscountRLH_, fgnCurrency_, fgnDiscountRLH_, spotFX_);
+    boost::shared_ptr<PricingEngine> engine;
+    if (invertFxIndex_) {
+        engine.reset(new CrossCcySwapEngine(fgnCurrency_, fgnDiscountRLH_, domCurrency_, domDiscountRLH_, spotFX_));
+    }
+    else {
+        engine.reset(new CrossCcySwapEngine(domCurrency_, domDiscountRLH_, fgnCurrency_, fgnDiscountRLH_, spotFX_));
+    }
     swap_->setPricingEngine(engine);
 
     earliestDate_ = swap_->startDate();
