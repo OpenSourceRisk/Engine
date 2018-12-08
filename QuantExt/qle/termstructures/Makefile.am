@@ -10,6 +10,7 @@ libTermStructures_la_SOURCES = \
 	averageoisratehelper.cpp \
 	basistwoswaphelper.cpp \
 	crossccybasisswaphelper.cpp \
+	crossccybasismtmresetswaphelper.cpp \
 	dynamicswaptionvolmatrix.cpp \
 	hazardspreadeddefaulttermstructure.cpp \
 	oibasisswaphelper.cpp \
@@ -48,6 +49,7 @@ this_include_HEADERS = \
 	basistwoswaphelper.hpp \
 	blackinvertedvoltermstructure.hpp \
 	crossccybasisswaphelper.hpp \
+	crossccybasismtmresetswaphelper.hpp \
 	dynamicblackvoltermstructure.hpp \
 	dynamicswaptionvolmatrix.hpp \
 	hazardspreadeddefaulttermstructure.hpp \

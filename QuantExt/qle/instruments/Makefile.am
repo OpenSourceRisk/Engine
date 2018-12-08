@@ -7,6 +7,7 @@ SUBDIRS =
 libInstruments_la_SOURCES = \
 	averageois.cpp \
 	crossccybasisswap.cpp \
+	crossccybasismtmresetswap.cpp \
 	crossccyswap.cpp \
 	currencyswap.cpp \
 	deposit.cpp \
@@ -31,6 +32,7 @@ this_include_HEADERS = \
 	all.hpp \
 	averageois.hpp \
 	crossccybasisswap.hpp \
+	crossccybasismtmresetswap.hpp \
 	crossccyswap.hpp \
 	currencyswap.hpp \
 	deposit.hpp \
