@@ -33,9 +33,11 @@ namespace QuantExt {
 //! Cross Ccy Basis MtM Reset Swap Rate Helper
 /*! Rate helper for bootstrapping over cross currency basis (MtM reset) swap spreads
 
+    The resets are applied to the domestic leg (foreign currency is constant notional)
+
     Assumes that you have, at a minimum, either:
-    - flatIndex with attached YieldTermStructure and flatDiscountCurve
-    - spreadIndex with attached YieldTermStructure and spreadDiscountCurve
+    - foreign ccy index with attached YieldTermStructure and discountCurve
+    - domestic ccy with attached YieldTermStructure and discountCurve
 
     The other leg is then solved for i.e. index curve (if no
     YieldTermStructure is attached to its index) or discount curve (if
@@ -43,7 +45,7 @@ namespace QuantExt {
 
     The currencies are deduced from the ibor indexes. The spotFx
     be be quoted with either of these currencies, this is determined
-    by the flatIsDomestic flag. The settlement date of the spot is
+    by the invertFxIndex flag. The settlement date of the spot is
     assumed to be equal to the settlement date of the swap itself.
 
             \ingroup termstructures
