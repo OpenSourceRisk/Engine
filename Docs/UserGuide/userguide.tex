@@ -640,6 +640,10 @@ Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRA
 {\tt ctest -j4}
 \end{enumerate}
 
+Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
+  \${BOOST}/stage/lib}.
+
 The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
 
 The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
