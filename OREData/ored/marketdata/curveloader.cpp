@@ -103,7 +103,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
 
         if (n == yieldCurveSpecs.size()) {
             for (auto ycs : yieldCurveSpecs) {
-                ALOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
+                WLOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
                 errors[ycs->name()] = "dependent curves missing - " + missingDependents[ycs->curveConfigID()];
             }
             break;

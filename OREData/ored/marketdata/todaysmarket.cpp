@@ -46,6 +46,7 @@
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 #include <qle/indexes/equityindex.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 using namespace std;
 using namespace QuantLib;
@@ -771,7 +772,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
                 LOG("Loading spec " << *spec << " done.");
             
-            } catch (const std::exception& e) {                
+            } catch (const std::exception& e) {      
+                WLOG("Failed to build curve " << spec->name());
                 buildErrors[spec->name()] = e.what();
             }
         }
@@ -783,7 +785,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         for (auto error : buildErrors) {
             ALOG("Failed to build curve " << error.first << " due to error: " << error.second);
         }
-        QL_FAIL("Cannot build all required curves");
+
+        QL_FAIL("Cannot build all required curves! Building failed for: " <<
+            boost::algorithm::join(buildErrors | boost::adaptors::map_keys, ", "));
     }
 
 
