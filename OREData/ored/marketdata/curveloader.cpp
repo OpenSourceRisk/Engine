@@ -106,7 +106,6 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
     }
 
     /* Now put them into the front of curveSpecs */
-    curveSpecs.resize(sortedYieldCurveSpecs.size());
     curveSpecs.insert(curveSpecs.begin(), sortedYieldCurveSpecs.begin(), sortedYieldCurveSpecs.end());
 
     DLOG("Ordered Curves (" << curveSpecs.size() << ")")
