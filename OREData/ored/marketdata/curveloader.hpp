@@ -27,10 +27,10 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <vector>
 
-using ore::data::CurveConfigurations;
 
 namespace ore {
 namespace data {
+using ore::data::CurveConfigurations;
 //! Construct term structure wrappers
 /*!
   This function

@@ -31,10 +31,10 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/model/infdkdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal INF model component
 /*!
@@ -58,7 +58,7 @@ public:
     //@{
     std::string infIndex() { return data_->infIndex(); }
     boost::shared_ptr<QuantExt::InfDkParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
     //@}
 private:
     void buildCapFloorBasket();
@@ -68,7 +68,7 @@ private:
     boost::shared_ptr<InfDkData> data_;
     boost::shared_ptr<ZeroInflationIndex> inflationIndex_;
     boost::shared_ptr<QuantExt::InfDkParametrization> parametrization_;
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
 } // namespace data

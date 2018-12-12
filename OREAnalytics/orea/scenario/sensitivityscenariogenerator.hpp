@@ -33,8 +33,8 @@
 #include <map>
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace data;
 
 //! Sensitivity Scenario Generator
 /*!

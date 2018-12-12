@@ -36,11 +36,11 @@
 
 #include <vector>
 
-using namespace QuantLib;
-using std::string;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
+using std::string;
 
 //! Serializable Additional Leg Data
 /*!

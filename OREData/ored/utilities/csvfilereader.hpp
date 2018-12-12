@@ -28,10 +28,10 @@
 #include <fstream>
 #include <vector>
 
-using QuantLib::Size;
 
 namespace ore {
 namespace data {
+using QuantLib::Size;
 
 class CSVFileReader {
 public:

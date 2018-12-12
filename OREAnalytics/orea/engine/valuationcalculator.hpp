@@ -28,13 +28,13 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 
+
+namespace ore {
+namespace analytics {
 using ore::data::Trade;
 using QuantLib::Date;
 using QuantLib::Size;
 using QuantLib::Real;
-
-namespace ore {
-namespace analytics {
 
 //! ValuationCalculator interface
 class ValuationCalculator {

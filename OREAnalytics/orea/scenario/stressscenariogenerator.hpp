@@ -31,8 +31,8 @@
 #include <ored/marketdata/market.hpp>
 
 namespace ore {
-using namespace data;
 namespace analytics {
+using namespace data;
 
 //! Stress Scenario Generator
 /*!

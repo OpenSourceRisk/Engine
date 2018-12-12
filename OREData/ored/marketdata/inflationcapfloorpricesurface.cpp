@@ -150,7 +150,7 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             addCap = 2;
         }
         if (capStrikes.size() == 1) {
-            floorStrikes.push_back(largeStrike);
+            capStrikes.push_back(largeStrike);
             addCap = 1;
         }
         if (addFloor > 0) {

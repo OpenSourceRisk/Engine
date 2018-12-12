@@ -44,12 +44,12 @@
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/quote.hpp>
 
+
+namespace QuantExt {
 using QuantLib::Real;
 using QuantLib::Rate;
 using QuantLib::Handle;
 using QuantLib::Null;
-
-namespace QuantExt {
 
     /*! Same as QuantLib, but with fixed t1 computation (dc from vol ts instead
       of index) and extended to SLN and N vol types */

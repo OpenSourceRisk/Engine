@@ -32,8 +32,17 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
-#include <qle/currencies/all.hpp>
-#include <qle/calendars/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -104,8 +113,11 @@ Date parseDate(const string& s) {
 }
 
 Real parseReal(const string& s) {
-    // TODO: review
-    return atof(s.c_str());
+    try {
+        return std::stod(s);
+    } catch (const std::exception& ex) {
+        QL_FAIL("Failed to parseReal(\"" << s << "\") " << ex.what());
+    }
 }
 
 bool tryParseReal(const string& s, QuantLib::Real& result) {
@@ -120,7 +132,7 @@ bool tryParseReal(const string& s, QuantLib::Real& result) {
 
 Integer parseInteger(const string& s) {
     try {
-        return io::to_integer(s);
+        return boost::lexical_cast<Integer>(s.c_str());
     } catch (std::exception& ex) {
         QL_FAIL("Failed to parseInteger(\"" << s << "\") " << ex.what());
     }
@@ -213,7 +225,7 @@ Calendar parseCalendar(const string& s) {
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
                                       {"CLP", Chile()},
-                                      {"THB", Thailand()},
+                                      {"THB", QuantExt::Thailand()},
                                       {"COP", Colombia()},
                                       {"PEN", Peru()},
                                       {"MYR", Malaysia()},

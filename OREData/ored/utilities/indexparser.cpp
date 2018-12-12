@@ -31,7 +31,44 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <qle/indexes/all.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/dkcpi.hpp>
+#include <qle/indexes/secpi.hpp>
+#include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/indexes/ibor/chfsaron.hpp>
+#include <qle/indexes/ibor/chftois.hpp>
+#include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/copibr.hpp>
+#include <qle/indexes/ibor/corra.hpp>
+#include <qle/indexes/ibor/czkpribor.hpp>
+#include <qle/indexes/ibor/demlibor.hpp>
+#include <qle/indexes/ibor/dkkcibor.hpp>
+#include <qle/indexes/ibor/dkkois.hpp>
+#include <qle/indexes/ibor/hkdhibor.hpp>
+#include <qle/indexes/ibor/hufbubor.hpp>
+#include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwkoribor.hpp>
+#include <qle/indexes/ibor/mxntiie.hpp>
+#include <qle/indexes/ibor/myrklibor.hpp>
+#include <qle/indexes/ibor/noknibor.hpp>
+#include <qle/indexes/ibor/nowa.hpp>
+#include <qle/indexes/ibor/nzdbkbm.hpp>
+#include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnwibor.hpp>
+#include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/seksior.hpp>
+#include <qle/indexes/ibor/sekstibor.hpp>
+#include <qle/indexes/ibor/sgdsibor.hpp>
+#include <qle/indexes/ibor/sgdsor.hpp>
+#include <qle/indexes/ibor/skkbribor.hpp>
+#include <qle/indexes/ibor/thbbibor.hpp>
+#include <qle/indexes/ibor/tonar.hpp>
+#include <qle/indexes/ibor/twdtaibor.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -127,6 +164,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"AUD-AONIA", boost::make_shared<IborIndexParserOIS<Aonia>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
         {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
@@ -171,7 +209,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
-        {"CLP-CAMARA", boost::make_shared<IborIndexParserWithPeriod<CLPCamara>>()}
+        {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
+        {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()}
     };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);

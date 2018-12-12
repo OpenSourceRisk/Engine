@@ -289,20 +289,23 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         yieldCurveTenors_ != rhs.yieldCurveTenors_ || indices_ != rhs.indices_ || swapIndices_ != rhs.swapIndices_ ||
         interpolation_ != rhs.interpolation_ || extrapolate_ != rhs.extrapolate_ ||
         swapVolTerms_ != rhs.swapVolTerms_ || swapVolCcys_ != rhs.swapVolCcys_ ||
-        swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolExpiries_ != rhs.swapVolExpiries_ ||
+        swapVolDayCounters_ != rhs.swapVolDayCounters_ || swapVolSimulate_ != rhs.swapVolSimulate_ || swapVolIsCube_ != rhs.swapVolIsCube_ || 
+        swapVolSimulateATMOnly_ != rhs.swapVolSimulateATMOnly_ ||
+        swapVolExpiries_ != rhs.swapVolExpiries_ || swapVolStrikeSpreads_ != rhs.swapVolStrikeSpreads_ ||
         swapVolDecayMode_ != rhs.swapVolDecayMode_ || capFloorVolSimulate_ != rhs.capFloorVolSimulate_ ||
-        capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolExpiries_ != rhs.capFloorVolExpiries_ ||
-        capFloorVolStrikes_ != rhs.capFloorVolStrikes_ || capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ ||
-        defaultNames_ != rhs.defaultNames_ || defaultTenors_ != rhs.defaultTenors_ ||
-        cdsVolSimulate_ != rhs.cdsVolSimulate_ || cdsVolNames_ != rhs.cdsVolNames_ ||
-        cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDecayMode_ != rhs.cdsVolDecayMode_ ||
-        equityNames_ != rhs.equityNames_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
-        equityForecastTenors_ != rhs.equityForecastTenors_ ||
-        equityForecastCurveSimulate_ != rhs.equityForecastCurveSimulate_ ||
+        capFloorVolCcys_ != rhs.capFloorVolCcys_ || capFloorVolDayCounters_ != rhs.capFloorVolDayCounters_ ||
+        capFloorVolExpiries_ != rhs.capFloorVolExpiries_ || capFloorVolStrikes_ != rhs.capFloorVolStrikes_ ||
+        capFloorVolDecayMode_ != rhs.capFloorVolDecayMode_ || survivalProbabilitySimulate_ != rhs.survivalProbabilitySimulate_ ||
+        recoveryRateSimulate_ != rhs.recoveryRateSimulate_ || defaultNames_ != rhs.defaultNames_ ||
+        defaultCurveDayCounters_ != rhs.defaultCurveDayCounters_ || defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
+        cdsVolSimulate_ != rhs.cdsVolSimulate_ || cdsVolNames_ != rhs.cdsVolNames_ || cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDayCounters_ != rhs.cdsVolDayCounters_ ||
+        cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityNames_ != rhs.equityNames_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
+        equityForecastTenors_ != rhs.equityForecastTenors_ || equityForecastCurveSimulate_ != rhs.equityForecastCurveSimulate_ ||
         dividendYieldSimulate_ != rhs.dividendYieldSimulate_ || fxVolSimulate_ != rhs.fxVolSimulate_ ||
-        fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
-        fxVolCcyPairs_ != rhs.fxVolCcyPairs_ || fxSpotSimulate_ != rhs.fxSpotSimulate_ || fxCcyPairs_ != rhs.fxCcyPairs_ ||
-        equityVolSimulate_ != rhs.equityVolSimulate_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
+        fxVolIsSurface_ != rhs.fxVolIsSurface_ || fxVolExpiries_ != rhs.fxVolExpiries_ ||
+        fxVolDayCounters_ != rhs.fxVolDayCounters_ || fxVolDecayMode_ != rhs.fxVolDecayMode_ ||
+        fxVolCcyPairs_ != rhs.fxVolCcyPairs_ || fxSpotSimulate_ != rhs.fxSpotSimulate_ || fxCcyPairs_ != rhs.fxCcyPairs_ || equityVolSimulate_ != rhs.equityVolSimulate_ ||
+        equityVolExpiries_ != rhs.equityVolExpiries_ || equityVolDayCounters_ != rhs.equityVolDayCounters_ ||
         equityVolDecayMode_ != rhs.equityVolDecayMode_ || equityVolNames_ != rhs.equityVolNames_ ||
         equityIsSurface_ != rhs.equityIsSurface_ || equityVolSimulateATMOnly_ != rhs.equityVolSimulateATMOnly_ ||
         equityMoneyness_ != rhs.equityMoneyness_ ||
@@ -310,9 +313,11 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         additionalScenarioDataCcys_ != rhs.additionalScenarioDataCcys_ || securitySpreadsSimulate_ != rhs.securitySpreadsSimulate_ || 
         securities_ != rhs.securities_ || baseCorrelationSimulate_ != rhs.baseCorrelationSimulate_ ||
         baseCorrelationNames_ != rhs.baseCorrelationNames_ || baseCorrelationTerms_ != rhs.baseCorrelationTerms_ ||
-        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ ||
-        zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationTenors_ != rhs.zeroInflationTenors_ ||
-        yoyInflationIndices_ != rhs.yoyInflationIndices_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ || 
+        baseCorrelationDayCounters_ != rhs.baseCorrelationDayCounters_ ||
+        baseCorrelationDetachmentPoints_ != rhs.baseCorrelationDetachmentPoints_ || cpiIndices_ != rhs.cpiIndices_ ||
+        zeroInflationIndices_ != rhs.zeroInflationIndices_ || zeroInflationDayCounters_ != rhs.zeroInflationDayCounters_ ||
+        zeroInflationTenors_ != rhs.zeroInflationTenors_ || yoyInflationIndices_ != rhs.yoyInflationIndices_ ||
+        yoyInflationDayCounters_ != rhs.yoyInflationDayCounters_ || yoyInflationTenors_ != rhs.yoyInflationTenors_ || 
         commodityCurveSimulate_ != rhs.commodityCurveSimulate_ || commodityNames_ != rhs.commodityNames_ || 
         commodityCurveTenors_ != rhs.commodityCurveTenors_ || commodityCurveDayCounters_ != rhs.commodityCurveDayCounters_ ||
         commodityVolSimulate_ != rhs.commodityVolSimulate_ || commodityVolDecayMode_ != rhs.commodityVolDecayMode_ ||

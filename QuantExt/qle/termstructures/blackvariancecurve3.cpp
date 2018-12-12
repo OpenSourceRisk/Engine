@@ -53,9 +53,10 @@ void BlackVarianceCurve3::update() {
 void BlackVarianceCurve3::performCalculations() const {
     for (Size j = 1; j <= quotes_.size(); j++) {
         variances_[j] = times_[j] * quotes_[j - 1]->value() * quotes_[j - 1]->value();
-        QL_REQUIRE(variances_[j] >= variances_[j - 1],
-                   "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
-                                                           << " and var[j-1]:" << variances_[j - 1]);
+      //  TEMP FIX: Non-decreasing variances in backtest when applying shift between scenarios
+      //  QL_REQUIRE(variances_[j] >= variances_[j - 1],
+      //             "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
+      //                                                     << " and var[j-1]:" << variances_[j - 1]);
     }
     varianceCurve_.update();
 }
