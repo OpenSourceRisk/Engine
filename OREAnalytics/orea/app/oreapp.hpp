@@ -25,7 +25,9 @@
 
 #include <boost/make_shared.hpp>
 #include <iostream>
-#include <orea/aggregation/all.hpp>
+#include <orea/aggregation/collateralaccount.hpp>
+#include <orea/aggregation/collatexposurehelper.hpp>
+#include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
@@ -37,10 +39,10 @@
 #include <ored/ored.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 
-using namespace ore::data;
 
 namespace ore {
 namespace analytics {
+using namespace ore::data;
 
 class SensitivityScenarioData;
 class SensitivityAnalysis;
@@ -54,6 +56,22 @@ public:
     //! generates XVA reports for a given portfolio and market
     virtual int run();
 
+    //! Load curve configurations from xml file, build t0 market using market data provided.
+    //! If any of the passed vectors are empty fall back on OREApp::buildMarket() and use market/fixing data files
+    void buildMarket(const std::string& todaysMarketXML = "",
+        const std::string& curveConfigXML = "",
+        const std::string& conventionsXML = "",
+        const std::vector<std::string>& marketData = std::vector<std::string>(),
+        const std::vector<std::string>& fixingData = std::vector<std::string>());
+
+    //! Get the t0 market
+    // TODO: This should return a market, not market impl
+    boost::shared_ptr<ore::data::MarketImpl> getMarket() const;
+
+    //! build engine factory for a given market from an XML String
+    boost::shared_ptr<ore::data::EngineFactory> buildEngineFactoryFromXMLString(const boost::shared_ptr<ore::data::Market>& market,
+        const std::string& pricingEngineXML);
+
 protected:
     //! read setup from params_
     virtual void readSetup();
@@ -65,8 +83,6 @@ protected:
     void getConventions();
     //! load market parameters
     void getMarketParameters();
-    //! build today's market
-    void buildMarket();
     //! build engine factory for a given market
     virtual boost::shared_ptr<EngineFactory> buildEngineFactory(const boost::shared_ptr<Market>& market,
                                                                 const string& groupName = "setup") const;

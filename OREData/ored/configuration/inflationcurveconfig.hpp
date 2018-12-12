@@ -31,6 +31,9 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -39,9 +42,6 @@ using QuantLib::Date;
 using QuantLib::DayCounter;
 using QuantLib::Calendar;
 using QuantLib::Frequency;
-
-namespace ore {
-namespace data {
 
 class InflationCurveConfig : public CurveConfig {
 public:

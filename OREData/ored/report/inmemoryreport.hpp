@@ -27,11 +27,11 @@
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
 
-using std::string;
-using std::vector;
 
 namespace ore {
 namespace data {
+using std::string;
+using std::vector;
 
 /*! InMemoryReport just stores report information in local vectors and provides an interface to access
  *  the values. It could be used as a backend to a GUI

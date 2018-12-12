@@ -34,10 +34,10 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Supported calibration parameter type
 enum class ParamType {
@@ -125,10 +125,10 @@ public:
           optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
-    void clear();
+    virtual void clear();
 
     //! Reset member variables to defaults
-    void reset();
+    virtual void reset();
 
     //! \name Serialisation
     //@{

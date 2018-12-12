@@ -25,9 +25,9 @@
 
 #include <ql/time/calendar.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
     class Peru : public Calendar {
       private:

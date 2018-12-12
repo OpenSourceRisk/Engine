@@ -33,6 +33,9 @@
 #include <ql/types.hpp>
 #include <set>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using std::set;
@@ -42,9 +45,6 @@ using boost::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
-
-namespace ore {
-namespace data {
 
 //! Base class for yield curve segments.
 /*!

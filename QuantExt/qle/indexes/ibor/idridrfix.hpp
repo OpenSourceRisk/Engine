@@ -29,9 +29,9 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/currencies/asia.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! IDR-IDRFIX index
 /*! IDR-IDRFIX rate.

@@ -9,9 +9,6 @@
     <ClInclude Include="qle\currencies\africa.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
-    <ClInclude Include="qle\currencies\all.hpp">
-      <Filter>currencies</Filter>
-    </ClInclude>
     <ClInclude Include="qle\currencies\america.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
@@ -75,9 +72,6 @@
     <ClInclude Include="qle\termstructures\interpolateddiscountcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\cashflows\all.hpp">
-      <Filter>cashflows</Filter>
-    </ClInclude>
     <ClInclude Include="qle\cashflows\averageonindexedcoupon.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -92,15 +86,6 @@
     </ClInclude>
     <ClInclude Include="qle\cashflows\subperiodscouponpricer.hpp">
       <Filter>cashflows</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\indexes\all.hpp">
-      <Filter>indexes</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\indexes\ibor\all.hpp">
-      <Filter>indexes\ibor</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\instruments\all.hpp">
-      <Filter>instruments</Filter>
     </ClInclude>
     <ClInclude Include="qle\instruments\averageois.hpp">
       <Filter>instruments</Filter>
@@ -120,20 +105,11 @@
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\all.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp">
       <Filter>pricingengines</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\quotes\all.hpp">
-      <Filter>quotes</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\termstructures\all.hpp">
-      <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\averageoisratehelper.hpp">
       <Filter>termstructures</Filter>
@@ -158,9 +134,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\oiccbasisswap.hpp">
       <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\models\all.hpp">
-      <Filter>models</Filter>
     </ClInclude>
     <ClInclude Include="qle\models\crossassetanalytics.hpp">
       <Filter>models</Filter>
@@ -216,9 +189,6 @@
     <ClInclude Include="qle\models\pseudoparameter.hpp">
       <Filter>models</Filter>
     </ClInclude>
-    <ClInclude Include="qle\methods\all.hpp">
-      <Filter>methods</Filter>
-    </ClInclude>
     <ClInclude Include="qle\methods\multipathgeneratorbase.hpp">
       <Filter>methods</Filter>
     </ClInclude>
@@ -236,9 +206,6 @@
     </ClInclude>
     <ClInclude Include="qle\pricingengines\oiccbasisswapengine.hpp">
       <Filter>pricingengines</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\processes\all.hpp">
-      <Filter>processes</Filter>
     </ClInclude>
     <ClInclude Include="qle\processes\crossassetstateprocess.hpp">
       <Filter>processes</Filter>
@@ -459,9 +426,6 @@
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\all.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
       <Filter>math</Filter>
     </ClInclude>
@@ -569,9 +533,6 @@
     </ClInclude>
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp">
       <Filter>instruments</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\calendars\all.hpp">
-      <Filter>time\calendars</Filter>
     </ClInclude>
     <ClInclude Include="qle\calendars\chile.hpp">
       <Filter>time\calendars</Filter>

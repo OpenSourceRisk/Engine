@@ -48,8 +48,9 @@ bool LgmData::operator==(const LgmData& rhs) {
     if (qualifier_ != rhs.qualifier_ || calibrationType_ != rhs.calibrationType_ || revType_ != rhs.revType_ ||
         volType_ != rhs.volType_ || calibrateH_ != rhs.calibrateH_ || hType_ != rhs.hType_ || hTimes_ != rhs.hTimes_ ||
         hValues_ != rhs.hValues_ || calibrateA_ != rhs.calibrateA_ || aType_ != rhs.aType_ || aTimes_ != rhs.aTimes_ ||
-        aValues_ != rhs.aValues_ || scaling_ != rhs.scaling_ || optionExpiries_ != rhs.optionExpiries_ ||
-        optionTerms_ != rhs.optionTerms_ || optionStrikes_ != rhs.optionStrikes_) {
+        aValues_ != rhs.aValues_ || shiftHorizon_!= rhs.shiftHorizon_ || scaling_ != rhs.scaling_ ||
+        optionExpiries_ != rhs.optionExpiries_ || optionTerms_ != rhs.optionTerms_ || optionStrikes_ != rhs.optionStrikes_ /*||
+        calibrationStrategy_ != rhs.calibrationStrategy_*/) {
         return false;
     }
     return true;
@@ -151,6 +152,8 @@ LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s) {
 std::ostream& operator<<(std::ostream& oss, const LgmData::CalibrationStrategy& type) {
     if (type == LgmData::CalibrationStrategy::CoterminalATM)
         oss << "COTERMINALATM";
+    else if (type == LgmData::CalibrationStrategy::CoterminalDealStrike)
+        oss << "COTERMINALDEALSTRIKE";
     else if (type == LgmData::CalibrationStrategy::None)
         oss << "NONE";
     else

@@ -21,6 +21,8 @@
 #include <ored/utilities/xmlutils.hpp>
 
 using namespace QuantLib;
+using namespace std;
+
 
 namespace ore {
 namespace analytics {

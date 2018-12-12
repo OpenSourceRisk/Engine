@@ -27,10 +27,10 @@
 #include <ql/time/date.hpp>
 #include <vector>
 
-using QuantLib::Real;
 
 namespace ore {
 namespace data {
+using QuantLib::Real;
 
 //! Instrument Wrapper
 /*!

@@ -31,7 +31,44 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <qle/indexes/all.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/dkcpi.hpp>
+#include <qle/indexes/secpi.hpp>
+#include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/indexes/ibor/chfsaron.hpp>
+#include <qle/indexes/ibor/chftois.hpp>
+#include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/copibr.hpp>
+#include <qle/indexes/ibor/corra.hpp>
+#include <qle/indexes/ibor/czkpribor.hpp>
+#include <qle/indexes/ibor/demlibor.hpp>
+#include <qle/indexes/ibor/dkkcibor.hpp>
+#include <qle/indexes/ibor/dkkois.hpp>
+#include <qle/indexes/ibor/hkdhibor.hpp>
+#include <qle/indexes/ibor/hufbubor.hpp>
+#include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwkoribor.hpp>
+#include <qle/indexes/ibor/mxntiie.hpp>
+#include <qle/indexes/ibor/myrklibor.hpp>
+#include <qle/indexes/ibor/noknibor.hpp>
+#include <qle/indexes/ibor/nowa.hpp>
+#include <qle/indexes/ibor/nzdbkbm.hpp>
+#include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnwibor.hpp>
+#include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/seksior.hpp>
+#include <qle/indexes/ibor/sekstibor.hpp>
+#include <qle/indexes/ibor/sgdsibor.hpp>
+#include <qle/indexes/ibor/sgdsor.hpp>
+#include <qle/indexes/ibor/skkbribor.hpp>
+#include <qle/indexes/ibor/thbbibor.hpp>
+#include <qle/indexes/ibor/tonar.hpp>
+#include <qle/indexes/ibor/twdtaibor.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;

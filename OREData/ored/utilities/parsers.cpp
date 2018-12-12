@@ -32,8 +32,15 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
-#include <qle/currencies/all.hpp>
-#include <qle/calendars/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
 
 #include <boost/lexical_cast.hpp>
 

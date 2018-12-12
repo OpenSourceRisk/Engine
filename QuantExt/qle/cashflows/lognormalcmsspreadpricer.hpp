@@ -48,7 +48,6 @@
 #include <ql/math/integrals/gaussianquadratures.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 
-using namespace QuantLib;
 
 namespace QuantLib {
     class CmsSpreadCoupon;
@@ -56,6 +55,7 @@ namespace QuantLib {
 }
 
 namespace QuantExt {
+using namespace QuantLib;
 
 
     //! CMS spread - coupon pricer

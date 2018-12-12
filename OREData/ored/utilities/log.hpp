@@ -51,10 +51,10 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-using std::string;
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! The Base Custom Log Handler class
 /*!

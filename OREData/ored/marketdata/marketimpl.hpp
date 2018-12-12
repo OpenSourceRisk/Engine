@@ -31,6 +31,9 @@
 
 #include <map>
 
+
+namespace ore {
+namespace data {
 using namespace QuantLib;
 using ore::data::Convention;
 using ore::data::Conventions;
@@ -38,9 +41,6 @@ using std::string;
 using std::map;
 using std::pair;
 using std::tuple;
-
-namespace ore {
-namespace data {
 
 // TODO: rename class
 //! Market Implementation

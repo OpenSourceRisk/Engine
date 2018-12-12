@@ -37,7 +37,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
     try {
 
-        boost::shared_ptr<CommodityCurveConfig> config = curveConfigs.commodityCurveConfig(spec_.curveConfigId());
+        boost::shared_ptr<CommodityCurveConfig> config = curveConfigs.commodityCurveConfig(spec_.curveConfigID());
 
         // Loop over all market data looking for the quotes
         map<Date, Real> curveData;

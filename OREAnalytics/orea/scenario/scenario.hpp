@@ -31,13 +31,13 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Real;
 using QuantLib::Size;
 using QuantLib::Date;
 using std::string;
-
-namespace ore {
-namespace analytics {
 
 //! Data types stored in the scenario class
 /*! \ingroup scenario

@@ -31,11 +31,11 @@
 #include <qle/models/infdkparametrization.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
-using namespace QuantExt;
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantExt;
+using namespace QuantLib;
 
 Real logCalibrationErrors(
     const std::vector<boost::shared_ptr<BlackCalibrationHelper>>& basket,

@@ -32,6 +32,9 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using QuantLib::IborIndex;
 using QuantLib::SwapIndex;
@@ -41,9 +44,6 @@ using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
 using QuantLib::ZeroInflationTermStructure;
 using ore::data::Convention;
-
-namespace ore {
-namespace data {
 
 //! Convert std::string to QuantExt::FxIndex
 /*!
