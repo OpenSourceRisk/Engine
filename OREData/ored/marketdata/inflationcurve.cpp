@@ -164,6 +164,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
                 baseRate, nominalTs, instruments, config->tolerance()));
+            // force bootstrap so that errors are thrown during the build, not later
+            boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
@@ -222,6 +224,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
                 baseRate, nominalTs, instruments, config->tolerance()));
+            // force bootstrap so that errors are thrown during the build, not later
+            boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }
         if (seasonality != nullptr) {
             curve_->setSeasonality(seasonality);

@@ -154,6 +154,9 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
         QL_FAIL("unknown error");
     }
 
+    // force bootstrap so that errors are thrown during the build, not later
+    h_->discount(QL_EPSILON);
+
     LOG("Yield curve " << curveSpec_.name() << " built");
 }
 

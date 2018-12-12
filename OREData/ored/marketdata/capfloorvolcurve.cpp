@@ -182,6 +182,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
     } catch (...) {
         QL_FAIL("cap/floor vol curve building failed: unknown error");
     }
+    // force bootstrap so that errors are thrown during the build, not later
+    capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
 }
 } // namespace data
 } // namespace ore
