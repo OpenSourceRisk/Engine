@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt-Test_SRC currency.cpp
+logquote.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
