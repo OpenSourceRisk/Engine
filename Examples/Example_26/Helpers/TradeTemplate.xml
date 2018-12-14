@@ -8,7 +8,7 @@
 	  <AdditionalFields/>
 	</Envelope>
 	<SwapData>
-	  <LegData>
+	<LegData>
 		<LegType>Fixed</LegType>
 		<Payer>false</Payer>
 		<Currency>EUR</Currency>
@@ -17,7 +17,7 @@
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
-                <PaymentLag>0</PaymentLag>
+		<PaymentLag>0</PaymentLag>
 		<FixedLegData>
 		  <Rates>
 			<Rate>0</Rate>
@@ -36,16 +36,16 @@
 			<LastDate/>
 		  </Rules>
 		</ScheduleData>
-	  </LegData>
-	  <LegData>
+	</LegData>
+	<LegData>
 		<LegType>Floating</LegType>
 		<Payer>true</Payer>
 		<Currency>EUR</Currency>
 		<Notionals>
-		  <Notional>1000000.000000</Notional>
+		<Notional>1000000.000000</Notional>
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
-                <PaymentLag>0</PaymentLag>
+		<PaymentLag>0</PaymentLag>
 		<PaymentConvention>MF</PaymentConvention>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
@@ -68,39 +68,39 @@
 			<LastDate/>
 		  </Rules>
 		</ScheduleData>
-	  </LegData>
+	</LegData>
 	</SwapData>
 </Trade>
 <Trade id="fratemplate">
   <TradeType>ForwardRateAgreement</TradeType>
   <Envelope>
-    <CounterParty>CPTY_A</CounterParty>
-    <NettingSetId>CPTY_A</NettingSetId>
-    <AdditionalFields/>
+	<CounterParty>CPTY_A</CounterParty>
+	<NettingSetId>CPTY_A</NettingSetId>
+	<AdditionalFields/>
   </Envelope>
   <ForwardRateAgreementData>
-    <StartDate></StartDate>
-    <EndDate></EndDate>
-    <Currency>EUR</Currency>
-    <Index>EUR-EURIBOR-1Y</Index>
-    <LongShort>Long</LongShort>
-    <Strike>0</Strike>
-    <Notional>10000000</Notional>
+	<StartDate></StartDate>
+	<EndDate></EndDate>
+	<Currency>EUR</Currency>
+	<Index>EUR-EURIBOR-1Y</Index>
+	<LongShort>Long</LongShort>
+	<Strike>0</Strike>
+	<Notional>10000000</Notional>
   </ForwardRateAgreementData>
 </Trade>
 <Trade id="fxfwdtemplate">
   <TradeType>FxForward</TradeType>
   <Envelope>
-    <CounterParty>CPTY_A</CounterParty>
-    <NettingSetId>CPTY_A</NettingSetId>
-    <AdditionalFields/>
+	<CounterParty>CPTY_A</CounterParty>
+	<NettingSetId>CPTY_A</NettingSetId>
+	<AdditionalFields/>
   </Envelope>  
   <FxForwardData>
-    <ValueDate></ValueDate>
-    <BoughtCurrency>EUR</BoughtCurrency>
-    <BoughtAmount>1000000</BoughtAmount>
-    <SoldCurrency>EUR</SoldCurrency>
-    <SoldAmount>1000000</SoldAmount>
+	<ValueDate></ValueDate>
+	<BoughtCurrency>EUR</BoughtCurrency>
+	<BoughtAmount>1000000</BoughtAmount>
+	<SoldCurrency>EUR</SoldCurrency>
+	<SoldAmount>1000000</SoldAmount>
   </FxForwardData>
 </Trade>
 <Trade id="xccybasisswaptemplate">
@@ -118,13 +118,13 @@
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
 		  <Exchanges>
-            <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
-          </Exchanges>
+			<NotionalInitialExchange>true</NotionalInitialExchange>
+			<NotionalFinalExchange>true</NotionalFinalExchange>
+		  </Exchanges>
 		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
-                <PaymentLag>0</PaymentLag>
+				<PaymentLag>0</PaymentLag>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
@@ -153,14 +153,14 @@
 		<Currency>EUR</Currency>
 		<Notionals>
 		  <Notional>1000000.000000</Notional>
-          <Exchanges>
-            <NotionalInitialExchange>true</NotionalInitialExchange>
-            <NotionalFinalExchange>true</NotionalFinalExchange>
-          </Exchanges>
-        </Notionals>
+		  <Exchanges>
+			<NotionalInitialExchange>true</NotionalInitialExchange>
+			<NotionalFinalExchange>true</NotionalFinalExchange>
+		  </Exchanges>
+		</Notionals>
 		<DayCounter>ACT/360</DayCounter>
 		<PaymentConvention>MF</PaymentConvention>
-                <PaymentLag>0</PaymentLag>
+		<PaymentLag>0</PaymentLag>
 		<FloatingLegData>
 		  <Index>EUR-EURIBOR-1Y</Index>
 		  <Spreads>
