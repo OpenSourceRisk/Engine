@@ -462,7 +462,7 @@ public:
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             int fixingDays = 0, const string& fixingCalendar = "",
             const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(), 
-            const int& paymentLag = 0);
+            const int paymentLag = 0);
 
     //! \name Serialisation
     //@{
