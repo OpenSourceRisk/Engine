@@ -1,7 +1,10 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC currency.cpp
+set(QuantExt-Test_SRC blackvariancecurve.cpp
+currency.cpp
+deposit.cpp
 logquote.cpp
+payment.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
