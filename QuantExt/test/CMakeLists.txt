@@ -3,8 +3,10 @@
 set(QuantExt-Test_SRC blackvariancecurve.cpp
 currency.cpp
 deposit.cpp
+discountcurve.cpp
 logquote.cpp
 payment.cpp
+ratehelpers.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
