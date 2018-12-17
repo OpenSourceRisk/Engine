@@ -150,14 +150,6 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
     // Create the helper swap manually and price it using curve bootstrapped from helper
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
 
-    // Print out cashflow to validate. Remove later
-    /*
-    for (int j = 0; j < 3; j++) {
-        for (int i = 0; i < swap->leg(j).size(); i++) {
-            cout << swap->leg(j)[i]->date() << "     " << swap->leg(j)[i]->amount() << endl;
-        }
-    };
-    */
     // Swap should have NPV = 0.0. 
     Real tol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), tol);
