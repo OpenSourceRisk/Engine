@@ -35,11 +35,11 @@ marketdata/fxvolcurve.cpp
 marketdata/inflationcapfloorpricesurface.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
+marketdata/inmemoryloader.cpp
 marketdata/market.cpp
 marketdata/marketdatum.cpp
 marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
-marketdata/inmemoryloader.cpp
 marketdata/security.cpp
 marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
@@ -149,12 +149,12 @@ marketdata/fxvolcurve.hpp
 marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
+marketdata/inmemoryloader.hpp
 marketdata/loader.hpp
 marketdata/market.hpp
 marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
-marketdata/inmemoryloader.hpp
 marketdata/security.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp

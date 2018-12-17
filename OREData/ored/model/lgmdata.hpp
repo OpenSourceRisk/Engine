@@ -125,10 +125,10 @@ public:
           optionExpiries_(optionExpiries), optionTerms_(optionTerms), optionStrikes_(optionStrikes) {}
 
     //! Clear list of calibration instruments
-    void clear();
+    virtual void clear();
 
     //! Reset member variables to defaults
-    void reset();
+    virtual void reset();
 
     //! \name Serialisation
     //@{

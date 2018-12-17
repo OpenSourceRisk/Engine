@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -31,8 +33,6 @@
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-
-#include <test/equityswap.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -167,13 +167,14 @@ struct CommonVars {
 
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void EquitySwapTest::testEquitySwapPriceReturn() {
+BOOST_AUTO_TEST_SUITE(EquitySwapTests)
+
+BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
+
     BOOST_TEST_MESSAGE("Testing Equity Swap Price Return...");
     
-    QuantLib::SavedSettings backup;
-
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
     Date today = market->asofDate();
@@ -209,10 +210,9 @@ void EquitySwapTest::testEquitySwapPriceReturn() {
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8); // this is 1E-10 rel diff
 }
 
-void EquitySwapTest::testEquitySwapTotalReturn() {
-    BOOST_TEST_MESSAGE("Testing Equity Swap Total Return...");
+BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
 
-    QuantLib::SavedSettings backup;
+    BOOST_TEST_MESSAGE("Testing Equity Swap Total Return...");
 
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
@@ -249,10 +249,6 @@ void EquitySwapTest::testEquitySwapTotalReturn() {
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
 }
 
-test_suite* EquitySwapTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("EquitySwapTest");
-    suite->add(BOOST_TEST_CASE(&EquitySwapTest::testEquitySwapPriceReturn));
-    suite->add(BOOST_TEST_CASE(&EquitySwapTest::testEquitySwapTotalReturn));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
