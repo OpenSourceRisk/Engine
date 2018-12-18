@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt-Test_SRC blackvariancecurve.cpp
+commodityforward.cpp
 currency.cpp
 deposit.cpp
 discountcurve.cpp
