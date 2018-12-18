@@ -9,6 +9,7 @@ index.cpp
 logquote.cpp
 payment.cpp
 ratehelpers.cpp
+survivalprobabilitycurve.cpp 
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
