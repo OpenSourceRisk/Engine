@@ -5,6 +5,7 @@ commodityforward.cpp
 currency.cpp
 deposit.cpp
 discountcurve.cpp
+index.cpp
 logquote.cpp
 payment.cpp
 ratehelpers.cpp
