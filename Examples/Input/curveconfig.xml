@@ -19,6 +19,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/GBP</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURCHF</CurveId>
@@ -27,6 +28,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/CHF</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURJPY</CurveId>
@@ -35,6 +37,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/JPY</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>GBPUSD</CurveId>
@@ -43,6 +46,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
     </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>

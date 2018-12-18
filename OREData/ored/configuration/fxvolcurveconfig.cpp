@@ -77,9 +77,9 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Dimension " << dim << " not supported yet");
     }
     expiries_ = XMLUtils::getChildrenValuesAsPeriods(node, "Expiries", true);
+    fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
 
     if (dimension_ == Dimension::Smile) {
-        fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
         fxForeignYieldCurveID_ = XMLUtils::getChildValue(node, "FXForeignCurveID", true);
         fxDomesticYieldCurveID_ = XMLUtils::getChildValue(node, "FXDomesticCurveID", true);
     }
@@ -100,9 +100,9 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
 
     if (dimension_ == Dimension::Smile) {
-        XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
         XMLUtils::addChild(doc, node, "FXForeignCurveID", fxForeignYieldCurveID_);
         XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
     }
