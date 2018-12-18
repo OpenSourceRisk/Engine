@@ -3,6 +3,7 @@
 set(QuantExt-Test_SRC blackvariancecurve.cpp
 commodityforward.cpp
 currency.cpp
+deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 index.cpp
