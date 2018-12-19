@@ -13,6 +13,7 @@ logquote.cpp
 payment.cpp
 qle_calendars.cpp
 ratehelpers.cpp
+staticallycorrectedyieldtermstructure.cpp 
 survivalprobabilitycurve.cpp 
 testsuite.cpp)
 
