@@ -32,10 +32,12 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real fgnNominal, const Curr
                                                      const boost::shared_ptr<IborIndex>& fgnIndex, Spread fgnSpread,
                                                      const Currency& domCurrency, const Schedule& domSchedule,
                                                      const boost::shared_ptr<IborIndex>& domIndex, Spread domSpread,
-                                                     const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx)
+                                                     const boost::shared_ptr<FxIndex>& fxIdx, 
+                                                     bool invertFxIdx, bool receiveDom)
     : CrossCcySwap(3), fgnNominal_(fgnNominal), fgnCurrency_(fgnCurrency), fgnSchedule_(fgnSchedule),
       fgnIndex_(fgnIndex), fgnSpread_(fgnSpread), domCurrency_(domCurrency), domSchedule_(domSchedule),
-      domIndex_(domIndex), domSpread_(domSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx) {
+      domIndex_(domIndex), domSpread_(domSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx),
+      receiveDom_(receiveDom) {
 
     registerWith(fgnIndex_);
     registerWith(domIndex_);
@@ -46,7 +48,8 @@ CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real fgnNominal, const Curr
 void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
     legs_[0] = IborLeg(fgnSchedule_, fgnIndex_).withNotionals(fgnNominal_).withSpreads(fgnSpread_);
-    payer_[0] = -1.0;
+    receiveDom_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
+    
     currencies_[0] = fgnCurrency_;
     // Pay leg notional exchange at start.
     Date initialPayDate = fgnSchedule_.dates().front();
@@ -60,7 +63,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     // Receive (domestic/resettable) leg
     // start by creating a dummy vanilla floating leg
     legs_[1] = IborLeg(domSchedule_, domIndex_).withNotionals(0).withSpreads(domSpread_);
-    payer_[1] = +1.0;
+    receiveDom_ ? payer_[1] = +1.0 : payer_[1] = -1.0;
     currencies_[1] = domCurrency_;
     // replace the coupons with a FloatingRateFXLinkedNotionalCoupon
     // (skip the first coupon as it has a fixed notional)
@@ -77,7 +80,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         legs_[1][j] = fxLinkedCoupon;
     }
     // now build a separate leg to store the domestic (resetting) notionals
-    payer_[2] = +1.0;
+    receiveDom_ ? payer_[2] = +1.0 : payer_[2] = -1.0;
     currencies_[2] = domCurrency_;
     for (Size j = 0; j < legs_[1].size(); j++) {
         boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(legs_[1][j]);

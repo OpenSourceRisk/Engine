@@ -53,7 +53,8 @@ public:
                       const boost::shared_ptr<IborIndex>& fgnIndex, Spread fgnSpread,
                       const Currency& domCurrency, const Schedule& domSchedule,
                       const boost::shared_ptr<IborIndex>& domIndex, Spread domSpread, 
-                      const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false);
+                      const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false,
+                      bool receiveDom = true);
     //@}
     //! \name Instrument interface
     //@{
@@ -110,6 +111,7 @@ private:
 
     boost::shared_ptr<FxIndex> fxIndex_;
     bool invertFxIndex_;
+    bool receiveDom_;
 
     mutable Spread fairFgnSpread_;
     mutable Spread fairDomSpread_;
