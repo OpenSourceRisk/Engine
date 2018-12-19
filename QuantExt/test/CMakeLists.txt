@@ -11,6 +11,7 @@ dynamicswaptionvolmatrix.cpp
 index.cpp
 logquote.cpp
 payment.cpp
+qle_calendars.cpp
 ratehelpers.cpp
 survivalprobabilitycurve.cpp 
 testsuite.cpp)
