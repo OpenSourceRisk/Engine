@@ -9,6 +9,7 @@ discountcurve.cpp
 discountingcommodityforwardengine.cpp
 dynamicswaptionvolmatrix.cpp 
 index.cpp
+interpolatedyoycapfloortermpricesurface.cpp 
 logquote.cpp
 payment.cpp
 qle_calendars.cpp
