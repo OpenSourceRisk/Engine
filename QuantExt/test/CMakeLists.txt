@@ -7,6 +7,7 @@ deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
+dynamicswaptionvolmatrix.cpp 
 index.cpp
 logquote.cpp
 payment.cpp
