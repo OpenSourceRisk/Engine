@@ -11,6 +11,7 @@ deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp 
+dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp 
 fxvolsmile.cpp 
 index.cpp
@@ -23,6 +24,7 @@ qle_calendars.cpp
 ratehelpers.cpp
 staticallycorrectedyieldtermstructure.cpp 
 survivalprobabilitycurve.cpp 
+swaptionvolconstantspread.cpp
 testsuite.cpp)
 
 add_executable(quantext-test-suite ${QuantExt-Test_SRC})
