@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt-Test_SRC blackvariancecurve.cpp
+cashflow.cpp
 commodityforward.cpp
 crossccyfixfloatswap.cpp 
 currency.cpp
@@ -16,6 +17,7 @@ interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 payment.cpp
 pricecurve.cpp
+pricetermstructureadapter.cpp
 qle_calendars.cpp
 ratehelpers.cpp
 staticallycorrectedyieldtermstructure.cpp 
