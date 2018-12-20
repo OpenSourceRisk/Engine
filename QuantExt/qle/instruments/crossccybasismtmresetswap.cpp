@@ -71,12 +71,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[1][j]);
         Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(new FloatingRateFXLinkedNotionalCoupon(
-            fgnNominal_, fixingDate, fxIndex_, invertFxIndex_, coupon->date(), coupon->accrualStartDate(),
-            coupon->accrualEndDate(), coupon->fixingDays(), coupon->index(), coupon->gearing(), coupon->spread(),
-            coupon->referencePeriodStart(), coupon->referencePeriodEnd(), coupon->dayCounter(), coupon->isInArrears()));
-        // set the same pricer
-        fxLinkedCoupon->setPricer(coupon->pricer());
+        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
+            new FloatingRateFXLinkedNotionalCoupon(fixingDate, fgnNominal_, fxIndex_, invertFxIndex_, coupon));
         legs_[1][j] = fxLinkedCoupon;
     }
     // now build a separate leg to store the domestic (resetting) notionals
