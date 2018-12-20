@@ -296,13 +296,14 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
                  const bool notionalInitialExchange, const bool notionalFinalExchange,
                  const bool notionalAmortizingExchange, const bool isNotResetXCCY, const string& foreignCurrency,
                  const double foreignAmount, const string& fxIndex, int fixingDays, const string& fixingCalendar,
-                 const std::vector<AmortizationData>& amortizationData)
+                 const std::vector<AmortizationData>& amortizationData, const int paymentLag)
     : concreteLegData_(concreteLegData), isPayer_(isPayer), currency_(currency), schedule_(scheduleData),
       dayCounter_(dayCounter), notionals_(notionals), notionalDates_(notionalDates),
       paymentConvention_(paymentConvention), notionalInitialExchange_(notionalInitialExchange),
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
-      fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData) {
+      fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), 
+      amortizationData_(amortizationData), paymentLag_(paymentLag) {
 }
 
 void LegData::fromXML(XMLNode* node) {
@@ -312,6 +313,7 @@ void LegData::fromXML(XMLNode* node) {
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     dayCounter_ = XMLUtils::getChildValue(node, "DayCounter"); // optional
     paymentConvention_ = XMLUtils::getChildValue(node, "PaymentConvention");
+    paymentLag_ = XMLUtils::getChildValueAsInt(node, "PaymentLag");
     // if not given, default of getChildValueAsBool is true, which fits our needs here
     notionals_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Notionals", "Notional", "startDate", notionalDates_);
@@ -391,6 +393,8 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
+    if (paymentLag_ != 0)
+        XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
     addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate", notionalDates_);
     XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
 
@@ -486,10 +490,17 @@ Leg makeFixedLeg(const LegData& data) {
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
+    Calendar paymentCalendar = schedule.calendar();
     vector<double> rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
+    Natural paymentLag = data.paymentLag();
     applyAmortization(notionals, data, schedule, true, rates);
-    Leg leg = FixedRateLeg(schedule).withNotionals(notionals).withCouponRates(rates, dc).withPaymentAdjustment(bdc);
+    Leg leg = FixedRateLeg(schedule)
+                .withNotionals(notionals)
+                .withCouponRates(rates, dc)
+                .withPaymentAdjustment(bdc)
+                .withPaymentLag(paymentLag)
+                .withPaymentCalendar(paymentCalendar);
     return leg;
 }
 
@@ -637,7 +648,8 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
     Schedule schedule = makeSchedule(data.schedule());
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-
+    Natural paymentLag = data.paymentLag();
+    Calendar paymentCalendar = index->fixingCalendar();
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
     vector<double> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
 
@@ -666,7 +678,9 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
                                .withNotionals(notionals)
                                .withSpreads(spreads)
                                .withPaymentDayCounter(dc)
-                               .withPaymentAdjustment(bdc);
+                               .withPaymentAdjustment(bdc)
+                               .withPaymentCalendar(paymentCalendar)
+                               .withPaymentLag(paymentLag);
 
         if (floatData->gearings().size() > 0)
             leg.withGearings(buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule));
