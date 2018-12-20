@@ -2,6 +2,7 @@
 
 set(QuantExt-Test_SRC blackvariancecurve.cpp
 commodityforward.cpp
+crossccyfixfloatswap.cpp 
 currency.cpp
 deltagammavar.cpp
 deposit.cpp
@@ -9,10 +10,12 @@ discountcurve.cpp
 discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp 
 dynamicswaptionvolmatrix.cpp 
+fxvolsmile.cpp 
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp 
 logquote.cpp
 payment.cpp
+pricecurve.cpp
 qle_calendars.cpp
 ratehelpers.cpp
 staticallycorrectedyieldtermstructure.cpp 
