@@ -1,6 +1,7 @@
 # cpp files, this list is maintained manually
 
 set(QuantExt-Test_SRC blackvariancecurve.cpp
+bonds.cpp
 cashflow.cpp
 commodityforward.cpp
 crossccyfixfloatswap.cpp 
