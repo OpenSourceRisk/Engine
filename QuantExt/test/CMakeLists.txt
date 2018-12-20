@@ -7,6 +7,7 @@ deltagammavar.cpp
 deposit.cpp
 discountcurve.cpp
 discountingcommodityforwardengine.cpp
+discountratiomodifiedcurve.cpp 
 dynamicswaptionvolmatrix.cpp 
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp 
