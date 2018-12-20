@@ -134,6 +134,7 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
 
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
     registerLegBuilder(boost::make_shared<CashflowLegBuilder>());
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
