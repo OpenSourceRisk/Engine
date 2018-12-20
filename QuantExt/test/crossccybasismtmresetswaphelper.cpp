@@ -159,7 +159,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
     BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
 
     // Check the 5Y discount factor
-    DiscountFactor expDisc = 0.91155574393806327;
+    DiscountFactor expDisc = 0.91155524911218166;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 }
 
@@ -188,7 +188,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange() {
     BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
 
     // Check the 5Y discount factor
-    DiscountFactor expDisc = 0.91155574393806327;
+    DiscountFactor expDisc = 0.91155524911218166;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the nominal of the helper swap
@@ -237,7 +237,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange() {
     BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
 
     // Check the 5Y discount factor
-    DiscountFactor expDisc = 0.91155574393806327;
+    DiscountFactor expDisc = 0.91155524911218166;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Add a 10bps spread
@@ -250,7 +250,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange() {
     BOOST_CHECK_SMALL(swap->NPV(), absTol);
 
     // Check the 5Y discount factor again. More spread on foreign leg => more significant discount factor.
-    expDisc = 0.89807856632258765;
+    expDisc = 0.89807807922008731;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the spread of the helper swap. Should now be 15bps.
@@ -282,7 +282,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate() {
     BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairFgnSpread(), relTol);
 
     // Check the 5Y discount factor
-    DiscountFactor expDisc = 0.91155574393806327;
+    DiscountFactor expDisc = 0.91155524911218166;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the start date of the helper swap
@@ -299,7 +299,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate() {
     BOOST_CHECK_SMALL(swap->NPV(), absTol);
 
     // Check the 5Y discount factor again. Changes slightly due to helper holidays/weekends.
-    expDisc = 0.91155562449173388;
+    expDisc = 0.91155524848230363;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the start date of the helper swap. Should be 1 day greater. 
