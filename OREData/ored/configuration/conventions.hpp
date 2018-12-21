@@ -689,7 +689,7 @@ public:
     //! Detailed constructor
     CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
-                                const string& strEom = "");
+                                const string& strEom = "", const string& strIsResettable = "", const string& strFlatIndexIsResettable = "");
     //@}
 
     //! \name Inspectors
@@ -703,6 +703,8 @@ public:
     const string& spreadIndexName() const { return strSpreadIndex_; }
 
     bool eom() const { return eom_; }
+    bool isResettable() const { return isResettable_; }
+    bool FlatIndexIsResettable() const { return FlatIndexIsResettable_; }
     //@}
 
     //! \name Serialisation
@@ -718,6 +720,8 @@ private:
     boost::shared_ptr<IborIndex> flatIndex_;
     boost::shared_ptr<IborIndex> spreadIndex_;
     bool eom_;
+    bool isResettable_;
+    bool FlatIndexIsResettable_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -726,6 +730,8 @@ private:
     string strFlatIndex_;
     string strSpreadIndex_;
     string strEom_;
+    string strIsResettable_;
+    string strFlatIndexIsResettable_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions
