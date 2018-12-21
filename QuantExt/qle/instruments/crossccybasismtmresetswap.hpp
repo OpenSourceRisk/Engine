@@ -49,12 +49,12 @@ public:
     /*! First leg holds the pay currency cashflows and the second leg
         holds the receive currency cashflows.
     */
-    CrossCcyBasisMtMResetSwap(Real fgnNominal, const Currency& fgnCurrency, const Schedule& fgnSchedule,
-                      const boost::shared_ptr<IborIndex>& fgnIndex, Spread fgnSpread,
-                      const Currency& domCurrency, const Schedule& domSchedule,
-                      const boost::shared_ptr<IborIndex>& domIndex, Spread domSpread, 
+    CrossCcyBasisMtMResetSwap(Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
+                      const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
+                      const Currency& domesticCurrency, const Schedule& domesticSchedule,
+                      const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread, 
                       const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false,
-                      bool receiveDom = true);
+                      bool receiveDomestic = true);
     //@}
     //! \name Instrument interface
     //@{
@@ -63,29 +63,29 @@ public:
     //@}
     //! \name Inspectors
     //@{
-    Real fgnNominal() const { return fgnNominal_; }
-    const Currency& fgnCurrency() const { return fgnCurrency_; }
-    const Schedule& fgnSchedule() const { return fgnSchedule_; }
-    const boost::shared_ptr<IborIndex>& fgnIndex() const { return fgnIndex_; }
-    Spread fgnSpread() const { return fgnSpread_; }
+    Real foreignNominal() const { return foreignNominal_; }
+    const Currency& foreignCurrency() const { return foreignCurrency_; }
+    const Schedule& foreignSchedule() const { return foreignSchedule_; }
+    const boost::shared_ptr<IborIndex>& foreignIndex() const { return foreignIndex_; }
+    Spread foreignSpread() const { return foreignSpread_; }
 
-    const Currency& domCurrency() const { return domCurrency_; }
-    const Schedule& domSchedule() const { return domSchedule_; }
-    const boost::shared_ptr<IborIndex>& domIndex() const { return domIndex_; }
-    Spread domSpread() const { return domSpread_; }
+    const Currency& domesticCurrency() const { return domesticCurrency_; }
+    const Schedule& domesticSchedule() const { return domesticSchedule_; }
+    const boost::shared_ptr<IborIndex>& domesticIndex() const { return domesticIndex_; }
+    Spread domesticSpread() const { return domesticSpread_; }
     //@}
 
     //! \name Additional interface
     //@{
-    Spread fairFgnSpread() const {
+    Spread fairForeignSpread() const {
         calculate();
-        QL_REQUIRE(fairFgnSpread_ != Null<Real>(), "Fair foreign spread is not available");
-        return fairFgnSpread_;
+        QL_REQUIRE(fairForeignSpread_ != Null<Real>(), "Fair foreign spread is not available");
+        return fairForeignSpread_;
     }
-    Spread fairDomSpread() const {
+    Spread fairDomesticSpread() const {
         calculate();
-        QL_REQUIRE(fairDomSpread_ != Null<Real>(), "Fair domestic spread is not available");
-        return fairDomSpread_;
+        QL_REQUIRE(fairDomesticSpread_ != Null<Real>(), "Fair domestic spread is not available");
+        return fairDomesticSpread_;
     }
     //@}
 
@@ -98,38 +98,38 @@ protected:
 private:
     void initialize();
 
-    Real fgnNominal_;
-    Currency fgnCurrency_;
-    Schedule fgnSchedule_;
-    boost::shared_ptr<IborIndex> fgnIndex_;
-    Spread fgnSpread_;
+    Real foreignNominal_;
+    Currency foreignCurrency_;
+    Schedule foreignSchedule_;
+    boost::shared_ptr<IborIndex> foreignIndex_;
+    Spread foreignSpread_;
 
-    Currency domCurrency_;
-    Schedule domSchedule_;
-    boost::shared_ptr<IborIndex> domIndex_;
-    Spread domSpread_;
+    Currency domesticCurrency_;
+    Schedule domesticSchedule_;
+    boost::shared_ptr<IborIndex> domesticIndex_;
+    Spread domesticSpread_;
 
     boost::shared_ptr<FxIndex> fxIndex_;
     bool invertFxIndex_;
-    bool receiveDom_;
+    bool receiveDomestic_;
 
-    mutable Spread fairFgnSpread_;
-    mutable Spread fairDomSpread_;
+    mutable Spread fairForeignSpread_;
+    mutable Spread fairDomesticSpread_;
 };
 
 //! \ingroup instruments
 class CrossCcyBasisMtMResetSwap::arguments : public CrossCcySwap::arguments {
 public:
-    Spread fgnSpread;
-    Spread domSpread;
+    Spread foreignSpread;
+    Spread domesticSpread;
     void validate() const;
 };
 
 //! \ingroup instruments
 class CrossCcyBasisMtMResetSwap::results : public CrossCcySwap::results {
 public:
-    Spread fairFgnSpread;
-    Spread fairDomSpread;
+    Spread fairForeignSpread;
+    Spread fairDomesticSpread;
     void reset();
 };
 } // namespace QuantExt

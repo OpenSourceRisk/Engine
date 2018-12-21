@@ -35,57 +35,57 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
     const Calendar& settlementCalendar, const Period& swapTenor,
     BusinessDayConvention rollConvention,
-    const boost::shared_ptr<QuantLib::IborIndex>& fgnCcyIndex,
-    const boost::shared_ptr<QuantLib::IborIndex>& domCcyIndex,
-    const Handle<YieldTermStructure>& fgnCcyDiscountCurve,
-    const Handle<YieldTermStructure>& domCcyDiscountCurve,
-    const Handle<YieldTermStructure>& fgnCcyFxFwdRateCurve,
-    const Handle<YieldTermStructure>& domCcyFxFwdRateCurve,
+    const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+    const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+    const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
+    const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+    const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve,
+    const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve,
     bool eom,
-    bool spreadOnFgnCcy,
+    bool spreadOnForeignCcy,
     bool invertFxIndex) 
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention), 
-      fgnCcyIndex_(fgnCcyIndex), domCcyIndex_(domCcyIndex), fgnCcyDiscountCurve_(fgnCcyDiscountCurve),
-      domCcyDiscountCurve_(domCcyDiscountCurve), fgnCcyFxFwdRateCurve_(fgnCcyFxFwdRateCurve),
-      domCcyFxFwdRateCurve_(domCcyFxFwdRateCurve), eom_(eom), spreadOnFgnCcy_(spreadOnFgnCcy),
+      foreignCcyIndex_(foreignCcyIndex), domesticCcyIndex_(domesticCcyIndex), foreignCcyDiscountCurve_(foreignCcyDiscountCurve),
+      domesticCcyDiscountCurve_(domesticCcyDiscountCurve), foreignCcyFxFwdRateCurve_(foreignCcyFxFwdRateCurve),
+      domesticCcyFxFwdRateCurve_(domesticCcyFxFwdRateCurve), eom_(eom), spreadOnForeignCcy_(spreadOnForeignCcy),
       invertFxIndex_(invertFxIndex) {
 
-    fgnCurrency_ = fgnCcyIndex_->currency();
-    domCurrency_ = domCcyIndex_->currency();
-    QL_REQUIRE(fgnCurrency_ != domCurrency_, "matching currencies not allowed on CrossCcyBasisMtMResetSwapHelper");
+    foreignCurrency_ = foreignCcyIndex_->currency();
+    domesticCurrency_ = domesticCcyIndex_->currency();
+    QL_REQUIRE(foreignCurrency_ != domesticCurrency_, "matching currencies not allowed on CrossCcyBasisMtMResetSwapHelper");
 
-    bool fgnIndexHasCurve = !fgnCcyIndex_->forwardingTermStructure().empty();
-    bool domIndexHasCurve = !domCcyIndex_->forwardingTermStructure().empty();
-    bool haveFgnDiscountCurve = !fgnCcyDiscountCurve_.empty();
-    bool haveDomDiscountCurve = !domCcyDiscountCurve_.empty();
+    bool foreignIndexHasCurve = !foreignCcyIndex_->forwardingTermStructure().empty();
+    bool domesticIndexHasCurve = !domesticCcyIndex_->forwardingTermStructure().empty();
+    bool haveForeignDiscountCurve = !foreignCcyDiscountCurve_.empty();
+    bool haveDomesticDiscountCurve = !domesticCcyDiscountCurve_.empty();
 
-    QL_REQUIRE(!(fgnIndexHasCurve && domIndexHasCurve && haveFgnDiscountCurve && haveDomDiscountCurve),
+    QL_REQUIRE(!(foreignIndexHasCurve && domesticIndexHasCurve && haveForeignDiscountCurve && haveDomesticDiscountCurve),
         "CrossCcyBasisMtMResetSwapHelper - Have all curves, nothing to solve for.");
 
     /* Link the curve being bootstrapped to the index if the index has
     no projection curve */
-    if (fgnIndexHasCurve && haveFgnDiscountCurve) {
-        if (!domIndexHasCurve) {
-            domCcyIndex_ = domCcyIndex_->clone(termStructureHandle_);
-            domCcyIndex_->unregisterWith(termStructureHandle_);
+    if (foreignIndexHasCurve && haveForeignDiscountCurve) {
+        if (!domesticIndexHasCurve) {
+            domesticCcyIndex_ = domesticCcyIndex_->clone(termStructureHandle_);
+            domesticCcyIndex_->unregisterWith(termStructureHandle_);
         }
         // if we have both index and discounting curve on foreign leg,
-          // check fgnCcyFxFwdRateCurve and link it to fgn discount curve if empty
-          // (we are bootstrapping on domestic leg in this instance, so fgn leg needs to be fully determined
-        if (fgnCcyFxFwdRateCurve_.empty())
-            fgnCcyFxFwdRateCurve_ = fgnCcyDiscountCurve_;
+          // check foreignCcyFxFwdRateCurve and link it to foreign discount curve if empty
+          // (we are bootstrapping on domestic leg in this instance, so foreign leg needs to be fully determined
+        if (foreignCcyFxFwdRateCurve_.empty())
+            foreignCcyFxFwdRateCurve_ = foreignCcyDiscountCurve_;
     }
-    else if (domIndexHasCurve && haveDomDiscountCurve) {
-        if (!fgnIndexHasCurve) {
-            fgnCcyIndex_ = fgnCcyIndex_->clone(termStructureHandle_);
-            fgnCcyIndex_->unregisterWith(termStructureHandle_);
+    else if (domesticIndexHasCurve && haveDomesticDiscountCurve) {
+        if (!foreignIndexHasCurve) {
+            foreignCcyIndex_ = foreignCcyIndex_->clone(termStructureHandle_);
+            foreignCcyIndex_->unregisterWith(termStructureHandle_);
         }
         // if we have both index and discounting curve on domestic leg,
-        // check domCcyFxFwdRateCurve and link it to dom discount curve if empty
-        // (we are bootstrapping on fgn leg in this instance, so dom leg needs to be fully determined
-        if (domCcyFxFwdRateCurve_.empty())
-            domCcyFxFwdRateCurve_ = domCcyDiscountCurve_;
+        // check domesticCcyFxFwdRateCurve and link it to domestic discount curve if empty
+        // (we are bootstrapping on foreign leg in this instance, so domestic leg needs to be fully determined
+        if (domesticCcyFxFwdRateCurve_.empty())
+            domesticCcyFxFwdRateCurve_ = domesticCcyDiscountCurve_;
     }
     else {
         QL_FAIL("Need one leg of the cross currency basis swap to "
@@ -93,12 +93,12 @@ CrossCcyBasisMtMResetSwapHelper::CrossCcyBasisMtMResetSwapHelper(
     }
 
     registerWith(spotFX_);
-    registerWith(domCcyIndex_);
-    registerWith(fgnCcyIndex_);
-    registerWith(fgnCcyDiscountCurve_);
-    registerWith(domCcyDiscountCurve_);
-    registerWith(fgnCcyFxFwdRateCurve_);
-    registerWith(domCcyFxFwdRateCurve_);
+    registerWith(domesticCcyIndex_);
+    registerWith(foreignCcyIndex_);
+    registerWith(foreignCcyDiscountCurve_);
+    registerWith(domesticCcyDiscountCurve_);
+    registerWith(foreignCcyFxFwdRateCurve_);
+    registerWith(domesticCcyFxFwdRateCurve_);
 
     initializeDates();
 
@@ -114,40 +114,40 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
-    Period fgnLegTenor = fgnCcyIndex_->tenor();
-    Schedule fgnLegSchedule = MakeSchedule()
+    Period foreignLegTenor = foreignCcyIndex_->tenor();
+    Schedule foreignLegSchedule = MakeSchedule()
                                    .from(settlementDate)
                                    .to(maturityDate)
-                                   .withTenor(fgnLegTenor)
+                                   .withTenor(foreignLegTenor)
                                    .withCalendar(settlementCalendar_)
                                    .withConvention(rollConvention_)
                                    .endOfMonth(eom_);
 
-    Period domLegTenor = domCcyIndex_->tenor();
-    Schedule domLegSchedule = MakeSchedule()
+    Period domesticLegTenor = domesticCcyIndex_->tenor();
+    Schedule domesticLegSchedule = MakeSchedule()
                                      .from(settlementDate)
                                      .to(maturityDate)
-                                     .withTenor(domLegTenor)
+                                     .withTenor(domesticLegTenor)
                                      .withCalendar(settlementCalendar_)
                                      .withConvention(rollConvention_)
                                      .endOfMonth(eom_);
 
-    Real fgnNominal = 1.0;
+    Real foreignNominal = 1.0;
     // build an FX index for forward rate projection (TODO - review settlement and calendar)
     boost::shared_ptr<FxIndex> fxIdx = 
-        boost::make_shared<FxIndex>("dummy", settlementDays_, fgnCurrency_, domCurrency_, settlementCalendar_, 
-                                     spotFX_, fgnCcyFxFwdRateCurveRLH_, domCcyFxFwdRateCurveRLH_);
+        boost::make_shared<FxIndex>("dummy", settlementDays_, foreignCurrency_, domesticCurrency_, settlementCalendar_, 
+                                     spotFX_, foreignCcyFxFwdRateCurveRLH_, domesticCcyFxFwdRateCurveRLH_);
 
     swap_ = boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
-        new CrossCcyBasisMtMResetSwap(fgnNominal, fgnCurrency_, fgnLegSchedule, fgnCcyIndex_, 0.0,
-            domCurrency_, domLegSchedule, domCcyIndex_, 0.0, fxIdx, invertFxIndex_));
+        new CrossCcyBasisMtMResetSwap(foreignNominal, foreignCurrency_, foreignLegSchedule, foreignCcyIndex_, 0.0,
+            domesticCurrency_, domesticLegSchedule, domesticCcyIndex_, 0.0, fxIdx, invertFxIndex_));
 
     boost::shared_ptr<PricingEngine> engine;
     if (invertFxIndex_) {
-        engine.reset(new CrossCcySwapEngine(fgnCurrency_, fgnDiscountRLH_, domCurrency_, domDiscountRLH_, spotFX_));
+        engine.reset(new CrossCcySwapEngine(foreignCurrency_, foreignDiscountRLH_, domesticCurrency_, domesticDiscountRLH_, spotFX_));
     }
     else {
-        engine.reset(new CrossCcySwapEngine(domCurrency_, domDiscountRLH_, fgnCurrency_, fgnDiscountRLH_, spotFX_));
+        engine.reset(new CrossCcySwapEngine(domesticCurrency_, domesticDiscountRLH_, foreignCurrency_, foreignDiscountRLH_, spotFX_));
     }
     swap_->setPricingEngine(engine);
 
@@ -157,7 +157,7 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
 /* May need to adjust latestDate_ if you are projecting libor based
    on tenor length rather than from accrual date to accrual date. */
 #ifdef QL_USE_INDEXED_COUPON
-    if (termStructureHandle_ == fgnCcyIndex_->forwardingTermStructure()) {
+    if (termStructureHandle_ == foreignCcyIndex_->forwardingTermStructure()) {
         Size numCashflows = swap_->leg(0).size();
         Date endDate = latestDate_;
         if (numCashflows > 0) {
@@ -167,16 +167,16 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
                 if (!lastFloating)
                     continue;
                 else {
-                    Date fixingValueDate = fgnCcyIndex_->valueDate(lastFloating->fixingDate());
-                    endDate = domCcyIndex_->maturityDate(fixingValueDate);
-                    Date endValueDate = fgnCcyIndex_->maturityDate(fixingValueDate);
+                    Date fixingValueDate = foreignCcyIndex_->valueDate(lastFloating->fixingDate());
+                    endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
+                    Date endValueDate = foreignCcyIndex_->maturityDate(fixingValueDate);
                     latestDate_ = std::max(latestDate_, endValueDate);
                     break;
                 }
             }
         }
     }
-    if (termStructureHandle_ == domCcyIndex_->forwardingTermStructure()) {
+    if (termStructureHandle_ == domesticCcyIndex_->forwardingTermStructure()) {
         Size numCashflows = swap_->leg(1).size();
         Date endDate = latestDate_;
         if (numCashflows > 0) {
@@ -186,9 +186,9 @@ void CrossCcyBasisMtMResetSwapHelper::initializeDates() {
                 if (!lastFloating)
                     continue;
                 else {
-                    Date fixingValueDate = domCcyIndex_->valueDate(lastFloating->fixingDate());
-                    endDate = domCcyIndex_->maturityDate(fixingValueDate);
-                    Date endValueDate = domCcyIndex_->maturityDate(fixingValueDate);
+                    Date fixingValueDate = domesticCcyIndex_->valueDate(lastFloating->fixingDate());
+                    endDate = domesticCcyIndex_->maturityDate(fixingValueDate);
+                    Date endValueDate = domesticCcyIndex_->maturityDate(fixingValueDate);
                     latestDate_ = std::max(latestDate_, endValueDate);
                     break;
                 }
@@ -205,26 +205,26 @@ void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 
     termStructureHandle_.linkTo(temp, observer);
 
-    if (fgnCcyDiscountCurve_.empty())
-        fgnDiscountRLH_.linkTo(temp, observer);
+    if (foreignCcyDiscountCurve_.empty())
+        foreignDiscountRLH_.linkTo(temp, observer);
     else
-        fgnDiscountRLH_.linkTo(*fgnCcyDiscountCurve_, observer);
+        foreignDiscountRLH_.linkTo(*foreignCcyDiscountCurve_, observer);
 
-    if (domCcyDiscountCurve_.empty())
-        domDiscountRLH_.linkTo(temp, observer);
+    if (domesticCcyDiscountCurve_.empty())
+        domesticDiscountRLH_.linkTo(temp, observer);
     else
-        domDiscountRLH_.linkTo(*domCcyDiscountCurve_, observer);
+        domesticDiscountRLH_.linkTo(*domesticCcyDiscountCurve_, observer);
 
     // the below are the curves used for FX forward rate projection (for the resetting cashflows)
-    if (fgnCcyFxFwdRateCurve_.empty())
-        fgnCcyFxFwdRateCurveRLH_.linkTo(temp, observer);
+    if (foreignCcyFxFwdRateCurve_.empty())
+        foreignCcyFxFwdRateCurveRLH_.linkTo(temp, observer);
     else
-        fgnCcyFxFwdRateCurveRLH_.linkTo(*fgnCcyFxFwdRateCurve_, observer);
+        foreignCcyFxFwdRateCurveRLH_.linkTo(*foreignCcyFxFwdRateCurve_, observer);
 
-    if (domCcyFxFwdRateCurve_.empty())
-        domCcyFxFwdRateCurveRLH_.linkTo(temp, observer);
+    if (domesticCcyFxFwdRateCurve_.empty())
+        domesticCcyFxFwdRateCurveRLH_.linkTo(temp, observer);
     else
-        domCcyFxFwdRateCurveRLH_.linkTo(*domCcyFxFwdRateCurve_, observer);
+        domesticCcyFxFwdRateCurveRLH_.linkTo(*domesticCcyFxFwdRateCurve_, observer);
 
     RelativeDateRateHelper::setTermStructure(t);
 }
@@ -232,10 +232,10 @@ void CrossCcyBasisMtMResetSwapHelper::setTermStructure(YieldTermStructure* t) {
 Real CrossCcyBasisMtMResetSwapHelper::impliedQuote() const {
     QL_REQUIRE(termStructure_, "Term structure needs to be set");
     swap_->recalculate();
-    if (spreadOnFgnCcy_)
-        return swap_->fairFgnSpread();
+    if (spreadOnForeignCcy_)
+        return swap_->fairForeignSpread();
     else
-        return swap_->fairDomSpread();
+        return swap_->fairDomesticSpread();
 }
 
 void CrossCcyBasisMtMResetSwapHelper::accept(AcyclicVisitor& v) {

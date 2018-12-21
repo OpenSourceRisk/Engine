@@ -644,10 +644,10 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const
                                                          const string& strSettlementCalendar,
                                                          const string& strRollConvention, const string& flatIndex,
                                                          const string& spreadIndex, const string& strEom,
-                                                         const string& strIsMtmResettable, const string& strFlatIsResettableLeg)
+                                                         const string& strIsResettable, const string& strFlatIndexIsResettable)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
-      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsMtmResettable_(strIsMtmResettable), strFlatIsResettableLeg_(strFlatIsResettableLeg) {
+      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable), strFlatIndexIsResettable_(strFlatIndexIsResettable) {
     build();
 }
 
@@ -658,8 +658,8 @@ void CrossCcyBasisSwapConvention::build() {
     flatIndex_ = parseIborIndex(strFlatIndex_);
     spreadIndex_ = parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
-    isMtmResettable_ = strIsMtmResettable_.empty() ? false : parseBool(strIsMtmResettable_);
-    flatIsResettableLeg_ = strFlatIsResettableLeg_.empty() ? true : parseBool(strFlatIsResettableLeg_);
+    isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
+    FlatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -675,8 +675,8 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatIndex_ = XMLUtils::getChildValue(node, "FlatIndex", true);
     strSpreadIndex_ = XMLUtils::getChildValue(node, "SpreadIndex", true);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
-    strIsMtmResettable_ = XMLUtils::getChildValue(node, "IsMtmResettable", false);
-    strFlatIsResettableLeg_ = XMLUtils::getChildValue(node, "FlatIsResettableLeg", false);
+    strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
+    strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
 
     build();
 }
@@ -691,8 +691,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FlatIndex", strFlatIndex_);
     XMLUtils::addChild(doc, node, "SpreadIndex", strSpreadIndex_);
     XMLUtils::addChild(doc, node, "EOM", strEom_);
-    XMLUtils::addChild(doc, node, "IsMtmResettable", false);
-    XMLUtils::addChild(doc, node, "FlatIsResettableLeg", false);
+    XMLUtils::addChild(doc, node, "IsResettable", false);
+    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", false);
 
     return node;
 }
