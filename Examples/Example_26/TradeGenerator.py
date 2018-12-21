@@ -167,6 +167,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     spread = "0"
     rule = ""
     spotLag = ""
+    paymentLag = "0"
     try:
 
         if(basis):
@@ -219,22 +220,27 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             dayCounter = currencyDaycountConvention(currency)
         else:
             spotLag = details[3][0:-1]
+            currency = details[2]
             if tradeType == "Swap":
                 convention = swapConventions[curve]
                 calendar = convention.find("FixedCalendar").text
                 fixingDays = spotLag
+                tenor = details[4]
             elif tradeType == "OIS":
+                if currency == "USD":
+                    calendar = "US-FED"
                 convention = oisConventions[curve]
                 rule = convention.find("Rule").text
                 spotLag = convention.find("SpotLag").text
+                paymentLag = convention.find("PaymentLag").text
                 fixingDays = spotLag
+                fixedFreq = convention.find("FixedFrequency").text
+                tenor = freqToTenor(fixedFreq)
             else:
                 debugPrint("Failed to find convention for " + curve)
                 return False
             index = convention.find("Index").text
-            currency = details[2]
 
-            tenor = details[4]
             dayCounter = currencyDaycountConvention(currency)
             payer = True
 
@@ -249,7 +255,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
         fxRate = float(marketData["FX/RATE/EUR/" + currency])
         notional *= fxRate
 
-    startDate = addTenorToDate(startDate, spotLag + "D") #why is fixing days 2 in CHF OIS trades?
+    startDate = addTenorToDate(startDate, spotLag + "D") 
     while startDate.weekday() > 4: #or startDate.weekday() < 1:
         startDate += datetime.timedelta(days=1)
     endDate = addTenorToDate(startDate, maturity)
@@ -260,6 +266,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     legroot.find("Currency").text = currency
     legroot.find("DayCounter").text = dayCounter
     legroot.find("PaymentConvention").text = payConvention
+    legroot.find("PaymentLag").text = paymentLag
     # floatinglegdata
     # index
     legroot.find("FloatingLegData/Index").text = index
@@ -297,9 +304,9 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     termConvention = ""
     payer = "false"
     rule = ""
+    paymentLag = "0"
     currency = details[2]
     fixingDays = details[3]
-
     maturity = details[5]
     try:
         if tradeType == "Swap":
@@ -307,8 +314,11 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
             calendar = convention.find("FixedCalendar").text
             fixingDays = getFixingDaysForCCY(currency)
         elif tradeType == "OIS":
+            if currency == "USD":
+                calendar = "US-FED"
             convention = oisConventions[curve]
             rule = convention.find("Rule").text
+            paymentLag = convention.find("PaymentLag").text
             fixingDays = convention.find("SpotLag").text
         else:
             debugPrint("could not find convention for " + curve)
@@ -341,11 +351,11 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
         except:
             debugPrint("FX rate not found for EUR/" + currency)
             return False
-
     legroot.find("Notionals/Notional").text = str(notional)
     legroot.find("Currency").text = currency
     legroot.find("DayCounter").text = dayCounter
     legroot.find("PaymentConvention").text = termConvention
+    legroot.find("PaymentLag").text = paymentLag
     legroot.find("FixedLegData/Rates/Rate").text = rate
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate

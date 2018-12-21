@@ -119,6 +119,34 @@ private:
     vector<string> rateDates_;
 };
 
+//! Serializable Fixed Leg Data
+/*!
+  \ingroup tradedata
+*/
+class ZeroCouponFixedLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
+    //! Constructor
+    ZeroCouponFixedLegData(const Rate& rate, const int& years)
+        : LegAdditionalData("ZeroCouponFixed"), rate_(rate), years_(years) {}
+
+    //! \name Inspectors
+    //@{
+    const Rate& rate() const { return rate_; }
+    const int& years() const { return years_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    Rate rate_;
+    int years_;
+};
+
 //! Serializable Floating Leg Data
 /*!
   \ingroup tradedata
@@ -461,7 +489,8 @@ public:
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             int fixingDays = 0, const string& fixingCalendar = "",
-            const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>());
+            const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(), 
+            const int paymentLag = 0);
 
     //! \name Serialisation
     //@{
@@ -487,6 +516,7 @@ public:
     const string& fxIndex() const { return fxIndex_; }
     int fixingDays() const { return fixingDays_; }
     const string& fixingCalendar() const { return fixingCalendar_; }
+    const int paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
     //
     const string& legType() const { return concreteLegData_->legType(); }
@@ -516,11 +546,13 @@ private:
     int fixingDays_;
     string fixingCalendar_;
     std::vector<AmortizationData> amortizationData_;
+    int paymentLag_;
 };
 
 //! \name Utilities for building QuantLib Legs
 //@{
 Leg makeFixedLeg(const LegData& data);
+Leg makeZCFixedLeg(const LegData& data);
 Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                 const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index);

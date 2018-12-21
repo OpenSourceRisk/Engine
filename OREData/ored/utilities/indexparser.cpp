@@ -257,21 +257,32 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 
     string familyName = tokens[0] + "LiborSwapIsdaFix";
     Currency ccy = parseCurrency(tokens[0]);
-    boost::shared_ptr<IborIndex> index = convention->index()->clone(f);
-    Period tenor(convention->fixedFrequency());
+
+    boost::shared_ptr<IborIndex> index = f.empty() || !convention ? boost::shared_ptr<IborIndex>() : convention->index()->clone(f);
+    QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
+    QuantLib::Calendar calender = convention ? convention->fixedCalendar() : NullCalendar();
+    Period fixedLegTenor = convention ? Period(convention->fixedFrequency()) : Period(1, Months);
+    BusinessDayConvention fixedLegConvention = convention ? convention->fixedConvention() : ModifiedFollowing;
+    DayCounter fixedLegDayCounter = convention ? convention->fixedDayCounter() : ActualActual();
 
     if (d.empty())
-        return boost::make_shared<SwapIndex>(familyName, // familyName
+        return boost::make_shared<SwapIndex>(familyName,
                                              p,
-                                             index->fixingDays(), // settlementDays
-                                             ccy, convention->fixedCalendar(),
-                                             tenor,                         // fixedLegTenor
-                                             convention->fixedConvention(), // fixedLegConvention
-                                             convention->fixedDayCounter(), // fixedLegDaycounter
+                                             settlementDays,
+                                             ccy, calender,
+                                             fixedLegTenor,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
                                              index);
     else
-        return boost::make_shared<SwapIndex>(familyName, p, index->fixingDays(), ccy, convention->fixedCalendar(),
-                                             tenor, convention->fixedConvention(), convention->fixedDayCounter(), index,
+        return boost::make_shared<SwapIndex>(familyName,
+                                             p,
+                                             settlementDays,
+                                             ccy, calender,
+                                             fixedLegTenor,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
+                                             index,
                                              d);
 }
 
