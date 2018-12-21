@@ -21,7 +21,7 @@
 */
 
 #ifndef quantext_test_cross_ccy_basis_mtm_reset_swap_hpp
-#define uantext_test_cross_ccy_basis_mtm_reset_swap_hpp
+#define quantext_test_cross_ccy_basis_mtm_reset_swap_hpp
 
 #include <boost/test/unit_test.hpp>
 
