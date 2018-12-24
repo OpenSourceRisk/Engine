@@ -65,7 +65,7 @@ public:
 
 }
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PriceTermStructureAdapterTest)
 		
@@ -269,4 +269,4 @@ BOOST_AUTO_TEST_CASE(testExtrapolation) {
 
 BOOST_AUTO_TEST_SUITE_END()
 
-BOOST_AUTO_TEST_SUITE_END()}
+BOOST_AUTO_TEST_SUITE_END()
