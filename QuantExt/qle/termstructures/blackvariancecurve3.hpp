@@ -48,7 +48,9 @@ using namespace QuantLib;
 class BlackVarianceCurve3 : public LazyObject, public BlackVarianceTermStructure {
 public:
     BlackVarianceCurve3(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-                        const std::vector<Time>& times, const std::vector<Handle<Quote> >& blackVolCurve);
+                        const std::vector<Time>& times, const std::vector<Handle<Quote> >& blackVolCurve,
+                        //! If true, we check for monotone variance in performCalculations and throw if not
+                        bool requireMonotoneVariance = true);
     //! \name TermStructure interface
     //@{
     Date maxDate() const;
@@ -78,6 +80,7 @@ private:
     std::vector<Handle<Quote> > quotes_;
     mutable std::vector<Real> variances_;
     mutable Interpolation varianceCurve_;
+    bool requireMonotoneVariance_;
 };
 
 // inline definitions

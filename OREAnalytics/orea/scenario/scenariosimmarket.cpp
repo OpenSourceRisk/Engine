@@ -734,7 +734,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     cal, spot, times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
             } else {
                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
             }
             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 
