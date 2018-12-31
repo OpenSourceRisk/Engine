@@ -221,8 +221,8 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                         fxIdxNode.text = "FX-ECB-" + spreadCCY + "-" + flatCCY
                         fixNode = ET.SubElement(fxResetNode, "FixingDays")
                         fixNode.text = fixingDays
-                        
-                
+                        fixCalNode = ET.SubElement(fxResetNode, "FixingCalendar")
+                        fixCalNode.text = "TARGET,US,UK" # Temp
 
             else: #Tenor Basis Swap
                 payConvention = "MF"
