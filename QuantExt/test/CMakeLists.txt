@@ -8,7 +8,13 @@ commodityforward.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp 
 crossassetmodelparametrizations.cpp
+<<<<<<< HEAD
 crossccyfixfloatswap.cpp 
+=======
+crossccybasismtmresetswap.cpp
+crossccybasismtmresetswaphelper.cpp
+crossccyfixfloatswap.cpp
+>>>>>>> origin/master
 crossccyfixfloatswaphelper.cpp
 currency.cpp
 deltagammavar.cpp
