@@ -253,6 +253,10 @@ void OREApp::readSetup() {
         (params_->hasGroup("parametricVar") && params_->get("parametricVar", "active") == "Y") ? true : false;
     writeBaseScenario_ =
         (params_->hasGroup("baseScenario") && params_->get("baseScenario", "active") == "Y") ? true : false;
+
+    continueOnError_ = false;
+    if(params_->has("setup", "continueOnError"))
+        continueOnError_ = parseBool(params_->get("setup", "continueOnError"));
 }
 
 void OREApp::setupLog() {
@@ -542,7 +546,8 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration,
+                                                           continueOnError_);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
@@ -611,7 +616,7 @@ void OREApp::generateNPVCube() {
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
-                                                           params_->get("markets", "simulation"));
+                                                           params_->get("markets", "simulation"), continueOnError_);
         simMarket_->scenarioGenerator() = sg;
 
         string groupName = "simulation";
@@ -852,10 +857,6 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
     bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
 
-    bool continueOnError = false;
-    if(params_->has("setup", "continueOnError"))
-        continueOnError = parseBool(params_->get("setup", "continueOnError"));
-
     if (marketData.size() == 0 || fixingData.size() == 0) {
         /*******************************
         * Market and fixing data loader
@@ -869,7 +870,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
             out_ << "OK" << endl;
             market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_,
-                                                       continueOnError);
+                                                       continueOnError_);
         }
         else {
             WLOG("No market data loaded from file");
@@ -880,7 +881,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
         InMemoryLoader loader;
         loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
         market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_,
-                                                   continueOnError);
+                                                   continueOnError_);
     }
     DLOG("market built");
 }
