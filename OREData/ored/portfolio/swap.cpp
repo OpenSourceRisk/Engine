@@ -78,8 +78,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // and calendar from legData_[i].fxIndex()
             string source = fxIndexBase->sourceCurrency().code();
             string target = fxIndexBase->targetCurrency().code();
-            Handle<YieldTermStructure> sorTS = market->discountCurve(source);
-            Handle<YieldTermStructure> tarTS = market->discountCurve(target);
+            Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
+            Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
             Handle<Quote> spot = market->fxSpot(source + target);
             Calendar cal = parseCalendar(legData_[i].fixingCalendar());
             fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
