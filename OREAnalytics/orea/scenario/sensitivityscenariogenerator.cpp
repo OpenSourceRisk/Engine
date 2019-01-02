@@ -236,6 +236,18 @@ void SensitivityScenarioGenerator::generateScenarios() {
     LOG("sensitivity scenario generator initialised");
 }
 
+namespace {
+bool tryGetBaseScenarioValue(const boost::shared_ptr<Scenario> baseScenario, const RiskFactorKey& key, Real& value) {
+    try {
+        value = baseScenario->get(key);
+        return true;
+    } catch (const std::exception& e) {
+        ALOG("skip scenario generation for key " << key << ": " << e.what());
+    }
+    return false;
+}
+} // namespace
+
 void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // We can choose to shift fewer FX risk factors than listed in the market
@@ -271,12 +283,15 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         // QL_REQUIRE(type == SensitivityScenarioGenerator::ShiftType::Relative, "FX scenario type must be relative");
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
+        Real rate;
+        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
+        if (!tryGetBaseScenarioValue(baseScenario_, key, rate))
+            continue;
+
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
 
         scenarioDescriptions_.push_back(fxScenarioDescription(ccypair, up));
 
-        RiskFactorKey key(RiskFactorKey::KeyType::FXSpot, ccypair);
-        Real rate = scenario->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newRate);
@@ -310,11 +325,14 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
         Real size = up ? data.shiftSize : -1.0 * data.shiftSize;
         bool relShift = (type == SensitivityScenarioGenerator::ShiftType::Relative);
 
+        Real rate;
+        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
+        if (!tryGetBaseScenarioValue(baseScenario_, key, rate))
+            continue;
+
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
 
         scenarioDescriptions_.push_back(equityScenarioDescription(equity, up));
-        RiskFactorKey key(RiskFactorKey::KeyType::EquitySpot, equity);
-        Real rate = baseScenario_->get(key);
         Real newRate = relShift ? rate * (1.0 + size) : (rate + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newRate);
@@ -353,14 +371,18 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(ccy));
 
+        Real quote = 0.0;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(ccy)[j];
             times[j] = dc.yearFraction(asof, d);
 
             RiskFactorKey key(RiskFactorKey::KeyType::DiscountCurve, ccy, j);
-            Real quote = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote);
             zeros[j] = -std::log(quote) / times[j];
         }
+        if (!valid)
+            continue;
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
                                               ? simMarketData_->yieldCurveTenors(ccy)
@@ -431,19 +453,23 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         std::vector<Real> times(n_ten);
         // buffer for shifted zero curves
         std::vector<Real> shiftedZeros(n_ten);
-        
+
         SensitivityScenarioData::CurveShiftData data = *idx.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(indexName));
 
+        Real quote = 0.0;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(indexName)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::IndexCurve, indexName, j);
-            Real quote = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote);
             zeros[j] = -std::log(quote) / times[j];
         }
+        if (!valid)
+            continue;
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
@@ -518,13 +544,17 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
+        Real quote = 0.0;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yieldCurveTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, j);
-            Real quote = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote);
             zeros[j] = -std::log(quote) / times[j];
         }
+        if (!valid)
+            continue;
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
@@ -597,13 +627,17 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(bool up)
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
+        Real quote = 0.0;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityForecastTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::EquityForecastCurve, name, j);
-            Real quote = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote);
             zeros[j] = -std::log(quote) / times[j];
         }
+        if (!valid)
+            continue;
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastTenors(name)
                                                      ? simMarketData_->equityForecastTenors(name)
@@ -678,13 +712,17 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
         DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
 
+        Real quote = 0.0;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->equityDividendTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::DividendYield, name, j);
-            Real quote = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote);
             zeros[j] = -std::log(quote) / times[j];
         }
+        if (!valid)
+            continue;
 
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
                                                      ? simMarketData_->equityDividendTenors(name)
@@ -766,16 +804,18 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "FX vol shift tenors not specified");
 
         DayCounter dc = parseDayCounter(simMarketData_->fxVolDayCounter(ccyPair));
+        bool valid = true;
         for (Size j = 0; j < n_fxvol_exp; ++j) {
             Date d = asof + simMarketData_->fxVolExpiries()[j];
             times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_fxvol_strikes; k++) {
                 Size idx = k * n_fxvol_exp + j;
-
                 RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx);
-                values[k][j] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, values[k][j]);
             }
         }
+        if (!valid)
+            continue;
 
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -849,16 +889,18 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
         Real shiftSize = data.shiftSize;
         QL_REQUIRE(shiftTenors.size() > 0, "Equity vol shift tenors not specified");
         DayCounter dc = parseDayCounter(simMarketData_->equityVolDayCounter(equity));
+        bool valid = true;
         for (Size j = 0; j < n_eqvol_exp; ++j) {
             Date d = asof + simMarketData_->equityVolExpiries()[j];
             times[j] = dc.yearFraction(asof, d);
             for (Size k = 0; k < n_eqvol_strikes; k++) {
                 Size idx = k * n_eqvol_exp + j;
-
                 RiskFactorKey key(RiskFactorKey::KeyType::EquityVolatility, equity, idx);
-                values[k][j] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, values[k][j]);
             }
         }
+        if (!valid)
+            continue;
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -963,16 +1005,18 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
             volTermTimes[j] = dc.yearFraction(asof, term);
         }
 
+        bool valid = true;
         for (Size j = 0; j < n_swvol_exp; ++j) {
             for (Size k = 0; k < n_swvol_term; ++k) {
                 for (Size l = 0; l < n_swvol_strike; ++l) {
                     Size idx = j * n_swvol_term * n_swvol_strike + k * n_swvol_strike + l;
-
                     RiskFactorKey key(RiskFactorKey::KeyType::SwaptionVolatility, ccy, idx);
-                    volData[l][j][k] = baseScenario_->get(key);
+                    valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[l][j][k]);
                 }
             }
         }
+        if (!valid)
+            continue;
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
@@ -1079,13 +1123,16 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             Date expiry = asof + simMarketData_->capFloorVolExpiries(ccy)[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
+        bool valid = true;
         for (Size j = 0; j < n_cfvol_exp; ++j) {
             for (Size k = 0; k < n_cfvol_strikes; ++k) {
                 Size idx = j * n_cfvol_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, idx);
-                volData[j][k] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j][k]);
             }
         }
+        if (!valid)
+            continue;
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
@@ -1159,13 +1206,17 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         DayCounter dc = parseDayCounter(simMarketData_->defaultCurveDayCounter(name));
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
 
+        Real prob = 0.0;
+        bool valid= true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->defaultTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
             RiskFactorKey key(RiskFactorKey::KeyType::SurvivalProbability, name, j);
-            Real prob = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_,key,prob);
             hazardRates[j] = -std::log(prob) / times[j];
         }
+        if (!valid)
+            continue;
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasDefaultTenors(name)
                                               ? simMarketData_->defaultTenors(name)
@@ -1249,10 +1300,14 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
             Date expiry = asof + simMarketData_->cdsVolExpiries()[j];
             volExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
+        bool valid = true;
         for (Size j = 0; j < n_cdsvol_exp; ++j) {
             RiskFactorKey key(RiskFactorKey::KeyType::CDSVolatility, name, j);
-            volData[j] = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[j]);
         }
+        if (!valid)
+            continue;
+
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
@@ -1311,13 +1366,15 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         SensitivityScenarioData::CurveShiftData data = *z.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->zeroInflationDayCounter(indexName));
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->zeroInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::ZeroInflationCurve, indexName, j);
-            zeros[j] = baseScenario_->get(key);
-
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, zeros[j]);
             times[j] = dc.yearFraction(asof, d);
         }
+        if (!valid)
+            continue;
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
                                               ? simMarketData_->zeroInflationTenors(indexName)
@@ -1393,13 +1450,15 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
+        bool valid=true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
-            yoys[j] = baseScenario_->get(key);
-
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, yoys[j]);
             times[j] = dc.yearFraction(asof, d);
         }
+        if (!valid)
+            continue;
 
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
                                               ? simMarketData_->yoyInflationTenors(indexName)
@@ -1483,12 +1542,15 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
             Date term = asof + simMarketData_->baseCorrelationTerms()[j];
             termTimes[j] = dc.yearFraction(asof, term);
         }
+        bool valid = true;
         for (Size j = 0; j < n_bc_levels; ++j) {
             for (Size k = 0; k < n_bc_terms; ++k) {
                 RiskFactorKey key(RiskFactorKey::KeyType::BaseCorrelation, name, j);
-                bcData[j][k] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, bcData[j][k]);
             }
         }
+        if (!valid)
+            continue;
 
         // cache tenor times
         for (Size j = 0; j < shiftTermTimes.size(); ++j)
@@ -1566,7 +1628,9 @@ void SensitivityScenarioGenerator::generateCommodityScenarios(bool up) {
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
         scenarioDescriptions_.push_back(commodityScenarioDescription(name, up));
         RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, name);
-        Real spot = baseScenario_->get(key);
+        Real spot;
+        if (!tryGetBaseScenarioValue(baseScenario_, key, spot))
+            continue;
         Real shiftedSpot = type == ShiftType::Relative ? spot * (1.0 + shift) : (spot + shift);
         scenario->add(key, shiftedSpot);
 
@@ -1607,11 +1671,14 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         vector<Real> shiftedPrices(times.size());
 
         // Get the base prices for this name from the base scenario
+        bool valid=true;
         for (Size j = 0; j < times.size(); ++j) {
             times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
-            basePrices[j] = baseScenario_->get(key);
+            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, basePrices[j]);
         }
+        if (!valid)
+            continue;
 
         // Get the sensitivity data for this name
         SensitivityScenarioData::CurveShiftData data = *c.second;
@@ -1700,13 +1767,16 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         DayCounter dayCounter = parseDayCounter(simMarketData_->commodityVolDayCounter(name));
 
         // Get the base scenario volatility values
+        bool valid=true;
         for (Size j = 0; j < expiries.size(); j++) {
             times[j] = dayCounter.yearFraction(asof, asof + expiries[j]);
             for (Size i = 0; i < moneyness.size(); i++) {
                 RiskFactorKey key(RiskFactorKey::KeyType::CommodityVolatility, name, i * expiries.size() + j);
-                baseValues[i][j] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, baseValues[i][j]);
             }
         }
+        if (!valid)
+            continue;
 
         // Store the shift expiry times
         for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
@@ -1773,7 +1843,9 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
 
         scenarioDescriptions_.push_back(securitySpreadScenarioDescription(bond, up));
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
-        Real base_spread = baseScenario_->get(key);
+        Real base_spread;
+        if (!tryGetBaseScenarioValue(baseScenario_, key, base_spread))
+            continue;
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newSpread);
