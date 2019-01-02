@@ -55,14 +55,14 @@ public:
     CrossCcyBasisMtMResetSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
                             const Calendar& settlementCalendar, const Period& swapTenor,
                             BusinessDayConvention rollConvention,
-                            const boost::shared_ptr<QuantLib::IborIndex>& fgnCcyIndex,
-                            const boost::shared_ptr<QuantLib::IborIndex>& domCcyIndex,
-                            const Handle<YieldTermStructure>& fgnCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& domCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& fgnCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
-                            const Handle<YieldTermStructure>& domCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
+                            const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+                            const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+                            const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
+                            const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+                            const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
+                            const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
                             bool eom = false,
-                            bool spreadOnFgnCcy = true,
+                            bool spreadOnForeignCcy = true,
                             bool invertFxIndex = false);
     //! \name RateHelper interface
     //@{
@@ -86,23 +86,23 @@ protected:
     Calendar settlementCalendar_;
     Period swapTenor_;
     BusinessDayConvention rollConvention_;
-    boost::shared_ptr<QuantLib::IborIndex> fgnCcyIndex_;
-    boost::shared_ptr<QuantLib::IborIndex> domCcyIndex_;
-    Handle<YieldTermStructure> fgnCcyDiscountCurve_;
-    Handle<YieldTermStructure> domCcyDiscountCurve_;
-    Handle<YieldTermStructure> fgnCcyFxFwdRateCurve_;
-    Handle<YieldTermStructure> domCcyFxFwdRateCurve_;
-    bool eom_, spreadOnFgnCcy_, invertFxIndex_;
+    boost::shared_ptr<QuantLib::IborIndex> foreignCcyIndex_;
+    boost::shared_ptr<QuantLib::IborIndex> domesticCcyIndex_;
+    Handle<YieldTermStructure> foreignCcyDiscountCurve_;
+    Handle<YieldTermStructure> domesticCcyDiscountCurve_;
+    Handle<YieldTermStructure> foreignCcyFxFwdRateCurve_;
+    Handle<YieldTermStructure> domesticCcyFxFwdRateCurve_;
+    bool eom_, spreadOnForeignCcy_, invertFxIndex_;
 
-    Currency fgnCurrency_;
-    Currency domCurrency_;
+    Currency foreignCurrency_;
+    Currency domesticCurrency_;
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap_;
 
     RelinkableHandle<YieldTermStructure> termStructureHandle_;
-    RelinkableHandle<YieldTermStructure> fgnDiscountRLH_;
-    RelinkableHandle<YieldTermStructure> domDiscountRLH_;
-    RelinkableHandle<YieldTermStructure> fgnCcyFxFwdRateCurveRLH_;
-    RelinkableHandle<YieldTermStructure> domCcyFxFwdRateCurveRLH_;
+    RelinkableHandle<YieldTermStructure> foreignDiscountRLH_;
+    RelinkableHandle<YieldTermStructure> domesticDiscountRLH_;
+    RelinkableHandle<YieldTermStructure> foreignCcyFxFwdRateCurveRLH_;
+    RelinkableHandle<YieldTermStructure> domesticCcyFxFwdRateCurveRLH_;
 };
 } // namespace QuantExt
 

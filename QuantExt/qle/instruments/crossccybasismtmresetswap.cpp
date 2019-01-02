@@ -27,44 +27,44 @@ using boost::assign::list_of;
 
 namespace QuantExt {
 
-CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real fgnNominal, const Currency& fgnCurrency,
-                                                     const Schedule& fgnSchedule,
-                                                     const boost::shared_ptr<IborIndex>& fgnIndex, Spread fgnSpread,
-                                                     const Currency& domCurrency, const Schedule& domSchedule,
-                                                     const boost::shared_ptr<IborIndex>& domIndex, Spread domSpread,
+CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real foreignNominal, const Currency& foreignCurrency,
+                                                     const Schedule& foreignSchedule,
+                                                     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
+                                                     const Currency& domesticCurrency, const Schedule& domesticSchedule,
+                                                     const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
                                                      const boost::shared_ptr<FxIndex>& fxIdx, 
-                                                     bool invertFxIdx, bool receiveDom)
-    : CrossCcySwap(3), fgnNominal_(fgnNominal), fgnCurrency_(fgnCurrency), fgnSchedule_(fgnSchedule),
-      fgnIndex_(fgnIndex), fgnSpread_(fgnSpread), domCurrency_(domCurrency), domSchedule_(domSchedule),
-      domIndex_(domIndex), domSpread_(domSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx),
-      receiveDom_(receiveDom) {
+                                                     bool invertFxIdx, bool receiveDomestic)
+    : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency), foreignSchedule_(foreignSchedule),
+      foreignIndex_(foreignIndex), foreignSpread_(foreignSpread), domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule),
+      domesticIndex_(domesticIndex), domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx),
+      receiveDomestic_(receiveDomestic) {
 
-    registerWith(fgnIndex_);
-    registerWith(domIndex_);
+    registerWith(foreignIndex_);
+    registerWith(domesticIndex_);
     registerWith(fxIndex_);
     initialize();
 }
 
 void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
-    legs_[0] = IborLeg(fgnSchedule_, fgnIndex_).withNotionals(fgnNominal_).withSpreads(fgnSpread_);
-    receiveDom_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
+    legs_[0] = IborLeg(foreignSchedule_, foreignIndex_).withNotionals(foreignNominal_).withSpreads(foreignSpread_);
+    receiveDomestic_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
     
-    currencies_[0] = fgnCurrency_;
+    currencies_[0] = foreignCurrency_;
     // Pay leg notional exchange at start.
-    Date initialPayDate = fgnSchedule_.dates().front();
-    boost::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-fgnNominal_, initialPayDate));
+    Date initialPayDate = foreignSchedule_.dates().front();
+    boost::shared_ptr<CashFlow> initialPayCF(new SimpleCashFlow(-foreignNominal_, initialPayDate));
     legs_[0].insert(legs_[0].begin(), initialPayCF);
     // Pay leg notional exchange at end.
-    Date finalPayDate = fgnSchedule_.dates().back();
-    boost::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(fgnNominal_, finalPayDate));
+    Date finalPayDate = foreignSchedule_.dates().back();
+    boost::shared_ptr<CashFlow> finalPayCF(new SimpleCashFlow(foreignNominal_, finalPayDate));
     legs_[0].push_back(finalPayCF);
 
     // Receive (domestic/resettable) leg
     // start by creating a dummy vanilla floating leg
-    legs_[1] = IborLeg(domSchedule_, domIndex_).withNotionals(0).withSpreads(domSpread_);
-    receiveDom_ ? payer_[1] = +1.0 : payer_[1] = -1.0;
-    currencies_[1] = domCurrency_;
+    legs_[1] = IborLeg(domesticSchedule_, domesticIndex_).withNotionals(0).withSpreads(domesticSpread_);
+    receiveDomestic_ ? payer_[1] = +1.0 : payer_[1] = -1.0;
+    currencies_[1] = domesticCurrency_;
     // replace the coupons with a FloatingRateFXLinkedNotionalCoupon
     // (skip the first coupon as it has a fixed notional)
     for (Size j = 0; j < legs_[1].size(); ++j) {
@@ -72,12 +72,12 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
         boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
-            new FloatingRateFXLinkedNotionalCoupon(fixingDate, fgnNominal_, fxIndex_, invertFxIndex_, coupon));
+            new FloatingRateFXLinkedNotionalCoupon(fixingDate, foreignNominal_, fxIndex_, invertFxIndex_, coupon));
         legs_[1][j] = fxLinkedCoupon;
     }
     // now build a separate leg to store the domestic (resetting) notionals
-    receiveDom_ ? payer_[2] = +1.0 : payer_[2] = -1.0;
-    currencies_[2] = domCurrency_;
+    receiveDomestic_ ? payer_[2] = +1.0 : payer_[2] = -1.0;
+    currencies_[2] = domesticCurrency_;
     for (Size j = 0; j < legs_[1].size(); j++) {
         boost::shared_ptr<Coupon> c = boost::dynamic_pointer_cast<Coupon>(legs_[1][j]);
         QL_REQUIRE(c, "Resetting XCCY - expected Coupon"); // TODO: fixed fx resetable?
@@ -86,9 +86,9 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         Date fixingDate = fxIndex_->fixingCalendar().advance(c->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
         legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -fgnNominal_, fxIndex_, invertFxIndex_)));
+            new FXLinkedCashFlow(c->accrualStartDate(), fixingDate, -foreignNominal_, fxIndex_, invertFxIndex_)));
         legs_[2].push_back(boost::shared_ptr<CashFlow>(
-            new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, fgnNominal_, fxIndex_, invertFxIndex_)));
+            new FXLinkedCashFlow(c->accrualEndDate(), fixingDate, foreignNominal_, fxIndex_, invertFxIndex_)));
     }
 
     // Register the instrument with all cashflows on each leg.
@@ -111,8 +111,8 @@ void CrossCcyBasisMtMResetSwap::setupArguments(PricingEngine::arguments* args) c
     if (!arguments)
         return;
 
-    arguments->fgnSpread = fgnSpread_;
-    arguments->fgnSpread = fgnSpread_;
+    arguments->foreignSpread = foreignSpread_;
+    arguments->foreignSpread = foreignSpread_;
 }
 
 void CrossCcyBasisMtMResetSwap::fetchResults(const PricingEngine::results* r) const {
@@ -123,41 +123,41 @@ void CrossCcyBasisMtMResetSwap::fetchResults(const PricingEngine::results* r) co
     if (results) {
         /* If PricingEngine::results are of type
            CrossCcyBasisSwap::results */
-        fairFgnSpread_ = results->fairFgnSpread;
-        fairDomSpread_ = results->fairDomSpread;
+        fairForeignSpread_ = results->fairForeignSpread;
+        fairDomesticSpread_ = results->fairDomesticSpread;
     } else {
         /* If not, e.g. if the engine is a CrossCcySwap::engine */
-        fairFgnSpread_ = Null<Spread>();
-        fairDomSpread_ = Null<Spread>();
+        fairForeignSpread_ = Null<Spread>();
+        fairDomesticSpread_ = Null<Spread>();
     }
 
     /* Calculate the fair pay and receive spreads if they are null */
     static Spread basisPoint = 1.0e-4;
-    if (fairFgnSpread_ == Null<Spread>()) {
+    if (fairForeignSpread_ == Null<Spread>()) {
         if (legBPS_[0] != Null<Real>())
-            fairFgnSpread_ = fgnSpread_ - NPV_ / (legBPS_[0] / basisPoint);
+            fairForeignSpread_ = foreignSpread_ - NPV_ / (legBPS_[0] / basisPoint);
     }
-    if (fairDomSpread_ == Null<Spread>()) {
+    if (fairDomesticSpread_ == Null<Spread>()) {
         if (legBPS_[1] != Null<Real>())
-            fairDomSpread_ = domSpread_ - NPV_ / (legBPS_[1] / basisPoint);
+            fairDomesticSpread_ = domesticSpread_ - NPV_ / (legBPS_[1] / basisPoint);
     }
 }
 
 void CrossCcyBasisMtMResetSwap::setupExpired() const {
     CrossCcySwap::setupExpired();
-    fairFgnSpread_ = Null<Spread>();
-    fairDomSpread_ = Null<Spread>();
+    fairForeignSpread_ = Null<Spread>();
+    fairDomesticSpread_ = Null<Spread>();
 }
 
 void CrossCcyBasisMtMResetSwap::arguments::validate() const {
     CrossCcySwap::arguments::validate();
-    QL_REQUIRE(fgnSpread != Null<Spread>(), "Pay spread cannot be null");
-    QL_REQUIRE(domSpread != Null<Spread>(), "Rec spread cannot be null");
+    QL_REQUIRE(foreignSpread != Null<Spread>(), "Pay spread cannot be null");
+    QL_REQUIRE(domesticSpread != Null<Spread>(), "Rec spread cannot be null");
 }
 
 void CrossCcyBasisMtMResetSwap::results::reset() {
     CrossCcySwap::results::reset();
-    fairFgnSpread = Null<Spread>();
-    fairDomSpread = Null<Spread>();
+    fairForeignSpread = Null<Spread>();
+    fairDomesticSpread = Null<Spread>();
 }
 } // namespace QuantExt

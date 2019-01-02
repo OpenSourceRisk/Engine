@@ -36,15 +36,17 @@ void MultiPathGeneratorMersenneTwister::reset() {
 }
 
 MultiPathGeneratorSobol::MultiPathGeneratorSobol(const boost::shared_ptr<StochasticProcess>& process,
-                                                 const TimeGrid& grid, BigNatural seed)
-    : process_(process), grid_(grid), seed_(seed) {
+                                                 const TimeGrid& grid, BigNatural seed,
+                                                 SobolRsg::DirectionIntegers directionIntegers)
+    : process_(process), grid_(grid), seed_(seed), directionIntegers_(directionIntegers) {
     reset();
 }
 
 void MultiPathGeneratorSobol::reset() {
-    LowDiscrepancy::rsg_type rsg =
-        LowDiscrepancy::make_sequence_generator(process_->size() * (grid_.size() - 1), seed_);
-    pg_ = boost::make_shared<MultiPathGenerator<LowDiscrepancy::rsg_type> >(process_, grid_, rsg);
+    pg_ = boost::make_shared<MultiPathGenerator<InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal> > >(
+        process_, grid_,
+        InverseCumulativeRsg<SobolRsg, InverseCumulativeNormal>(
+            SobolRsg(process_->size() * (grid_.size() - 1), seed_, directionIntegers_)));
 }
 
 MultiPathGeneratorSobolBrownianBridge::MultiPathGeneratorSobolBrownianBridge(
@@ -92,7 +94,7 @@ boost::shared_ptr<MultiPathGeneratorBase> makeMultiPathGenerator(const SequenceT
     case MersenneTwisterAntithetic:
         return boost::make_shared<QuantExt::MultiPathGeneratorMersenneTwister>(process, timeGrid, seed, true);
     case Sobol:
-        return boost::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed);
+        return boost::make_shared<QuantExt::MultiPathGeneratorSobol>(process, timeGrid, seed, directionIntegers);
     case SobolBrownianBridge:
         return boost::make_shared<QuantExt::MultiPathGeneratorSobolBrownianBridge>(process, timeGrid, ordering, seed,
                                                                                    directionIntegers);

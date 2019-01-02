@@ -165,6 +165,7 @@ Calendar parseCalendar(const string& s) {
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
+                                      {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
                                       {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
@@ -555,6 +556,38 @@ QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Polynom type \"" << s << "\" not recognized");
+    }
+}
+
+SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s) {
+    static map<string, SobolBrownianGenerator::Ordering> m = {{"Factors", SobolBrownianGenerator::Ordering::Factors},
+                                                              {"Steps", SobolBrownianGenerator::Ordering::Steps},
+                                                              {"Diagonal", SobolBrownianGenerator::Ordering::Diagonal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolBrownianGenerator ordering \"" << s << "\" not recognized");
+    }
+}
+
+SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s) {
+    static map<string, SobolRsg::DirectionIntegers> m = {
+        {"Unit", SobolRsg::DirectionIntegers::Unit},
+        {"Jaeckel", SobolRsg::DirectionIntegers::Jaeckel},
+        {"SobolLevitan", SobolRsg::DirectionIntegers::SobolLevitan},
+        {"SobolLevitanLemieux", SobolRsg::DirectionIntegers::SobolLevitanLemieux},
+        {"JoeKuoD5", SobolRsg::DirectionIntegers::JoeKuoD5},
+        {"JoeKuoD6", SobolRsg::DirectionIntegers::JoeKuoD6},
+        {"JoeKuoD7", SobolRsg::DirectionIntegers::JoeKuoD7},
+        {"Kuo", SobolRsg::DirectionIntegers::Kuo},
+        {"Kuo2", SobolRsg::DirectionIntegers::Kuo2},
+        {"Kuo3", SobolRsg::DirectionIntegers::Kuo3}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
     }
 }
 
