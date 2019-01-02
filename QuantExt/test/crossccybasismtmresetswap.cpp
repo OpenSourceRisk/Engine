@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccybasismtmresetswap.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/ibor/gbplibor.hpp>
@@ -323,9 +323,11 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
 }
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
+BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapTest)
+		
+BOOST_AUTO_TEST_CASE(testSwapPricing) {
 
 
     BOOST_TEST_MESSAGE("Test cross currency MtM resetting swap pricing against known results");
@@ -355,13 +357,7 @@ void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
     BOOST_CHECK_SMALL(swap->legBPS(0) - expBps, tol);
 }
 
-test_suite* CrossCcyBasisMtMResetSwapTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CrossCcyBasisMtMResetSwapTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapTest::testSwapPricing));
-
-    return suite;
-}
-
-} // namespace testsuite

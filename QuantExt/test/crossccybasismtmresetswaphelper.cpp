@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccybasismtmresetswaphelper.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
@@ -134,9 +134,11 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 }
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
+BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapHelperTest)
+		
+BOOST_AUTO_TEST_CASE(testBootstrap) {
 
     BOOST_TEST_MESSAGE("Test simple bootstrap against cross currency MtM resetting swap");
 
@@ -163,7 +165,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testBootstrap() {
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 }
 
-void CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange() {
+BOOST_AUTO_TEST_CASE(testSpotFxChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under spot FX change");
 
@@ -212,7 +214,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange() {
         std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
 }
 
-void CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange() {
+BOOST_AUTO_TEST_CASE(testSpreadChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under helper spread change");
 
@@ -257,7 +259,7 @@ void CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange() {
     BOOST_CHECK_CLOSE(vars.spreadQuote->value(), swap->fairForeignSpread(), relTol);
 }
 
-void CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate() {
+BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap after moving evaluation date");
 
@@ -306,16 +308,6 @@ void CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate() {
     BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
 }
 
-test_suite* CrossCcyBasisMtMResetSwapHelperTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CrossCcyBasisMtMResetSwapHelperTests");
-
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testBootstrap));
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testSpotFxChange));
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testSpreadChange));
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapHelperTest::testMovingEvaluationDate));
-
-    return suite;
-}
-
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
