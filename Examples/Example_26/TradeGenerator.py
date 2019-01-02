@@ -211,7 +211,9 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 if(isResettable):
                     if((flatIndexIsResettable and payer) or ((not flatIndexIsResettable) and (not payer))):
                         notionalsNode = legroot.find("Notionals")
-                        fxResetNode = ET.SubElement(notionalsNode, "FXReset")
+                        #fxResetNode = ET.SubElement(notionalsNode, "FXReset")
+                        fxResetNode = ET.Element("FXReset")
+                        notionalsNode.insert(1,fxResetNode)
                         fgnCcy = spreadCCY if flatIndexIsResettable else flatCCY
                         fgnCcyNode = ET.SubElement(fxResetNode, "ForeignCurrency")
                         fgnCcyNode.text = fgnCcy
