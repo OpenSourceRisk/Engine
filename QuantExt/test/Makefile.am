@@ -39,6 +39,7 @@ QLE_TESTS = \
 	crossccyfixfloatswaphelper.hpp crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.hpp crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.hpp crossccybasismtmresetswaphelper.cpp \
+	correlationtermstructure.hpp correlationtermstructure.cpp \
 	utilities.hpp
 
 dist-hook:
