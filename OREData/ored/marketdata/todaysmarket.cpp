@@ -768,7 +768,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             requiredSwapIndices[swapIndexName] =
                                 swapIndex(swapIndexName, configuration.first).currentLink();
                         } catch (const std::exception& e) {
-                            WLOG("Failed to build swap index " << it.first);
+                            WLOG("Failed to build swap index " << it.first << ": " << e.what());
                         }
                     }
                     swapIndicesBuilt = true;
