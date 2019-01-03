@@ -606,6 +606,9 @@
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\nzdois.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

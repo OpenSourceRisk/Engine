@@ -538,6 +538,7 @@
     <ClInclude Include="qle\indexes\ibor\noknibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\nowa.hpp" />
     <ClInclude Include="qle\indexes\ibor\nzdbkbm.hpp" />
+    <ClInclude Include="qle\indexes\ibor\nzdois.hpp" />
     <ClInclude Include="qle\indexes\ibor\phpphiref.hpp" />
     <ClInclude Include="qle\indexes\ibor\plnwibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\rubmosprime.hpp" />
