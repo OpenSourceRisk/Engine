@@ -17,7 +17,7 @@
 */
 
 /*! \file nzdois.hpp
-    \brief New Zealand Dollars OID Rate
+    \brief New Zealand Dollars OIS Rate
     \ingroup indexes
 */
 
