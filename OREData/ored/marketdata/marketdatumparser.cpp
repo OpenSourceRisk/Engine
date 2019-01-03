@@ -70,6 +70,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
+        {"SPREAD", MarketDatum::InstrumentType::SPREAD},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION}};
 
     auto it = b.find(s);
@@ -93,6 +94,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_NVOL", MarketDatum::QuoteType::RATE_NVOL},
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
+        {"CORRELATION", MarketDatum::QuoteType::CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
     };
 
@@ -475,6 +477,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
         
         return boost::make_shared<CommodityOptionQuote>(
+            value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
+    }
+
+    case MarketDatum::InstrumentType::SPREAD: {
+        // Expects the following form:
+        // SPREAD/CORRELATION/<INDEX1>/<INDEX2>/<TENOR>/<STRIKE>
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::CORRELATION, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
+        
+        return boost::make_shared<SpreadQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
     }
 

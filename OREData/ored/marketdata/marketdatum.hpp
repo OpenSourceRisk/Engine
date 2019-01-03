@@ -98,6 +98,7 @@ public:
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
+        SPREAD,
         COMMODITY_OPTION
     };
 
@@ -114,7 +115,8 @@ public:
         RATE_NVOL,
         RATE_SLNVOL,
         BASE_CORRELATION,
-        SHIFT
+        SHIFT,
+        CORRELATION
     };
 
     //! Constructor
@@ -1243,6 +1245,46 @@ public:
 private:
     std::string commodityName_;
     std::string quoteCurrency_;
+    std::string expiry_;
+    std::string strike_;
+};
+
+//! Spread data class
+/*! This class holds single market points of type SPREAD
+    \ingroup marketdata
+*/
+class SpreadQuote : public MarketDatum {
+public:
+    //! Constructor
+    /*! \param value         The correlation value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be CORRELATION
+        \param index1        The name of the first index
+        \param index2        The name of the second index
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATM 
+    */
+    SpreadQuote(QuantLib::Real value, 
+        const QuantLib::Date& asof, 
+        const std::string& name, 
+        QuoteType quoteType, 
+        const std::string& index1,
+        const std::string& index2,
+        const std::string& expiry,
+        const std::string& strike);
+
+    //! \name Inspectors
+    //@{
+    const std::string& index1() const { return index1_; }
+    const std::string& index2() const { return index2_; }
+    const std::string& expiry() const { return expiry_; }
+    const std::string& strike() const { return strike_; }
+    //@}
+
+private:
+    std::string index1_;
+    std::string index2_;
     std::string expiry_;
     std::string strike_;
 };
