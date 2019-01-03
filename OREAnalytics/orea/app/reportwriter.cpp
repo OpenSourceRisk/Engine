@@ -248,7 +248,8 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<or
 }
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-    const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
+                               const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
+                               const bool continueOnError) {
     LOG("Write curves... ");
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
@@ -270,28 +271,68 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
 
     for (auto it : discountCurves) {
         DLOG("discount curve - " << it.first);
-        report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->discountCurve(it.first, configID));
+        try {
+            yieldCurves.push_back(market->discountCurve(it.first, configID));
+            report.addColumn(it.first, double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     for (auto it : YieldCurves) {
         DLOG("yield curve - " << it.first);
-        report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->yieldCurve(it.first, configID));
+        try {
+            yieldCurves.push_back(market->yieldCurve(it.first, configID));
+            report.addColumn(it.first, double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     for (auto it : indexCurves) {
         DLOG("index curve - " << it.first);
-        report.addColumn(it.first, double(), 15);
-        yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
+        try {
+            yieldCurves.push_back(market->iborIndex(it.first, configID)->forwardingTermStructure());
+            report.addColumn(it.first, double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     for (auto it : zeroInflationIndices) {
         DLOG("inflation curve - " << it.first);
-        report.addColumn(it.first, double(), 15);
-        zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, configID));
+        try {
+            zeroInflationFixings.push_back(market->zeroInflationIndex(it.first, configID));
+            report.addColumn(it.first, double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     for (auto it : defaultCurves) {
         DLOG("default curve - " << it.first);
-        report.addColumn(it.first, double(), 15);
-        probabilityCurves.push_back(market->defaultCurve(it.first, configID));
+        try {
+            probabilityCurves.push_back(market->defaultCurve(it.first, configID));
+            report.addColumn(it.first, double(), 15);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                WLOG("skip this curve: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
 
     for (Size j = 0; j < grid.size(); ++j) {

@@ -398,7 +398,7 @@ void OREApp::writeInitialReports() {
         CSVFileReport curvesReport(fileName);
         DateGrid grid(params_->get("curves", "grid"));
         getReportWriter()->writeCurves(curvesReport, params_->get("curves", "configuration"), grid, marketParameters_,
-                                  market_);
+                                       market_, continueOnError_);
         out_ << "OK" << endl;
     } else {
         LOG("skip curve report");

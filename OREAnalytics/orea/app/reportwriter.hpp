@@ -56,7 +56,8 @@ public:
                                  const std::string& configuration = ore::data::Market::defaultConfiguration);
 
     virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                            const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
+                             const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
+                             const bool continueOnError = false);
 
     virtual void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
                                     const std::string& tradeId);
