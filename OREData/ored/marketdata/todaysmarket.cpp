@@ -59,7 +59,8 @@ namespace ore {
 namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
-                           const CurveConfigurations& curveConfigs, const Conventions& conventions)
+                           const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                           const bool continueOnError)
     : MarketImpl(conventions) {
 
     // Fixings
@@ -789,11 +790,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         for (auto error : buildErrors) {
             ALOG("Failed to build curve " << error.first << " due to error: " << error.second);
         }
-
-        QL_FAIL("Cannot build all required curves! Building failed for: " <<
-            boost::algorithm::join(buildErrors | boost::adaptors::map_keys, ", "));
+        if (!continueOnError) {
+            QL_FAIL("Cannot build all required curves! Building failed for: "
+                    << boost::algorithm::join(buildErrors | boost::adaptors::map_keys, ", "));
+        }
     }
-
 
 } // CTOR
 } // namespace data
