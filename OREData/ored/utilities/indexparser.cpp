@@ -69,7 +69,6 @@
 #include <qle/indexes/ibor/thbbibor.hpp>
 #include <qle/indexes/ibor/tonar.hpp>
 #include <qle/indexes/ibor/twdtaibor.hpp>
-#include <qle/indexes/ibor/nzdois.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -212,7 +211,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
         {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
         {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()},
-        {"NZD-OIS", boost::make_shared<IborIndexParserOIS<NZDois>>()}
+        {"NZD-OCR", boost::make_shared<IborIndexParserOIS<Nzocr>>()}
     };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
