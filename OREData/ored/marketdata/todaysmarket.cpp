@@ -762,10 +762,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
                         const string& swapIndexName = it.first;
                         const string& discountIndex = it.second;
-
-                        addSwapIndex(swapIndexName, discountIndex, configuration.first);
-                        LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-                        requiredSwapIndices[swapIndexName] = swapIndex(swapIndexName, configuration.first).currentLink();
+                        try {
+                            addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                            LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                            requiredSwapIndices[swapIndexName] =
+                                swapIndex(swapIndexName, configuration.first).currentLink();
+                        } catch (const std::exception& e) {
+                            WLOG("Failed to build swap index " << it.first);
+                        }
                     }
                     swapIndicesBuilt = true;
                 }
