@@ -125,9 +125,10 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
     boost::shared_ptr<ScenarioFactory> scenarioFactory = scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
     LOG("Scenario factory created for sensitivity analysis");
 
-    LOG("Create scenario generator for sensitivity analysis");
+    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
+                                                                               << ")");
     scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_);
+        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_, continueOnError_);
     LOG("Scenario generator created for sensitivity analysis");
 
     // Set simulation market's scenario generator
