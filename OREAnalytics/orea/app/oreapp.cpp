@@ -852,6 +852,10 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
     string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
     bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
 
+    bool continueOnError = false;
+    if(params_->has("setup", "continueOnError"))
+        continueOnError = parseBool(params_->get("setup", "continueOnError"));
+
     if (marketData.size() == 0 || fixingData.size() == 0) {
         /*******************************
         * Market and fixing data loader
@@ -864,7 +868,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
             CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
             out_ << "OK" << endl;
-            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_,
+                                                       continueOnError);
         }
         else {
             WLOG("No market data loaded from file");
@@ -874,7 +879,8 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
         LOG("Load market and fixing data from string vectors");
         InMemoryLoader loader;
         loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
-        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_,
+                                                   continueOnError);
     }
     DLOG("market built");
 }
