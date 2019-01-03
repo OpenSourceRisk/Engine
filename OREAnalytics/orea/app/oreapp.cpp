@@ -439,8 +439,9 @@ boost::shared_ptr<ReportWriter> OREApp::getReportWriter() const {
     return boost::shared_ptr<ReportWriter>(getReportWriterImpl());
 }
 
-boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() { 
-    return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(), getExtraLegBuilders()); 
+boost::shared_ptr<SensitivityRunner> OREApp::getSensitivityRunner() {
+    return boost::make_shared<SensitivityRunner>(params_, getExtraTradeBuilders(), getExtraEngineBuilders(),
+                                                 getExtraLegBuilders(), continueOnError_);
 }
 
 void OREApp::runStressTest() {

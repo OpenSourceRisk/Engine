@@ -43,7 +43,7 @@ void SensitivityRunner::runSensitivityAnalysis(
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
         boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
-                                                sensiData, conventions, recalibrateModels);
+                                                sensiData, conventions, recalibrateModels, false, continueOnError_);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
