@@ -24,6 +24,7 @@ OREDATA_TESTS = \
 	curveconfig.cpp \
 	ored_commodityforward.cpp \
 	commoditycurveconfig.cpp \
+	correlationcurveconfig.cpp \
 	commoditycurve.cpp \
 	commodityoption.cpp \
 	commodityvolcurveconfig.cpp \

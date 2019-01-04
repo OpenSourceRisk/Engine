@@ -110,11 +110,15 @@ SpreadQuote::SpreadQuote(Real value, const Date& asof, const string& name, Quote
             ") must be either ATM or an actual strike price");
     }
 
-    // Call parser to check that the expiry_ resolves to a period or a date
-    Date outDate;
-    Period outPeriod;
-    bool outBool;
-    parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
+
+    
+    // If expiry not equal flat Call parser to check that the expiry_ resolves to a period or a date
+    if (expiry != "FLAT") {
+        Date outDate;
+        Period outPeriod;
+        bool outBool;
+        parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
+    }
 }
 
 } // namespace data
