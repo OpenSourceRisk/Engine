@@ -74,7 +74,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData1->optionTerms() = terms;
     lgmData1->optionStrikes() = strikes;
 
-    lgmData1->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData1->scaling() = 1.0;
 
     // Second instance
@@ -100,7 +99,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData2->optionTerms() = terms;
     lgmData2->optionStrikes() = strikes;
 
-    lgmData2->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData2->scaling() = 1.0;
 
     // Third instance
@@ -126,7 +124,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData3->optionTerms() = terms;
     lgmData3->optionStrikes() = strikes;
 
-    lgmData3->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData3->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<IrLgmData>>);
@@ -167,7 +164,6 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
 
     infDkData1->optionExpiries() = expiries;
     infDkData1->optionStrikes() = strikes;
-    infDkData1->calibrationStrategy() = parseCalibrationStrategy("None");
     infDkData1->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
