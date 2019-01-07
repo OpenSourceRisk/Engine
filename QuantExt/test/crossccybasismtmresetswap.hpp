@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2019 Quaternion Risk Management Ltd
+ Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -15,3 +15,26 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
+
+/*! \file test/crossccybasismtmresetswap.hpp
+    \brief Cross currency MtM resetting swap test
+*/
+
+#ifndef quantext_test_cross_ccy_basis_mtm_reset_swap_hpp
+#define quantext_test_cross_ccy_basis_mtm_reset_swap_hpp
+
+#include <boost/test/unit_test.hpp>
+
+namespace testsuite {
+
+    //! Cross currency fix float swap tests
+class CrossCcyBasisMtMResetSwapTest {
+    public:
+        // Test single swap pricing against known good results
+        static void testSwapPricing();
+
+        static boost::unit_test_framework::test_suite* suite();
+    };
+}
+
+#endif

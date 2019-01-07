@@ -600,6 +600,12 @@
     <ClInclude Include="qle\cashflows\lognormalcmsspreadpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
+    <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1023,6 +1029,12 @@
     </ClCompile>
     <ClCompile Include="qle\cashflows\lognormalcmsspreadpricer.cpp">
       <Filter>cashflows</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp">
+      <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

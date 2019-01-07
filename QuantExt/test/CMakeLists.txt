@@ -9,6 +9,8 @@ cpicapfloor.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
+crossccybasismtmresetswap.cpp
+crossccybasismtmresetswaphelper.cpp
 crossccyfixfloatswap.cpp
 crossccyfixfloatswaphelper.cpp
 currency.cpp

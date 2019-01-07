@@ -38,6 +38,8 @@ QLE_TESTS = \
 	crossccyfixfloatswap.hpp crossccyfixfloatswap.cpp \
 	crossccyfixfloatswaphelper.hpp crossccyfixfloatswaphelper.cpp \
 	cpicapfloor.hpp cpicapfloor.cpp \
+	crossccybasismtmresetswap.hpp crossccybasismtmresetswap.cpp \
+	crossccybasismtmresetswaphelper.hpp crossccybasismtmresetswaphelper.cpp \
 	utilities.hpp
 
 dist-hook:

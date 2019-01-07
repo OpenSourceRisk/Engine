@@ -768,12 +768,13 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     } // loop over configurations
 
     if (buildErrors.size() > 0) {
+        string errStr;
         for (auto error : buildErrors) {
             ALOG("Failed to build curve " << error.first << " due to error: " << error.second);
+            errStr += "(" + error.first + ": " + error.second + "); " ;
         }
 
-        QL_FAIL("Cannot build all required curves! Building failed for: "
-                << boost::algorithm::join(buildErrors | boost::adaptors::map_keys, ", "));
+        QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
     }
 
 } // CTOR

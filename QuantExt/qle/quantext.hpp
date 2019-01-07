@@ -72,6 +72,7 @@
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
+#include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/instruments/crossccybasisswap.hpp>
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 #include <qle/instruments/crossccyswap.hpp>
@@ -155,6 +156,7 @@
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>

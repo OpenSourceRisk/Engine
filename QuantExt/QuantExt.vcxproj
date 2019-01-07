@@ -557,6 +557,7 @@
     <ClInclude Include="qle\instruments\cdsoption.hpp" />
     <ClInclude Include="qle\instruments\commodityforward.hpp" />
     <ClInclude Include="qle\instruments\creditdefaultswap.hpp" />
+    <ClInclude Include="qle\instruments\crossccybasismtmresetswap.hpp" />
     <ClInclude Include="qle\instruments\crossccybasisswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyfixfloatswap.hpp" />
     <ClInclude Include="qle\instruments\crossccyswap.hpp" />
@@ -639,6 +640,7 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
+    <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
@@ -716,6 +718,7 @@
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
+    <ClCompile Include="qle\instruments\crossccybasismtmresetswap.cpp" />
     <ClCompile Include="qle\instruments\crossccybasisswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyfixfloatswap.cpp" />
     <ClCompile Include="qle\instruments\crossccyswap.cpp" />
@@ -782,6 +785,7 @@
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
+    <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\datedstrippedoptionlet.cpp" />

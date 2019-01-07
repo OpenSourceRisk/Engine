@@ -29,6 +29,7 @@ instruments/averageois.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
+instruments/crossccybasismtmresetswap.cpp
 instruments/crossccybasisswap.cpp
 instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
@@ -98,6 +99,7 @@ termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
 termstructures/datedstrippedoptionlet.cpp
@@ -198,6 +200,7 @@ instruments/averageois.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
+instruments/crossccybasismtmresetswap.hpp
 instruments/crossccybasisswap.hpp
 instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
@@ -282,6 +285,7 @@ termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
 termstructures/datedstrippedoptionlet.hpp

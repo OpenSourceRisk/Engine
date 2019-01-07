@@ -186,6 +186,13 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 spreadIndex = convention.find("SpreadIndex").text
                 payConvention = convention.find("RollConvention").text
                 calendar = convention.find("SettlementCalendar").text
+                isResettable = False
+                flatIndexIsResettable = False
+                isResettableNode = convention.find("IsResettable")
+                if isResettableNode is not None:
+                    isResettable = True if (isResettableNode.text=="Y") else False
+                    flatIndexIsResettableNode = convention.find("FlatIndexIsResettable")
+                    flatIndexIsResettable = True if (flatIndexIsResettableNode.text=="Y") else False
                 if(payer):
                     index = convention.find("FlatIndex").text
                     currency = flatCCY
@@ -201,6 +208,23 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                         debugPrint("Could not find market data for " + tradeQuote)
                         return False
                 fixingDays = getFixingDaysForCCY(currency)
+                if(isResettable):
+                    if((flatIndexIsResettable and payer) or ((not flatIndexIsResettable) and (not payer))):
+                        notionalsNode = legroot.find("Notionals")
+                        #fxResetNode = ET.SubElement(notionalsNode, "FXReset")
+                        fxResetNode = ET.Element("FXReset")
+                        notionalsNode.insert(1,fxResetNode)
+                        fgnCcy = spreadCCY if flatIndexIsResettable else flatCCY
+                        fgnCcyNode = ET.SubElement(fxResetNode, "ForeignCurrency")
+                        fgnCcyNode.text = fgnCcy
+                        fgnAmtNode = ET.SubElement(fxResetNode, "ForeignAmount")
+                        fgnAmtNode.text = str(notional)
+                        fxIdxNode = ET.SubElement(fxResetNode, "FXIndex")
+                        fxIdxNode.text = "FX-ECB-" + spreadCCY + "-" + flatCCY
+                        fixNode = ET.SubElement(fxResetNode, "FixingDays")
+                        fixNode.text = fixingDays
+                        fixCalNode = ET.SubElement(fxResetNode, "FixingCalendar")
+                        fixCalNode.text = "TARGET,US,UK" # Temp
 
             else: #Tenor Basis Swap
                 payConvention = "MF"
