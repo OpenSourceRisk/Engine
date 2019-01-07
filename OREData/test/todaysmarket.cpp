@@ -395,9 +395,9 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31 1172.9")
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223")
         // correlation quotes
-        ("20160226 SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM 0.1")
-        ("20160226 SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM 0.2")
-        ("20160226 SPREAD/CORRELATION/USD-CMS-10Y/USD-CMS-1Y/FLAT/ATM 0.1");
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM 0.1")
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM 0.2")
+        ("20160226 CORRELATION/RATE/USD-CMS-10Y/USD-CMS-1Y/1Y/ATM 0.1");
     // clang-format on
 
     for (auto s : data) {
@@ -704,14 +704,18 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
         Period(2, Years)
     };
     
+    vector<Period> optionTenors3{
+        Period(1, Years)
+    };
     //Correlation curve
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
-        CorrelationCurveConfig::QuoteType::Correlation, extrapolate, optionTenors2,
+        CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors2,
         dayCounter, UnitedStates(), bdc, "EUR-CMS-10Y", "EUR-CMS-1Y");
+    //Constant Correlation
     configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
-        "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::Flat,
-        CorrelationCurveConfig::QuoteType::Correlation, extrapolate, vector<Period>(),
+        "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
+        CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors3,
         dayCounter, UnitedStates(), bdc, "USD-CMS-10Y", "USD-CMS-1Y");
 
     // clang-format off

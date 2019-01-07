@@ -304,20 +304,20 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
     BOOST_TEST_MESSAGE("Testing market datum parsing...");
 
 
-    BOOST_TEST_MESSAGE("Testing spread market datum parsing...");
+    BOOST_TEST_MESSAGE("Testing correlation market datum parsing...");
     Date d(1,Jan,1990);
     Real value = 1;
 
-    string input = "SPREAD/CORRELATION/INDEX1/INDEX2/1Y/ATM";
+    string input = "CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM";
 
     boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
     BOOST_CHECK(datum->asofDate() == d);
     BOOST_CHECK(datum->quote()->value() == value);
-    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::SPREAD);
-    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::CORRELATION);
+    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE);
 
-    boost::shared_ptr<ore::data::SpreadQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::SpreadQuote>(datum);
+    boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
 
 
     BOOST_CHECK(spreadDatum->index1() == "INDEX1");

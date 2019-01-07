@@ -37,13 +37,13 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             curveConfigs.correlationCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
-                       config->dimension() == CorrelationCurveConfig::Dimension::Flat,
+                       config->dimension() == CorrelationCurveConfig::Dimension::Constant,
                    "Unsupported correlation curve building dimension");
 
         // We loop over all market data, looking for quotes that match the configuration
         // until we found the whole matrix or do not have more quotes in the market data
 
-        bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Flat);
+        bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
     
         LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
         
@@ -57,11 +57,11 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
         for (auto& md : loader.loadQuotes(asof)) {
 
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::SPREAD) {
+            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CORRELATION) {
 
-                boost::shared_ptr<SpreadQuote> q = boost::dynamic_pointer_cast<SpreadQuote>(md);
+                boost::shared_ptr<CorrelationQuote> q = boost::dynamic_pointer_cast<CorrelationQuote>(md);
 
-                if (remainingQuotes > 0 && q != NULL && q->quoteType() == ore::data::MarketDatum::QuoteType::CORRELATION) {
+                if (remainingQuotes > 0 && q != NULL && q->quoteType() == ore::data::MarketDatum::QuoteType::RATE) {
 
                     quotesRead++;
 

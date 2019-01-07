@@ -3217,10 +3217,10 @@
     <Correlation>
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
-      <!-- ATM, Flat -->
+      <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
-      <!-- Correlation, Price -->
-      <QuoteType>Correlation</QuoteType>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -3234,16 +3234,17 @@
     <Correlation>
       <CurveId>USD-CORR</CurveId>
       <CurveDescription>USD CMS correlations</CurveDescription>
-      <!-- ATM, Flat -->
-      <Dimension>Flat</Dimension>
-      <!-- Correlation, Price -->
-      <QuoteType>Correlation</QuoteType>
+      <!-- ATM, Constant -->
+      <Dimension>Constant</Dimension>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <!--Ccalendar and Business day convention for option tenor to date conversion -->
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y</OptionTenors>
       <Index1>USD-CMS-10Y</Index1>
       <Index2>USD-CMS-1Y</Index2>
     </Correlation>

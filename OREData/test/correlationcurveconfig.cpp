@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     configXml.append("  <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>");
     configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
     configXml.append("  <Dimension>ATM</Dimension>");
-    configXml.append("  <QuoteType>Correlation</QuoteType>");
+    configXml.append("  <QuoteType>Rate</QuoteType>");
     configXml.append("  <Extrapolation>true</Extrapolation>");
     configXml.append("  <Calendar>TARGET</Calendar>");
     configXml.append("  <DayCounter>A365</DayCounter>");
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
 
     // Expected vector of quotes
     vector<string> quotes = {
-        "SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
-        "SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"
+        "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
+        "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"
     };
 
     // Check fields

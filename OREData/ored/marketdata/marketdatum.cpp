@@ -98,9 +98,9 @@ CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const s
     parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
 }
 
-SpreadQuote::SpreadQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
     const string& index1, const string& index2, const string& expiry, const string& strike)
-    : MarketDatum(value, asof, name, quoteType, InstrumentType::SPREAD),
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::CORRELATION),
       index1_(index1), index2_(index2), expiry_(expiry), strike_(strike) {
 
     // If strike is not ATMF, it must parse to Real
@@ -112,13 +112,11 @@ SpreadQuote::SpreadQuote(Real value, const Date& asof, const string& name, Quote
 
 
     
-    // If expiry not equal flat Call parser to check that the expiry_ resolves to a period or a date
-    if (expiry != "FLAT") {
-        Date outDate;
-        Period outPeriod;
-        bool outBool;
-        parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
-    }
+    // Call parser to check that the expiry_ resolves to a period or a date
+    Date outDate;
+    Period outPeriod;
+    bool outBool;
+    parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
 }
 
 } // namespace data

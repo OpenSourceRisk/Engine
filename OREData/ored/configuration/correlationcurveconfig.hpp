@@ -47,10 +47,10 @@ using QuantLib::Spread;
 */
 class CorrelationCurveConfig : public CurveConfig {
 public:
-    //! supported volatility dimensions
-    enum class Dimension { ATM, Flat };
+    //! supported Correlation dimensions
+    enum class Dimension { ATM , Constant};
     // supported volatility types
-    enum class QuoteType { Correlation, Price };
+    enum class QuoteType { Rate, Price };
 
     //! \name Constructors/Destructors
     //@{

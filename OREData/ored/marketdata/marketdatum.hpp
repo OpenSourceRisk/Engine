@@ -98,7 +98,7 @@ public:
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
-        SPREAD,
+        CORRELATION,
         COMMODITY_OPTION
     };
 
@@ -115,8 +115,7 @@ public:
         RATE_NVOL,
         RATE_SLNVOL,
         BASE_CORRELATION,
-        SHIFT,
-        CORRELATION
+        SHIFT
     };
 
     //! Constructor
@@ -1253,19 +1252,19 @@ private:
 /*! This class holds single market points of type SPREAD
     \ingroup marketdata
 */
-class SpreadQuote : public MarketDatum {
+class CorrelationQuote : public MarketDatum {
 public:
     //! Constructor
     /*! \param value         The correlation value
         \param asof          The quote date
         \param name          The quote name
-        \param quoteType     The quote type, should be CORRELATION
+        \param quoteType     The quote type, should be RATE or PRICE 
         \param index1        The name of the first index
         \param index2        The name of the second index
         \param expiry        Expiry can be a period or a date
         \param strike        Can be underlying commodity price or ATM 
     */
-    SpreadQuote(QuantLib::Real value, 
+    CorrelationQuote(QuantLib::Real value, 
         const QuantLib::Date& asof, 
         const std::string& name, 
         QuoteType quoteType, 

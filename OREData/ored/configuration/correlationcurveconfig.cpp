@@ -28,8 +28,8 @@ namespace data {
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t) {
     switch (t) {
-    case CorrelationCurveConfig::QuoteType::Correlation:
-        return out << "CORRELATION";
+    case CorrelationCurveConfig::QuoteType::Rate:
+        return out << "RATE";
     case CorrelationCurveConfig::QuoteType::Price:
         return out << "PRICE";
     default:
@@ -49,11 +49,11 @@ CorrelationCurveConfig::CorrelationCurveConfig(
       businessDayConvention_(businessDayConvention), index1_(index1),
       index2_(index2) {
 
-    QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Flat, "Invalid dimension");
+    QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Constant, "Invalid dimension");
 
-    if (dimension == Dimension::Flat) {
-        QL_REQUIRE(optionTenors.size() == 0 ,
-                   "Smile tenors should only be set when dim!=Flat");
+    if (dimension == Dimension::Constant) {
+        QL_REQUIRE(optionTenors.size() == 1 ,
+                   "Only one tenor should be supplied for a constant correlation termstructure");
     }
 }
 
@@ -62,21 +62,15 @@ const vector<string>& CorrelationCurveConfig::quotes() {
     if (quotes_.size() == 0) {
 
         std::stringstream ssBase;
-        ssBase << "SPREAD/" << quoteType_ << "/" << index1_ << "/" << index2_;
+        ssBase << "CORRELATION/" << quoteType_ << "/" << index1_ << "/" << index2_;
         string base = ssBase.str();
 
-        if (dimension_ != Dimension::Flat) {
-            for (auto o : optionTenors_) {
-                std::stringstream ss;
-                ss << base << "/" << to_string(o) << "/ATM";
-                quotes_.push_back(ss.str());
-            }
-
-        } else {
+        for (auto o : optionTenors_) {
             std::stringstream ss;
-            ss << base << "/FLAT/ATM";
+            ss << base << "/" << to_string(o) << "/ATM";
             quotes_.push_back(ss.str());
         }
+
     }
     return quotes_;
 }
@@ -88,17 +82,22 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
-    if (dim == "ATM") {
-        dimension_ = Dimension::ATM;
-    } else if (dim == "Flat") {
-        dimension_ = Dimension::Flat;
-    } else {
-        QL_FAIL("Dimension " << dim << " not recognized");
-    }
 
+    QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
+
+    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
+    QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
+    
+    if (optionTenors_.size() == 1) {
+        dimension_ = Dimension::Constant;
+    } else {
+        QL_REQUIRE(dim != "Constant", "Dimension " << dim << " not recognised");
+        dimension_ = Dimension::ATM;
+    }
+    
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "Correlation") {
-        quoteType_ = QuoteType::Correlation;
+    if (quoteType == "Rate") {
+        quoteType_ = QuoteType::Rate;
     } else if (quoteType == "Price") {
         quoteType_ = QuoteType::Price;
     } else {
@@ -108,7 +107,6 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
     extrapolate_ = parseBool(extr);
 
-    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
@@ -132,15 +130,16 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
-        XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-    } else if (dimension_ == Dimension::Flat) {
-        XMLUtils::addChild(doc, node, "Dimension", "Flat");
+    } else if (dimension_ == Dimension::Constant) {
+        XMLUtils::addChild(doc, node, "Dimension", "Constant");
     } else {
-        QL_FAIL("Unkown Dimension in CorrelationCurveConfig::toXML()");
+        QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
     }
 
-    if (quoteType_ == QuoteType::Correlation) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Correlation");
+    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
+    
+    if (quoteType_ == QuoteType::Rate) {
+        XMLUtils::addChild(doc, node, "QuoteType", "Rate");
     } else if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "QuoteType", "Price");
     } else {
