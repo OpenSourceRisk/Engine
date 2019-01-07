@@ -25,21 +25,23 @@ namespace ore {
 namespace data {
 
 namespace {
-static const Size numberOfMarketObjects = 19;
+static const Size numberOfMarketObjects = 22;
 // clang-format off
 static const vector<string> marketObjectStrings = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
                                                    "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
                                                    "BaseCorrelation", "CapFloorVol", "ZeroInflationCurve",
-                                                   "YoYInflationCurve", "InflationCapFloorPriceSurface",
-                                                   "EquityCurves", "EquityVols", "Securities", "CommodityCurves",
-                                                   "CommodityVolatilities"};
+                                                   "YoYInflationCurve", "InflationCapFloorPriceSurface", 
+                                                   "YoYInflationCapFloorPriceSurface", "ZeroInflationCapFloorVol",
+                                                   "YoYInflationCapFloorVol", "EquityCurves", "EquityVols",
+                                                   "Securities", "CommodityCurves", "CommodityVolatilities"};
 static const vector<string> marketObjectXMLNames = {"DiscountingCurves", "YieldCurves", "IndexForwardingCurves",
                                                     "SwapIndexCurves",
                                                     "FxSpots", "FxVolatilities", "SwaptionVolatilities",
                                                     "DefaultCurves", "CDSVolatilities", "BaseCorrelations",
                                                     "CapFloorVolatilities",
                                                     "ZeroInflationIndexCurves", "YYInflationIndexCurves",
-                                                    "InflationCapFloorPriceSurfaces",
+                                                    "InflationCapFloorPriceSurfaces", "YYInflationCapFloorPriceSurfaces",
+                                                    "ZeroInflationCapFloorVolatilities", "YYInflationCapFloorVolatilities",
                                                     "EquityCurves", "EquityVolatilities",
                                                     "Securities", "CommodityCurves", "CommodityVolatilities"};
 static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
@@ -48,6 +50,9 @@ static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
     {"DefaultCurve", "name"}, {"CDSVolatility", "name"}, {"BaseCorrelation", "name"},
     {"CapFloorVolatility", "currency"}, {"ZeroInflationIndexCurve", "name"},
     {"YYInflationIndexCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
+    {"YYInflationCapFloorPriceSurface", "name" },
+    {"ZeroInflationCapFloorVolatility", "name" },
+    {"YYInflationCapFloorVolatility", "name" },
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
     {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}};
 // clang-format on

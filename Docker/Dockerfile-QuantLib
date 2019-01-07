@@ -15,7 +15,7 @@ COPY QuantLib /ore/QuantLib
 RUN cd /ore/QuantLib \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && ./autogen.sh \
-  && ./configure --disable-static CXXFLAGS=-O2 \
+  && ./configure --enable-static CXXFLAGS=-O2 \
   && cd ql \
   && make -j ${num_cores} \
   && make install \

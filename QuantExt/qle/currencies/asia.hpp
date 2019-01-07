@@ -29,9 +29,9 @@
 
 #include <ql/currency.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Kazakhstani tenge
 /*! The ISO three-letter code is KZT; the numeric code is 398.
@@ -97,6 +97,17 @@ public:
 class PHPCurrency : public Currency {
 public:
     PHPCurrency();
+};
+
+//! Chinese yuan (Hong Kong)
+/*! The ISO three-letter code is CNH; there is no numeric code.
+ It is divided in 100 fen.
+
+ \ingroup currencies
+*/
+class CNHCurrency : public Currency {
+public:
+    CNHCurrency();
 };
 } // namespace QuantExt
 #endif

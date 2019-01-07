@@ -27,19 +27,26 @@ namespace data {
 DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency,
                                        const Type& type, const string& discountCurveID, const string& recoveryRateQuote,
                                        const DayCounter& dayCounter, const string& conventionID,
-                                       const vector<string>& cdsQuotes, bool extrapolation,
+                                       const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
                                        const std::vector<Period>& pillars, const Calendar& calendar, const Size spotLag)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
       sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag) {
-    quotes_ = cdsQuotes;
+    
+    for (const auto& kv : cdsQuotes) {
+        quotes_.push_back(kv.first);
+    }
     quotes_.insert(quotes_.begin(), recoveryRateQuote_);
 }
 
 void DefaultCurveConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "DefaultCurve");
+
+    // Just in case
+    cdsQuotes_.clear();
+    quotes_.clear();
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
@@ -67,15 +74,22 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
         spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
         calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
         discountCurveID_ = conventionID_ = recoveryRateQuote_ = "";
-        cdsQuotes_.clear();
-        quotes_.clear();
     } else {
         discountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", false);
         conventionID_ = XMLUtils::getChildValue(node, "Conventions", true);
-        cdsQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-        quotes_ = cdsQuotes_;
-        quotes_.insert(quotes_.begin(), recoveryRateQuote_);
+
+        XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+        if (quotesNode) {
+            for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
+                string attr = XMLUtils::getAttribute(n, "optional");
+                bool opt = (!attr.empty() && parseBool(attr));
+                cdsQuotes_.emplace_back(make_pair(XMLUtils::getNodeValue(n), opt));
+                quotes_.push_back(XMLUtils::getNodeValue(n));
+            }
+        }
+
         recoveryRateQuote_ = XMLUtils::getChildValue(node, "RecoveryRate", false);
+        quotes_.insert(quotes_.begin(), recoveryRateQuote_);
         benchmarkCurveID_ = sourceCurveID_ = "";
         calendar_ = Calendar();
         spotLag_ = 0;
@@ -91,11 +105,17 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
 
     if (type_ == Type::SpreadCDS || type_ == Type::HazardRate) {
+        XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
+        XMLNode* quotesNode = XMLUtils::addChild(doc, node, "Quotes");
+        for (auto q : cdsQuotes_) {
+            XMLNode* qNode = doc.allocNode("Quote", q.first);
+            if (q.second)
+                XMLUtils::addAttribute(doc, qNode, "optional", "true");
+            XMLUtils::appendNode(quotesNode, qNode);
+        }
         XMLUtils::addChild(doc, node, "Conventions", conventionID_);
-        XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
-        XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
         XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);

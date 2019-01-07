@@ -221,7 +221,6 @@ CrossAssetModelBuilder::build(const boost::shared_ptr<CrossAssetModelData>& conf
 
     for (Size i = 0; i < irBuilder.size(); i++) {
         LOG("IR Calibration " << i);
-        irBuilder[i]->update();
         swaptionCalibrationErrors_[i] = irBuilder[i]->error();
     }
 

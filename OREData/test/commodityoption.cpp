@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/commodityoption.hpp>
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 #include <boost/algorithm/string/replace.hpp>
@@ -85,8 +86,6 @@ public:
 
 class CommonData {
 public:
-    SavedSettings backup;
-
     Envelope envelope;
     string commodityName;
     string currency;
@@ -117,9 +116,11 @@ public:
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void CommodityOptionTest::testCommodityOptionTradeBuilding() {
+BOOST_AUTO_TEST_SUITE(CommodityOptionTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityOptionTradeBuilding) {
     
     BOOST_TEST_MESSAGE("Testing commodity option trade building");
 
@@ -160,7 +161,7 @@ void CommodityOptionTest::testCommodityOptionTradeBuilding() {
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), expectedPrice, testTolerance);
 }
 
-void CommodityOptionTest::testCommodityOptionFromXml() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity option trade from XML");
 
@@ -248,7 +249,7 @@ void CommodityOptionTest::testCommodityOptionFromXml() {
     BOOST_CHECK_CLOSE(trade->instrument()->NPV(), cachedPutPrice, testTolerance);
 }
 
-void CommodityOptionTest::testLongShortCallPutPrices() {
+BOOST_AUTO_TEST_CASE(testLongShortCallPutPrices) {
 
     BOOST_TEST_MESSAGE("Testing commodity option prices");
 
@@ -287,7 +288,7 @@ void CommodityOptionTest::testLongShortCallPutPrices() {
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), -cachedPutPrice, testTolerance);
 }
 
-void CommodityOptionTest::testCommodityOptionBuildExceptions() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionBuildExceptions) {
 
     BOOST_TEST_MESSAGE("Testing commodity option exceptions during building");
 
@@ -328,7 +329,7 @@ void CommodityOptionTest::testCommodityOptionBuildExceptions() {
     BOOST_CHECK_THROW(option->build(td.engineFactory), Error);
 }
 
-void CommodityOptionTest::testCommodityOptionPremium() {
+BOOST_AUTO_TEST_CASE(testCommodityOptionPremium) {
 
     BOOST_TEST_MESSAGE("Testing commodity option premium works");
 
@@ -352,17 +353,6 @@ void CommodityOptionTest::testCommodityOptionPremium() {
     BOOST_CHECK_CLOSE(option->instrument()->NPV(), cachedCallPrice - premiumDiscount * premium, testTolerance);
 }
 
-test_suite* CommodityOptionTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityOptionTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionTradeBuilding));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionFromXml));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testLongShortCallPutPrices));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionBuildExceptions));
-    suite->add(BOOST_TEST_CASE(&CommodityOptionTest::testCommodityOptionPremium));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

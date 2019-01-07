@@ -27,6 +27,16 @@ using namespace QuantLib;
 namespace ore {
 namespace data {
 
+namespace {
+Real parseCcyReversion(const std::map<string, string>& p, const std::string& ccy) {
+    // either we have a ccy specific reversion or require a ccy independent reversion parameter
+    if (p.find("MeanReversion_" + ccy) != p.end())
+        return parseReal(p.at("MeanReversion_" + ccy));
+    else
+        return parseReal(p.at("MeanReversion"));
+}
+} // namespace
+
 GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
     if (s == "Standard")
         return GFunctionFactory::Standard;
@@ -43,7 +53,7 @@ GFunctionFactory::YieldCurveModel ycmFromString(const string& s) {
 boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
 
     const string& ccyCode = ccy.code();
-    Real rev = parseReal(engineParameters_.at("MeanReversion"));
+    Real rev = parseCcyReversion(engineParameters_, ccyCode);
     string ycmstr = engineParameters_.at("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
@@ -59,7 +69,7 @@ boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder:
 boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
 
     const string& ccyCode = ccy.code();
-    Real rev = parseReal(engineParameters_.at("MeanReversion"));
+    Real rev = parseCcyReversion(engineParameters_, ccyCode);
     string ycmstr = engineParameters_.at("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
     Rate llim = parseReal(engineParameters_.at("LowerLimit"));
@@ -79,7 +89,7 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
 boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::engineImpl(const Currency& ccy) {
 
     const string& ccyCode = ccy.code();
-    Real rev = parseReal(engineParameters_.at("MeanReversion"));
+    Real rev = parseCcyReversion(engineParameters_, ccyCode);
     string policy = engineParameters_.at("Policy");
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));

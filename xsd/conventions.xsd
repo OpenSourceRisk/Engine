@@ -1,8 +1,7 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
+  <xs:element type="conventions" name="Conventions"/>
 
-  
   <xs:complexType name="conventions">
     <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element type="zeroType" name="Zero"/>
@@ -15,8 +14,10 @@
       <xs:element type="averageOISType" name="AverageOIS"/>
       <xs:element type="tenorBasisSwapType" name="TenorBasisSwap"/>
       <xs:element type="tenorBasisTwoSwapType" name="TenorBasisTwoSwap"/>
+      <xs:element type="bmaBasisSwapType" name="BMABasisSwap"/>
       <xs:element type="fxType" name="FX"/>
       <xs:element type="crossCurrencyBasisType" name="CrossCurrencyBasis"/>
+      <xs:element type="crossCurrencyFixFloatType" name="CrossCurrencyFixFloat"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
       <xs:element type="inflationswapType" name="InflationSwap"/>
     </xs:choice>
@@ -63,7 +64,7 @@
       <xs:element type="xs:unsignedLong" name="SettlementDays" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="futureType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -77,7 +78,7 @@
       <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="oisType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -90,6 +91,7 @@
       <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -149,6 +151,14 @@
     </xs:sequence>
   </xs:complexType>
 
+  <xs:complexType name="bmaBasisSwapType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="LiborIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="BMAIndex" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="fxType">
     <xs:sequence>
       <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
@@ -170,6 +180,23 @@
       <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="FlatIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="SpreadIndex" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+  
+  <xs:complexType name="crossCurrencyFixFloatType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="SettlementDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SettlementCalendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="SettlementConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="FixedCurrency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="frequencyType" name="FixedFrequency" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="FixedDayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Index" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
@@ -195,6 +222,6 @@
       <xs:element type="businessDayConvention" name="InflationConvention" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
- 
+
 </xs:schema>
 

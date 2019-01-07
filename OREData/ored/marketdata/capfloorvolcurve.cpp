@@ -153,7 +153,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             capVol, iborIndex, Null<Rate>(), 1.0e-6, 100, discountCurve, quoteVolatilityType, shift, true, Normal, 0.0);
         boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
             boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
-        capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);
+        capletVol_ =
+            boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
         capletVol_->enableExtrapolation(config->extrapolate());
 
         // If given, add the ATM cap/floor volatility curve
@@ -172,7 +173,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             boost::shared_ptr<OptionletStripper> atmOptionletStripper =
                 boost::make_shared<OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType, shift);
             datedOptionletStripper = boost::make_shared<DatedStrippedOptionlet>(asof, atmOptionletStripper);
-            capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);
+            capletVol_ =
+                boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
             capletVol_->enableExtrapolation(config->extrapolate());
         }
     } catch (std::exception& e) {

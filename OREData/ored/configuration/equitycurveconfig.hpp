@@ -29,6 +29,9 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -37,9 +40,6 @@ using QuantLib::DayCounter;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
 
-namespace ore {
-namespace data {
-
 //! Equity curve configuration
 /*!
   \ingroup configuration
@@ -47,7 +47,7 @@ namespace data {
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice };
+    enum class Type { DividendYield, ForwardPrice, NoDividends };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -102,5 +102,10 @@ private:
     string divInterpMethod_;
     bool extrapolation_;
 };
+
+std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
+
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
+
 } // namespace data
 } // namespace ore

@@ -88,7 +88,8 @@
 \author{Quaternion Risk Management}
 %\date{7 October 2016}
 %\date{28 April 2017}
-\date{7 December 2017}
+%\date{7 December 2017}
+\date{13 June 2018}
 \maketitle
 
 \newpage
@@ -104,6 +105,7 @@ Date & Author & Comment \\
 7 October 2016 & Quaternion & initial release\\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
+13 June 2018 & Quaternion & updates for release 4\\
 \hline
 \end{supertabular}
 \end{center}
@@ -613,6 +615,68 @@ strings.
 
 \end{enumerate}
 
+\subsubsection*{Building on Unix with CMake}
+
+Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
+
+\begin{enumerate}
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake by invoking \\
+\medskip
+{\tt cmake -DBOOST\_ROOT=\${BOOST} -DBOOST\_LIBRARYDIR=\${BOOST}/stage/lib ..} \\
+\medskip
+
+Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} and run \\
+\medskip
+{\tt cmake ..} \\
+\medskip
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+{\tt make -j4} \\
+\medskip
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
+\item Run all test suites by invoking \\
+\medskip
+{\tt ctest -j4}
+\end{enumerate}
+
+Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
+  \${BOOST}/stage/lib}.
+
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
+
+The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+ 
+\subsubsection*{Building on Windows with CMake}
+
+The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
+
+\begin{enumerate}
+\item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
+\medskip
+{\tt vcvarsall.bat x64} \\
+\medskip
+to initialize the compiler-related environment.
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake e.g. by invoking \\
+\medskip
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
+{\tt \hspace{2cm} -G Ninja ..} \\
+\medskip
+where the -G option allows choosing the desired build system generator.
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+  {\tt ninja} \\
+\medskip
+Ninja automatically utilizes all available threads, unless specified with the -j option.
+
+\item Run all test suites by invoking \\
+  \medskip {\tt ctest -j4}
+\end{enumerate}
+
 \subsection{Python and Jupyter}\label{sec:python}
 
 Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
@@ -835,7 +899,7 @@ It is instructive to look into the input folder in Examples/Example\_1, the cont
 
 This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The
 expected exposure can be seen as a European option on the underlying netting set, see also appendix
-\ref{sec:app_exposure}. In this exampl«e, the expected exposure at some future point in time, say 10 years, is equal to
+\ref{sec:app_exposure}. In this example, the expected exposure at some future point in time, say 10 years, is equal to
 the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap
 maturity in 20 years. We can easily compute such standard European Swaption prices for all future points in time where
 both Swap legs reset, i.e. annually in this case\footnote{Using closed form expressions for standard European Swaption
@@ -2735,7 +2799,11 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <ModelParameters>
       <Parameter name="Calibration">Bootstrap</Parameter>
       <Parameter name="BermudanStrategy">CoterminalATM</Parameter>
-      <Parameter name="Reversion">0.03</Parameter>
+      <!-- ccy specific reversions -->
+      <Parameter name="Reversion_EUR">0.03</Parameter>
+      <Parameter name="Reversion_USD">0.04</Parameter>
+      <!-- reversion to use if no ccy specific value is given -->
+      <Parameter name="Reversion">0.02</Parameter>
       <Parameter name="ReversionType">HullWhite</Parameter>
       <Parameter name="Volatility">0.01</Parameter>
       <Parameter name="VolatilityType">Hagan</Parameter>
@@ -2760,7 +2828,12 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>
     <Engine>BlackIborCouponPricer</Engine>
-    <EngineParameters/>
+    <EngineParameters>
+      <!-- Black76 or BivariateLognormal -->
+      <TimingAdjustment>Black76</TimingAdjustment>
+      <!-- Correlation Parameter for BivariateLognormal -->
+      <Correlation>1.0</Correlation>
+    </EngineParameters>
   </Product>
   <Product type="EquityForward">
     <Model>DiscountedCashflows</Model>
@@ -2795,6 +2868,8 @@ following is an overview over the Example section's {\tt pricingengine.xml}. Fur
     <EngineParameters>
       <!-- Alternative Yield Curve Models: ExactYield, ParallelShifts, NonParallelShifts -->
       <Parameter name="YieldCurveModel">Standard</Parameter> 
+      <Parameter name="MeanReversion_EUR">0.01</Parameter>
+      <Parameter name="MeanReversion_USD">0.02</Parameter>
       <Parameter name="MeanReversion">0.0</Parameter>
     </EngineParameters>
   </Product>
@@ -2814,21 +2889,21 @@ For example, in case of the Bermudan Swaption, the parameters are interpreted as
 
 \item The first block of model parameters then provides initial values for the model (Reversion, Volatility) and chooses
   the parametrisation of the LGM model with ReversionType and VolatilityType choices {\em HullWhite} and {\em
-    Hagan}. Calibration and BermudanStrategy can be set to {\em None} in order to skip model calibration. Alternatively,
-  Calibration is set to {\em Bootstrap} and BermudanStrategy to {\em CoterminalATM} in order to calibrate to
-  instrument-specific co-terminal ATM Swaptions, i.e. chosen to match the instruments first expiry and final maturity.
-  If {\em CoterminalDealStrike} is chosen, the co-terminal swaptions will match the fixed rate of the deal (if the deal
-  has changing fixed rates, the first rate is matched). Finally if the ShiftHorizon parameter is given, its value times
-  the remaining maturity time of the deal is chosen as the horizon shift parameter for the LGM model. If not given, this
-  parameter defaults to $0.5$.
+    Hagan}. Notice the possibility to specify a currency-specific reversion. Calibration and BermudanStrategy can be set
+  to {\em None} in order to skip model calibration. Alternatively, Calibration is set to {\em Bootstrap} and
+  BermudanStrategy to {\em CoterminalATM} in order to calibrate to instrument-specific co-terminal ATM Swaptions,
+  i.e. chosen to match the instruments first expiry and final maturity.  If {\em CoterminalDealStrike} is chosen, the
+  co-terminal swaptions will match the fixed rate of the deal (if the deal has changing fixed rates, the first rate is
+  matched). Finally if the ShiftHorizon parameter is given, its value times the remaining maturity time of the deal is
+  chosen as the horizon shift parameter for the LGM model. If not given, this parameter defaults to $0.5$.
 
 \item The second block of engine parameters specifies the Numerical Swaption engine parameters which determine the
   number of standard deviations covered in the probability density integrals (sy and sx), and the number of grid points
   used per standard deviation (ny and nx).
 \end{itemize}
 
-To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR), please refer to the 
-commented parts in {\tt Examples/Input/pricingengine.xml}.
+To see the configuration options for the alternative CMS engines (Hagan Numerical, LinearTSR) or the Black Ibor coupon
+pricer (CapFlooredIborLeg), please refer to the commented parts in {\tt Examples/Input/pricingengine.xml}.
 
 \medskip
 This file is relevant in particular for structured products which are on the roadmap of future ORE releases. But it is also
@@ -2870,6 +2945,8 @@ Let us discuss this section using the following example
   <Sequence>SobolBrownianBridge</Sequence>
   <Seed>42</Seed>
   <Samples>1000</Samples>
+  <Ordering>Steps</Ordering>
+  <DirectionIntegers>JoeKuoD7</DirectionIntegers>
 </Parameters>
 \end{minted}
 \caption{Simulation configuration}
@@ -2893,6 +2970,11 @@ SobolBrownianBridge}).
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
 use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
 to use if one of the {\em Forward } related methods is chosen.
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
+    Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
+  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
+    Kuo2, Kuo3})
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}
@@ -3700,7 +3782,7 @@ Listing \ref{lst:swaptionvol_configuration} shows the configuration of Swaption 
     <Dimension>ATM</Dimension>
     <!-- Normal or Lognormal or ShiftedLognormal -->
     <VolatilityType>Normal</VolatilityType>
-    <!-- Flat or Linear -->
+    <!-- Flat, Linear, None -->
     <Extrapolation>Flat</Extrapolation>
     <!-- Day counter for date to time conversion -->
     <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -3739,8 +3821,8 @@ Listing \ref{lst:capfloorvol_configuration} shows the configuration of Cap/Floor
       <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
@@ -4081,7 +4163,44 @@ a SpreadQuote and a RecoveryRateQuote.
 %========================================================
 %\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-\include{portfoliodata}
+\include{introenvelope}
+
+%\include{tradedata}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Trade Specific Data}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+After the envelope node, trade-specific data for each trade type supported by
+ORE is included. 
+Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
+configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
+sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
+
+\vspace{1em}
+
+Details of  trade-specific data for all trade types follow below.
+
+\input{tradedata/swap}
+\input{../../Docs/UserGuide/tradedata/capfloor}
+\input{../../Docs/UserGuide/tradedata/forwardrateagreement}
+\input{../../Docs/UserGuide/tradedata/swaption}
+\input{../../Docs/UserGuide/tradedata/fxforward}
+\input{../../Docs/UserGuide/tradedata/fxswap}
+\input{../../Docs/UserGuide/tradedata/fxoption}
+\input{../../Docs/UserGuide/tradedata/equityoption}
+\input{../../Docs/UserGuide/tradedata/equityforward}
+\input{../../Docs/UserGuide/tradedata/equityswap}
+\input{../../Docs/UserGuide/tradedata/cpiswap}
+\input{../../Docs/UserGuide/tradedata/yyswap}
+\input{../../Docs/UserGuide/tradedata/bond}
+\input{../../Docs/UserGuide/tradedata/creditdefaultswap}
+\input{../../Docs/UserGuide/tradedata/commodityoption}
+\input{../../Docs/UserGuide/tradedata/commodityforward}
+
+
+\include{tradecomponents}
+\include{allowablevalues}
 
 %========================================================
 %\section{Netting Set Definitions}\label{sec:nettingsetinput}

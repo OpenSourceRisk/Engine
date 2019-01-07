@@ -32,7 +32,17 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
-#include <qle/currencies/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -103,8 +113,11 @@ Date parseDate(const string& s) {
 }
 
 Real parseReal(const string& s) {
-    // TODO: review
-    return atof(s.c_str());
+    try {
+        return std::stod(s);
+    } catch (const std::exception& ex) {
+        QL_FAIL("Failed to parseReal(\"" << s << "\") " << ex.what());
+    }
 }
 
 bool tryParseReal(const string& s, QuantLib::Real& result) {
@@ -119,7 +132,7 @@ bool tryParseReal(const string& s, QuantLib::Real& result) {
 
 Integer parseInteger(const string& s) {
     try {
-        return io::to_integer(s);
+        return boost::lexical_cast<Integer>(s.c_str());
     } catch (std::exception& ex) {
         QL_FAIL("Failed to parseInteger(\"" << s << "\") " << ex.what());
     }
@@ -152,6 +165,7 @@ Calendar parseCalendar(const string& s) {
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
+                                      {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
                                       {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
@@ -181,12 +195,15 @@ Calendar parseCalendar(const string& s) {
                                       {"SS", Sweden()},
                                       {"SEK", Sweden()},
                                       {"SEST", Sweden()},
+                                      {"Sweden", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
+                                      {"CNH", China()},
                                       {"CNY", China()},
                                       {"CZK", CzechRepublic()},
                                       {"DKK", Denmark()},
                                       {"DEN", Denmark()},
+                                      {"Denmark", Denmark()},
                                       {"FIN", Finland()},
                                       {"HKD", HongKong()},
                                       {"ISK", Iceland()},
@@ -195,6 +212,7 @@ Calendar parseCalendar(const string& s) {
                                       {"MXN", Mexico()},
                                       {"NZD", NewZealand()},
                                       {"NOK", Norway()},
+                                      {"Norway", Norway()},
                                       {"PLN", Poland()},
                                       {"RUB", Russia()},
                                       {"SAR", SaudiArabia()},
@@ -206,18 +224,19 @@ Calendar parseCalendar(const string& s) {
                                       {"UAH", Ukraine()},
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
+                                      {"CLP", Chile()},
+                                      {"THB", QuantExt::Thailand()},
+                                      {"COP", Colombia()},
+                                      {"PEN", Peru()},
+                                      {"MYR", Malaysia()},
+                                      {"PHP", Philippines()},
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"CLP", TARGET()},
                                       {"RON", TARGET()},
-                                      {"THB", TARGET()},
-                                      {"COP", TARGET()},
                                       {"ILS", TARGET()},
                                       {"KWD", TARGET()},
-                                      {"PEN", TARGET()},
                                       {"TND", TARGET()},
-                                      {"MYR", TARGET()},
                                       {"KZT", TARGET()},
                                       {"QAR", TARGET()},
                                       {"MXV", TARGET()},
@@ -227,7 +246,6 @@ Calendar parseCalendar(const string& s) {
                                       {"OMR", TARGET()},
                                       {"VND", TARGET()},
                                       {"AED", TARGET()},
-                                      {"PHP", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
                                       // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
@@ -235,7 +253,8 @@ Calendar parseCalendar(const string& s) {
                                       {"BEBR", TARGET()}, // Belgium, Brussels not in QL
                                       {"WeekendsOnly", WeekendsOnly()},
                                       {"UNMAPPED", WeekendsOnly()},
-                                      {"NullCalendar", NullCalendar()}};
+                                      {"NullCalendar", NullCalendar()},
+                                      {"", NullCalendar()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -317,6 +336,7 @@ DayCounter parseDayCounter(const string& s) {
                                         {"A365", Actual365Fixed()},
                                         {"A365F", Actual365Fixed()},
                                         {"Actual/365 (Fixed)", Actual365Fixed()},
+                                        {"Actual/365 (fixed)", Actual365Fixed()},
                                         {"ACT/365.FIXED", Actual365Fixed()},
                                         {"ACT/365", Actual365Fixed()},
                                         {"ACT/365L", Actual365Fixed()},
@@ -331,11 +351,13 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ActActISDA", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT.ISDA", ActualActual(ActualActual::ISDA)},
                                         {"Actual/Actual (ISDA)", ActualActual(ActualActual::ISDA)},
+                                        {"ActualActual (ISDA)", ActualActual(ActualActual::ISDA)},
                                         {"ACT/ACT", ActualActual(ActualActual::ISDA)},
                                         {"ACT29", ActualActual(ActualActual::AFB)},
                                         {"ACT", ActualActual(ActualActual::ISDA)},
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ActualActual (ISMA)", ActualActual(ActualActual::ISMA)},
                                         {"ActActAFB", ActualActual(ActualActual::AFB)},
                                         {"ACT/ACT.AFB", ActualActual(ActualActual::AFB)},
                                         {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
@@ -359,21 +381,21 @@ DayCounter parseDayCounter(const string& s) {
 Currency parseCurrency(const string& s) {
     static map<string, Currency> m = {
         {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BRL", BRLCurrency()},
-        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNY", CNYCurrency()}, {"CZK", CZKCurrency()},
-        {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()}, {"ESP", ESPCurrency()},
-        {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, {"GRD", GRDCurrency()},
-        {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()}, {"ITL", ITLCurrency()},
-        {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()}, {"KRW", KRWCurrency()},
-        {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, {"NZD", NZDCurrency()},
-        {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()}, {"SEK", SEKCurrency()},
-        {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()}, {"TWD", TWDCurrency()},
-        {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()}, {"CLP", CLPCurrency()},
-        {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()}, {"KWD", KWDCurrency()},
-        {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()}, {"RUB", RUBCurrency()},
-        {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()},
-        {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()},
-        {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()}, {"AED", AEDCurrency()},
-        {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()}};
+        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, 
+        {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()}, 
+        {"ESP", ESPCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, 
+        {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()}, 
+        {"ITL", ITLCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()}, 
+        {"KRW", KRWCurrency()}, {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, 
+        {"NZD", NZDCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()}, 
+        {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()}, 
+        {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()}, 
+        {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()}, 
+        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()}, 
+        {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()}, 
+        {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()}, 
+        {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()}, 
+        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -534,6 +556,38 @@ QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Polynom type \"" << s << "\" not recognized");
+    }
+}
+
+SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s) {
+    static map<string, SobolBrownianGenerator::Ordering> m = {{"Factors", SobolBrownianGenerator::Ordering::Factors},
+                                                              {"Steps", SobolBrownianGenerator::Ordering::Steps},
+                                                              {"Diagonal", SobolBrownianGenerator::Ordering::Diagonal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolBrownianGenerator ordering \"" << s << "\" not recognized");
+    }
+}
+
+SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s) {
+    static map<string, SobolRsg::DirectionIntegers> m = {
+        {"Unit", SobolRsg::DirectionIntegers::Unit},
+        {"Jaeckel", SobolRsg::DirectionIntegers::Jaeckel},
+        {"SobolLevitan", SobolRsg::DirectionIntegers::SobolLevitan},
+        {"SobolLevitanLemieux", SobolRsg::DirectionIntegers::SobolLevitanLemieux},
+        {"JoeKuoD5", SobolRsg::DirectionIntegers::JoeKuoD5},
+        {"JoeKuoD6", SobolRsg::DirectionIntegers::JoeKuoD6},
+        {"JoeKuoD7", SobolRsg::DirectionIntegers::JoeKuoD7},
+        {"Kuo", SobolRsg::DirectionIntegers::Kuo},
+        {"Kuo2", SobolRsg::DirectionIntegers::Kuo2},
+        {"Kuo3", SobolRsg::DirectionIntegers::Kuo3}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
     }
 }
 

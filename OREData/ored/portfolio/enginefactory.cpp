@@ -17,7 +17,22 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/all.hpp>
+#include <ored/portfolio/builders/bond.hpp>
+#include <ored/portfolio/builders/cachingenginebuilder.hpp>
+#include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
+#include <ored/portfolio/builders/commodityoption.hpp>
+#include <ored/portfolio/builders/creditdefaultswap.hpp>
+#include <ored/portfolio/builders/equityforward.hpp>
+#include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/fxforward.hpp>
+#include <ored/portfolio/builders/fxoption.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/builders/yoycapfloor.hpp>
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/legbuilders.hpp>
 #include <ored/utilities/log.hpp>
@@ -26,11 +41,14 @@ namespace ore {
 namespace data {
 
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
-                             const map<MarketContext, string>& configurations)
+                             const map<MarketContext, string>& configurations,
+                             const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+                             const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders)
     : market_(market), engineData_(engineData), configurations_(configurations) {
     LOG("Building EngineFactory");
 
     addDefaultBuilders();
+    addExtraBuilders(extraEngineBuilders, extraLegBuilders);
 }
 
 void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& builder) {
@@ -98,6 +116,9 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
+
+    registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
@@ -111,12 +132,32 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<MidPointCdsEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
+
     registerLegBuilder(boost::make_shared<FixedLegBuilder>());
+    registerLegBuilder(boost::make_shared<ZeroCouponFixedLegBuilder>());
     registerLegBuilder(boost::make_shared<FloatingLegBuilder>());
     registerLegBuilder(boost::make_shared<CashflowLegBuilder>());
     registerLegBuilder(boost::make_shared<CPILegBuilder>());
     registerLegBuilder(boost::make_shared<YYLegBuilder>());
     registerLegBuilder(boost::make_shared<CMSLegBuilder>());
+    registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
+    registerLegBuilder(boost::make_shared<EquityLegBuilder>());
+}
+
+
+void EngineFactory::addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+    const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders) {
+
+    if (extraEngineBuilders.size() > 0) {
+        LOG("adding " << extraEngineBuilders.size() << " extra engine builders");
+        for (auto eb : extraEngineBuilders)
+            registerBuilder(eb);
+    }
+    if (extraLegBuilders.size() > 0) {
+        LOG("adding " << extraLegBuilders.size() << " extra leg builders");
+        for (auto elb : extraLegBuilders)
+            registerLegBuilder(elb);
+    }
 }
 
 } // namespace data

@@ -20,6 +20,8 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
+#include <ql/math/rounding.hpp>
+#include <ql/math/comparison.hpp>
 
 namespace ore {
 namespace data {
@@ -27,7 +29,7 @@ namespace data {
 // Local class for printing each report type via fprintf
 class ReportTypePrinter : public boost::static_visitor<> {
 public:
-    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), prec_(prec), null_("#N/A") {}
+    ReportTypePrinter(FILE* fp, int prec) : fp_(fp), rounding_(prec, QuantLib::Rounding::Closest), null_("#N/A") {}
 
     void operator()(const Size i) const {
         if (i == QuantLib::Null<Size>()) {
@@ -40,7 +42,8 @@ public:
         if (d == QuantLib::Null<Real>()) {
             fprintNull();
         } else {
-            fprintf(fp_, "%.*f", prec_, d);
+            Real r = rounding_(d);
+            fprintf(fp_, "%.*f", rounding_.precision(), QuantLib::close_enough(r, 0.0) ? 0.0 : r);
         }
     }
     void operator()(const string& s) const { fprintf(fp_, "%s", s.c_str()); }
@@ -61,7 +64,7 @@ private:
     void fprintNull() const { fprintf(fp_, "%s", null_.c_str()); }
 
     FILE* fp_;
-    int prec_;
+    QuantLib::Rounding rounding_;
     const string null_;
 };
 

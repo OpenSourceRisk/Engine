@@ -35,6 +35,13 @@ public:
                  const string& configuration) const override;
 };
 
+class ZeroCouponFixedLegBuilder : public LegBuilder {
+public:
+    ZeroCouponFixedLegBuilder() : LegBuilder("ZeroCouponFixed") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 class FloatingLegBuilder : public LegBuilder {
 public:
     FloatingLegBuilder() : LegBuilder("Floating") {}
@@ -68,6 +75,20 @@ public:
     CMSLegBuilder() : LegBuilder("CMS") {}
     Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
                  const string& configuration) const override;
+};
+
+class CMSSpreadLegBuilder : public LegBuilder {
+public:
+    CMSSpreadLegBuilder() : LegBuilder("CMSSpread") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
+class EquityLegBuilder : public LegBuilder {
+public:
+    EquityLegBuilder() : LegBuilder("Equity") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+        const string& configuration) const override;
 };
 
 } // namespace data

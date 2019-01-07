@@ -28,8 +28,12 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
+#include <ql/currency.hpp>
 #include <string>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using QuantLib::Real;
 using QuantLib::Size;
@@ -42,9 +46,6 @@ using QuantLib::DayCounter;
 using QuantLib::Natural;
 using QuantLib::Month;
 using QuantLib::Months;
-
-namespace ore {
-namespace data {
 
 //! Base market data class
 /*!
@@ -72,7 +73,9 @@ public:
         IMM_FRA,
         IR_SWAP,
         BASIS_SWAP,
+        BMA_SWAP,
         CC_BASIS_SWAP,
+        CC_FIX_FLOAT_SWAP,
         CDS,
         CDS_INDEX,
         FX_SPOT,
@@ -85,6 +88,7 @@ public:
         ZC_INFLATIONSWAP,
         ZC_INFLATIONCAPFLOOR,
         YY_INFLATIONSWAP,
+        YY_INFLATIONCAPFLOOR,
         SEASONALITY,
         EQUITY_SPOT,
         EQUITY_FWD,
@@ -390,6 +394,42 @@ private:
     Period maturity_;
 };
 
+//! BMA Swap data class
+/*!
+This class holds single market points of type
+- BMA_SWAP
+Specific data comprise
+- term
+- currency
+- maturity
+
+The quote (in Basis Points) is then interpreted as follows:
+
+A fair Swap pays the libor index with gearing equal to the quote
+and receives the bma index.
+
+\ingroup marketdata
+*/
+class BMASwapQuote : public MarketDatum {
+public:
+    //! Constructor
+    BMASwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, Period term,
+        string ccy = "USD", Period maturity = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term),
+        ccy_(ccy), maturity_(maturity) {}
+
+    //! \name Inspectors
+    //@{
+    const Period& term() const { return term_; }
+    const string& ccy() const { return ccy_; }
+    const Period& maturity() const { return maturity_; }
+    //@}
+private:
+    Period term_;
+    string ccy_;
+    Period maturity_;
+};
+
 //! Cross Currency Basis Swap data class
 /*!
   This class holds single market points of type
@@ -404,7 +444,7 @@ private:
   with spread zero and receives the reference index of "currency" in
   "currency" plus the quoted spread.
 
-  \ingroup marketdata‚
+  \ingroup marketdata
 */
 class CrossCcyBasisSwapQuote : public MarketDatum {
 public:
@@ -429,6 +469,49 @@ private:
     string ccy_;
     Period term_;
     Period maturity_;
+};
+
+//! Cross Currency Fix Float Swap quote holder
+/*! Holds the quote for the fair fixed rate on a fixed against float 
+    cross currency swap.
+
+    \ingroup marketdata
+*/
+class CrossCcyFixFloatSwapQuote : public MarketDatum {
+public:
+    //! Constructor
+    CrossCcyFixFloatSwapQuote(
+        QuantLib::Real value, 
+        const QuantLib::Date& asof,
+        const std::string& name, 
+        QuoteType quoteType, 
+        const QuantLib::Currency& floatCurrency, 
+        const QuantLib::Period& floatTenor, 
+        const QuantLib::Currency& fixedCurrency, 
+        const QuantLib::Period& fixedTenor,
+        const QuantLib::Period& maturity)
+        : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), 
+          floatCurrency_(floatCurrency), 
+          floatTenor_(floatTenor), 
+          fixedCurrency_(fixedCurrency), 
+          fixedTenor_(fixedTenor), 
+          maturity_(maturity) {}
+
+    //! \name Inspectors
+    //@{
+    const QuantLib::Currency& floatCurrency() const { return floatCurrency_; }
+    const QuantLib::Period& floatTenor() const { return floatTenor_; }
+    const QuantLib::Currency& fixedCurrency() const { return fixedCurrency_; }
+    const QuantLib::Period& fixedTenor() const { return fixedTenor_; }
+    const QuantLib::Period& maturity() const { return maturity_; }
+    //@}
+
+private:
+    QuantLib::Currency floatCurrency_;
+    QuantLib::Period floatTenor_;
+    QuantLib::Currency fixedCurrency_;
+    QuantLib::Period fixedTenor_;
+    QuantLib::Period maturity_;
 };
 
 //! CDS Spread data class
@@ -768,21 +851,21 @@ private:
     Period term_;
 };
 
-//! ZC Cap Floor data class
+//! Inflation Cap Floor data class
 /*!
- This class holds single market points of type
- - ZC_INFLATION_CAPFLOOR
- Specific data comprise type (can be price or nvol or slnvol),
- index, term, cap/floor, strike
+This class holds single market points of type
+- INFLATION_CAPFLOOR
+Specific data comprise type (can be price or nvol or slnvol),
+index, term, cap/floor, strike
 
- \ingroup marketdata
- */
-class ZcInflationCapFloorQuote : public MarketDatum {
+\ingroup marketdata
+*/
+class InflationCapFloorQuote : public MarketDatum {
 public:
-    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
-                             Period term, bool isCap, const string& strike)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::ZC_INFLATIONCAPFLOOR), index_(index),
-          term_(term), isCap_(isCap), strike_(strike) {}
+    InflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+        Period term, bool isCap, const string& strike, InstrumentType instrumentType)
+        : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index),
+        term_(term), isCap_(isCap), strike_(strike) {}
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -793,6 +876,23 @@ private:
     Period term_;
     bool isCap_;
     string strike_;
+};
+
+//! ZC Cap Floor data class
+/*!
+ This class holds single market points of type
+ - ZC_INFLATION_CAPFLOOR
+ Specific data comprise type (can be price or nvol or slnvol),
+ index, term, cap/floor, strike
+
+ \ingroup marketdata
+ */
+class ZcInflationCapFloorQuote : public InflationCapFloorQuote {
+public:
+    ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+                             Period term, bool isCap, const string& strike)
+        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike, 
+                                 InstrumentType::ZC_INFLATIONCAPFLOOR) {}
 };
 
 //! YoY Inflation swap data class
@@ -814,6 +914,23 @@ public:
 private:
     string index_;
     Period term_;
+};
+
+//! YY Cap Floor data class
+/*!
+This class holds single market points of type
+- YY_INFLATION_CAPFLOOR
+Specific data comprise type (can be price or nvol or slnvol),
+index, term, cap/floor, strike
+
+\ingroup marketdata
+*/
+class YyInflationCapFloorQuote : public InflationCapFloorQuote {
+public:
+    YyInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
+        Period term, bool isCap, const string& strike)
+        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
+            InstrumentType::YY_INFLATIONCAPFLOOR) {}
 };
 
 //! Inflation seasonality data class

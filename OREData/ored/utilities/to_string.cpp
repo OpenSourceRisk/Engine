@@ -29,6 +29,8 @@
 #define snprintf _snprintf
 #endif
 
+using std::string;
+
 namespace ore {
 namespace data {
 
@@ -42,5 +44,10 @@ std::string to_string(const QuantLib::Date& date) {
     QL_REQUIRE(n == 10, "Failed to convert date " << date << " to_string() n:" << n);
     return std::string(buf);
 }
+
+string to_string(bool aBool) {
+    return aBool ? "true" : "false";
+}
+
 } // namespace data
 } // namespace ore

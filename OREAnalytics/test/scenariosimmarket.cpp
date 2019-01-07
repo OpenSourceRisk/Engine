@@ -38,6 +38,7 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
+using namespace ore::data;
 
 namespace {
 
@@ -228,7 +229,6 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 
     BOOST_TEST_MESSAGE("Testing to XML...");
     XMLDocument outDoc;
-    XMLDocument inDoc;
     string testFile = "simtest.xml";
     XMLNode* node = params->toXML(outDoc);
 

@@ -26,12 +26,12 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
-using std::string;
-using std::vector;
-using ore::data::XMLNode;
 
 namespace ore {
 namespace data {
+using std::string;
+using std::vector;
+using ore::data::XMLNode;
 
 //! Security configuration
 /*!

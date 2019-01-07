@@ -186,6 +186,7 @@ node is shown in Listing \ref{lst:ois_conventions}.
   <FixedConvention> </FixedConvention>
   <FixedPaymentConvention> </FixedPaymentConvention>
   <Rule> </Rule>
+  <PaymentCalendar> </PaymentCalendar>
 </OIS>
 \end{minted}
 \caption{OIS conventions}
@@ -209,6 +210,8 @@ to 0.
 defaults to \emph{Following}.
 \item Rule [Optional]: The rule used for generating the OIS dates schedule i.e.\ \emph{Backward} or \emph{Forward}. If
 not provided, this defaults to \emph{Backward}.
+\item PaymentCalendar [Optional]: The business day calendar used for determining coupon payment dates.
+If not specified, this defaults to the fixing calendar defined on the overnight index.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -441,6 +444,8 @@ structure of this node is shown in Listing \ref{lst:xccy_basis_conventions}.
   <FlatIndex> </FlatIndex>
   <SpreadIndex> </SpreadIndex>
   <EOM> </EOM>
+  <IsResettable> </IsResettable>
+  <FlatIndexIsResettable> </FlatIndexIsResettable>>
 </CrossCurrencyBasis>
 \end{minted}
 \caption{Cross currency basis swap conventions}
@@ -456,8 +461,9 @@ SettlementDays above.
 \item RollConvention: The roll convention for both legs.
 \item FlatIndex: The name of the index on the leg that does not have the cross currency basis spread.
 \item SpreadIndex: The name of the index on the leg that has the cross currency basis spread.
-\item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs
-and \emph{False} if not. If not provided, it defaults to \emph{False}.
+\item EOM [Optional]: \emph{True} if the end of month convention is to be used when generating the schedule on both legs, and \emph{False} if not. If not provided, it defaults to \emph{False}.
+\item IsResettable [Optional]: \emph{True} if the swap is mark-to-market resetting, and \emph{False} otherwise. If not provided, it defaults to \emph{False}.
+\item FlatIndexIsResettable [Optional]: \emph{True} if it is the notional on the leg paying the flat index that resets, and \emph{False} otherwise. If not provided, it defaults to \emph{True}.
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

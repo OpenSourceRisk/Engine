@@ -32,6 +32,13 @@ QLE_TESTS = \
 	discountingcommodityforwardengine.hpp discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.hpp pricetermstructureadapter.cpp \
 	bonds.hpp bonds.cpp \
+	interpolatedyoycapfloortermpricesurface.hpp interpolatedyoycapfloortermpricesurface.cpp \
+	qle_calendars.hpp qle_calendars.cpp \
+	discountratiomodifiedcurve.hpp discountratiomodifiedcurve.cpp \
+	crossccyfixfloatswap.hpp crossccyfixfloatswap.cpp \
+	crossccyfixfloatswaphelper.hpp crossccyfixfloatswaphelper.cpp \
+	crossccybasismtmresetswap.hpp crossccybasismtmresetswap.cpp \
+	crossccybasismtmresetswaphelper.hpp crossccybasismtmresetswaphelper.cpp \
 	utilities.hpp
 
 dist-hook:

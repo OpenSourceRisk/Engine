@@ -1,6 +1,6 @@
 <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
-<xs:include schemaLocation="ore_types.xsd"/>
+  <xs:element type="sensitivityanalysis" name="SensitivityAnalysis"/>
 
   <xs:complexType name="sensitivityanalysis">
     <xs:sequence>
@@ -33,59 +33,59 @@
       <xs:element type="xs:string" name="Instruments" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="xs:boolean" name="SingleCurve" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element name="Conventions">
-       <xs:complexType>
-        <xs:sequence>
-         <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
-          <xs:complexType>
-           <xs:simpleContent>
-            <xs:extension base="xs:string">
-             <xs:attribute name="id" type="xs:string" />
-            </xs:extension>
-            </xs:simpleContent>
-          </xs:complexType>
-         </xs:element>
-        </xs:sequence>
-       </xs:complexType>
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
+              <xs:complexType>
+                <xs:simpleContent>
+                  <xs:extension base="xs:string">
+                    <xs:attribute name="id" type="xs:string" />
+                  </xs:extension>
+                </xs:simpleContent>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="discountcurves">
     <xs:sequence>
       <xs:element type="discountcurve" name="DiscountCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="indexcurves">
     <xs:sequence>
       <xs:element type="indexcurve" name="IndexCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="yieldcurves">
     <xs:sequence>
       <xs:element type="yieldcurve" name="YieldCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="fxspots">
     <xs:sequence>
       <xs:element type="fxspot" name="FxSpot" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="fxvolatilities">
     <xs:sequence>
       <xs:element type="fxvolatility" name="FxVolatility" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="swaptionvolatilities">
     <xs:sequence>
       <xs:element type="swaptionvolatility" name="SwaptionVolatility" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="capfloorvolatilities">
     <xs:sequence>
       <xs:element type="capfloorvolatility" name="CapFloorVolatility" maxOccurs="unbounded" minOccurs="0"/>
@@ -130,10 +130,10 @@
 
   <xs:complexType name="basecorrelations">
     <xs:sequence>
-     <xs:element type="basecorrelation" name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="basecorrelation" name="BaseCorrelation" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="securityspreads">
     <xs:sequence>
       <xs:element type="securityspread" name="SecuritySpread" maxOccurs="unbounded" minOccurs="0"/>
@@ -145,19 +145,19 @@
       <xs:element type="dividendyield" name="DividendYieldCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityspots">
     <xs:sequence>
       <xs:element type="commodityspot" name="CommoditySpot" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityCurves">
     <xs:sequence>
       <xs:element type="commodityCurve" name="CommodityCurve" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityvolatilities">
     <xs:sequence>
       <xs:element type="commodityvolatility" name="CommodityVolatility" maxOccurs="unbounded" minOccurs="0"/>
@@ -169,130 +169,130 @@
       <xs:element type="xs:string" name="Pair" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
-  
+
   <xs:complexType name="discountcurve">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="currencyCode" name="ccy" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="indexcurve">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="indexNameType" name="index" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="yieldcurve">
     <xs:sequence>
       <xs:element type="xs:string" name="CurveType" minOccurs="0"/>
       <xs:element type="shifttype" name="ShiftType"  minOccurs="0"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="xs:string" name="Shifts"  minOccurs="0"/>
       <xs:element name="ParConversion" minOccurs="0">
-       <xs:complexType>
-        <xs:sequence>
-         <xs:element type="xs:string" name="Instruments"/>
-         <xs:element type="xs:boolean" name="SingleCurve"/>
-         <xs:element name="Conventions">
-          <xs:complexType>
-            <xs:sequence>
-             <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="xs:string" name="Instruments"/>
+            <xs:element type="xs:boolean" name="SingleCurve"/>
+            <xs:element name="Conventions">
               <xs:complexType>
-               <xs:simpleContent>
-                <xs:extension base="xs:string">
-                 <xs:attribute name="id" type="xs:string" />
-                </xs:extension>
-               </xs:simpleContent>
+                <xs:sequence>
+                  <xs:element name="Convention" maxOccurs="unbounded" minOccurs="0">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="id" type="xs:string" />
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
               </xs:complexType>
-             </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-         </xs:element>
-        </xs:sequence>
-       </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
       </xs:element>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="fxspot">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="fxvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="currencyPair" name="ccypair" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="swaptionvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element name="Shifts">
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element name="Shifts">
           <xs:complexType>
-           <xs:sequence>
-            <xs:element name="Shift" maxOccurs="unbounded" minOccurs="0">
-             <xs:complexType>
-              <xs:simpleContent>
-               <xs:extension base="xs:float">
-                <xs:attribute type="xs:string" name="expiry"/>
-                <xs:attribute type="xs:string" name="term"/>
-               </xs:extension>
-              </xs:simpleContent>
-             </xs:complexType>
-            </xs:element>
-           </xs:sequence>
+            <xs:sequence>
+              <xs:element name="Shift" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute type="xs:string" name="expiry"/>
+                      <xs:attribute type="xs:string" name="term"/>
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
           </xs:complexType>
-         </xs:element>
-        </xs:choice>
+        </xs:element>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="currencyCode" name="ccy" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="capfloorvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
       <xs:element type="indexNameType" name="Index" minOccurs="0"/>
@@ -303,10 +303,10 @@
   <xs:complexType name="cdsvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
@@ -316,10 +316,10 @@
     <xs:sequence>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -329,10 +329,10 @@
   <xs:complexType name="equityspot">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
@@ -340,23 +340,23 @@
   <xs:complexType name="equityvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="zeroinflationindexcurve">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -366,10 +366,10 @@
   <xs:complexType name="yyinflationindexcurve">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
@@ -379,23 +379,23 @@
   <xs:complexType name="basecorrelation">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftLossLevels"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="indexName" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="securityspread">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
     </xs:sequence>
     <xs:attribute type="xs:string" name="security" use="required"/>
   </xs:complexType>
@@ -403,22 +403,22 @@
   <xs:complexType name="dividendyield">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="equity" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityspot">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
@@ -427,29 +427,29 @@
     <xs:sequence>
       <xs:element type="currencyCode" name="Currency"/>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftTenors"/>
       <xs:element type="parconversion" name="ParConversion" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
-  
+
   <xs:complexType name="commodityvolatility">
     <xs:sequence>
       <xs:element type="shifttype" name="ShiftType"/>
-        <xs:choice>
-         <xs:element type="xs:float" name="ShiftSize"/>
-         <xs:element type="xs:string" name="Shifts"/>
-        </xs:choice>
+      <xs:choice>
+        <xs:element type="xs:float" name="ShiftSize"/>
+        <xs:element type="xs:string" name="Shifts"/>
+      </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
-  
+
   <xs:simpleType name="shifttype">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Absolute"/>

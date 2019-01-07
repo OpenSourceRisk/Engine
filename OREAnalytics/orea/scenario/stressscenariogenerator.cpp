@@ -29,16 +29,21 @@ namespace analytics {
 
 StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressTestScenarioData>& stressData,
                                                  const boost::shared_ptr<Scenario>& baseScenario,
-                                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData)
-    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData) {
-    QL_REQUIRE(stressData_ != NULL, "StressScenarioGenerator: stressData is null");
+                                                 const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+                                                 const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory)
+    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData), 
+      stressScenarioFactory_(stressScenarioFactory) {
+    
+    QL_REQUIRE(stressData_, "StressScenarioGenerator: stressData is null");
+
+    generateScenarios();
 }
 
-void StressScenarioGenerator::generateScenarios(const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory) {
+void StressScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
     for (Size i = 0; i < stressData_->data().size(); ++i) {
         StressTestScenarioData::StressTestData data = stressData_->data().at(i);
-        boost::shared_ptr<Scenario> scenario = stressScenarioFactory->buildScenario(asof, data.label);
+        boost::shared_ptr<Scenario> scenario = stressScenarioFactory_->buildScenario(asof, data.label);
 
         if (simMarketData_->simulateFxSpots())
             addFxShifts(data, scenario);

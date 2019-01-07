@@ -36,6 +36,9 @@
 #include <set>
 #include <vector>
 
+
+namespace ore {
+namespace data {
 using std::map;
 using std::set;
 using std::string;
@@ -44,9 +47,6 @@ using std::tuple;
 using ore::data::Market;
 using QuantLib::PricingEngine;
 using QuantLib::Disposable;
-
-namespace ore {
-namespace data {
 
 class Trade;
 class LegBuilder;
@@ -169,7 +169,11 @@ public:
         //! The market that is passed to each builder
         const boost::shared_ptr<Market>& market,
         //! The market configurations that are passed to each builder
-        const map<MarketContext, string>& configurations = std::map<MarketContext, string>());
+        const map<MarketContext, string>& configurations = std::map<MarketContext, string>(),
+        //! additional engine builders
+        const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders = {},
+        //! additional leg builders
+        const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders = {});
 
     //! Return the market used by this EngineFactory
     const boost::shared_ptr<Market>& market() const { return market_; };
@@ -195,6 +199,9 @@ public:
 
     //! Add a set of default engine and leg builders
     void addDefaultBuilders();
+    //! Add a set of default engine and leg builders
+    void addExtraBuilders(const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,
+                          const std::vector<boost::shared_ptr<LegBuilder>> extraLegBuilders);
 
     //! Clear all builders
     void clear() {

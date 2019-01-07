@@ -25,6 +25,7 @@
 
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
+#include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -37,14 +38,15 @@
 #include <ql/time/date.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
+#include <qle/indexes/equityindex.hpp>
 
+namespace ore {
+namespace data {
 using namespace QuantLib;
 using std::string;
 
 typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelationTermStructure;
-
-namespace ore {
-namespace data {
 
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
@@ -126,6 +128,12 @@ public:
     capFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Stripped YoY Inflation Cap/Floor volatilities i.e. caplet/floorlet volatilities
+    //@{
+    virtual Handle<QuantExt::YoYOptionletVolatilitySurface>
+    yoyCapFloorVol(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>
     zeroInflationIndex(const string& indexName, const string& configuration = Market::defaultConfiguration) const = 0;
@@ -134,27 +142,30 @@ public:
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<CPICapFloorTermPriceSurface>
-    inflationCapFloorPriceSurface(const string& indexName,
-                                  const string& configuration = Market::defaultConfiguration) const = 0;
+    cpiInflationCapFloorPriceSurface(const string& indexName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
 
+    //! Inflation Cap Floor Price Surfaces
+    virtual Handle<YoYCapFloorTermPriceSurface>
+    yoyInflationCapFloorPriceSurface(const string& indexName,
+                                     const string& configuration = Market::defaultConfiguration) const = 0;
+    
     //! \name Equity curves
     //@{
     virtual Handle<Quote> equitySpot(const string& eqName,
                                      const string& configuration = Market::defaultConfiguration) const = 0;
     virtual Handle<YieldTermStructure>
     equityDividendCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
+    virtual Handle<YieldTermStructure>
+    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0; 
+    virtual Handle<QuantExt::EquityIndex>
+    equityCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! \name Equity volatilities
     //@{
     virtual Handle<BlackVolTermStructure>
     equityVol(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
-    //@}
-
-    //! \name Equity volatilities
-    //@{
-    virtual Handle<YieldTermStructure>
-    equityForecastCurve(const string& eqName, const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
     //! Refresh term structures for a given configuration

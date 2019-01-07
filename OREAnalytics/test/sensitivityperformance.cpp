@@ -23,8 +23,20 @@
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/all.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parametricvar.hpp>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sensitivityinmemorystream.hpp>
+#include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -289,7 +301,6 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
         77 * Months, 78 * Months, 79 * Months, 80 * Months, 7 * Years,   88 * Months, 89 * Months, 90 * Months,
         91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
 
-    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->discountCurveShiftData()["USD"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
@@ -300,7 +311,6 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
 
     sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
         boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
@@ -316,27 +326,23 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
         boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
     sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
     sensiData->swaptionVolShiftData()["USD"] = swvsData;
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
     sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
     sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;
@@ -375,7 +381,6 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
     swvsData.shiftTerms = {1 * Years, 3 * Years, 5 * Years, 10 * Years, 20 * Years};
 
-    sensiData->discountCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->discountCurveShiftData()["EUR"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
     sensiData->discountCurveShiftData()["USD"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
@@ -386,7 +391,6 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
 
     sensiData->discountCurveShiftData()["CHF"] = boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->indexNames() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
     sensiData->indexCurveShiftData()["EUR-EURIBOR-6M"] =
         boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
@@ -402,27 +406,23 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->indexCurveShiftData()["CHF-LIBOR-6M"] =
         boost::make_shared<SensitivityScenarioData::CurveShiftData>(cvsData);
 
-    sensiData->fxCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY"};
     sensiData->fxShiftData()["EURUSD"] = fxsData;
     sensiData->fxShiftData()["EURGBP"] = fxsData;
     sensiData->fxShiftData()["EURJPY"] = fxsData;
     sensiData->fxShiftData()["EURCHF"] = fxsData;
 
-    sensiData->fxVolCcyPairs() = {"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"};
     sensiData->fxVolShiftData()["EURUSD"] = fxvsData;
     sensiData->fxVolShiftData()["EURGBP"] = fxvsData;
     sensiData->fxVolShiftData()["EURJPY"] = fxvsData;
     sensiData->fxVolShiftData()["EURCHF"] = fxvsData;
     sensiData->fxVolShiftData()["GBPCHF"] = fxvsData;
 
-    sensiData->swaptionVolCurrencies() = {"EUR", "USD", "GBP", "CHF", "JPY"};
     sensiData->swaptionVolShiftData()["EUR"] = swvsData;
     sensiData->swaptionVolShiftData()["GBP"] = swvsData;
     sensiData->swaptionVolShiftData()["USD"] = swvsData;
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolCurrencies() = {"EUR", "USD"};
     sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
     sensiData->capFloorVolShiftData()["EUR"].indexName = "EUR-EURIBOR-6M";
     sensiData->capFloorVolShiftData()["USD"] = cfvsData;

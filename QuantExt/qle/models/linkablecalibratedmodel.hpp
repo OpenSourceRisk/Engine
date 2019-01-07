@@ -31,9 +31,9 @@
 #include <ql/option.hpp>
 #include <ql/patterns/observable.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Calibrated model class with linkable parameters
 /*! \ingroup models
@@ -51,12 +51,21 @@ public:
     /*! An additional constraint can be passed which must be
         satisfied in addition to the constraints of the model.
     */
-    virtual void calibrate(const std::vector<boost::shared_ptr<CalibrationHelper> >&, OptimizationMethod& method,
+    virtual void calibrate(const std::vector<boost::shared_ptr<CalibrationHelperBase> >&, OptimizationMethod& method,
                            const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
                            const std::vector<Real>& weights = std::vector<Real>(),
                            const std::vector<bool>& fixParameters = std::vector<bool>());
 
-    Real value(const Array& params, const std::vector<boost::shared_ptr<CalibrationHelper> >&);
+    //! for backward compatibility
+    virtual void calibrate(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >&, OptimizationMethod& method,
+                           const EndCriteria& endCriteria, const Constraint& constraint = Constraint(),
+                           const std::vector<Real>& weights = std::vector<Real>(),
+                           const std::vector<bool>& fixParameters = std::vector<bool>());
+
+    Real value(const Array& params, const std::vector<boost::shared_ptr<CalibrationHelperBase> >&);
+
+    //! for backward compatibility
+    Real value(const Array& params, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >&);
 
     const boost::shared_ptr<Constraint>& constraint() const;
 

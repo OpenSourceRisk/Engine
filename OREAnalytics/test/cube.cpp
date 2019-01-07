@@ -64,11 +64,13 @@ void testCube(NPVCube& cube, const std::string& cubeName, Real tolerance) {
     BOOST_CHECK_THROW(cube.set(1.0, cube.numIds(), 0, 0), std::exception);
     BOOST_CHECK_THROW(cube.set(1.0, 0, cube.numDates(), 0), std::exception);
     BOOST_CHECK_THROW(cube.set(1.0, 0, 0, cube.samples()), std::exception);
+    BOOST_CHECK_THROW(cube.set(1.0, "test_id", Date::todaysDate(), 0), std::exception);
 
     // Check we can't get anything out of bounds
     BOOST_CHECK_THROW(cube.get(cube.numIds(), 0, 0), std::exception);
     BOOST_CHECK_THROW(cube.get(0, cube.numDates(), 0), std::exception);
     BOOST_CHECK_THROW(cube.get(0, 0, cube.samples()), std::exception);
+    BOOST_CHECK_THROW(cube.get("test_id", Date::todaysDate(), 0), std::exception);
 
     checkCube(cube, tolerance);
     // All done
@@ -161,6 +163,39 @@ void CubeTest::testDoublePrecisionInMemoryCubeFileNIO() {
     testCubeFileIO<DoublePrecisionInMemoryCubeN>(c, "DoublePrecisionInMemoryCubeN", 1e-14);
 }
 
+void testCubeGetSetbyDateID(NPVCube& cube, Real tolerance) {
+    vector<string> ids = cube.ids();
+    vector<Date> dates = cube.dates();
+    // set value for each cube entry
+    Real i = 1.0;
+    for (auto id : ids) {
+        for (auto dt : dates) {
+            cube.set(i, id, dt, 0);
+            i++;
+        }
+    }
+    // check the cube returns as expected
+    Real j = 1.0;
+    for (auto id : ids) {
+        for (auto dt : dates) {
+            Real actual = cube.get(id, dt, 0);
+            BOOST_CHECK_CLOSE(j, actual, tolerance);
+            j++;
+        }
+    }
+}
+
+void CubeTest::testInMemoryCubeGetSetbyDateID() {
+    vector<string> ids = {"id1", "id2", "id3"}; // the overlap doesn't matter
+    Date today = Date::todaysDate();
+    vector<Date> dates = { today + QuantLib::Period(1, QuantLib::Days),
+                           today + QuantLib::Period(2, QuantLib::Days),
+                           today + QuantLib::Period(3, QuantLib::Days) };
+    Size samples = 1;
+    DoublePrecisionInMemoryCube cube(Date(), ids, dates, samples);
+    testCubeGetSetbyDateID(cube, 1e-14);
+}
+
 test_suite* CubeTest::suite() {
     test_suite* suite = BOOST_TEST_SUITE("Cube tests");
 
@@ -170,6 +205,7 @@ test_suite* CubeTest::suite() {
     suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeN));
     suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeFileIO));
     suite->add(BOOST_TEST_CASE(&CubeTest::testDoublePrecisionInMemoryCubeFileNIO));
+    suite->add(BOOST_TEST_CASE(&CubeTest::testInMemoryCubeGetSetbyDateID));
 
     return suite;
 }

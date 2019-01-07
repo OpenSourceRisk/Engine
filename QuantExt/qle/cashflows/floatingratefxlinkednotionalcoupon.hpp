@@ -28,9 +28,9 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %Coupon paying a Libor-type index on an fx-linked nominal
 //! \ingroup cashflows
@@ -51,12 +51,9 @@ public:
                              refPeriodEnd, dayCounter, isInArrears),
           notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex, invertFxIndex) {}
 
-    //! \name CashFlow interface
+    //! \name Coupon interface
     //@{
-    /*! We override FloatingRateCoupon::amount() here as we need to use the variable notional from
-        the fxLinkedCashflow.
-     */
-    Real amount() const { return rate() * accrualPeriod() * notional_.amount(); }
+    Real nominal() const { return notional_.amount(); }
     //@}
 
     //! Return the underlying FX linked notional

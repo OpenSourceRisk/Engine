@@ -28,9 +28,9 @@
 
 #include <qle/instruments/tenorbasisswap.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Rate helper for bootstrapping using Libor tenor basis swaps
 /*! \ingroup termstructures

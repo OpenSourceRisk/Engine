@@ -34,17 +34,20 @@
 #include <ored/configuration/fxspotconfig.hpp>
 #include <ored/configuration/fxvolcurveconfig.hpp>
 #include <ored/configuration/inflationcapfloorpricesurfaceconfig.hpp>
+#include <ored/configuration/inflationcapfloorvolcurveconfig.hpp>
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/marketdata/curvespec.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
 
 namespace ore {
 namespace data {
+using ore::data::XMLSerializable;
+using ore::data::XMLNode;
 
 //! Container class for all Curve Configurations
 /*!
@@ -53,7 +56,7 @@ namespace data {
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations(){};
+    CurveConfigurations() { }
 
     //! \name Setters and Getters
     //@{
@@ -99,7 +102,13 @@ public:
         return inflationCapFloorPriceSurfaceConfigs_[curveID];
     };
     const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
+        inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
+
+    boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
+        return inflationCapFloorVolCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
+        inflationCapFloorVolCurveConfig(const string& curveID) const;
 
     boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) {
         return equityCurveConfigs_[curveID];
@@ -126,8 +135,15 @@ public:
         return commodityVolatilityCurveConfigs_[curveID];
     };
     const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
-
-    std::set<string> quotes() const;
+    
+    /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
+        
+        If \p todaysMarketParams is a `nullptr`, the set of quotes required by all CurveConfig elements is returned.
+        If \p todaysMarketParams is provided, the set of quotes required by only those CurveConfig elements appearing 
+        in \p todaysMarketParams for the given configuration(s) is returned. 
+    */
+    std::set<string> quotes(boost::shared_ptr<const TodaysMarketParameters> todaysMarketParams = nullptr, 
+        const std::set<std::string>& configurations = { "" }) const;
     //@}
 
     //! \name Serialisation
@@ -145,6 +161,7 @@ private:
     std::map<std::string, boost::shared_ptr<BaseCorrelationCurveConfig>> baseCorrelationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCurveConfig>> inflationCurveConfigs_;
     std::map<std::string, boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>> inflationCapFloorPriceSurfaceConfigs_;
+    std::map<std::string, boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>> inflationCapFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityCurveConfig>> equityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<EquityVolatilityCurveConfig>> equityVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<SecurityConfig>> securityConfigs_;

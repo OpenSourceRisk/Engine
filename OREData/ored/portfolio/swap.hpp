@@ -36,13 +36,15 @@ namespace data {
 class Swap : public Trade {
 public:
     //! Deault constructor
-    Swap() : Trade("Swap") {}
+    Swap(const string swapType = "Swap") : Trade(swapType) {}
 
     //! Constructor with vector of LegData
-    Swap(const Envelope& env, const vector<LegData>& legData) : Trade("Swap", env), legData_(legData) {}
+    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap") 
+        : Trade(swapType, env), legData_(legData) {}
 
     //! Constructor with two legs
-    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1) : Trade("Swap", env), legData_({leg0, leg1}) {}
+    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap") 
+        : Trade(swapType, env), legData_({leg0, leg1}) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
@@ -60,9 +62,9 @@ public:
 
 protected:
     virtual boost::shared_ptr<LegData> createLegData() const;
+    vector<LegData> legData_;
 
 private:
-    vector<LegData> legData_;
 };
 } // namespace data
 } // namespace ore

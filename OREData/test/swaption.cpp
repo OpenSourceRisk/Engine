@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -28,12 +30,10 @@
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/swaption.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
-using namespace ore::data;
 using namespace ore::data;
 
 namespace {
@@ -68,12 +68,16 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void SwaptionTest::testEuropeanSwaptionPrice() {
+BOOST_AUTO_TEST_SUITE(EuropeanSwaptionTests)
+
+BOOST_AUTO_TEST_CASE(testEuropeanSwaptionPrice) {
+
     BOOST_TEST_MESSAGE("Testing Swaption Price...");
 
-    Date today = Settings::instance().evaluationDate();
+    Date today(3, Dec, 2018);
+    Settings::instance().evaluationDate() = today;
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -111,7 +115,7 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
     ore::data::Swaption swaptionPhysical(env, optionDataPhysical, legs);
     ore::data::Swaption swaptionPremium(env, optionDataPremium, legs);
 
-    Real expectedNpvCash = 615.03;
+    Real expectedNpvCash = 565.19;
     Real premiumNpv = premium * market->discountCurve("EUR")->discount(calendar.adjust(qlStartDate));
     Real expectedNpvPremium = expectedNpvCash - premiumNpv;
 
@@ -140,13 +144,8 @@ void SwaptionTest::testEuropeanSwaptionPrice() {
 
     BOOST_CHECK_SMALL(npvCash - expectedNpvCash, 0.01);
     BOOST_CHECK_SMALL(npvPremium - expectedNpvPremium, 0.01);
-
-    Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* SwaptionTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("EuropeanSwaptionTest");
-    suite->add(BOOST_TEST_CASE(&SwaptionTest::testEuropeanSwaptionPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

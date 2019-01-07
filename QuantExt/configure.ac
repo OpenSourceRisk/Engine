@@ -6,7 +6,7 @@ AC_PREREQ(2.62)
 AC_CONFIG_SRCDIR([qle/quantext.hpp])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_HEADERS([qle/config.hpp])
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([foreign nostdinc])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_COPYRIGHT([
@@ -161,6 +161,7 @@ esac
 AC_CONFIG_FILES([
     Makefile
     qle/Makefile
+    qle/calendars/Makefile
     qle/cashflows/Makefile
     qle/currencies/Makefile
     qle/indexes/Makefile

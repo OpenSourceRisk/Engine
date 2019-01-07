@@ -43,6 +43,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"BaseCorrelation", CurveSpec::CurveType::BaseCorrelation},
         {"Inflation", CurveSpec::CurveType::Inflation},
         {"InflationCapFloorPrice", CurveSpec::CurveType::InflationCapFloorPrice},
+        {"InflationCapFloorVolatility", CurveSpec::CurveType::InflationCapFloorVolatility },
         {"Equity", CurveSpec::CurveType::Equity},
         {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
         {"Security", CurveSpec::CurveType::Security},
@@ -167,6 +168,16 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         const string& index = tokens[1];
         const string& curveConfigID = tokens[2];
         return boost::make_shared<InflationCapFloorPriceSurfaceSpec>(index, curveConfigID);
+    }
+
+    case CurveSpec::CurveType::InflationCapFloorVolatility: {
+        // e.g. InflationCapFloorVolatility/EUHICPXT/CurveConfigID
+        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+                                       " of tokens in InflationCapFloor volatility curve spec "
+                                      << s);
+        const string& index = tokens[1];
+        const string& curveConfigID = tokens[2];
+        return boost::make_shared<InflationCapFloorVolatilityCurveSpec>(index, curveConfigID);
     }
 
     case CurveSpec::CurveType::Equity: {

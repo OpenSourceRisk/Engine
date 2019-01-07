@@ -152,6 +152,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
+Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
+    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration, "capfloor curve");
+}
+
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
     return lookup<Handle<ZeroInflationIndex>>(zeroInflationIndices_, indexName, configuration, "zero inflation index");
 }
@@ -160,15 +164,25 @@ Handle<YoYInflationIndex> MarketImpl::yoyInflationIndex(const string& indexName,
     return lookup<Handle<YoYInflationIndex>>(yoyInflationIndices_, indexName, configuration, "yoy inflation index");
 }
 
-Handle<CPICapFloorTermPriceSurface> MarketImpl::inflationCapFloorPriceSurface(const string& indexName,
-                                                                              const string& configuration) const {
-    return lookup<Handle<CPICapFloorTermPriceSurface>>(inflationCapFloorPriceSurfaces_, indexName, configuration,
+Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface(const string& indexName,
+                                                                                 const string& configuration) const {
+    return lookup<Handle<CPICapFloorTermPriceSurface>>(cpiInflationCapFloorPriceSurfaces_, indexName, configuration,
+                                                       "inflation cap floor price surface");
+}
+
+Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
+                                                                                 const string& configuration) const {
+    return lookup<Handle<YoYCapFloorTermPriceSurface>>(yoyInflationCapFloorPriceSurfaces_, indexName, configuration,
                                                        "inflation cap floor price surface");
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
     return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
 }
+
+Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const string& configuration) const {
+    return lookup<Handle<QuantExt::EquityIndex>>(equityCurves_, key, configuration, "equity curve");
+};
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
     return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration,
@@ -269,6 +283,10 @@ void MarketImpl::refresh(const string& configuration) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
+        for (auto& x : yoyCapFloorVolSurfaces_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
         for (auto& x : fxVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
@@ -295,13 +313,27 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second->yoyInflationTermStructure());
             }
         }
-        for (auto& x : inflationCapFloorPriceSurfaces_) {
+        for (auto& x : cpiInflationCapFloorPriceSurfaces_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+        for (auto& x : yoyInflationCapFloorPriceSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
         for (auto& x : equityVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
+        }
+        for (auto& x : equityCurves_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration) {
+                Handle<YieldTermStructure> y = x.second->equityForecastCurve();
+                if (!y.empty())
+                    it->second.insert(*y);
+                y = x.second->equityDividendCurve();
+                if (!y.empty())
+                    it->second.insert(*y);
+            }
         }
         for (auto& x : baseCpis_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)

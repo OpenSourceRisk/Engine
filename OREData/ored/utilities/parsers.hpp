@@ -42,10 +42,10 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
 
-using std::string;
 
 namespace ore {
 namespace data {
+using std::string;
 
 //! Convert std::string to QuantLib::Date
 /*!
@@ -169,6 +169,18 @@ void parseDateOrPeriod(const string& s, QuantLib::Date& d, QuantLib::Period& p, 
 \ingroup utilities
 */
 QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s);
+
+//! Convert text to QuantLib::SobolBrownianGenerator::Ordering
+/*!
+\ingroup utilities
+*/
+QuantLib::SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s);
+
+//! Convert text to QuantLib::SobolRsg::DirectionIntegers
+/*!
+\ingroup utilities
+*/
+QuantLib::SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s);
 
 //! Convert comma separated list of values to vector of values
 /*!

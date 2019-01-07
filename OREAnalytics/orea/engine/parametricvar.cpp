@@ -17,8 +17,9 @@
 */
 
 #include <orea/engine/parametricvar.hpp>
-#include <orea/engine/riskfilter.hpp>
 
+#include <orea/engine/riskfilter.hpp>
+#include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -37,7 +38,7 @@ namespace analytics {
 
 ParametricVarCalculator::ParametricVarCalculator(
     const std::map<std::string, std::set<string>>& tradePortfolios, const std::string& portfolioFilter,
-    const boost::shared_ptr<SensitivityData>& sensitivities,
+    const boost::shared_ptr<SensitivityStream>& sensitivities,
     const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance, const std::vector<Real>& p,
     const std::string& method, const Size mcSamples, const Size mcSeed, const bool breakdown,
     const bool salvageCovarianceMatrix)
@@ -70,9 +71,9 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
     std::set<std::string> portfoliosTmp;
     std::map<std::string, std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real>> value1, value2;
     std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> value1All, value2All;
-    while (sensitivities_->next()) {
+    while (SensitivityRecord sr = sensitivities_->next()) {
         std::set<std::string> portfolios;
-        auto pn = tradePortfolios_.find(sensitivities_->tradeId());
+        auto pn = tradePortfolios_.find(sr.tradeId);
         if (pn != tradePortfolios_.end()) {
             if (pn->second.empty())
                 portfolios = {"(empty)"};
@@ -80,34 +81,36 @@ void ParametricVarCalculator::calculate(ore::data::Report& report) {
                 portfolios = pn->second;
         } else
             portfolios = {"(unknown)"};
-        auto f1 = sensitivities_->factor1();
-        auto f2 = sensitivities_->factor2();
-        RiskFactorKey k1 = f1 == nullptr ? RiskFactorKey() : *f1;
-        RiskFactorKey k2 = f2 == nullptr ? RiskFactorKey() : *f2;
+        RiskFactorKey k1 = sr.key_1;
+        RiskFactorKey k2 = sr.key_2;
         auto key = std::make_pair(k1, k2);
-        if (f1 != nullptr)
-            sensiKeysTmp.insert(*f1);
-        if (f2 != nullptr)
-            sensiKeysTmp.insert(*f2);
+        if (k1 != RiskFactorKey())
+            sensiKeysTmp.insert(k1);
+        if (k2 != RiskFactorKey())
+            sensiKeysTmp.insert(k2);
         bool relevant = false;
         for (auto const& p : portfolios) {
             if (!hasFilter || boost::regex_match(p, filter)) {
                 relevant = true;
                 portfoliosTmp.insert(p);
-                if (sensitivities_->value() != Null<Real>()) {
-                    value1[p][key] += sensitivities_->value();
+                if (sr.isCrossGamma()) {
+                    value1[p][key] += sr.gamma;
+                } else {
+                    value1[p][key] += sr.delta;
                 }
-                if (sensitivities_->value2() != Null<Real>()) {
-                    value2[p][key] += sensitivities_->value2();
+                if (!sr.isCrossGamma()) {
+                    value2[p][key] += sr.gamma;
                 }
             }
         }
         if (relevant) {
-            if (sensitivities_->value() != Null<Real>()) {
-                value1All[key] += sensitivities_->value();
+            if (sr.isCrossGamma()) {
+                value1All[key] += sr.gamma;
+            } else {
+                value1All[key] += sr.delta;
             }
-            if (sensitivities_->value2() != Null<Real>()) {
-                value2All[key] += sensitivities_->value2();
+            if (!sr.isCrossGamma()) {
+                value2All[key] += sr.gamma;
             }
         }
     }

@@ -19,6 +19,7 @@
 */
 
 #include <orea/app/reportwriter.hpp>
+
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
 #include <ostream>
@@ -26,18 +27,20 @@
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/errors.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <stdio.h>
 
 using std::string;
 using std::vector;
 using QuantLib::Date;
+using ore::data::to_string;
 
 namespace ore {
 namespace analytics {
 
 void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCurrency,
-                            boost::shared_ptr<Market> market, const std::string& configuration,
-                            boost::shared_ptr<Portfolio> portfolio) {
+    boost::shared_ptr<Market> market, const std::string& configuration,
+    boost::shared_ptr<Portfolio> portfolio) {
     LOG("portfolio valuation");
     DayCounter dc = ActualActual();
     Date today = Settings::instance().evaluationDate();
@@ -75,7 +78,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->notional() * fx)
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e) {
             ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
             Date maturity = trade->maturity();
             report.next()
@@ -97,8 +101,11 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
     LOG("NPV file written");
 }
 
-void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Portfolio> portfolio) {
+void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+    boost::shared_ptr<ore::data::Market> market,
+    const std::string& configuration) {
     Date asof = Settings::instance().evaluationDate();
+    bool write_discount_factor = market ? true : false;
     LOG("Writing cashflow report for " << asof);
     report.addColumn("TradeId", string())
         .addColumn("Type", string())
@@ -114,6 +121,10 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
         .addColumn("fixingValue", double(), 10)
         .addColumn("Notional", double(), 4);
 
+    if (write_discount_factor) {
+        report.addColumn("DiscountFactor", double(), 10);
+        report.addColumn("PresentValue", double(), 10);
+     }
     const vector<boost::shared_ptr<Trade>>& trades = portfolio->trades();
 
     for (Size k = 0; k < trades.size(); k++) {
@@ -127,6 +138,9 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                 const QuantLib::Leg& leg = legs[i];
                 bool payer = trades[k]->legPayers()[i];
                 string ccy = trades[k]->legCurrencies()[i];
+                Handle<YieldTermStructure> discountCurve;
+                if (write_discount_factor)
+                    discountCurve = market->discountCurve(ccy, configuration);
                 for (size_t j = 0; j < leg.size(); j++) {
                     boost::shared_ptr<QuantLib::CashFlow> ptrFlow = leg[j];
                     Date payDate = ptrFlow->date();
@@ -146,12 +160,17 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             accrual = ptrCoupon->accrualPeriod();
                             notional = ptrCoupon->nominal();
                             flowType = "Interest";
-                        } else {
+                        }
+                        else {
                             coupon = Null<Real>();
                             accrual = Null<Real>();
                             notional = Null<Real>();
                             flowType = "Notional";
                         }
+                        // This BMA part here (and below) is necessary because the fixingDay() method of
+                        // AverageBMACoupon returns an exception rather than the last fixing day of the period.
+                        boost::shared_ptr<AverageBMACoupon> ptrBMA =
+                            boost::dynamic_pointer_cast<QuantLib::AverageBMACoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::FloatingRateCoupon> ptrFloat =
                             boost::dynamic_pointer_cast<QuantLib::FloatingRateCoupon>(ptrFlow);
                         boost::shared_ptr<QuantLib::InflationCoupon> ptrInfl =
@@ -162,23 +181,33 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             boost::dynamic_pointer_cast<QuantExt::FXLinkedCashFlow>(ptrFlow);
                         Date fixingDate;
                         Real fixingValue;
-                        if (ptrFloat) {
+                        if (ptrBMA) {
+                            // We return the last fixing inside the coupon period
+                            fixingDate = ptrBMA->fixingDates().end()[-2];
+                            fixingValue = ptrBMA->pricer()->swapletRate();
+                            if (ptrBMA->index()->pastFixing(fixingDate) == Null<Real>())
+                                flowType = "BMAaverage";
+                        } else if (ptrFloat) {
                             fixingDate = ptrFloat->fixingDate();
                             fixingValue = ptrFloat->index()->fixing(fixingDate);
                             if (ptrFloat->index()->pastFixing(fixingDate) == Null<Real>())
                                 flowType = "InterestProjected";
-                        } else if (ptrInfl) {
+                        }
+                        else if (ptrInfl) {
                             fixingDate = ptrInfl->fixingDate();
                             fixingValue = ptrInfl->index()->fixing(fixingDate);
                             flowType = "Inflation";
-                        } else if (ptrIndCf) {
+                        }
+                        else if (ptrIndCf) {
                             fixingDate = ptrIndCf->fixingDate();
                             fixingValue = ptrIndCf->index()->fixing(fixingDate);
                             flowType = "Index";
-                        } else if (ptrFxlCf) {
+                        }
+                        else if (ptrFxlCf) {
                             fixingDate = ptrFxlCf->fxFixingDate();
                             fixingValue = ptrFxlCf->fxRate();
-                        } else {
+                        }
+                        else {
                             fixingDate = Null<Date>();
                             fixingValue = Null<Real>();
                         }
@@ -196,12 +225,21 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
                             .add(fixingDate)
                             .add(fixingValue)
                             .add(notional);
+
+                        if (write_discount_factor) {
+                            Real discountFactor = discountCurve->discount(payDate);
+                            report.add(discountFactor);
+                            Real presentValue = discountFactor * amount;
+                            report.add(presentValue);
+                        }
                     }
                 }
             }
-        } catch (std::exception& e) {
+        }
+        catch (std::exception& e) {
             LOG("Exception writing cashflow report : " << e.what());
-        } catch (...) {
+        }
+        catch (...) {
             LOG("Exception writing cashflow report : Unkown Exception");
         }
     }
@@ -210,7 +248,7 @@ void ReportWriter::writeCashflow(ore::data::Report& report, boost::shared_ptr<Po
 }
 
 void ReportWriter::writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                               const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
+    const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market) {
     LOG("Write curves... ");
 
     QL_REQUIRE(marketConfig.hasConfiguration(configID), "curve configuration " << configID << " not found");
@@ -270,7 +308,7 @@ void ReportWriter::writeCurves(ore::data::Report& report, const std::string& con
 }
 
 void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                       const string& tradeId) {
+    const string& tradeId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -321,7 +359,7 @@ void ReportWriter::writeTradeExposures(ore::data::Report& report, boost::shared_
 }
 
 void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                            const string& nettingSetId) {
+    const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -368,7 +406,7 @@ void ReportWriter::writeNettingSetExposures(ore::data::Report& report, boost::sh
 }
 
 void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationMethod,
-                            boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
+    boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess) {
     const vector<Date> dates = postProcess->cube()->dates();
     DayCounter dc = ActualActual();
     report.addColumn("TradeId", string())
@@ -429,7 +467,7 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
 }
 
 void ReportWriter::writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                        const string& nettingSetId) {
+    const string& nettingSetId) {
     const vector<Date> dates = postProcess->cube()->dates();
     Date today = Settings::instance().evaluationDate();
     DayCounter dc = ActualActual();
@@ -492,6 +530,88 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
         }
     }
     report.end();
+}
+
+void ReportWriter::writeScenarioReport(Report& report,
+    const boost::shared_ptr<SensitivityCube>& sensitivityCube, Real outputThreshold) {
+
+    LOG("Writing Scenario report");
+
+    report.addColumn("TradeId", string());
+    report.addColumn("Factor", string());
+    report.addColumn("Up/Down", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Scenario NPV", double(), 2);
+    report.addColumn("Difference", double(), 2);
+
+    for (const auto& tradeId : sensitivityCube->tradeIds()) {
+        Real baseNpv = sensitivityCube->npv(tradeId);
+
+        for (const auto& scenarioDescription : sensitivityCube->scenarioDescriptions()) {
+
+            Real scenarioNpv = sensitivityCube->npv(tradeId, scenarioDescription);
+            Real difference = scenarioNpv - baseNpv;
+
+            if (fabs(difference) > outputThreshold) {
+                report.next();
+                report.add(tradeId);
+                report.add(scenarioDescription.factors());
+                report.add(scenarioDescription.typeString());
+                report.add(baseNpv);
+                report.add(scenarioNpv);
+                report.add(difference);
+            }
+            else if (!std::isfinite(difference)) {
+                // TODO: is this needed?
+                ALOG("sensitivity scenario for trade " << tradeId << ", factor " <<
+                    scenarioDescription.factors() << " is not finite (" << difference << ")");
+            }
+        }
+    }
+
+    report.end();
+    LOG("Scenario report finished");
+}
+
+void ReportWriter::writeSensitivityReport(Report& report,
+    const boost::shared_ptr<SensitivityStream>& ss, Real outputThreshold) {
+
+    LOG("Writing Sensitivity report");
+
+    report.addColumn("TradeId", string());
+    report.addColumn("IsPar", string());
+    report.addColumn("Factor_1", string());
+    report.addColumn("ShiftSize_1", double(), 6);
+    report.addColumn("Factor_2", string());
+    report.addColumn("ShiftSize_2", double(), 6);
+    report.addColumn("Currency", string());
+    report.addColumn("Base NPV", double(), 2);
+    report.addColumn("Delta", double(), 2);
+    report.addColumn("Gamma", double(), 2);
+    
+    // Make sure that we are starting from the start
+    ss->reset();
+    while(SensitivityRecord sr = ss->next()) {
+        if (fabs(sr.delta) > outputThreshold || fabs(sr.gamma) > outputThreshold) {
+            report.next();
+            report.add(sr.tradeId);
+            report.add(to_string(sr.isPar));
+            report.add(reconstructFactor(sr.key_1, sr.desc_1));
+            report.add(sr.shift_1);
+            report.add(reconstructFactor(sr.key_2, sr.desc_2));
+            report.add(sr.shift_2);
+            report.add(sr.currency);
+            report.add(sr.baseNpv);
+            report.add(sr.delta);
+            report.add(sr.gamma);
+        } else if (!std::isfinite(sr.delta) || !std::isfinite(sr.gamma)) {
+            // TODO: Again, is this needed?
+            ALOG("sensitivity record has infinite values: " << sr);
+        }
+    }
+
+    report.end();
+    LOG("Sensitivity report finished");
 }
 
 } // namespace analytics

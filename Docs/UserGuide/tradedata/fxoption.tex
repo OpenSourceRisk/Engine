@@ -1,0 +1,48 @@
+\subsubsection{FX Option}
+
+The \lstinline!FXOptionData!  node is the trade data container for the FX Option trade type.  Vanilla FX options are
+supported, the exercise style must be \emph{European}. The strike rate of an FX option is: SoldAmount / BoughtAmount. The
+\lstinline!FXOptionData!  node includes one and only one \lstinline!OptionData! trade component sub-node plus elements
+specific to the FX Option. The structure of an example \lstinline!FXOptionData! node for a FX Option is shown in Listing
+\ref{lst:fxoption_data}.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+        <FxOptionData>
+            <OptionData>
+             ...
+            </OptionData>
+            <BoughtCurrency>EUR</BoughtCurrency>
+            <BoughtAmount>1000000</BoughtAmount>
+            <SoldCurrency>USD</SoldCurrency>
+            <SoldAmount>1350000</SoldAmount>
+        </FxOptionData>
+\end{minted}
+\caption{FX Option data}
+\label{lst:fxoption_data}
+\end{listing}
+
+The meanings and allowable values of the elements in the \lstinline!FXOptionData!  node follow below.
+
+\begin{itemize}
+\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data}. Note that the
+  FX option type allows for \emph{European} option style only.
+
+\item BoughtCurrency: The bought currency of the FX option.  
+
+Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
+
+\item BoughtAmount: The amount in the BoughtCurrency.  
+
+Allowable values:  Any positive real number.
+
+\item SoldCurrency: The sold currency of the FX option.  
+
+Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.
+
+\item SoldAmount: The amount in the SoldCurrency.  
+
+Allowable values:  Any positive real number.
+
+\end{itemize}
