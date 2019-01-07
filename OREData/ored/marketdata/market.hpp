@@ -199,7 +199,7 @@ public:
     //! \name Correlation
     //@{
     virtual QuantLib::Handle<QuantExt::CorrelationTermStructure> correlationCurve(
-                                                                                  const std::string& name, const std::string& configuration = Market::defaultConfiguration) const = 0;
+                                                                                  const std::string& index1, const std::string& index2, const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
 } // namespace data

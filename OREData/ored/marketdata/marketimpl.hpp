@@ -150,18 +150,18 @@ public:
                                                       const string& configuration = Market::defaultConfiguration) const;
 
     //! Commodity curves
-    QuantLib::Handle<QuantLib::Quote> commoditySpot(const std::string& commodityName, 
-        const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::Quote> commoditySpot(const string& commodityName, 
+        const string& configuration = Market::defaultConfiguration) const;
 
-    QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const std::string& commodityName,
-        const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantExt::PriceTermStructure> commodityPriceCurve(const string& commodityName,
+        const string& configuration = Market::defaultConfiguration) const;
 
-    QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(const std::string& commodityName,
-        const std::string& configuration = Market::defaultConfiguration) const;
+    QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(const string& commodityName,
+        const string& configuration = Market::defaultConfiguration) const;
     //@}
 
     //! Correlation curves
-    Handle<QuantExt::CorrelationTermStructure> correlationCurve(const string& name,
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve(const string& index1, const string& index2,
                                                    const string& configuration = Market::defaultConfiguration) const;
 
     //! \name Disable copying
@@ -197,11 +197,11 @@ protected:
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
-    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
-    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
-    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
-    std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
-    map<pair<string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
+    map<tuple<string, string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
+    map<pair<string, string>, QuantLib::Handle<QuantLib::Quote>> commoditySpots_;
+    map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
+    map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
+    map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
     Conventions conventions_;
 
     //! add a swap index to the market

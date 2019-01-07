@@ -920,8 +920,8 @@ BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
     BOOST_TEST_MESSAGE("Testing correlation curve");
 
     // Just test that the building suceeded - the curve itself has been tested elsewhere
-    Handle<QuantExt::CorrelationTermStructure> correlationCurve1 = market->correlationCurve("EUR-CMS-10Y/EUR-CMS-1Y");
-    Handle<QuantExt::CorrelationTermStructure> correlationCurve2 = market->correlationCurve("USD-CMS-10Y/USD-CMS-1Y");
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve1 = market->correlationCurve("EUR-CMS-10Y","EUR-CMS-1Y");
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve2 = market->correlationCurve("USD-CMS-10Y","USD-CMS-1Y");
     BOOST_CHECK(*correlationCurve1);
     BOOST_CHECK(*correlationCurve2);
 }

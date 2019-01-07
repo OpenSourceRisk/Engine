@@ -62,6 +62,18 @@ A lookup(const B& map, const C& key, const YieldCurveType y, const string& confi
     return it->second;
 }
 
+template <class A, class B, class C>
+A lookup(const B& map, const C& key1, const C& key2, const string& configuration, const string& type) {
+    auto it = map.find(make_tuple(configuration, key1, key2));
+    if (it == map.end()) {
+        // fall back to default configuration
+        it = map.find(make_tuple(Market::defaultConfiguration, key1, key2));
+        QL_REQUIRE(it != map.end(), "did not find object " << key1 << "/" << key2 << " of type " << type << " under configuration "
+                                                           << configuration << " in CorrelationCurves");
+    }
+    return it->second;
+}
+
 } // anonymous namespace
 Handle<YieldTermStructure> MarketImpl::yieldCurve(const YieldCurveType& type, const string& key,
                                                   const string& configuration) const {
@@ -218,8 +230,8 @@ Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& comm
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
 }
 
-    Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& key, const string& configuration) const {
-        return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, key, configuration, "correlation curve");
+    Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2, const string& configuration) const {
+        return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, index1, index2, configuration, "correlation curve");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
@@ -353,7 +365,7 @@ void MarketImpl::refresh(const string& configuration) {
         }
 
         for (auto& x : correlationCurves_) {
-            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+            if (get<0>(x.first) == configuration || get<0>(x.first) == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
     }

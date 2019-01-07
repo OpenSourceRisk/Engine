@@ -766,7 +766,10 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding CorrelationCurve (" << it.first << ") with spec " << *corrspec
                                 << " to configuration " << configuration.first);
-                            correlationCurves_[make_pair(configuration.first, it.first)] =
+
+                            vector<string> tokens;
+                            boost::split(tokens, it.first, boost::is_any_of("/:"));
+                            correlationCurves_[make_tuple(configuration.first, tokens[0], tokens[1])] =
                                 Handle<QuantExt::CorrelationTermStructure>(itr->second->corrTermStructure());
                         }
                     }
