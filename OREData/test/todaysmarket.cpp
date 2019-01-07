@@ -393,7 +393,11 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31 1163.4")
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29 1165.3")
         ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31 1172.9")
-        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223");
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223")
+        // correlation quotes
+        ("20160226 SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM 0.1")
+        ("20160226 SPREAD/CORRELATION/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM 0.2")
+        ("20160226 SPREAD/CORRELATION/USD-CMS-10Y/USD-CMS-1Y/FLAT/ATM 0.1");
     // clang-format on
 
     for (auto s : data) {
@@ -439,6 +443,9 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
 
     parameters->addMarketObject(MarketObject::CommodityCurve, "ois", {{"COMDTY_GOLD_USD", "Commodity/USD/GOLD_USD"}});
 
+    map<string, string> correlationMap = {{"EUR-CMS-10Y/EUR-CMS-1Y", "Correlation/EUR-CORR"}, {"USD-CMS-10Y/USD-CMS-1Y", "Correlation/USD-CORR"}};
+    parameters->addMarketObject(MarketObject::Correlation, "ois", correlationMap);
+
     // all others empty so far
     map<string, string> emptyMap;
     parameters->addMarketObject(MarketObject::FXSpot, "ois", emptyMap);
@@ -459,6 +466,7 @@ boost::shared_ptr<TodaysMarketParameters> marketParameters() {
     config.setId(MarketObject::EquityCurve, "ois");
     config.setId(MarketObject::EquityVol, "ois");
     config.setId(MarketObject::CommodityCurve, "ois");
+    config.setId(MarketObject::Correlation, "ois");
 
     parameters->addConfiguration("default", config);
 
@@ -691,6 +699,21 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
         extrapolate, false, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M",
         "Yield/USD/USD1D");
 
+    vector<Period> optionTenors2{
+        Period(1, Years),
+        Period(2, Years)
+    };
+    
+    //Correlation curve
+    configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
+        CorrelationCurveConfig::QuoteType::Correlation, extrapolate, optionTenors2,
+        dayCounter, UnitedStates(), bdc, "EUR-CMS-10Y", "EUR-CMS-1Y");
+    configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::Flat,
+        CorrelationCurveConfig::QuoteType::Correlation, extrapolate, vector<Period>(),
+        dayCounter, UnitedStates(), bdc, "USD-CMS-10Y", "USD-CMS-1Y");
+
     // clang-format off
     vector<string> eqFwdQuotes{
         "EQUITY_FWD/PRICE/SP5/USD/1Y",
@@ -890,6 +913,17 @@ BOOST_AUTO_TEST_CASE(testCommodityCurve) {
     // Just test that the building suceeded - the curve itself has been tested elsewhere
     Handle<PriceTermStructure> commodityCurve = market->commodityPriceCurve("COMDTY_GOLD_USD");
     BOOST_CHECK(*commodityCurve);
+}
+
+BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
+    
+    BOOST_TEST_MESSAGE("Testing correlation curve");
+
+    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve1 = market->correlationCurve("EUR-CMS-10Y/EUR-CMS-1Y");
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve2 = market->correlationCurve("USD-CMS-10Y/USD-CMS-1Y");
+    BOOST_CHECK(*correlationCurve1);
+    BOOST_CHECK(*correlationCurve2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

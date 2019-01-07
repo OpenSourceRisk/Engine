@@ -38,6 +38,7 @@
 #include <ql/time/date.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/indexes/equityindex.hpp>
 
@@ -193,6 +194,12 @@ public:
     //@{
     virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(
         const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Correlation
+    //@{
+    virtual QuantLib::Handle<QuantExt::CorrelationTermStructure> correlationCurve(
+                                                                                  const std::string& name, const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
 } // namespace data

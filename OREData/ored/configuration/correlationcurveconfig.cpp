@@ -31,7 +31,7 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t)
     case CorrelationCurveConfig::QuoteType::Correlation:
         return out << "CORRELATION";
     case CorrelationCurveConfig::QuoteType::Price:
-        return out << "Price";
+        return out << "PRICE";
     default:
         QL_FAIL("unknown QuoteType(" << Integer(t) << ")");
     }
@@ -42,17 +42,17 @@ CorrelationCurveConfig::CorrelationCurveConfig(
     const QuoteType& quoteType, const bool extrapolate,
     const vector<Period>& optionTenors, const DayCounter& dayCounter,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& index1,
-    const string& index2, const vector<Period>& smileOptionTenors)
+    const string& index2)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), quoteType_(quoteType),
       extrapolate_(extrapolate), optionTenors_(optionTenors),
       dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index1_(index1),
-      index2_(index2), smileOptionTenors_(smileOptionTenors) {
+      index2_(index2) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Flat, "Invalid dimension");
 
     if (dimension == Dimension::Flat) {
-        QL_REQUIRE(smileOptionTenors.size() == 0 ,
+        QL_REQUIRE(optionTenors.size() == 0 ,
                    "Smile tenors should only be set when dim!=Flat");
     }
 }
@@ -74,7 +74,7 @@ const vector<string>& CorrelationCurveConfig::quotes() {
 
         } else {
             std::stringstream ss;
-            ss << base << "/Flat/ATM";
+            ss << base << "/FLAT/ATM";
             quotes_.push_back(ss.str());
         }
     }
@@ -108,7 +108,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
     extrapolate_ = parseBool(extr);
 
-    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
+    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
@@ -121,9 +121,6 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
     index1_ = XMLUtils::getChildValue(node, "Index1", true);
     index2_ = XMLUtils::getChildValue(node, "Index2", true);
-
-    // optional smile stuff
-    smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
     
 }
 
@@ -135,6 +132,7 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
+        XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
     } else if (dimension_ == Dimension::Flat) {
         XMLUtils::addChild(doc, node, "Dimension", "Flat");
     } else {
@@ -151,16 +149,11 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
 
-    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "Index1", index1_);
     XMLUtils::addChild(doc, node, "Index2", index2_);
-
-    if (dimension_ == Dimension::ATM) {
-        XMLUtils::addGenericChildAsList(doc, node, "SmileOptionTenors", smileOptionTenors_);
-    }
 
     return node;
 }

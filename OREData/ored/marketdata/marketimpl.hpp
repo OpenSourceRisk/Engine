@@ -160,6 +160,10 @@ public:
         const std::string& configuration = Market::defaultConfiguration) const;
     //@}
 
+    //! Correlation curves
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve(const string& name,
+                                                   const string& configuration = Market::defaultConfiguration) const;
+
     //! \name Disable copying
     //@{
     MarketImpl(const MarketImpl&) = delete;
@@ -197,6 +201,7 @@ protected:
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
+    map<pair<string, string>, Handle<QuantExt::CorrelationTermStructure>> correlationCurves_;
     Conventions conventions_;
 
     //! add a swap index to the market

@@ -484,7 +484,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // Expects the following form:
         // SPREAD/CORRELATION/<INDEX1>/<INDEX2>/<TENOR>/<STRIKE>
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
-        QL_REQUIRE(quoteType == MarketDatum::QuoteType::CORRELATION, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::CORRELATION, "Quote type for " << datumName << " should be 'CORRELATION'");
         
         return boost::make_shared<SpreadQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);

@@ -62,9 +62,7 @@ public:
                                   const vector<Period>& optionTenors,
                                   const DayCounter& dayCounter,
                                   const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& index1, const string& index2,
-                                  // Only required for smile
-                                  const vector<Period>& smileOptionTenors = vector<Period>());
+                                  const string& index1, const string& index2);
     //@}
 
     //! \name Serialisation
@@ -84,7 +82,6 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& index1() const { return index1_; }
     const string& index2() const { return index2_; }
-    const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -98,7 +95,6 @@ public:
     Calendar& calendar() { return calendar_; }
     string& index1() { return index1_; }
     string& index2() { return index2_; }
-    vector<Period>& smileOptionTenors() { return smileOptionTenors_; }
     //@}
 
 private:
@@ -110,7 +106,6 @@ private:
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;
     string index1_, index2_;
-    vector<Period> smileOptionTenors_;
 };
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);

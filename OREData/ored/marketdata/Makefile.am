@@ -35,6 +35,7 @@ libOREDataMarketData_la_SOURCES = \
 	yieldcurve.cpp \
 	commoditycurve.cpp \
 	commodityvolcurve.cpp \
+	correlationcurve.cpp \
 	inflationcapfloorvolcurve.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -69,6 +70,7 @@ this_include_HEADERS = \
 	yieldcurve.hpp \
 	commoditycurve.hpp \
 	commodityvolcurve.hpp \
+	correlationcurve.hpp \
 	inflationcapfloorvolcurve.hpp
 
 all.hpp: Makefile.am

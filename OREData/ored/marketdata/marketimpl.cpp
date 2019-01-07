@@ -218,6 +218,10 @@ Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& comm
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
 }
 
+    Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& key, const string& configuration) const {
+        return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, key, configuration, "correlation curve");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;
@@ -344,6 +348,11 @@ void MarketImpl::refresh(const string& configuration) {
                 it->second.insert(*x.second);
         }
         for (auto& x : commodityVols_) {
+            if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
+                it->second.insert(*x.second);
+        }
+
+        for (auto& x : correlationCurves_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
                 it->second.insert(*x.second);
         }
