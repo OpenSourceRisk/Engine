@@ -119,6 +119,9 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         }
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
+            // Use fixed start date if provided by config
+            Date startDate = config->startDate() != Date() ? config->startDate() : asof + cdsConv->settlementDays();
+            
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
             std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helper;
@@ -126,7 +129,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    startDate, cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
@@ -135,12 +138,18 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             // like for yield curves we need to copy the piecewise curve because
             // on eval date changes the relative date helpers with trigger a
             // bootstrap.
-            vector<Date> dates(helper.size() + 1, asof);
-            vector<Real> survivalProbs(helper.size() + 1, 1.0);
+            vector<Date> dates;
+            vector<Real> survivalProbs;
+            dates.push_back(asof);
+            survivalProbs.push_back(1.0);
             for (Size i = 0; i < helper.size(); ++i) {
-                dates[i + 1] = helper[i]->latestDate();
-                survivalProbs[i + 1] = tmp->survivalProbability(dates[i + 1]);
+                if (helper[i]->latestDate() > asof) {
+                    dates.push_back(helper[i]->latestDate());
+                    survivalProbs.push_back(tmp->survivalProbability(dates.back()));
+                }
             }
+            QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
+
             LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
             curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, survivalProbs,
                                                                                          config->dayCounter());
