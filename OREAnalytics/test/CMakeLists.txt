@@ -4,13 +4,14 @@ set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 cube.cpp
 observationmode.cpp
 scenariosimmarket.cpp
+scenariogenerator.cpp
 sensitivityaggregator.cpp 
+sensitivityanalysis.cpp
+sensitivityanalysisanalytic.cpp
 sensitivityperformance.cpp
 shiftscenariogenerator.cpp
 swapperformance.cpp
-sensitivityanalysisanalytic.cpp
 stresstest.cpp
-scenariogenerator.cpp
 testmarket.cpp
 testportfolio.cpp
 testsuite.cpp)
