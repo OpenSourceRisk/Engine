@@ -48,6 +48,7 @@
 #include <ql/math/integrals/gaussianquadratures.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 
+#include <qle/termstructures/correlationtermstructure.hpp>
 
 namespace QuantLib {
     class CmsSpreadCoupon;
@@ -82,7 +83,7 @@ using namespace QuantLib;
       public:
         LognormalCmsSpreadPricer(
             const boost::shared_ptr<CmsCouponPricer> cmsPricer,
-            const Handle<Quote> &correlation,
+            const Handle<QuantExt::CorrelationTermStructure> &correlation,
             const Handle<YieldTermStructure> &couponDiscountCurve =
                 Handle<YieldTermStructure>(),
             const Size IntegrationPoints = 16,

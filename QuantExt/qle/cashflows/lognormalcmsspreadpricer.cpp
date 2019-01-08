@@ -61,7 +61,7 @@ namespace QuantExt {
 
     LognormalCmsSpreadPricer::LognormalCmsSpreadPricer(
         const boost::shared_ptr<CmsCouponPricer> cmsPricer,
-        const Handle<Quote> &correlation,
+        const Handle<QuantExt::CorrelationTermStructure> &correlation,
         const Handle<YieldTermStructure> &couponDiscountCurve,
         const Size integrationPoints,
         const boost::optional<VolatilityType> volatilityType,
@@ -255,7 +255,7 @@ namespace QuantExt {
             // for the normal volatility case we do not need the drifts
             // but rather use adjusted rates directly in the integrand
 
-            rho_ = std::max(std::min(correlation()->value(), 0.9999),
+            rho_ = std::max(std::min(correlation(fixingTime_), 0.9999),
                             -0.9999); // avoid division by zero in integrand
         } else {
             // fixing is in the past or today
