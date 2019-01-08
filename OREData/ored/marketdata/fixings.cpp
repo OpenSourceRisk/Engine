@@ -51,10 +51,10 @@ void applyFixings(const vector<Fixing>& fixings, const data::Conventions& conven
             TLOG("Added fixing for " << f.name << " (" << io::iso_date(f.date) << ") value:" << f.fixing);
             count++;
         } catch (const std::exception& e) {
-            WLOG("Error during adding fixing for " << f.name << ": " << e.what());
+            DLOG("Error during adding fixing for " << f.name << ": " << e.what());
         }
     }
-    DLOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.elapsed() << " seconds");
+    LOG("Added " << count << " of " << fixings.size() << " fixings in " << timer.elapsed() << " seconds");
 }
 } // namespace data
 } // namespace ore

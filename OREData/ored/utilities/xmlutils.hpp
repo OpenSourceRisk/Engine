@@ -30,13 +30,6 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-using std::map;
-using std::pair;
-using QuantLib::Real;
-using QuantLib::Size;
-using QuantLib::Period;
 
 // Forward declarations and typedefs
 // so we don't need to #include rapidxml everywhere.
@@ -53,6 +46,13 @@ template <class Ch> class xml_document;
 
 namespace ore {
 namespace data {
+using std::string;
+using std::vector;
+using std::map;
+using std::pair;
+using QuantLib::Real;
+using QuantLib::Size;
+using QuantLib::Period;
 
 typedef rapidxml::xml_node<char> XMLNode;
 

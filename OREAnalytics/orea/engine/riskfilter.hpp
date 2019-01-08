@@ -30,10 +30,10 @@
 #include <string>
 #include <vector>
 
-using QuantLib::Size;
 
 namespace ore {
 namespace analytics {
+using QuantLib::Size;
 
 //! Risk Filter
 /*! The risk filter class groups risk factor keys w.r.t. a risk class (IR, FX, EQ...) and a risk type (delta-gamma,

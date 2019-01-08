@@ -24,6 +24,8 @@
 
 #include <boost/make_shared.hpp>
 
+using namespace QuantLib;
+
 namespace {
 static inline void setValue(Matrix& m, const Real& value, const QuantExt::CrossAssetModel* model,
                             const QuantExt::CrossAssetModelTypes::AssetType& t1, const Size& i1,

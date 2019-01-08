@@ -29,9 +29,9 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Black volatility curve modelled as variance curve
 /*! This class calculates time-dependent Black volatilities using
@@ -43,12 +43,14 @@ namespace QuantExt {
 
     \todo check time extrapolation
 
-            \ingroup termstructures
+    \ingroup termstructures
 */
 class BlackVarianceCurve3 : public LazyObject, public BlackVarianceTermStructure {
 public:
+    // If requireMonotoneVariance is true, we check for monotone variance in performCalculations and throw if not
     BlackVarianceCurve3(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc, const DayCounter& dc,
-                        const std::vector<Time>& times, const std::vector<Handle<Quote> >& blackVolCurve);
+                        const std::vector<Time>& times, const std::vector<Handle<Quote> >& blackVolCurve,
+                        bool requireMonotoneVariance = true);
     //! \name TermStructure interface
     //@{
     Date maxDate() const;
@@ -78,6 +80,7 @@ private:
     std::vector<Handle<Quote> > quotes_;
     mutable std::vector<Real> variances_;
     mutable Interpolation varianceCurve_;
+    bool requireMonotoneVariance_;
 };
 
 // inline definitions

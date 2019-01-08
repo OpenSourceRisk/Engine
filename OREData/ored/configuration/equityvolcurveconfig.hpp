@@ -27,14 +27,14 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
 using QuantLib::Period;
 using QuantLib::DayCounter;
-
-namespace ore {
-namespace data {
 
 //! Equity volatility structure configuration
 /*!

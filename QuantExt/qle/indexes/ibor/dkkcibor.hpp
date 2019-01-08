@@ -29,9 +29,9 @@
 #include <ql/time/calendars/denmark.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! DKK-CIBOR index
 /*! DKK-CIBOR rate overseen by Danish Bankers Association.

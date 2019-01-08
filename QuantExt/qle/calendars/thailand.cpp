@@ -18,7 +18,9 @@
 
 #include <qle/calendars/thailand.hpp>
 
-namespace QuantLib {
+using namespace QuantLib;
+
+namespace QuantExt {
 
     Thailand::Thailand(Market market) {
         // all calendar instances share the same implementation instance

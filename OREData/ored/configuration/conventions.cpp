@@ -225,10 +225,11 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) {
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
                              const string& fixedDayCounter, const string& paymentLag, const string& eom,
                              const string& fixedFrequency, const string& fixedConvention,
-                             const string& fixedPaymentConvention, const string& rule)
+                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule) {
+      strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
+      strPaymentCal_(paymentCal) {
     build();
 }
 
@@ -246,6 +247,7 @@ void OisConvention::build() {
     fixedPaymentConvention_ =
         strFixedPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strFixedPaymentConvention_);
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
+    paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
 }
 
 void OisConvention::fromXML(XMLNode* node) {
@@ -264,6 +266,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", false);
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", false);
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
+    strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
 
     build();
 }
@@ -281,6 +284,7 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
     XMLUtils::addChild(doc, node, "Rule", strRule_);
+    XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
 
     return node;
 }
@@ -639,10 +643,11 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
 CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays,
                                                          const string& strSettlementCalendar,
                                                          const string& strRollConvention, const string& flatIndex,
-                                                         const string& spreadIndex, const string& strEom)
+                                                         const string& spreadIndex, const string& strEom,
+                                                         const string& strIsResettable, const string& strFlatIndexIsResettable)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
-      strSpreadIndex_(spreadIndex), strEom_(strEom) {
+      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable), strFlatIndexIsResettable_(strFlatIndexIsResettable) {
     build();
 }
 
@@ -653,6 +658,8 @@ void CrossCcyBasisSwapConvention::build() {
     flatIndex_ = parseIborIndex(strFlatIndex_);
     spreadIndex_ = parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
+    isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
+    FlatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -668,6 +675,8 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatIndex_ = XMLUtils::getChildValue(node, "FlatIndex", true);
     strSpreadIndex_ = XMLUtils::getChildValue(node, "SpreadIndex", true);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
+    strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
+    strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
 
     build();
 }
@@ -682,6 +691,8 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FlatIndex", strFlatIndex_);
     XMLUtils::addChild(doc, node, "SpreadIndex", strSpreadIndex_);
     XMLUtils::addChild(doc, node, "EOM", strEom_);
+    XMLUtils::addChild(doc, node, "IsResettable", false);
+    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", false);
 
     return node;
 }

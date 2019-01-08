@@ -91,6 +91,7 @@
       <xs:element type="businessDayConvention" name="FixedConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="FixedPaymentConvention" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dateRule" name="Rule" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="PaymentCalendar" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -180,6 +181,8 @@
       <xs:element type="xs:string" name="FlatIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="SpreadIndex" minOccurs="1" maxOccurs="1"/>
       <xs:element type="bool" name="EOM" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="IsResettable" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="FlatIndexIsResettable" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
   

@@ -41,8 +41,15 @@ class OreExample(object):
             else:
                 self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
         else:
-            self.ore_exe = "../../App/ore"
-
+            if os.path.isfile("../../App/build/ore"):
+                self.ore_exe = "../../App/build/ore"
+            elif os.path.isfile("../../build/App/ore"):
+                self.ore_exe = "../../build/App/ore"
+            elif os.path.isfile("../../App/ore"):
+                self.ore_exe = "../../App/ore"
+            else:
+                print_on_console("ORE executable not found.")
+                quit()
 
     def print_headline(self, headline):
         self.headlinecounter += 1

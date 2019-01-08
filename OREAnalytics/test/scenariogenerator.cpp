@@ -644,6 +644,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
     sgd->discretization() = QuantExt::CrossAssetStateProcess::exact;
     sgd->sequenceType() = Sobol;
+    sgd->directionIntegers() = SobolRsg::JoeKuoD7;
     sgd->seed() = 42;
     sgd->grid() = grid;
 

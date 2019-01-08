@@ -615,6 +615,68 @@ strings.
 
 \end{enumerate}
 
+\subsubsection*{Building on Unix with CMake}
+
+Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
+
+\begin{enumerate}
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake by invoking \\
+\medskip
+{\tt cmake -DBOOST\_ROOT=\${BOOST} -DBOOST\_LIBRARYDIR=\${BOOST}/stage/lib ..} \\
+\medskip
+
+Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} and run \\
+\medskip
+{\tt cmake ..} \\
+\medskip
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+{\tt make -j4} \\
+\medskip
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
+\item Run all test suites by invoking \\
+\medskip
+{\tt ctest -j4}
+\end{enumerate}
+
+Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
+  \${BOOST}/stage/lib}.
+
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
+
+The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+ 
+\subsubsection*{Building on Windows with CMake}
+
+The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
+
+\begin{enumerate}
+\item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
+\medskip
+{\tt vcvarsall.bat x64} \\
+\medskip
+to initialize the compiler-related environment.
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake e.g. by invoking \\
+\medskip
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
+{\tt \hspace{2cm} -G Ninja ..} \\
+\medskip
+where the -G option allows choosing the desired build system generator.
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+  {\tt ninja} \\
+\medskip
+Ninja automatically utilizes all available threads, unless specified with the -j option.
+
+\item Run all test suites by invoking \\
+  \medskip {\tt ctest -j4}
+\end{enumerate}
+
 \subsection{Python and Jupyter}\label{sec:python}
 
 Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
@@ -837,7 +899,7 @@ It is instructive to look into the input folder in Examples/Example\_1, the cont
 
 This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The
 expected exposure can be seen as a European option on the underlying netting set, see also appendix
-\ref{sec:app_exposure}. In this exampl«e, the expected exposure at some future point in time, say 10 years, is equal to
+\ref{sec:app_exposure}. In this example, the expected exposure at some future point in time, say 10 years, is equal to
 the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap
 maturity in 20 years. We can easily compute such standard European Swaption prices for all future points in time where
 both Swap legs reset, i.e. annually in this case\footnote{Using closed form expressions for standard European Swaption
@@ -2883,6 +2945,8 @@ Let us discuss this section using the following example
   <Sequence>SobolBrownianBridge</Sequence>
   <Seed>42</Seed>
   <Samples>1000</Samples>
+  <Ordering>Steps</Ordering>
+  <DirectionIntegers>JoeKuoD7</DirectionIntegers>
 </Parameters>
 \end{minted}
 \caption{Simulation configuration}
@@ -2906,6 +2970,11 @@ SobolBrownianBridge}).
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
 use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
 to use if one of the {\em Forward } related methods is chosen.
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
+    Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
+  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
+    Kuo2, Kuo3})
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}

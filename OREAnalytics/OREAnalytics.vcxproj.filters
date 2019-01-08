@@ -21,9 +21,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="orea\aggregation\all.hpp">
-      <Filter>aggregation</Filter>
-    </ClInclude>
     <ClInclude Include="orea\aggregation\collateralaccount.hpp">
       <Filter>aggregation</Filter>
     </ClInclude>
@@ -32,9 +29,6 @@
     </ClInclude>
     <ClInclude Include="orea\aggregation\postprocess.hpp">
       <Filter>aggregation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\cube\all.hpp">
-      <Filter>cube</Filter>
     </ClInclude>
     <ClInclude Include="orea\cube\cubewriter.hpp">
       <Filter>cube</Filter>
@@ -45,9 +39,6 @@
     <ClInclude Include="orea\cube\npvcube.hpp">
       <Filter>cube</Filter>
     </ClInclude>
-    <ClInclude Include="orea\engine\all.hpp">
-      <Filter>engine</Filter>
-    </ClInclude>
     <ClInclude Include="orea\engine\valuationengine.hpp">
       <Filter>engine</Filter>
     </ClInclude>
@@ -56,9 +47,6 @@
     </ClInclude>
     <ClInclude Include="orea\simulation\simmarket.hpp">
       <Filter>simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\scenario\all.hpp">
-      <Filter>scenario</Filter>
     </ClInclude>
     <ClInclude Include="orea\scenario\crossassetmodelscenariogenerator.hpp">
       <Filter>scenario</Filter>
@@ -121,12 +109,6 @@
     </ClInclude>
     <ClInclude Include="orea\simulation\fixingmanager.hpp">
       <Filter>simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\simulation\all.hpp">
-      <Filter>simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="orea\app\all.hpp">
-      <Filter>app</Filter>
     </ClInclude>
     <ClInclude Include="orea\engine\observationmode.hpp">
       <Filter>engine</Filter>

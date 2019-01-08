@@ -35,24 +35,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="orea\aggregation\all.hpp" />
     <ClInclude Include="orea\aggregation\collateralaccount.hpp" />
     <ClInclude Include="orea\aggregation\collatexposurehelper.hpp" />
     <ClInclude Include="orea\aggregation\postprocess.hpp" />
-    <ClInclude Include="orea\app\all.hpp" />
     <ClInclude Include="orea\app\oreapp.hpp" />
     <ClInclude Include="orea\app\parameters.hpp" />
     <ClInclude Include="orea\app\reportwriter.hpp" />
     <ClInclude Include="orea\app\sensitivityrunner.hpp" />
     <ClInclude Include="orea\auto_link.hpp" />
-    <ClInclude Include="orea\cube\all.hpp" />
     <ClInclude Include="orea\cube\cubewriter.hpp" />
     <ClInclude Include="orea\cube\inmemorycube.hpp" />
     <ClInclude Include="orea\cube\npvcube.hpp" />
     <ClInclude Include="orea\cube\npvsensicube.hpp" />
     <ClInclude Include="orea\cube\sensicube.hpp" />
     <ClInclude Include="orea\cube\sensitivitycube.hpp" />
-    <ClInclude Include="orea\engine\all.hpp" />
     <ClInclude Include="orea\engine\filteredsensitivitystream.hpp" />
     <ClInclude Include="orea\engine\observationmode.hpp" />
     <ClInclude Include="orea\engine\parametricvar.hpp" />
@@ -69,7 +65,6 @@
     <ClInclude Include="orea\engine\valuationengine.hpp" />
     <ClInclude Include="orea\orea.hpp" />
     <ClInclude Include="orea\scenario\aggregationscenariodata.hpp" />
-    <ClInclude Include="orea\scenario\all.hpp" />
     <ClInclude Include="orea\scenario\clonescenariofactory.hpp" />
     <ClInclude Include="orea\scenario\crossassetmodelscenariogenerator.hpp" />
     <ClInclude Include="orea\scenario\lgmscenariogenerator.hpp" />
@@ -88,7 +83,6 @@
     <ClInclude Include="orea\scenario\simplescenariofactory.hpp" />
     <ClInclude Include="orea\scenario\stressscenariodata.hpp" />
     <ClInclude Include="orea\scenario\stressscenariogenerator.hpp" />
-    <ClInclude Include="orea\simulation\all.hpp" />
     <ClInclude Include="orea\simulation\dategrid.hpp" />
     <ClInclude Include="orea\simulation\fixingmanager.hpp" />
     <ClInclude Include="orea\simulation\simmarket.hpp" />

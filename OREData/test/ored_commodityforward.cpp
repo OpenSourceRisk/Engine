@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/ored_commodityforward.hpp>
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -64,14 +65,13 @@ public:
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void CommodityForwardTest::testCommodityForwardTradeBuilding() {
+BOOST_AUTO_TEST_SUITE(CommodityForwardTests)
+
+BOOST_AUTO_TEST_CASE(testCommodityForwardTradeBuilding) {
     
     BOOST_TEST_MESSAGE("Testing commodity forward trade building");
-
-    // Ensure settings are restored after this test
-    SavedSettings backup;
 
     // Create market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -138,7 +138,7 @@ void CommodityForwardTest::testCommodityForwardTradeBuilding() {
     BOOST_CHECK_THROW(forward->build(engineFactory), Error);
 }
 
-void CommodityForwardTest::testCommodityForwardFromXml() {
+BOOST_AUTO_TEST_CASE(testCommodityForwardFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of commodity forward trade from XML");
 
@@ -184,14 +184,6 @@ void CommodityForwardTest::testCommodityForwardFromXml() {
     BOOST_CHECK_CLOSE(commodityForward->quantity(), 500000.0, testTolerance);
 }
 
-test_suite* CommodityForwardTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CommodityForwardTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testCommodityForwardTradeBuilding));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testCommodityForwardFromXml));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

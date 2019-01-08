@@ -26,6 +26,7 @@
 
 using namespace std;
 using QuantLib::WeekendsOnly;
+using QuantLib::Currency;
 
 namespace ore {
 namespace data {

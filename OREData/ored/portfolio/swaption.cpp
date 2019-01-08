@@ -73,6 +73,16 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Exercise type " << option_.style() << " not implemented for Swaptions");
 }
 
+namespace {
+// FIXME add support for settlement method, for the time being we just default to the QL < 1.14 behaviour
+QuantLib::Settlement::Method defaultMethod(const QuantLib::Settlement::Type t) {
+    if (t == QuantLib::Settlement::Physical)
+        return QuantLib::Settlement::PhysicalOTC;
+    else
+        return QuantLib::Settlement::ParYieldCurve;
+}
+} // namespace
+
 void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     LOG("Building European Swaption " << id());
@@ -91,7 +101,8 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<Exercise> exercise(new EuropeanExercise(exDate));
 
     // Build Swaption
-    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise, settleType));
+    boost::shared_ptr<QuantLib::Swaption> swaption(
+        new QuantLib::Swaption(swap, exercise, settleType, defaultMethod(settleType)));
 
     // Add Engine
     string tt("EuropeanSwaption");
@@ -197,12 +208,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<QuantLib::Instrument> swaption;
     if (isNonStandard) {
         swaption = boost::shared_ptr<QuantLib::Instrument>(
-            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery));
+            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery, defaultMethod(delivery)));
         // workaround for missing registration in QL versions < 1.13
         swaption->registerWithObservables(nonstandardSwap);
-    }
-    else
-        swaption = boost::shared_ptr<QuantLib::Instrument>(new QuantLib::Swaption(vanillaSwap, exercise, delivery));
+    } else
+        swaption = boost::shared_ptr<QuantLib::Instrument>(
+            new QuantLib::Swaption(vanillaSwap, exercise, delivery, defaultMethod(delivery)));
 
     QuantLib::Position::Type positionType = parsePositionType(option_.longShort());
     if (delivery == Settlement::Physical)
