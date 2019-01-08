@@ -91,7 +91,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     if (optionTenors_.size() == 1) {
         dimension_ = Dimension::Constant;
     } else {
-        QL_REQUIRE(dim != "Constant", "Dimension " << dim << " not recognised");
+        QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
         dimension_ = Dimension::ATM;
     }
     
