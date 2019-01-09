@@ -606,6 +606,9 @@
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\probabilitytraits.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
