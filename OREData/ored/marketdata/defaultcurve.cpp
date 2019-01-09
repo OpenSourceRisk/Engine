@@ -20,6 +20,7 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/probabilitytraits.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -132,7 +133,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     startDate, cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
-                boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
+                boost::make_shared<PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear>>(asof, helper,
                                                                                           config->dayCounter());
 
             // like for yield curves we need to copy the piecewise curve because

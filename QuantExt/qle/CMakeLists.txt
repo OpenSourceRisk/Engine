@@ -308,6 +308,7 @@ termstructures/optionletstripper2.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
+termstructures/probabilitytraits.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp

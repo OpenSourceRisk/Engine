@@ -669,6 +669,7 @@
     <ClInclude Include="qle\termstructures\optionletstripper2.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\probabilitytraits.hpp" />
     <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
