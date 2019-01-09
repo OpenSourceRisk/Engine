@@ -38,12 +38,15 @@ using namespace QuantLib;
         a volatility surface whose elements are the market term volatilities
         of a set of caps/floors with given length and given strike.
 
-        This is a copy of the QL CapFloorTermVolSurface but uses BiLinear instead of
-        BiCubic interpolation to avoid negative caps
+        This is a copy of the QL CapFloorTermVolSurface but gives the option to use
+        BiLinear instead of BiCubic Spline interpolation.
+        Default is BiCubic Spline for backwards compatibility with QuantLib
     */
     class CapFloorTermVolSurface : public LazyObject, 
                                    public CapFloorTermVolatilityStructure {
       public:
+        enum InterpolationMethod { BicubicSpline, Bilinear };
+
         //! floating reference date, floating market data
         CapFloorTermVolSurface(Natural settlementDays,
                                const Calendar& calendar,
@@ -51,7 +54,8 @@ using namespace QuantLib;
                                const std::vector<Period>& optionTenors,
                                const std::vector<Rate>& strikes,
                                const std::vector<std::vector<Handle<Quote> > >&,
-                               const DayCounter& dc = Actual365Fixed());
+                               const DayCounter& dc = Actual365Fixed(),
+                               InterpolationMethod interpolationMethod = BicubicSpline);
         //! fixed reference date, floating market data
         CapFloorTermVolSurface(const Date& settlementDate,
                                const Calendar& calendar,
@@ -59,7 +63,8 @@ using namespace QuantLib;
                                const std::vector<Period>& optionTenors,
                                const std::vector<Rate>& strikes,
                                const std::vector<std::vector<Handle<Quote> > >&,
-                               const DayCounter& dc = Actual365Fixed());
+                               const DayCounter& dc = Actual365Fixed(),
+                               InterpolationMethod interpolationMethod = BicubicSpline);
         //! fixed reference date, fixed market data
         CapFloorTermVolSurface(const Date& settlementDate,
                                const Calendar& calendar,
@@ -67,7 +72,8 @@ using namespace QuantLib;
                                const std::vector<Period>& optionTenors,
                                const std::vector<Rate>& strikes,
                                const Matrix& volatilities,
-                               const DayCounter& dc = Actual365Fixed());
+                               const DayCounter& dc = Actual365Fixed(),
+                               InterpolationMethod interpolationMethod = BicubicSpline);
         //! floating reference date, fixed market data
         CapFloorTermVolSurface(Natural settlementDays,
                                const Calendar& calendar,
@@ -75,7 +81,8 @@ using namespace QuantLib;
                                const std::vector<Period>& optionTenors,
                                const std::vector<Rate>& strikes,
                                const Matrix& volatilities,
-                               const DayCounter& dc = Actual365Fixed());
+                               const DayCounter& dc = Actual365Fixed(),
+                               InterpolationMethod interpolationMethod = BicubicSpline);
         //! \name TermStructure interface
         //@{
         Date maxDate() const;
@@ -119,6 +126,7 @@ using namespace QuantLib;
         mutable Matrix vols_;
 
         // make it not mutable if possible
+        InterpolationMethod interpolationMethod_;
         mutable Interpolation2D interpolation_;
     };
 

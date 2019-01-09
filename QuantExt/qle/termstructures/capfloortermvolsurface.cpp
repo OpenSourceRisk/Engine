@@ -18,6 +18,7 @@
 
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/bicubicsplineinterpolation.hpp>
 #include <ql/utilities/dataformatters.hpp>
 #include <ql/quotes/simplequote.hpp>
 
@@ -33,7 +34,8 @@ namespace QuantExt {
                         const std::vector<Period>& optionTenors,
                         const std::vector<Rate>& strikes,
                         const std::vector<std::vector<Handle<Quote> > >& vols,
-                        const DayCounter& dc)
+                        const DayCounter& dc,
+                        InterpolationMethod interpolationMethod)
     : CapFloorTermVolatilityStructure(settlementDays, calendar, bdc, dc),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -42,7 +44,8 @@ namespace QuantExt {
       nStrikes_(strikes.size()),
       strikes_(strikes),
       volHandles_(vols),
-      vols_(vols.size(), vols[0].size())
+      vols_(vols.size(), vols[0].size()),
+      interpolationMethod_(interpolationMethod)
     {
         checkInputs();
         initializeOptionDatesAndTimes();
@@ -65,7 +68,8 @@ namespace QuantExt {
                         const std::vector<Period>& optionTenors,
                         const std::vector<Rate>& strikes,
                         const std::vector<std::vector<Handle<Quote> > >& vols,
-                        const DayCounter& dc)
+                        const DayCounter& dc,
+                        InterpolationMethod interpolationMethod)
     : CapFloorTermVolatilityStructure(settlementDate, calendar, bdc, dc),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -74,7 +78,8 @@ namespace QuantExt {
       nStrikes_(strikes.size()),
       strikes_(strikes),
       volHandles_(vols),
-      vols_(vols.size(), vols[0].size())
+      vols_(vols.size(), vols[0].size()),
+      interpolationMethod_(interpolationMethod)
     {
         checkInputs();
         initializeOptionDatesAndTimes();
@@ -97,7 +102,8 @@ namespace QuantExt {
                         const std::vector<Period>& optionTenors,
                         const std::vector<Rate>& strikes,
                         const Matrix& vols,
-                        const DayCounter& dc)
+                        const DayCounter& dc,
+                        InterpolationMethod interpolationMethod)
     : CapFloorTermVolatilityStructure(settlementDate, calendar, bdc, dc),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -106,7 +112,8 @@ namespace QuantExt {
       nStrikes_(strikes.size()),
       strikes_(strikes),
       volHandles_(vols.rows()),
-      vols_(vols)
+      vols_(vols),
+      interpolationMethod_(interpolationMethod)
     {
         checkInputs();
         initializeOptionDatesAndTimes();
@@ -128,7 +135,8 @@ namespace QuantExt {
                         const std::vector<Period>& optionTenors,
                         const std::vector<Rate>& strikes,
                         const Matrix& vols,
-                        const DayCounter& dc)
+                        const DayCounter& dc,
+                        InterpolationMethod interpolationMethod)
     : CapFloorTermVolatilityStructure(settlementDays, calendar, bdc, dc),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -137,7 +145,8 @@ namespace QuantExt {
       nStrikes_(strikes.size()),
       strikes_(strikes),
       volHandles_(vols.rows()),
-      vols_(vols)
+      vols_(vols),
+      interpolationMethod_(interpolationMethod)
     {
         checkInputs();
         initializeOptionDatesAndTimes();
@@ -185,11 +194,21 @@ namespace QuantExt {
 
     void CapFloorTermVolSurface::interpolate()
     {
-        interpolation_ = BilinearInterpolation(strikes_.begin(),
-                                       strikes_.end(),
-                                       optionTimes_.begin(),
-                                       optionTimes_.end(),
-                                       vols_);
+        if (interpolationMethod_ == BicubicSpline)
+            interpolation_ = QuantLib::BicubicSpline(strikes_.begin(),
+                                                     strikes_.end(),
+                                                     optionTimes_.begin(),
+                                                     optionTimes_.end(),
+                                                     vols_);
+        else if (interpolationMethod_ == Bilinear)
+            interpolation_ = BilinearInterpolation(strikes_.begin(),
+                                                   strikes_.end(),
+                                                   optionTimes_.begin(),
+                                                   optionTimes_.end(),
+                                                   vols_);
+        else {
+            QL_FAIL("Invalid InterpolationMethod");
+        }
     }
 
     void CapFloorTermVolSurface::update()

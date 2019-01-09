@@ -23,18 +23,15 @@
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/capfloortermvolsurface.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
 
 using namespace QuantLib;
-using QuantExt::DatedStrippedOptionlet;
-using QuantExt::DatedStrippedOptionletAdapter;
-using QuantExt::OptionletStripper1;
-using QuantExt::OptionletStripper2;
+using namespace QuantExt;
 using namespace std;
 
 namespace ore {
@@ -67,6 +64,15 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             break;
         default:
             QL_FAIL("unexpected volatility type");
+        }
+
+        QuantExt::CapFloorTermVolSurface::InterpolationMethod interpolationMethod;
+        if (config->interpolationMethod() == "BicubicSpline")
+            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::BicubicSpline;
+        else if (config->interpolationMethod() == "Bilinear")
+            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::Bilinear;
+        else {
+            QL_FAIL("invalid InterpolationMethod " << config->interpolationMethod());
         }
 
         // Read in quotes matrix. If we hit any ATM quotes that match one of the tenors, store those also.
@@ -145,7 +151,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
 
         // Non-ATM cap/floor volatility surface
         boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol = boost::make_shared<QuantExt::CapFloorTermVolSurface>(
-            0, config->calendar(), config->businessDayConvention(), tenors, strikes, vols, config->dayCounter());
+            0, config->calendar(), config->businessDayConvention(), tenors, strikes, vols, config->dayCounter(), interpolationMethod);
 
         // Build the stripped caplet/floorlet surface
         // Hardcoded target volatility type to Normal - decision made to always work with a Normal optionlet surface
