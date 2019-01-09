@@ -39,12 +39,12 @@ using std::vector;
 
     \ingroup termstructures
 */
-class OptionletStripper2 : public OptionletStripper {
+class OptionletStripper2 : public QuantExt::OptionletStripper {
 public:
     //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper1 by adding optionlet
     //! volatilities stripped from an ATM volatility curve \p atmCapFloorTermVolCurve
-    OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1,
-                       const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+    OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper1>& optionletStripper1,
+                       const Handle<QuantExt::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
 
     vector<Rate> atmCapFloorStrikes() const;
@@ -61,7 +61,7 @@ private:
 
     class ObjectiveFunction {
     public:
-        ObjectiveFunction(const boost::shared_ptr<OptionletStripper1>&, const boost::shared_ptr<CapFloor>&,
+        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper1>&, const boost::shared_ptr<CapFloor>&,
                           Real targetValue, const Handle<YieldTermStructure>& discount);
         Real operator()(Volatility spreadVol) const;
 
@@ -72,8 +72,8 @@ private:
         const Handle<YieldTermStructure> discount_;
     };
 
-    const boost::shared_ptr<OptionletStripper1> stripper1_;
-    const Handle<CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
+    const boost::shared_ptr<QuantExt::OptionletStripper1> stripper1_;
+    const Handle<QuantExt::CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
     DayCounter dc_;
     Size nOptionExpiries_;
     mutable vector<Rate> atmCapFloorStrikes_;
