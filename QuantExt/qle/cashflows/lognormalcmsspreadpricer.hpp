@@ -58,6 +58,29 @@ namespace QuantLib {
 namespace QuantExt {
 using namespace QuantLib;
 
+    //! base pricer for vanilla CMS spread coupons with a correlation surface
+    class CmsSpreadCouponPricer2 : public FloatingRateCouponPricer {
+      public:
+        explicit CmsSpreadCouponPricer2(
+                           const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>())
+        : correlation_(correlation) {
+            registerWith(correlation_);
+        }
+
+        Real correlation(Time t, Real strike = 1) const{
+            return correlation_->correlation(t, strike);
+        }
+
+        void setCorrelation(
+                         const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>()) {
+            unregisterWith(correlation_);
+            correlation_ = correlation;
+            registerWith(correlation_);
+            update();
+        }
+      private:
+        Handle<CorrelationTermStructure> correlation_;
+    };
 
     //! CMS spread - coupon pricer
     /*! The swap rate adjustments are computed using the given
@@ -78,7 +101,7 @@ using namespace QuantLib;
         http://ssrn.com/abstract=2686998
     */
 
-    class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer {
+    class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer2 {
 
       public:
         LognormalCmsSpreadPricer(
@@ -143,6 +166,7 @@ using namespace QuantLib;
 
         boost::shared_ptr<CmsCoupon> c1_, c2_;
     };
+
 }
 
 #endif
