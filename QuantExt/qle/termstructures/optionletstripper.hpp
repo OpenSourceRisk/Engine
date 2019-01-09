@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file optionletstripper.hpp
+/*! \file qle/termstructures/optionletstripper.hpp
     \brief optionlet (caplet/floorlet) volatility stripper
 */
 
