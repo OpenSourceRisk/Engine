@@ -101,7 +101,7 @@ this_include_HEADERS = \
     yoyinflationoptionletvolstripper.hpp \
 	discountratiomodifiedcurve.hpp \
 	crossccyfixfloatswaphelper.hpp \
-	capfloortermvolsurface.cpp \
+	capfloortermvolsurface.hpp \
 	probabilitytraits.hpp
 
 all.hpp: Makefile.am
