@@ -32,7 +32,7 @@ namespace QuantExt {
 
 namespace detail {
     const QuantLib::Real avgHazardRate = 0.01;
-    const QuantLib::Real maxHazardRate = 2.0;
+    const QuantLib::Real maxHazardRate = 3.0;
 }
 
 //! Survival probability curve traits
