@@ -21,6 +21,7 @@ libTermStructures_la_SOURCES = \
 	datedstrippedoptionlet.cpp \
 	datedstrippedoptionletadapter.cpp \
 	dynamicoptionletvolatilitystructure.cpp \
+	optionletstripper.cpp \
 	optionletstripper1.cpp \
 	optionletstripper2.cpp \
 	spreadedoptionletvolatility.cpp \
@@ -40,7 +41,8 @@ libTermStructures_la_SOURCES = \
 	pricetermstructureadapter.cpp \
     yoyinflationoptionletvolstripper.cpp \
 	discountratiomodifiedcurve.cpp \
-	crossccyfixfloatswaphelper.cpp
+	crossccyfixfloatswaphelper.cpp \
+	capfloortermvolsurface.cpp
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
@@ -66,6 +68,7 @@ this_include_HEADERS = \
 	datedstrippedoptionletbase.hpp \
 	dynamicoptionletvolatilitystructure.hpp \
 	dynamicstype.hpp \
+	optionletstripper.hpp \
 	optionletstripper1.hpp \
 	optionletstripper2.hpp \
 	spreadedoptionletvolatility.hpp \
@@ -98,6 +101,7 @@ this_include_HEADERS = \
     yoyinflationoptionletvolstripper.hpp \
 	discountratiomodifiedcurve.hpp \
 	crossccyfixfloatswaphelper.hpp \
+	capfloortermvolsurface.cpp \
 	probabilitytraits.hpp
 
 all.hpp: Makefile.am
