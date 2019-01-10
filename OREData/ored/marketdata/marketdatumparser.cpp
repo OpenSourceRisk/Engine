@@ -94,6 +94,7 @@ static MarketDatum::QuoteType parseQuoteType(const string& s) {
         {"RATE_SLNVOL", MarketDatum::QuoteType::RATE_SLNVOL},
         {"BASE_CORRELATION", MarketDatum::QuoteType::BASE_CORRELATION},
         {"SHIFT", MarketDatum::QuoteType::SHIFT},
+        {"CPR", MarketDatum::QuoteType::CPR},
     };
 
     if (s == "RATE_GVOL")
@@ -245,7 +246,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Currency fixedCurrency = parseCurrency(tokens[4]);
         Period fixedTenor = parsePeriod(tokens[5]);
         Period maturity = parsePeriod(tokens[6]);
-        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, 
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType,
             floatCurrency, floatTenor, fixedCurrency, fixedTenor, maturity);
     }
 
@@ -432,7 +433,10 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     case MarketDatum::InstrumentType::BOND: {
         QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
         const string& securityID = tokens[2];
-        return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+        if(quoteType == MarketDatum::QuoteType::YIELD_SPREAD)
+            return boost::make_shared<SecuritySpreadQuote>(value, asof, datumName, securityID);
+        else if(quoteType == MarketDatum::QuoteType::CPR)
+            return boost::make_shared<CPRQuote>(value, asof, datumName, securityID);
     }
 
     case MarketDatum::InstrumentType::CDS_INDEX: {
@@ -473,7 +477,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<DATE/TENOR>/<STRIKE>
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
-        
+
         return boost::make_shared<CommodityOptionQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
     }

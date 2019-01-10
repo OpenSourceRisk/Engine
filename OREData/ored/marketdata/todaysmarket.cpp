@@ -24,6 +24,7 @@
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
+#include <ored/marketdata/cpr.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
 #include <ored/marketdata/curveloader.hpp>
@@ -87,7 +88,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<Security>> requiredSecurities;
     map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves;
     map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves;
-    
+    map<string, boost::shared_ptr<CPR>> requiredCPRs;
+
     // store all curve build errors
     map<string, string> buildErrors;
 
@@ -741,6 +743,30 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
                             bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, discount, yield);
                             commodityVols_[make_pair(configuration.first, it.first)] = Handle<BlackVolTermStructure>(bvts);
+                        }
+                    }
+                    break;
+                }
+
+                case CurveSpec::CurveType::CPR: {
+                    boost::shared_ptr<CPRSpec> cprspec = boost::dynamic_pointer_cast<CPRSpec>(spec);
+                    QL_REQUIRE(cprspec, "Failed to convert spec " << *spec << " to CPR spec");
+
+                    // have we built the curve already ?
+                    auto itr = requiredCPRs.find(cprspec->name());
+                    if (itr == requiredCPRs.end()) {
+                        // build the curve
+                        LOG("Building CPR for asof " << asof);
+                        boost::shared_ptr<CPR> cpr = boost::make_shared<CPR>(asof, *cprspec, loader);
+                        itr = requiredCPRs.insert(make_pair(cprspec->name(), cpr)).first;
+                    }
+
+                    // add the handle to the Market Map (possible lots of times for proxies)
+                    for (const auto& it : params.mapping(MarketObject::FXSpot, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding CPR (" << it.first << ") with spec " << *cprspec << " to configuration "
+                                << configuration.first);
+                            cprs_[make_pair(configuration.first, cprspec->name())] = itr->second->handle();
                         }
                     }
                     break;

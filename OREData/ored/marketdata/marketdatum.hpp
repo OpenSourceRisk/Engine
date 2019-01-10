@@ -114,7 +114,8 @@ public:
         RATE_NVOL,
         RATE_SLNVOL,
         BASE_CORRELATION,
-        SHIFT
+        SHIFT,
+        CPR
     };
 
     //! Constructor
@@ -1245,6 +1246,26 @@ private:
     std::string quoteCurrency_;
     std::string expiry_;
     std::string strike_;
+};
+
+//! CPR data class
+/*!
+This class holds single market points of type
+- CPR
+\ingroup marketdata
+*/
+class CPRQuote : public MarketDatum {
+public:
+    //! Constructor
+    CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::CPR, InstrumentType::BOND), securityID_(securityId) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
 };
 
 } // namespace data

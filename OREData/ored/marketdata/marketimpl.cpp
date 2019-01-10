@@ -218,6 +218,10 @@ Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& comm
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
 }
 
+Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {
+    return lookup<Handle<Quote>>(cprs_, securityID, configuration, "cpr");
+}
+
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {
     try {
         std::vector<string> tokens;

@@ -160,6 +160,12 @@ public:
         const std::string& configuration = Market::defaultConfiguration) const;
     //@}
 
+    //! \name Conditional Prepayment Rates
+    //@{
+    QuantLib::Handle<Quote> cpr(const string& securityID,
+                                const string& configuration = Market::defaultConfiguration) const;
+    //@}
+
     //! \name Disable copying
     //@{
     MarketImpl(const MarketImpl&) = delete;
@@ -197,6 +203,7 @@ protected:
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     std::map<std::pair<std::string, std::string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
+    map<pair<string,string>, Handle<Quote>> cprs_;
     Conventions conventions_;
 
     //! add a swap index to the market
