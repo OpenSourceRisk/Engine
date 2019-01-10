@@ -108,12 +108,12 @@ void FixingManager::initialise(const boost::shared_ptr<Portfolio>& portfolio) {
                     boost::dynamic_pointer_cast<FloatingRateFXLinkedNotionalCoupon>(cf);
                 if (fc) {
                     fixingMap_[fc->index()].insert(fc->fixingDate());
-                    fixingMap_[fc->fxLinkedCashFlow().index()].insert(fc->fxLinkedCashFlow().fxFixingDate());
+                    fixingMap_[fc->fxIndex()].insert(fc->fxFixingDate());
                 }
 
                 boost::shared_ptr<FXLinkedCashFlow> flcf = boost::dynamic_pointer_cast<FXLinkedCashFlow>(cf);
                 if (flcf)
-                    fixingMap_[flcf->index()].insert(flcf->fxFixingDate());
+                    fixingMap_[flcf->fxIndex()].insert(flcf->fxFixingDate());
 
                 boost::shared_ptr<CPICoupon> cpc = boost::dynamic_pointer_cast<CPICoupon>(cf);
                 if (cpc)

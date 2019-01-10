@@ -25,6 +25,7 @@
 
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
@@ -56,7 +57,8 @@ public:
                        const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation = true,
                        const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<Period>& pillars = std::vector<Period>(),
-                       const Calendar& calendar = Calendar(), const Size spotLag = 0);
+                       const Calendar& calendar = Calendar(), const Size spotLag = 0, 
+                       const QuantLib::Date& startDate = QuantLib::Date());
     //! Default constructor
     DefaultCurveConfig() {}
     //@}
@@ -82,6 +84,7 @@ public:
     const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
     const std::vector<std::pair<std::string, bool>>& cdsQuotes() { return cdsQuotes_; }
+    const QuantLib::Date& startDate() const { return startDate_; }
 
     //@}
 
@@ -99,6 +102,7 @@ public:
     Calendar calendar() { return calendar_; }
     Size spotLag() { return spotLag_; }
     bool& extrapolation() { return extrapolation_; }
+    QuantLib::Date& startDate() { return startDate_; }
     //@}
 
 private:
@@ -116,6 +120,7 @@ private:
     vector<Period> pillars_;
     Calendar calendar_;
     Size spotLag_;
+    QuantLib::Date startDate_;
 };
 } // namespace data
 } // namespace ore
