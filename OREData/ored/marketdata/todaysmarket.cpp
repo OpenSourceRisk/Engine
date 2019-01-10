@@ -762,11 +762,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     }
 
                     // add the handle to the Market Map (possible lots of times for proxies)
-                    for (const auto& it : params.mapping(MarketObject::FXSpot, configuration.first)) {
+                    for (const auto& it : params.mapping(MarketObject::CPR, configuration.first)) {
                         if (it.second == spec->name()) {
                             LOG("Adding CPR (" << it.first << ") with spec " << *cprspec << " to configuration "
                                 << configuration.first);
-                            cprs_[make_pair(configuration.first, cprspec->name())] = itr->second->handle();
+                            cprs_[make_pair(configuration.first, it.first)] = itr->second->handle();
                         }
                     }
                     break;
