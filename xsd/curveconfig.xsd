@@ -124,6 +124,14 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element name="InterpolationMethod" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Bilinear"/>
+            <xs:enumeration value="BicubicSpline"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
       <xs:element type="bool" name="IncludeAtm"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="calendar" name="Calendar"/>

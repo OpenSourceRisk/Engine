@@ -75,12 +75,12 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto data = boost::make_shared<IrLgmData>();
 
     // check for allowed calibration / bermudan strategy settings
-    std::vector<std::pair<CalibrationType, LgmData::CalibrationStrategy>> validCalPairs = {
-        {CalibrationType::None, LgmData::CalibrationStrategy::None},
-        {CalibrationType::Bootstrap, LgmData::CalibrationStrategy::CoterminalATM},
-        {CalibrationType::Bootstrap, LgmData::CalibrationStrategy::CoterminalDealStrike},
-        {CalibrationType::BestFit, LgmData::CalibrationStrategy::CoterminalATM},
-        {CalibrationType::BestFit, LgmData::CalibrationStrategy::CoterminalDealStrike}};
+    std::vector<std::pair<CalibrationType, CalibrationStrategy>> validCalPairs = {
+        {CalibrationType::None, CalibrationStrategy::None},
+        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalATM},
+        {CalibrationType::Bootstrap, CalibrationStrategy::CoterminalDealStrike},
+        {CalibrationType::BestFit, CalibrationStrategy::CoterminalATM},
+        {CalibrationType::BestFit, CalibrationStrategy::CoterminalDealStrike}};
 
     QL_REQUIRE(std::find(validCalPairs.begin(), validCalPairs.end(),
                          std::make_pair(calibration, calibrationStrategy)) != validCalPairs.end(),
@@ -107,12 +107,11 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     data->aValues() = sigma;
     data->aTimes() = sigmaTimes;
     data->volatilityType() = volatilityType;
-    data->calibrationStrategy() = calibrationStrategy;
     data->calibrationType() = calibration;
     data->shiftHorizon() = shiftHorizon;
 
-    if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalATM ||
-        calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
+    if (calibrationStrategy == CalibrationStrategy::CoterminalATM ||
+        calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
         DLOG("Build LgmData for co-terminal specification");
         vector<string> expiryDates, termDates;
         for (Size i = 0; i < expiries.size(); ++i) {
@@ -122,7 +121,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
         data->optionExpiries() = expiryDates;
         data->optionTerms() = termDates;
         data->optionStrikes().resize(expiryDates.size(), "ATM");
-        if (calibrationStrategy == LgmData::CalibrationStrategy::CoterminalDealStrike) {
+        if (calibrationStrategy == CalibrationStrategy::CoterminalDealStrike) {
             for (Size i = 0; i < expiries.size(); ++i) {
                 if (strikes[i] != Null<Real>())
                     data->optionStrikes()[i] = std::to_string(strikes[i]);
