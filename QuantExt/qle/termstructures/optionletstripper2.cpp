@@ -29,8 +29,8 @@
 
 namespace QuantExt {
 
-OptionletStripper2::OptionletStripper2(const boost::shared_ptr<OptionletStripper1>& optionletStripper1,
-                                       const Handle<CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+OptionletStripper2::OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper1>& optionletStripper1,
+                                       const Handle<QuantExt::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                                        const VolatilityType type, const Real displacement)
     : OptionletStripper(optionletStripper1->termVolSurface(), optionletStripper1->iborIndex(),
                         optionletStripper1->discountCurve(), optionletStripper1->volatilityType(),
@@ -151,7 +151,7 @@ vector<Real> OptionletStripper2::atmCapFloorPrices() const {
 
 // OptionletStripper2::ObjectiveFunction
 OptionletStripper2::ObjectiveFunction::ObjectiveFunction(
-    const boost::shared_ptr<OptionletStripper1>& optionletStripper1, const boost::shared_ptr<CapFloor>& cap,
+    const boost::shared_ptr<QuantExt::OptionletStripper1>& optionletStripper1, const boost::shared_ptr<CapFloor>& cap,
     Real targetValue, const Handle<YieldTermStructure>& discount)
     : cap_(cap), targetValue_(targetValue), discount_(discount) {
     boost::shared_ptr<OptionletVolatilityStructure> adapter(new StrippedOptionletAdapter(optionletStripper1));

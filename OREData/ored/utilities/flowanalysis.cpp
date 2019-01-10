@@ -123,16 +123,15 @@ void AnalysisGenerator::visit(QuantLib::AverageBMACoupon& c) {
 void AnalysisGenerator::visit(QuantExt::FXLinkedCashFlow& c) {
     visit(static_cast<QuantLib::CashFlow&>(c));
     flowAnalysis_.back()[FIXING_DATE] = to_string(c.fxFixingDate());
-    flowAnalysis_.back()[INDEX] = c.index()->name();
+    flowAnalysis_.back()[INDEX] = c.fxIndex()->name();
 }
 
 void AnalysisGenerator::visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c) {
     // Ibor
     visit(static_cast<QuantLib::FloatingRateCoupon&>(c));
-
     // FX
-    QuantExt::FXLinkedCashFlow d = c.fxLinkedCashFlow();
-    visit(static_cast<QuantExt::FXLinkedCashFlow&>(d));
+    flowAnalysis_.back()[FIXING_DATE] = to_string(c.fxFixingDate());
+    flowAnalysis_.back()[INDEX] = c.fxIndex()->name();
 }
 
 void AnalysisGenerator::visit(QuantLib::InflationCoupon& c) {

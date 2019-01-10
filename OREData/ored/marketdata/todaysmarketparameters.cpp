@@ -167,7 +167,7 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
                     // Again, swap indices are different...
                     if (MarketObject(i) == MarketObject::SwapIndexCurve) {
                         XMLNode* swapIndexNode = XMLUtils::addChild(doc, node, marketObjectXMLNamesSingle[i].first);
-                        XMLUtils::addAttribute(doc, swapIndexNode, marketObjectXMLNamesSingle[i].first,
+                        XMLUtils::addAttribute(doc, swapIndexNode, marketObjectXMLNamesSingle[i].second,
                                                singleMappingIterator->first.c_str());
                         XMLUtils::addChild(doc, swapIndexNode, "Discounting",
                                            (string)singleMappingIterator->second.c_str());
