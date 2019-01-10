@@ -70,7 +70,8 @@ public:
         CommoditySpot,
         CommodityCurve,
         CommodityVolatility,
-        SecuritySpread
+        SecuritySpread,
+        Correlation
     };
 
     //! Constructor

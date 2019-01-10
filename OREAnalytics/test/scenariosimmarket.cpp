@@ -90,6 +90,9 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
+    parameters->simulateCorrelations() = true;
+    parameters->correlationExpiries() = {1 * Years, 2 * Years};
+    parameters->correlationPairs() = {make_pair("EUR-CMS-10Y", "EUR-CMS-1Y"), make_pair("USD-CMS-10Y", "USD-CMS-1Y")};
     return parameters;
 }
 } // namespace
@@ -225,6 +228,26 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
+void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
+                            boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                            boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+    for (const auto& spec : parameters->correlationPairs()) {
+        Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(spec.first, spec.second);
+        Handle<QuantExt::CorrelationTermStructure> initCurve =
+            initMarket->correlationCurve(spec.first, spec.second);
+        BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
+        vector<Date> dates;
+        Date asof = initMarket->asofDate();
+        for (Size i = 0; i < parameters->correlationExpiries().size(); i++) {
+            dates.push_back(asof + parameters->correlationExpiries()[i]);
+        }
+
+        for (const auto& date : dates) {
+            BOOST_CHECK_CLOSE(simCurve->correlation(date), initCurve->correlation(date), 1e-12);
+        }
+    }
+}
+
 void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params) {
 
     BOOST_TEST_MESSAGE("Testing to XML...");
@@ -275,6 +298,7 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testFxVolCurve(initMarket, simMarket, parameters);
     testDefaultCurve(initMarket, simMarket, parameters);
     testZeroInflationCurve(initMarket, simMarket, parameters);
+    testCorrelationCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
 }
 

@@ -49,6 +49,7 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 
 #include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/quotes/exceptionquote.hpp>
 
 namespace QuantLib {
     class CmsSpreadCoupon;
@@ -59,27 +60,29 @@ namespace QuantExt {
 using namespace QuantLib;
 
     //! base pricer for vanilla CMS spread coupons with a correlation surface
-    class CmsSpreadCouponPricer2 : public FloatingRateCouponPricer {
+    class CmsSpreadCouponPricer2 : public CmsSpreadCouponPricer {
       public:
         explicit CmsSpreadCouponPricer2(
                            const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>())
-        : correlation_(correlation) {
-            registerWith(correlation_);
+        : CmsSpreadCouponPricer(Handle<Quote>(
+            boost::make_shared<ExceptionQuote>("CmsSpreadPricer2 doesn't support 'correlation()', instead use 'correlation(Time, Strike)'"))),
+            correlationCurve_(correlation) {
+            registerWith(correlationCurve_);
         }
 
         Real correlation(Time t, Real strike = 1) const{
-            return correlation_->correlation(t, strike);
+            return correlationCurve_->correlation(t, strike);
         }
 
-        void setCorrelation(
+        void setCorrelationCurve(
                          const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>()) {
-            unregisterWith(correlation_);
-            correlation_ = correlation;
-            registerWith(correlation_);
+            unregisterWith(correlationCurve_);
+            correlationCurve_ = correlation;
+            registerWith(correlationCurve_);
             update();
         }
       private:
-        Handle<CorrelationTermStructure> correlation_;
+        Handle<CorrelationTermStructure> correlationCurve_;
     };
 
     //! CMS spread - coupon pricer

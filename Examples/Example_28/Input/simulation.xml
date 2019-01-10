@@ -270,5 +270,12 @@
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
+    <Correlations>
+        <simulate>true</simulate>
+        <Expiries>1Y</Expiries>
+        <Pairs>
+            <Pair>EUR-CMS-10Y,EUR-CMS-2Y</Pair>
+        </Pairs>
+    </Correlations>
   </Market>
 </Simulation>

@@ -18,6 +18,7 @@
 
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <ql/quotes/simplequote.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -25,7 +26,7 @@ using namespace QuantLib;
     FlatCorrelation::FlatCorrelation(const Date& referenceDate,
                                      const Handle<Quote>& correlation,
                                      const DayCounter& dayCounter)
-    : CorrelationTermStructure(referenceDate, Calendar(), dayCounter),
+    : CorrelationTermStructure(referenceDate, NullCalendar(), dayCounter),
       correlation_(correlation) {
         registerWith(correlation_);
     }
@@ -33,7 +34,7 @@ using namespace QuantLib;
     FlatCorrelation::FlatCorrelation(const Date& referenceDate,
                                      Real correlation,
                                      const DayCounter& dayCounter)
-    : CorrelationTermStructure(referenceDate, Calendar(), dayCounter),
+    : CorrelationTermStructure(referenceDate, NullCalendar(), dayCounter),
       correlation_(boost::shared_ptr<Quote>(new SimpleQuote(correlation))) {}
 
     FlatCorrelation::FlatCorrelation(Natural settlementDays,
