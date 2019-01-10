@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>

@@ -18,7 +18,7 @@
 
 
 #include "utilities.hpp"
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>

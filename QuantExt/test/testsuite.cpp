@@ -36,8 +36,9 @@ using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
 
-#include <oret/oret.hpp>
-using ore::test::setupTestLogging;
+//#include <oret/oret.hpp>
+//using ore::test::setupTestLogging;
+#include "toplevelfixture.hpp"
 
 #ifdef BOOST_MSVC
 #include <ql/auto_link.hpp>
@@ -51,7 +52,7 @@ public:
 		char** argv = master_test_suite().argv;
 
 		// Set up test logging
-		setupTestLogging(argc,argv);
+		//setupTestLogging(argc,argv);
 	}
 
 	~QleGlobalFixture() {

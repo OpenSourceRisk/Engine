@@ -20,7 +20,7 @@
 #include "yieldcurvemarketdata.hpp"
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
 

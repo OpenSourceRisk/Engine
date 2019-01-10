@@ -18,7 +18,7 @@
 
 #include <qle/math/stabilisedglls.hpp>
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/math/functional.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/methods/montecarlo/lsmbasissystem.hpp>

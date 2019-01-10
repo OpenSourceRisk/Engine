@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>

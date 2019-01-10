@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
 

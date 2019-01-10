@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <qle/math/deltagammavar.hpp>
 #include <boost/foreach.hpp>

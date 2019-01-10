@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <oret/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
-#include "toplevelfixture.hpp"
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -323,5 +323,4 @@ BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-
 

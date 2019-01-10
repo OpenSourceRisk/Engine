@@ -16,7 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include "utilities.hpp"
 #include <boost/make_shared.hpp>

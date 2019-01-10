@@ -21,7 +21,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>

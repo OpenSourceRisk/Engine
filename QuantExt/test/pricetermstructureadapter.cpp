@@ -20,7 +20,7 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>

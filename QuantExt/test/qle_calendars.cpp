@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/time/calendar.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/colombia.hpp>

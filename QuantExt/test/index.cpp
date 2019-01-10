@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currency.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>

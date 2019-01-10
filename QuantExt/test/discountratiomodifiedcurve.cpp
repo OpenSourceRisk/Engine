@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <ql/settings.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>

@@ -19,7 +19,7 @@
 #include "utilities.hpp"
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>

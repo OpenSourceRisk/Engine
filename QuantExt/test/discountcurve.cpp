@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>

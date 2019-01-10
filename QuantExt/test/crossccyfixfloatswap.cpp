@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>

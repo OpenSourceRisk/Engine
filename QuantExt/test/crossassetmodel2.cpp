@@ -18,7 +18,7 @@
 
 #include "utilities.hpp"
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>

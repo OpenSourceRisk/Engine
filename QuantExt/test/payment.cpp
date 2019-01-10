@@ -20,7 +20,7 @@
 #include <qle/instruments/payment.hpp>
 #include <qle/pricingengines/paymentdiscountingengine.hpp>
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currencies/europe.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>

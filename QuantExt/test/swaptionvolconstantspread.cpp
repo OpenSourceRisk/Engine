@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include "swaptionmarketdata.hpp"
 #include "yieldcurvemarketdata.hpp"
-#include <oret/toplevelfixture.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
