@@ -203,7 +203,8 @@ namespace ore {
             }
         }
 
-        // boost::shared_ptr<LegData> Bond::createLegData() const { return boost::make_shared<LegData>(); }
+        //boost::shared_ptr<LegData> Bond::createLegData() const { return boost::make_shared<LegData>(); }
+        boost::shared_ptr<LegData> BondOption::createLegData() const { return boost::make_shared<LegData>(); } //new
 
         XMLNode* BondOption::toXML(XMLDocument& doc) {
             XMLNode* node = Trade::toXML(doc);

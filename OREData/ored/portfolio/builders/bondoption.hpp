@@ -23,9 +23,10 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #pragma once
 
+#include <boost/make_shared.hpp> // new
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <boost/make_shared.hpp> // new
+#include <ql/processes/blackscholesprocess.hpp> // new
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp> // new
 #include <qle/termstructures/pricetermstructureadapter.hpp> // new
 
@@ -33,14 +34,14 @@ namespace ore {
     namespace data {
 
         //! Engine builder for bond option
-        /*! Pricing engines are cached by commodity and currency
+        /*! Pricing engines are cached by currency, creditCurve, securityId and referenceCurve
 
         \ingroup builders
         */
-        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<std::string, const std::string&, const QuantLib::Currency&> {
+        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
         public:
             BondOptionEngineBuilder()
-                : CachingEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine", { "BondOption" }) {}
+                : CachingEngineBuilder("Black", "AnalyticEuropeanEngine", { "BondOption" }) {}
 
         protected:
             virtual std::string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
@@ -49,17 +50,17 @@ namespace ore {
             }
 
             virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId, const Handle<Quote>& bondQuote) {
+                const string& referenceCurveId) {
                 string tsperiodStr = engineParameters_.at("TimestepPeriod");
                 Period tsperiod = parsePeriod(tsperiodStr);
                 Handle<YieldTermStructure> yield = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
                 Handle<YieldTermStructure> discountCurve=
                     market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
                 Handle<QuantLib::SwaptionVolatilityStructure> swaptionVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
-
+                
                 // Create the option engine
-                boost::shared_ptr<GeneralizedBlackScholesProcess> process = boost::make_shared<GeneralizedBlackScholesProcess>(
-                    bondQuote, yield, discountCurve, Handle<BlackVolTermStructure>());
+                boost::shared_ptr<BlackProcess> process = boost::make_shared<BlackProcess>(
+                    Handle<Quote>(), yield, Handle<BlackVolTermStructure>());
 
                 return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(process, discountCurve);
             };
