@@ -73,7 +73,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
         if (flat) {
             corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(new QuantExt::FlatCorrelation(
-                asof, corrs[0],
+                0, config->calendar(), corrs[0],
                 config->dayCounter()));
 
             corr->enableExtrapolation(config->extrapolate());

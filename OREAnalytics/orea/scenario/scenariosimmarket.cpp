@@ -1197,7 +1197,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
             if (n == 1 && m == 1) {
                 ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>
-                    (baseCorr->settlementDays(), cal, quotes[0][0]->value(), dc));
+                    (baseCorr->settlementDays(), cal, quotes[0][0], dc));
             } else if (n == 1) {
                 ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc, cal));
             } else {

@@ -140,6 +140,7 @@ private:
     void generateCommodityCurveScenarios(bool up);
     void generateCommodityVolScenarios(bool up);
     void generateSecuritySpreadScenarios(bool up);
+    void generateCorrelationScenarios(bool up);
 
     ScenarioDescription discountScenarioDescription(string ccy, Size bucket, bool up);
     ScenarioDescription indexScenarioDescription(string index, Size bucket, bool up);
@@ -164,6 +165,7 @@ private:
     ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName,
         QuantLib::Size expiryBucket, QuantLib::Size strikeBucket, bool up);
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
+    ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;

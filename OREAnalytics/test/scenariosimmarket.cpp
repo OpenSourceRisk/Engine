@@ -90,7 +90,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
-    parameters->simulateCorrelations() = true;
+    parameters->simulateCorrelations() = false;
     parameters->correlationExpiries() = {1 * Years, 2 * Years};
     parameters->correlationPairs() = {make_pair("EUR-CMS-10Y", "EUR-CMS-1Y"), make_pair("USD-CMS-10Y", "USD-CMS-1Y")};
     return parameters;
