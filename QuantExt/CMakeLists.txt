@@ -9,16 +9,13 @@ include("../cmake/writeTestSuiteMain.cmake")
 include("../cmake/commonSettings.cmake")
 
 get_library_name("QuantExt" QLE_LIB_NAME)
-get_library_name("OREData" ORED_LIB_NAME)
 get_library_name("QuantLib" QL_LIB_NAME)
 configure_msvc_runtime()
 
 find_package (Boost COMPONENTS unit_test_framework date_time system thread REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${OREDATA_SOURCE_DIR})
 include_directories(${QUANTLIB_SOURCE_DIR})
-include_directories(${ORETEST_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_link_directory_if_exists("${QUANTLIB_SOURCE_DIR}/build/ql")
