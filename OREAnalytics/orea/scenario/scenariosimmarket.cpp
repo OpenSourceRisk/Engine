@@ -306,7 +306,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         }
     }
     LOG("security recovery rates done...");
-    
+
     // building security cpr
     LOG("building security cpr...");
     for (const auto& name : parameters->securities()) {

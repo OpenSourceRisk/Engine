@@ -25,16 +25,16 @@ namespace ore {
 namespace data {
 
 namespace {
-static constexpr Size numberOfMarketObjects = 22;
+static const Size numberOfMarketObjects = 22;
 // clang-format off
-static const string marketObjectStrings[] = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
+static const vector<string> marketObjectStrings = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
                                                    "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
                                                    "BaseCorrelation", "CapFloorVol", "ZeroInflationCurve",
                                                    "YoYInflationCurve", "InflationCapFloorPriceSurface", 
                                                    "YoYInflationCapFloorPriceSurface", "ZeroInflationCapFloorVol",
                                                    "YoYInflationCapFloorVol", "EquityCurves", "EquityVols",
                                                    "Securities", "CommodityCurves", "CommodityVolatilities"};
-static const string marketObjectXMLNames[] = {"DiscountingCurves", "YieldCurves", "IndexForwardingCurves",
+static const vector<string> marketObjectXMLNames = {"DiscountingCurves", "YieldCurves", "IndexForwardingCurves",
                                                     "SwapIndexCurves",
                                                     "FxSpots", "FxVolatilities", "SwaptionVolatilities",
                                                     "DefaultCurves", "CDSVolatilities", "BaseCorrelations",
@@ -44,7 +44,7 @@ static const string marketObjectXMLNames[] = {"DiscountingCurves", "YieldCurves"
                                                     "ZeroInflationCapFloorVolatilities", "YYInflationCapFloorVolatilities",
                                                     "EquityCurves", "EquityVolatilities",
                                                     "Securities", "CommodityCurves", "CommodityVolatilities"};
-static const pair<string, string> marketObjectXMLNamesSingle[] = {
+static const vector<pair<string, string>> marketObjectXMLNamesSingle = {
     {"DiscountingCurve", "currency"}, {"YieldCurve", "name"}, {"Index", "name"}, {"SwapIndex", "name"},
     {"FxSpot", "pair"}, {"FxVolatility", "pair"}, {"SwaptionVolatility", "currency"},
     {"DefaultCurve", "name"}, {"CDSVolatility", "name"}, {"BaseCorrelation", "name"},
@@ -56,14 +56,6 @@ static const pair<string, string> marketObjectXMLNamesSingle[] = {
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
     {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}};
 // clang-format on
-
-// check that the lists above have all the correct length
-static_assert(numberOfMarketObjects == sizeof(marketObjectStrings) / sizeof(marketObjectStrings[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectStrings");
-static_assert(numberOfMarketObjects == sizeof(marketObjectXMLNames) / sizeof(marketObjectXMLNames[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectXMLNames");
-static_assert(numberOfMarketObjects == sizeof(marketObjectXMLNamesSingle) / sizeof(marketObjectXMLNamesSingle[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectXMLNamesSingle");
 } // anonymous namespace
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o) {

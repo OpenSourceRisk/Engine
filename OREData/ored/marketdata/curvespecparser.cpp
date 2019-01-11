@@ -221,7 +221,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return boost::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
     }
 
-    // TODO: the rest...
+        // TODO: the rest...
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
