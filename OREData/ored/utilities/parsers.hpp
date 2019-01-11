@@ -209,5 +209,14 @@ AmortizationType parseAmortizationType(const std::string& s);
 */
 QuantExt::SequenceType parseSequenceType(const std::string& s);
 
+
+enum class AssetClass {EQ, FX, COM, IR};
+
+//! Convert text to QuantLib::LsmBasisSystem::PolynomType
+/*!
+\ingroup utilities
+*/
+AssetClass parseAssetClass(const std::string& s);
+
 } // namespace data
 } // namespace ore
