@@ -21,7 +21,6 @@ marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
-marketdata/cpr.cpp
 marketdata/csvloader.cpp
 marketdata/curveloader.cpp
 marketdata/curvespec.cpp
@@ -136,7 +135,6 @@ marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
-marketdata/cpr.hpp
 marketdata/csvloader.hpp
 marketdata/curveloader.hpp
 marketdata/curvespec.hpp

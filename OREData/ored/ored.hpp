@@ -29,7 +29,6 @@
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
-#include <ored/marketdata/cpr.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>

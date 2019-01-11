@@ -56,8 +56,7 @@ public:
         Security,
         BaseCorrelation,
         Commodity,
-        CommodityVolatility,
-        CPR
+        CommodityVolatility
     };
     
     //! Default constructor
@@ -116,8 +115,6 @@ public:
             return "Commodity";
         case CurveType::CommodityVolatility:
             return "CommodityVolatility";
-        case CurveType::CPR:
-            return "CPR";
         default:
             return "N/A";
         }
@@ -501,32 +498,6 @@ public:
 private:
     std::string currency_;
     std::string curveConfigId_;
-};
-
-//! CPR curve description
-/*! \ingroup curves
-*/
-class CPRSpec : public CurveSpec {
-
-public:
-    //! \name Constructors
-    //@{
-    //! Default constructor
-    CPRSpec() {}
-
-    //! Detailed constructor
-    CPRSpec(const std::string& securityID) : securityID_(securityID) {}
-    //@}
-
-    //! \name Inspectors
-    //@{
-    CurveType baseType() const { return CurveType::CPR; }
-    const std::string& securityID() const { return securityID_; }
-    std::string subName() const { return securityID_; }
-    //@}
-
-private:
-    std::string securityID_;
 };
 
 } // namespace data

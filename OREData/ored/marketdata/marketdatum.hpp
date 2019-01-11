@@ -98,7 +98,8 @@ public:
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
-        COMMODITY_OPTION
+        COMMODITY_OPTION,
+        CPR
     };
 
     //! Supported market quote types
@@ -114,8 +115,7 @@ public:
         RATE_NVOL,
         RATE_SLNVOL,
         BASE_CORRELATION,
-        SHIFT,
-        CPR
+        SHIFT
     };
 
     //! Constructor
@@ -1258,7 +1258,7 @@ class CPRQuote : public MarketDatum {
 public:
     //! Constructor
     CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
-        : MarketDatum(value, asofDate, name, QuoteType::CPR, InstrumentType::BOND), securityID_(securityId) {}
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
 
     //! \name Inspectors
     //@{

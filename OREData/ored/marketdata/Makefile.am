@@ -9,7 +9,6 @@ libOREDataMarketData_la_LIBADD =
 libOREDataMarketData_la_SOURCES = \
 	capfloorvolcurve.cpp \
     cdsvolcurve.cpp \
-	cpr.cpp \
 	csvloader.cpp \
 	curveloader.cpp \
 	curvespec.cpp \
@@ -43,7 +42,6 @@ this_include_HEADERS = \
 	all.hpp \
 	capfloorvolcurve.hpp \
     cdsvolcurve.hpp \
-	cpr.hpp \
 	csvloader.hpp \
 	curveloader.hpp \
 	curvespec.hpp \

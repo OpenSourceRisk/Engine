@@ -48,8 +48,7 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
         {"Security", CurveSpec::CurveType::Security},
         {"Commodity", CurveSpec::CurveType::Commodity},
-        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility},
-        {"CPR", CurveSpec::CurveType::CPR}};
+        {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility}};
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -222,16 +221,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         return boost::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
     }
 
-    case CurveSpec::CurveType::CPR: {
-        // Security/ISIN
-        QL_REQUIRE(tokens.size() == 2, "Unexpected number"
-                                       " of tokens in CPR spec "
-                                           << s);
-        const string& securityID = tokens[1];
-        return boost::make_shared<CPRSpec>(securityID);
-    }
-
-        // TODO: the rest...
+    // TODO: the rest...
     }
 
     QL_FAIL("Unable to convert \"" << s << "\" into CurveSpec");
