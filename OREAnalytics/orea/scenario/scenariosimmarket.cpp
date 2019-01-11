@@ -293,6 +293,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         try {
             boost::shared_ptr<SimpleQuote> recoveryQuote(
                 new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+            // TODO this comes from the default curves section in the parameters,
+            // do we want to specify the simulation of security recovery rates separately?
             if (parameters->simulateRecoveryRates()) {
                 simData_.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
@@ -304,6 +306,26 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         }
     }
     LOG("security recovery rates done...");
+    
+    // building security cpr
+    LOG("building security cpr...");
+    for (const auto& name : parameters->securities()) {
+        DLOG("Adding security cpr " << name << " from configuration " << configuration);
+        // security cpr are optional, so we need a try-catch block
+        try {
+            boost::shared_ptr<SimpleQuote> cprQuote(
+                new SimpleQuote(initMarket->cpr(name, configuration)->value()));
+            if (parameters->cprSimulate()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::CPR, name),
+                                 std::forward_as_tuple(cprQuote));
+            }
+            cprs_.insert(pair<pair<string, string>, Handle<Quote>>(
+                make_pair(Market::defaultConfiguration, name), Handle<Quote>(cprQuote)));
+        } catch (...) {
+        }
+    }
+    LOG("security cprs done...");
 
     // constructing index curves
     LOG("building index curves...");
