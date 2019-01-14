@@ -35,7 +35,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -146,7 +145,15 @@ public:
         //! Scaling factor applied to all DIM values
         Real dimScaling = 1.0,
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
-        bool fullInitialCollateralisation = false);
+        bool fullInitialCollateralisation = false,
+        // own capital discounting rate for discounting expected capital for KVA
+        Real kvaCapitalDiscountRate = 0.10,
+        // alpha to adjust EEPE to give EAD for risk capital
+        Real kvaAlpha = 1.4,
+        // regulatory adjustment, 1/min cap requirement
+        Real kvaRegAdjustment = 12.5,
+        // Cost of Capital for KVA = regulatory adjustment x capital hurdle
+        Real kvaCapitalHurdle = 0.012);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -221,6 +228,8 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
+    //! Return netting set KVA
+    Real nettingSetKVACCR(const string& nettingSetId);
     //! Return netting set COLVA
     Real nettingSetCOLVA(const string& nettingSetId);
     //! Return netting set Collateral Floor value
@@ -273,7 +282,8 @@ private:
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
-    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
+    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_,
+        netEEE_B_kva_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_;
@@ -282,6 +292,7 @@ private:
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_;
+    map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
     map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
@@ -303,6 +314,10 @@ private:
     Real dimLocalRegressionBandwidth_;
     Real dimScaling_;
     bool fullInitialCollateralisation_;
+    Real kvaCapitalDiscountRate_;
+    Real kvaAlpha_;
+    Real kvaRegAdjustment_;
+    Real kvaCapitalHurdle_;
 };
 } // namespace analytics
 } // namespace ore
