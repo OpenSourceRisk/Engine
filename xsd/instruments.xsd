@@ -531,7 +531,8 @@
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Notional"/>
       <xs:element type="calendar" name="Calendar"/>
-	  <xs:element type="assetClass" name="AssetClassUnderlying"/>
+      <xs:element type="assetClass" name="AssetClassUnderlying"/>
+      <xs:element type="momentType" name="MomentType"/>
     </xs:sequence>
   </xs:complexType>
 
