@@ -863,10 +863,6 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             string fixingFileString = params_->get("setup", "fixingDataFile");
             vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
             CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
-            // Apply fixings
-            LOG("Loading Fixings");
-            applyFixings(loader.loadFixings(), conventions_);
-            LOG("Loading Fixing done.");
             out_ << "OK" << endl;
             market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
         }

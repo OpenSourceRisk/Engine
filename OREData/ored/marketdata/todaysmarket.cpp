@@ -59,8 +59,16 @@ namespace ore {
 namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
-                           const CurveConfigurations& curveConfigs, const Conventions& conventions)
+                           const CurveConfigurations& curveConfigs, const Conventions& conventions, bool loadFixings)
     : MarketImpl(conventions) {
+
+    // Fixings
+    if (loadFixings) {
+        // Apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Fixings");
+        applyFixings(loader.loadFixings(), conventions);
+        LOG("Todays Market Loading Fixing done.");
+    }
 
     // store all curves built, since they might appear in several configurations
     // and might therefore be reused
