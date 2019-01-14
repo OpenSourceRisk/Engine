@@ -103,7 +103,7 @@ CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& n
     : MarketDatum(value, asof, name, quoteType, InstrumentType::CORRELATION),
       index1_(index1), index2_(index2), expiry_(expiry), strike_(strike) {
 
-    // If strike is not ATMF, it must parse to Real
+    // If strike is not ATM, it must parse to Real
     if (strike != "ATM") {
         Real result;
         QL_REQUIRE(tryParseReal(strike_, result), "Commodity option quote strike (" << strike_ << 
