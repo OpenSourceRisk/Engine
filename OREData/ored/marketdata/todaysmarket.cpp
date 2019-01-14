@@ -62,12 +62,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                            const CurveConfigurations& curveConfigs, const Conventions& conventions)
     : MarketImpl(conventions) {
 
-    // Fixings
-    // Apply them now in case a curve builder needs them
-    LOG("Todays Market Loading Fixings");
-    applyFixings(loader.loadFixings(), conventions);
-    LOG("Todays Market Loading Fixing done.");
-
     // store all curves built, since they might appear in several configurations
     // and might therefore be reused
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves;
