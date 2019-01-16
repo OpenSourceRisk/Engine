@@ -423,13 +423,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-   <xs:simpleType name="assetClass">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="EQ"/>
-      <xs:enumeration value="FX"/>
-    </xs:restriction>
-  </xs:simpleType>
-
    <xs:simpleType name="momentType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Variance"/>

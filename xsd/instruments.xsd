@@ -406,7 +406,8 @@
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="EquitySwap"/>
-      <xs:enumeration value="VarianceSwap"/>
+      <xs:enumeration value="EqVarianceSwap"/>
+	  <xs:enumeration value="FxVarianceSwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="Bond"/>
@@ -531,7 +532,6 @@
       <xs:element type="xs:float" name="Strike"/>
       <xs:element type="xs:float" name="Notional"/>
       <xs:element type="calendar" name="Calendar"/>
-      <xs:element type="assetClass" name="AssetClassUnderlying"/>
       <xs:element type="momentType" name="MomentType"/>
     </xs:sequence>
   </xs:complexType>
