@@ -29,8 +29,8 @@ instruments/averageois.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
-instruments/crossccybasisswap.cpp
 instruments/crossccybasismtmresetswap.cpp
+instruments/crossccybasisswap.cpp
 instruments/crossccyfixfloatswap.cpp
 instruments/crossccyswap.cpp
 instruments/currencyswap.cpp
@@ -96,8 +96,9 @@ termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvolsurfacewithatm.cpp
-termstructures/crossccybasisswaphelper.cpp
+termstructures/capfloortermvolsurface.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
+termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
 termstructures/datedstrippedoptionlet.cpp
 termstructures/datedstrippedoptionletadapter.cpp
@@ -112,6 +113,7 @@ termstructures/immfraratehelper.cpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
+termstructures/optionletstripper.cpp
 termstructures/optionletstripper1.cpp
 termstructures/optionletstripper2.cpp
 termstructures/pricetermstructure.cpp
@@ -197,8 +199,8 @@ instruments/averageois.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
-instruments/crossccybasisswap.hpp
 instruments/crossccybasismtmresetswap.hpp
+instruments/crossccybasisswap.hpp
 instruments/crossccyfixfloatswap.hpp
 instruments/crossccyswap.hpp
 instruments/currencyswap.hpp
@@ -279,8 +281,9 @@ termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvolsurfacewithatm.hpp
-termstructures/crossccybasisswaphelper.hpp
+termstructures/capfloortermvolsurface.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
+termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
 termstructures/datedstrippedoptionlet.hpp
 termstructures/datedstrippedoptionletadapter.hpp
@@ -303,11 +306,13 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp
+termstructures/optionletstripper.hpp
 termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
+termstructures/probabilitytraits.hpp
 termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp

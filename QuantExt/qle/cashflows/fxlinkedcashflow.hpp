@@ -32,9 +32,25 @@
 #include <ql/time/date.hpp>
 #include <qle/indexes/fxindex.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
+
+//! Base class for FX Linked cashflows
+class FXLinked {
+public:
+    FXLinked(const Date& fixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex, bool invertIndex = false);
+    Date fxFixingDate() const { return fxFixingDate_; }
+    Real foreignAmount() const { return foreignAmount_; }
+    const boost::shared_ptr<FxIndex>& fxIndex() const { return fxIndex_; }
+    bool invertFxIndex() const { return invertIndex_; }
+    Real fxRate() const;
+
+private:
+    Date fxFixingDate_;
+    Real foreignAmount_;
+    boost::shared_ptr<FxIndex> fxIndex_;
+    bool invertIndex_;
+};
 
 //! FX Linked cash-flow
 /*!
@@ -60,7 +76,7 @@ using namespace QuantLib;
 
      \ingroup cashflows
  */
-class FXLinkedCashFlow : public CashFlow {
+class FXLinkedCashFlow : public CashFlow, public FXLinked, public Observer {
 public:
     FXLinkedCashFlow(const Date& cashFlowDate, const Date& fixingDate, Real foreignAmount,
                      boost::shared_ptr<FxIndex> fxIndex, bool invertIndex = false);
@@ -68,26 +84,24 @@ public:
     //! \name CashFlow interface
     //@{
     Date date() const { return cashFlowDate_; }
-    Real amount() const { return foreignAmount_ * fxRate(); }
+    Real amount() const { return foreignAmount() * fxRate(); }
     //@}
-
-    Date fxFixingDate() const { return fxFixingDate_; }
-    const boost::shared_ptr<FxIndex>& index() const { return fxIndex_; }
-    bool invertIndex() const { return invertIndex_; }
-    Real fxRate() const;
 
     //! \name Visitability
     //@{
     void accept(AcyclicVisitor&);
     //@}
 
+    //! \name Observer interface
+    //@{
+    void update() { notifyObservers(); }
+    //@}
+
 private:
     Date cashFlowDate_;
-    Date fxFixingDate_;
-    Real foreignAmount_;
-    boost::shared_ptr<FxIndex> fxIndex_;
-    bool invertIndex_;
 };
+
+// inline definitions
 
 inline void FXLinkedCashFlow::accept(AcyclicVisitor& v) {
     Visitor<FXLinkedCashFlow>* v1 = dynamic_cast<Visitor<FXLinkedCashFlow>*>(&v);

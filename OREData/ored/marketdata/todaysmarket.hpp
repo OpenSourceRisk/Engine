@@ -62,7 +62,9 @@ public:
         //! Description of curve compositions
         const CurveConfigurations& curveConfigs,
         //! Repository of market conventions
-        const Conventions& conventions);
+        const Conventions& conventions,
+        //! Optional Load Fixings
+        bool loadFixings = true);
 };
 } // namespace data
 } // namespace ore

@@ -30,18 +30,18 @@ using boost::shared_ptr;
 
 namespace QuantExt {
 
-OptionletStripper1::OptionletStripper1(const shared_ptr<CapFloorTermVolSurface>& termVolSurface,
+OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVolSurface>& termVolSurface,
                                        const shared_ptr<IborIndex>& index, Rate switchStrike, Real accuracy,
                                        Natural maxIter, const Handle<YieldTermStructure>& discount,
                                        const VolatilityType type, const Real displacement, bool dontThrow,
                                        const optional<VolatilityType> targetVolatilityType,
-                                       const optional<Real> targetDisplacement)
+                                       const optional<Real> targetDisplacement, Real dontThrowMinVol)
     : OptionletStripper(termVolSurface, index, discount, targetVolatilityType ? *targetVolatilityType : type,
                         targetDisplacement ? *targetDisplacement : displacement),
       volQuotes_(nOptionletTenors_, std::vector<shared_ptr<SimpleQuote> >(nStrikes_)),
       floatingSwitchStrike_(switchStrike == Null<Rate>() ? true : false), capFlooMatrixNotInitialized_(true),
       switchStrike_(switchStrike), accuracy_(accuracy), maxIter_(maxIter), dontThrow_(dontThrow),
-      inputVolatilityType_(type), inputDisplacement_(displacement) {
+      dontThrowMinVol_(dontThrowMinVol), inputVolatilityType_(type), inputDisplacement_(displacement) {
 
     capFloorPrices_ = Matrix(nOptionletTenors_, nStrikes_);
     optionletPrices_ = Matrix(nOptionletTenors_, nStrikes_);
@@ -143,7 +143,7 @@ void OptionletStripper1::performCalculations() const {
                 }
             } catch (std::exception& e) {
                 if (dontThrow_)
-                    optionletStDevs_[i][j] = 0.0;
+                    optionletStDevs_[i][j] = dontThrowMinVol_; // really need a way to log this
                 else
                     QL_FAIL("could not bootstrap optionlet:"
                             "\n type:    "
