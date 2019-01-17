@@ -640,10 +640,12 @@
     <ClInclude Include="qle\termstructures\blackvariancecurve3.hpp" />
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
@@ -669,6 +671,7 @@
     <ClInclude Include="qle\termstructures\optionletstripper2.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructureadapter.hpp" />
     <ClInclude Include="qle\termstructures\pricetermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\probabilitytraits.hpp" />
     <ClInclude Include="qle\termstructures\spreadedoptionletvolatility.hpp" />
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
@@ -785,6 +788,7 @@
     <ClCompile Include="qle\termstructures\blackvariancecurve3.cpp" />
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
+    <ClCompile Include="qle\termstructures\capfloortermvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\crossccyfixfloatswaphelper.cpp" />
@@ -801,6 +805,7 @@
     <ClCompile Include="qle\termstructures\oibasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oiccbasisswaphelper.cpp" />
     <ClCompile Include="qle\termstructures\oisratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\optionletstripper.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper1.cpp" />
     <ClCompile Include="qle\termstructures\optionletstripper2.cpp" />
     <ClCompile Include="qle\termstructures\pricetermstructure.cpp" />

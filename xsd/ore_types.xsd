@@ -423,5 +423,14 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="settlementMethod">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PhysicalOTC"/>
+      <xs:enumeration value="PhysicalCleared"/>
+      <xs:enumeration value="CollateralizedCashPrice"/>
+      <xs:enumeration value="ParYieldCurve"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 
