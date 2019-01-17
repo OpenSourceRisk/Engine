@@ -221,6 +221,9 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
+	//! Return netting set KVA
+	Real nettingSetKVACCR(const string& nettingSetId);
+
     //! Return netting set COLVA
     Real nettingSetCOLVA(const string& nettingSetId);
     //! Return netting set Collateral Floor value
@@ -282,6 +285,8 @@ private:
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_;
+	map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
+  
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;
     map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
