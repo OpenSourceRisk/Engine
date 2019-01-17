@@ -5,6 +5,7 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
     all.hpp \
 	audbbsw.hpp \
+	brlcdi.hpp \
 	chftois.hpp \
 	corra.hpp \
 	czkpribor.hpp \

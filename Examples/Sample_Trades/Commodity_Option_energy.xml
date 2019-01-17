@@ -1,0 +1,16 @@
+<Trade id="CommodityForward_Gold_1Y">
+    <TradeType>CommodityForward</TradeType>
+    <Envelope>
+        <CounterParty>CPTY_A</CounterParty>
+        <NettingSetId>CPTY_A</NettingSetId>
+        <AdditionalFields/>
+    </Envelope>
+    <CommodityForwardData>
+        <Position>Short</Position>
+        <Maturity>2017-02-05</Maturity>
+        <Name>COMDTY_GOLD_USD</Name>
+        <Currency>USD</Currency>
+        <Strike>1162.0</Strike>
+        <Quantity>1000</Quantity>
+    </CommodityForwardData>
+</Trade>

@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  env_ore:
+    image: env_ore
+    build:
+      context: ../
+      dockerfile: Docker/Dockerfile-ORE
+      args:
+        - quantlib_version=1.11
