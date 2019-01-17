@@ -935,13 +935,13 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:yylegdata}.
 \end{itemize}
 
-\subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
+\subsubsection{Schedule Data (Rules and Dates)}\label{ss:schedule_data}
 
-The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. When
-\lstinline!IsRulesBased! is set to \emph{false}, the \lstinline!ScheduleData! node includes a \lstinline!Dates! sub-node
-where the schedule is determined directly by \lstinline!Date! child elements. The schedule can also be generated from a
-set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
-elements.  Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. The Schedule can both be
+rules based (at least one sub-node Rules exists) and dates based (at least one \lstinline!Dates! sub-node exists,
+where the schedule is determined directly by \lstinline!Date! child elements). In rules based schedules, the schedule dates are generated from a
+set of rules based on the entries of the sub-node Rules, having the elements StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule.
+Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
 \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
 
 \begin{listing}[H]

@@ -1962,8 +1962,8 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-    <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="aggregationScenarioDataDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -1979,7 +1979,9 @@ cube for post processing in the context of Dynamic Initial Margin and Variation 
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
-file.
+file. Only those currencies or indices are written here that are stated in the AggregationScenarioDataCurrencies and 
+AggregationScenarioDataIndices subsections of the simulation files market section, see also section
+\ref{sec:sim_market}.
  
 \medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
 individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
@@ -3214,9 +3216,6 @@ FX volatilities are taken to be a curve by default. To simulate an FX volatility
 
 For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}.  
 If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}. 
-
-For Yield Curves, Swaption Volatilities, CapFloor Volatilities, Default Curves, Base Correlations and Inflation Curves, a DayCounter may be specified for each riskfactor using the node {\tt <DayCounter name="EXAMPLE\_CURVE">}. 
-If no day counter is specified for a given riskfactor then the default Actual365 is used. To specify a new default for a riskfactor type then use the daycounter node without any attribute,  {\tt <DayCounter>}.
 
 \begin{longlisting}
 %\hrule\medskip
