@@ -130,6 +130,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         string tradeId = trade->id();
         nidMap[tradeId] = trade->envelope().nettingSetId();
         cidMap[tradeId] = trade->envelope().counterparty();
+        QL_REQUIRE(cidMap[tradeId] == nettingSetManager_->get(nidMap[tradeId])->counterparty(),
+            "counterparty from trade (" << cidMap[tradeId] << ") is not the same as counterparty from trade's nettingset: " << nettingSetManager_->get(nidMap[tradeId])->counterparty());
         matMap[tradeId] = trade->maturity();
     }
 
@@ -447,6 +449,21 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             std::sort(distribution.begin(), distribution.end());
             Size index = Size(floor(quantile_ * (samples - 1) + 0.5));
             pfe[j + 1] = std::max(distribution[index], 0.0);
+
+			// for KVA maturity adjustment, calculate the effective maturity from effective expected exposure as of that time ...
+			// ... more accuracy may be achieved by using a longstaff-schwartz method / regression
+			Real eepe_kva = 0;
+			for (Size k = j; k < dates; ++k) {
+				eepe_kva = std::max(eepe_kva, epe[k + 1]);
+			}
+			eee_b_kva[j + 1] = eepe_kva;
+			if (dc.yearFraction(today, date) > 1.0) {
+				effMatNumer_[nettingSetId] += epe[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
+			}
+            if (dc.yearFraction(today, date) <= 1.0) {
+                effMatDenom_[nettingSetId] += eee_b_kva[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
+            }
+
         }
         expectedCollateral_[nettingSetId] = eab;
         netEPE_[nettingSetId] = epe;
@@ -660,22 +677,14 @@ void PostProcess::updateStandAloneXVA() {
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
             Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
-			Real fcaIncrement_exOwnSP = cvaS0 * borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
-			Real fcaIncrement_exAllSP = borrowingSpreadDcf * tradeEPE_[tradeId][j + 1];
             tradeFCA_[tradeId] += fcaIncrement;
-			tradeFCA_exOwnSP_[tradeId] += fcaIncrement_exOwnSP;
-			tradeFCA_exAllSP_[tradeId] += fcaIncrement_exAllSP;
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
             Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
-			Real fbaIncrement_exOwnSP = cvaS0 * lendingSpreadDcf * tradeENE_[tradeId][j + 1];
-			Real fbaIncrement_exAllSP = lendingSpreadDcf * tradeENE_[tradeId][j + 1];
             tradeFBA_[tradeId] += fbaIncrement;
-			tradeFBA_exOwnSP_[tradeId] += fbaIncrement_exOwnSP;
-			tradeFBA_exAllSP_[tradeId] += fbaIncrement_exAllSP;
         }
         if (sumTradeCVA_.find(nid) == sumTradeCVA_.end()) {
             sumTradeCVA_[nid] = 0.0;
@@ -693,11 +702,12 @@ void PostProcess::updateStandAloneXVA() {
         LOG("Update XVA for netting set " << nettingSetId);
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
+		vector<Real> eepe = netEEE_B_kva_[nettingSetId]; // needed for KVA CCR Risk capital (EAD = alpha x eepe(t))
+
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
         string cid = counterpartyId_[nettingSetId];
-
         Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
@@ -707,6 +717,25 @@ void PostProcess::updateStandAloneXVA() {
             dvaDts = market_->defaultCurve(dvaName_, configuration_);
             dvaRR = market_->recoveryRate(dvaName_, configuration_)->value();
         }
+
+		// KVA CCR using the IRB risk weighted asset method and IMM:
+		// KVA effective maturity of nettingSet, capped at 5
+		Real kvaNWMaturity = std::min(1 + (effMatDenom_[nettingSetId] == 0.0 ? 0 : effMatNumer_[nettingSetId] / effMatDenom_[nettingSetId]), 5.0);
+		Real lgd = (1 - cvaRR);
+		// PD from counterparty Dts, floored to avoid 0 ...
+		Real PD = std::max(cvaDts->defaultProbability(today), 0.000000000001);
+		// granularity adjustment, Gordy (2004):
+		Real rho = 0.12 * (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)) + 0.24 * (1 - (1 - std::exp(-50 * PD)) / (1 - std::exp(-50)));
+		InverseCumulativeNormal icn; CumulativeNormalDistribution cnd;
+		// Basel II internal rating based (IRB) estimate of worst case PD: large homogeneous pool (LHP) approximation of Vasicek (1997)
+		Real PD99 = cnd((icn(PD) + std::sqrt(rho) * icn(0.999)) / (std::sqrt(1 - rho))) - PD;
+		// KVA regulatory PD (worst case PD floored at 0.03)
+		Real kva99PD = std::max(PD99, 0.03);
+		// for maturity adjustment factor, B(PD) = (0.11852 - 0.05478 * ln(PD)) ^ 2
+		Real kvaMatAdjB = std::pow((0.11852 - 0.05478 * std::log(PD)), 2.0);
+		// maturity adjustment factor for RWA method: MA(PD, M) = (1 + (M - 2.5) * B(PD)) / (1 - 1.5 * B(PD)), capped at 5, floored at 1, M = effective maturity
+		Real kvaMatAdj = std::max(std::min((1 + (kvaNWMaturity - 2.5) * kvaMatAdjB) / (1 - 1.5 * kvaMatAdjB), 5.0), 1.0);
+
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -735,23 +764,24 @@ void PostProcess::updateStandAloneXVA() {
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
+
             Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * epe[j + 1];
-			Real fcaIncrement_exOwnSP = cvaS0 * borrowingSpreadDcf * epe[j + 1];
-			Real fcaIncrement_exAllSP =  borrowingSpreadDcf * epe[j + 1];
 			nettingSetFCA_[nettingSetId] += fcaIncrement;
-			nettingSetFCA_exOwnSP_[nettingSetId] += fcaIncrement_exOwnSP;
-			nettingSetFCA_exAllSP_[nettingSetId] += fcaIncrement_exAllSP;
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
+
             Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * ene[j + 1];
-			Real fbaIncrement_exOwnSP = cvaS0 * lendingSpreadDcf * ene[j + 1];
-			Real fbaIncrement_exAllSP = lendingSpreadDcf * ene[j + 1];
 			nettingSetFBA_[nettingSetId] += fbaIncrement;
-			nettingSetFBA_exOwnSP_[nettingSetId] += fbaIncrement_exOwnSP;
-			nettingSetFBA_exAllSP_[nettingSetId] += fbaIncrement_exAllSP;
+
+			// Risk Capital: RC = EAD x LGD x PD99.9 x MA(PD, M); EAD = alpha x EEPE(t) (approximated by EPE here);
+			Real kvaRC = kvaAlpha_ * eepe[j + 1] * lgd * kva99PD * kvaMatAdj;
+			// expected risk capital discounted at capital discount rate
+			Real kvaCapitalDiscount = 1 / std::pow(1 + kvaCapitalDiscountRate_, ActualActual().yearFraction(today, d0));
+			Real kvaCCRIncrement = kvaRC * kvaCapitalDiscount * ActualActual().yearFraction(d0, d1);
+			nettingSetKVACCR_[nettingSetId] += kvaCCRIncrement;
 
             // FIXME: Subtract the spread received on posted IM in MVA calculation
             if (applyMVA) {
@@ -759,6 +789,10 @@ void PostProcess::updateStandAloneXVA() {
                 nettingSetMVA_[nettingSetId] += mvaIncrement;
             }
         }
+
+		// Total KVA CCR: Sum of discounted RC x cost of capital (= capital hurdle x regulatory adjustment (12.5))
+		nettingSetKVACCR_[nettingSetId] *= (kvaCapitalHurdle_ * kvaRegAdjustment_);
+
     }
 }
 
@@ -1137,26 +1171,6 @@ Real PostProcess::tradeFCA(const string& tradeId) {
     return tradeFCA_[tradeId];
 }
 
-Real PostProcess::tradeFBA_exOwnSP(const string& tradeId) {
-	QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
-	return tradeFBA_exOwnSP_[tradeId];
-}
-
-Real PostProcess::tradeFCA_exOwnSP(const string& tradeId) {
-	QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
-	return tradeFCA_exOwnSP_[tradeId];
-}
-
-Real PostProcess::tradeFBA_exAllSP(const string& tradeId) {
-	QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
-	return tradeFBA_exAllSP_[tradeId];
-}
-
-Real PostProcess::tradeFCA_exAllSP(const string& tradeId) {
-	QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
-	return tradeFCA_exAllSP_[tradeId];
-}
-
 Real PostProcess::nettingSetCVA(const string& nettingSetId) {
     QL_REQUIRE(nettingSetCVA_.find(nettingSetId) != nettingSetCVA_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet CVA map");
@@ -1187,29 +1201,6 @@ Real PostProcess::nettingSetFCA(const string& nettingSetId) {
     return nettingSetFCA_[nettingSetId];
 }
 
-Real PostProcess::nettingSetFBA_exOwnSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFBA_exOwnSP_.find(nettingSetId) != nettingSetFBA_exOwnSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FBA_exOwnSP map");
-	return nettingSetFBA_exOwnSP_[nettingSetId];
-}
-
-Real PostProcess::nettingSetFCA_exOwnSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFCA_exOwnSP_.find(nettingSetId) != nettingSetFCA_exOwnSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exOwnSP map");
-	return nettingSetFCA_exOwnSP_[nettingSetId];
-}
-
-Real PostProcess::nettingSetFBA_exAllSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFBA_exAllSP_.find(nettingSetId) != nettingSetFBA_exAllSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FBA_exAllSP map");
-	return nettingSetFBA_exAllSP_[nettingSetId];
-}
-
-Real PostProcess::nettingSetFCA_exAllSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFCA_exAllSP_.find(nettingSetId) != nettingSetFCA_exAllSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exAllSP map");
-	return nettingSetFCA_exAllSP_[nettingSetId];
-}
 
 Real PostProcess::allocatedTradeCVA(const string& allocatedTradeId) {
     QL_REQUIRE(allocatedTradeCVA_.find(allocatedTradeId) != allocatedTradeCVA_.end(),

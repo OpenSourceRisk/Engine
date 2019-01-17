@@ -60,7 +60,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
      */
     sort(curveSpecs.begin(), curveSpecs.end());
     auto itSpec = unique(curveSpecs.begin(), curveSpecs.end());
-    curveSpecs.resize(distance(curveSpecs.begin(), itSpec));
+    curveSpecs.resize(std::distance(curveSpecs.begin(), itSpec));
 
     /* remove the YieldCurveSpecs from curveSpecs
      */

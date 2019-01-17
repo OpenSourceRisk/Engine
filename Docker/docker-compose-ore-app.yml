@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  ore_app:
+    image: ore_app
+    build:
+      context: ../
+      dockerfile: Docker/Dockerfile-ORE-App
