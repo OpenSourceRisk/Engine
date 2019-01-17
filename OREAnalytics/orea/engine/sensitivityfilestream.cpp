@@ -96,12 +96,12 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     auto p = deconstructFactor(entries[2]);
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
-    sr.shift_1 = parseReal(entries[3]);
+    tryParseReal(entries[3], sr.shift_1);
     
     p = deconstructFactor(entries[4]);
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
-    sr.shift_2 = parseReal(entries[5]);
+    tryParseReal(entries[5], sr.shift_2);
     
     sr.currency = entries[6];
     sr.baseNpv = parseReal(entries[7]);
