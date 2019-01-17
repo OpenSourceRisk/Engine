@@ -221,6 +221,14 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
+	//! Return netting set FBA excluding own survival probability
+	Real nettingSetFBA_exOwnSP(const string& nettingSetId);
+	//! Return netting set FCA excluding own survival probability
+	Real nettingSetFCA_exOwnSP(const string& nettingSetId);
+	//! Return netting set FBA excluding both survival probabilities
+	Real nettingSetFBA_exAllSP(const string& nettingSetId);
+	//! Return netting set FCA excluding both survival probabilities
+	Real nettingSetFCA_exAllSP(const string& nettingSetId);
 	//! Return netting set KVA
 	Real nettingSetKVACCR(const string& nettingSetId);
 
@@ -284,8 +292,9 @@ private:
     map<string, Real> allocatedTradeCVA_, allocatedTradeDVA_;
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
+    map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_, nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_;
-	map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
+	  map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
   
     boost::shared_ptr<NPVCube> nettedCube_;
     boost::shared_ptr<NPVCube> dimCube_;

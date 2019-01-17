@@ -748,8 +748,6 @@ void PostProcess::updateStandAloneXVA() {
         nettingSetFBA_[nettingSetId] = 0.0;
         nettingSetFCA_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
-		nettingSetKVACCR_[nettingSetId] = 0.0;
-
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
@@ -784,7 +782,6 @@ void PostProcess::updateStandAloneXVA() {
 			Real kvaCapitalDiscount = 1 / std::pow(1 + kvaCapitalDiscountRate_, ActualActual().yearFraction(today, d0));
 			Real kvaCCRIncrement = kvaRC * kvaCapitalDiscount * ActualActual().yearFraction(d0, d1);
 			nettingSetKVACCR_[nettingSetId] += kvaCCRIncrement;
-
 
             // FIXME: Subtract the spread received on posted IM in MVA calculation
             if (applyMVA) {
@@ -1204,12 +1201,6 @@ Real PostProcess::nettingSetFCA(const string& nettingSetId) {
     return nettingSetFCA_[nettingSetId];
 }
 
-
-Real PostProcess::nettingSetKVACCR(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetKVACCR_.find(nettingSetId) != nettingSetKVACCR_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet KVACCR map");
-	return nettingSetKVACCR_[nettingSetId];
-}
 
 Real PostProcess::allocatedTradeCVA(const string& allocatedTradeId) {
     QL_REQUIRE(allocatedTradeCVA_.find(allocatedTradeId) != allocatedTradeCVA_.end(),
