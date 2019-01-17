@@ -11,7 +11,8 @@ this_include_HEADERS = \
 	flatextrapolation.hpp \
 	nadarayawatson.hpp \
 	stabilisedglls.hpp \
-	deltagammavar.hpp
+	deltagammavar.hpp \
+	trace.hpp
 
 noinst_LTLIBRARIES = libMath.la
 

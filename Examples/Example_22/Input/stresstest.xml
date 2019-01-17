@@ -124,18 +124,18 @@
 	<ShiftType>Absolute</ShiftType>
 	<Shifts>
 	  <Shift>0.0010</Shift><!-- that's used as a default if pairs are not specified -->
+	  <Shift expiry="1Y" term="1Y">0.0010</Shift>
 	  <Shift expiry="1Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="1Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="1Y" term="5Y">0.0010</Shift>
+	  <Shift expiry="1Y" term="10Y">0.0010</Shift>
+	  <Shift expiry="5Y" term="1Y">0.0010</Shift>
 	  <Shift expiry="5Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="5Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="5Y" term="5Y">0.0010</Shift>
+	  <Shift expiry="5Y" term="10Y">0.0010</Shift>
+	  <Shift expiry="10Y" term="1Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
-	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
+	  <Shift expiry="10Y" term="10Y">0.0010</Shift>
 	</Shifts>
 	<ShiftExpiries>1Y,5Y,10Y</ShiftExpiries>
-	<ShiftTerms>5Y</ShiftTerms>
+	<ShiftTerms>1Y,5Y,10Y</ShiftTerms>
       </SwaptionVolatility>
     </SwaptionVolatilities>
     

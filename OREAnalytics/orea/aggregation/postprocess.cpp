@@ -87,8 +87,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                          const string& dvaName, const string& fvaBorrowingCurve, const string& fvaLendingCurve,
                          Real dimQuantile, Size dimHorizonCalendarDays, Size dimRegressionOrder,
                          vector<string> dimRegressors, Size dimLocalRegressionEvaluations,
-                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation, 
-						 Real kvaCapitalDiscountRate, Real kvaAlpha, Real kvaRegAdjustment, Real kvaCapitalHurdle)
+                         Real dimLocalRegressionBandwidth, Real dimScaling, bool fullInitialCollateralisation)
     : portfolio_(portfolio), nettingSetManager_(nettingSetManager), market_(market), cube_(cube),
       scenarioData_(scenarioData), analytics_(analytics), baseCurrency_(baseCurrency), quantile_(quantile),
       calcType_(parseCollateralCalculationType(calculationType)), dvaName_(dvaName),
@@ -96,8 +95,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
       dimHorizonCalendarDays_(dimHorizonCalendarDays), dimRegressionOrder_(dimRegressionOrder),
       dimRegressors_(dimRegressors), dimLocalRegressionEvaluations_(dimLocalRegressionEvaluations),
       dimLocalRegressionBandwidth_(dimLocalRegressionBandwidth), dimScaling_(dimScaling),
-      fullInitialCollateralisation_(fullInitialCollateralisation),
-	  kvaCapitalDiscountRate_(kvaCapitalDiscountRate), kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment), kvaCapitalHurdle_(kvaCapitalHurdle) {
+      fullInitialCollateralisation_(fullInitialCollateralisation) {
 
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
@@ -132,6 +130,8 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         string tradeId = trade->id();
         nidMap[tradeId] = trade->envelope().nettingSetId();
         cidMap[tradeId] = trade->envelope().counterparty();
+        QL_REQUIRE(cidMap[tradeId] == nettingSetManager_->get(nidMap[tradeId])->counterparty(),
+            "counterparty from trade (" << cidMap[tradeId] << ") is not the same as counterparty from trade's nettingset: " << nettingSetManager_->get(nidMap[tradeId])->counterparty());
         matMap[tradeId] = trade->maturity();
     }
 
@@ -187,7 +187,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     for (Size i = 0; i < portfolio->size(); ++i) {
         string tradeId = portfolio->trades()[i]->id();
         string nettingSetId = portfolio->trades()[i]->envelope().nettingSetId();
-
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
             nettingSetValue[nettingSetId] = vector<vector<Real>>(dates, vector<Real>(samples, 0.0));
@@ -352,7 +351,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         vector<Real> ene(dates + 1, 0.0);
         vector<Real> ee_b(dates + 1, 0.0);
         vector<Real> eee_b(dates + 1, 0.0);
-		vector<Real> eee_b_kva(dates + 1, 0.0);
         vector<Real> eab(dates + 1, 0.0);
         vector<Real> pfe(dates + 1, 0.0);
         vector<Real> colvaInc(dates + 1, 0.0);
@@ -465,13 +463,13 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             if (dc.yearFraction(today, date) <= 1.0) {
                 effMatDenom_[nettingSetId] += eee_b_kva[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
             }
+
         }
         expectedCollateral_[nettingSetId] = eab;
         netEPE_[nettingSetId] = epe;
         netENE_[nettingSetId] = ene;
         netEE_B_[nettingSetId] = ee_b;
         netEEE_B_[nettingSetId] = eee_b;
-		netEEE_B_kva_[nettingSetId] = eee_b_kva;
         netPFE_[nettingSetId] = pfe;
         colvaInc_[nettingSetId] = colvaInc;
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
@@ -705,11 +703,11 @@ void PostProcess::updateStandAloneXVA() {
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
 		vector<Real> eepe = netEEE_B_kva_[nettingSetId]; // needed for KVA CCR Risk capital (EAD = alpha x eepe(t))
+
         vector<Real> edim;
         if (applyMVA)
             edim = nettingSetExpectedDIM_[nettingSetId];
         string cid = counterpartyId_[nettingSetId];
-
         Handle<DefaultProbabilityTermStructure> cvaDts = market_->defaultCurve(cid);
         QL_REQUIRE(!cvaDts.empty(), "Default curve missing for counterparty " << cid);
         Real cvaRR = market_->recoveryRate(cid, configuration_)->value();
@@ -737,6 +735,7 @@ void PostProcess::updateStandAloneXVA() {
 		Real kvaMatAdjB = std::pow((0.11852 - 0.05478 * std::log(PD)), 2.0);
 		// maturity adjustment factor for RWA method: MA(PD, M) = (1 + (M - 2.5) * B(PD)) / (1 - 1.5 * B(PD)), capped at 5, floored at 1, M = effective maturity
 		Real kvaMatAdj = std::max(std::min((1 + (kvaNWMaturity - 2.5) * kvaMatAdjB) / (1 - 1.5 * kvaMatAdjB), 5.0), 1.0);
+
         Handle<YieldTermStructure> borrowingCurve, lendingCurve;
         if (fvaBorrowingCurve_ != "")
             borrowingCurve = market_->yieldCurve(fvaBorrowingCurve_, configuration_);
@@ -750,6 +749,7 @@ void PostProcess::updateStandAloneXVA() {
         nettingSetFCA_[nettingSetId] = 0.0;
         nettingSetMVA_[nettingSetId] = 0.0;
 		nettingSetKVACCR_[nettingSetId] = 0.0;
+
         for (Size j = 0; j < dates; ++j) {
             Date d0 = j == 0 ? today : cube_->dates()[j - 1];
             Date d1 = cube_->dates()[j];
@@ -766,6 +766,7 @@ void PostProcess::updateStandAloneXVA() {
             if (!borrowingCurve.empty())
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
+
             Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * epe[j + 1];
 			nettingSetFCA_[nettingSetId] += fcaIncrement;
 
@@ -773,6 +774,7 @@ void PostProcess::updateStandAloneXVA() {
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
+
             Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * ene[j + 1];
 			nettingSetFBA_[nettingSetId] += fbaIncrement;
 
@@ -783,14 +785,17 @@ void PostProcess::updateStandAloneXVA() {
 			Real kvaCCRIncrement = kvaRC * kvaCapitalDiscount * ActualActual().yearFraction(d0, d1);
 			nettingSetKVACCR_[nettingSetId] += kvaCCRIncrement;
 
+
             // FIXME: Subtract the spread received on posted IM in MVA calculation
             if (applyMVA) {
                 Real mvaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * edim[j];
                 nettingSetMVA_[nettingSetId] += mvaIncrement;
             }
         }
+
 		// Total KVA CCR: Sum of discounted RC x cost of capital (= capital hurdle x regulatory adjustment (12.5))
 		nettingSetKVACCR_[nettingSetId] *= (kvaCapitalHurdle_ * kvaRegAdjustment_);
+
     }
 }
 
@@ -1198,6 +1203,7 @@ Real PostProcess::nettingSetFCA(const string& nettingSetId) {
                "NettingSetId " << nettingSetId << " not found in nettingSet FCA map");
     return nettingSetFCA_[nettingSetId];
 }
+
 
 Real PostProcess::nettingSetKVACCR(const string& nettingSetId) {
 	QL_REQUIRE(nettingSetKVACCR_.find(nettingSetId) != nettingSetKVACCR_.end(),
