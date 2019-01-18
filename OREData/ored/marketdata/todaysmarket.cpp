@@ -405,6 +405,44 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     } catch (QuantLib::Error& e) {
                         LOG(e.what());
                     }
+		    for (const auto it : zcInfMap) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding ZeroInflationIndex (" << it.first << ") with spec " << *inflationspec
+                                << " to configuration " << configuration.first);
+                            boost::shared_ptr<ZeroInflationTermStructure> ts =
+                                boost::dynamic_pointer_cast<ZeroInflationTermStructure>(
+                                    itr->second->inflationTermStructure());
+                            QL_REQUIRE(ts, "expected zero inflation term structure for index " << it.first
+                                << ", but could not cast");
+                            // index is not interpolated
+                            auto tmp = parseZeroInflationIndex(it.first, false, Handle<ZeroInflationTermStructure>(ts));
+                            zeroInflationIndices_[make_pair(configuration.first, it.first)] =
+                                Handle<ZeroInflationIndex>(tmp);
+                        }
+                    }
+                    // this try-catch is necessary to handle cases where no YoY inflation index curves exist in scope
+                    map<string, string> yyInfMap;
+                    try {
+                        yyInfMap = params.mapping(MarketObject::YoYInflationCurve, configuration.first);
+                    }
+                    catch (QuantLib::Error& e) {
+                        LOG(e.what());
+                    }
+                    for (const auto it : yyInfMap) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding YoYInflationIndex (" << it.first << ") with spec " << *inflationspec
+                                << " to configuration " << configuration.first);
+                            boost::shared_ptr<YoYInflationTermStructure> ts =
+                                boost::dynamic_pointer_cast<YoYInflationTermStructure>(
+                                    itr->second->inflationTermStructure());
+                            QL_REQUIRE(ts, "expected yoy inflation term structure for index " << it.first
+                                << ", but could not cast");
+                            yoyInflationIndices_[make_pair(configuration.first, it.first)] =
+                                Handle<YoYInflationIndex>(boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
+                                    parseZeroInflationIndex(it.first, false), false,
+                                    Handle<YoYInflationTermStructure>(ts)));
+                        }
+                    }
                     break;
                 }
 
