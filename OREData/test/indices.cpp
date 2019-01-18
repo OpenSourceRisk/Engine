@@ -106,6 +106,7 @@ static struct test_data index_data[] = {
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
     {"NOK-NOWA", "NowaON Actual/Actual (ISMA)", 1 * Days},
     {"NZD-OCR", "NzocrON Actual/365 (Fixed)", 1 * Days},
+    {"BRL-CDI", "BRL-CDITN Business/252(Brazil)", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
