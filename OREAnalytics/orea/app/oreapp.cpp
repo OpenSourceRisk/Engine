@@ -717,7 +717,10 @@ void OREApp::runPostProcessor() {
     analytics["fva"] = parseBool(params_->get("xva", "fva"));
     analytics["colva"] = parseBool(params_->get("xva", "colva"));
     analytics["collateralFloor"] = parseBool(params_->get("xva", "collateralFloor"));
-    analytics["kva"] = parseBool(params_->get("xva", "kva"));
+    if (params_->has("xva", "kva"))
+        analytics["kva"] = parseBool(params_->get("xva", "kva"));
+    else
+        analytics["kva"] = false;
     if (params_->has("xva", "mva"))
         analytics["mva"] = parseBool(params_->get("xva", "mva"));
     else
@@ -778,7 +781,7 @@ void OREApp::runPostProcessor() {
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
-	kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
+        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
 }
 
 void OREApp::writeXVAReports() {
