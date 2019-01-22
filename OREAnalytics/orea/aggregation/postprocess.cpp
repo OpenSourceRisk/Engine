@@ -789,30 +789,22 @@ void PostProcess::updateStandAloneXVA() {
                 borrowingSpreadDcf = borrowingCurve->discount(d0) / borrowingCurve->discount(d1) -
                                      oisCurve->discount(d0) / oisCurve->discount(d1);
             Real fcaIncrement = cvaS0 * dvaS0 * borrowingSpreadDcf * epe[j + 1];
-<<<<<<< HEAD
-            nettingSetFCA_[nettingSetId] += fcaIncrement;
-=======
             Real fcaIncrement_exOwnSP = cvaS0 * borrowingSpreadDcf * epe[j + 1];
             Real fcaIncrement_exAllSP = borrowingSpreadDcf * epe[j + 1];
             nettingSetFCA_[nettingSetId] += fcaIncrement;
             nettingSetFCA_exOwnSP_[nettingSetId] += fcaIncrement_exOwnSP;
             nettingSetFCA_exAllSP_[nettingSetId] += fcaIncrement_exAllSP;
->>>>>>> origin/master
 
             Real lendingSpreadDcf = 0.0;
             if (!lendingCurve.empty())
                 lendingSpreadDcf = lendingCurve->discount(d0) / lendingCurve->discount(d1) -
                                    oisCurve->discount(d0) / oisCurve->discount(d1);
             Real fbaIncrement = cvaS0 * dvaS0 * lendingSpreadDcf * ene[j + 1];
-<<<<<<< HEAD
-            nettingSetFBA_[nettingSetId] += fbaIncrement;
-=======
             Real fbaIncrement_exOwnSP = cvaS0 * lendingSpreadDcf * ene[j + 1];
             Real fbaIncrement_exAllSP = lendingSpreadDcf * ene[j + 1];
             nettingSetFBA_[nettingSetId] += fbaIncrement;
             nettingSetFBA_exOwnSP_[nettingSetId] += fbaIncrement_exOwnSP;
             nettingSetFBA_exAllSP_[nettingSetId] += fbaIncrement_exAllSP;
->>>>>>> origin/master
 
             // Risk Capital: RC = EAD x LGD x PD99.9 x MA(PD, M); EAD = alpha x EEPE(t) (approximated by EPE here);
             Real kvaRC = kvaAlpha_ * eepe[j + 1] * lgd * kva99PD * kvaMatAdj;
@@ -1257,12 +1249,12 @@ Real PostProcess::nettingSetFCA(const string& nettingSetId) {
     return nettingSetFCA_[nettingSetId];
 }
 
-<<<<<<< HEAD
 Real PostProcess::nettingSetKVACCR(const string& nettingSetId) {
     QL_REQUIRE(nettingSetKVACCR_.find(nettingSetId) != nettingSetKVACCR_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet KVACCR map");
     return nettingSetKVACCR_[nettingSetId];
-=======
+}
+
 Real PostProcess::nettingSetFBA_exOwnSP(const string& nettingSetId) {
 	QL_REQUIRE(nettingSetFBA_exOwnSP_.find(nettingSetId) != nettingSetFBA_exOwnSP_.end(),
 		"NettingSetId " << nettingSetId << " not found in nettingSet FBA_exOwnSP map");
@@ -1285,7 +1277,6 @@ Real PostProcess::nettingSetFCA_exAllSP(const string& nettingSetId) {
 	QL_REQUIRE(nettingSetFCA_exAllSP_.find(nettingSetId) != nettingSetFCA_exAllSP_.end(),
 		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exAllSP map");
 	return nettingSetFCA_exAllSP_[nettingSetId];
->>>>>>> origin/master
 }
 
 Real PostProcess::allocatedTradeCVA(const string& allocatedTradeId) {
