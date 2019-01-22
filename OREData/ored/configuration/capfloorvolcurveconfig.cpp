@@ -40,15 +40,19 @@ std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::Volat
     }
 }
 
+const string CapFloorVolatilityCurveConfig::defaultInterpolationMethod = "BicubicSpline";
+
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, const bool extrapolate,
     const bool flatExtrapolation, bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-    const BusinessDayConvention& businessDayConvention, const string& iborIndex, const string& discountCurve)
+    const BusinessDayConvention& businessDayConvention, const string& iborIndex, const string& discountCurve,
+    const string& interpolationMethod)
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
-      businessDayConvention_(businessDayConvention), iborIndex_(iborIndex), discountCurve_(discountCurve) {}
+      businessDayConvention_(businessDayConvention), iborIndex_(iborIndex), discountCurve_(discountCurve),
+      interpolationMethod_(interpolationMethod) {}
 
 const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -120,6 +124,9 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+    interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
+    if (interpolationMethod_ == "")
+        interpolationMethod_ = defaultInterpolationMethod;
 }
 
 XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -151,6 +158,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
 
     return node;
 }

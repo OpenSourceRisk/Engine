@@ -44,7 +44,7 @@ public:
                              const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
                              const std::vector<Volatility>& bf25d, const DayCounter& dayCounter, const Calendar& cal,
                              const Handle<Quote>& fxSpot, const Handle<YieldTermStructure>& domesticTS,
-                             const Handle<YieldTermStructure>& foreignTS);
+                             const Handle<YieldTermStructure>& foreignTS, bool requireMonotoneVariance = true);
     //! \name TermStructure interface
     //@{
     DayCounter dayCounter() const { return dayCounter_; }
@@ -105,8 +105,8 @@ public:
                                        const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
                                        const std::vector<Volatility>& bf25d, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
-                                       const Handle<YieldTermStructure>& fore)
-        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore) {}
+                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true)
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore, requireMonotoneVariance) {}
 
 protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,

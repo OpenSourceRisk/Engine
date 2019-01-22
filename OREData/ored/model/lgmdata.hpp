@@ -73,10 +73,18 @@ enum class CalibrationType {
     None
 };
 
+//! Supported calibration strategies
+enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, None };
+
 //! Convert calibration type string into enumerated class value
 CalibrationType parseCalibrationType(const string& s);
 //! Convert enumerated class value into a string
 std::ostream& operator<<(std::ostream& oss, const CalibrationType& type);
+
+//! Convert calibration strategy string into enumerated class value
+CalibrationStrategy parseCalibrationStrategy(const string& s);
+//! Convert enumerated class value into a string
+std::ostream& operator<<(std::ostream& oss, const CalibrationStrategy& type);
 
 //! Linear Gauss Markov Model Parameters
 /*!
@@ -105,9 +113,6 @@ public:
         //! Parametrize volatility as Hagan alpha(t)
         Hagan
     };
-
-    //! Supported calibration strategies
-    enum class CalibrationStrategy { CoterminalATM, CoterminalDealStrike, None };
 
     //! Default constructor
     LgmData() {}
@@ -156,7 +161,6 @@ public:
     std::vector<std::string>& optionExpiries() { return optionExpiries_; }
     std::vector<std::string>& optionTerms() { return optionTerms_; }
     std::vector<std::string>& optionStrikes() { return optionStrikes_; }
-    CalibrationStrategy& calibrationStrategy() { return calibrationStrategy_; }
     //@}
 
     //! \name Operators
@@ -182,17 +186,14 @@ private:
     std::vector<std::string> optionExpiries_;
     std::vector<std::string> optionTerms_;
     std::vector<std::string> optionStrikes_;
-    CalibrationStrategy calibrationStrategy_;
 };
 
 //! Enum parsers used in CrossAssetModelBuilder's fromXML
 LgmData::ReversionType parseReversionType(const string& s);
 LgmData::VolatilityType parseVolatilityType(const string& s);
-LgmData::CalibrationStrategy parseCalibrationStrategy(const string& s);
 
 //! Enum to string used in CrossAssetModelBuilder's toXML
 std::ostream& operator<<(std::ostream& oss, const LgmData::ReversionType& type);
 std::ostream& operator<<(std::ostream& oss, const LgmData::VolatilityType& type);
-std::ostream& operator<<(std::ostream& oss, const LgmData::CalibrationStrategy& type);
 } // namespace data
 } // namespace ore

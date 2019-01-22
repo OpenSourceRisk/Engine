@@ -809,12 +809,14 @@ BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
 
     for (Size i = 0; i < tenors.size(); ++i) {
         for (Size j = 0; j < strikes.size(); ++j) {
-            Real error = fabs(ovs->volatility(tenors[i], strikes[j]) - cachedValues[i][j]);
+            Volatility v = ovs->volatility(tenors[i], strikes[j]);
+            Real error = fabs(v - cachedValues[i][j]);
             // clang-format off
             BOOST_CHECK_MESSAGE(error < tolerance,
                 "\ncap tenor:         " << tenors[i] <<
                 "\nstrike:            " << io::rate(strikes[j]) <<
                 "\ncached volatility: " << io::volatility(cachedValues[i][j]) <<
+                "\nvolatility:        " << io::volatility(v) <<
                 "\nerror:             " << io::rate(error) <<
                 "\ntolerance:         " << io::rate(tolerance));
             // clang-format on

@@ -30,9 +30,10 @@ FxBlackVolatilitySurface::FxBlackVolatilitySurface(const Date& referenceDate, co
                                                    const std::vector<Volatility>& bf25d, const DayCounter& dayCounter,
                                                    const Calendar& cal, const Handle<Quote>& fxSpot,
                                                    const Handle<YieldTermStructure>& domesticTS,
-                                                   const Handle<YieldTermStructure>& foreignTS)
+                                                   const Handle<YieldTermStructure>& foreignTS,
+                                                   bool requireMonotoneVariance)
     : BlackVolatilityTermStructure(referenceDate, cal), times_(dates.size()), dayCounter_(dayCounter), fxSpot_(fxSpot),
-      domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(referenceDate, dates, atmVols, dayCounter),
+      domesticTS_(domesticTS), foreignTS_(foreignTS), atmCurve_(referenceDate, dates, atmVols, dayCounter, requireMonotoneVariance),
       rr25d_(rr25d), bf25d_(bf25d) {
 
     QL_REQUIRE(dates.size() > 1, "at least 1 date required");

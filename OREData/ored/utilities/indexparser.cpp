@@ -208,9 +208,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
-        {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
+        {"BRL-CDI", boost::make_shared<IborIndexParserOIS<BRLCdi>>()},
         {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
-        {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()}
+        {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()},
+        {"NZD-OCR", boost::make_shared<IborIndexParserOIS<Nzocr>>()}
     };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);

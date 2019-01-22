@@ -4,7 +4,7 @@
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
       <CurveDescription/>
-      <Dimension>Smile</Dimension>
+      <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,10Y
       </Expiries>
@@ -174,6 +174,8 @@
       <VolatilityType>Normal</VolatilityType>
       <!-- Linear, Flat, None -->
       <Extrapolation>Linear</Extrapolation>
+      <!-- BicubicSpline or Bilinear. Default is BicubicSpline -->
+      <InterpolationMethod>BicubicSpline</InterpolationMethod>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
