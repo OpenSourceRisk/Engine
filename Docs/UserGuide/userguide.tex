@@ -1420,11 +1420,8 @@ and likewise for cases B, C and D. The essential results of each run are are vis
 \item evolution of expected DIM
 \item regression plots at selected future times 
 \end{itemize}
-illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. In all cases the zero
-order regression estimate of DIM differs noticeably from the higher orders (one and two). In the three swap cases we
-moreover see that first and second order polynomial choice makes hardly any difference; note that case C and D use up to
-three-dimensional regressors (simulated USD and EUR rate fixings and the EUR/USD FX rate). In the Swaption case B, first
-and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
+illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. 
+In the three swap cases, the regression orders do make a noticable difference in the respective expected DIM evolution. In the Swaption case B, first and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
  
 \begin{figure}[h!]
 \begin{center}
@@ -2030,8 +2027,8 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-    <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -2047,7 +2044,9 @@ cube for post processing in the context of Dynamic Initial Margin and Variation 
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
-file.
+file. Only those currencies or indices are written here that are stated in the AggregationScenarioDataCurrencies and 
+AggregationScenarioDataIndices subsections of the simulation files market section, see also section
+\ref{sec:sim_market}.
  
 \medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
 individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
