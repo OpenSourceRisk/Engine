@@ -37,8 +37,7 @@ namespace QuantExt {
 
     void CmsCapHelper::performCalculations() const {
 
-
-        Date startDate = asof_;
+        Date startDate; 
         Date endDate;
 
         //Compute ATM swap rates
@@ -46,29 +45,30 @@ namespace QuantExt {
 
         std::vector<Real> nominals(1,1.0);
 
-     {   
+        {   
         boost::shared_ptr<PricingEngine> swapEngine(
                              new DiscountingSwapEngine(index1_->discountingTermStructure(), false));
      
         Calendar calendar = index1_->fixingCalendar();
         
         boost::shared_ptr<IborIndex> index = index1_->iborIndex();
-        endDate = calendar.advance(startDate, length_,
+        // FIXME, reduce length by forward start
+        startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
+        endDate = calendar.advance(startDate, length_ - forwardStart_,
                                       index->businessDayConvention());
         
 
         
-        //endDate = index1_->maturityDate(asof_);
-        Schedule cmsSchedule(startDate, endDate, index->tenor(), calendar,
+        Schedule cmsSchedule(startDate, endDate, cmsTenor_, calendar,
                                index->businessDayConvention(),
                                index->businessDayConvention(),
                                DateGeneration::Forward, false);
-        
+
         Leg cmsLeg = CmsLeg(cmsSchedule, index1_)
                     .withNotionals(nominals)
                     .withPaymentAdjustment(index1_->iborIndex()->businessDayConvention())
                     .withPaymentDayCounter(index1_->iborIndex()->dayCounter())
-                    .withFixingDays(0);
+                    .withFixingDays(fixingDays_);
         QuantLib::setCouponPricer(cmsLeg, cmsPricer_);
 
         std::vector<Leg> cmsLegs;
@@ -89,22 +89,23 @@ namespace QuantExt {
         Calendar calendar = index2_->fixingCalendar();
         
         boost::shared_ptr<IborIndex> index = index2_->iborIndex();
-        endDate = calendar.advance(startDate, length_,
+        // FIXME, reduce length by forward start
+        //startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
+        endDate = calendar.advance(startDate, length_-forwardStart_,
                                        index->businessDayConvention());
         
 
         
-        //endDate = index2_->maturityDate(asof_);
-        Schedule cmsSchedule(startDate, endDate, index->tenor(), calendar,
+        Schedule cmsSchedule(startDate, endDate, cmsTenor_, calendar,
                                index->businessDayConvention(),
                                index->businessDayConvention(),
                                DateGeneration::Forward, false);
         
         Leg cmsLeg = CmsLeg(cmsSchedule, index2_)
                     .withNotionals(nominals)
-                    .withPaymentAdjustment(index1_->iborIndex()->businessDayConvention())
-                    .withPaymentDayCounter(index1_->iborIndex()->dayCounter())
-                    .withFixingDays(0);
+                    .withPaymentAdjustment(index2_->iborIndex()->businessDayConvention())
+                    .withPaymentDayCounter(index2_->iborIndex()->dayCounter())
+                    .withFixingDays(fixingDays_);
         QuantLib::setCouponPricer(cmsLeg, cmsPricer_);
 
         std::vector<Leg> cmsLegs;
@@ -127,9 +128,14 @@ namespace QuantExt {
         
         boost::shared_ptr<QuantLib::SwapSpreadIndex> spreadIndex = 
                                 boost::make_shared<QuantLib::SwapSpreadIndex>(
-                                    "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index1_, index2_);
-        
-        Schedule cmsSpreadSchedule(startDate, endDate, Period(3, Months), calendar,
+                                    "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index2_, index1_);
+
+
+        //startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
+        endDate = calendar.advance(startDate, length_-forwardStart_,
+                                       index->businessDayConvention());
+
+        Schedule cmsSpreadSchedule(startDate, endDate, cmsTenor_, calendar,
                                index->businessDayConvention(),
                                index->businessDayConvention(),
                                DateGeneration::Forward, false);
@@ -138,37 +144,23 @@ namespace QuantExt {
                     .withSpreads(std::vector<Rate>(1, 0))
                     .withPaymentAdjustment(index->businessDayConvention())
                     .withPaymentDayCounter(Actual360())
-                    .withFixingDays(0)
+                    .withFixingDays(fixingDays_)
                     .inArrears(true)
                     .withCaps(std::vector<Rate>(1, spread));
 
         QuantLib::setCouponPricer(cmsLeg1, pricer_);
 
-        /*cmsLeg1 = StrippedCappedFlooredCouponLeg(cmsLeg1);
-        for(Size i = 0; i < cmsLeg1.size(); i++) {
-            boost::shared_ptr<StrippedCappedFlooredCoupon> sc = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(cmsLeg1[i]);
-            if(sc != nullptr)
-                sc->registerWith(sc->underlying());
-        }*/
+        Leg cmsLeg1b = StrippedCappedFlooredCouponLeg(cmsLeg1);
 
-        legs.push_back(cmsLeg1);
+        legs.push_back(cmsLeg1b);
         legPayers.push_back(false);
-        
-        Leg cmsLeg2 = CmsSpreadLeg(cmsSchedule, spreadIndex)
-                    .withNotionals(nominals)
-                    .withPaymentAdjustment(index->businessDayConvention())
-                    .withPaymentDayCounter(Actual360())
-                    .withFixingDays(0);
-
-        QuantLib::setCouponPricer(cmsLeg2, pricer_);
-        legs.push_back(cmsLeg2);
-        legPayers.push_back(true);
 
         cap_ = boost::make_shared<QuantLib::Swap>(legs, legPayers);
 
         cap_->setPricingEngine(swapEngine);
 
-        std::cout<<"performCalc, marketVal "<<marketValue()<<", modelVal " << cap_->NPV()<<std::endl;
+        std::cout<<"performCalc, noCoupons " << cmsLeg1b.size() << " spread " << spread << " marketVal "<<marketValue()<<", modelVal " << cap_->NPV()<<std::endl;
     }
 
 }
+
