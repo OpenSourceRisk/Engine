@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file oret/toplevelfixture.hpp
+/*! \file test/toplevelfixture.hpp
     \brief Fixture that can be used at top level
 */
 
@@ -24,14 +24,12 @@
 
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/settings.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/test/unit_test.hpp>
-
-using QuantLib::IndexManager;
-using QuantLib::SavedSettings;
 
 namespace ore {
 namespace test {
+
+using QuantLib::IndexManager;
+using QuantLib::SavedSettings;
 
 //! Top level fixture
 class TopLevelFixture {

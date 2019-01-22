@@ -35,9 +35,6 @@ using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
-
-//#include <oret/oret.hpp>
-//using ore::test::setupTestLogging;
 #include "toplevelfixture.hpp"
 
 #ifdef BOOST_MSVC
@@ -47,19 +44,14 @@ using boost::unit_test::framework::master_test_suite;
 
 class QleGlobalFixture {
 public:
-	QleGlobalFixture() {
-		int argc = master_test_suite().argc;
-		char** argv = master_test_suite().argv;
+    QleGlobalFixture() {
+    }
 
-		// Set up test logging
-		//setupTestLogging(argc,argv);
-	}
+    ~QleGlobalFixture() {
+        stopTimer();
+    }
 
-	~QleGlobalFixture() {
-		stopTimer();
-	}
-
-	//Method called in destructor to log time taken
+    //Method called in destructor to log time taken
     void stopTimer() {
         double seconds = t.elapsed();
         int hours = int(seconds / 3600);
@@ -75,8 +67,8 @@ public:
     }
 
 private:
-	// Timing the test run
-	boost::timer t;
+    // Timing the test run
+    boost::timer t;
 };
 
 
