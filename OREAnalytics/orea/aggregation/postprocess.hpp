@@ -146,13 +146,13 @@ public:
         Real dimScaling = 1.0,
         //! Assume t=0 collateral balance equals NPV (set to 0 if false)
         bool fullInitialCollateralisation = false,
-        // own capital discounting rate for discounting expected capital for KVA
+        //! own capital discounting rate for discounting expected capital for KVA
         Real kvaCapitalDiscountRate = 0.10,
-        // alpha to adjust EEPE to give EAD for risk capital
+        //! alpha to adjust EEPE to give EAD for risk capital
         Real kvaAlpha = 1.4,
-        // regulatory adjustment, 1/min cap requirement
+        //! regulatory adjustment, 1/min cap requirement
         Real kvaRegAdjustment = 12.5,
-        // Cost of Capital for KVA = regulatory adjustment x capital hurdle
+        //! Cost of Capital for KVA = regulatory adjustment x capital hurdle
         Real kvaCapitalHurdle = 0.012);
 
     //! Return list of Trade IDs in the portfolio
