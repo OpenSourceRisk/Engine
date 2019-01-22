@@ -18,7 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
-#include <boost/test/data/test_case.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <qle/quotes/logquote.hpp>
 

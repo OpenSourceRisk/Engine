@@ -20,7 +20,6 @@
 #include <qle/pricingengines/depositengine.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
-#include <boost/test/data/test_case.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/time/calendars/target.hpp>

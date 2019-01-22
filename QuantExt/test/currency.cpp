@@ -18,7 +18,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
-#include <boost/test/data/test_case.hpp>
 #include <ql/currency.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
