@@ -31,7 +31,44 @@
 #include <ql/indexes/all.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <qle/indexes/all.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/dkcpi.hpp>
+#include <qle/indexes/secpi.hpp>
+#include <qle/indexes/equityindex.hpp>
+#include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/genericiborindex.hpp>
+#include <qle/indexes/ibor/audbbsw.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/indexes/ibor/chfsaron.hpp>
+#include <qle/indexes/ibor/chftois.hpp>
+#include <qle/indexes/ibor/clpcamara.hpp>
+#include <qle/indexes/ibor/copibr.hpp>
+#include <qle/indexes/ibor/corra.hpp>
+#include <qle/indexes/ibor/czkpribor.hpp>
+#include <qle/indexes/ibor/demlibor.hpp>
+#include <qle/indexes/ibor/dkkcibor.hpp>
+#include <qle/indexes/ibor/dkkois.hpp>
+#include <qle/indexes/ibor/hkdhibor.hpp>
+#include <qle/indexes/ibor/hufbubor.hpp>
+#include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwkoribor.hpp>
+#include <qle/indexes/ibor/mxntiie.hpp>
+#include <qle/indexes/ibor/myrklibor.hpp>
+#include <qle/indexes/ibor/noknibor.hpp>
+#include <qle/indexes/ibor/nowa.hpp>
+#include <qle/indexes/ibor/nzdbkbm.hpp>
+#include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnwibor.hpp>
+#include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/seksior.hpp>
+#include <qle/indexes/ibor/sekstibor.hpp>
+#include <qle/indexes/ibor/sgdsibor.hpp>
+#include <qle/indexes/ibor/sgdsor.hpp>
+#include <qle/indexes/ibor/skkbribor.hpp>
+#include <qle/indexes/ibor/thbbibor.hpp>
+#include <qle/indexes/ibor/tonar.hpp>
+#include <qle/indexes/ibor/twdtaibor.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -89,11 +126,21 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": EQ-NAME");
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
     if (tokens.size() == 2) {
-        return boost::make_shared<EquityIndex>(tokens[0] + "/" + tokens[1], NullCalendar());
+        return boost::make_shared<EquityIndex>(tokens[1], NullCalendar());
     }
     else {
         QL_FAIL("Error parsing equity string " + s);
     }
+}
+
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
+    try {
+        index = parseIborIndex(s);
+    }
+    catch (...) {
+        return false;
+    }
+    return true;
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
@@ -117,6 +164,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"CHF-TOIS", boost::make_shared<IborIndexParserOIS<CHFTois>>()},
         {"CHF-SARON", boost::make_shared<IborIndexParserOIS<CHFSaron>>()},
         {"USD-FedFunds", boost::make_shared<IborIndexParserOIS<FedFunds>>()},
+        {"AUD-AONIA", boost::make_shared<IborIndexParserOIS<Aonia>>()},
         {"CAD-CORRA", boost::make_shared<IborIndexParserOIS<CORRA>>()},
         {"DKK-DKKOIS", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
         {"DKK-TNR", boost::make_shared<IborIndexParserOIS<DKKOis>>()},
@@ -160,8 +208,10 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
         {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
-        {"BRL-CDI", boost::make_shared<IborIndexParserWithPeriod<BRLCdi>>()},
-        {"CLP-CAMARA", boost::make_shared<IborIndexParserWithPeriod<CLPCamara>>()}
+        {"BRL-CDI", boost::make_shared<IborIndexParserOIS<BRLCdi>>()},
+        {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
+        {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()},
+        {"NZD-OCR", boost::make_shared<IborIndexParserOIS<Nzocr>>()}
     };
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
@@ -208,21 +258,32 @@ boost::shared_ptr<SwapIndex> parseSwapIndex(const string& s, const Handle<YieldT
 
     string familyName = tokens[0] + "LiborSwapIsdaFix";
     Currency ccy = parseCurrency(tokens[0]);
-    boost::shared_ptr<IborIndex> index = convention->index()->clone(f);
-    Period tenor(convention->fixedFrequency());
+
+    boost::shared_ptr<IborIndex> index = f.empty() || !convention ? boost::shared_ptr<IborIndex>() : convention->index()->clone(f);
+    QuantLib::Natural settlementDays = index ? index->fixingDays() : 0;
+    QuantLib::Calendar calender = convention ? convention->fixedCalendar() : NullCalendar();
+    Period fixedLegTenor = convention ? Period(convention->fixedFrequency()) : Period(1, Months);
+    BusinessDayConvention fixedLegConvention = convention ? convention->fixedConvention() : ModifiedFollowing;
+    DayCounter fixedLegDayCounter = convention ? convention->fixedDayCounter() : ActualActual();
 
     if (d.empty())
-        return boost::make_shared<SwapIndex>(familyName, // familyName
+        return boost::make_shared<SwapIndex>(familyName,
                                              p,
-                                             index->fixingDays(), // settlementDays
-                                             ccy, convention->fixedCalendar(),
-                                             tenor,                         // fixedLegTenor
-                                             convention->fixedConvention(), // fixedLegConvention
-                                             convention->fixedDayCounter(), // fixedLegDaycounter
+                                             settlementDays,
+                                             ccy, calender,
+                                             fixedLegTenor,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
                                              index);
     else
-        return boost::make_shared<SwapIndex>(familyName, p, index->fixingDays(), ccy, convention->fixedCalendar(),
-                                             tenor, convention->fixedConvention(), convention->fixedDayCounter(), index,
+        return boost::make_shared<SwapIndex>(familyName,
+                                             p,
+                                             settlementDays,
+                                             ccy, calender,
+                                             fixedLegTenor,
+                                             fixedLegConvention,
+                                             fixedLegDayCounter,
+                                             index,
                                              d);
 }
 
@@ -258,7 +319,9 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"USCPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"US CPI", boost::make_shared<ZeroInflationIndexParser<USCPI>>()},
         {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
-        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()}};
+        {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
+        {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
+        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

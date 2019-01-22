@@ -72,6 +72,10 @@ using boost::unit_test::test_suite;
 #include "pricetermstructureadapter.hpp"
 #include "interpolatedyoycapfloortermpricesurface.hpp"
 #include "discountratiomodifiedcurve.hpp"
+#include "crossccyfixfloatswap.hpp"
+#include "crossccyfixfloatswaphelper.hpp"
+#include "crossccybasismtmresetswap.hpp"
+#include "crossccybasismtmresetswaphelper.hpp"
 
 namespace {
 
@@ -134,6 +138,10 @@ test_suite* init_unit_test_suite(int, char* []) {
     test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
     test->add(testsuite::CalendarsTest::suite());
     test->add(testsuite::DiscountingRatioModifiedCurveTest::suite());
+    test->add(testsuite::CrossCurrencyFixFloatSwapTest::suite());
+    test->add(testsuite::CrossCurrencyFixFloatSwapHelperTest::suite());
+    test->add(testsuite::CrossCcyBasisMtMResetSwapTest::suite());
+    test->add(testsuite::CrossCcyBasisMtMResetSwapHelperTest::suite());
 
     test->add(BOOST_TEST_CASE(stopTimer));
 

@@ -8,6 +8,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/USD</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURGBP</CurveId>
@@ -16,6 +17,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/GBP</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURCHF</CurveId>
@@ -24,6 +26,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/CHF</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>EURJPY</CurveId>
@@ -32,6 +35,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/EUR/JPY</FXSpotID>
     </FXVolatility>
     <FXVolatility>
       <CurveId>GBPUSD</CurveId>
@@ -40,6 +44,7 @@
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,4Y,5Y,10Y
       </Expiries>
+      <FXSpotID>FX/GBP/USD</FXSpotID>
     </FXVolatility>
   </FXVolatilities>
   <SwaptionVolatilities>
@@ -165,8 +170,8 @@
       <CurveDescription>EUR normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
@@ -186,8 +191,8 @@
       <CurveDescription>GBP normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->
@@ -205,8 +210,8 @@
       <CurveDescription>USD normal cap floor volatilities</CurveDescription>
       <!-- Normal, Lognormal or ShiftedLognormal -->
       <VolatilityType>Normal</VolatilityType>
-      <!-- True or False -->
-      <Extrapolation>TRUE</Extrapolation>
+      <!-- Linear, Flat, None -->
+      <Extrapolation>Linear</Extrapolation>
       <!-- Include ATM vol quotes also: True or False -->
       <IncludeAtm>FALSE</IncludeAtm>
       <!-- Day counter for date to time conversion -->

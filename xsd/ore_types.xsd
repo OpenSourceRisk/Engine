@@ -49,6 +49,7 @@
       <xs:enumeration value="CAD"/>
       <xs:enumeration value="CHF"/>
       <xs:enumeration value="CNY"/>
+      <xs:enumeration value="CNH"/>
       <xs:enumeration value="CZK"/>
       <xs:enumeration value="DEM"/>
       <xs:enumeration value="DKK"/>
@@ -419,6 +420,15 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Physical"/>
       <xs:enumeration value="Cash"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="settlementMethod">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PhysicalOTC"/>
+      <xs:enumeration value="PhysicalCleared"/>
+      <xs:enumeration value="CollateralizedCashPrice"/>
+      <xs:enumeration value="ParYieldCurve"/>
     </xs:restriction>
   </xs:simpleType>
 

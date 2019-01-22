@@ -271,17 +271,39 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // building security spreads
     LOG("building security spreads...");
     for (const auto& name : parameters->securities()) {
-        DLOG("Adding security spread " << name <<" from configuration " << configuration);
-        boost::shared_ptr<SimpleQuote> spreadQuote(new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+        DLOG("Adding security spread " << name << " from configuration " << configuration);
+        // we have a security spread for each security, so no try-catch block required
+        boost::shared_ptr<SimpleQuote> spreadQuote(
+            new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
         if (parameters->securitySpreadsSimulate()) {
             simData_.emplace(std::piecewise_construct,
-                std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
-                std::forward_as_tuple(spreadQuote));
+                             std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
+                             std::forward_as_tuple(spreadQuote));
         }
         securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                                                                           Handle<Quote>(spreadQuote)));
     }
     LOG("security spreads done...");
+
+    // building security recovery rates
+    LOG("building security recovery rates...");
+    for (const auto& name : parameters->securities()) {
+        DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+        // security recovery rates are optional, so we need a try-catch block
+        try {
+            boost::shared_ptr<SimpleQuote> recoveryQuote(
+                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+            if (parameters->simulateRecoveryRates()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                 std::forward_as_tuple(recoveryQuote));
+            }
+            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+        } catch (...) {
+        }
+    }
+    LOG("security recovery rates done...");
 
     // constructing index curves
     LOG("building index curves...");
@@ -433,7 +455,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     for (Size j = 0; j < swapTenors.size(); ++j) {
                         Real strike =
                             atmOnly ? Null<Real>() : cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
-                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
                         Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
@@ -544,7 +566,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
                 optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
             boost::shared_ptr<StrippedOptionletAdapter2> adapter =
-                boost::make_shared<StrippedOptionletAdapter2>(optionlet);
+                boost::make_shared<StrippedOptionletAdapter2>(optionlet, true); // FIXME always flat extrapolation
             hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
         } else {
             string decayModeString = parameters->capFloorVolDecayMode();
@@ -712,7 +734,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     cal, spot, times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
             } else {
                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
             }
             fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 

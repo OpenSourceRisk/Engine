@@ -28,36 +28,36 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %Coupon paying a Libor-type index on an fx-linked nominal
 //! \ingroup cashflows
-class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon {
+class FloatingRateFXLinkedNotionalCoupon : public FloatingRateCoupon, public FXLinked {
 public:
     //! FloatingRateFXLinkedNotionalCoupon
-    /*! Note that if you ask this coupon for it's nominal, you will get 0 back as the nominal is
-     *  variable (and Coupon::nominal() is not virtual). To get the actual nominal call fxLinkedCashFlow().amount()
-     */
-    FloatingRateFXLinkedNotionalCoupon(Real foreignAmount, const Date& fxFixingDate, boost::shared_ptr<FxIndex> fxIndex,
-                                       bool invertFxIndex, const Date& paymentDate, const Date& startDate,
-                                       const Date& endDate, Natural fixingDays,
-                                       const boost::shared_ptr<InterestRateIndex>& index, Real gearing = 1.0,
-                                       Spread spread = 0.0, const Date& refPeriodStart = Date(),
-                                       const Date& refPeriodEnd = Date(), const DayCounter& dayCounter = DayCounter(),
-                                       bool isInArrears = false)
-        : FloatingRateCoupon(paymentDate, 0.0, startDate, endDate, fixingDays, index, gearing, spread, refPeriodStart,
-                             refPeriodEnd, dayCounter, isInArrears),
-          notional_(paymentDate, fxFixingDate, foreignAmount, fxIndex, invertFxIndex) {}
+    FloatingRateFXLinkedNotionalCoupon(const Date& fxFixingDate, Real foreignAmount, boost::shared_ptr<FxIndex> fxIndex,
+                                       bool invertFxIndex, const boost::shared_ptr<FloatingRateCoupon>& underlying)
+        : FloatingRateCoupon(underlying->date(), Null<Real>(), underlying->accrualStartDate(),
+                             underlying->accrualEndDate(), underlying->fixingDays(), underlying->index(),
+                             underlying->gearing(), underlying->spread(), underlying->referencePeriodStart(),
+                             underlying->referencePeriodEnd(), underlying->dayCounter(), underlying->isInArrears()),
+          FXLinked(fxFixingDate, foreignAmount, fxIndex, invertFxIndex), underlying_(underlying) {
+        registerWith(FXLinked::fxIndex());
+        registerWith(underlying_);
+    }
 
     //! \name Coupon interface
     //@{
-    Real nominal() const { return notional_.amount(); }
+    Rate nominal() const { return foreignAmount() * fxRate(); }
+    Rate rate() const { return underlying_->rate(); }
     //@}
 
-    //! Return the underlying FX linked notional
-    const FXLinkedCashFlow& fxLinkedCashFlow() { return notional_; }
+    //! \name FloatingRateCoupon interface
+    //@{
+    Rate indexFixing() const { return underlying_->indexFixing(); } // might be overwritten in underlying
+    void setPricer(const ext::shared_ptr<FloatingRateCouponPricer>& p) { underlying_->setPricer(p); }
+    //@}
 
     //! \name Visitability
     //@{
@@ -65,7 +65,7 @@ public:
     //@}
 
 private:
-    FXLinkedCashFlow notional_;
+    const boost::shared_ptr<FloatingRateCoupon> underlying_;
 };
 
 // inline definitions

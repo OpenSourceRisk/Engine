@@ -1,142 +1,4 @@
-%========================================================
-\section{Trade Data}\label{sec:portfolio_data}
-%========================================================
 
-The trades that make up the portfolio are specified in an XML file where the portfolio data is specified in a hierarchy
-of nodes and sub-nodes.  The nodes containing individual trade data are referred to as elements or XML elements. These
-are generally the lowest level nodes.
-
-\vspace{1em}
-
-The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within
-the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.
-Further, the trade type is set by the TradeType XML element. Each trade has an Envelope node that includes the same XML
-elements for all trade types (Id, Type, Counterparty, Rating, NettingSetId) plus the Additional fields node, and after
-that, a node containing trade specific data.
-
-\vspace{1em}
-An example of a {\tt portfolio.xml} file with one Swap trade including the full envelope node is shown in Listing \ref{lst:portfolio}.
-
-\begin{listing}[H]
-%\hrule\medskip
-\begin{minted}[fontsize=\footnotesize]{xml}
-<Portfolio>
-  <Trade id="Swap#1">
-    <TradeType> Swap </TradeType>
-    <Envelope>
-      <CounterParty> Counterparty#1 </CounterParty>
-      <NettingSetId> NettingSet#2 </NettingSetId>
-      <PortfolioIds>
-          <PortoliodId> PF#1 </PortfolioId>
-          <PortoliodId> PF#2 </PortfolioId>
-      </PortfolioIds>
-      <AdditionalFields>
-        <Sector> SectorA </Sector>
-        <Book> BookB </Book>
-        <Rating> A1 </Rating>
-      </AdditionalFields>
-    </Envelope>
-    <SwapData>
-        ...
-        [Trade specific data for a Swap]
-        ...
-    </SwapData>
-  </Trade>
-</Portfolio>
-\end{minted}
-\caption{Portfolio}
-\label{lst:portfolio}
-\end{listing}
-
-A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and
-allowable values follows below. There are two XML elements directly under the top level {\tt Portfolio} node:
-
-\begin{itemize}
-\item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
-  portfolio. Trade ids should be unique within a portfolio.  The {\tt
-    Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
-  in the beginning closed by {\tt </Trade>} at the end of the trade data.
-
-Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
-
-
-\item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
-ORE currently supports 14 trade types.
-
-%Allowable values:  \emph{Swap, CapFloor, Swaption, FxForward, FxOption, Bond, CreditDefaultSwap}
-Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
-EquityForward, EquityOption, VarianceSwap, CommodityForward, CommodityOption, CreditDefaultSwap, Bond}
-
-\end{itemize}
-
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Envelope}\label{ss:envelope}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-The envelope node contains basic identifying details of a trade ({\tt
-  Id}, {\tt Type}, {\tt Counterparty}, {\tt NettingSetId}), a 
-{\tt PortfolioIds} node containing a list of portfolio assignments, 
-plus an {\tt AdditionalFields} node where custom
-elements can be added for informational purposes such as {\tt Book} or
-{\tt Sector}. Beside the custom elements within the {\tt
-  AdditionalFields} node, the envelope contains the same elements for
-all Trade types.  The {\tt Id}, {\tt Type}, {\tt Counterparty} and
-{\tt NettingSetId} elements must have non-blank entries for ORE to
-run. 
-%, whereas ORE will run without a {\tt Rating} element but fail to produce a CVA. \\
-The meanings and allowable values of the various elements in the \lstinline!Envelope!  node follow below.
-
-\begin{itemize}
-\item {\tt Id}: The {\tt Id} element in the envelope is used to identify trades within a portfolio. It should be set to
-  identical values as the {\tt Trade id=" "} element.
-
-  Allowable values: Any alphanumeric string. The underscore (\_) sign may be used as well.
-
-%\item {\tt Type}: The Trade Type is in addition to being set in the {\tt ClassName} element, also set by the {\tt Type}
-%  element in the envelope. Both elements should have the same entry.
-%
-%Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForward, FxSwap, FxOption,
-%EquityForward, EquityOption, CreditDefaultSwap, Bond}
-
-\item {\tt Counterparty}: Specifies the name of the counterparty of the trade.  It is used to show exposure analytics by
-  counterparty.
-
-Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
-
-%\item {\tt Rating} [Optional]: The {\tt Rating} element specifies the default curve that will be used in the CVA
-% calculations.  No CVA will be calculated if omitted or left blank.
-
-%Allowable values: An alphanumeric string that matches default curve names in the market configuration file.  
-
-\item {\tt NettingSetId} [Optional]: The {\tt NettingSetId} element specifies the identifier for a netting set. If a
-  \lstinline!NettingSetId! is specified, the trade is eligible for close-out netting under the terms of an associated
-  ISDA agreement. The specified {\tt NettingSetId} must be defined within the netting set definitions file
-  (see section \ref{sec:nettingsetinput}). If left blank or omitted the trade will not belong to any netting set, and thus not be
-  eligible for netting.
-
-Allowable values: Any alphanumeric string. Underscores (\_) and blank spaces may be used as well. 
-
-% -- specified netting --Negative transaction values offset exposures from positive transaction values within specified
-% netting groups. Total netting
-% group %-- exposures and exposures from transactions not belonging to a netting group are then combined without offsetting.
-
-\item \lstinline!PortfolioIds! [Optional]: The PortfolioIds node
-  allows the assignment of a given trade to several portfolios, each
-  enclosed in its own pair of tags {\tt <PortfolioId>} and {\tt
-    </PortfolioId>} . Note that ORE does not assume a hierarchical 
- organisation of such portfolios. If present, the portfolio IDs will be used in the
-  generation of some ORE reports such as the VaR report which provides
-  breakdown by any portfolio id that occurs in the trades' envelopes.
-
-Allowable values for each PortfolioId: Any string.
-
-\item \lstinline!AdditionalFields! [Optional]: The AdditionalFields node allows the insertion of additional trade
-  information using custom XML elements.  For example, elements such as Sector, Desk or Folder can be used. The elements
-  within the \lstinline!AdditionalFields! node are used for
-  informational purposes only, and do not affect any analytics in ORE.
-
-Allowable values: Any custom element.
-
-\end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Specific Data}
@@ -188,7 +50,7 @@ elements, or both.
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
-  <CapFloorData>
+<CapFloorData>
   <LongShort>Long</LongShort>
   <LegData>
     <Payer>false</Payer>
@@ -246,13 +108,13 @@ The \lstinline!SwaptionData!  node is the trade data container for the Swaption 
 node has one and exactly one \lstinline!OptionData! trade component sub-node, and at least one \lstinline!LegData! trade
 component sub-node.  These trade components are outlined in section \ref{ss:option_data} and section
 \ref{ss:leg_data}.\\
-
+\vspace{5mm}
 Supported swaption exercise styles are European and Bermudan. European swaptions can have unlimited number of legs, with
 each leg represented by a \lstinline!LegData! sub-node. Bermudan swaptions must have two legs, i.e. two
 \lstinline!LegData! sub-nodes. See Table \ref{tab:bermudan_requirements} for further details on requirements for
 Bermudan swaptions. Cross currency swaptions are not supported for either exercise style, i.e. the Currency element must
 have the same value for all \lstinline!LegData! sub-nodes of a swaption.\\
-
+\vspace{5mm}
 The structure of an example \lstinline!SwaptionData!  node of a two-legged European swaption is shown in Listing
 \ref{lst:swaption_data}.
 
@@ -328,6 +190,8 @@ The meanings and allowable values of the various elements in the \lstinline!FXFo
 \item BoughtAmount: The amount to be bought on value date.  \\ Allowable values:  Any positive real number.
 \item SoldCurrency: The currency to be sold on value date.  \\ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 \item SoldAmount: The amount to be sold on value date.  \\ Allowable values:  Any positive real number.
+\item Settlement [Optional]: Delivery type.  Note that Non-Deliverable Forwards can be represented by \emph{Cash} settlement. Delivery type does not impact pricing in ORE.  \\Allowable values: \emph{Cash} or \emph{Physical}.  Defaults to \emph{Physical} if left blank or omitted.
+
 
 \end{itemize}
 
@@ -347,7 +211,7 @@ It contains no sub-nodes.
             <NearBoughtAmount>1000000</NearBoughtAmount>
             <NearSoldCurrency>USD</NearSoldCurrency>
             <NearSoldAmount>1140000</NearSoldAmount>
-             <FarDate>2028-09-01</FarDate>
+            <FarDate>2028-09-01</FarDate>
             <FarBoughtAmount>1300000</FarBoughtAmount>
             <FarSoldAmount>1000000</FarSoldAmount>
         </FxSwapData>
@@ -435,7 +299,7 @@ an example \lstinline!EquityOptionData! node for an equity option is shown in Li
     <OptionData>
       ...
     </OptionData>
-    <Name>SP5</Name>
+    <Name>ISIN:US78378X1072</Name>
     <Currency>USD</Currency>
     <Strike>2147.56</Strike>
     <Quantity>17000</Quantity>
@@ -450,10 +314,10 @@ The meanings and allowable values of the elements in the \lstinline!EquityOption
 \begin{itemize}
 	\item OptionData: This is a trade component sub-node outlined in section \ref{ss:option_data} Option Data. Note 
 	that the equity option type allows for \emph{European} option style only.	
-	\item Name: The name of the underlying equity. \\
-	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Name: The identifier of the underlying equity. \\
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
 	\item Currency: The currency of the equity option. \\
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The option strike price.\\
 	Allowable values:  Any positive real number.	
 	\item Quantity: The number of units of the underlying covered by the transaction. \\
@@ -472,7 +336,7 @@ Listing \ref{lst:eqfwd_data}.
 <EquityForwardData>
   <LongShort>Long</LongShort>
   <Maturity>2018-06-30</Maturity>
-  <Name>SP5</Name>
+  <Name>ISIN:US78378X1072</Name>
   <Currency>USD</Currency>
   <Strike>2147.56</Strike>
   <Quantity>17000</Quantity>
@@ -486,13 +350,13 @@ The meanings and allowable values of the elements in the \lstinline!EquityForwar
 
 \begin{itemize}
 	\item LongShort: Defines whether the underlying equity will be bought (long) or sold (short). \\
-	Allowable values: Long, Short.
+	Allowable values:  \emph{Long}, \emph{Short}.
 	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying equity will be bought/sold. \\
 	Allowable values: Any date string.
-	\item Name: The name of the underlying equity or equity index. \\
-	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
+	\item Name: The identifier of the underlying equity or equity index. \\
+	Allowable values:  Any string (provided it is the ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
 	\item Currency: The  currency of the equity forward. \\
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The agreed buy/sell price of the equity forward. \\
 	Allowable values:  Any positive real number.	
 	\item Quantity: The number of units of the underlying equity to be bought/sold. \\
@@ -512,7 +376,7 @@ CPI leg contains an additional {\tt CPILegData} block. See \ref{ss:cpilegdata} f
       <LegData>
         <LegType>Floating</LegType>
         <Payer>true</Payer>
-        ...
+         ...
       </LegData>
       <LegData>
         <LegType>CPI</LegType>
@@ -567,10 +431,8 @@ are
 \item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
     todaysmarket.xml}
 % \item LGD (optional): If given, this LGD is used for pricing, overriding the default LGD of the default curve
-\item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for
-  pricing.
-\item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a curve in the yield
-  curves block in {\tt todaysmarket.xml}.
+\item SecurityId: A unique identifier for the security, this defines the security specific spread to be used for pricing.
+\item ReferenceCurveId: The benchmark curve to be used for pricing, this must match a name of a yield curve in the market data configuration.
 \item SettlementDays: The settlement delay applicable to the security.
 \item Calendar: The calendar associated to the settlement lag.
 \item IssueDate: The issue date of the security.
@@ -600,7 +462,7 @@ A LegData block then defines the cashflow structure of the bond, this can be of 
 \label{lst:bonddata}
 \end{listing}
 
-The bond pricing requires a recovery rate that can be specified in ORE per SecurityId, see sections \ref{sec:curveconfig} and \ref{md:sec_rec_rates}. 
+The bond pricing requires a recovery rate that can be specified per SecurityId in the market data configuration.
 
 \subsubsection{Credit Default Swap}
 
@@ -608,24 +470,23 @@ A credit default swap is set up using a {\tt CreditDefaultSwapData} block as sho
 are
 
 \begin{itemize}
-\item IssuerId: A unique identifier for the issuer of the bond
-\item CreditCurveId: The entity defining the default curve used for pricing, via the default curves block in {\tt
-    todaysmarket.xml}
+\item IssuerId: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
+\item CreditCurveId: Typically the ISIN-code of the reference entity defining the default curve used for pricing. Other identifiers may be used as well, provided they are supported in the market data configuration.
 \item SettlesAccrual: Whether or not the accrued coupon is due in the event of a default.
 \item PaysAtDefaultTime: If set to true, any payments triggered by a default event are due at default time. If set to false, they are due at the end of the accrual period.
 \item ProtectionStart: The first date where a default event will trigger the contract.
-\item UpfrontDate: Settlement date for the upfront payment.
-\item UpfrontFee: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\item UpfrontDate [Optional]: Settlement date for the upfront payment.
+\item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount.
 \end{itemize}
 
-A LegData block then defines the cashflow structure of the credit default swap, this must be be of type fixed.
+A LegData block then defines the cashflow structure of the credit default swap, this must be be of type \emph{Fixed}.
 
 \begin{listing}[H]
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
     <CreditDefaultSwapData>
       <IssuerId>CPTY_A</IssuerId>
-      <CreditCurveId>BANK</CreditCurveId>
+      <CreditCurveId>ISIN:XS0982710740</CreditCurveId>
       <SettlesAccrual>Y</SettlesAccrual>
       <PaysAtDefaultTime>Y</PaysAtDefaultTime>
       <ProtectionStart>20160206</ProtectionStart>
@@ -653,14 +514,13 @@ Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
 
 \item EndDate: EndDate is the date when the forward loan or deposit ends. It follows that (EndDate - StartDate) is the tenor/term of the underlying loan or deposit.
 \item Currency: The currency of the FRA notional. \\
-Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 \item Index: The name of the interest rate index the FRA is benchmarked against.
 \item LongShort: Specifies whether the FRA position is long (one receives the agreed rate) or short (one pays the agreed rate).
 \item Strike: The agreed forward interest rate.
 \item Notional: No accretion or amortisation, just a constant notional.
 \end{itemize}
 
-A LegData block then defines the cashflow structure of the bond, this can be of type fixed, floating etc.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -713,7 +573,7 @@ The meanings and allowable values of the elements in the \lstinline!CommodityOpt
 	\item Name: The name of the underlying commodity. \\
 	Allowable values:  Any string (provided it is the ID of a commodity in the market configuration).
 	\item Currency: The currency of the commodity option. \\
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The option strike price.\\
 	Allowable values:  Any positive real number.	
 	\item Quantity: The number of units of the underlying commodity covered by the transaction. \\
@@ -745,13 +605,13 @@ The meanings and allowable values of the elements in the \lstinline!CommodityFor
 
 \begin{itemize}
 	\item LongShort: Defines whether the underlying commodity will be bought (long) or sold (short). \\
-	Allowable values: Long, Short.
+	Allowable values: \emph{Long, Short}
 	\item Maturity: The maturity date of the forward contract, i.e. the date when the underlying commodity will be bought/sold. \\
 	Allowable values: Any date string.
 	\item Name: The name of the underlying commodity. \\
 	Allowable values:  Any string (provided it is the ID of an equity in the market configuration).
 	\item Currency: The  currency of the commodity forward. \\
-	Allowable values:  See Currency in Table \ref{tab:allow_stand_data}.	
+	Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.	
 	\item Strike: The agreed buy/sell price of the commodity forward. \\
 	Allowable values:  Any positive real number.	
 	\item Quantity: The number of units of the underlying commodity to be bought/sold. \\

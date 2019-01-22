@@ -28,17 +28,18 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Period;
 using QuantLib::Rate;
 using std::vector;
 using std::string;
 using std::pair;
+using std::map;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace analytics {
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
@@ -168,9 +169,16 @@ public:
     //@}
 
 protected:
-    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
+    void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
     void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
+
+    //! toXML helper methods
+    //@{
+    void shiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const ShiftData& data) const;
+    void curveShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const CurveShiftData& data) const;
+    void volShiftDataToXML(ore::data::XMLDocument& doc, XMLNode* node, const VolShiftData& data) const;
+    //@}
 
     map<string, boost::shared_ptr<CurveShiftData>> discountCurveShiftData_; // key: ccy
     map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_; // key: indexName

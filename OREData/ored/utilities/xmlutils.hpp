@@ -30,13 +30,6 @@
 #include <string>
 #include <vector>
 
-using std::string;
-using std::vector;
-using std::map;
-using std::pair;
-using QuantLib::Real;
-using QuantLib::Size;
-using QuantLib::Period;
 
 // Forward declarations and typedefs
 // so we don't need to #include rapidxml everywhere.
@@ -53,6 +46,13 @@ template <class Ch> class xml_document;
 
 namespace ore {
 namespace data {
+using std::string;
+using std::vector;
+using std::map;
+using std::pair;
+using QuantLib::Real;
+using QuantLib::Size;
+using QuantLib::Period;
 
 typedef rapidxml::xml_node<char> XMLNode;
 
@@ -103,6 +103,11 @@ public:
 
     void fromFile(const std::string& filename);
     void toFile(const std::string& filename);
+
+    //! Parse from XML string
+    void fromXMLString(const std::string& xml);
+    //! Parse from XML string
+    std::string toXMLString();
 };
 
 //! XML Utilities Class
@@ -149,6 +154,9 @@ public:
     static void addChildrenWithAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                                           const vector<Real>& values, const string& attrName,
                                           const vector<string>& attrs);
+    static void addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                           const vector<Real>& values, const string& attrName,
+                                           const vector<string>& attrs);
 
     static void addChildren(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
                             const string& firstName, const string& secondName, const map<string, string>& values);

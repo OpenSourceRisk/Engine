@@ -32,15 +32,15 @@
 //#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-using QuantLib::Date;
+
+namespace ore {
+namespace data {
+using namespace QuantLib;
 using ore::data::YieldCurveSegment;
 using ore::data::YieldCurveConfig;
 using ore::data::YieldCurveConfigMap;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building yield term structures
 /*!
@@ -147,6 +147,8 @@ private:
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+        vector<boost::shared_ptr<RateHelper>>& instruments);
 };
 
 //! Helper function for parsing interpolation method

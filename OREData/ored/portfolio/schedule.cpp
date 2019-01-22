@@ -219,7 +219,7 @@ Schedule makeSchedule(const ScheduleData& data) {
             Size offset = dates.back() == s.dates().front() ? 1 : 0;
             isRegular.erase(isRegular.end() - offset,
                             isRegular.end()); // correct for superfluous flags from previous schedule
-            // add isRegular information, if available, otherwi≈cdse assume irregular periods
+            // add isRegular information, if available, otherwise assume irregular periods
             if (s.hasIsRegular()) {
                 isRegular.insert(isRegular.end(), s.isRegular().begin(), s.isRegular().end());
             } else {

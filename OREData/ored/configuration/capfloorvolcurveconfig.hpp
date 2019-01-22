@@ -29,6 +29,9 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
@@ -38,9 +41,6 @@ using QuantLib::Natural;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
 
-namespace ore {
-namespace data {
-
 //! CapFloor volatility curve configuration class
 /*! \ingroup configuration
  */
@@ -48,13 +48,16 @@ class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
+    static const string defaultInterpolationMethod; // BicubicSpline
+
     CapFloorVolatilityCurveConfig() {}
     CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-                                  const VolatilityType& volatilityType, const bool extrapolate, bool inlcudeAtm,
-                                  const vector<Period>& tenors, const vector<double>& strikes,
-                                  const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-                                  const BusinessDayConvention& businessDayConvention, const string& iborIndex,
-                                  const string& discountCurve);
+                                  const VolatilityType& volatilityType, const bool extrapolate,
+                                  const bool flatExtrapolation, bool inlcudeAtm, const vector<Period>& tenors,
+                                  const vector<double>& strikes, const DayCounter& dayCounter, Natural settleDays,
+                                  const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
+                                  const string& iborIndex, const string& discountCurve,
+                                  const string& interpolationMethod = defaultInterpolationMethod);
 
     //! \name XMLSerializable interface
     //@{
@@ -66,6 +69,7 @@ public:
     //@{
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
+    const bool& flatExtrapolation() const { return flatExtrapolation_; }
     const bool& includeAtm() const { return includeAtm_; }
     const vector<Period>& tenors() const { return tenors_; }
     const vector<double>& strikes() const { return strikes_; }
@@ -75,6 +79,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& iborIndex() const { return iborIndex_; }
     const string& discountCurve() const { return discountCurve_; }
+    const string& interpolationMethod() const { return interpolationMethod_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -82,6 +87,7 @@ public:
     //@{
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate() { return extrapolate_; }
+    bool& flatExtrapolation() { return flatExtrapolation_; }
     bool& includeAtm() { return includeAtm_; }
     vector<Period>& tenors() { return tenors_; }
     vector<double>& strikes() { return strikes_; }
@@ -90,11 +96,12 @@ public:
     Calendar& calendar() { return calendar_; }
     string& iborIndex() { return iborIndex_; }
     string& discountCurve() { return discountCurve_; }
+    string& interpolationMethod() { return interpolationMethod_; }
     //@}
 
 private:
     VolatilityType volatilityType_;
-    bool extrapolate_, includeAtm_;
+    bool extrapolate_, flatExtrapolation_, includeAtm_;
     vector<Period> tenors_;
     vector<double> strikes_;
     DayCounter dayCounter_;
@@ -103,6 +110,7 @@ private:
     BusinessDayConvention businessDayConvention_;
     string iborIndex_;
     string discountCurve_;
+    string interpolationMethod_;
 };
 
 std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);

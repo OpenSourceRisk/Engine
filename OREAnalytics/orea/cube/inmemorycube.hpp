@@ -33,13 +33,13 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/utilities/serializationdate.hpp>
 
+
+namespace ore {
+namespace analytics {
 using QuantLib::Size;
 using QuantLib::Real;
 using QuantLib::Date;
 using std::vector;
-
-namespace ore {
-namespace analytics {
 
 //! InMemoryCube stores the cube in memory using nested STL vectors
 /*! InMemoryCube stores the cube in memory using nested STL vectors, this class is a template

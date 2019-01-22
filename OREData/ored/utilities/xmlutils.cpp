@@ -50,10 +50,9 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     QL_REQUIRE(length > 0, "File " << fileName << " is empty.");
     t.seekg(0, std::ios::beg);      // go back to the beginning
     _buffer = new char[length + 1]; // allocate memory for a buffer of appropriate dimension
-    memset(_buffer, 0, length + 1); // Wipe the buffer (caused problems on windows release build)
     t.read(_buffer, length);        // read the whole file into the buffer
+    _buffer[static_cast<int>(t.gcount())] = '\0';
     t.close();                      // close file handle
-    _buffer[length] = '\0';
     try {
         _doc->parse<0>(_buffer);
     } catch (rapidxml::parse_error& pe) {
@@ -129,6 +128,19 @@ void XMLSerializable::toFile(const string& filename) {
     doc.toFile(filename);
 }
 
+void XMLSerializable::fromXMLString(const string& xml) {
+    ore::data::XMLDocument doc;
+    doc.fromXMLString(xml);
+    fromXML(doc.getFirstNode(""));
+}
+
+string XMLSerializable::toXMLString() {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toString();
+}
+
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
     QL_REQUIRE(node, "XML Node is NULL (expected " << expectedName << ")");
     QL_REQUIRE(node->name() == expectedName,
@@ -165,6 +177,15 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int va
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
     string s = value ? "true" : "false";
     addChild(doc, n, name, s);
+}
+
+void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                       const vector<Real>& values, const string& attrName,
+                                       const vector<string>& attrs) {
+    if (attrs.empty())
+        XMLUtils::addChildren(doc, n, names, name, values);
+    else
+        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrName, attrs);
 }
 
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,

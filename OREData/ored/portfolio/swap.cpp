@@ -78,8 +78,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             // and calendar from legData_[i].fxIndex()
             string source = fxIndexBase->sourceCurrency().code();
             string target = fxIndexBase->targetCurrency().code();
-            Handle<YieldTermStructure> sorTS = market->discountCurve(source);
-            Handle<YieldTermStructure> tarTS = market->discountCurve(target);
+            Handle<YieldTermStructure> sorTS = market->discountCurve(source, configuration);
+            Handle<YieldTermStructure> tarTS = market->discountCurve(target, configuration);
             Handle<Quote> spot = market->fxSpot(source + target);
             Calendar cal = parseCalendar(legData_[i].fixingCalendar());
             fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
@@ -110,7 +110,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
                 // this is the reseting leg...
                 QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
-                Real foreignNotional = legData_[i].foreignAmount();
                 // First coupon is the same (no reset or FX link)
                 // The reset are FX Linked
                 for (Size j = 1; j < legs_[i].size(); ++j) {
@@ -118,12 +117,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
                     Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                   -static_cast<Integer>(fxIndex->fixingDays()), Days);
-                    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
-                        new FloatingRateFXLinkedNotionalCoupon(
-                            foreignNotional, fixingDate, fxIndex, invertFxIndex, coupon->date(),
-                            coupon->accrualStartDate(), coupon->accrualEndDate(), coupon->fixingDays(), coupon->index(),
-                            coupon->gearing(), coupon->spread(), coupon->referencePeriodStart(),
-                            coupon->referencePeriodEnd(), coupon->dayCounter(), coupon->isInArrears()));
+                    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                        boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
+                                                                               fxIndex, invertFxIndex, coupon);
                     // set the same pricer
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;

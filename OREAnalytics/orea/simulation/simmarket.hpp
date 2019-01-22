@@ -30,6 +30,7 @@
 
 namespace ore {
 namespace analytics {
+using namespace ore::data;
 
 //! Simulation Market
 /*!

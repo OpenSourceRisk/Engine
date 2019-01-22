@@ -28,10 +28,10 @@
     \ingroup math
 */
 
-using QuantLib::Real;
-using QuantLib::Size;
 
 namespace QuantExt {
+using QuantLib::Real;
+using QuantLib::Size;
 namespace detail {
 
 //! Regression impl

@@ -32,8 +32,6 @@ void EngineData::clear() {
     engineParams_.clear();
 }
 
-bool EngineData::hasProduct(const std::string& productName) { return (model_.find(productName) != model_.end()); }
-
 void EngineData::fromXML(XMLNode* root) {
     clear();
     XMLUtils::checkNode(root, "PricingEngines");
@@ -99,5 +97,38 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
     }
     return pricingEnginesNode;
 }
+
+// we assume all the maps have the same keys
+bool EngineData::hasProduct(const std::string& productName) {
+    return (model_.find(productName) != model_.end());
+}
+
+vector<string> EngineData::products() const {
+    vector<string> res;
+    for (auto it : model_)
+        res.push_back(it.first);
+    return res;
+}
+
+bool operator==(const EngineData& lhs, const EngineData& rhs) {
+    vector<string> products = lhs.products();
+    // this assumes they are both sorted the same
+    if (products != rhs.products())
+        return false;
+    // now loop over the products and check everything
+    for (auto product : products) {
+        if (lhs.model(product) != rhs.model(product) ||
+            lhs.modelParameters(product) != rhs.modelParameters(product) ||
+            lhs.engine(product) != rhs.engine(product) ||
+            lhs.engineParameters(product) != rhs.engineParameters(product))
+            return false;
+    }
+    return true;
+}
+
+bool operator!=(const EngineData& lhs, const EngineData& rhs) {
+    return !(lhs==rhs);
+}
+
 } // namespace data
 } // namespace ore

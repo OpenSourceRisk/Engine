@@ -33,6 +33,9 @@
 #include <ql/types.hpp>
 #include <set>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using std::set;
@@ -42,9 +45,6 @@ using boost::optional;
 using ore::data::XMLNode;
 using QuantLib::AcyclicVisitor;
 using QuantLib::Real;
-
-namespace ore {
-namespace data {
 
 //! Base class for yield curve segments.
 /*!
@@ -68,6 +68,7 @@ public:
         BMABasis,
         FXForward,
         CrossCcyBasis,
+        CrossCcyFixFloat,
         DiscountRatio
     };
     //! Default destructor
@@ -85,7 +86,7 @@ public:
     // TODO: why typeID?
     const string& typeID() const { return typeID_; }
     const string& conventionsID() const { return conventionsID_; }
-    virtual vector<string> quotes() const { return quotes_; }
+    const vector<pair<string, bool>>& quotes() const { return quotes_; }
     //@}
 
     //! \name Visitability
@@ -98,10 +99,21 @@ protected:
     //@{
     //! Default constructor
     YieldCurveSegment() {}
-    //! Detailed constructor
+    //! Detailed constructor - assumes all quotes are mandatory
     YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quotes);
     //@}
-    vector<string> quotes_;
+
+    //! Quote and optional flag pair
+    vector<pair<string, bool>> quotes_;
+
+    //! Utility to build a quote, optional flag defaults to false
+    pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
+
+    //! Utility method to read quotes from XML
+    void loadQuotesFromXML(XMLNode * node);
+    //! Utility method to write quotes to XML
+    XMLNode *writeQuotesToXML(XMLDocument& doc);
+
 
 private:
     // TODO: why type and typeID?

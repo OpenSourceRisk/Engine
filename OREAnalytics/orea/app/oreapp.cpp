@@ -68,6 +68,8 @@ OREApp::OREApp(boost::shared_ptr<Parameters> params, ostream& out)
 
     // Set up logging
     setupLog();
+
+    readSetup();
 }
 
 OREApp::~OREApp() {
@@ -82,20 +84,12 @@ int OREApp::run() {
     try {
         out_ << "ORE starting" << std::endl;
         LOG("ORE starting");
-        readSetup();
-
-        /*************
-         * Load Conventions
-         */
-        out_ << setw(tab_) << left << "Conventions... " << flush;
-        getConventions();
-        out_ << "OK" << endl;
+        //readSetup();
 
         /*********
          * Build Markets
          */
         out_ << setw(tab_) << left << "Market... " << flush;
-        getMarketParameters();
         buildMarket();
         out_ << "OK" << endl;
 
@@ -290,39 +284,6 @@ void OREApp::getConventions() {
         conventions_.fromFile(conventionsFile);
     } else {
         WLOG("No conventions file loaded");
-    }
-}
-
-void OREApp::buildMarket() {
-    if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
-        /*******************************
-         * Market and fixing data loader
-         */
-        out_ << endl << setw(tab_) << left << "Market data loader... " << flush;
-        string marketFileString = params_->get("setup", "marketDataFile");
-        vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
-        string fixingFileString = params_->get("setup", "fixingDataFile");
-        vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
-        string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
-        bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
-        CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
-        out_ << "OK" << endl;
-
-        /**********************
-         * Curve configurations
-         */
-        CurveConfigurations curveConfigs;
-        if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
-            out_ << setw(tab_) << left << "Curve configuration... " << flush;
-            string curveConfigFile = inputPath_ + "/" + params_->get("setup", "curveConfigFile");
-            curveConfigs.fromFile(curveConfigFile);
-            out_ << "OK" << endl;
-        } else {
-            WLOG("No curve configurations loaded from file");
-        }
-        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
-    } else {
-        WLOG("No market data loaded from file");
     }
 }
 
@@ -857,5 +818,91 @@ void OREApp::writeDIMReport() {
         reportVec.push_back(boost::make_shared<ore::data::CSVFileReport>(dimFiles2[i]));
     postProcess_->exportDimRegression(nettingSet, dimOutputGridPoints, reportVec);
 }
+
+void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& curveConfigXML,
+    const std::string& conventionsXML, const std::vector<string>& marketData,
+    const std::vector<string>& fixingData) {
+    DLOG("OREPlusApp::buildMarket called");
+
+    if (conventionsXML == "")
+        getConventions();
+    else
+        conventions_.fromXMLString(conventionsXML);
+
+    if (todaysMarketXML == "")
+        getMarketParameters();
+    else
+        marketParameters_.fromXMLString(todaysMarketXML);
+
+    CurveConfigurations curveConfigs;
+    if (curveConfigXML != "")
+        curveConfigs.fromXMLString(curveConfigXML);
+    else if (params_->has("setup", "curveConfigFile") && params_->get("setup", "curveConfigFile") != "") {
+        out_ << endl << setw(tab_) << left << "Curve configuration... " << flush;
+        string inputPath = params_->get("setup", "inputPath");
+        string curveConfigFile = inputPath + "/" + params_->get("setup", "curveConfigFile");
+        LOG("Load curve configurations from file");
+        curveConfigs.fromFile(curveConfigFile);
+        out_ << "OK" << endl;
+    }
+    else {
+        WLOG("No curve configurations loaded");
+    }
+
+    string implyTodaysFixingsString = params_->get("setup", "implyTodaysFixings");
+    bool implyTodaysFixings = parseBool(implyTodaysFixingsString);
+
+    if (marketData.size() == 0 || fixingData.size() == 0) {
+        /*******************************
+        * Market and fixing data loader
+        */
+        if (params_->has("setup", "marketDataFile") && params_->get("setup", "marketDataFile") != "") {
+            out_ << setw(tab_) << left << "Market data loader... " << flush;
+            string marketFileString = params_->get("setup", "marketDataFile");
+            vector<string> marketFiles = getFilenames(marketFileString, inputPath_);
+            string fixingFileString = params_->get("setup", "fixingDataFile");
+            vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
+            CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
+            out_ << "OK" << endl;
+            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+        }
+        else {
+            WLOG("No market data loaded from file");
+        }
+    }
+    else {
+        LOG("Load market and fixing data from string vectors");
+        InMemoryLoader loader;
+        loadDataFromBuffers(loader, marketData, fixingData, implyTodaysFixings);
+        market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs, conventions_);
+    }
+    DLOG("market built");
+}
+
+boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
+    QL_REQUIRE(market_ != nullptr, "OREApp::getMarket(): original market is null");
+    return boost::dynamic_pointer_cast<MarketImpl>(market_);
+}
+
+boost::shared_ptr<EngineFactory> OREApp::buildEngineFactoryFromXMLString(const boost::shared_ptr<Market>& market,
+    const std::string& pricingEngineXML) {
+    DLOG("OREApp::buildEngineFactoryFromXMLString called");
+
+    if (pricingEngineXML == "")
+        return buildEngineFactory(market);
+    else {
+        boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+        engineData->fromXMLString(pricingEngineXML);
+
+        map<MarketContext, string> configurations;
+        configurations[MarketContext::irCalibration] = params_->get("markets", "lgmcalibration");
+        configurations[MarketContext::fxCalibration] = params_->get("markets", "fxcalibration");
+        configurations[MarketContext::pricing] = params_->get("markets", "pricing");
+        boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(
+            engineData, market, configurations, getExtraEngineBuilders(), getExtraLegBuilders());
+        return factory;
+    }
+}
+
 } // namespace analytics
 } // namespace ore

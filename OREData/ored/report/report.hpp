@@ -29,14 +29,14 @@
 #include <ql/types.hpp>
 #include <string>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using QuantLib::Size;
 using QuantLib::Real;
 using QuantLib::Date;
 using QuantLib::Period;
-
-namespace ore {
-namespace data {
 
 /*! Abstract Report interface class
  *

@@ -29,9 +29,9 @@
 #include <ql/time/calendars/czechrepublic.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! CZK-PRIBOR index
 /*! CZK-PRIBOR rate overseen by the Czech National Bank.

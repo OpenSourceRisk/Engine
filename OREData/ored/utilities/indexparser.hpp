@@ -32,6 +32,9 @@
 #include <qle/indexes/fxindex.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 
+
+namespace ore {
+namespace data {
 using std::string;
 using QuantLib::IborIndex;
 using QuantLib::SwapIndex;
@@ -41,9 +44,6 @@ using QuantLib::Handle;
 using QuantLib::YieldTermStructure;
 using QuantLib::ZeroInflationTermStructure;
 using ore::data::Convention;
-
-namespace ore {
-namespace data {
 
 //! Convert std::string to QuantExt::FxIndex
 /*!
@@ -57,6 +57,12 @@ boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
 */
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
                                             const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
+
+//! Try to convert std::string to QuantLib::IborIndex
+/*!
+    \ingroup utilities
+*/
+bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!

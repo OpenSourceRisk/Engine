@@ -42,10 +42,10 @@ namespace QuantExt {
     option expiry are considered to be
     part of the exercise into right.
 
-    \warning Cash settled swaptions are not supported
+    \warning Cash ParYieldCurve-settled swaptions are not supported
 
     Reference: Hagan, Methodology for callable swaps and Bermudan
-               “exercise into” swaptions
+               exercise into swaptions
 */
 
 /*! Base class from which we derive the engines for both the Swaption
@@ -74,8 +74,6 @@ protected:
 
         y_.resize(2 * my_ + 1);         // x-coordinate / standard deviation of x
         w_.resize(2 * my_ + 1);         // probability weight around y-grid point i
-        wsum_.resize(2 * my_ + 1, 0.0); // partial sum of the weights
-        Real M0 = 0.0, M2 = 0.0, M4 = 0.0;
         for (int i = 0; i <= 2 * my_; i++) {
             y_[i] = h_ * (i - my_);
             if (i == 0 || i == 2 * my_)
@@ -89,10 +87,6 @@ protected:
                 QL_REQUIRE(w_[i] > -1.0E-10, "NumericLgmSwaptionEngine: negative w (" << w_[i] << ") at i=" << i);
                 w_[i] = 0.0;
             }
-            M0 += w_[i];
-            Real y2 = y_[i] * y_[i];
-            M2 += w_[i] * y2;
-            M4 += w_[i] * y2 * y2;
         }
     }
 
@@ -109,7 +103,7 @@ protected:
     int mx_, my_, nx_;
     const Handle<YieldTermStructure> discountCurve_;
     Real h_;
-    std::vector<Real> y_, w_, wsum_;
+    std::vector<Real> y_, w_;
 }; // NnumercLgmSwaptionEngineBase
 
 //! Engine for Swaption instrument

@@ -51,6 +51,9 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         capFloorType = QuantLib::CapFloor::Collar;
     }
 
+    // Clear legs before building
+    legs_.clear();
+
     // Make sure that the floating leg section does not have caps or floors
     boost::shared_ptr<EngineBuilder> builder;
 

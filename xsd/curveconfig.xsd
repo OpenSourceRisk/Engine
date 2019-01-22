@@ -123,7 +123,15 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
-      <xs:element type="bool" name="Extrapolation"/>
+      <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element name="InterpolationMethod" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:enumeration value="Bilinear"/>
+            <xs:enumeration value="BicubicSpline"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
       <xs:element type="bool" name="IncludeAtm"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="calendar" name="Calendar"/>
@@ -475,6 +483,7 @@
   <xs:simpleType name="crossCurrencySegmentTypeType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Cross Currency Basis Swap"/>
+      <xs:enumeration value="Cross Currency Fix Float Swap"/>
       <xs:enumeration value="FX Forward"/>
     </xs:restriction>
   </xs:simpleType>
@@ -519,7 +528,15 @@
 
   <xs:complexType name="quoteType">
     <xs:sequence>
-      <xs:element type="xs:string" name="Quote" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="Quote" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute name="optional" type="xs:string"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
 

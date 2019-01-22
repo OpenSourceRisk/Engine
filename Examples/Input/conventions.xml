@@ -1292,6 +1292,8 @@
     <RollConvention>MF</RollConvention>
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>EUR-EURIBOR-3M</SpreadIndex>
+    <IsResettable>Y</IsResettable>
+    <FlatIndexIsResettable>Y</FlatIndexIsResettable>
   </CrossCurrencyBasis>
   <CrossCurrencyBasis>
     <Id>USD-GBP-XCCY-BASIS-CONVENTIONS</Id>
@@ -1445,6 +1447,18 @@
     <FlatIndex>USD-LIBOR-3M</FlatIndex>
     <SpreadIndex>TWD-GENERIC-3M</SpreadIndex>
   </CrossCurrencyBasis>
+  <!-- Cross Currency Fix Float Swaps -->
+  <CrossCurrencyFixFloat>
+    <Id>USD-TRY-XCCY-FIX-FLOAT-CONVENTIONS</Id>
+    <SettlementDays>2</SettlementDays>
+    <SettlementCalendar>US,UK,TRY</SettlementCalendar>
+    <SettlementConvention>F</SettlementConvention>
+    <FixedCurrency>TRY</FixedCurrency>
+    <FixedFrequency>Annual</FixedFrequency>
+    <FixedConvention>F</FixedConvention>
+    <FixedDayCounter>A360</FixedDayCounter>
+    <Index>USD-LIBOR-3M</Index>
+  </CrossCurrencyFixFloat>
   <!-- Inflation Swaps -->
   <InflationSwap>
       <Id>EUHICP_INFLATIONSWAP</Id>

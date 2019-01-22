@@ -29,11 +29,11 @@
 #include <ql/errors.hpp>
 #include <vector>
 
-using QuantLib::Size;
-using QuantLib::Real;
 
 namespace ore {
 namespace analytics {
+using QuantLib::Size;
+using QuantLib::Real;
 //! NPV Cube class stores both future and current NPV values.
 /*! The cube class stores futures NPV values in a 3-D array, i.e. each side can be of a different
  *  length (so a cuboid).
