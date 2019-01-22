@@ -29,7 +29,6 @@
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 
-#include <iostream>
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -81,9 +80,11 @@ using namespace QuantLib;
     Real
     InterpolatedCorrelationCurve<T>::correlationImpl(Time t, Real) const {
         calculate();
-        if (t <= this->times_.back())
+        if (t <= this->times_[0]) {
+            return this->data_[0];
+        } else if (t <= this->times_.back()) {
             return this->interpolation_(t, true);
-
+        }
         // flat extrapolation
         return this->data_.back();
     }

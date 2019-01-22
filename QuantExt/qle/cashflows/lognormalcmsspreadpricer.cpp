@@ -69,7 +69,6 @@ namespace QuantExt {
         : CmsSpreadCouponPricer2(correlation), cmsPricer_(cmsPricer),
           couponDiscountCurve_(couponDiscountCurve) {
 
-        registerWith(correlation);
         if (!couponDiscountCurve_.empty())
             registerWith(couponDiscountCurve_);
         registerWith(cmsPricer_);
@@ -107,18 +106,18 @@ namespace QuantExt {
         Real phi1, phi2;
         phi1 = (*cnd_)(
             phi_ * (std::log(a_ * s1_ / h) +
-                    (m1_ + (0.5 - rho_ * rho_) * v1_ * v1_) * fixingTime_ +
-                    rho_ * v1_ * std::sqrt(fixingTime_) * v) /
-            (v1_ * std::sqrt(fixingTime_ * (1.0 - rho_ * rho_))));
+                    (m1_ + (0.5 - rho() * rho()) * v1_ * v1_) * fixingTime_ +
+                    rho() * v1_ * std::sqrt(fixingTime_) * v) /
+            (v1_ * std::sqrt(fixingTime_ * (1.0 - rho() * rho()))));
         phi2 = (*cnd_)(
             phi_ * (std::log(a_ * s1_ / h) +
                     (m1_ - 0.5 * v1_ * v1_) * fixingTime_ +
-                    rho_ * v1_ * std::sqrt(fixingTime_) * v) /
-            (v1_ * std::sqrt(fixingTime_ * (1.0 - rho_ * rho_))));
+                    rho() * v1_ * std::sqrt(fixingTime_) * v) /
+            (v1_ * std::sqrt(fixingTime_ * (1.0 - rho() * rho()))));
         Real f = a_ * phi_ * s1_ *
                      std::exp(m1_ * fixingTime_ -
-                              0.5 * rho_ * rho_ * v1_ * v1_ * fixingTime_ +
-                              rho_ * v1_ * std::sqrt(fixingTime_) * v) *
+                              0.5 * rho() * rho() * v1_ * v1_ * fixingTime_ +
+                              rho() * v1_ * std::sqrt(fixingTime_) * v) *
                      phi1 -
                  phi_ * h * phi2;
         return std::exp(-x * x) * f;
@@ -134,7 +133,7 @@ namespace QuantExt {
             phi_ *
             (gearing1_ * adjustedRate1_ + gearing2_ * adjustedRate2_ - k_ +
              std::sqrt(fixingTime_) *
-                 (rho_ * gearing1_ * vol1_ + gearing2_ * vol2_) * s);
+                 (rho() * gearing1_ * vol1_ + gearing2_ * vol2_) * s);
         Real f =
             close_enough(alpha_, 0.0)
                 ? std::max(beta, 0.0)
@@ -255,8 +254,6 @@ namespace QuantExt {
             // for the normal volatility case we do not need the drifts
             // but rather use adjusted rates directly in the integrand
 
-            rho_ = std::max(std::min(correlation(fixingTime_), 0.9999),
-                            -0.9999); // avoid division by zero in integrand
         } else {
             // fixing is in the past or today
             adjustedRate1_ = c1_->indexFixing();
@@ -305,7 +302,7 @@ namespace QuantExt {
                 std::sqrt(fixingTime_ *
                           (gearing1_ * gearing1_ * vol1_ * vol1_ +
                            gearing2_ * gearing2_ * vol2_ * vol2_ +
-                           2.0 * gearing1_ * gearing2_ * rho_ * vol1_ * vol2_));
+                           2.0 * gearing1_ * gearing2_ * rho() * vol1_ * vol2_));
             res =
                 bachelierBlackFormula(optionType_, strike, forward, stddev, 1.0);
         }

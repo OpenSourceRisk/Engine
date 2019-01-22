@@ -126,6 +126,8 @@ using namespace QuantLib;
 
       private:
         void initialize(const FloatingRateCoupon &coupon);
+        Real rho() const { return std::max(std::min(correlation(fixingTime_), 0.9999),
+                            -0.9999); } 
         Real optionletPrice(Option::Type optionType, Real strike) const;
 
         Real integrand(const Real) const;
@@ -157,7 +159,6 @@ using namespace QuantLib;
         Real adjustedRate1_, adjustedRate2_;
         Real vol1_, vol2_;
         Real mu1_, mu2_;
-        Real rho_;
 
         bool inheritedVolatilityType_;
         VolatilityType volType_;

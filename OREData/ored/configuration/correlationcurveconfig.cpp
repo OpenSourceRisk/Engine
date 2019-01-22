@@ -42,12 +42,23 @@ CorrelationCurveConfig::CorrelationCurveConfig(
     const QuoteType& quoteType, const bool extrapolate,
     const vector<Period>& optionTenors, const DayCounter& dayCounter,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& index1,
-    const string& index2)
+    const string& index2, const string& currency, const string& swaptionVol, const string& discountCurve, 
+    const string& cmsModel, const string& cmsEngine,
+    const Real cmsMeanReversion, const Real cmsLowerRateBoundLogNormal,
+    const Real cmsUpperRateBoundLogNormal, const Real cmsLowerRateBoundNormal,
+    const Real cmsUpperRateBoundNormal, const Real cmsPriceThreshold,
+    const string& cmsBsStdDev, const string& cmsSpreadModel, const string& cmsSpreadEngine,
+    const Real cmsSpreadIntegrationPoints)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), quoteType_(quoteType),
       extrapolate_(extrapolate), optionTenors_(optionTenors),
       dayCounter_(dayCounter), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index1_(index1),
-      index2_(index2) {
+      index2_(index2), currency_(currency), swaptionVol_(swaptionVol), discountCurve_(discountCurve), 
+      cmsModel_(cmsModel), cmsEngine_(cmsEngine), cmsMeanReversion_(cmsMeanReversion),
+      cmsLowerRateBoundLogNormal_(cmsLowerRateBoundLogNormal), cmsUpperRateBoundLogNormal_(cmsUpperRateBoundLogNormal),
+      cmsLowerRateBoundNormal_(cmsLowerRateBoundNormal), cmsUpperRateBoundNormal_(cmsUpperRateBoundNormal),
+      cmsPriceThreshold_(cmsPriceThreshold), cmsBsStdDev_(cmsBsStdDev), cmsSpreadModel_(cmsSpreadModel), cmsSpreadEngine_(cmsSpreadEngine),
+      cmsSpreadIntegrationPoints_(cmsSpreadIntegrationPoints) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Constant, "Invalid dimension");
 
@@ -120,6 +131,38 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     index1_ = XMLUtils::getChildValue(node, "Index1", true);
     index2_ = XMLUtils::getChildValue(node, "Index2", true);
     
+    currency_ = XMLUtils::getChildValue(node, "Currency", true);
+
+    swaptionVol_ = "";
+
+    if (quoteType_ == QuoteType::Price) {
+        swaptionVol_ = XMLUtils::getChildValue(node, "SwaptionVolatility", true);
+        discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+      /*  XMLNode* pricerNode = XMLUtils::getChildNode(node, "Pricer");
+        QL_REQUIRE(pricerNode, "no pricer configs provided for CMS correlations");
+        cmsModel_ = XMLUtils::getChildValue(pricerNode, "CMSModel", true);
+        cmsEngine_ = XMLUtils::getChildValue(pricerNode, "CMSEngine", true);
+        cmsMeanReversion_ = XMLUtils::getChildValueAsDouble(pricerNode, "CMSMeanReversion", true);
+        cmsLowerRateBoundLogNormal_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSLowerRateBoundLogNormal", true);
+        cmsUpperRateBoundLogNormal_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSUpperRateBoundLogNormal", true);
+        cmsLowerRateBoundNormal_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSLowerRateBoundNormal", true);
+        cmsUpperRateBoundNormal_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSUpperRateBoundNormal", true);
+        cmsVegaRatio_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSVegaRatio", true);
+        cmsPriceThreshold_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSPriceThreshold", true);
+        cmsBsStdDev_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSBsStdDev", true);
+
+        cmsSpreadModel_ = XMLUtils::getChildValue(pricerNode, "CMSSpreadModel", true);;
+        cmsSpreadEngine_ = XMLUtils::getChildValue(pricerNode, "CMSSpreadEngine", true);;
+        cmsSpreadIntegrationPoints_ = 
+            XMLUtils::getChildValueAsDouble(pricerNode, "CMSSpreadIntegrationPoints", true);;*/
+    }
 }
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
@@ -153,7 +196,25 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "Index1", index1_);
     XMLUtils::addChild(doc, node, "Index2", index2_);
+    XMLUtils::addChild(doc, node, "Currency", currency_);
 
+    if (quoteType_ == QuoteType::Price) {
+        XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+        XMLUtils::addChild(doc, node, "CMSModel", to_string(cmsModel_));
+        XMLUtils::addChild(doc, node, "CMSEngine", to_string(cmsEngine_));
+        XMLUtils::addChild(doc, node, "CMSMeanReversion", to_string(cmsMeanReversion_));
+        XMLUtils::addChild(doc, node, "CMSLowerRateBoundLogNormal", to_string(cmsLowerRateBoundLogNormal_));
+        XMLUtils::addChild(doc, node, "CMSUpperRateBoundLogNormal", to_string(cmsUpperRateBoundLogNormal_));
+        XMLUtils::addChild(doc, node, "CMSLowerRateBoundNormal", to_string(cmsLowerRateBoundNormal_));
+        XMLUtils::addChild(doc, node, "CMSUpperRateBoundNormal", to_string(cmsUpperRateBoundNormal_));
+        XMLUtils::addChild(doc, node, "CMSVegaRatio", to_string(cmsVegaRatio_));
+        XMLUtils::addChild(doc, node, "CMSPriceThreshold", to_string(cmsPriceThreshold_));
+        XMLUtils::addChild(doc, node, "CMSBsStdDev", to_string(cmsBsStdDev_));
+        XMLUtils::addChild(doc, node, "CMSSpreadModel", to_string(cmsSpreadModel_));
+        XMLUtils::addChild(doc, node, "CMSSpreadEngine", to_string(cmsSpreadEngine_));
+        XMLUtils::addChild(doc, node, "CMSSpreadIntegrationPoints", to_string(cmsSpreadIntegrationPoints_));
+    }
     return node;
 }
 } // namespace data

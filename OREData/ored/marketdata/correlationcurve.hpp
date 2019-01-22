@@ -29,6 +29,9 @@
 #include <ored/marketdata/loader.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
+#include <ored/marketdata/swaptionvolcurve.hpp>
+#include <ored/marketdata/capfloorvolcurve.hpp>
+#include <ored/marketdata/yieldcurve.hpp>
 
 
 namespace ore {
@@ -48,7 +51,9 @@ public:
     CorrelationCurve() {}
     //! Detailed constructor
     CorrelationCurve(Date asof, CorrelationCurveSpec spec, const Loader& loader,
-                     const CurveConfigurations& curveConfigs);
+                     const CurveConfigurations& curveConfigs, map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
+                     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+                     map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves);
     //@}
 
     //! \name Inspectors
@@ -58,8 +63,18 @@ public:
     const boost::shared_ptr<QuantExt::CorrelationTermStructure>& corrTermStructure() { return corr_; }
     //@}
 private:
+    void calibrate(const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof, const vector<Handle<Quote>>& prices, 
+            vector<Handle<Quote>>& quotes,
+            boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
+            map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
+            map<string, boost::shared_ptr<YieldCurve>>& yieldCurves, 
+            map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves);
     CorrelationCurveSpec spec_;
     boost::shared_ptr<QuantExt::CorrelationTermStructure> corr_;
+
+    //! Calibration cost function class
+    class CalibrationFunction;
+    friend class CalibrationFunction;
 };
 } // namespace data
 } // namespace ore
