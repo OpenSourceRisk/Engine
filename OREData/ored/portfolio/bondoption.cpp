@@ -36,6 +36,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/exercise.hpp> //new
 #include <ql/instruments/compositeinstrument.hpp> //new
 #include <ql/instruments/vanillaoption.hpp> //new
+#include <ql/instruments/callabilityschedule.hpp> //new
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp> //new
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -71,106 +73,89 @@ namespace ore {
 
             const boost::shared_ptr<Market> market = engineFactory->market();
 
-            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption"); //new
-            boost::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
-
-            // --------------------------------------------------------------------------------
-
-            QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for EquityOption");
-
-            // Payoff
-            Option::Type type = parseOptionType(option_.callPut());
-            boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
-
-            // Only European Vanilla supported for now
-            QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
-            QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
-            Date expiryDate = parseDate(option_.exerciseDates().front());
-
-            // Exercise
-            boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
-
-            // Vanilla European/American.
-            // If price adjustment is necessary we build a simple EU Option
-            boost::shared_ptr<QuantLib::Instrument> instrument;
-
-            // QL does not have an EquityOption, so we add a vanilla one here and wrap
-            // it in a composite to get the notional in.
-            boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
-
-            // Position::Type positionType = parsePositionType(option_.longShort());
-            // Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
-            // Real mult = quantity_ * bsInd;
-
-            maturity_ = expiryDate;
-
-            // Notional - we really need todays spot to get the correct notional.
-            // But rather than having it move around we use strike * quantity
-            notional_ = strike_ * quantity_;
-
-            // -------------------------------------------------------------------------------------------------------------
+            boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("BondOption");
 
             Date issueDate = parseDate(issueDate_);
             Calendar calendar = parseCalendar(calendar_);
             Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
-            boost::shared_ptr<QuantLib::Bond> bond; // pointer to the quantlib Bond class; construct the cashflows of that bond
-            //boost::shared_ptr<QuantExt::BondOption> bondOption; // pointer to bondOption; both are needed here. but only the bondOption equipped with pricer
+            boost::shared_ptr<QuantLib::CallableBond> bondoption;
 
             // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
             bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
             Real mult = firstLegIsPayer ? -1.0 : 1.0;
-            if (zeroBond_) { // Zero coupon bond
-                bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
+            if (zeroBond_) { // Zero coupon bond option
+                             // bondoption.reset(new QuantLib::ZeroCouponBond(settlementDays, faceAmount_, calendar, parseDate(maturityDate_), ...));
             }
-            else { // Coupon bond
+            else { // Coupon bond option
                 std::vector<Leg> legs;
+                std::vector<Rate> rates;
+                Schedule schedule;
+                DayCounter daycounter;
+                BusinessDayConvention business_dc = Following;
                 for (Size i = 0; i < coupons_.size(); ++i) {
                     bool legIsPayer = coupons_[i].isPayer();
                     QL_REQUIRE(legIsPayer == firstLegIsPayer, "Bond legs must all have same pay/receive flag");
-                    if (i == 0)
+                    if (i == 0) {
                         currency_ = coupons_[i].currency();
-                    else {
+                        schedule = makeSchedule(coupons_[i].schedule());
+                        daycounter = parseDayCounter(coupons_[i].dayCounter());
+                        business_dc = parseBusinessDayConvention(coupons_[i].paymentConvention());
+                    } else {
                         QL_REQUIRE(currency_ == coupons_[i].currency(), "leg #" << i << " currency (" << coupons_[i].currency()
                             << ") not equal to leg #0 currency ("
                             << coupons_[0].currency());
                     }
                     Leg leg;
+                    Rate rate = 0.0;
                     auto configuration = builder->configuration(MarketContext::pricing);
                     auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
                     leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
                     legs.push_back(leg);
+                    if (coupons_[i].legType() == "Fixed")
+                        rate = 0.05;
+                    rates = std::vector<Rate>(1, rate);
+
                 } // for coupons_
                 Leg leg = joinLegs(legs);
-                bond.reset(new QuantLib::Bond(settlementDays, calendar, issueDate, leg));
+                Callability::Price callabilityPrice = Callability::Price(strike(), Callability::Price::Dirty);
+                //Callability::Price callabilityPrice = Callability::Price();
+                Callability::Type callabilityType = Callability::Call;
+                Date exerciseDate = parseDate(option().exerciseDates().back());
+                boost::shared_ptr<Callability> callability;
+                callability.reset(new Callability(callabilityPrice, callabilityType, exerciseDate));
+                CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
+
+                // missing the redemption and CallabilitySchedule& putCallSchedule
+                bondoption.reset(new QuantLib::CallableFixedRateBond(settlementDays, faceAmount(), schedule, rates, 
+                    daycounter, business_dc, strike(), issueDate, callabilitySchedule));
                 // workaround, QL doesn't register a bond with its leg's cashflows
                 for (auto const& c : leg)
-                    bond->registerWith(c);
+                    bondoption->registerWith(c);
             }
 
             Currency currency = parseCurrency(currency_);
-            boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder_bd);
-            QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-            // here we go with buildng the bondOptionEngine
-            boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder); //new
-            QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id()); //new
 
-            bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
-            instrument_.reset(new VanillaInstrument(bond, mult));
+            // boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
+            // QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
+
+            boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder); //new
+            QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
+
+            // bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
+            // instrument_.reset(new VanillaInstrument(bond, mult));
+
+            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
+            // Hier wurde nur Payer oder Reciever berücksichtigt, muss aber noch Call/Put und Long/Call berücksichtigt werden.
+            instrument_.reset(new VanillaInstrument(bondoption, mult));
 
             npvCurrency_ = currency_;
-            maturity_ = bond->cashflows().back()->date();
-            notional_ = currentNotional(bond->cashflows());
+            maturity_ = bondoption->cashflows().back()->date();
+            notional_ = currentNotional(bondoption->cashflows());
 
             // Add legs (only 1)
-            legs_ = { bond->cashflows() };
+            legs_ = { bondoption->cashflows() };
             legCurrencies_ = { npvCurrency_ };
             legPayers_ = { firstLegIsPayer };
-
-            // -------------------------------------------------------------------------------------------------
-            // Handle<SwaptionVolatilityStructure> volatility = engineFactory->market()->swaptionVol(currency_, Market::configuration(MarketContext::pricing));
-            // LOG("Implied vol for BondOption on " << securityId_ << " with maturity " << maturity_ << " and strike " << strike_ << " is " << volatility->volatility(maturity_, maturityDate_, strike_));
-            // boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
-            // vanilla->setPricingEngine(bondOptionBuilder->engine(currency_, creditCurveId_, securityId_, referenceCurveId_));
         }
 
         void BondOption::fromXML(XMLNode* node) {
