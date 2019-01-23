@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccyfixfloatswaphelper.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -152,9 +152,11 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossCurrencyFixFloatSwapHelperTest::testBootstrap() {
+BOOST_AUTO_TEST_SUITE(CrossCurrencyFixFloatSwapHelperTest)
+		
+BOOST_AUTO_TEST_CASE(testBootstrap) {
 
     BOOST_TEST_MESSAGE("Test simple bootstrap against cross currency fix float swap");
 
@@ -183,7 +185,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testBootstrap() {
     BOOST_CHECK_CLOSE(expDisc, tryDiscCurve->discount(vars.asof + 5 * Years), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
+BOOST_AUTO_TEST_CASE(testSpotFxChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under spot FX change");
 
@@ -227,7 +229,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
     BOOST_CHECK_CLOSE(vars.spotFx->value(), vars.helper->swap()->fixedNominal(), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testSpreadChange() {
+BOOST_AUTO_TEST_CASE(testSpreadChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under helper spread change");
 
@@ -272,7 +274,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpreadChange() {
     BOOST_CHECK_CLOSE(vars.spread->value(), vars.helper->swap()->floatSpread(), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate() {
+BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap after moving evaluation date");
 
@@ -318,16 +320,8 @@ void CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate() {
     BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
 }
 
-test_suite* CrossCurrencyFixFloatSwapHelperTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CrossCurrencyFixFloatSwapHelperTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testBootstrap));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testSpreadChange));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate));
 
-    return suite;
-}
-
-}

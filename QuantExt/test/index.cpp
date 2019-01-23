@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "index.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currency.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
@@ -66,22 +67,17 @@ struct IndTestData {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void dataCheck(struct IndTestData& data) {
+BOOST_AUTO_TEST_SUITE(IndexTest)
 
-    BOOST_CHECK_EQUAL(data.ind.familyName(), data.name);
-    BOOST_CHECK_EQUAL(data.ind.fixingCalendar().name(), data.calName);
-    BOOST_CHECK_EQUAL(data.ind.currency().name(), data.ccyName);
-}
-
-void IndexTest::testIborIndex() {
+BOOST_AUTO_TEST_CASE(testIborIndex) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt indexes");
 
     Period pd(3, Months);
 
-    struct IndTestData data[] = { { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
+    IndTestData data[] = { { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
                                   { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
                                   { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
                                   { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
@@ -108,13 +104,13 @@ void IndexTest::testIborIndex() {
 
     Size size = sizeof(data) / sizeof(data[0]);
 
-    for (Size i = 0; i < size; i++)
-        dataCheck(data[i]);
+    for (Size i = 0; i < size; i++) {
+		BOOST_CHECK_EQUAL(data[i].ind.familyName(), data[i].name);
+    	BOOST_CHECK_EQUAL(data[i].ind.fixingCalendar().name(), data[i].calName);
+    	BOOST_CHECK_EQUAL(data[i].ind.currency().name(), data[i].ccyName);
+	}
 }
 
-test_suite* IndexTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("IborIndexTests");
-    suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndex));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

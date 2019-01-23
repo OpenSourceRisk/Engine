@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodelparametrizations.hpp"
 #include "utilities.hpp"
 
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
@@ -85,9 +86,10 @@ void check2(const std::string& s, const Real x, const Real y, const Real e, cons
 
 } // anonymous namespace
 
-namespace testsuite {
-
-void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_AUTO_TEST_SUITE(CrossAssetModelParametrizationsTest)
+		
+BOOST_AUTO_TEST_CASE(testParametrizationBaseClasses) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (base classes)...");
 
@@ -294,7 +296,7 @@ void CrossAssetModelParametrizationsTest::testParametrizationBaseClasses() {
     check("time from date helper1x", 0.0, helper1x.t()[3], yts->timeFromReference(dates[3]));
 }
 
-void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
+BOOST_AUTO_TEST_CASE(testIrLgm1fParametrizations) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (irlgm1f)...");
 
@@ -462,7 +464,7 @@ void CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations() {
     }
 }
 
-void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
+BOOST_AUTO_TEST_CASE(testFxBsParametrizations) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (fxbs)...");
 
@@ -519,11 +521,14 @@ void CrossAssetModelParametrizationsTest::testFxBsParametrizations() {
     check("fxb2_1.sigma", 5.0, fxbs_1.sigma(5.0), 0.15);
 }
 
-test_suite* CrossAssetModelParametrizationsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model parametrizations tests");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testParametrizationBaseClasses));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testIrLgm1fParametrizations));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelParametrizationsTest::testFxBsParametrizations));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+
+
+
+
+
+

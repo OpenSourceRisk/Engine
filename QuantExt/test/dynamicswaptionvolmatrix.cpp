@@ -16,8 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "dynamicswaptionvolmatrix.hpp"
+
 #include "utilities.hpp"
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
 
@@ -63,9 +65,11 @@ struct TestData {
 
 } // anonymous namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, ore::test::TopLevelFixture)
 
-void DynamicSwaptionVolMatrixTest::testConstantVariance() {
+BOOST_AUTO_TEST_SUITE(DynamicSwaptionVolMatrixTest)
+
+BOOST_AUTO_TEST_CASE(testConstantVariance) {
 
     BOOST_TEST_MESSAGE("Testing constant variance dynamics of "
                        "DynamicSwaptionVolatilityMatrix...");
@@ -103,7 +107,7 @@ void DynamicSwaptionVolMatrixTest::testConstantVariance() {
 
 } // testConstantVariance
 
-void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
+BOOST_AUTO_TEST_CASE(testForwardForwardVariance) {
 
     BOOST_TEST_MESSAGE("Testing forward forward variance dynamics of "
                        "DynamicSwaptionVolatilityMatrix");
@@ -149,10 +153,6 @@ void DynamicSwaptionVolMatrixTest::testForwardForwardVariance() {
 
 } // testForwardForwardVariance
 
-test_suite* DynamicSwaptionVolMatrixTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DynamicSwaptionVolMatrix tests");
-    suite->add(BOOST_TEST_CASE(&DynamicSwaptionVolMatrixTest::testConstantVariance));
-    suite->add(BOOST_TEST_CASE(&DynamicSwaptionVolMatrixTest::testForwardForwardVariance));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "qle_calendars.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/time/calendar.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/colombia.hpp>
@@ -41,10 +42,11 @@ namespace check {
     }
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-    
-void CalendarsTest::testPeruvianCalendar() {
+BOOST_AUTO_TEST_SUITE(CalendarsTest)
+
+BOOST_AUTO_TEST_CASE(testPeruvianCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Peruvian holiday list");
     
@@ -73,7 +75,7 @@ void CalendarsTest::testPeruvianCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-void CalendarsTest::testColombianCalendar() {
+BOOST_AUTO_TEST_CASE(testColombianCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Colombian holiday list");
     
@@ -107,7 +109,7 @@ void CalendarsTest::testColombianCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-void CalendarsTest::testPhilippineCalendar() {
+BOOST_AUTO_TEST_CASE(testPhilippineCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Philippine holiday list");
 
@@ -134,7 +136,7 @@ void CalendarsTest::testPhilippineCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-void CalendarsTest::testThaiCalendar() {
+BOOST_AUTO_TEST_CASE(testThaiCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Thai holiday list");
     
@@ -164,7 +166,7 @@ void CalendarsTest::testThaiCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-void CalendarsTest::testMalaysianCalendar() {
+BOOST_AUTO_TEST_CASE(testMalaysianCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Malaysian holiday list");
     
@@ -187,7 +189,7 @@ void CalendarsTest::testMalaysianCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-void CalendarsTest::testChileanCalendar() {
+BOOST_AUTO_TEST_CASE(testChileanCalendar) {
 
     BOOST_TEST_MESSAGE("Testing Chilean holiday list");
     
@@ -212,14 +214,6 @@ void CalendarsTest::testChileanCalendar() {
     check::checkCalendars(expectedHolidays, hol);
 }
 
-test_suite* CalendarsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CalendarsTest");
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testPhilippineCalendar));
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testColombianCalendar));
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testPeruvianCalendar));
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testThaiCalendar));
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testChileanCalendar));
-    suite->add(BOOST_TEST_CASE(&CalendarsTest::testMalaysianCalendar));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
