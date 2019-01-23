@@ -16,29 +16,38 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/stabilisedglls.hpp
-    \brief stabilised glls tests
+/*! \file test/toplevelfixture.hpp
+    \brief Fixture that can be used at top level
 */
 
-#ifndef quantext_test_glls_hpp
-#define quantext_test_glls_hpp
+#pragma once
 
-#include <boost/test/unit_test.hpp>
+#include <ql/indexes/indexmanager.hpp>
+#include <ql/settings.hpp>
 
-namespace testsuite {
+namespace ore {
+namespace test {
 
-//! stabilised glls tests
-class StabilisedGLLSTest {
+using QuantLib::IndexManager;
+using QuantLib::SavedSettings;
+
+//! Top level fixture
+class TopLevelFixture {
 public:
-    /*! GeneralLinearLeastSquares fails to produce resonable regression coefficients on the
-      (untransformed) data used in this test case.  */
-    static void testBigInputNumbers();
+    SavedSettings savedSettings;
 
-    /*! Test 2D regression on random data against GeneralLinearLeastSquares */
-    static void test2DRegression();
-
-    static boost::unit_test_framework::test_suite* suite();
+    /*! Constructor
+        Add things here that you want to happen at the start of every test case
+    */
+    TopLevelFixture() {}
+    /*! Destructor
+        Add things here that you want to happen after _every_ test case
+    */
+    ~TopLevelFixture() {
+        // Clear and fixings that have been added
+        IndexManager::instance().clearHistories();
+    }
 };
-} // namespace testsuite
 
-#endif
+}
+}

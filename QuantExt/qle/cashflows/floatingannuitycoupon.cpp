@@ -57,7 +57,7 @@ void FloatingAnnuityCoupon::performCalculations() const {
     if (this->nominal_ < 0.0 && underflow_ == false)
         this->nominal_ = 0.0;
     // std::cout << "FloatingAnnuityCoupon called() for startDate " << QuantLib::io::iso_date(accrualStartDate_) << " "
-    // 	  << "Nominal " << this->nominal_ << std::endl;
+    //       << "Nominal " << this->nominal_ << std::endl;
 }
 
 Rate FloatingAnnuityCoupon::previousNominal() const { return previousCoupon_->nominal(); }

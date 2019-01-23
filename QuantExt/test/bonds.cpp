@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "bonds.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -32,9 +32,11 @@
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void BondsTest::testBondSpreads() {
+BOOST_AUTO_TEST_SUITE(BondsTest)
+
+BOOST_AUTO_TEST_CASE(testBondSpreads) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt bond spread helper");
 
@@ -122,10 +124,7 @@ void BondsTest::testBondSpreads() {
     BOOST_CHECK_CLOSE(pricePar, parRedemption, 0.0001);
 
 }
+BOOST_AUTO_TEST_SUITE_END()
 
-test_suite* BondsTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("BondHelpersTests");
-    suite->add(BOOST_TEST_CASE(&BondsTest::testBondSpreads));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+

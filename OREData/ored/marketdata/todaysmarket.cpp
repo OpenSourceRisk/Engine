@@ -60,14 +60,16 @@ namespace ore {
 namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
-                           const CurveConfigurations& curveConfigs, const Conventions& conventions)
+                           const CurveConfigurations& curveConfigs, const Conventions& conventions, bool loadFixings)
     : MarketImpl(conventions) {
 
     // Fixings
-    // Apply them now in case a curve builder needs them
-    LOG("Todays Market Loading Fixings");
-    applyFixings(loader.loadFixings(), conventions);
-    LOG("Todays Market Loading Fixing done.");
+    if (loadFixings) {
+        // Apply them now in case a curve builder needs them
+        LOG("Todays Market Loading Fixings");
+        applyFixings(loader.loadFixings(), conventions);
+        LOG("Todays Market Loading Fixing done.");
+    }
 
     // store all curves built, since they might appear in several configurations
     // and might therefore be reused
@@ -596,7 +598,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             Handle<Quote> eqSpot = Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
 
                             boost::shared_ptr<EquityIndex> eqCurve =
-                                boost::make_shared<EquityIndex>(it.first, parseCalendar(equityspec->ccy()), eqSpot,
+                                boost::make_shared<EquityIndex>(it.first, parseCalendar(equityConfig->currency()), eqSpot,
                                     itr->second->forecastingYieldTermStructure(), div_h);
                             Handle<EquityIndex> eq_h(eqCurve);
                             yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] = div_h;
