@@ -36,7 +36,6 @@
       <xs:element type="bondData" name="BondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
-      <xs:element type="varianceSwapData" name="VarianceSwapData"/>
     </xs:choice>
   </xs:group>
 
@@ -407,8 +406,6 @@
       <xs:enumeration value="EquityOption"/>
       <xs:enumeration value="EquityForward"/>
       <xs:enumeration value="EquitySwap"/>
-      <xs:enumeration value="EqVarianceSwap"/>
-      <xs:enumeration value="FxVarianceSwap"/>
       <xs:enumeration value="CommodityForward"/>
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="Bond"/>
