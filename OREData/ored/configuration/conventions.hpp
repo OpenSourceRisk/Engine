@@ -30,13 +30,14 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
 
+
+namespace ore {
+namespace data {
 using std::string;
 using std::map;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
-
-namespace ore {
-namespace data {
+using namespace QuantLib;
 
 //! Abstract base class for convention objects
 /*!
@@ -285,7 +286,7 @@ public:
     OisConvention(const string& id, const string& spotLag, const string& index, const string& fixedDayCounter,
                   const string& paymentLag = "", const string& eom = "", const string& fixedFrequency = "",
                   const string& fixedConvention = "", const string& fixedPaymentConvention = "",
-                  const string& rule = "");
+                  const string& rule = "", const std::string& paymentCalendar = "");
     //@}
 
     //! \name Inspectors
@@ -300,6 +301,7 @@ public:
     BusinessDayConvention fixedConvention() const { return fixedConvention_; }
     BusinessDayConvention fixedPaymentConvention() const { return fixedPaymentConvention_; }
     DateGeneration::Rule rule() const { return rule_; }
+    QuantLib::Calendar paymentCalendar() const { return paymentCal_; }
     //@}
 
     //! \name Serialisation
@@ -319,6 +321,7 @@ private:
     BusinessDayConvention fixedConvention_;
     BusinessDayConvention fixedPaymentConvention_;
     DateGeneration::Rule rule_;
+    QuantLib::Calendar paymentCal_;
 
     // Strings to store the inputs
     string strSpotLag_;
@@ -330,6 +333,7 @@ private:
     string strFixedConvention_;
     string strFixedPaymentConvention_;
     string strRule_;
+    std::string strPaymentCal_;
 };
 
 //! Container for storing Swap Index conventions
@@ -685,7 +689,7 @@ public:
     //! Detailed constructor
     CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
-                                const string& strEom = "");
+                                const string& strEom = "", const string& strIsResettable = "", const string& strFlatIndexIsResettable = "");
     //@}
 
     //! \name Inspectors
@@ -699,6 +703,8 @@ public:
     const string& spreadIndexName() const { return strSpreadIndex_; }
 
     bool eom() const { return eom_; }
+    bool isResettable() const { return isResettable_; }
+    bool FlatIndexIsResettable() const { return FlatIndexIsResettable_; }
     //@}
 
     //! \name Serialisation
@@ -714,6 +720,8 @@ private:
     boost::shared_ptr<IborIndex> flatIndex_;
     boost::shared_ptr<IborIndex> spreadIndex_;
     bool eom_;
+    bool isResettable_;
+    bool FlatIndexIsResettable_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -722,6 +730,8 @@ private:
     string strFlatIndex_;
     string strSpreadIndex_;
     string strEom_;
+    string strIsResettable_;
+    string strFlatIndexIsResettable_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions

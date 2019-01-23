@@ -31,10 +31,10 @@
 #include <ored/model/fxbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal FX model component
 /*!
@@ -64,7 +64,7 @@ public:
     //@{
     std::string foreignCurrency() { return data_->foreignCcy(); }
     boost::shared_ptr<QuantExt::FxBsParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
     //@}
 private:
     void buildOptionBasket();
@@ -74,7 +74,7 @@ private:
     boost::shared_ptr<FxBsData> data_;
     Real error_;
     boost::shared_ptr<QuantExt::FxBsParametrization> parametrization_;
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
 } // namespace data

@@ -38,14 +38,14 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
+
+namespace ore {
+namespace data {
 using namespace QuantLib;
 using std::string;
 using std::map;
 using std::vector;
 using std::pair;
-
-namespace ore {
-namespace data {
 
 //! Cross Asset Model Parameters
 /*! CrossAssetModelData comprises the specification of how to build and calibrate

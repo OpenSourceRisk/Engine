@@ -35,10 +35,10 @@
 #include <ored/model/lgmdata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-using namespace QuantLib;
 
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! INF Model Parameters
 /*!
@@ -79,6 +79,15 @@ public:
     void fromXML(XMLNode* node);
     XMLNode* toXML(XMLDocument& doc);
     //@}
+    void clear() { 
+        LgmData::clear(); 
+    }
+    void reset() {
+        LgmData::reset();
+        index_ = "";
+        currency_ = "";
+        capfloor_ = "";
+    }
 
 private:
     std::string index_;

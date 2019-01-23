@@ -167,6 +167,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     spread = "0"
     rule = ""
     spotLag = ""
+    paymentLag = "0"
     try:
 
         if(basis):
@@ -185,6 +186,13 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                 spreadIndex = convention.find("SpreadIndex").text
                 payConvention = convention.find("RollConvention").text
                 calendar = convention.find("SettlementCalendar").text
+                isResettable = False
+                flatIndexIsResettable = False
+                isResettableNode = convention.find("IsResettable")
+                if isResettableNode is not None:
+                    isResettable = True if (isResettableNode.text=="Y") else False
+                    flatIndexIsResettableNode = convention.find("FlatIndexIsResettable")
+                    flatIndexIsResettable = True if (flatIndexIsResettableNode.text=="Y") else False
                 if(payer):
                     index = convention.find("FlatIndex").text
                     currency = flatCCY
@@ -200,6 +208,23 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
                         debugPrint("Could not find market data for " + tradeQuote)
                         return False
                 fixingDays = getFixingDaysForCCY(currency)
+                if(isResettable):
+                    if((flatIndexIsResettable and payer) or ((not flatIndexIsResettable) and (not payer))):
+                        notionalsNode = legroot.find("Notionals")
+                        #fxResetNode = ET.SubElement(notionalsNode, "FXReset")
+                        fxResetNode = ET.Element("FXReset")
+                        notionalsNode.insert(1,fxResetNode)
+                        fgnCcy = spreadCCY if flatIndexIsResettable else flatCCY
+                        fgnCcyNode = ET.SubElement(fxResetNode, "ForeignCurrency")
+                        fgnCcyNode.text = fgnCcy
+                        fgnAmtNode = ET.SubElement(fxResetNode, "ForeignAmount")
+                        fgnAmtNode.text = str(notional)
+                        fxIdxNode = ET.SubElement(fxResetNode, "FXIndex")
+                        fxIdxNode.text = "FX-ECB-" + spreadCCY + "-" + flatCCY
+                        fixNode = ET.SubElement(fxResetNode, "FixingDays")
+                        fixNode.text = fixingDays
+                        fixCalNode = ET.SubElement(fxResetNode, "FixingCalendar")
+                        fixCalNode.text = "TARGET,US,UK" # Temp
 
             else: #Tenor Basis Swap
                 payConvention = "MF"
@@ -219,22 +244,27 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
             dayCounter = currencyDaycountConvention(currency)
         else:
             spotLag = details[3][0:-1]
+            currency = details[2]
             if tradeType == "Swap":
                 convention = swapConventions[curve]
                 calendar = convention.find("FixedCalendar").text
                 fixingDays = spotLag
+                tenor = details[4]
             elif tradeType == "OIS":
+                if currency == "USD":
+                    calendar = "US-FED"
                 convention = oisConventions[curve]
                 rule = convention.find("Rule").text
                 spotLag = convention.find("SpotLag").text
+                paymentLag = convention.find("PaymentLag").text
                 fixingDays = spotLag
+                fixedFreq = convention.find("FixedFrequency").text
+                tenor = freqToTenor(fixedFreq)
             else:
                 debugPrint("Failed to find convention for " + curve)
                 return False
             index = convention.find("Index").text
-            currency = details[2]
 
-            tenor = details[4]
             dayCounter = currencyDaycountConvention(currency)
             payer = True
 
@@ -249,7 +279,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
         fxRate = float(marketData["FX/RATE/EUR/" + currency])
         notional *= fxRate
 
-    startDate = addTenorToDate(startDate, spotLag + "D") #why is fixing days 2 in CHF OIS trades?
+    startDate = addTenorToDate(startDate, spotLag + "D") 
     while startDate.weekday() > 4: #or startDate.weekday() < 1:
         startDate += datetime.timedelta(days=1)
     endDate = addTenorToDate(startDate, maturity)
@@ -260,6 +290,7 @@ def CreateFloatingLeg(legroot, tradeType, tradeQuote, curve, details, basis=Fals
     legroot.find("Currency").text = currency
     legroot.find("DayCounter").text = dayCounter
     legroot.find("PaymentConvention").text = payConvention
+    legroot.find("PaymentLag").text = paymentLag
     # floatinglegdata
     # index
     legroot.find("FloatingLegData/Index").text = index
@@ -297,9 +328,9 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
     termConvention = ""
     payer = "false"
     rule = ""
+    paymentLag = "0"
     currency = details[2]
     fixingDays = details[3]
-
     maturity = details[5]
     try:
         if tradeType == "Swap":
@@ -307,8 +338,11 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
             calendar = convention.find("FixedCalendar").text
             fixingDays = getFixingDaysForCCY(currency)
         elif tradeType == "OIS":
+            if currency == "USD":
+                calendar = "US-FED"
             convention = oisConventions[curve]
             rule = convention.find("Rule").text
+            paymentLag = convention.find("PaymentLag").text
             fixingDays = convention.find("SpotLag").text
         else:
             debugPrint("could not find convention for " + curve)
@@ -341,11 +375,11 @@ def CreateFixedLeg(legroot, tradeType, tradeQuote, curve, details):
         except:
             debugPrint("FX rate not found for EUR/" + currency)
             return False
-
     legroot.find("Notionals/Notional").text = str(notional)
     legroot.find("Currency").text = currency
     legroot.find("DayCounter").text = dayCounter
     legroot.find("PaymentConvention").text = termConvention
+    legroot.find("PaymentLag").text = paymentLag
     legroot.find("FixedLegData/Rates/Rate").text = rate
     legroot.find("ScheduleData/Rules/StartDate").text = startDate
     legroot.find("ScheduleData/Rules/EndDate").text = endDate

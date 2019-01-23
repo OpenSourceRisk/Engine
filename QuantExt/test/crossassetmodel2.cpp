@@ -16,12 +16,59 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodel2.hpp"
 #include "utilities.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <qle/models/all.hpp>
-#include <qle/pricingengines/all.hpp>
+#include <qle/models/cdsoptionhelper.hpp>
+#include <qle/models/cpicapfloorhelper.hpp>
+#include <qle/models/crlgm1fparametrization.hpp>
+#include <qle/models/crossassetanalytics.hpp>
+#include <qle/models/crossassetanalyticsbase.hpp>
+#include <qle/models/crossassetmodel.hpp>
+#include <qle/models/crossassetmodelimpliedeqvoltermstructure.hpp>
+#include <qle/models/crossassetmodelimpliedfxvoltermstructure.hpp>
+#include <qle/models/dkimpliedyoyinflationtermstructure.hpp>
+#include <qle/models/dkimpliedzeroinflationtermstructure.hpp>
+#include <qle/models/eqbsconstantparametrization.hpp>
+#include <qle/models/eqbsparametrization.hpp>
+#include <qle/models/eqbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxbsconstantparametrization.hpp>
+#include <qle/models/fxbsparametrization.hpp>
+#include <qle/models/fxbspiecewiseconstantparametrization.hpp>
+#include <qle/models/fxeqoptionhelper.hpp>
+#include <qle/models/gaussian1dcrossassetadaptor.hpp>
+#include <qle/models/infdkparametrization.hpp>
+#include <qle/models/irlgm1fconstantparametrization.hpp>
+#include <qle/models/irlgm1fparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiseconstanthullwhiteadaptor.hpp>
+#include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
+#include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
+#include <qle/models/lgm.hpp>
+#include <qle/models/lgmimplieddefaulttermstructure.hpp>
+#include <qle/models/lgmimpliedyieldtermstructure.hpp>
+#include <qle/models/linkablecalibratedmodel.hpp>
+#include <qle/models/parametrization.hpp>
+#include <qle/models/piecewiseconstanthelper.hpp>
+#include <qle/models/pseudoparameter.hpp>
+#include <qle/pricingengines/analyticcclgmfxoptionengine.hpp>
+#include <qle/pricingengines/analyticdkcpicapfloorengine.hpp>
+#include <qle/pricingengines/analyticlgmcdsoptionengine.hpp>
+#include <qle/pricingengines/analyticlgmswaptionengine.hpp>
+#include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
+#include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/pricingengines/depositengine.hpp>
+#include <qle/pricingengines/discountingcommodityforwardengine.hpp>
+#include <qle/pricingengines/discountingcurrencyswapengine.hpp>
+#include <qle/pricingengines/discountingequityforwardengine.hpp>
+#include <qle/pricingengines/discountingfxforwardengine.hpp>
+#include <qle/pricingengines/discountingriskybondengine.hpp>
+#include <qle/pricingengines/discountingswapenginemulticurve.hpp>
+#include <qle/pricingengines/midpointcdsengine.hpp>
+#include <qle/pricingengines/numericlgmswaptionengine.hpp>
+#include <qle/pricingengines/oiccbasisswapengine.hpp>
+#include <qle/pricingengines/paymentdiscountingengine.hpp>
 
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/ibor/euribor.hpp>
@@ -991,9 +1038,11 @@ struct Lgm31fTestData {
 
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
+BOOST_AUTO_TEST_SUITE(CrossAssetModelTest2)
+		
+BOOST_AUTO_TEST_CASE(testLgm31fPositiveCovariance) {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "
                        "in Ccy LGM 31F model...");
@@ -1063,7 +1112,7 @@ void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
 
 } // testLgm31fPositiveCovariance
 
-void CrossAssetModelTest2::testLgm31fMoments() {
+BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
 
     BOOST_TEST_MESSAGE("Check analytical moments against Euler simulation in "
                        "Ccy LGM 31F model...");
@@ -1186,7 +1235,7 @@ void CrossAssetModelTest2::testLgm31fMoments() {
 
 } // testLgm31fMoments
 
-void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
+BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Check martingale property in Ccy LGM 31F model...");
 
@@ -1236,11 +1285,6 @@ void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
 
 } // testLgm13fMartingaleProperty
 
-test_suite* CrossAssetModelTest2::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests 2");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fPositiveCovariance));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fMoments));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

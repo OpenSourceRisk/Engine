@@ -29,9 +29,9 @@
 
 #include <boost/make_shared.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Converts OptionletVolatilityStructure with fixed reference date into a floating reference date term structure.
 /*! Different ways of reacting to time decay can be specified.

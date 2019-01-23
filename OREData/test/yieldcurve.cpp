@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <test/yieldcurve.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -78,13 +79,13 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-} // namespace
+}
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void YieldCurveTest::testBootstrapAndFixings() {
+BOOST_AUTO_TEST_SUITE(YieldCurveTests)
 
-    SavedSettings backup;
+BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
 
     Date asof(31, August, 2015);
     Settings::instance().evaluationDate() = asof;
@@ -131,9 +132,6 @@ void YieldCurveTest::testBootstrapAndFixings() {
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 }
 
-test_suite* YieldCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("YieldCurveTest");
-    suite->add(BOOST_TEST_CASE(&YieldCurveTest::testBootstrapAndFixings));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

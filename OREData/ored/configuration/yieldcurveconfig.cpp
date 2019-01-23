@@ -172,9 +172,16 @@ YieldCurveConfig::YieldCurveConfig(const string& curveID, const string& curveDes
 
 const vector<string>& YieldCurveConfig::quotes() {
     if (quotes_.size() == 0) {
+        bool addedFxSpot = false;
         for (auto c : curveSegments_) {
             for (auto segmentQuote : c->quotes()) 
                 quotes_.push_back(segmentQuote.first);
+
+            // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the 
+            // set of quotes needed for the YieldCurveConfig if it has not already been added.
+            if (auto xccySegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
+                if (!addedFxSpot) quotes_.push_back(xccySegment->spotRateID());
+            }
         }
     }
     return quotes_;

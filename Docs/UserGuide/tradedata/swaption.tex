@@ -42,7 +42,7 @@ The structure of an example \lstinline!SwaptionData!  node of a European swaptio
         & \bfseries{A  Swaption requires:} \\  \hline
     \lstinline!OptionData! & One \lstinline!OptionData! sub-node  \\  \hline
    \lstinline!Style! &  \emph{Bermudan} or \emph{European}\\ \hline
-    \lstinline!ExerciseDates! & At least two \lstinline!ExerciseDate! child elements.\\ \hline
+    \lstinline!ExerciseDates! & \emph{Bermudan} swaptions  require at least two \lstinline!ExerciseDate! child elements.  \emph{European} swaptions can only have one \lstinline!ExerciseDate! child element. \\ \hline
     \lstinline!LegData! &  Two \lstinline!LegData! sub-nodes \\ \hline 
     \lstinline!Currency! & The same currency for both nodes.\\ \hline 
     \lstinline!LegType! & \emph{Bermudan} swaptions must have: \emph{Fixed} on one node and \emph{Floating} on the other.  No such requirement for \emph{European} swaptions.     \\ \hline   

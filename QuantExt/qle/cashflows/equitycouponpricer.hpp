@@ -27,9 +27,9 @@
 #include <ql/cashflows/couponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Pricer for equity coupons
 /*! \ingroup cashflows

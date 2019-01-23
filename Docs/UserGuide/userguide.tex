@@ -615,6 +615,68 @@ strings.
 
 \end{enumerate}
 
+\subsubsection*{Building on Unix with CMake}
+
+Recent releases of ORE (since end of 2018) can be built with CMake on Unix systems, as follows.
+
+\begin{enumerate}
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake by invoking \\
+\medskip
+{\tt cmake -DBOOST\_ROOT=\${BOOST} -DBOOST\_LIBRARYDIR=\${BOOST}/stage/lib ..} \\
+\medskip
+
+Alternatively, set environment variables {\tt BOOST\_ROOT} and {\tt BOOST\_LIBRARYDIR} and run \\
+\medskip
+{\tt cmake ..} \\
+\medskip
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+{\tt make -j4} \\
+\medskip
+\item Unset {\tt LD\_LIBRARY\_PATH} respectively {\tt DYLD\_LIBRARY\_PATH} before running the ORE executable or the test suites below, in order not to override the rpath information embedded into the libaries built with CMake
+\item Run all test suites by invoking \\
+\medskip
+{\tt ctest -j4}
+\end{enumerate}
+
+Notice that if the boost libraries are not installed they might not be found during runtime because of a missing rpath
+tag in their path. Run the script {\tt rename\_libs.sh} to set the rpath tag in all libraries located in {\tt
+  \${BOOST}/stage/lib}.
+
+The .cpp and .hpp files included in the build process need to be explicitly specified in the various {\tt CMakeLists.txt} files in the project directory, as in the {\tt Makefile.am} files of the GNU build system. However for the CMake build system we have provided a python script (in {\tt Tools/update\_cmake\_files.py}) that automates this process. 
+
+The advantage of the CMake build system is that it builds fewer intermediate libraries and is hence significantly faster than the GNU automake based build. Moreover it can be extended to cover both Unix and Windows builds. 
+ 
+\subsubsection*{Building on Windows with CMake}
+
+The same set of {\tt CMakeLists.txt} files allows building ORE on Windows. The following instructions use the {\tt Ninja} build system ({\url{ninja-build.org}) that covers the role of {\tt make} on Unix systems and calls the Visual Studio C++ compiler and linker. 
+
+\begin{enumerate}
+\item Open a command prompt, change to directory C:{\textbackslash}Program Files (x86){\textbackslash}Microsoft Visual Studio 14.0{\textbackslash}VC and run\\
+\medskip
+{\tt vcvarsall.bat x64} \\
+\medskip
+to initialize the compiler-related environment.
+\item Change to the ORE project directory that contains the {\tt QuantLib}, {\tt QuantExt}, etc, folders; create subdirectory {\tt build} and change to subdirectory {\tt build}
+\item Configure CMake e.g. by invoking \\
+\medskip
+{\tt cmake -D BOOST\_LIBRARYDIR=/path/to/boost/root/lib64-msvc-14.0 } \textbackslash\\
+{\tt \hspace{2cm} -D CMKAE\_BUILD\_TYPE=Release }\textbackslash\\
+{\tt \hspace{2cm} -D MSVC\_RUNTIME=static} \textbackslash\\
+{\tt \hspace{2cm} -G Ninja ..} \\
+\medskip
+where the -G option allows choosing the desired build system generator.
+\item Build all ORE libraries including QuantLib by invoking \\
+\medskip
+  {\tt ninja} \\
+\medskip
+Ninja automatically utilizes all available threads, unless specified with the -j option.
+
+\item Run all test suites by invoking \\
+  \medskip {\tt ctest -j4}
+\end{enumerate}
+
 \subsection{Python and Jupyter}\label{sec:python}
 
 Python (version 3.5 or higher) is required to run the examples in section \ref{sec:examples} and plot exposure
@@ -837,7 +899,7 @@ It is instructive to look into the input folder in Examples/Example\_1, the cont
 
 This simple example is an important test case which is also run similarly in one of the unit test suites of ORE. The
 expected exposure can be seen as a European option on the underlying netting set, see also appendix
-\ref{sec:app_exposure}. In this exampl«e, the expected exposure at some future point in time, say 10 years, is equal to
+\ref{sec:app_exposure}. In this example, the expected exposure at some future point in time, say 10 years, is equal to
 the European Swaption price for an option with expiry in 10 years, underlying Swap start in 10 years and underlying Swap
 maturity in 20 years. We can easily compute such standard European Swaption prices for all future points in time where
 both Swap legs reset, i.e. annually in this case\footnote{Using closed form expressions for standard European Swaption
@@ -1358,11 +1420,8 @@ and likewise for cases B, C and D. The essential results of each run are are vis
 \item evolution of expected DIM
 \item regression plots at selected future times 
 \end{itemize}
-illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. In all cases the zero
-order regression estimate of DIM differs noticeably from the higher orders (one and two). In the three swap cases we
-moreover see that first and second order polynomial choice makes hardly any difference; note that case C and D use up to
-three-dimensional regressors (simulated USD and EUR rate fixings and the EUR/USD FX rate). In the Swaption case B, first
-and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
+illustrated for cases A and B in figures \ref{fig_ex13a_evolution} - \ref{fig_ex13b_regression}. 
+In the three swap cases, the regression orders do make a noticable difference in the respective expected DIM evolution. In the Swaption case B, first and second order polynomial choice makes a difference before option expiry. More details on this DIM model and its performance can be found in \cite{Anfuso2016,LichtersEtAl}.
  
 \begin{figure}[h!]
 \begin{center}
@@ -1968,8 +2027,8 @@ needed for subsequent XVA analytics.
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="storeFlows">Y</Parameter>
     <Parameter name="cubeFile">cube_A.dat</Parameter>
-    <Parameter name="additionalScenarioDataFileName">scenariodata.dat</Parameter>
-    <Parameter name="scenariodump">scenariodump.csv</Parameter>
+    <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
+    <Parameter name="aggregationScenarioDump">scenariodump.csv</Parameter>
   </Analytic>
 </Analytics>      
 \end{minted}
@@ -1985,7 +2044,9 @@ cube for post processing in the context of Dynamic Initial Margin and Variation 
 scenario data (written to the specified file here) is likewise required in the post processor step. These data comprise
 simulated index fixing e.g. for collateral compounding and simulated FX rates for cash collateral conversion into base
 currency. The scenario dump file, if specified here, causes ORE to write simulated market data to a human-readable csv
-file.
+file. Only those currencies or indices are written here that are stated in the AggregationScenarioDataCurrencies and 
+AggregationScenarioDataIndices subsections of the simulation files market section, see also section
+\ref{sec:sim_market}.
  
 \medskip The XVA analytic section offers CVA, DVA, FVA and COLVA calculations which can be selected/deselected here
 individually. All XVA calculations depend on a previously generated NPV cube (see above) which is referenced here via
@@ -2020,6 +2081,11 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
     <Parameter name="colva">Y</Parameter>
     <Parameter name="collateralFloor">Y</Parameter>
+    <Parameter name="kva">Y</Parameter>
+    <Parameter name="kvaCapitalDiscountRate">0.10</Parameter>
+    <Parameter name="kvaAlpha">1.4</Parameter>
+    <Parameter name="kvaRegAdjustment">12.5</Parameter>
+    <Parameter name="kvaCapitalHurdle">0.012</Parameter>
     <Parameter name="dim">Y</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
@@ -2071,7 +2137,11 @@ collateral rates floor to the collateral model file (netting.xml)}
 \item {\tt fvaBorrowingCurve:} Identifier of the borrowing yield curve
 \item {\tt fvaLendingCurve:} Identifier of the lending yield curve
 %\item {\tt collateralSpread:} Deviation between collateral rate and overnight rate, expressed in absolute terms (one
-%basis point is 0.0001) assuming the day count convention of the collateral rate. 
+%basis point is 0.0001) assuming the day count convention of the
+%collateral rate. 
+%basis point is 0.0001) assuming the day count convention of the collateral rate.
+\item {\tt kva:} Flag to enable setting the kva ccr parameters.
+\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle:} the kva ccr parameters (see \ref{sec:app_kva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
@@ -2883,6 +2953,8 @@ Let us discuss this section using the following example
   <Sequence>SobolBrownianBridge</Sequence>
   <Seed>42</Seed>
   <Samples>1000</Samples>
+  <Ordering>Steps</Ordering>
+  <DirectionIntegers>JoeKuoD7</DirectionIntegers>
 </Parameters>
 \end{minted}
 \caption{Simulation configuration}
@@ -2906,6 +2978,11 @@ SobolBrownianBridge}).
 %\item {\tt Fixings: } Choose whether fixings should be simulated or not, and if so which fixing simulation method to
 use ({\em Backward, Forward, BestOfForwardBackward, InterpolatedForwardBackward}), which number of forward horizon days
 to use if one of the {\em Forward } related methods is chosen.
+\item {\tt Ordering:} If the sequence type {\em SobolBrownianBridge} is used, ordering of variates ({\em Factors, Steps,
+    Diagonal})
+\item {\tt DirectionIntegers:} If the sequence type {\em SobolBrownianBridge} or {\em Sobol} is used, type of direction
+  integers in Sobol generator ({\em Unit, Jaeckel, SobolLevitan, SobolLevitanLemieux, JoeKuoD5, JoeKuoD6, JoeKuoD7, Kuo,
+    Kuo2, Kuo3})
 \end{itemize}
 
 \subsubsection{Model}\label{sec:sim_model}
@@ -4635,6 +4712,58 @@ Given the DIM estimate along all paths, we can next work out the Margin Value Ad
 with borrowing spread $f_b$ as in the FVA section \ref{sec:fva} and spread $s_I$ received on initial margin, both
 spreads relative to the cash collateral rate.
 
+\subsection{KVA (CCR)}\label{sec:app_kva}
+
+The KVA is calculated for the Counterparty Credit Risk Capital charge
+(CCR) following the IRB method concisely  described in
+\cite{Gregory15}, Appendix 8A.
+It is following the Basel rules by computing risk capital as the
+product of alpha weighted  exposure at default, worst case probability
+of default at 99.9  and a maturity adjustment factor also described in
+the Basel annex 4.
+The risk capital charges are discounted with a capital discount factor
+and summed up to  give the total CCR KVA after being multiplied with
+the risk  weight and a capital charge (following the RWA method).
+
+\medskip Basel II internal rating based (IRB) estimate of worst case
+probability of  default: large homogeneous pool (LHP) approximation of
+Vasicek (1997), KVA regulatory probability of default is the worst
+case  probability of default floored at 0.03:
+$$
+PD_{99.9\%} = \max(0.03, N (\frac{N^{-1}(PD) + \sqrt{\rho}
+  N^{-1}(0.999)}{\sqrt{1 - \rho}}) - PD)
+$$
+$N$ is the cumulative standard normal distribution,
+
+$$
+\rho = 0.12 \frac{1 - e^{-50 PD}}{1 - e^{-50}} + 0.24 (1 - \frac{1 -
+  e^{-50 PD}}{1 - e^{-50}})
+$$
+
+\medskip Maturity adjustment factor for RWA method capped at 5, floored at 1:
+$$MA(PD, M) = \min(5, \max(1, \frac{1 + (M - 2.5) B(PD)}{1 - 1.5 B(PD)}))$$
+\medskip where $B(PD) = (0.11852 - 0.05478 \ln(PD))^2$ and M is the
+effective  maturity of the portfolio (capped at 5):
+
+$$M = \min(5, 1 + \frac{\sum\limits_{t_k > 1yr} EE(t_k)\Delta t_k
+  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} EEE(t_k)\Delta t_k B(0,t_k)})$$
+
+\medskip where $B(0,t_k)$ is the risk-free discount factor from the
+simulation  date $t_k$ to today, $\Delta t_k$ is the difference
+between time points, 
+$EE(t_k)$ is the expected exposure at time $t_k$ and $EEE(t_k)$ is the
+effective expected exposure.
+
+\medskip (expected) risk capital at $t_i$:
+$$RC_{t_i} = EAD_{t_i} \times LGD \times PD_{99.9\%} \times MA(PD, M)$$
+
+$$EAD_{t_i} = \alpha \times EEPE_{t_i}$$
+
+\medskip $EEPE_{t_i}$ being approximated by $EPE$ at point $t_i$ and $\alpha$ the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+
+\medskip $KVA_{CCR}$ is the sum of the expected risk capitals discounted at capital discount rate and factored with the capital hurdle and the regulatory adjustment:
+$$KVA_{CCR} = \sum_i RC_{t_i} \frac{1}{ (1 + capDiscRate)^{t_i-t_0}} (t_i - t_{i-1}) \times (capHurdle \times regAdj)$$
+
 \subsection{Collateral Model}\label{sec:app_collateral}
 
 The collateral model implemented in ORE is based on the evolution of collateral account balances along each Monte Carlo
@@ -4950,6 +5079,8 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{Gregory12} Jon Gregory, {\em Counterparty Credit Risk and Credit Value Adjustment, 2nd Ed.}, Wiley Finance,
   2013.
+
+\bibitem{Gregory15} Jon Gregory, {\em The xVA Challenge, 3rd Ed.}, Wiley Finance, 2015.
 
 \bibitem{Lichters} Roland Lichters, Roland Stamm, Donal Gallagher, {\em Modern Derivatives Pricing and Credit Exposure
     Analysis, Theory and Practice of CSA and XVA Pricing, Exposure Simulation and Backtesting}, Palgrave Macmillan,

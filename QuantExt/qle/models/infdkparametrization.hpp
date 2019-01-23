@@ -20,8 +20,8 @@
     \brief Inflation Dodgson Kainth parametrization
 */
 
-#ifndef quantextplus_infdklgm1f_parametrization_hpp
-#define quantextplus_infdklgm1f_parametrization_hpp
+#ifndef quantext_infdklgm1f_parametrization_hpp
+#define quantext_infdklgm1f_parametrization_hpp
 
 #include <ql/handle.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
@@ -31,10 +31,10 @@
 #include <qle/models/irlgm1fpiecewiseconstantparametrization.hpp>
 #include <qle/models/irlgm1fpiecewiselinearparametrization.hpp>
 
-using namespace QuantLib;
-using namespace QuantExt;
 
 namespace QuantExt {
+using namespace QuantLib;
+using namespace QuantExt;
 
 typedef Lgm1fParametrization<ZeroInflationTermStructure> InfDkParametrization;
 

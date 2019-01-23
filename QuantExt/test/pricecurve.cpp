@@ -15,9 +15,8 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-#include "pricecurve.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
 
@@ -181,9 +180,11 @@ void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool is
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void PriceCurveTest::testTimesAndPricesCurve() {
+BOOST_AUTO_TEST_SUITE(PriceCurveTest)
+		
+BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and prices");
 
@@ -221,7 +222,7 @@ void PriceCurveTest::testTimesAndPricesCurve() {
     }
 }
 
-void PriceCurveTest::testTimesAndQuotesCurve() {
+BOOST_AUTO_TEST_CASE(testTimesAndQuotesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and quotes");
 
@@ -279,7 +280,7 @@ void PriceCurveTest::testTimesAndQuotesCurve() {
     }
 }
 
-void PriceCurveTest::testDatesAndPricesCurve() {
+BOOST_AUTO_TEST_CASE(testDatesAndPricesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from dates and prices");
 
@@ -317,7 +318,7 @@ void PriceCurveTest::testDatesAndPricesCurve() {
     }
 }
 
-void PriceCurveTest::testDatesAndQuotesCurve() {
+BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from dates and quotes");
 
@@ -364,7 +365,7 @@ void PriceCurveTest::testDatesAndQuotesCurve() {
     }
 }
 
-void PriceCurveTest::testNoTimeZeroWorks() {
+BOOST_AUTO_TEST_CASE(testNoTimeZeroWorks) {
 
     BOOST_TEST_MESSAGE("Test building with times without a time 0 works with extrapolation on");
 
@@ -392,7 +393,7 @@ void PriceCurveTest::testNoTimeZeroWorks() {
     BOOST_CHECK_THROW(priceCurve.price(0.25, false), QuantLib::Error);
 }
 
-void PriceCurveTest::testNegativeTimeRequestThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
 
     BOOST_TEST_MESSAGE("Test that requesting a price at a time before zero throws");
 
@@ -417,7 +418,7 @@ void PriceCurveTest::testNegativeTimeRequestThrows() {
     BOOST_CHECK_THROW(priceCurve.price(today, td.extrapolate), QuantLib::Error);
 }
 
-void PriceCurveTest::testNegativePriceThrows() {
+BOOST_AUTO_TEST_CASE(testNegativePriceThrows) {
 
     BOOST_TEST_MESSAGE("Test that attempting to return a negative price gives an error");
 
@@ -441,18 +442,6 @@ void PriceCurveTest::testNegativePriceThrows() {
     BOOST_CHECK_THROW(priceCurve.price(d, td.extrapolate), QuantLib::Error);
 }
 
-test_suite* PriceCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("PriceCurveTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testTimesAndPricesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testTimesAndQuotesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testDatesAndPricesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testDatesAndQuotesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNoTimeZeroWorks));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNegativeTimeRequestThrows));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNegativePriceThrows));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

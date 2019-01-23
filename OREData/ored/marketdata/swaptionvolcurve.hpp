@@ -29,12 +29,12 @@
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
-using QuantLib::Date;
-using QuantLib::SwaptionVolatilityMatrix;
-using ore::data::CurveConfigurations;
 
 namespace ore {
 namespace data {
+using QuantLib::Date;
+using QuantLib::SwaptionVolatilityMatrix;
+using ore::data::CurveConfigurations;
 
 //! Wrapper class for building Swaption volatility structures
 /*!

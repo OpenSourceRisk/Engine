@@ -29,9 +29,9 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! average overnight coupon pricer
 /*! \ingroup cashflows

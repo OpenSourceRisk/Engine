@@ -29,8 +29,8 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
 
-using namespace QuantLib;
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Equity Index
 /*! \ingroup indexes */

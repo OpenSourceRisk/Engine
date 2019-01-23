@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "cashflow.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/indexmanager.hpp>
@@ -33,8 +34,11 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-namespace testsuite {
-void CashFlowTest::testFXLinkedCashFlow() {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(CashFlowTest)
+
+BOOST_AUTO_TEST_CASE(testFXLinkedCashFlow) {
 
     BOOST_TEST_MESSAGE("Testing FX Linked CashFlow");
 
@@ -90,7 +94,7 @@ void CashFlowTest::testFXLinkedCashFlow() {
     Settings::instance().evaluationDate() = today;
 }
 
-void CashFlowTest::testEquityCoupon() {
+BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 
     BOOST_TEST_MESSAGE("Testing Equity Coupon");
 
@@ -166,10 +170,7 @@ void CashFlowTest::testEquityCoupon() {
     BOOST_CHECK_CLOSE(eq4.amount(), expectedAmount, 1e-10);
 }
 
-test_suite* CashFlowTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CashFlowTests");
-    suite->add(BOOST_TEST_CASE(&CashFlowTest::testFXLinkedCashFlow));
-    suite->add(BOOST_TEST_CASE(&CashFlowTest::testEquityCoupon));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+

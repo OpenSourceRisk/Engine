@@ -41,8 +41,15 @@ class OreExample(object):
             else:
                 self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
         else:
-            self.ore_exe = "../../App/ore"
-
+            if os.path.isfile("../../App/build/ore"):
+                self.ore_exe = "../../App/build/ore"
+            elif os.path.isfile("../../build/App/ore"):
+                self.ore_exe = "../../build/App/ore"
+            elif os.path.isfile("../../App/ore"):
+                self.ore_exe = "../../App/ore"
+            else:
+                print_on_console("ORE executable not found.")
+                quit()
 
     def print_headline(self, headline):
         self.headlinecounter += 1
@@ -82,6 +89,38 @@ class OreExample(object):
                      color=color,
                      label=label,
                      marker=marker)
+
+    def plotScaled(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='', xlabel='', ylabel='', rescale=False, zoom=1, legendLocation='upper right', xScale=1.0, yScale=1.0, exponent=1.0):
+        xTmp = self.get_output_data_from_column(filename, colIdxTime, offset)
+        yTmp = self.get_output_data_from_column(filename, colIdxVal, offset)
+        x = []
+        y = []
+        yMax = pow(float(yTmp[0]), exponent) / yScale
+        yMin = pow(float(yTmp[0]), exponent) / yScale
+        for i in range(0, len(xTmp)-1):
+            try :
+                tmp = pow(float(yTmp[i]), exponent) / yScale;
+                y.append(tmp)
+                yMax = max(tmp, yMax)
+                yMin = min(tmp, yMin)
+                x.append(float(xTmp[i]) / xScale)
+            except TypeError:
+                pass
+        if (yMax != 0.0):
+            yn = [ u / yMax for u in y ]
+        self.ax.plot(x,
+                     y,
+                     linewidth=2,
+                     linestyle=linestyle,
+                     color=color,
+                     label=label,
+                     marker=marker)
+        if rescale:            
+            self.ax.set_ylim([yMin/zoom, yMax/zoom])
+        self.ax.set_title(title)
+        self.ax.set_xlabel(xlabel)
+        self.ax.set_ylabel(ylabel)
+        self.ax.legend(loc=legendLocation, shadow=True)        
 
     def plotSq(self, filename, colIdxTime, colIdxVal, color, label, offset=1, marker='', linestyle='-', title='',
                xlabel='', ylabel='', rescale=False, zoom=1):

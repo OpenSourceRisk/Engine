@@ -32,8 +32,17 @@
 #include <ql/time/daycounters/all.hpp>
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/version.hpp>
-#include <qle/currencies/all.hpp>
-#include <qle/calendars/all.hpp>
+#include <qle/calendars/chile.hpp>
+#include <qle/calendars/colombia.hpp>
+#include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/peru.hpp>
+#include <qle/calendars/philippines.hpp>
+#include <qle/calendars/thailand.hpp>
+#include <qle/currencies/africa.hpp>
+#include <qle/currencies/america.hpp>
+#include <qle/currencies/asia.hpp>
+
+#include <boost/lexical_cast.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -104,8 +113,11 @@ Date parseDate(const string& s) {
 }
 
 Real parseReal(const string& s) {
-    // TODO: review
-    return atof(s.c_str());
+    try {
+        return std::stod(s);
+    } catch (const std::exception& ex) {
+        QL_FAIL("Failed to parseReal(\"" << s << "\") " << ex.what());
+    }
 }
 
 bool tryParseReal(const string& s, QuantLib::Real& result) {
@@ -120,7 +132,7 @@ bool tryParseReal(const string& s, QuantLib::Real& result) {
 
 Integer parseInteger(const string& s) {
     try {
-        return io::to_integer(s);
+        return boost::lexical_cast<Integer>(s.c_str());
     } catch (std::exception& ex) {
         QL_FAIL("Failed to parseInteger(\"" << s << "\") " << ex.what());
     }
@@ -153,6 +165,7 @@ Calendar parseCalendar(const string& s) {
                                       {"US-SET", UnitedStates(UnitedStates::Settlement)},
                                       {"US settlement", UnitedStates(UnitedStates::Settlement)},
                                       {"US-GOV", UnitedStates(UnitedStates::GovernmentBond)},
+                                      {"US-FED", UnitedStates(UnitedStates::FederalReserve)},
                                       {"US-NYSE", UnitedStates(UnitedStates::NYSE)},
                                       {"New York stock exchange", UnitedStates(UnitedStates::NYSE)},
                                       {"US with Libor impact", UnitedStates(UnitedStates::LiborImpact)},
@@ -212,7 +225,7 @@ Calendar parseCalendar(const string& s) {
                                       {"HUF", Hungary()},
                                       {"GBLO", UnitedKingdom()},
                                       {"CLP", Chile()},
-                                      {"THB", Thailand()},
+                                      {"THB", QuantExt::Thailand()},
                                       {"COP", Colombia()},
                                       {"PEN", Peru()},
                                       {"MYR", Malaysia()},
@@ -489,6 +502,22 @@ Settlement::Type parseSettlementType(const std::string& s) {
     }
 }
 
+Settlement::Method parseSettlementMethod(const std::string& s) {
+    static map<string, Settlement::Method> m = {
+        {"PhysicalOTC", Settlement::PhysicalOTC},
+        {"PhysicalCleared", Settlement::PhysicalCleared},
+        {"CollateralizedCashPrice", Settlement::CollateralizedCashPrice},
+        {"ParYieldCurve", Settlement::ParYieldCurve},
+    };
+
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("Settlement method \"" << s << "\" not recognized");
+    }
+}
+
 Exercise::Type parseExerciseType(const std::string& s) {
     static map<string, Exercise::Type> m = {
         {"European", Exercise::European}, {"Bermudan", Exercise::Bermudan}, {"American", Exercise::American},
@@ -543,6 +572,38 @@ QuantLib::LsmBasisSystem::PolynomType parsePolynomType(const std::string& s) {
         return it->second;
     } else {
         QL_FAIL("Polynom type \"" << s << "\" not recognized");
+    }
+}
+
+SobolBrownianGenerator::Ordering parseSobolBrownianGeneratorOrdering(const std::string& s) {
+    static map<string, SobolBrownianGenerator::Ordering> m = {{"Factors", SobolBrownianGenerator::Ordering::Factors},
+                                                              {"Steps", SobolBrownianGenerator::Ordering::Steps},
+                                                              {"Diagonal", SobolBrownianGenerator::Ordering::Diagonal}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolBrownianGenerator ordering \"" << s << "\" not recognized");
+    }
+}
+
+SobolRsg::DirectionIntegers parseSobolRsgDirectionIntegers(const std::string& s) {
+    static map<string, SobolRsg::DirectionIntegers> m = {
+        {"Unit", SobolRsg::DirectionIntegers::Unit},
+        {"Jaeckel", SobolRsg::DirectionIntegers::Jaeckel},
+        {"SobolLevitan", SobolRsg::DirectionIntegers::SobolLevitan},
+        {"SobolLevitanLemieux", SobolRsg::DirectionIntegers::SobolLevitanLemieux},
+        {"JoeKuoD5", SobolRsg::DirectionIntegers::JoeKuoD5},
+        {"JoeKuoD6", SobolRsg::DirectionIntegers::JoeKuoD6},
+        {"JoeKuoD7", SobolRsg::DirectionIntegers::JoeKuoD7},
+        {"Kuo", SobolRsg::DirectionIntegers::Kuo},
+        {"Kuo2", SobolRsg::DirectionIntegers::Kuo2},
+        {"Kuo3", SobolRsg::DirectionIntegers::Kuo3}};
+    auto it = m.find(s);
+    if (it != m.end()) {
+        return it->second;
+    } else {
+        QL_FAIL("SobolRsg direction integers \"" << s << "\" not recognized");
     }
 }
 

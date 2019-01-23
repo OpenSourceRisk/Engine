@@ -101,7 +101,7 @@ std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
     case EquityCurveConfig::Type::NoDividends:
         return out << "NoDividends";
     default:
-        QL_FAIL("unknown EquityCurveConfig::Type(" << Integer(t) << ")");
+        QL_FAIL("unknown EquityCurveConfig::Type(" << int(t) << ")");
     }
 }
 

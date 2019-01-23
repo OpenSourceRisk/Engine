@@ -27,14 +27,14 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
+
+namespace ore {
+namespace data {
 using std::vector;
 using std::string;
 using ore::data::XMLSerializable;
 using ore::data::XMLNode;
 using ore::data::XMLUtils;
-
-namespace ore {
-namespace data {
 
 //! Pricing engine description
 /*! \ingroup tradedata
@@ -53,6 +53,8 @@ public:
     const map<string, string>& engineParameters(const string& productName) const {
         return engineParams_.at(productName);
     }
+    //! Return all products
+    vector<string> products() const;
     //@}
 
     //! \name Setters
@@ -78,5 +80,9 @@ private:
     map<string, string> engine_;
     map<string, map<string, string>> engineParams_;
 };
+
+bool operator==(const EngineData& lhs, const EngineData& rhs);
+bool operator!=(const EngineData& lhs, const EngineData& rhs);
+
 } // namespace data
 } // namespace ore

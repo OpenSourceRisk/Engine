@@ -30,9 +30,9 @@
 
 #include <boost/unordered_map.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 class CrossAssetModel;
 

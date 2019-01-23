@@ -30,116 +30,54 @@ using namespace std;
 using namespace boost;
 
 // Boost.Test
-#include <boost/test/parameterized_test.hpp>
-#include <boost/test/test_tools.hpp>
+#define BOOST_TEST_MODULE QuantExtTestSuite
 #include <boost/test/unit_test.hpp>
 using boost::unit_test::test_suite;
+using boost::unit_test::framework::master_test_suite;
+
+#include "toplevelfixture.hpp"
 
 #ifdef BOOST_MSVC
 #include <ql/auto_link.hpp>
 #include <qle/auto_link.hpp>
 #endif
 
-// Lib test suites
-#include "analyticlgmswaptionengine.hpp"
-#include "blackvariancecurve.hpp"
-#include "bonds.hpp"
-#include "qle_calendars.hpp"
-#include "cashflow.hpp"
-#include "commodityforward.hpp"
-#include "crossassetmodel.hpp"
-#include "crossassetmodel2.hpp"
-#include "crossassetmodelparametrizations.hpp"
-#include "currency.hpp"
-#include "deltagammavar.hpp"
-#include "deposit.hpp"
-#include "discountcurve.hpp"
-#include "discountingcommodityforwardengine.hpp"
-#include "dynamicblackvoltermstructure.hpp"
-#include "dynamicswaptionvolmatrix.hpp"
-#include "fxvolsmile.hpp"
-#include "index.hpp"
-#include "logquote.hpp"
-#include "optionletstripper.hpp"
-#include "payment.hpp"
-#include "pricecurve.hpp"
-#include "ratehelpers.hpp"
-#include "stabilisedglls.hpp"
-#include "staticallycorrectedyieldtermstructure.hpp"
-#include "survivalprobabilitycurve.hpp"
-#include "swaptionvolatilityconverter.hpp"
-#include "swaptionvolconstantspread.hpp"
-#include "pricetermstructureadapter.hpp"
-#include "interpolatedyoycapfloortermpricesurface.hpp"
-#include "discountratiomodifiedcurve.hpp"
-#include "crossccyfixfloatswap.hpp"
-#include "crossccyfixfloatswaphelper.hpp"
+class QleGlobalFixture {
+public:
+    QleGlobalFixture() {
+    }
 
-namespace {
+    ~QleGlobalFixture() {
+        stopTimer();
+    }
 
-boost::timer t;
+    //Method called in destructor to log time taken
+    void stopTimer() {
+        double seconds = t.elapsed();
+        int hours = int(seconds / 3600);
+        seconds -= hours * 3600;
+        int minutes = int(seconds / 60);
+        seconds -= minutes * 60;
+        cout << endl << "QuantExt tests completed in ";
+        if (hours > 0)
+            cout << hours << " h ";
+        if (hours > 0 || minutes > 0)
+            cout << minutes << " m ";
+        cout << fixed << setprecision(0) << seconds << " s" << endl;
+    }
 
-void startTimer() {
-    BOOST_CHECK(true);
-    t.restart();
-}
-void stopTimer() {
-    BOOST_CHECK(true);
-    double seconds = t.elapsed();
-    int hours = int(seconds / 3600);
-    seconds -= hours * 3600;
-    int minutes = int(seconds / 60);
-    seconds -= minutes * 60;
-    std::cout << endl << " QuantExt tests completed in ";
-    if (hours > 0)
-        cout << hours << " h ";
-    if (hours > 0 || minutes > 0)
-        cout << minutes << " m ";
-    cout << fixed << setprecision(0) << seconds << " s" << endl << endl;
-}
-} // namespace
+private:
+    // Timing the test run
+    boost::timer t;
+};
 
-test_suite* init_unit_test_suite(int, char* []) {
 
-    test_suite* test = BOOST_TEST_SUITE("QuantExtTestSuite");
+// Breaking change in 1.65.0
+// https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
+// Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
+#if BOOST_VERSION<106500
+BOOST_GLOBAL_FIXTURE(QleGlobalFixture);
+#else
+BOOST_TEST_GLOBAL_FIXTURE(QleGlobalFixture);
+#endif
 
-    test->add(BOOST_TEST_CASE(startTimer));
-    
-    test->add(testsuite::CashFlowTest::suite());
-    test->add(testsuite::AnalyticLgmSwaptionEngineTest::suite());
-    test->add(testsuite::CrossAssetModelTest::suite());
-    test->add(testsuite::CrossAssetModelTest2::suite());
-    test->add(testsuite::CrossAssetModelParametrizationsTest::suite());
-    test->add(testsuite::DiscountCurveTest::suite());
-    test->add(testsuite::DynamicBlackVolTermStructureTest::suite());
-    test->add(testsuite::DynamicSwaptionVolMatrixTest::suite());
-    test->add(testsuite::CurrencyTest::suite());
-    test->add(testsuite::IndexTest::suite());
-    test->add(testsuite::LogQuoteTest::suite());
-    test->add(testsuite::StaticallyCorrectedYieldTermStructureTest::suite());
-    test->add(testsuite::BlackVarianceCurveTest::suite());
-    test->add(testsuite::SwaptionVolatilityConverterTest::suite());
-    test->add(testsuite::OptionletStripperTest::suite());
-    test->add(testsuite::DepositTest::suite());
-    test->add(testsuite::RateHelpersTest::suite());
-    test->add(testsuite::StabilisedGLLSTest::suite());
-    test->add(testsuite::SurvivalProbabilityCurveTest::suite());
-    test->add(testsuite::SwaptionVolConstantSpreadTest::suite());
-    test->add(testsuite::FxVolSmileTest::suite());
-    test->add(testsuite::PaymentTest::suite());
-    test->add(testsuite::DeltaGammaVarTest::suite());
-    test->add(testsuite::PriceCurveTest::suite());
-    test->add(testsuite::CommodityForwardTest::suite());
-    test->add(testsuite::DiscountingCommodityForwardEngineTest::suite());
-    test->add(testsuite::PriceTermStructureAdapterTest::suite());
-    test->add(testsuite::BondsTest::suite());
-    test->add(testsuite::InterpolatedYoyCapFloorTermPriceSurfaceTest::suite());
-    test->add(testsuite::CalendarsTest::suite());
-    test->add(testsuite::DiscountingRatioModifiedCurveTest::suite());
-    test->add(testsuite::CrossCurrencyFixFloatSwapTest::suite());
-    test->add(testsuite::CrossCurrencyFixFloatSwapHelperTest::suite());
-
-    test->add(BOOST_TEST_CASE(stopTimer));
-
-    return test;
-}

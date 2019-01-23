@@ -32,9 +32,9 @@
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/equityindex.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! equity coupon pricer
 /*! \ingroup cashflows

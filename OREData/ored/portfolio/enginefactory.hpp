@@ -36,6 +36,9 @@
 #include <set>
 #include <vector>
 
+
+namespace ore {
+namespace data {
 using std::map;
 using std::set;
 using std::string;
@@ -44,9 +47,6 @@ using std::tuple;
 using ore::data::Market;
 using QuantLib::PricingEngine;
 using QuantLib::Disposable;
-
-namespace ore {
-namespace data {
 
 class Trade;
 class LegBuilder;

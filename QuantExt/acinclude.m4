@@ -234,10 +234,10 @@ AC_DEFUN([QL_CHECK_BOOST],
 # ------------------------
 # Check whether the QuantLib installation is up to date
 AC_DEFUN([QL_CHECK_QUANTLIB_VERSION],
-[AC_MSG_CHECKING([for QuantLib version >= 1.11])
+[AC_MSG_CHECKING([for QuantLib version >= 1.14])
  AC_TRY_COMPILE(
     [@%:@include <ql/version.hpp>],
-    [@%:@if QL_HEX_VERSION < 0x011100f0
+    [@%:@if QL_HEX_VERSION < 0x011400f0
      @%:@error too old
      @%:@endif],
     [AC_MSG_RESULT([yes])],

@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "discountcurve.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
@@ -24,11 +25,14 @@
 #include <qle/termstructures/interpolateddiscountcurve2.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace QuantLib;
 using std::vector;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void DiscountCurveTest::testDiscountCurve() {
+BOOST_AUTO_TEST_SUITE(DiscountCurveTest)
+
+BOOST_AUTO_TEST_CASE(testDiscountCurve) {
 
     // FIXME: test curve1 or 2 or both
     BOOST_TEST_MESSAGE("Testing QuantExt::InteroplatedDiscountCurve2...");
@@ -77,9 +81,6 @@ void DiscountCurveTest::testDiscountCurve() {
     }
 }
 
-test_suite* DiscountCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DiscountCurveTests");
-    suite->add(BOOST_TEST_CASE(&DiscountCurveTest::testDiscountCurve));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
