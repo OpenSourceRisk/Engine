@@ -77,8 +77,10 @@ public:
     }
 
     virtual const std::vector<Fixing>& loadFixings() const = 0;
-    virtual const std::vector<Fixing>& loadDividends() const = 0;
     //@}
+
+    //! Optional load dividends method
+    virtual const std::vector<Fixing>& loadDividends() const {}
 };
 } // namespace data
 } // namespace ore
