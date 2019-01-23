@@ -758,7 +758,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building CorrelationCurve for asof " << asof);
                         boost::shared_ptr<CorrelationCurve> corrCurve = boost::make_shared<CorrelationCurve>(
-                            asof, *corrspec, loader, curveConfigs, requiredSwapIndices,requiredYieldCurves, 
+                            asof, *corrspec, loader, curveConfigs, conventions, requiredSwapIndices,requiredYieldCurves, 
                             requiredSwaptionVolCurves);
                         itr = requiredCorrelationCurves.insert(make_pair(corrspec->name(), corrCurve)).first;
                     }

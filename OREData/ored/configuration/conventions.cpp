@@ -957,6 +957,47 @@ XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+void CmsSpreadOptionConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "CmsSpreadOption");
+    type_ = Type::CMSSpreadOption;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+    strForwardStart_ = XMLUtils::getChildValue(node, "ForwardStart", true);
+    strSpotDays_ = XMLUtils::getChildValue(node, "SpotDays", true);
+    strSwapTenor_ = XMLUtils::getChildValue(node, "SwapTenor", true);
+    strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", true);
+    strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
+    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+    strRollConvention_ = XMLUtils::getChildValue(node, "RollConvention", true);
+
+    build();
+}
+
+void CmsSpreadOptionConvention::build() {
+
+    forwardStart_ = parsePeriod(strForwardStart_);
+    spotDays_ = parsePeriod(strSpotDays_);
+    swapTenor_ = parsePeriod(strSwapTenor_);
+    fixingDays_ = lexical_cast<Natural>(strFixingDays_);
+    calendar_ = parseCalendar(strCalendar_);
+    dayCounter_ = parseDayCounter(strDayCounter_);
+    rollConvention_ = parseBusinessDayConvention(strRollConvention_);
+}
+
+XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("CmsSpreadOption");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "ForwardStart", strForwardStart_);
+    XMLUtils::addChild(doc, node, "SpotDays", strSpotDays_);
+    XMLUtils::addChild(doc, node, "SwapTenor", strSwapTenor_);
+    XMLUtils::addChild(doc, node, "FixingDays", strFixingDays_);
+    XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
+    XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+    XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
+
+    return node;
+}
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -998,6 +1039,8 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new SwapIndexConvention());
         } else if (childName == "InflationSwap") {
             convention.reset(new InflationSwapConvention());
+        } else if (childName == "CmsSpreadOption") {
+            convention.reset(new CmsSpreadOptionConvention());
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }

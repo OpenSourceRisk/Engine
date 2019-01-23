@@ -709,12 +709,14 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
     };
     //Correlation curve
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
-        "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
+        "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::ATM, 
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
         CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors2,
         dayCounter, UnitedStates(), bdc, "EUR-CMS-10Y", "EUR-CMS-1Y", "EUR");
     //Constant Correlation
     configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-1Y-10Y-CONVENTION",
         CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors3,
         dayCounter, UnitedStates(), bdc, "USD-CMS-10Y", "USD-CMS-1Y", "USD");
 

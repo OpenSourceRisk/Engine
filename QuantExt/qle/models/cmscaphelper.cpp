@@ -1,21 +1,19 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2001, 2002, 2003 Sadruddin Rejeb
- Copyright (C) 2015 Peter Caspers
+ Copyright (C) 2019 Quaternion Risk Management Ltd
+ All rights reserved.
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -52,7 +50,8 @@ namespace QuantExt {
         Calendar calendar = index1_->fixingCalendar();
         
         boost::shared_ptr<IborIndex> index = index1_->iborIndex();
-        // FIXME, reduce length by forward start
+        
+        // FIXME, reduce length by forward start        
         startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
         endDate = calendar.advance(startDate, length_ - forwardStart_,
                                       index->businessDayConvention());
@@ -90,7 +89,7 @@ namespace QuantExt {
         
         boost::shared_ptr<IborIndex> index = index2_->iborIndex();
         // FIXME, reduce length by forward start
-        //startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
+        startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
         endDate = calendar.advance(startDate, length_-forwardStart_,
                                        index->businessDayConvention());
         
@@ -131,19 +130,19 @@ namespace QuantExt {
                                     "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index2_, index1_);
 
 
-        //startDate = calendar.advance(calendar.advance(asof_, spotDays_),forwardStart_);
-        endDate = calendar.advance(startDate, length_-forwardStart_,
-                                       index->businessDayConvention());
+        startDate = calendar_.advance(calendar_.advance(asof_, spotDays_),forwardStart_);
+        endDate = calendar_.advance(startDate, length_-forwardStart_,
+                                       convention_);
 
-        Schedule cmsSpreadSchedule(startDate, endDate, cmsTenor_, calendar,
-                               index->businessDayConvention(),
-                               index->businessDayConvention(),
+        Schedule cmsSpreadSchedule(startDate, endDate, cmsTenor_, calendar_,
+                               convention_,
+                               convention_,
                                DateGeneration::Forward, false);
         Leg cmsLeg1 = CmsSpreadLeg(cmsSpreadSchedule, spreadIndex)
                     .withNotionals(nominals)
                     .withSpreads(std::vector<Rate>(1, 0))
-                    .withPaymentAdjustment(index->businessDayConvention())
-                    .withPaymentDayCounter(Actual360())
+                    .withPaymentAdjustment(convention_)
+                    .withPaymentDayCounter(dayCounter_)
                     .withFixingDays(fixingDays_)
                     .inArrears(true)
                     .withCaps(std::vector<Rate>(1, spread));

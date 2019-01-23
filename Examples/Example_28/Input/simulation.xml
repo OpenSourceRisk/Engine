@@ -271,10 +271,10 @@
       <Index>USD-LIBOR-3M</Index>
     </AggregationScenarioDataIndices>
     <Correlations>
-        <Simulate>true</Simulate>
+        <Simulate>false</Simulate>
         <Expiries>1Y,2Y</Expiries>
         <Pairs>
-            <Pair>EUR-CMS-10Y,EUR-CMS-2Y</Pair>
+            <Pair>EUR-CMS-2Y,EUR-CMS-10Y</Pair>
         </Pairs>
     </Correlations>
   </Market>

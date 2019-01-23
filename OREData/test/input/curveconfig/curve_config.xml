@@ -417,6 +417,8 @@
     <Correlation>
       <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Currency>EUR</Currency>
       <!-- ATM -->
       <Dimension>ATM</Dimension>
       <!-- Rate, Price -->
@@ -434,6 +436,8 @@
     <Correlation>
       <CurveId>USD-CMS-10Y/USD-CMS-1Y</CurveId>
       <CurveDescription>USD CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Currency>USD</Currency>
       <!-- ATM -->
       <Dimension>Constant</Dimension>
       <!-- Rate, Price -->

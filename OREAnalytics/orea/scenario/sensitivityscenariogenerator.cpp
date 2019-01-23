@@ -1831,9 +1831,14 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
                     for (Size kk = 0; kk < n_c_strikes; ++kk) {
                         Size idx = jj * n_c_strikes + kk;
                         RiskFactorKey key(RFType::Correlation, label, idx);
+                        
+                        if (shiftedCorrData[jj][kk] > 1) {
+                            shiftedCorrData[jj][kk] = 1;
+                        } else if (shiftedCorrData[jj][kk] < -1) {
+                            shiftedCorrData[jj][kk] = -1;
+                        }
 
                         scenario->add(key, shiftedCorrData[jj][kk]);
-
 
                         LOG(jj << " " << kk << " " << shiftedCorrData[jj][kk] << " " << corrData[jj][kk]);
                         // Possibly store valid shift size

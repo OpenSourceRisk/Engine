@@ -1532,4 +1532,14 @@
       <InflationCalendar>ZAR</InflationCalendar>
       <InflationConvention>MF</InflationConvention>
   </InflationSwap>
+  <CmsSpreadOption>
+    <Id>EUR-CMS-2Y-10Y-CONVENTION</Id>
+    <ForwardStart>0M</ForwardStart>
+    <SpotDays>2D</SpotDays>
+    <SwapTenor>3M</SwapTenor>
+    <FixingDays>2</FixingDays>
+    <Calendar>TARGET</Calendar>
+    <DayCounter>A360</DayCounter>
+    <RollConvention>MF</RollConvention>
+  </CmsSpreadOption>
 </Conventions>

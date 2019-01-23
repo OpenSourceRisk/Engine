@@ -18118,8 +18118,9 @@
     <Correlation>
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Conventions>EUR-CMS-2Y-10Y-CONVENTION</Conventions>
       <SwaptionVolatility>EUR</SwaptionVolatility>
-      <CapFloorVolatility>EUR_CF_N</CapFloorVolatility>
       <DiscountCurve>EUR-EONIA</DiscountCurve>
       <Currency>EUR</Currency>
       <!-- ATM, Constant -->

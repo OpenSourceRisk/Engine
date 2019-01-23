@@ -48,9 +48,11 @@ using QuantLib::Null;
 */
 class CorrelationCurveConfig : public CurveConfig {
 public:
+    //! supported Correlation types
+    enum class  CorrelationType{ CMSSpread};
     //! supported Correlation dimensions
     enum class Dimension { ATM , Constant};
-    // supported volatility types
+    // supported quote types
     enum class QuoteType { Rate, Price };
 
     //! \name Constructors/Destructors
@@ -59,17 +61,13 @@ public:
     CorrelationCurveConfig() {}
     //! Detailed constructor
     CorrelationCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
+                                  const CorrelationType& corrType, const string& conventions,
                                   const QuoteType& quoteType, const bool extrapolate,
                                   const vector<Period>& optionTenors,
                                   const DayCounter& dayCounter,
                                   const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
                                   const string& index1, const string& index2, const string& currency, const string& swaptionVol = "",
-                                  const string& discountCurve = "", const string& cmsModel = "", const string& cmsEngine = "",
-                                  const Real cmsMeanReversion = Null<Real>(), const Real cmsLowerRateBoundLogNormal = Null<Real>(),
-                                  const Real cmsUpperRateBoundLogNormal = Null<Real>(), const Real cmsLowerRateBoundNormal = Null<Real>(),
-                                  const Real cmsUpperRateBoundNormal = Null<Real>(), const Real cmsPriceThreshold = Null<Real>(),
-                                  const string& cmsBsStdDev = "", const string& cmsSpreadModel = "", const string& cmsSpreadEngine = "",
-                                  const Real cmsSpreadIntegrationPoints = Null<Real>());
+                                  const string& discountCurve = "");
     //@}
 
     //! \name Serialisation
@@ -80,6 +78,8 @@ public:
 
     //! \name Inspectors
     //@{
+    const CorrelationType& correlationType() const { return correlationType_; }
+    const string& conventions() const { return conventions_; }
     const Dimension& dimension() const { return dimension_; }
     const QuoteType& quoteType() const { return quoteType_; }
     const bool& extrapolate() const { return extrapolate_; }
@@ -94,24 +94,12 @@ public:
     const string& discountCurve() const { return discountCurve_; }
     const vector<string>& quotes() override;
 
-    const string cmsModel() const { return cmsModel_; }
-    const string cmsEngine() const { return cmsEngine_; }
-    const Real cmsMeanReversion() const { return cmsMeanReversion_; }
-    const Real cmsLowerRateBoundLogNormal() const { return cmsLowerRateBoundLogNormal_; }
-    const Real cmsUpperRateBoundLogNormal() const { return cmsUpperRateBoundLogNormal_; }
-    const Real cmsLowerRateBoundNormal() const { return cmsLowerRateBoundNormal_; }
-    const Real cmsUpperRateBoundNormal() const { return cmsUpperRateBoundNormal_; }
-    const Real cmsVegaRatio() const { return cmsVegaRatio_; }
-    const Real cmsPriceThreshold() const { return cmsPriceThreshold_; }
-    const string cmsBsStdDev() const { return cmsBsStdDev_; }
-
-    const string cmsSpreadModel() const { return cmsSpreadModel_; }
-    const string cmsSpreadEngine() const { return cmsSpreadEngine_; }
-    const Real cmsSpreadIntegrationPoints() const { return cmsSpreadIntegrationPoints_; }
     //@}
 
     //! \name Setters
     //@{
+    CorrelationType& correlationType() { return correlationType_; }
+    string& conventions() { return conventions_; }
     Dimension& dimension() { return dimension_; }
     QuoteType& quoteType() { return quoteType_; }
     bool& extrapolate() { return extrapolate_; }
@@ -124,23 +112,11 @@ public:
     string& swaptionVolatility() { return swaptionVol_; }
     string& discountCurve() { return discountCurve_; }
     
-    string& cmsModel() { return cmsModel_; }
-    string& cmsEngine() { return cmsEngine_; }
-    Real& cmsMeanReversion() { return cmsMeanReversion_; }
-    Real& cmsLowerRateBoundLogNormal() { return cmsLowerRateBoundLogNormal_; }
-    Real& cmsUpperRateBoundLogNormal() { return cmsUpperRateBoundLogNormal_; }
-    Real& cmsLowerRateBoundNormal() { return cmsLowerRateBoundNormal_; }
-    Real& cmsUpperRateBoundNormal() { return cmsUpperRateBoundNormal_; }
-    Real& cmsVegaRatio() { return cmsVegaRatio_; }
-    Real& cmsPriceThreshold() { return cmsPriceThreshold_; }
-    string& cmsBsStdDev() { return cmsBsStdDev_; }
-
-    string& cmsSpreadModel() { return cmsSpreadModel_; }
-    string& cmsSpreadEngine() { return cmsSpreadEngine_; }
-    Real& cmsSpreadIntegrationPoints() { return cmsSpreadIntegrationPoints_; }
     //@}
 
 private:
+    CorrelationType correlationType_;
+    string conventions_;
     Dimension dimension_;
     QuoteType quoteType_;
     bool extrapolate_;
@@ -153,20 +129,6 @@ private:
     string swaptionVol_;
     string discountCurve_;
     
-    string cmsModel_;
-    string cmsEngine_;
-    Real cmsMeanReversion_;
-    Real cmsLowerRateBoundLogNormal_;
-    Real cmsUpperRateBoundLogNormal_;
-    Real cmsLowerRateBoundNormal_;
-    Real cmsUpperRateBoundNormal_;
-    Real cmsVegaRatio_;
-    Real cmsPriceThreshold_;
-    string cmsBsStdDev_;
-
-    string cmsSpreadModel_;
-    string cmsSpreadEngine_;
-    Real cmsSpreadIntegrationPoints_;
 };
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);

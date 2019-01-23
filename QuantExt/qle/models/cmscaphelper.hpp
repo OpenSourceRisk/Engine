@@ -1,25 +1,23 @@
-/* -*- mode: c++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-
 /*
- Copyright (C) 2001, 2002, 2003 Sadruddin Rejeb
- Copyright (C) 2015 Peter Caspers
+ Copyright (C) 2019 Quaternion Risk Management Ltd
+ All rights reserved.
 
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
+ This file is part of ORE, a free-software/open-source library
+ for transparent pricing and risk analysis - http://opensourcerisk.org
 
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
+ ORE is free software: you can redistribute it and/or modify it
+ under the terms of the Modified BSD License.  You should have received a
+ copy of the license along with this program.
+ The license is also available online at <http://opensourcerisk.org>
 
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+ This program is distributed on the basis that it will form a useful
+ contribution to risk analytics and model standardisation, but WITHOUT
+ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file calibrationhelper.hpp
-    \brief Calibration helper class
+/*! \file cmsoptionlper.hpp
+    \brief Cms Option helper class
 */
 
 #ifndef quantext_cms_calibration_helper_h
@@ -42,9 +40,13 @@ using namespace QuantLib;
     class CmsCapHelper : public LazyObject, public CalibrationHelperBase {
       public:
         CmsCapHelper(Date asof, boost::shared_ptr<SwapIndex>& index1, boost::shared_ptr<SwapIndex>& index2, 
-                            const Handle<Quote>& price, const Handle<Quote>& correlation, const Period& length,
+                            const Handle<Quote>& price, const Handle<Quote>& correlation, const Period& length, 
+                            const Period& forwardStart, const Period& spotDays, const Period& cmsTenor, Natural fixingDays,
+                            const Calendar& calendar, const DayCounter& daycounter, const BusinessDayConvention& convention,
                             boost::shared_ptr<FloatingRateCouponPricer>& pricer, boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer)
-        : asof_(asof), index1_(index1), index2_(index2), marketValue_(price->value()), correlation_(correlation), length_(length), pricer_(pricer), cmsPricer_(cmsPricer) {
+        : asof_(asof), index1_(index1), index2_(index2), marketValue_(price->value()), correlation_(correlation), length_(length), 
+        forwardStart_(forwardStart), spotDays_(spotDays), cmsTenor_(cmsTenor), fixingDays_(fixingDays), 
+        calendar_(calendar), dayCounter_(daycounter), convention_(convention), pricer_(pricer), cmsPricer_(cmsPricer) {
 
             registerWith(correlation_);
         }
@@ -68,6 +70,15 @@ using namespace QuantLib;
         Real marketValue_;
         Handle<Quote> correlation_;
         Period length_;
+
+        Period forwardStart_;
+        Period spotDays_;
+        Period cmsTenor_;
+        Natural fixingDays_;
+        Calendar calendar_;
+        DayCounter dayCounter_;
+        BusinessDayConvention convention_;
+
         boost::shared_ptr<FloatingRateCouponPricer> pricer_;
         boost::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer_;
 

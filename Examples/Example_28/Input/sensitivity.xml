@@ -9,7 +9,7 @@
     </DiscountCurve>
   </DiscountCurves>
   <Correlations>
-    <Correlation index1="EUR-CMS-10Y" index2="EUR-CMS-2Y">
+    <Correlation index1="EUR-CMS-2Y" index2="EUR-CMS-10Y">
       <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.01</ShiftSize>
       <ShiftExpiries>1Y,2Y</ShiftExpiries>

@@ -39,6 +39,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     configXml.append("<Correlation>");
     configXml.append("  <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>");
     configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
+    configXml.append("  <CorrelationType>CMSSpread</CorrelationType>");
+    configXml.append("  <Currency>EUR</Currency>");
     configXml.append("  <Dimension>ATM</Dimension>");
     configXml.append("  <QuoteType>Rate</QuoteType>");
     configXml.append("  <Extrapolation>true</Extrapolation>");
