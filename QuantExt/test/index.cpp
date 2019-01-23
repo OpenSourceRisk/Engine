@@ -105,10 +105,10 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
     Size size = sizeof(data) / sizeof(data[0]);
 
     for (Size i = 0; i < size; i++) {
-		BOOST_CHECK_EQUAL(data[i].ind.familyName(), data[i].name);
-    	BOOST_CHECK_EQUAL(data[i].ind.fixingCalendar().name(), data[i].calName);
-    	BOOST_CHECK_EQUAL(data[i].ind.currency().name(), data[i].ccyName);
-	}
+        BOOST_CHECK_EQUAL(data[i].ind.familyName(), data[i].name);
+        BOOST_CHECK_EQUAL(data[i].ind.fixingCalendar().name(), data[i].calName);
+        BOOST_CHECK_EQUAL(data[i].ind.currency().name(), data[i].ccyName);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

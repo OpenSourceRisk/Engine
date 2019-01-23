@@ -68,7 +68,7 @@ public:
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PriceTermStructureAdapterTest)
-		
+ 
 BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     BOOST_TEST_MESSAGE("Testing implied zero rates from PriceTermStructureAdapter");

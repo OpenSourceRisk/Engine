@@ -137,7 +137,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapHelperTest)
-		
+
 BOOST_AUTO_TEST_CASE(testBootstrap) {
 
     BOOST_TEST_MESSAGE("Test simple bootstrap against cross currency MtM resetting swap");

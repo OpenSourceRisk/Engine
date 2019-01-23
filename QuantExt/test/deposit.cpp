@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_SUITE(DepositTest)
 
 BOOST_AUTO_TEST_CASE(testRepricing) {
     
-	BOOST_TEST_MESSAGE("Testing Repricing of a Deposit on a depo curve...");
+    BOOST_TEST_MESSAGE("Testing Repricing of a Deposit on a depo curve...");
 
     SavedSettings backup;
 

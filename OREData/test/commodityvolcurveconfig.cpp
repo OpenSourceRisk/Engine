@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
     configXml.append("  <CurveDescription/>");
     configXml.append("  <Currency>USD</Currency>");
     configXml.append("  <Type>Constant</Type>");
-    configXml.append("	<Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>");
+    configXml.append("  <Quote>COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF</Quote>");
     configXml.append("</CommodityVolatility>");
 
     // Create the XMLNode

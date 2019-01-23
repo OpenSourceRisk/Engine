@@ -183,7 +183,7 @@ void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool is
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PriceCurveTest)
-		
+ 
 BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and prices");

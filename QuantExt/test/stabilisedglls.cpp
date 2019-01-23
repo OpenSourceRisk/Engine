@@ -32,7 +32,7 @@ using namespace QuantExt;
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StabilisedGLLSTest)
-		
+ 
 BOOST_AUTO_TEST_CASE(testBigInputNumbers) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::StablizedGLLS with big input numbers (1D)");

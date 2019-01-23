@@ -88,7 +88,7 @@ void check2(const std::string& s, const Real x, const Real y, const Real e, cons
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(CrossAssetModelParametrizationsTest)
-		
+
 BOOST_AUTO_TEST_CASE(testParametrizationBaseClasses) {
 
     BOOST_TEST_MESSAGE("Testing CrossAssetModel parametrizations (base classes)...");
