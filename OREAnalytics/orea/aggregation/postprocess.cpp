@@ -1200,23 +1200,23 @@ Real PostProcess::tradeFCA(const string& tradeId) {
 }
 
 Real PostProcess::tradeFBA_exOwnSP(const string& tradeId) {
-	QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
-	return tradeFBA_exOwnSP_[tradeId];
+    QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
+    return tradeFBA_exOwnSP_[tradeId];
 }
 
 Real PostProcess::tradeFCA_exOwnSP(const string& tradeId) {
-	QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
-	return tradeFCA_exOwnSP_[tradeId];
+    QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
+    return tradeFCA_exOwnSP_[tradeId];
 }
 
 Real PostProcess::tradeFBA_exAllSP(const string& tradeId) {
-	QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
-	return tradeFBA_exAllSP_[tradeId];
+    QL_REQUIRE(tradeFBA_.find(tradeId) != tradeFBA_.end(), "TradeId " << tradeId << " not found in trade FBA map");
+    return tradeFBA_exAllSP_[tradeId];
 }
 
 Real PostProcess::tradeFCA_exAllSP(const string& tradeId) {
-	QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
-	return tradeFCA_exAllSP_[tradeId];
+    QL_REQUIRE(tradeFCA_.find(tradeId) != tradeFCA_.end(), "TradeId " << tradeId << " not found in trade FCA map");
+    return tradeFCA_exAllSP_[tradeId];
 }
   
 Real PostProcess::nettingSetCVA(const string& nettingSetId) {
@@ -1256,27 +1256,27 @@ Real PostProcess::nettingSetKVACCR(const string& nettingSetId) {
 }
 
 Real PostProcess::nettingSetFBA_exOwnSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFBA_exOwnSP_.find(nettingSetId) != nettingSetFBA_exOwnSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FBA_exOwnSP map");
-	return nettingSetFBA_exOwnSP_[nettingSetId];
+    QL_REQUIRE(nettingSetFBA_exOwnSP_.find(nettingSetId) != nettingSetFBA_exOwnSP_.end(),
+        "NettingSetId " << nettingSetId << " not found in nettingSet FBA_exOwnSP map");
+    return nettingSetFBA_exOwnSP_[nettingSetId];
 }
 
 Real PostProcess::nettingSetFCA_exOwnSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFCA_exOwnSP_.find(nettingSetId) != nettingSetFCA_exOwnSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exOwnSP map");
-	return nettingSetFCA_exOwnSP_[nettingSetId];
+    QL_REQUIRE(nettingSetFCA_exOwnSP_.find(nettingSetId) != nettingSetFCA_exOwnSP_.end(),
+        "NettingSetId " << nettingSetId << " not found in nettingSet FCA_exOwnSP map");
+    return nettingSetFCA_exOwnSP_[nettingSetId];
 }
 
 Real PostProcess::nettingSetFBA_exAllSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFBA_exAllSP_.find(nettingSetId) != nettingSetFBA_exAllSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FBA_exAllSP map");
-	return nettingSetFBA_exAllSP_[nettingSetId];
+    QL_REQUIRE(nettingSetFBA_exAllSP_.find(nettingSetId) != nettingSetFBA_exAllSP_.end(),
+        "NettingSetId " << nettingSetId << " not found in nettingSet FBA_exAllSP map");
+    return nettingSetFBA_exAllSP_[nettingSetId];
 }
 
 Real PostProcess::nettingSetFCA_exAllSP(const string& nettingSetId) {
-	QL_REQUIRE(nettingSetFCA_exAllSP_.find(nettingSetId) != nettingSetFCA_exAllSP_.end(),
-		"NettingSetId " << nettingSetId << " not found in nettingSet FCA_exAllSP map");
-	return nettingSetFCA_exAllSP_[nettingSetId];
+    QL_REQUIRE(nettingSetFCA_exAllSP_.find(nettingSetId) != nettingSetFCA_exAllSP_.end(),
+        "NettingSetId " << nettingSetId << " not found in nettingSet FCA_exAllSP map");
+    return nettingSetFCA_exAllSP_[nettingSetId];
 }
 
 Real PostProcess::allocatedTradeCVA(const string& allocatedTradeId) {

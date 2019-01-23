@@ -1041,7 +1041,7 @@ struct Lgm31fTestData {
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossAssetModelTest2)
-		
+
 BOOST_AUTO_TEST_CASE(testLgm31fPositiveCovariance) {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "

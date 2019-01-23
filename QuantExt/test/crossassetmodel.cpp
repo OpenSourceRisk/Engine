@@ -171,7 +171,7 @@ struct BermudanTestData {
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
-		
+
 BOOST_AUTO_TEST_CASE(testBermudanLgm1fGsr) {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "

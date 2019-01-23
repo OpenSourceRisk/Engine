@@ -31,12 +31,12 @@ BOOST_AUTO_TEST_SUITE(LogQuoteTest)
 
 BOOST_AUTO_TEST_CASE(testLogQuote) {
 
-	BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
-	boost::shared_ptr<SimpleQuote> quote(new QuantLib::SimpleQuote(1.0));
-	Handle<Quote> qh(quote);
-	Handle<Quote> logQuote(boost::shared_ptr<Quote>(new LogQuote(qh)));
+    BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
+    boost::shared_ptr<SimpleQuote> quote(new QuantLib::SimpleQuote(1.0));
+    Handle<Quote> qh(quote);
+    Handle<Quote> logQuote(boost::shared_ptr<Quote>(new LogQuote(qh)));
 
-	BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
+    BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
 
     quote->setValue(2.0);
     BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));

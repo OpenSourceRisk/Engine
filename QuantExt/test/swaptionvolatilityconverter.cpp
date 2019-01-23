@@ -86,7 +86,7 @@ struct CommonVars {
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SwaptionVolatilityConverterTest)
-		
+ 
 BOOST_AUTO_TEST_CASE(testNormalToLognormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from normal to lognormal...");
 

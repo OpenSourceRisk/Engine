@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(SurvivalProbabilityCruveTest)
 
 BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
     
-	BOOST_TEST_MESSAGE("Testing QuantExt::SurvivalProbabilityCurve...");
+    BOOST_TEST_MESSAGE("Testing QuantExt::SurvivalProbabilityCurve...");
 
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);
     Date today = Settings::instance().evaluationDate();

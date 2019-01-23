@@ -52,7 +52,7 @@ static CcyTestData currencyData[] = {
     { BHDCurrency(), "Bahraini dinar", "BHD", 48 },
     { OMRCurrency(), "Omani rial", "OMR", 512 },
     { AEDCurrency(), "United Arab Emirates dirham", "AED", 784 },
-	{ PHPCurrency(), "Philippine peso", "PHP", 608 },
+    { PHPCurrency(), "Philippine peso", "PHP", 608 },
 };
 } // namespace
 
@@ -64,13 +64,13 @@ BOOST_AUTO_TEST_CASE(testCurrency) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt currencies");
 
-	Size size = sizeof(currencyData) / sizeof(currencyData[0]);
+    Size size = sizeof(currencyData) / sizeof(currencyData[0]);
 
     for (Size i = 0; i < size; i++) {
-    	BOOST_CHECK_EQUAL(currencyData[i].ccy.name(), currencyData[i].name);
-    	BOOST_CHECK_EQUAL(currencyData[i].ccy.code(), currencyData[i].code);
-    	BOOST_CHECK_EQUAL(currencyData[i].ccy.numericCode(), currencyData[i].numCode);
-	}
+        BOOST_CHECK_EQUAL(currencyData[i].ccy.name(), currencyData[i].name);
+        BOOST_CHECK_EQUAL(currencyData[i].ccy.code(), currencyData[i].code);
+        BOOST_CHECK_EQUAL(currencyData[i].ccy.numericCode(), currencyData[i].numCode);
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

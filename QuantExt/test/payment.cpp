@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(PaymentTest)
 
 BOOST_AUTO_TEST_CASE(testDomesicPayment) {
     
-	BOOST_TEST_MESSAGE("Testing Domestic Payment NPV...");
+    BOOST_TEST_MESSAGE("Testing Domestic Payment NPV...");
 
     SavedSettings backup;
 
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(testDomesicPayment) {
 
 BOOST_AUTO_TEST_CASE(testForeignPayment) {
     
-	BOOST_TEST_MESSAGE("Testing Foreign Payment NPV...");
+    BOOST_TEST_MESSAGE("Testing Foreign Payment NPV...");
 
     SavedSettings backup;
 

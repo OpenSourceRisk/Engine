@@ -326,7 +326,7 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapTest)
-		
+
 BOOST_AUTO_TEST_CASE(testSwapPricing) {
 
 

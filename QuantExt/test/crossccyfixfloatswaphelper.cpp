@@ -155,7 +155,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossCurrencyFixFloatSwapHelperTest)
-		
+ 
 BOOST_AUTO_TEST_CASE(testBootstrap) {
 
     BOOST_TEST_MESSAGE("Test simple bootstrap against cross currency fix float swap");

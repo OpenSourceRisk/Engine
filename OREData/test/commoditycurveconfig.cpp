@@ -65,8 +65,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     configXml.append("  <Currency>USD</Currency>");
     configXml.append("  <SpotQuote>COMMODITY/PRICE/GOLD/USD</SpotQuote>");
     configXml.append("  <Quotes>");
-    configXml.append("	<Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29</Quote>");
-    configXml.append("	<Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28</Quote>");
+    configXml.append("    <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29</Quote>");
+    configXml.append("    <Quote>COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28</Quote>");
     configXml.append("  </Quotes>");
     configXml.append("  <DayCounter>A365</DayCounter>");
     configXml.append("  <InterpolationMethod>Linear</InterpolationMethod>");
