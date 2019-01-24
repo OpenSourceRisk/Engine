@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "discountingcommodityforwardengine.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
-
 #include <ql/currencies/america.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/settings.hpp>
@@ -32,9 +31,11 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using namespace QuantExt;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void DiscountingCommodityForwardEngineTest::testPricing() {
+BOOST_AUTO_TEST_SUITE(DiscountingCommodityForwardEngineTest)
+
+BOOST_AUTO_TEST_CASE(testPricing) {
     
     BOOST_TEST_MESSAGE("Testing discounting commodity forward engine pricing");
 
@@ -137,12 +138,6 @@ void DiscountingCommodityForwardEngineTest::testPricing() {
     BOOST_CHECK_CLOSE(forward->NPV(), -quantity * (prices[1] - strike) * dfs[1] / npvDateDiscount, tolerance);
 }
 
-test_suite* DiscountingCommodityForwardEngineTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DiscountingCommodityForwardEngineTests");
-    
-    suite->add(BOOST_TEST_CASE(&DiscountingCommodityForwardEngineTest::testPricing));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()

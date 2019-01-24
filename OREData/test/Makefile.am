@@ -35,7 +35,6 @@ OREDATA_TESTS = \
 
 dist-hook:
 	mkdir -p $(distdir)/build
-	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 

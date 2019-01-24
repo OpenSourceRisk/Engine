@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "swaptionvolatilityconverter.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include "swaptionmarketdata.hpp"
 #include "yieldcurvemarketdata.hpp"
 
@@ -82,9 +83,11 @@ struct CommonVars {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void SwaptionVolatilityConverterTest::testNormalToLognormal() {
+BOOST_AUTO_TEST_SUITE(SwaptionVolatilityConverterTest)
+ 
+BOOST_AUTO_TEST_CASE(testNormalToLognormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from normal to lognormal...");
 
     CommonVars vars;
@@ -113,7 +116,7 @@ void SwaptionVolatilityConverterTest::testNormalToLognormal() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testLognormalToNormal() {
+BOOST_AUTO_TEST_CASE(testLognormalToNormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from lognormal to normal...");
 
     CommonVars vars;
@@ -142,7 +145,7 @@ void SwaptionVolatilityConverterTest::testLognormalToNormal() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testNormalToShiftedLognormal() {
+BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from normal to shifted lognormal...");
 
     CommonVars vars;
@@ -171,7 +174,7 @@ void SwaptionVolatilityConverterTest::testNormalToShiftedLognormal() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testShiftedLognormalToShiftedLognormal() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from shifted lognormal to shifted lognormal...");
 
     CommonVars vars;
@@ -201,7 +204,7 @@ void SwaptionVolatilityConverterTest::testShiftedLognormalToShiftedLognormal() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testShiftedLognormalToNormal() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from shifted lognormal to normal...");
 
     CommonVars vars;
@@ -230,7 +233,7 @@ void SwaptionVolatilityConverterTest::testShiftedLognormalToNormal() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testFailureImplyingVol() {
+BOOST_AUTO_TEST_CASE(testFailureImplyingVol) {
     BOOST_TEST_MESSAGE("Testing failure to imply lognormal vol from normal vol...");
 
     CommonVars vars;
@@ -257,7 +260,7 @@ void SwaptionVolatilityConverterTest::testFailureImplyingVol() {
     BOOST_CHECK_THROW(converter.convert(), QuantLib::Error);
 }
 
-void SwaptionVolatilityConverterTest::testNormalShiftsIgnored() {
+BOOST_AUTO_TEST_CASE(testNormalShiftsIgnored) {
     BOOST_TEST_MESSAGE("Testing shifts supplied to normal converter ignored...");
 
     CommonVars vars;
@@ -287,7 +290,7 @@ void SwaptionVolatilityConverterTest::testNormalShiftsIgnored() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testConstructionFromSwapIndex() {
+BOOST_AUTO_TEST_CASE(testConstructionFromSwapIndex) {
     BOOST_TEST_MESSAGE("Testing construction of SwaptionVolatilityConverter from SwapIndex...");
 
     CommonVars vars;
@@ -319,7 +322,7 @@ void SwaptionVolatilityConverterTest::testConstructionFromSwapIndex() {
     }
 }
 
-void SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount() {
+BOOST_AUTO_TEST_CASE(testConstructionFromSwapIndexNoDiscount) {
     BOOST_TEST_MESSAGE("Testing construction from SwapIndex with no exogenous discount curve...");
 
     CommonVars vars;
@@ -336,7 +339,7 @@ void SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount() 
     BOOST_CHECK_NO_THROW(converter.convert());
 }
 
-void SwaptionVolatilityConverterTest::testCube() {
+BOOST_AUTO_TEST_CASE(testCube) {
     BOOST_TEST_MESSAGE("Testing lognormal to normal conversion for cube...");
 
     CommonVars vars;
@@ -380,20 +383,6 @@ void SwaptionVolatilityConverterTest::testCube() {
     }
 }
 
-test_suite* SwaptionVolatilityConverterTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SwaptionVolatilityConverterTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testNormalToLognormal));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testLognormalToNormal));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testNormalToShiftedLognormal));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testShiftedLognormalToShiftedLognormal));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testShiftedLognormalToNormal));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testFailureImplyingVol));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testNormalShiftsIgnored));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testConstructionFromSwapIndex));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testConstructionFromSwapIndexNoDiscount));
-    suite->add(BOOST_TEST_CASE(&SwaptionVolatilityConverterTest::testCube));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

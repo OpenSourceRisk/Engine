@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodel2.hpp"
 #include "utilities.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
@@ -1038,9 +1038,11 @@ struct Lgm31fTestData {
 
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
+BOOST_AUTO_TEST_SUITE(CrossAssetModelTest2)
+
+BOOST_AUTO_TEST_CASE(testLgm31fPositiveCovariance) {
 
     BOOST_TEST_MESSAGE("Testing for positive semidefinite covariance matrices "
                        "in Ccy LGM 31F model...");
@@ -1110,7 +1112,7 @@ void CrossAssetModelTest2::testLgm31fPositiveCovariance() {
 
 } // testLgm31fPositiveCovariance
 
-void CrossAssetModelTest2::testLgm31fMoments() {
+BOOST_AUTO_TEST_CASE(testLgm31fMoments) {
 
     BOOST_TEST_MESSAGE("Check analytical moments against Euler simulation in "
                        "Ccy LGM 31F model...");
@@ -1233,7 +1235,7 @@ void CrossAssetModelTest2::testLgm31fMoments() {
 
 } // testLgm31fMoments
 
-void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
+BOOST_AUTO_TEST_CASE(testLgm31fMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Check martingale property in Ccy LGM 31F model...");
 
@@ -1283,11 +1285,6 @@ void CrossAssetModelTest2::testLgm31fMartingaleProperty() {
 
 } // testLgm13fMartingaleProperty
 
-test_suite* CrossAssetModelTest2::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests 2");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fPositiveCovariance));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fMoments));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest2::testLgm31fMartingaleProperty));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

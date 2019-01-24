@@ -16,10 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "optionletstripper.hpp"
 #include "capfloormarketdata.hpp"
 #include "yieldcurvemarketdata.hpp"
 
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
 
@@ -68,9 +69,11 @@ struct CommonVars {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void OptionletStripperTest::testUsualNormalStripping() {
+BOOST_AUTO_TEST_SUITE(OptionletStripperTest)
+
+BOOST_AUTO_TEST_CASE(testUsualNormalStripping) {
     BOOST_TEST_MESSAGE("Testing standard stripping of normal capfloor vols...");
 
     CommonVars vars;
@@ -120,7 +123,7 @@ void OptionletStripperTest::testUsualNormalStripping() {
     }
 }
 
-void OptionletStripperTest::testUsualShiftedLognormalStripping() {
+BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStripping) {
     BOOST_TEST_MESSAGE("Testing standard stripping of shifted lognormal capfloor vols...");
 
     CommonVars vars;
@@ -171,7 +174,7 @@ void OptionletStripperTest::testUsualShiftedLognormalStripping() {
     }
 }
 
-void OptionletStripperTest::testNormalToShiftedLognormalStripping() {
+BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
     BOOST_TEST_MESSAGE("Testing stripping of normal capfloor vols to give shifted lognormal optionlet vols...");
 
     CommonVars vars;
@@ -222,7 +225,7 @@ void OptionletStripperTest::testNormalToShiftedLognormalStripping() {
     }
 }
 
-void OptionletStripperTest::testShiftedLognormalToNormalStripping() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
     BOOST_TEST_MESSAGE("Testing stripping of shifted lognormal capfloor vols to give normal optionlet vols...");
 
     CommonVars vars;
@@ -273,7 +276,7 @@ void OptionletStripperTest::testShiftedLognormalToNormalStripping() {
     }
 }
 
-void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
     BOOST_TEST_MESSAGE("Testing stripping with shifted lognormal vols with different shifts...");
 
     CommonVars vars;
@@ -324,7 +327,7 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping() {
     }
 }
 
-void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
+BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
     BOOST_TEST_MESSAGE("Testing standard stripping of normal capfloor vols with overlayed ATM curve...");
 
     CommonVars vars;
@@ -415,7 +418,7 @@ void OptionletStripperTest::testUsualNormalStrippingWithAtm() {
     }
 }
 
-void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
+BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     BOOST_TEST_MESSAGE("Testing standard stripping of shifted lognormal capfloor vols with overlayed ATM curve...");
 
     CommonVars vars;
@@ -500,7 +503,7 @@ void OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm() {
     }
 }
 
-void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
+BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAt) {
     BOOST_TEST_MESSAGE("Testing stripping of normal capfloor vols with ATM to give shifted lognormal...");
 
     CommonVars vars;
@@ -585,7 +588,7 @@ void OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm() {
     }
 }
 
-void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
     BOOST_TEST_MESSAGE("Testing stripping of shifted lognormal capfloor vols with ATM to give normal...");
 
     CommonVars vars;
@@ -670,7 +673,7 @@ void OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm() {
     }
 }
 
-void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithAtm() {
+BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
     BOOST_TEST_MESSAGE("Testing stripping with shifted lognormal vols with ATM with different shifts...");
 
     CommonVars vars;
@@ -755,7 +758,7 @@ void OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithA
     }
 }
 
-void OptionletStripperTest::testNormalToLognormalGivesError() {
+BOOST_AUTO_TEST_CASE(testNormalToLognormalGivesError) {
     BOOST_TEST_MESSAGE("Testing stripping of normal to give lognormal gives error (due to negative strike)...");
 
     CommonVars vars;
@@ -774,7 +777,7 @@ void OptionletStripperTest::testNormalToLognormalGivesError() {
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
 }
 
-void OptionletStripperTest::testNormalToLognormalModifiedGivesError() {
+BOOST_AUTO_TEST_CASE(testNormalToLognormalModifiedGivesError) {
     BOOST_TEST_MESSAGE("Testing stripping of normal to give lognormal gives error (due to negative forward)...");
 
     CommonVars vars;
@@ -799,7 +802,7 @@ void OptionletStripperTest::testNormalToLognormalModifiedGivesError() {
     BOOST_CHECK_THROW(stripper->recalculate(), QuantLib::Error);
 }
 
-void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
+BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
     BOOST_TEST_MESSAGE("Testing stripping of normal to give lognormal when forwards are positive...");
 
     CommonVars vars;
@@ -861,25 +864,6 @@ void OptionletStripperTest::testNormalToLognormalWithPositiveForwards() {
     }
 }
 
-test_suite* OptionletStripperTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("OptionletStripperTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualNormalStripping));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualShiftedLognormalStripping));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToShiftedLognormalStripping));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToNormalStripping));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToShiftedLognormalStripping));
-
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualNormalStrippingWithAtm));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testUsualShiftedLognormalStrippingWithAtm));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToShiftedLognormalStrippingWithAtm));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToNormalStrippingWithAtm));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testShiftedLognormalToShiftedLognormalStrippingWithAtm));
-
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToLognormalGivesError));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToLognormalModifiedGivesError));
-    suite->add(BOOST_TEST_CASE(&OptionletStripperTest::testNormalToLognormalWithPositiveForwards));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

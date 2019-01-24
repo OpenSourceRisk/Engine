@@ -16,9 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include "utilities.hpp"
+
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
+#include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
+#include <ql/experimental/inflation/cpicapfloorengines.hpp>
+#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/indexes/ibor/gbplibor.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
+#include <ql/instruments/bonds/cpibond.hpp>
+#include <ql/instruments/cpicapfloor.hpp>
+#include <ql/instruments/cpiswap.hpp>
 #include <ql/instruments/zerocouponinflationswap.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
@@ -31,19 +42,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/types.hpp>
-
-#include "utilities.hpp"
-
-#include "cpicapfloor.hpp"
-#include <ql/cashflows/cpicoupon.hpp>
-#include <ql/cashflows/cpicouponpricer.hpp>
-#include <ql/instruments/bonds/cpibond.hpp>
-#include <ql/instruments/cpicapfloor.hpp>
-#include <ql/instruments/cpiswap.hpp>
-
-#include <ql/experimental/inflation/cpicapfloorengines.hpp>
-#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
-
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 
@@ -51,13 +49,15 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-#include <iostream>
-
 namespace {
 struct Datum {
     Date date;
     Rate rate;
 };
+
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(CPICapFloorTest)
 
 template <class T, class U, class I>
 std::vector<boost::shared_ptr<BootstrapHelper<T> > >
@@ -77,7 +77,7 @@ makeHelpers(Datum iiData[], Size N, const boost::shared_ptr<I>& ii, const Period
 }
 
 // Copy of the test setup from QuantLib/test-suite/inflationcpicapfloor.cpp
-
+namespace {
 struct CommonVars {
     // common data
 
@@ -121,7 +121,6 @@ struct CommonVars {
 
     // setup
     CommonVars() : nominals(1, 1000000) {
-        // std::cout <<"CommonVars" << std::endl;
         // option variables
         frequency = Annual;
         // usual setup
@@ -284,11 +283,12 @@ struct CommonVars {
         }
 
         Real nominal = 1.0;
-        boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK (new InterpolatedCPICapFloorTermPriceSurface<Bilinear>(
-            nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, hii, nominalUK, cStrikesUK,
-            fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK)));
+        boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK(
+            new InterpolatedCPICapFloorTermPriceSurface<Bilinear>(
+                nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, hii, nominalUK, cStrikesUK,
+                fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK)));
 
-	cpiCFsurfUK = intplCpiCFsurfUK;
+        cpiCFsurfUK = intplCpiCFsurfUK;
     }
 };
 
@@ -296,9 +296,7 @@ struct CommonVars {
 
 // additional test cases from here
 
-namespace testsuite {
-
-void CPICapFloorTest::volatilitySurface() {
+BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     CommonVars common;
 
     Handle<YieldTermStructure> nominalTS = common.ii->zeroInflationTermStructure()->nominalTermStructure();
@@ -397,7 +395,7 @@ void CPICapFloorTest::volatilitySurface() {
     }
 }
 
-void CPICapFloorTest::putCallParity() {
+BOOST_AUTO_TEST_CASE(testPutCallParity) {
 
     CommonVars common;
 
@@ -414,7 +412,7 @@ void CPICapFloorTest::putCallParity() {
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
     QuantExt::PriceQuotePreference type = QuantExt::PriceQuotePreference::CapFloor;
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
-      boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
+        boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
 
     // attach the implied vol surface to the engine
@@ -484,13 +482,8 @@ void CPICapFloorTest::putCallParity() {
     }
 }
 
-test_suite* CPICapFloorTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CPICapFloorTest");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CPICapFloorTest::volatilitySurface));
-    suite->add(BOOST_TEST_CASE(&CPICapFloorTest::putCallParity));
+BOOST_AUTO_TEST_SUITE_END()
 
-    return suite;
-}
-
-} // namespace testsuite
+} // namespace
