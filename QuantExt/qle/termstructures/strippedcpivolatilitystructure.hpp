@@ -32,7 +32,7 @@
 
 namespace QuantExt {
 
-enum class PriceQuotePreference { Cap, Floor, CapFloor };
+enum PriceQuotePreference { Cap, Floor, CapFloor };
 
 //! Stripped zero inflation volatility structure
 /*!
@@ -190,14 +190,14 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
 
 template <class Interpolator2D>
 bool StrippedCPIVolatilitySurface<Interpolator2D>::chooseFloor(QuantLib::Real strike, QuantLib::Real atmRate) const {
-    if (preference_ == PriceQuotePreference::Floor) {
+    if (preference_ == Floor) {
         if (strike <= priceSurface_->floorStrikes().back())
             return true;
         else
             return false;
     }
 
-    if (preference_ == PriceQuotePreference::Cap) {
+    if (preference_ == Cap) {
         if (strike < priceSurface_->capStrikes().front())
             return true;
         else
@@ -205,8 +205,8 @@ bool StrippedCPIVolatilitySurface<Interpolator2D>::chooseFloor(QuantLib::Real st
     }
 
     // else: Use floors where we have floor quotes only, caps where we have cap quotes only,
-    // and decide based on ATM where we have both cap and floor quotes 
-    
+    // and decide based on ATM where we have both cap and floor quotes
+
     // 1) strike < maxFloorStrike < minCapStrike: Floor!
     if (strike <= priceSurface_->floorStrikes().back() && strike < priceSurface_->capStrikes().front())
         return true;

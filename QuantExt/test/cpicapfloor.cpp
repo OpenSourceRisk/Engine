@@ -284,9 +284,11 @@ struct CommonVars {
         }
 
         Real nominal = 1.0;
-        cpiCFsurfUK = boost::make_shared<InterpolatedCPICapFloorTermPriceSurface<Bilinear> >(
+        boost::shared_ptr<InterpolatedCPICapFloorTermPriceSurface<Bilinear> > intplCpiCFsurfUK (new InterpolatedCPICapFloorTermPriceSurface<Bilinear>(
             nominal, baseZeroRate, observationLag, calendar, convention, dcZCIIS, hii, nominalUK, cStrikesUK,
-            fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK));
+            fStrikesUK, cfMaturitiesUK, *(cPriceUK), *(fPriceUK)));
+
+	cpiCFsurfUK = intplCpiCFsurfUK;
     }
 };
 
