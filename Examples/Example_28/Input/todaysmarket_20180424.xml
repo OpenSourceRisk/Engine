@@ -64,7 +64,7 @@
 	<EquityCurves id="default">
 	</EquityCurves>
   <Correlations id="default">
-      <Correlation name="EUR-CMS-2Y:EUR-CMS-10Y">Correlation/EUR-CORR</Correlation>
+      <Correlation name="EUR-CMS-10Y:EUR-CMS-2Y">Correlation/EUR-CORR</Correlation>
   </Correlations>
 </TodaysMarket>
 

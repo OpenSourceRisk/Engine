@@ -16,9 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "correlationtermstructure.hpp"
-#include "utilities.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 
@@ -31,9 +30,11 @@ using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CorrelationTermstructureTest::testFlatCorrelation() {
+BOOST_AUTO_TEST_SUITE(CorrelationTermstructureTest)
+
+BOOST_AUTO_TEST_CASE(testFlatCorrelation) {
 
     boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(0.02);
     Handle<Quote> hq(q);
@@ -63,7 +64,7 @@ void CorrelationTermstructureTest::testFlatCorrelation() {
     
 }
 
-void CorrelationTermstructureTest::testInterpolatedCorrelationCurve() {
+BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
 
     //build interpolated correlation curve
     std::vector<Time> times;
@@ -127,10 +128,6 @@ void CorrelationTermstructureTest::testInterpolatedCorrelationCurve() {
 
 }
 
-test_suite* CorrelationTermstructureTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CorrelationTermStructure tests");
-    suite->add(BOOST_TEST_CASE(&CorrelationTermstructureTest::testFlatCorrelation));
-    suite->add(BOOST_TEST_CASE(&CorrelationTermstructureTest::testInterpolatedCorrelationCurve));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

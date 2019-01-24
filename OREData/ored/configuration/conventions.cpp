@@ -957,6 +957,14 @@ XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CmsSpreadOptionConvention::CmsSpreadOptionConvention(const string& id, const string& strForwardStart, const string& strSpotDays,
+                                const string& strSwapTenor, const string& strFixingDays, const string& strCalendar,
+                                const string& strDayCounter, const string& strConvention)
+    : Convention(id, Type::CMSSpreadOption), strForwardStart_(strForwardStart), strSpotDays_(strSpotDays), strSwapTenor_(strSwapTenor),
+    strFixingDays_(strFixingDays), strCalendar_(strCalendar), strDayCounter_(strDayCounter), strRollConvention_(strConvention) {
+    build();
+}
+
 void CmsSpreadOptionConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "CmsSpreadOption");

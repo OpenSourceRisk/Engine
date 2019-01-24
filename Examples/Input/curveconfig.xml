@@ -3232,8 +3232,8 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y,2Y</OptionTenors>
-      <Index1>EUR-CMS-2Y</Index1>
-      <Index2>EUR-CMS-10Y</Index2>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
     </Correlation>
     <Correlation>
       <CurveId>USD-CORR</CurveId>

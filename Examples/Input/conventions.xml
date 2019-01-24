@@ -1533,7 +1533,7 @@
       <InflationConvention>MF</InflationConvention>
   </InflationSwap>
   <CmsSpreadOption>
-    <Id>EUR-CMS-2Y-10Y-CONVENTION</Id>
+    <Id>EUR-CMS-10Y-2Y-CONVENTION</Id>
     <ForwardStart>0M</ForwardStart>
     <SpotDays>2D</SpotDays>
     <SwapTenor>3M</SwapTenor>

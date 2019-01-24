@@ -18119,7 +18119,7 @@
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
-      <Conventions>EUR-CMS-2Y-10Y-CONVENTION</Conventions>
+      <Conventions>EUR-CMS-10Y-2Y-CONVENTION</Conventions>
       <SwaptionVolatility>EUR</SwaptionVolatility>
       <DiscountCurve>EUR-EONIA</DiscountCurve>
       <Currency>EUR</Currency>
@@ -18134,8 +18134,8 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y,2Y</OptionTenors>
-      <Index1>EUR-CMS-2Y</Index1>
-      <Index2>EUR-CMS-10Y</Index2>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
     </Correlation>
   </Correlations>
 </CurveConfiguration>

@@ -118,7 +118,7 @@ namespace QuantExt {
         rate2 = s->NPV()/(s->legBPS(0)/1.0e-4);
 
     
-        spread = rate2 - rate1;
+        spread = rate1 - rate2;
 
         //Construct CMS Spread CapFloor
         
@@ -127,7 +127,7 @@ namespace QuantExt {
         
         boost::shared_ptr<QuantLib::SwapSpreadIndex> spreadIndex = 
                                 boost::make_shared<QuantLib::SwapSpreadIndex>(
-                                    "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index2_, index1_);
+                                    "CMSSpread_" + index1_->familyName() + "_" + index2_->familyName(), index1_, index2_);
 
 
         startDate = calendar_.advance(calendar_.advance(asof_, spotDays_),forwardStart_);
@@ -155,10 +155,11 @@ namespace QuantExt {
         legPayers.push_back(false);
 
         cap_ = boost::make_shared<QuantLib::Swap>(legs, legPayers);
-
-        cap_->setPricingEngine(swapEngine);
-
-        std::cout<<"performCalc, noCoupons " << cmsLeg1b.size() << " spread " << spread << " marketVal "<<marketValue()<<", modelVal " << cap_->NPV()<<std::endl;
+        boost::shared_ptr<PricingEngine> swapEngine2(
+                                                    new DiscountingSwapEngine(discountCurve_, false));
+        cap_->setPricingEngine(swapEngine2);
+        
+        //std::cout<<"performCalc, noCoupons " << cmsLeg1b.size() << " spread " << spread << " marketVal "<<marketValue()<<", modelVal " << cap_->NPV()<<std::endl;
     }
 
 }

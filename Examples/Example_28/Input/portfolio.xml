@@ -18,8 +18,8 @@
         <DayCounter>30/360</DayCounter>
         <PaymentConvention>F</PaymentConvention>
         <CMSSpreadLegData>
-          <Index1>EUR-CMS-2Y</Index1>
-          <Index2>EUR-CMS-10Y</Index2>
+          <Index1>EUR-CMS-10Y</Index1>
+          <Index2>EUR-CMS-2Y</Index2>
           <IsInArrears>false</IsInArrears>
           <FixingDays>2</FixingDays>
           <Caps>
