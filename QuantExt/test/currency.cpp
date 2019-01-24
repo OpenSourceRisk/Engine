@@ -22,6 +22,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/metals.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -53,6 +54,10 @@ static CcyTestData currencyData[] = {
     { OMRCurrency(), "Omani rial", "OMR", 512 },
     { AEDCurrency(), "United Arab Emirates dirham", "AED", 784 },
     { PHPCurrency(), "Philippine peso", "PHP", 608 },
+    { XAUCurrency(), "Troy Ounce of Gold", "XAU", 959 },
+    { XAGCurrency(), "Troy Ounce of Silver", "XAG", 961 },
+    { XPDCurrency(), "Troy Ounce of Palladium", "XPD", 964 },
+    { XPTCurrency(), "Troy Ounce of Platinum", "XPT", 962 },
 };
 } // namespace
 
