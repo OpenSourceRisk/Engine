@@ -520,20 +520,6 @@
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="varianceSwapData">
-    <xs:sequence>
-      <xs:element type="date" name="StartDate"/>
-      <xs:element type="date" name="EndDate"/>
-      <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="xs:string" name="Name"/>
-      <xs:element type="xs:string" name="LongShort"/>
-      <xs:element type="xs:float" name="Strike"/>
-      <xs:element type="xs:float" name="Notional"/>
-      <xs:element type="calendar" name="Calendar"/>
-      <xs:element type="momentType" name="MomentType"/>
-    </xs:sequence>
-  </xs:complexType>
-
   <xs:complexType name="commodityOptionData">
     <xs:sequence>
       <xs:element type="optionData" name="OptionData"/>
