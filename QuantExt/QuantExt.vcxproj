@@ -618,6 +618,7 @@
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
+	<ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\depositengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp" />
@@ -768,6 +769,7 @@
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
+	<ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\depositengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp" />

@@ -372,6 +372,9 @@
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+	<ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -923,6 +926,9 @@
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+	<ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">

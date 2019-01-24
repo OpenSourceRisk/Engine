@@ -34,7 +34,7 @@
 
 namespace QuantExt {
 using namespace QuantLib;
-/*!	\addtogroup cashflows
+/*! \addtogroup cashflows
     @{
 */
 //! Set Coupon Pricer

@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "pricetermstructureadapter.hpp"
 
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
@@ -65,9 +65,11 @@ public:
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void PriceTermStructureAdapterTest::testImpliedZeroRates() {
+BOOST_AUTO_TEST_SUITE(PriceTermStructureAdapterTest)
+ 
+BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     BOOST_TEST_MESSAGE("Testing implied zero rates from PriceTermStructureAdapter");
 
@@ -131,7 +133,7 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
 
 }
 
-void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
+BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
 
     BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with floating reference discount curve and fixed reference price curve");
 
@@ -168,7 +170,7 @@ void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(0.5, Continuous), Error);
 }
 
-void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
+BOOST_AUTO_TEST_CASE(testFixedDiscountFloatingPrice) {
 
     BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with fixed reference discount curve and floating reference price curve");
 
@@ -204,7 +206,7 @@ void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(0.5, Continuous), Error);
 }
 
-void PriceTermStructureAdapterTest::testExtrapolation() {
+BOOST_AUTO_TEST_CASE(testExtrapolation) {
 
     BOOST_TEST_MESSAGE("Testing extrapolation behaviour of PriceTermStructureAdapter");
 
@@ -265,15 +267,6 @@ void PriceTermStructureAdapterTest::testExtrapolation() {
     BOOST_CHECK_NO_THROW(adaptedPriceCurve.zeroRate(asof + 3 * Months, td.dayCounter, Continuous));
 }
 
-test_suite* PriceTermStructureAdapterTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("PriceTermStructureAdapterTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testImpliedZeroRates));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testExtrapolation));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

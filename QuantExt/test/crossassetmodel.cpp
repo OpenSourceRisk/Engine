@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodel.hpp"
 #include "utilities.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/methods/multipathgeneratorbase.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
@@ -168,9 +168,11 @@ struct BermudanTestData {
 
 } // anonymous namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossAssetModelTest::testBermudanLgm1fGsr() {
+BOOST_AUTO_TEST_SUITE(CrossAssetModelTest)
+
+BOOST_AUTO_TEST_CASE(testBermudanLgm1fGsr) {
 
     BOOST_TEST_MESSAGE("Testing consistency of Bermudan swaption pricing in "
                        "LGM 1F and GSR models...");
@@ -218,7 +220,7 @@ void CrossAssetModelTest::testBermudanLgm1fGsr() {
                     << npvLgm2 << ") and Gsr (" << npvGsr << ") models, tolerance is " << tol);
 }
 
-void CrossAssetModelTest::testBermudanLgmInvariances() {
+BOOST_AUTO_TEST_CASE(testBermudanLgmInvariances) {
 
     BOOST_TEST_MESSAGE("Testing LGM model invariances for Bermudan "
                        "swaption pricing...");
@@ -255,7 +257,7 @@ void CrossAssetModelTest::testBermudanLgmInvariances() {
 
 } // testBermudanLgm1fGsr
 
-void CrossAssetModelTest::testNonstandardBermudanSwaption() {
+BOOST_AUTO_TEST_CASE(testNonstandardBermudanSwaption) {
 
     BOOST_TEST_MESSAGE("Testing numeric LGM swaption engine for non-standard swaption...");
 
@@ -285,7 +287,7 @@ void CrossAssetModelTest::testNonstandardBermudanSwaption() {
                     << (npv - ns_npv) << ", tolerance is " << tol);
 } // testNonstandardBermudanSwaption
 
-void CrossAssetModelTest::testLgm1fCalibration() {
+BOOST_AUTO_TEST_CASE(testLgm1fCalibration) {
 
     BOOST_TEST_MESSAGE("Testing calibration of LGM 1F model (analytic engine) "
                        "against GSR parameters...");
@@ -440,7 +442,7 @@ void CrossAssetModelTest::testLgm1fCalibration() {
 
 } // testLgm1fCalibration
 
-void CrossAssetModelTest::testCcyLgm3fForeignPayouts() {
+BOOST_AUTO_TEST_CASE(testCcyLgm3fForeignPayouts) {
 
     BOOST_TEST_MESSAGE("Testing pricing of foreign payouts under domestic "
                        "measure in Ccy LGM 3F model...");
@@ -886,7 +888,7 @@ struct IrFxCrModelTestData {
 
 } // anonymous namespace
 
-void CrossAssetModelTest::testLgm5fFxCalibration() {
+BOOST_AUTO_TEST_CASE(testLgm5fFxCalibration) {
 
     BOOST_TEST_MESSAGE("Testing fx calibration in Ccy LGM 5F model...");
 
@@ -1001,7 +1003,7 @@ void CrossAssetModelTest::testLgm5fFxCalibration() {
 
 } // testLgm5fFxCalibration
 
-void CrossAssetModelTest::testLgm5fFullCalibration() {
+BOOST_AUTO_TEST_CASE(testLgm5fFullCalibration) {
 
     BOOST_TEST_MESSAGE("Testing full calibration of Ccy LGM 5F model...");
 
@@ -1132,7 +1134,7 @@ void CrossAssetModelTest::testLgm5fFullCalibration() {
     }
 }
 
-void CrossAssetModelTest::testLgm5fMoments() {
+BOOST_AUTO_TEST_CASE(testLgm5fMoments) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
                        "in Ccy LGM 5F model...");
@@ -1237,7 +1239,7 @@ void CrossAssetModelTest::testLgm5fMoments() {
 
 } // testLgm5fMoments
 
-void CrossAssetModelTest::testLgmGsrEquivalence() {
+BOOST_AUTO_TEST_CASE(testLgmGsrEquivalence) {
 
     BOOST_TEST_MESSAGE("Testing equivalence of GSR and LGM models...");
 
@@ -1327,7 +1329,7 @@ void CrossAssetModelTest::testLgmGsrEquivalence() {
 
 } // testLgmGsrEquivalence
 
-void CrossAssetModelTest::testLgmMcWithShift() {
+BOOST_AUTO_TEST_CASE(testLgmMcWithShift) {
     BOOST_TEST_MESSAGE("Testing LGM1F Monte Carlo simulation with shifted H...");
 
     // cashflow time
@@ -1386,7 +1388,7 @@ void CrossAssetModelTest::testLgmMcWithShift() {
 
 } // testLgmMcWithShift
 
-void CrossAssetModelTest::testIrFxCrMartingaleProperty() {
+BOOST_AUTO_TEST_CASE(testIrFxCrMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-cr model for "
                        "Euler and exact discretizations...");
@@ -1567,7 +1569,7 @@ void CrossAssetModelTest::testIrFxCrMartingaleProperty() {
 
 } // testIrFxCrMartingaleProperty
 
-void CrossAssetModelTest::testIrFxCrMoments() {
+BOOST_AUTO_TEST_CASE(testIrFxCrMoments) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
                        "in ir-fx-cr model...");
@@ -1697,7 +1699,7 @@ void CrossAssetModelTest::testIrFxCrMoments() {
 
 } // testIrFxCrMoments
 
-void CrossAssetModelTest::testIrFxCrCorrelationRecovery() {
+BOOST_AUTO_TEST_CASE(testIrFxCrCorrelationRecovery) {
 
     BOOST_TEST_MESSAGE("Test if random correlation input is recovered for "
                        "small dt in ir-fx-cr model...");
@@ -2006,7 +2008,7 @@ struct IrFxInfCrModelTestData {
 
 } // anonymous namespace
 
-void CrossAssetModelTest::testIrFxInfCrMartingaleProperty() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr model for "
                        "Euler and exact discretizations...");
@@ -2205,7 +2207,7 @@ void CrossAssetModelTest::testIrFxInfCrMartingaleProperty() {
 
 } // testIrFxInfCrMartingaleProperty
 
-void CrossAssetModelTest::testIrFxInfCrMoments() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrMoments) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
                        "in ir-fx-inf-cr model...");
@@ -2545,7 +2547,7 @@ struct IrFxInfCrEqModelTestData {
 
 } // anonymous namespace
 
-void CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMartingaleProperty) {
 
     BOOST_TEST_MESSAGE("Testing martingale property in ir-fx-inf-cr-eq model for "
                        "Euler and exact discretizations...");
@@ -2782,7 +2784,7 @@ void CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty() {
 
 } // testIrFxInfCrEqMartingaleProperty
 
-void CrossAssetModelTest::testIrFxInfCrEqMoments() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrEqMoments) {
 
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
                        "in ir-fx-inf-cr-eq model...");
@@ -3070,7 +3072,7 @@ struct IrFxEqModelTestData {
 
 } // anonymous namespace
 
-void CrossAssetModelTest::testEqLgm5fPayouts() {
+BOOST_AUTO_TEST_CASE(testEqLgm5fPayouts) {
 
     BOOST_TEST_MESSAGE("Testing pricing of equity payouts under domestic "
                        "measure in CrossAsset LGM model...");
@@ -3213,7 +3215,7 @@ void CrossAssetModelTest::testEqLgm5fPayouts() {
 
 } // testEqLgm5fPayouts
 
-void CrossAssetModelTest::testEqLgm5fCalibration() {
+BOOST_AUTO_TEST_CASE(testEqLgm5fCalibration) {
 
     BOOST_TEST_MESSAGE("Testing EQ calibration of IR-FX-EQ LGM 5F model...");
 
@@ -3280,7 +3282,7 @@ void CrossAssetModelTest::testEqLgm5fCalibration() {
     }
 } // testEqLgm5fCalibration
 
-void CrossAssetModelTest::testEqLgm5fMoments() {
+BOOST_AUTO_TEST_CASE(testEqLgm5fMoments) {
 
     // TODO : REVIEW TOLERANCES
     BOOST_TEST_MESSAGE("Testing analytic moments vs. Euler and exact discretization "
@@ -3444,7 +3446,7 @@ void CrossAssetModelTest::testEqLgm5fMoments() {
     }
 } // testEqLgm5fMoments
 
-void CrossAssetModelTest::testCorrelationRecovery() {
+BOOST_AUTO_TEST_CASE(testCorrelationRecovery) {
 
     BOOST_TEST_MESSAGE("Test if random correlation input is recovered for "
                        "small dt in Ccy LGM model...");
@@ -3564,7 +3566,7 @@ void CrossAssetModelTest::testCorrelationRecovery() {
 
 } // test correlation recovery
 
-void CrossAssetModelTest::testIrFxInfCrCorrelationRecovery() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrCorrelationRecovery) {
 
     BOOST_TEST_MESSAGE("Test if random correlation input is recovered for "
                        "small dt in ir-fx-inf-cr model...");
@@ -3741,7 +3743,7 @@ void CrossAssetModelTest::testIrFxInfCrCorrelationRecovery() {
     }         // for currenciess
 } // testIrFxInfCrCorrelationRecovery
 
-void CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery() {
+BOOST_AUTO_TEST_CASE(testIrFxInfCrEqCorrelationRecovery) {
 
     BOOST_TEST_MESSAGE("Test if random correlation input is recovered for "
                        "small dt in ir-fx-inf-cr-eq model...");
@@ -3936,7 +3938,7 @@ void CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery() {
     }             // for currenciess
 } // testIrFxInfCrEqCorrelationRecovery
 
-void CrossAssetModelTest::testCpiCalibrationByAlpha() {
+BOOST_AUTO_TEST_CASE(testCpiCalibrationByAlpha) {
 
     BOOST_TEST_MESSAGE("Testing calibration to ZC CPI Floors (using alpha) and repricing via MC...");
 
@@ -4063,7 +4065,7 @@ void CrossAssetModelTest::testCpiCalibrationByAlpha() {
     }
 } // testCpiCalibrationByAlpha
 
-void CrossAssetModelTest::testCpiCalibrationByH() {
+BOOST_AUTO_TEST_CASE(testCpiCalibrationByH) {
 
     BOOST_TEST_MESSAGE("Testing calibration to ZC CPI Floors (using H) and repricing via MC...");
 
@@ -4197,7 +4199,7 @@ void CrossAssetModelTest::testCpiCalibrationByH() {
     }
 } // testCpiCalibrationByH
 
-void CrossAssetModelTest::testCrCalibration() {
+BOOST_AUTO_TEST_CASE(testCrCalibration) {
 
     BOOST_TEST_MESSAGE("Testing calibration to CDS Options and repricing via MC...");
 
@@ -4346,42 +4348,6 @@ void CrossAssetModelTest::testCrCalibration() {
     }
 } // testCrCalibration
 
-test_suite* CrossAssetModelTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAsset model tests");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgm1fGsr));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testBermudanLgmInvariances));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testNonstandardBermudanSwaption));
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm1fCalibration));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCcyLgm3fForeignPayouts));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFxCalibration));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fFullCalibration));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgm5fMoments));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmGsrEquivalence));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testLgmMcWithShift));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMartingaleProperty));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrMoments));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMartingaleProperty));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrMoments));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMartingaleProperty));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqMoments));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByAlpha));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCpiCalibrationByH));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCrCalibration));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fPayouts));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fCalibration));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testEqLgm5fMoments));
-
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testCorrelationRecovery));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxCrCorrelationRecovery));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrCorrelationRecovery));
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelTest::testIrFxInfCrEqCorrelationRecovery));
-
-    return suite;
-} // suite
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

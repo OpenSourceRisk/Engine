@@ -16,9 +16,9 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "interpolatedyoycapfloortermpricesurface.hpp"
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include "utilities.hpp"
-
 #include <boost/make_shared.hpp>
 
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
@@ -37,9 +37,11 @@ using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTermPriceSurface() {
+BOOST_AUTO_TEST_SUITE(CapFloordTermPriceSurfaceTest)
+
+BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
 
     BOOST_TEST_MESSAGE("Testing InterpolatedYoyCapFloorTermPriceSurface");
 
@@ -197,9 +199,7 @@ void InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTer
     }
 } // testInterpolatedYoyCapFloorTermPriceSurface
 
-test_suite* InterpolatedYoyCapFloorTermPriceSurfaceTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("InterpolatedYoyTermPriceSurface tests");
-    suite->add(BOOST_TEST_CASE(&InterpolatedYoyCapFloorTermPriceSurfaceTest::testInterpolatedYoyCapFloorTermPriceSurface));
-    return suite;
-}
-} // namespace testsuite
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

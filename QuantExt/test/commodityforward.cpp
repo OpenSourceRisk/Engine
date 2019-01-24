@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "commodityforward.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/currencies/america.hpp>
 #include <ql/settings.hpp>
 
@@ -52,9 +52,11 @@ public:
 };
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CommodityForwardTest::testConstructor() {
+BOOST_AUTO_TEST_SUITE(CommodityForwardTests)
+
+BOOST_AUTO_TEST_CASE(testConstructor) {
     
     BOOST_TEST_MESSAGE("Testing commodity forward constructor");
 
@@ -71,7 +73,7 @@ void CommodityForwardTest::testConstructor() {
     BOOST_CHECK_EQUAL(forward.strike(), td.strike);
 }
 
-void CommodityForwardTest::testIsExpired() {
+BOOST_AUTO_TEST_CASE(testIsExpired) {
 
     BOOST_TEST_MESSAGE("Testing commodity forward expiry logic");
 
@@ -91,7 +93,7 @@ void CommodityForwardTest::testIsExpired() {
     BOOST_CHECK_EQUAL(forward.isExpired(), true);
 }
 
-void CommodityForwardTest::testNegativeQuantityThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a negative quantity in the constructor causes an exception");
 
@@ -101,7 +103,7 @@ void CommodityForwardTest::testNegativeQuantityThrows() {
         td.position, -10.0, td.maturity, td.strike), QuantLib::Error);
 }
 
-void CommodityForwardTest::testNegativeStrikeThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a negative strike in the constructor causes an exception");
 
@@ -111,15 +113,6 @@ void CommodityForwardTest::testNegativeStrikeThrows() {
         td.position, td.quantity, td.maturity, -50.0), QuantLib::Error);
 }
 
-test_suite* CommodityForwardTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CommodityForwardTests");
-    
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testConstructor));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testIsExpired));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testNegativeQuantityThrows));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testNegativeStrikeThrows));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()
