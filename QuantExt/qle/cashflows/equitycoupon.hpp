@@ -146,8 +146,8 @@ private:
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
-    Real dividendFactor_ = 1.0;
-    Natural fixingDays_ = 0;
+    Real dividendFactor_;
+    Natural fixingDays_;
 };
 
 } // namespace QuantExt

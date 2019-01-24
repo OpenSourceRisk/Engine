@@ -87,7 +87,8 @@ std::vector<Date> EquityCoupon::fixingDates() const {
 EquityLeg::EquityLeg(const Schedule& schedule,
                      const boost::shared_ptr<EquityIndex>& equityCurve)
     : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), 
-    paymentCalendar_(Calendar()) {}
+    paymentCalendar_(Calendar()),
+      dividendFactor_(1.0), fixingDays_(0) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
