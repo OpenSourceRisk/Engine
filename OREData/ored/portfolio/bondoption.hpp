@@ -23,7 +23,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
-#include <ored/portfolio/optiondata.hpp> //new
+#include <ored/portfolio/optiondata.hpp> 
 
 namespace ore {
     namespace data {
@@ -73,9 +73,12 @@ namespace ore {
             virtual void fromXML(XMLNode* node);
             virtual XMLNode* toXML(XMLDocument& doc);
 
-            const OptionData& option() const { return option_; } //new
-            double strike() const { return strike_; } //new
-            double quantity() const { return quantity_; } //new
+            const OptionData& option() const { return option_; } 
+            double strike() const { return strike_; } 
+            double quantity() const { return quantity_; } 
+            double redemption() const { return redemption_; }
+            bool isCallableBond() const { return isCallableBond_; }
+            string priceType() const { return priceType_; }
             const string& issuerId() const { return issuerId_; }
             const string& creditCurveId() const { return creditCurveId_; }
             const string& securityId() const { return securityId_; }
@@ -92,9 +95,12 @@ namespace ore {
             virtual boost::shared_ptr<LegData> createLegData() const;
 
         private:
-            OptionData option_; //new
-            double strike_; //new
-            double quantity_; //new
+            OptionData option_; 
+            double strike_; 
+            double quantity_; 
+            double redemption_; 
+            bool isCallableBond_;
+            string priceType_;
             string issuerId_;
             string creditCurveId_;
             string securityId_;

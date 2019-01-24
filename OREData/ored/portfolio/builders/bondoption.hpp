@@ -26,8 +26,10 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-// #include <ql/processes/blackscholesprocess.hpp>
+#include <qle/pricingengines/blackbondoptionengine.hpp>
+#include <ql/processes/blackscholesprocess.hpp>
 #include <ql/experimental/callablebonds/blackcallablebondengine.hpp>
+#include <ql/experimental/callablebonds/callablebondvolstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
 namespace ore {
@@ -38,19 +40,19 @@ namespace ore {
         -
         \ingroup builders
         */
-        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
+        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&, const bool&> {
         public:
             BondOptionEngineBuilder()
-                : CachingEngineBuilder("Black", "BlackCallableFixedRateBondEngine", { "BondOption" }) {}
+                : CachingEngineBuilder("Black", "BlackBondOptionEngine", { "BondOption" }) {}
 
         protected:
             virtual std::string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId) {
-                return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId;
+                const string& referenceCurveId, const bool& isCallableBond) {
+                return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + (isCallableBond ? "CallableBond" : "BondOption");
             }
 
             virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId) {
+                const string& referenceCurveId, const bool& isCallableBond) {
                 // string tsperiodStr = engineParameters_.at("TimestepPeriod");
                 // Period tsperiod = parsePeriod(tsperiodStr);
                 // Handle<YieldTermStructure> yield = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
@@ -62,9 +64,8 @@ namespace ore {
                 // boost::shared_ptr<BlackProcess> process = boost::make_shared<BlackProcess>(
                 //    Handle<Quote>(), yield, Handle<BlackVolTermStructure>());
 
-                return boost::make_shared<QuantLib::BlackCallableFixedRateBondEngine>(Handle<CallableBondVolatilityStructure>(), discountCurve);
+                return boost::make_shared<QuantExt::BlackBondOptionEngine>(Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), discountCurve, isCallableBond);
             };
         };
-
     }
 }

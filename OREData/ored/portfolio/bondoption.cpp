@@ -31,13 +31,12 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/cashflows/simplecashflow.hpp>
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
-
-#include <ql/errors.hpp> //new
-#include <ql/exercise.hpp> //new
-#include <ql/instruments/compositeinstrument.hpp> //new
-#include <ql/instruments/vanillaoption.hpp> //new
-#include <ql/instruments/callabilityschedule.hpp> //new
-#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp> //new
+#include <ql/errors.hpp> 
+#include <ql/exercise.hpp> 
+#include <ql/instruments/compositeinstrument.hpp> 
+#include <ql/instruments/vanillaoption.hpp> 
+#include <ql/instruments/callabilityschedule.hpp> 
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp> 
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -84,11 +83,13 @@ namespace ore {
             bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
             Real mult = firstLegIsPayer ? -1.0 : 1.0;
             if (zeroBond_) { // Zero coupon bond option
-                             // bondoption.reset(new QuantLib::ZeroCouponBond(settlementDays, faceAmount_, calendar, parseDate(maturityDate_), ...));
+                // bondoption.reset(new QuantLib::ZeroCouponBond(settlementDays, faceAmount_, calendar, parseDate(maturityDate_), ...));
             }
             else { // Coupon bond option
-                std::vector<Leg> legs;
-                std::vector<Rate> rates;
+                std::vector<Leg> legs;              
+                Rate rate = 0.0;
+                std::vector<Rate> rates = std::vector<Rate>(1, rate);
+                Real faceAmount = 100;
                 Schedule schedule;
                 DayCounter daycounter;
                 BusinessDayConvention business_dc = Following;
@@ -98,54 +99,59 @@ namespace ore {
                     if (i == 0) {
                         currency_ = coupons_[i].currency();
                         schedule = makeSchedule(coupons_[i].schedule());
+                        faceAmount = coupons_[i].notionals().back();
                         daycounter = parseDayCounter(coupons_[i].dayCounter());
                         business_dc = parseBusinessDayConvention(coupons_[i].paymentConvention());
+                        if (coupons_[i].legType() == "Fixed") {
+                            boost::shared_ptr<FixedLegData> fixedLegData
+                                = boost::dynamic_pointer_cast<FixedLegData>(coupons_[i].concreteLegData());
+                            rates = buildScheduledVector(fixedLegData->rates(), fixedLegData->rateDates(), schedule);
+                        }
                     } else {
                         QL_REQUIRE(currency_ == coupons_[i].currency(), "leg #" << i << " currency (" << coupons_[i].currency()
                             << ") not equal to leg #0 currency ("
                             << coupons_[0].currency());
                     }
-                    Leg leg;
-                    Rate rate = 0.0;
+                    Leg leg;                
                     auto configuration = builder->configuration(MarketContext::pricing);
                     auto legBuilder = engineFactory->legBuilder(coupons_[i].legType());
                     leg = legBuilder->buildLeg(coupons_[i], engineFactory, configuration);
                     legs.push_back(leg);
-                    if (coupons_[i].legType() == "Fixed")
-                        rate = 0.05;
-                    rates = std::vector<Rate>(1, rate);
-
                 } // for coupons_
                 Leg leg = joinLegs(legs);
-                Callability::Price callabilityPrice = Callability::Price(strike(), Callability::Price::Dirty);
-                //Callability::Price callabilityPrice = Callability::Price();
-                Callability::Type callabilityType = Callability::Call;
+                Callability::Price callabilityPrice;
+                if (priceType_ == "Dirty") {
+                    callabilityPrice = Callability::Price(strike(), Callability::Price::Dirty);
+                } else {
+                    callabilityPrice = Callability::Price(strike(), Callability::Price::Clean);
+                }
+                Callability::Type callabilityType;
+                if (option().callPut() == "Call") {
+                    callabilityType = Callability::Call;
+                } else {
+                    callabilityType = Callability::Put;
+                }
                 Date exerciseDate = parseDate(option().exerciseDates().back());
                 boost::shared_ptr<Callability> callability;
                 callability.reset(new Callability(callabilityPrice, callabilityType, exerciseDate));
                 CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
 
-                // missing the redemption and CallabilitySchedule& putCallSchedule
-                bondoption.reset(new QuantLib::CallableFixedRateBond(settlementDays, faceAmount(), schedule, rates, 
-                    daycounter, business_dc, strike(), issueDate, callabilitySchedule));
-                // workaround, QL doesn't register a bond with its leg's cashflows
+                bondoption.reset(new QuantLib::CallableFixedRateBond(settlementDays, faceAmount, schedule, rates, 
+                    daycounter, business_dc, redemption(), issueDate, callabilitySchedule));
+                // workaround, QL doesn't register a bond option with its leg's cashflows
                 for (auto const& c : leg)
                     bondoption->registerWith(c);
             }
 
             Currency currency = parseCurrency(currency_);
 
-            // boost::shared_ptr<BondEngineBuilder> bondBuilder = boost::dynamic_pointer_cast<BondEngineBuilder>(builder);
-            // QL_REQUIRE(bondBuilder, "No Builder found for Bond: " << id());
-
-            boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder); //new
+            boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
             QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
-
-            // bond->setPricingEngine(bondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
-            // instrument_.reset(new VanillaInstrument(bond, mult));
-
-            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
-            // Hier wurde nur Payer oder Reciever berücksichtigt, muss aber noch Call/Put und Long/Call berücksichtigt werden.
+            
+            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, isCallableBond_));
+            if (option().longShort() == "Short") {
+                mult = -mult;
+            }        
             instrument_.reset(new VanillaInstrument(bondoption, mult));
 
             npvCurrency_ = currency_;
@@ -161,11 +167,14 @@ namespace ore {
         void BondOption::fromXML(XMLNode* node) {
             Trade::fromXML(node);
 
-            XMLNode* bondOptionNode = XMLUtils::getChildNode(node, "BondOptionData"); //new
-            QL_REQUIRE(bondOptionNode, "No BondOptionData Node"); //new
-            option_.fromXML(XMLUtils::getChildNode(bondOptionNode, "OptionData")); //new
-            strike_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Strike", true); //new
-            quantity_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Quantity", true); //new
+            XMLNode* bondOptionNode = XMLUtils::getChildNode(node, "BondOptionData");
+            QL_REQUIRE(bondOptionNode, "No BondOptionData Node");
+            option_.fromXML(XMLUtils::getChildNode(bondOptionNode, "OptionData"));
+            strike_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Strike", true);
+            quantity_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Quantity", true);
+            redemption_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Redemption", true);
+            priceType_ = XMLUtils::getChildValue(bondOptionNode, "PriceType", true);
+            isCallableBond_ = XMLUtils::getChildValueAsBool(bondOptionNode, "IsCallableBond");
 
             XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
             QL_REQUIRE(bondNode, "No BondData Node");
@@ -196,9 +205,12 @@ namespace ore {
 
             XMLNode* bondOptionNode = doc.allocNode("BondOptionData");
             XMLUtils::appendNode(node, bondOptionNode);
+            XMLUtils::addChild(doc, bondOptionNode, "IsCallableBond", isCallableBond_);
             XMLUtils::appendNode(bondOptionNode, option_.toXML(doc));
             XMLUtils::addChild(doc, bondOptionNode, "Strike", strike_);
             XMLUtils::addChild(doc, bondOptionNode, "Quantity", quantity_);
+            XMLUtils::addChild(doc, bondOptionNode, "Redemption", redemption_);
+            XMLUtils::addChild(doc, bondOptionNode, "PriceType", priceType_);
 
             XMLNode* bondNode = doc.allocNode("BondData");
             XMLUtils::appendNode(node, bondNode);
