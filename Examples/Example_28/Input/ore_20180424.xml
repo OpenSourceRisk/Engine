@@ -13,7 +13,7 @@
     <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket_20180424.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-    <Parameter name="portfolioFile">portfolio.xml</Parameter>
+    <Parameter name="portfolioFile">portfolio_20180424.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
   </Setup>
   <Markets>
@@ -50,8 +50,8 @@
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
     <Analytic type="sensitivity">
-      <Parameter name="active">N</Parameter>
-      <Parameter name="marketConfigFile">simulation_sensi.xml</Parameter>
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">simulation_20180424.xml</Parameter>
       <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="scenarioOutputFile">scenario.csv</Parameter>

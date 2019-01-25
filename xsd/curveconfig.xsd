@@ -20,6 +20,7 @@
       <xs:element type="baseCorrelations" name="BaseCorrelations" minOccurs="0" />
       <xs:element type="simCommodityCurves" name="CommodityCurves" minOccurs="0" />
       <xs:element type="commodityVolatilities" name="CommodityVolatilities" minOccurs="0" />
+      <xs:element type="correlations" name="Correlations" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -392,6 +393,33 @@
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="LowerStrikeConstantExtrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="bool" name="UpperStrikeConstantExtrapolation" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="correlations">
+    <xs:sequence>
+      <xs:element type="correlation" name="Correlation" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="correlation">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="CorrelationType"/>
+      <xs:element type="xs:string" name="Index1"/>
+      <xs:element type="xs:string" name="Index2"/>
+      <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SwaptionVolatility" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="currencyCode" name="Currency"/>
+      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="correlationQuoteType" name="QuoteType"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OptionTenors"/>
     </xs:sequence>
   </xs:complexType>
 

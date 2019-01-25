@@ -3220,6 +3220,8 @@
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
       <Currency>EUR</Currency>
       <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
@@ -3232,13 +3234,13 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y,2Y</OptionTenors>
-      <Index1>EUR-CMS-10Y</Index1>
-      <Index2>EUR-CMS-2Y</Index2>
     </Correlation>
     <Correlation>
       <CurveId>USD-CORR</CurveId>
       <CurveDescription>USD CMS correlations</CurveDescription>
       <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>USD-CMS-10Y</Index1>
+      <Index2>USD-CMS-1Y</Index2>
       <Currency>USD</Currency>
       <!-- ATM, Constant -->
       <Dimension>Constant</Dimension>
@@ -3251,8 +3253,6 @@
       <Calendar>TARGET</Calendar>
       <BusinessDayConvention>Following</BusinessDayConvention>
       <OptionTenors>1Y</OptionTenors>
-      <Index1>USD-CMS-10Y</Index1>
-      <Index2>USD-CMS-1Y</Index2>
     </Correlation>
   </Correlations>
 </CurveConfiguration>

@@ -366,6 +366,14 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ATM"/>
       <xs:enumeration value="Smile"/>
+      <xs:enumeration value="Constant"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="correlationQuoteType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Rate"/>
+      <xs:enumeration value="Price"/>
     </xs:restriction>
   </xs:simpleType>
 
