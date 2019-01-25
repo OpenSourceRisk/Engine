@@ -65,7 +65,7 @@ public:
     const string& baseCcy() const { return baseCcy_; }
     const vector<string>& ccys() const { return ccys_; }
     vector<string> paramsLookup(RiskFactorKey::KeyType kt) const;
-    bool ScenarioSimMarketParameters::hasParamsKey(RiskFactorKey) const; 
+    bool ScenarioSimMarketParameters::hasParamsKey(RiskFactorKey::KeyType kt, string name) const; 
     void addParams(RiskFactorKey::KeyType kt, vector<string> names);
 
     vector<string> discountCurveNames() const { return paramsLookup(RiskFactorKey::KeyType::DiscountCurve); }
@@ -179,7 +179,7 @@ public:
     const std::string& commodityVolDayCounter(const std::string& commodityName) const;
 
     // Get the parameters
-    const std::vector<RiskFactorKey>& parameters() const { return params_; }
+    const std::map<RiskFactorKey::KeyType, std::set<std::string>>& parameters() const { return params_; }
 
     //@}
 
@@ -399,7 +399,7 @@ private:
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
     std::map<std::string, std::string> commodityVolDayCounters_;
 
-    std::vector<RiskFactorKey> params_;
+    std::map<RiskFactorKey::KeyType, std::set<std::string>> params_;
 
 };
 } // namespace analytics

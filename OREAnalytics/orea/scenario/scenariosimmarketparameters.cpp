@@ -53,23 +53,26 @@ const string& returnDayCounter(const map<string, string>& m, const string& k) {
 
 vector<string> ScenarioSimMarketParameters::paramsLookup(RiskFactorKey::KeyType kt) const {
     vector<string> names;
-    for (auto it = params_.begin(); it != params_.end(); ++it) {
-        if (it->keytype == kt) {
-            names.push_back(it->name);
-        }
+    auto it = params_.find(kt);
+    if (it != params_.end()) {
+        for (auto n : it->second)
+            names.push_back(n);
     }
     return names;
 }
 
-bool ScenarioSimMarketParameters::hasParamsKey(RiskFactorKey rfk) const {
-    return std::find(params_.begin(), params_.end(), rfk) == params_.end() ? false : true;
+bool ScenarioSimMarketParameters::hasParamsKey(RiskFactorKey::KeyType kt, string name) const {
+    auto it = params_.find(kt);
+    if (it != params_.end()) {
+        return std::find(it->second.begin(), it->second.end(), name) == it->second.end() ? false : true;
+    }
+    return false;
 }
 
 void ScenarioSimMarketParameters::addParams(RiskFactorKey::KeyType kt, vector<string> names) {
     for (auto name : names) {
-        RiskFactorKey rfk(kt, name);
-        if (!hasParamsKey(rfk))
-            params_.push_back(rfk);
+        if (!hasParamsKey(kt, name))
+            params_[kt].insert(name);
     }
 }
 
