@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(testVolatilitySurface) {
     Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(common.cpiCFsurfUK);
 
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
-    QuantExt::PriceQuotePreference type = CapFloor;
+    QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
         boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
@@ -410,7 +410,7 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
     Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(common.cpiCFsurfUK);
 
     // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
-    QuantExt::PriceQuotePreference type = CapFloor;
+    QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
     boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
         boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
                                                                                         common.ii, blackEngine);
