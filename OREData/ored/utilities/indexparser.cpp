@@ -127,8 +127,7 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
     QL_REQUIRE(tokens[0] == "EQ", "expected first token to be EQ");
     if (tokens.size() == 2) {
         return boost::make_shared<EquityIndex>(tokens[1], NullCalendar());
-    }
-    else {
+    } else {
         QL_FAIL("Error parsing equity string " + s);
     }
 }
@@ -136,8 +135,7 @@ boost::shared_ptr<EquityIndex> parseEquityIndex(const string& s) {
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
     try {
         index = parseIborIndex(s);
-    }
-    catch (...) {
+    } catch (...) {
         return false;
     }
     return true;
@@ -362,8 +360,7 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseEquityIndex(s);
-        }
-        catch (...) {
+        } catch (...) {
         }
     }
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
