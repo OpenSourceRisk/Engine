@@ -618,6 +618,9 @@
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\depositengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp" />
@@ -768,6 +771,9 @@
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\depositengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp" />
