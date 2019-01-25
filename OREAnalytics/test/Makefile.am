@@ -32,7 +32,7 @@ orea_test_suite_LDFLAGS = \
     -L../../QuantExt/qle -lQuantExt \
     -L../../OREData/ored -lOREData \
     -L../orea -lOREAnalytics \
-    -lboost_date_time -lboost_serialization -lboost_regex -lboost_filesystem -lboost_system
+    -lboost_date_time -lboost_serialization -lboost_regex -lboost_filesystem -lboost_system -lboost_unit_test_framework
 
 TESTS = orea-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message
