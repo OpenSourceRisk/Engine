@@ -120,6 +120,16 @@ public:
     cpiInflationCapFloorPriceSurface(const string& indexName,
                                      const string& configuration = Market::defaultConfiguration) const;
 
+    //! Inflation Cap Volatility Surfaces 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationCapVolatilitySurface(const string& indexName, 
+                                     const string& configuration = Market::defaultConfiguration) const; 
+ 
+    //! Inflation Floor Volatility Surfaces 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationFloorVolatilitySurface(const string& indexName, 
+                                       const string& configuration = Market::defaultConfiguration) const; 
+
     //! YoY Inflation Cap Floor Price Surfaces
     virtual Handle<YoYCapFloorTermPriceSurface>
     yoyInflationCapFloorPriceSurface(const string& indexName,
@@ -188,6 +198,8 @@ protected:
     map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> cpiInflationCapFloorPriceSurfaces_;
+    map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationFloorVolatilitySurfaces_; 
+    map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapVolatilitySurfaces_; 
     map<pair<string, string>, Handle<YoYCapFloorTermPriceSurface>> yoyInflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;

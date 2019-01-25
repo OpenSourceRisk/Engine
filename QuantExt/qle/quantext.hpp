@@ -133,6 +133,8 @@
 #include <qle/pricingengines/analyticlgmswaptionengine.hpp>
 #include <qle/pricingengines/analyticxassetlgmeqoptionengine.hpp>
 #include <qle/pricingengines/blackcdsoptionengine.hpp>
+#include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+#include <qle/pricingengines/cpicapfloorengines.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
@@ -190,6 +192,7 @@
 #include <qle/termstructures/spreadedsmilesection.hpp>
 #include <qle/termstructures/spreadedswaptionvolatility.hpp>
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>

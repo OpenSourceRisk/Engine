@@ -101,6 +101,7 @@ this_include_HEADERS = \
     yoyinflationoptionletvolstripper.hpp \
 	discountratiomodifiedcurve.hpp \
 	crossccyfixfloatswaphelper.hpp \
+	strippedcpivolatilitystructure.hpp
 	capfloortermvolsurface.hpp \
 	probabilitytraits.hpp
 
