@@ -50,15 +50,6 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
             }
         }
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
-
-            boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to RecoveryRateQuote");
-            if (q->underlyingName() == spec.securityID()) {
-                recoveryRate_ = q->quote();
-            }
-        }
-
         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CPR) {
             boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(md);
             QL_REQUIRE(q, "Failed to cast " << md->name() << " to CPRQuote");
