@@ -253,6 +253,7 @@
       <xs:element type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ImplySeparateCapFloorVolSurfaces" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

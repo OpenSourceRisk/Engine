@@ -35,7 +35,8 @@ QLE_TESTS = \
 	crossccyfixfloatswap.cpp \
 	crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.cpp \
-	crossccybasismtmresetswaphelper.cpp
+	crossccybasismtmresetswaphelper.cpp \
+	cpicapfloor.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

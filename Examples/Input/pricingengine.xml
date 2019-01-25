@@ -175,4 +175,11 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
+    <Product type="CPICapFloor">
+    <Model>CPICapFloorModel</Model>
+    <ModelParameters/>
+    <!--<Engine>CPICapFloorEngine</Engine>-->
+    <Engine>CPIBlackCapFloorEngine</Engine>
+    <EngineParameters/> 
+  </Product>
 </PricingEngines>
