@@ -91,7 +91,7 @@ void CPICapFloor::fromXML(XMLNode* node) {
     longShort_ = XMLUtils::getChildValue(capFloorNode, "LongShort", true);
     capFloor_ = XMLUtils::getChildValue(capFloorNode, "CapFloor", true);
     currency_ = XMLUtils::getChildValue(capFloorNode, "Currency", true);
-    nominal_ = XMLUtils::getChildValueAsDouble(capFloorNode, "Nominal", true);
+    nominal_ = XMLUtils::getChildValueAsDouble(capFloorNode, "Notional", true);
     startDate_ = XMLUtils::getChildValue(capFloorNode, "StartDate", true);
     baseCPI_ = XMLUtils::getChildValueAsDouble(capFloorNode, "BaseCPI", true);
     maturityDate_ = XMLUtils::getChildValue(capFloorNode, "MaturityDate", true);
@@ -111,7 +111,7 @@ XMLNode* CPICapFloor::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, capFloorNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, capFloorNode, "CapFloor", capFloor_);
     XMLUtils::addChild(doc, capFloorNode, "Currency", currency_);
-    XMLUtils::addChild(doc, capFloorNode, "Nominal", nominal_);
+    XMLUtils::addChild(doc, capFloorNode, "Notional", nominal_);
     XMLUtils::addChild(doc, capFloorNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, capFloorNode, "BaseCPI", baseCPI_);
     XMLUtils::addChild(doc, capFloorNode, "MaturityDate", maturityDate_);
