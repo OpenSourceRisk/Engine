@@ -232,6 +232,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                         std::forward_as_tuple(q));
                 }
             }
+            continue;
 
         case RiskFactorKey::KeyType::DiscountCurve:
         case RiskFactorKey::KeyType::YieldCurve:
@@ -242,6 +243,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     parameters->yieldCurveDayCounter(name));
                 LOG("building " << name << " yield curve done");
             }
+            continue;
 
         case RiskFactorKey::KeyType::EquitySpot:
             for (const auto& name : param.second) {
@@ -257,6 +259,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     std::forward_as_tuple(q));
                 LOG("adding " << name << " equity spot done");
             }
+            continue;
 
         case RiskFactorKey::KeyType::EquityForecastCurve:
             for (const auto& name : param.second) {
@@ -266,6 +269,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     parameters->yieldCurveDayCounter(name));
                 LOG("building " << name << " equity forecast done");
             }
+            continue;
 
 
         case RiskFactorKey::KeyType::DividendYield:
@@ -286,6 +290,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 equityCurves_.insert(
                     pair<pair<string, string>, Handle<EquityIndex>>(make_pair(Market::defaultConfiguration, name), eh));
             }
+            continue;
 
         case RiskFactorKey::KeyType::SecuritySpread:
             for (const auto& name : param.second) {
@@ -301,6 +306,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                     Handle<Quote>(spreadQuote)));
             }
+            continue;
 
         case RiskFactorKey::KeyType::RecoveryRate:
             for (const auto& name : param.second) {
@@ -320,6 +326,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 catch (...) {
                 }
             }
+            continue;
 
         case RiskFactorKey::KeyType::IndexCurve:
             for (const auto& name : param.second) {
@@ -393,6 +400,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     pair<pair<string, string>, Handle<IborIndex>>(make_pair(Market::defaultConfiguration, name), ih));
                 LOG("building " << name << " index curve done");
             }
+            continue;
 
         case RiskFactorKey::KeyType::SwaptionVolatility:
             for (const auto& name : param.second) {
@@ -533,6 +541,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
                     make_pair(Market::defaultConfiguration, name), make_pair(swapIndexBase, swapIndexBase)));
             }
+            continue;
 
         case RiskFactorKey::KeyType::OptionletVolatility:
             for (const auto& name : param.second) {
@@ -588,6 +597,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
                 LOG("Simulaton market cap/floor volatility type = " << hCapletVol->volatilityType());
             }
+            continue;
 
         case RiskFactorKey::KeyType::SurvivalProbability:
             for (const auto& name : param.second) {
@@ -639,6 +649,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                     Handle<Quote>(rrQuote)));
             }
+            continue;
 
         case RiskFactorKey::KeyType::CDSVolatility:
             for (const auto& name : param.second) {
@@ -686,6 +697,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
                     make_pair(Market::defaultConfiguration, name), cvh));
             }
+            continue;
 
         case RiskFactorKey::KeyType::FXVolatility:
             for (const auto& name : param.second) {
@@ -767,6 +779,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     make_pair(Market::defaultConfiguration, reverse), ifvh));
 
             }
+            continue;
 
         case RiskFactorKey::KeyType::EquityVolatility:
             for (const auto& name : param.second) {
@@ -846,6 +859,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     make_pair(Market::defaultConfiguration, name), evh));
                 DLOG("EQ volatility curve built for " << name);
             }
+            continue;
 
         case RiskFactorKey::KeyType::BaseCorrelation:
             for (const auto& name : param.second) {
@@ -895,6 +909,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 DLOG("Base correlations built for " << name);
             }
+            continue;
 
         case RiskFactorKey::KeyType::CPIIndex:
             for (const auto& name : param.second) {
@@ -917,6 +932,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 simData_.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
                     std::forward_as_tuple(q));
             }
+            continue;
 
         case RiskFactorKey::KeyType::ZeroInflationCurve:
             for (const auto& name : param.second) {
@@ -976,9 +992,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
                 LOG("building " << name << " zero inflation curve done");
             }
+            continue;
 
         case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility:
             WLOG("ZeroInflationCapFloorVolatility not yet implemented");
+            continue;
 
         case RiskFactorKey::KeyType::YoYInflationCurve:
             for (const auto& name : param.second) {
@@ -1035,9 +1053,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 yoyInflationIndices_.insert(
                     pair<pair<string, string>, Handle<YoYInflationIndex>>(make_pair(Market::defaultConfiguration, name), zh));
             }
+            continue;
 
         case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
             WLOG("YoYInflationCapFloorVolatility not yet implemented");
+            continue;
 
         case RiskFactorKey::KeyType::CommoditySpot:
             for (const auto& name : param.second) {
@@ -1049,6 +1069,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 simData_.emplace(piecewise_construct,
                     forward_as_tuple(param.first, name), forward_as_tuple(q));
             }
+            continue;
 
         case RiskFactorKey::KeyType::CommodityCurve:
             for (const auto& name : param.second) {
@@ -1089,6 +1110,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     forward_as_tuple(Market::defaultConfiguration, name),
                     forward_as_tuple(simCommodityCurve));
             }
+            continue;
 
         case RiskFactorKey::KeyType::CommodityVolatility:
             for (const auto& name : param.second) {
@@ -1155,7 +1177,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
                 DLOG("Commodity volatility curve built for " << name);
             }
-
+            continue;
         }
     }
 
