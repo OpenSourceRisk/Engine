@@ -16,10 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "sensitivityanalysisanalytic.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -69,7 +70,10 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildFxOption;
+using testsuite::buildEuropeanSwaption;
 
 namespace {
 boost::shared_ptr<data::Conventions> conv() {
@@ -240,7 +244,11 @@ bool check(const Real reference, const Real value) {
 
 } // anonymous namespace
 
-void SensitivityAnalysisAnalyticTest::testSensitivities() {
+BOOST_FIXTURE_TEST_SUITE(OREAnaltyicsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SensitivityAnalysisAnalyticTest)
+		
+BOOST_AUTO_TEST_CASE(testSensitivities) {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
 
@@ -1434,10 +1442,6 @@ void SensitivityAnalysisAnalyticTest::testSensitivities() {
     BOOST_CHECK(true);
 }
 
-test_suite* SensitivityAnalysisAnalyticTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisAnalyticTest");
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisAnalyticTest::testSensitivities));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
