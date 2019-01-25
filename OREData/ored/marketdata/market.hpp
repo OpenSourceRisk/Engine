@@ -203,6 +203,12 @@ public:
     virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(
         const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
+
+    //! \name Conditional Prepayment Rates
+    //@{
+    virtual Handle<Quote> cpr(const string& securityID,
+                              const string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
 };
 } // namespace data
 } // namespace ore

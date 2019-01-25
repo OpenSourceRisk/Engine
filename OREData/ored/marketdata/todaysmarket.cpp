@@ -700,6 +700,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
                             if (!itr->second->recoveryRate().empty())
                                 recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
+                            if (!itr->second->cpr().empty())
+                                cprs_[make_pair(configuration.first, it.first)] = itr->second->cpr();
                         }
                     }
 

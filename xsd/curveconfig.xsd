@@ -315,6 +315,7 @@
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="SpreadQuote"/>
       <xs:element type="xs:string" name="RecoveryRateQuote"/>
+      <xs:element type="xs:string" name="CPRQuote"/>
     </xs:sequence>
   </xs:complexType>
 
