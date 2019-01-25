@@ -1,57 +1,34 @@
 
 OREANALYTICS_TESTS = \
 	testsuite.cpp \
-	aggregationscenariodata.hpp aggregationscenariodata.cpp \
-	cube.hpp cube.cpp \
-	scenariosimmarket.hpp scenariosimmarket.cpp \
-	swapperformance.hpp swapperformance.cpp \
-	scenariogenerator.hpp scenariogenerator.cpp \
-	sensitivityanalysis.hpp sensitivityanalysis.cpp \
-	sensitivityanalysisanalytic.hpp sensitivityanalysisanalytic.cpp \
-	testmarket.hpp testmarket.cpp \
-	testportfolio.hpp testportfolio.cpp \
-	observationmode.hpp observationmode.cpp \
-	stresstest.hpp stresstest.cpp \
-	sensitivityperformance.hpp sensitivityperformance.cpp \
-	shiftscenariogenerator.hpp shiftscenariogenerator.cpp \
-	sensitivityaggregator.hpp sensitivityaggregator.cpp
+	aggregationscenariodata.cpp \
+	cube.cpp \
+	scenariosimmarket.cpp \
+	swapperformance.cpp \
+	scenariogenerator.cpp \
+	sensitivityanalysis.cpp \
+	sensitivityanalysisanalytic.cpp \
+	testmarket.cpp \
+	testportfolio.cpp \
+	observationmode.cpp \
+	stresstest.cpp \
+	sensitivityperformance.cpp \
+	shiftscenariogenerator.cpp \
+	sensitivityaggregator.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
-#	mkdir -p $(distdir)/bin
-#	cp -p $(srcdir)/bin/runtest.bat $(distdir)/bin
-#	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 
-AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE} -I${top_builddir}/../OREData
-
-noinst_LTLIBRARIES = libUnitMain.la
-libUnitMain_la_SOURCES = main.cpp
-libUnitMain_la_CXXFLAGS = ${BOOST_UNIT_TEST_MAIN_CXXFLAGS}
-
-main.cpp: Makefile.am
-	echo "#ifdef BOOST_TEST_DYN_LINK" > $@
-	echo "#include <boost/test/unit_test.hpp>" >> $@
-	echo "#include <boost/test/framework.hpp>" >> $@
-	echo "using namespace boost::unit_test;" >> $@
-	echo "test_suite* init_unit_test_suite(int, char* []);" >> $@
-	echo "bool init_function() {" >> $@
-	echo "framework::master_test_suite().add(init_unit_test_suite(0,0));" >> $@
-	echo "return true;" >> $@
-	echo "}" >> $@
-	echo "int main( int argc, char* argv[] ) {" >> $@
-	echo "return ::boost::unit_test::unit_test_main( &init_function, argc, argv );" >> $@
-	echo "}" >> $@
-	echo "#endif" >> $@
+AM_CPPFLAGS = -DBOOST_ALL_DYN_LINK -DBOOST_TEST_DYN_LINK -I${top_srcdir} -I${top_builddir} -I${top_builddir}/../ORETest -I${top_builddir}/../QuantExt ${BOOST_UNIT_TEST_DEFINE} -I${top_builddir}/../OREData
 
 bin_PROGRAMS = orea-test-suite
 
 orea_test_suite_SOURCES = ${OREANALYTICS_TESTS}
-orea_test_suite_LDADD = libUnitMain.la
+orea_test_suite_LDADD =
 orea_test_suite_LDFLAGS = \
     -lQuantLib \
-    -l${BOOST_UNIT_TEST_LIB} \
     -L../../QuantExt/qle -lQuantExt \
     -L../../OREData/ored -lOREData \
     -L../orea -lOREAnalytics \
