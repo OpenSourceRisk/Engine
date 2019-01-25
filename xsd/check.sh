@@ -1,7 +1,7 @@
 #!/bin/sh
 
 function validate {
-find Examples -name '*.xml' -print0 | \
+find Examples/ -name '*.xml' -print0 | \
 { 
 fail=0
     while read -d $'\0' file
