@@ -624,6 +624,9 @@
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
+    <ClInclude Include="qle\currencies\metals.hpp">
+      <Filter>currencies</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1068,6 +1071,9 @@
     </ClCompile>
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp">
       <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\currencies\metals.cpp">
+      <Filter>currencies</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
