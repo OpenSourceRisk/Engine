@@ -19,6 +19,7 @@
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/indexes/ibor/libor.hpp>
 
 #include <qle/instruments/tenorbasisswap.hpp>
 
@@ -78,11 +79,18 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
     // Create the default long and short schedules
     Date terminationDate = effectiveDate + swapTenor;
 
+    boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
+    longIndexCalendar_ =
+        longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
+    boost::shared_ptr<Libor> shortIndexAsLibor = boost::dynamic_pointer_cast<Libor>(shortIndex_);
+    shortIndexCalendar_ =
+        shortIndexAsLibor != nullptr ? shortIndexAsLibor->jointCalendar() : shortIndex_->fixingCalendar();
+
     longSchedule_ = MakeSchedule()
                         .from(effectiveDate)
                         .to(terminationDate)
                         .withTenor(longTenor)
-                        .withCalendar(longIndex_->fixingCalendar())
+                        .withCalendar(longIndexCalendar_)
                         .withConvention(longIndex_->businessDayConvention())
                         .withTerminationDateConvention(longIndex_->businessDayConvention())
                         .withRule(rule)
@@ -93,7 +101,7 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
                              .from(effectiveDate)
                              .to(terminationDate)
                              .withTenor(shortPayTenor_)
-                             .withCalendar(shortIndex_->fixingCalendar())
+                             .withCalendar(shortIndexCalendar_)
                              .withConvention(shortIndex_->businessDayConvention())
                              .withTerminationDateConvention(shortIndex_->businessDayConvention())
                              .withRule(rule)
@@ -145,26 +153,27 @@ void TenorBasisSwap::initializeLegs() {
                       .withNotionals(nominal_)
                       .withSpreads(longSpread_)
                       .withPaymentAdjustment(longPmtConvention)
-                      .withPaymentDayCounter(longDayCounter);
+                      .withPaymentDayCounter(longDayCounter)
+                      .withPaymentCalendar(longIndexCalendar_);
 
     // Short leg
     Leg shortLeg;
     BusinessDayConvention shortPmtConvention = shortIndex_->businessDayConvention();
     DayCounter shortDayCounter = shortIndex_->dayCounter();
-    Calendar shortPmtCalendar = shortIndex_->fixingCalendar();
     if (shortPayTenor_ == shortIndex_->tenor()) {
         shortLeg = IborLeg(shortSchedule_, shortIndex_)
                        .withNotionals(nominal_)
                        .withSpreads(shortSpread_)
                        .withPaymentAdjustment(shortPmtConvention)
-                       .withPaymentDayCounter(shortDayCounter);
+                       .withPaymentDayCounter(shortDayCounter)
+                       .withPaymentCalendar(shortIndexCalendar_);
     } else {
         shortLeg = SubPeriodsLeg(shortSchedule_, shortIndex_)
                        .withNotional(nominal_)
                        .withSpread(shortSpread_)
                        .withPaymentAdjustment(shortPmtConvention)
                        .withPaymentDayCounter(shortDayCounter)
-                       .withPaymentCalendar(shortPmtCalendar)
+                       .withPaymentCalendar(shortIndexCalendar_)
                        .includeSpread(includeSpread_)
                        .withType(type_);
     }

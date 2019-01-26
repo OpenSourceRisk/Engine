@@ -18,6 +18,7 @@
 
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
+#include <ql/indexes/ibor/libor.hpp>
 
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
 
@@ -61,7 +62,9 @@ TenorBasisSwapHelper::TenorBasisSwapHelper(Handle<Quote> spread, const Period& s
 
 void TenorBasisSwapHelper::initializeDates() {
 
-    Calendar spotCalendar = longIndex_->fixingCalendar();
+    boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
+    Calendar spotCalendar =
+        longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
     Natural spotDays = longIndex_->fixingDays();
 
     Date valuationDate = Settings::instance().evaluationDate();
