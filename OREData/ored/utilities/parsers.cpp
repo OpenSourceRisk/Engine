@@ -34,7 +34,9 @@
 #include <ql/version.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/france.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/thailand.hpp>
@@ -155,6 +157,12 @@ Calendar parseCalendar(const string& s) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
+                                      {"FR", France()},
+                                      {"FRF", France()},
+                                      {"IT", Italy()},
+                                      {"ITL", Italy()},
+                                      {"NL", Netherlands()},
+                                      {"NGL", Netherlands()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
                                       {"CHZU", Switzerland()},
