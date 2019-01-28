@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccyfixfloatswap.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -186,9 +186,11 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(Rate spotFx, Rate rate, Spr
 
 }
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void CrossCurrencyFixFloatSwapTest::testSwapPricing() {
+BOOST_AUTO_TEST_SUITE(CrossCurrencyFixFloatSwapTest)
+
+BOOST_AUTO_TEST_CASE(testSwapPricing) {
 
     BOOST_TEST_MESSAGE("Test cross currency fix float swap pricing against known results");
 
@@ -232,13 +234,6 @@ void CrossCurrencyFixFloatSwapTest::testSwapPricing() {
     BOOST_CHECK_SMALL(-0.002740802104 - swap->fairSpread(), 1e-10);
 }
 
-test_suite* CrossCurrencyFixFloatSwapTest::suite() {
-    
-    test_suite* suite = BOOST_TEST_SUITE("CrossCurrencyFixFloatSwapTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapTest::testSwapPricing));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

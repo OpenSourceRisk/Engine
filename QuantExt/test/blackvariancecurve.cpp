@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "blackvariancecurve.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
@@ -29,9 +30,11 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, ore::test::TopLevelFixture)
 
-void BlackVarianceCurveTest::testBlackVarianceCurve() {
+BOOST_AUTO_TEST_SUITE(BlackVarianceCurveTest)
+
+BOOST_AUTO_TEST_CASE(testBlackVarianceCurve) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceCurve3...");
 
@@ -94,9 +97,7 @@ void BlackVarianceCurveTest::testBlackVarianceCurve() {
     }
 }
 
-test_suite* BlackVarianceCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("BlackVarianceCurveTest");
-    suite->add(BOOST_TEST_CASE(&BlackVarianceCurveTest::testBlackVarianceCurve));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+

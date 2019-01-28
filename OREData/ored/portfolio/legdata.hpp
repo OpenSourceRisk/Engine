@@ -417,13 +417,15 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, string eqName) : LegAdditionalData("Equity"), 
-        returnType_(returnType), eqName_(eqName) {}
+    EquityLegData(string returnType, Real dividendFactor, string eqName, Natural fixingDays)
+        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName), fixingDays_(fixingDays) {}
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
     const string& eqName() const { return eqName_; }
+    Real dividendFactor() const { return dividendFactor_; }
+    Natural fixingDays() const { return fixingDays_; }
     //@}
 
     //! \name Serialisation
@@ -433,7 +435,9 @@ public:
     //@}
 private:
     string returnType_;
+    Real dividendFactor_ = 1.0;
     string eqName_;
+    Natural fixingDays_ = 0;
 };
 
 //! Serializable object holding amortization rules

@@ -21,6 +21,7 @@ cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
+currencies/metals.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/inflationindexwrapper.cpp
@@ -76,6 +77,9 @@ pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
+pricingengines/cpibacheliercapfloorengine.cpp
+pricingengines/cpiblackcapfloorengine.cpp
+pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -154,6 +158,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
@@ -260,6 +265,9 @@ pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
+pricingengines/cpibacheliercapfloorengine.hpp
+pricingengines/cpiblackcapfloorengine.hpp
+pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -324,6 +332,7 @@ termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
+termstructures/strippedcpivolatilitystructure.hpp
 termstructures/tenorbasisswaphelper.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp

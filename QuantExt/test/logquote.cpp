@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "logquote.hpp"
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <ql/quotes/simplequote.hpp>
 #include <qle/quotes/logquote.hpp>
 
@@ -24,33 +25,32 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using QuantExt::LogQuote;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture) 
 
-void LogQuoteTest::testLogQuote() {
+BOOST_AUTO_TEST_SUITE(LogQuoteTest)
+
+BOOST_AUTO_TEST_CASE(testLogQuote) {
+
     BOOST_TEST_MESSAGE("Testing QuantExt::LogQuote...");
-
     boost::shared_ptr<SimpleQuote> quote(new QuantLib::SimpleQuote(1.0));
     Handle<Quote> qh(quote);
     Handle<Quote> logQuote(boost::shared_ptr<Quote>(new LogQuote(qh)));
 
-    BOOST_CHECK(logQuote->value() == std::log(quote->value()));
+    BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
 
     quote->setValue(2.0);
-    BOOST_CHECK(logQuote->value() == std::log(quote->value()));
+    BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
 
     quote->setValue(3.0);
-    BOOST_CHECK(logQuote->value() == std::log(quote->value()));
+    BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
 
     quote->setValue(123.0);
-    BOOST_CHECK(logQuote->value() == std::log(quote->value()));
+    BOOST_CHECK_EQUAL(logQuote->value(), std::log(quote->value()));
 
     // LogQuote should throw when a negative value is set
     BOOST_CHECK_THROW(quote->setValue(-1.0), std::exception);
 }
 
-test_suite* LogQuoteTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("LogQuoteTests");
-    suite->add(BOOST_TEST_CASE(&LogQuoteTest::testLogQuote));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

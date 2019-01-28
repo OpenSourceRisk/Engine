@@ -41,6 +41,7 @@
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/metals.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -395,7 +396,8 @@ Currency parseCurrency(const string& s) {
         {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()}, 
         {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()}, 
         {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()}, 
-        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()}};
+        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()},
+	{"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

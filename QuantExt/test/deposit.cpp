@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "deposit.hpp"
 
 #include <qle/pricingengines/depositengine.hpp>
-
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/time/calendars/target.hpp>
@@ -31,9 +31,12 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QleDataTestSuite, ore::test::TopLevelFixture)
 
-void DepositTest::testRepricing() {
+BOOST_AUTO_TEST_SUITE(DepositTest)
+
+BOOST_AUTO_TEST_CASE(testRepricing) {
+    
     BOOST_TEST_MESSAGE("Testing Repricing of a Deposit on a depo curve...");
 
     SavedSettings backup;
@@ -62,9 +65,6 @@ void DepositTest::testRepricing() {
                         "Deposit fair rate (" << depo.fairRate() << ") could not be verified, expected 0.02");
 }
 
-test_suite* DepositTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DepositTests");
-    suite->add(BOOST_TEST_CASE(&DepositTest::testRepricing));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

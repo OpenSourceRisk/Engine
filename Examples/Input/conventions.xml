@@ -275,6 +275,10 @@
     <Index>EUR-EURIBOR-3M</Index>
   </FRA>
   <FRA>
+    <Id>EUR-1M-FRA-CONVENTIONS</Id>
+    <Index>EUR-EURIBOR-1M</Index>
+  </FRA>
+  <FRA>
     <Id>AUD-3M-FRA-CONVENTIONS</Id>
     <Index>AUD-BBSW-3M</Index>
   </FRA>
@@ -1503,7 +1507,7 @@
       <DayCounter>30/360</DayCounter>
       <Index>UKRPI</Index>
       <Interpolated>false</Interpolated>
-      <ObservationLag>3M</ObservationLag>
+      <ObservationLag>2M</ObservationLag>
       <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
       <InflationCalendar>UK</InflationCalendar>
       <InflationConvention>MF</InflationConvention>

@@ -15,9 +15,8 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-#include "discountratiomodifiedcurve.hpp"
-
+#include <boost/test/unit_test.hpp>
+#include "toplevelfixture.hpp"
 #include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <ql/settings.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
@@ -34,9 +33,11 @@ using namespace boost::unit_test_framework;
 using namespace boost::assign;
 using std::vector;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
 
-void DiscountingRatioModifiedCurveTest::testStandardCurves() {
+BOOST_AUTO_TEST_SUITE(DiscountingRatioModifiedCurveTest)
+ 
+BOOST_AUTO_TEST_CASE(testStandardCurves) {
     
     BOOST_TEST_MESSAGE("Testing discount ratio modified curve with some standard curves");
 
@@ -85,7 +86,7 @@ void DiscountingRatioModifiedCurveTest::testStandardCurves() {
         baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(t)));
 }
 
-void DiscountingRatioModifiedCurveTest::testExtrapolationSettings() {
+BOOST_AUTO_TEST_CASE(testExtrapolationSettings) {
 
     BOOST_TEST_MESSAGE("Testing extrapolation settings for discount ratio modified curve");
 
@@ -128,7 +129,7 @@ void DiscountingRatioModifiedCurveTest::testExtrapolationSettings() {
     BOOST_CHECK_NO_THROW(curve.discount(Date(15, Aug, 2020) + 1 * Days));
 }
 
-void DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThrow() {
+BOOST_AUTO_TEST_CASE(testConstructionNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing construction with null underlying curves throw");
 
@@ -153,7 +154,7 @@ void DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThro
     BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve_1));
 }
 
-void DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow() {
+BOOST_AUTO_TEST_CASE(testLinkingNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing that linking with null underlying curves throw");
 
@@ -179,15 +180,6 @@ void DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow() {
     BOOST_CHECK_THROW(denCurve.linkTo(boost::shared_ptr<YieldTermStructure>()), QuantLib::Error);
 }
 
-test_suite* DiscountingRatioModifiedCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DiscountingRatioModifiedCurveTests");
-    
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testStandardCurves));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testExtrapolationSettings));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThrow));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()

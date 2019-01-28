@@ -26,6 +26,7 @@
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/experimental/inflation/yoycapfloortermpricesurface.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp> 
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
@@ -145,6 +146,14 @@ public:
     cpiInflationCapFloorPriceSurface(const string& indexName,
                                      const string& configuration = Market::defaultConfiguration) const = 0;
 
+    //! Inflation Cap Floor Volatility Surfaces 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationCapVolatilitySurface(const string& indexName, 
+				     const string& configuration = Market::defaultConfiguration) const = 0; 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationFloorVolatilitySurface(const string& indexName, 
+				       const string& configuration = Market::defaultConfiguration) const = 0; 
+
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<YoYCapFloorTermPriceSurface>
     yoyInflationCapFloorPriceSurface(const string& indexName,
@@ -193,6 +202,12 @@ public:
     //@{
     virtual QuantLib::Handle<QuantLib::BlackVolTermStructure> commodityVolatility(
         const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
+
+    //! \name Conditional Prepayment Rates
+    //@{
+    virtual Handle<Quote> cpr(const string& securityID,
+                              const string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 };
 } // namespace data

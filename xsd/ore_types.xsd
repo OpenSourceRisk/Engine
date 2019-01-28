@@ -432,5 +432,12 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="capFloor">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Cap"/>
+      <xs:enumeration value="Floor"/>
+    </xs:restriction>
+  </xs:simpleType>
+
 </xs:schema>
 
