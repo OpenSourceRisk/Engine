@@ -17,11 +17,11 @@
 */
 
 /*! \file netherlands.hpp
-    \brief Netherlandian calendar
+    \brief Dutch calendar
 */
 
-#ifndef quantext_netherlandian_calendar_hpp
-#define quantext_netherlandian_calendar_hpp
+#ifndef quantext_dutch_calendar_hpp
+#define quantext_dutch_calendar_hpp
 
 #include <ql/time/calendar.hpp>
 
@@ -32,7 +32,7 @@ using namespace QuantLib;
       private:
         class SettlementImpl : public Calendar::WesternImpl {
           public:
-            std::string name() const { return "Netherlandian settlement"; }
+            std::string name() const { return "Dutch settlement"; }
             bool isBusinessDay(const Date&) const;
         };
       public:

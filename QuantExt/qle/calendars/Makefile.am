@@ -7,7 +7,9 @@ libCalendars_la_SOURCES = \
 	thailand.cpp \
 	colombia.cpp \
 	peru.cpp \
+  france.cpp \
 	malaysia.cpp \
+  netherlands.cpp \
 	chile.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -17,7 +19,9 @@ this_include_HEADERS = \
 	thailand.hpp \
 	colombia.hpp \
 	peru.hpp \
+  france.hpp \
 	malaysia.hpp \
+  netherlands.hpp \
 	chile.hpp
 
 all.hpp: Makefile.am
