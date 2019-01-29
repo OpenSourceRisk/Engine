@@ -44,24 +44,12 @@ FOR A PARTICULAR PURPOSE.  See the license for more details.
 
 namespace QuantExt {
 
-    BlackBondOptionEngine::BlackBondOptionEngine(
-        const Handle<Quote>& fwdYieldVol,
-        const Handle<YieldTermStructure>& discountCurve, const bool& isCallableBond)
-        : BlackCallableFixedRateBondEngine(fwdYieldVol, discountCurve), volatility_(ext::shared_ptr<CallableBondVolatilityStructure>(
-            new CallableBondConstantVolatility(0, NullCalendar(),
-                fwdYieldVol,
-                Actual365Fixed()))),
-        discountCurve_(discountCurve), isCallableBond_(isCallableBond) {
-        registerWith(volatility_);
-        registerWith(discountCurve_);
-    }
-
     //! no vol structures implemented yet besides constant volatility
     BlackBondOptionEngine::BlackBondOptionEngine(
-        const Handle<CallableBondVolatilityStructure>& yieldVolStructure,
-        const Handle<YieldTermStructure>& discountCurve, const bool& isCallableBond)
-        : BlackCallableFixedRateBondEngine(yieldVolStructure, discountCurve), 
-        volatility_(yieldVolStructure), discountCurve_(discountCurve), isCallableBond_(isCallableBond) {
+        const Handle<SwaptionVolatilityStructure>& yieldVolStructure,
+        const Handle<YieldTermStructure>& discountCurve, 
+        const bool& isCallableBond)
+    :volatility_(yieldVolStructure), discountCurve_(discountCurve), isCallableBond_(isCallableBond) {
         registerWith(volatility_);
         registerWith(discountCurve_);
     }
@@ -162,8 +150,9 @@ namespace QuantExt {
             **discountCurve_,
             false, discountCurve_->referenceDate());
 
-        Real fwdCashPrice = (value - spotIncome()) /
-            discountCurve_->discount(exerciseDate);
+        Real discount = discountCurve_->discount(exerciseDate);
+
+        Real fwdCashPrice = (value - spotIncome()) / discount;
 
         Real cashStrike = arguments_.callabilityPrices[0];
 
@@ -175,11 +164,13 @@ namespace QuantExt {
         Time exerciseTime = volatility_->dayCounter().yearFraction(
             volatility_->referenceDate(),
             exerciseDate);
+
         Real embeddedOptionValue =
             blackFormula(type,
                 cashStrike,
                 fwdCashPrice,
-                priceVol*std::sqrt(exerciseTime));
+                priceVol*std::sqrt(exerciseTime),
+                discount);
 
         if (isCallableBond_) {
             if (type == Option::Call) {

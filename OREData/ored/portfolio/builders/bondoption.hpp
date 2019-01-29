@@ -53,18 +53,13 @@ namespace ore {
 
             virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
                 const string& referenceCurveId, const bool& isCallableBond) {
-                // string tsperiodStr = engineParameters_.at("TimestepPeriod");
-                // Period tsperiod = parsePeriod(tsperiodStr);
-                // Handle<YieldTermStructure> yield = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
-                Handle<YieldTermStructure> discountCurve=
-                    market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-                // Handle<QuantLib::SwaptionVolatilityStructure> swaptionVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
-                
-                // Create the option engine
-                // boost::shared_ptr<BlackProcess> process = boost::make_shared<BlackProcess>(
-                //    Handle<Quote>(), yield, Handle<BlackVolTermStructure>());
 
-                return boost::make_shared<QuantExt::BlackBondOptionEngine>(Handle<Quote>(boost::make_shared<SimpleQuote>(0.02)), discountCurve, isCallableBond);
+                Handle<YieldTermStructure> discountCurve =
+                    market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+                Handle<QuantLib::SwaptionVolatilityStructure> yieldVola = 
+                    market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
+
+                return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve, isCallableBond);
             };
         };
     }

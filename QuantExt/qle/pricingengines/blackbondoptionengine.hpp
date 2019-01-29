@@ -40,6 +40,7 @@ of upfront amount and exercise before CDS start
 #ifndef quantext_black_bond_option_engine_hpp
 #define quantext_black_bond_option_engine_hpp
 
+#include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
 #include <ql/experimental/callablebonds/callablebond.hpp>
 #include <ql/experimental/callablebonds/blackcallablebondengine.hpp>
 #include <ql/experimental/callablebonds/callablebondvolstructure.hpp>
@@ -49,19 +50,15 @@ namespace QuantExt {
     using namespace QuantLib;
 
     //! Black-formula bond option engine
-    class BlackBondOptionEngine : public BlackCallableFixedRateBondEngine {
+    class BlackBondOptionEngine : public CallableFixedRateBond::engine {
     public:
         //! volatility is the quoted fwd yield volatility, not price vol
         BlackBondOptionEngine(
-            const Handle<Quote>& fwdYieldVol,
-            const Handle<YieldTermStructure>& discountCurve, const bool& isCallableBond);
-        //! volatility is the quoted fwd yield volatility, not price vol
-        BlackBondOptionEngine(
-            const Handle<CallableBondVolatilityStructure>& yieldVolStructure,
+            const Handle<SwaptionVolatilityStructure>& yieldVolStructure,
             const Handle<YieldTermStructure>& discountCurve, const bool& isCallableBond);
         void calculate() const;
     private:
-        Handle<CallableBondVolatilityStructure> volatility_;
+        Handle<SwaptionVolatilityStructure> volatility_;
         Handle<YieldTermStructure> discountCurve_;
         bool isCallableBond_;
         // present value of all coupons paid during the life of option
