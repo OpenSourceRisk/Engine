@@ -81,10 +81,10 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
 
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
     longIndexCalendar_ =
-        longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
+        longIndexAsLibor != NULL ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
     boost::shared_ptr<Libor> shortIndexAsLibor = boost::dynamic_pointer_cast<Libor>(shortIndex_);
     shortIndexCalendar_ =
-        shortIndexAsLibor != nullptr ? shortIndexAsLibor->jointCalendar() : shortIndex_->fixingCalendar();
+        shortIndexAsLibor != NULL ? shortIndexAsLibor->jointCalendar() : shortIndex_->fixingCalendar();
 
     longSchedule_ = MakeSchedule()
                         .from(effectiveDate)
