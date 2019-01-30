@@ -32,7 +32,8 @@ OREDATA_TESTS = \
 	cds.cpp \
 	inflationcapfloor.cpp \
 	equityswap.cpp \
-	conventions.cpp
+	conventions.cpp \
+    digitalcms.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
