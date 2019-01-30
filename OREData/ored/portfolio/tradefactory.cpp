@@ -30,6 +30,7 @@
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/equityswap.hpp>
 #include <ored/portfolio/commodityoption.hpp>
+#include <ored/portfolio/cpicapfloor.hpp>
 #include <ored/portfolio/tradefactory.hpp>
 #include <ored/utilities/log.hpp>
 
@@ -53,6 +54,7 @@ TradeFactory::TradeFactory(std::map<string, boost::shared_ptr<AbstractTradeBuild
     addBuilder("CreditDefaultSwap", boost::make_shared<TradeBuilder<CreditDefaultSwap>>());    
     addBuilder("CommodityForward", boost::make_shared<TradeBuilder<CommodityForward>>());
     addBuilder("CommodityOption", boost::make_shared<TradeBuilder<CommodityOption>>());
+    addBuilder("CPICapFloor", boost::make_shared<TradeBuilder<CPICapFloor>>());
     if (extraBuilders.size() > 0)
         addExtraBuilders(extraBuilders);
 }

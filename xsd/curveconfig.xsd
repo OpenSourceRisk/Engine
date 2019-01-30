@@ -254,6 +254,7 @@
       <xs:element type="xs:string" name="CapStrikes" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="FloorStrikes" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="Maturities" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ImplySeparateCapFloorVolSurfaces" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -314,7 +315,8 @@
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
       <xs:element type="xs:string" name="SpreadQuote"/>
-      <xs:element type="xs:string" name="RecoveryRateQuote"/>
+      <xs:element type="xs:string" name="RecoveryRateQuote" minOccurs="0"/>
+      <xs:element type="xs:string" name="CPRQuote" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

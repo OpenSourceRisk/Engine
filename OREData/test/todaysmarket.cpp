@@ -50,13 +50,15 @@ namespace {
 class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
-    const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const;
-    const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const;
-    const vector<Fixing>& loadFixings() const { return fixings_; }
+    const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const;
+    const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
+    const std::vector<Fixing>& loadFixings() const { return fixings_; }
+    const std::vector<Fixing>& loadDividends() const { return dividends_; }
 
 private:
-    map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
-    vector<Fixing> fixings_;
+    std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
+    std::vector<Fixing> fixings_;
+    std::vector<Fixing> dividends_;
 };
 
 const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {

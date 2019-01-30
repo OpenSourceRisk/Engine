@@ -71,7 +71,8 @@ public:
         CommodityCurve,
         CommodityVolatility,
         SecuritySpread,
-        Correlation
+        Correlation,
+        CPR
     };
 
     //! Constructor

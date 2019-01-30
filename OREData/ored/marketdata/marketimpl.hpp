@@ -120,6 +120,16 @@ public:
     cpiInflationCapFloorPriceSurface(const string& indexName,
                                      const string& configuration = Market::defaultConfiguration) const;
 
+    //! Inflation Cap Volatility Surfaces 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationCapVolatilitySurface(const string& indexName, 
+                                     const string& configuration = Market::defaultConfiguration) const; 
+ 
+    //! Inflation Floor Volatility Surfaces 
+    virtual Handle<CPIVolatilitySurface> 
+    cpiInflationFloorVolatilitySurface(const string& indexName, 
+                                       const string& configuration = Market::defaultConfiguration) const; 
+
     //! YoY Inflation Cap Floor Price Surfaces
     virtual Handle<YoYCapFloorTermPriceSurface>
     yoyInflationCapFloorPriceSurface(const string& indexName,
@@ -163,6 +173,11 @@ public:
     //! Correlation curves
     Handle<QuantExt::CorrelationTermStructure> correlationCurve(const string& index1, const string& index2,
                                                    const string& configuration = Market::defaultConfiguration) const;
+    //! \name Conditional Prepayment Rates
+    //@{
+    QuantLib::Handle<Quote> cpr(const string& securityID,
+                                const string& configuration = Market::defaultConfiguration) const;
+    //@}
 
     //! \name Disable copying
     //@{
@@ -192,6 +207,8 @@ protected:
     map<pair<string, string>, Handle<ZeroInflationIndex>> zeroInflationIndices_;
     map<pair<string, string>, Handle<YoYInflationIndex>> yoyInflationIndices_;
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> cpiInflationCapFloorPriceSurfaces_;
+    map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationFloorVolatilitySurfaces_; 
+    map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapVolatilitySurfaces_; 
     map<pair<string, string>, Handle<YoYCapFloorTermPriceSurface>> yoyInflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
@@ -202,6 +219,7 @@ protected:
     map<pair<string, string>, QuantLib::Handle<QuantExt::PriceTermStructure>> commodityCurves_;
     map<pair<string, string>, QuantLib::Handle<QuantLib::BlackVolTermStructure>> commodityVols_;
     map<pair<string, string>, QuantLib::Handle<QuantExt::EquityIndex>> equityCurves_;
+    map<pair<string,string>, Handle<Quote>> cprs_;
     Conventions conventions_;
 
     //! add a swap index to the market

@@ -99,7 +99,8 @@ public:
         COMMODITY_SPOT,
         COMMODITY_FWD,
         CORRELATION,
-        COMMODITY_OPTION
+        COMMODITY_OPTION,
+        CPR
     };
 
     //! Supported market quote types
@@ -1286,6 +1287,26 @@ private:
     std::string index2_;
     std::string expiry_;
     std::string strike_;
+};
+
+//! CPR data class
+/*!
+This class holds single market points of type
+- CPR
+\ingroup marketdata
+*/
+class CPRQuote : public MarketDatum {
+public:
+    //! Constructor
+    CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
 };
 
 } // namespace data

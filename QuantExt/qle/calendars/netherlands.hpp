@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/sensitivityanalysisanalytic.hpp
-    \brief Sensitivity analysis tests against analytic sensitivities
-    \ingroup tests
+/*! \file netherlands.hpp
+    \brief Dutch calendar
 */
 
-#pragma once
+#ifndef quantext_dutch_calendar_hpp
+#define quantext_dutch_calendar_hpp
 
-#include <boost/test/unit_test.hpp>
+#include <ql/time/calendar.hpp>
 
-namespace testsuite {
+namespace QuantExt {
+using namespace QuantLib;
 
-/*! Sensitivity analysis versus analytic sensitivity engines tests
-    (computed externally by Quaternion and cached in file)
-*/
-/*!
-  \ingroup tests
-*/
-class SensitivityAnalysisAnalyticTest {
-public:
-    //! Test bucketed deltas, gammas, vegas in a multi curve setting for swap, swaption, fx option
-    static void testSensitivities();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
+  class Netherlands : public Calendar {
+      private:
+        class SettlementImpl : public Calendar::WesternImpl {
+          public:
+            std::string name() const { return "Dutch settlement"; }
+            bool isBusinessDay(const Date&) const;
+        };
+      public:
+        enum Market { Settlement    // generic settlement calendar
+        };
+        Netherlands(Market m = Settlement);
+    };
+
+}
+
+#endif

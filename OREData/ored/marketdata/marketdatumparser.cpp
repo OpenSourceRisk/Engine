@@ -71,7 +71,9 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
         {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
-        {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION}};
+        {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
+        {"CPR", MarketDatum::InstrumentType::CPR}
+    };
 
     auto it = b.find(s);
     if (it != b.end()) {
@@ -246,7 +248,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         Currency fixedCurrency = parseCurrency(tokens[4]);
         Period fixedTenor = parsePeriod(tokens[5]);
         Period maturity = parsePeriod(tokens[6]);
-        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType, 
+        return boost::make_shared<CrossCcyFixFloatSwapQuote>(value, asof, datumName, quoteType,
             floatCurrency, floatTenor, fixedCurrency, fixedTenor, maturity);
     }
 
@@ -474,7 +476,7 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         // COMMODITY_OPTION/RATE_LNVOL/<COMDTY_NAME>/<CCY>/<DATE/TENOR>/<STRIKE>
         QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
-        
+
         return boost::make_shared<CommodityOptionQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
     }
@@ -488,6 +490,13 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         
         return boost::make_shared<CorrelationQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
+    }
+
+    case MarketDatum::InstrumentType::CPR: {
+        QL_REQUIRE(tokens.size() == 3, "3 tokens expected in " << datumName);
+        const string& securityID = tokens[2];
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE, "Invalid quote type for " << datumName);
+        return boost::make_shared<CPRQuote>(value, asof, datumName, securityID);
     }
 
     default:

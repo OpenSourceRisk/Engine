@@ -106,6 +106,7 @@ this_include_HEADERS = \
     correlationtermstructure.hpp \
     flatcorrelation.hpp \
     interpolatedcorrelationcurve.hpp \
+	strippedcpivolatilitystructure.hpp \
 	capfloortermvolsurface.hpp \
 	probabilitytraits.hpp
 

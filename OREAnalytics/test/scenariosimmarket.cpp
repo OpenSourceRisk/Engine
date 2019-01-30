@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/conventions.hpp>
@@ -28,7 +30,6 @@
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/scenariosimmarket.hpp>
 #include <test/testmarket.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
@@ -39,6 +40,8 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
 using namespace ore::data;
+
+using testsuite::TestMarket;
 
 namespace {
 
@@ -96,8 +99,6 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     return parameters;
 }
 } // namespace
-
-namespace testsuite {
 
 void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
                 boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
@@ -270,7 +271,11 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
     remove("simtest.xml");
 }
 
-void ScenarioSimMarketTest::testScenarioSimMarket() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(ScenarioSimMarketTest)
+		
+BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
     SavedSettings backup;
@@ -302,9 +307,7 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testToXML(parameters);
 }
 
-test_suite* ScenarioSimMarketTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ScenarioSimMarketTests");
-    suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()
+
