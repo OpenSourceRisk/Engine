@@ -492,7 +492,9 @@
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
+    <ClInclude Include="qle\calendars\france.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
+    <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\thailand.hpp" />
@@ -698,7 +700,9 @@
   <ItemGroup>
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
+    <ClCompile Include="qle\calendars\france.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
+    <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
     <ClCompile Include="qle\calendars\thailand.cpp" />

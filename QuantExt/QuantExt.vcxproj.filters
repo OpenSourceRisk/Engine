@@ -627,6 +627,12 @@
     <ClInclude Include="qle\currencies\metals.hpp">
       <Filter>currencies</Filter>
     </ClInclude>
+    <ClInclude Include="qle\calendars\france.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\calendars\netherlands.hpp">
+      <Filter>time\calendars</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1074,6 +1080,12 @@
     </ClCompile>
     <ClCompile Include="qle\currencies\metals.cpp">
       <Filter>currencies</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\france.cpp">
+      <Filter>time\calendars</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\calendars\netherlands.cpp">
+      <Filter>time\calendars</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
