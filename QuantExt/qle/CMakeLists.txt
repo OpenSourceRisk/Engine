@@ -2,7 +2,9 @@
 
 set(QuantExt_SRC calendars/chile.cpp
 calendars/colombia.cpp
+calendars/france.cpp
 calendars/malaysia.cpp
+calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
 calendars/thailand.cpp
@@ -138,7 +140,9 @@ set(QuantExt_HDR auto_link.hpp
 version.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
+calendars/france.hpp
 calendars/malaysia.hpp
+calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
 calendars/thailand.hpp
