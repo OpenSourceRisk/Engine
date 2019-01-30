@@ -63,6 +63,9 @@ public:
     boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
     const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
 
+    bool hasFxVolCurveConfig(const std::string& curveID) const {
+        return fxVolCurveConfigs_.find(curveID) != fxVolCurveConfigs_.end();
+    }
     boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) {
         return fxVolCurveConfigs_[curveID];
     }
@@ -93,6 +96,9 @@ public:
     }
     const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
 
+    bool hasInflationCurveConfig(const std::string& curveID) const {
+        return inflationCurveConfigs_.find(curveID) != inflationCurveConfigs_.end();
+    }
     boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
         return inflationCurveConfigs_[curveID];
     };
