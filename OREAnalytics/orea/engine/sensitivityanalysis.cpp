@@ -55,6 +55,8 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                          const Conventions& conventions, const bool recalibrateModels,
+                                         const CurveConfigurations& curveConfigs,
+                                         const TodaysMarketParameters& todaysMarketParams,
                                          const bool nonShiftedBaseCurrencyConversion)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
@@ -115,7 +117,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
     
     LOG("Initialise sim market for sensitivity analysis");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_);
     LOG("Sim market initialised for sensitivity analysis");
 
     LOG("Create scenario factory for sensitivity analysis");

@@ -67,6 +67,8 @@ public:
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                         const Conventions& conventions, const bool recalibrateModels,
+                        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                         const bool nonShiftedBaseCurrencyConversion = false);
 
     virtual ~SensitivityAnalysis() {}
@@ -132,7 +134,12 @@ protected:
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData_;
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     Conventions conventions_;
-    bool recalibrateModels_, overrideTenors_;
+    bool recalibrateModels_;
+    //! Optional curve configurations. Used in building the scenario sim market.
+    ore::data::CurveConfigurations curveConfigs_;
+    //! Optional todays market parameters. Used in building the scenario sim market.
+    ore::data::TodaysMarketParameters todaysMarketParams_;
+    bool overrideTenors_;
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
