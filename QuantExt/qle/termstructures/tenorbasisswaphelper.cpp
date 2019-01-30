@@ -64,7 +64,7 @@ void TenorBasisSwapHelper::initializeDates() {
 
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
     Calendar spotCalendar =
-        longIndexAsLibor != nullptr ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
+        longIndexAsLibor != NULL ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
     Natural spotDays = longIndex_->fixingDays();
 
     Date valuationDate = Settings::instance().evaluationDate();
