@@ -1021,8 +1021,17 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
         ore::data::buildScheduledVector(cmsSpreadData->spreads(), cmsSpreadData->spreadDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
+    double eps = 1e-4;
     vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsSpreadData->callStrikes(), digitalCmsSpreadData->callStrikeDates(), schedule);
+
+    for (Size i = 0; i < callStrikes.size(); i++) {
+        if ( abs(callStrikes[i]) < eps / 2) {
+            callStrikes[i] = eps / 2;
+        }
+    }
+        
     vector<double> callPayoffs = ore::data::buildScheduledVector(digitalCmsSpreadData->callPayoffs(), digitalCmsSpreadData->callPayoffDates(), schedule);
+    
     vector<double> putStrikes = ore::data::buildScheduledVector(digitalCmsSpreadData->putStrikes(), digitalCmsSpreadData->putStrikeDates(), schedule);
     vector<double> putPayoffs = ore::data::buildScheduledVector(digitalCmsSpreadData->putPayoffs(), digitalCmsSpreadData->putPayoffDates(), schedule);
 
@@ -1070,16 +1079,6 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     Leg tmpLeg = digitalCmsSpreadLeg;
     QuantLib::setCouponPricer(tmpLeg, cmsSpreadPricer);
 
-    // build naked option leg if required
-    if (cmsSpreadData->nakedOption()) {
-        tmpLeg = StrippedCappedFlooredCouponLeg(tmpLeg);
-        // fix for missing registration in ql 1.13
-        for(auto const &t: tmpLeg) {
-            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
-            if(s!=nullptr)
-                s->registerWith(s->underlying());
-        }
-    }
     return tmpLeg;
 }
 
