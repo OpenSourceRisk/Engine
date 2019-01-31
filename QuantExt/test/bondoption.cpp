@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         Callability::Type callabilityType = Callability::Call;
         Date exerciseDate = Date(5, Dec, 2016);
         boost::shared_ptr<Callability> callability(new Callability(callabilityPrice, callabilityType, exerciseDate));
-        CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
+        CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability> >(1, callability);
 
         boost::shared_ptr<QuantLib::CallableBond> bondOption(new QuantLib::CallableFixedRateBond(settlementDays, faceAmount, schedule, rates,
             dc, bdc, redemption, issueDate, callabilitySchedule));
