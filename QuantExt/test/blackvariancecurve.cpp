@@ -30,7 +30,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BlackVarianceCurveTest)
 

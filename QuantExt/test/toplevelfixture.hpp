@@ -25,7 +25,7 @@
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/settings.hpp>
 
-namespace ore {
+namespace qle {
 namespace test {
 
 using QuantLib::IndexManager;
