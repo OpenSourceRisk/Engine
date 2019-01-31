@@ -31,9 +31,8 @@
 #include <ql/money.hpp>
 #include <ql/quote.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! <strong> FX Forward </strong>
 

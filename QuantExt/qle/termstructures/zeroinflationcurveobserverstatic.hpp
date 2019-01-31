@@ -30,9 +30,8 @@
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Inflation term structure based on the interpolation of zero rates.
 /*! \ingroup termstructures */

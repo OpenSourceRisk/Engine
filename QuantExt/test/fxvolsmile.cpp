@@ -20,9 +20,9 @@
     \brief fx vol smile
 */
 
-#include "fxvolsmile.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
@@ -106,11 +106,23 @@ struct CommonVars {
     }
 };
 
+struct VolData {
+    const char* tenor;
+    Volatility atm;
+    Volatility rr;
+    Volatility bf;
+    Time time;
+    Real df_d;
+    Real df_f;
+};
+
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void FxVolSmileTest::testVannaVolgaFxSmileSection() {
+BOOST_AUTO_TEST_SUITE(FxVolSmileTest)
+
+BOOST_AUTO_TEST_CASE(testVannaVolgaFxSmileSection) {
 
     BOOST_TEST_MESSAGE("Testing fx vanna volga smile");
 
@@ -168,17 +180,7 @@ void FxVolSmileTest::testVannaVolgaFxSmileSection() {
     */
 }
 
-struct VolData {
-    const char* tenor;
-    Volatility atm;
-    Volatility rr;
-    Volatility bf;
-    Time time;
-    Real df_d;
-    Real df_f;
-};
-
-void FxVolSmileTest::testVannaVolgaFxVolSurface() {
+BOOST_AUTO_TEST_CASE(testVannaVolgaFxVolSurface) {
 
     BOOST_TEST_MESSAGE("Testing fx vanna volga surface");
 
@@ -264,7 +266,7 @@ void FxVolSmileTest::testVannaVolgaFxVolSurface() {
      */
 }
 
-void FxVolSmileTest::testInvertedVolTermStructure() {
+BOOST_AUTO_TEST_CASE(testInvertedVolTermStructure) {
 
     BOOST_TEST_MESSAGE("Testing inverted vol term structure");
 
@@ -301,12 +303,6 @@ void FxVolSmileTest::testInvertedVolTermStructure() {
     }
 }
 
-test_suite* FxVolSmileTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FxVolSmileTests");
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxSmileSection));
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testVannaVolgaFxVolSurface));
-    suite->add(BOOST_TEST_CASE(&FxVolSmileTest::testInvertedVolTermStructure));
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

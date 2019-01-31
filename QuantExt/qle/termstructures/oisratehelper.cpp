@@ -57,27 +57,29 @@ OISRateHelper::OISRateHelper(Natural settlementDays, const Period& swapTenor, co
 
 void OISRateHelper::initializeDates() {
 
+    Calendar paymentCalendar_ = overnightIndex_->fixingCalendar();
+
     swap_ = MakeOIS(swapTenor_, overnightIndex_, 0.0)
                 .withSettlementDays(settlementDays_)
                 .withFixedLegDayCount(fixedDayCounter_)
                 .withEndOfMonth(endOfMonth_)
                 .withPaymentFrequency(paymentFrequency_)
                 .withRule(rule_)
-                // TODO: patch QL?
-                //.withFixedAccrualConvention(fixedConvention_)
-                //.withFixedPaymentConvention(paymentAdjustment_)
-                //.withPaymentLag(paymentLag_)
+                .withPaymentCalendar(paymentCalendar_)
+                .withPaymentAdjustment(paymentAdjustment_)
+                .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
                 .withTelescopicValueDates(telescopicValueDates_);
+    // TODO: patch QL?
+    //.withFixedAccrualConvention(fixedConvention_)
 
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
 
     // Latest Date may need to be updated due to payment lag.
     Date date;
-    if (paymentLag_ > 0) {
-        date = CashFlows::nextCashFlowDate(swap_->leg(0), false, latestDate_);
-        date = std::max(date, CashFlows::nextCashFlowDate(swap_->leg(1), false, latestDate_));
+    if (paymentLag_ != 0) {
+        date = paymentCalendar_.advance(latestDate_, paymentLag_, Days, paymentAdjustment_, false);
         latestDate_ = std::max(date, latestDate_);
     }
 }
@@ -144,9 +146,10 @@ DatedOISRateHelper::DatedOISRateHelper(const Date& startDate, const Date& endDat
                 .withPaymentFrequency(paymentFrequency_)
                 .withRule(rule_)
                 // TODO: patch QL
-                //.withPaymentLag(paymentLag_)
                 //.withFixedAccrualConvention(fixedConvention_)
-                //.withFixedPaymentConvention(paymentAdjustment_)
+                .withPaymentCalendar(overnightIndex_->fixingCalendar())
+                .withPaymentAdjustment(paymentAdjustment_)
+                .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(termStructureHandle_)
                 .withTelescopicValueDates(telescopicValueDates_);
 

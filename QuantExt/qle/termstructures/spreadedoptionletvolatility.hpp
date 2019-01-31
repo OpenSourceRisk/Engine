@@ -26,6 +26,7 @@
 
 #include <ql/termstructures/volatility/optionlet/spreadedoptionletvol.hpp>
 
+namespace QuantExt {
 using QuantLib::Date;
 using QuantLib::Handle;
 using QuantLib::OptionletVolatilityStructure;
@@ -34,8 +35,6 @@ using QuantLib::Rate;
 using QuantLib::SmileSection;
 using QuantLib::Time;
 using QuantLib::Volatility;
-
-namespace QuantExt {
 
 class SpreadedOptionletVolatility : public QuantLib::SpreadedOptionletVolatility {
 public:

@@ -29,9 +29,8 @@
 #include <ql/time/calendars/japan.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! %JPY %TONAR rate
 /*! Toyko Overnight Average Rate published by BOJ.

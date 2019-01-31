@@ -94,21 +94,10 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
         // intermediate rollback
         else {
             Real std = sqrt(model_->parametrization()->zeta(te[j]) - model_->parametrization()->zeta(te[j - 1]));
-            //            Real previousValue = 0;
             for (int k = 0; k <= 2 * mx_; k++) {
                 int imin = 0;
                 int imax = 2 * my_;
                 Real value = 0.0;
-                /*
-                int i1 = int(floor((- dx[j] * mx - dx[j-1] * (k - mx))/(h*std)))
-                + my;
-                int i2 = int(floor((+ dx[j] * mx - dx[j-1] * (k - mx))/(h*std)))
-                + my;
-                int imin = std::max(i1, 0);
-                int imax = std::min(i2, 2*my);
-                if (imin > 0)     value += v[j][0] * wsum[imin];
-                if (imax < 2*my)  value += v[j][2*my] * (1.0 - wsum[imax]);
-                */
                 for (int i = imin; i <= imax; i++) {
                     // Map y index to x index, not integer in general
                     Real kp = (dx[j - 1] * (k - mx_) + y_[i] * std) / dx[j] + mx_;
@@ -129,7 +118,6 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
                 }
                 // choose: continue (value) or exercise (u[j-1][k])
                 v[j - 1][k] = std::max(value, u[j - 1][k]);
-                // previousValue = value;
             }
         }
     } // for options
@@ -139,7 +127,7 @@ Real NumericLgmSwaptionEngineBase::calculate() const {
 } // NumericLgmSwaptionEngineBase::calculate
 
 void NumericLgmSwaptionEngine::calculate() const {
-    // TODO cash-settled swaptions are priced as if physically settled, this can be refined
+    // TODO ParYieldCurve cash-settled swaptions are priced as if CollateralizedCashPrice, this can be refined
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();
@@ -177,8 +165,6 @@ Real NumericLgmSwaptionEngine::conditionalSwapValue(Real x, Real t, const Date e
 } // NumericLgmSwaptionEngine::conditionalSwapValue
 
 void NumericLgmNonstandardSwaptionEngine::calculate() const {
-    // FIXME handle cash settled swaption properly in this engine, for the time being we treat cash settlement
-    // the same as physical settlement
     iborIndex_ = arguments_.swap->iborIndex();
     exercise_ = arguments_.exercise;
     results_.value = NumericLgmSwaptionEngineBase::calculate();

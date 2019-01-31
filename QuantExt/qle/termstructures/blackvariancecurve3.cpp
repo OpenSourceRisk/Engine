@@ -23,8 +23,9 @@ namespace QuantExt {
 
 BlackVarianceCurve3::BlackVarianceCurve3(Natural settlementDays, const Calendar& cal, BusinessDayConvention bdc,
                                          const DayCounter& dc, const std::vector<Time>& times,
-                                         const std::vector<Handle<Quote> >& blackVolCurve)
-    : BlackVarianceTermStructure(settlementDays, cal, bdc, dc), times_(times), quotes_(blackVolCurve) {
+                                         const std::vector<Handle<Quote> >& blackVolCurve, bool requireMonotoneVariance)
+    : BlackVarianceTermStructure(settlementDays, cal, bdc, dc), times_(times), quotes_(blackVolCurve),
+      requireMonotoneVariance_(requireMonotoneVariance) {
 
     QL_REQUIRE(times.size() == blackVolCurve.size(), "mismatch between date vector and black vol vector");
 
@@ -53,9 +54,11 @@ void BlackVarianceCurve3::update() {
 void BlackVarianceCurve3::performCalculations() const {
     for (Size j = 1; j <= quotes_.size(); j++) {
         variances_[j] = times_[j] * quotes_[j - 1]->value() * quotes_[j - 1]->value();
-        QL_REQUIRE(variances_[j] >= variances_[j - 1],
-                   "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
-                                                           << " and var[j-1]:" << variances_[j - 1]);
+        if (requireMonotoneVariance_) {
+            QL_REQUIRE(variances_[j] >= variances_[j - 1],
+                       "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
+                                                               << " and var[j-1]:" << variances_[j - 1]);
+        }
     }
     varianceCurve_.update();
 }

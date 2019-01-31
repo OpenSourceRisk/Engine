@@ -28,9 +28,8 @@
 #include <ql/math/array.hpp>
 #include <qle/models/pseudoparameter.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Parametrization
 /*! \ingroup models

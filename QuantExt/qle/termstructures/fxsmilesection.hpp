@@ -26,9 +26,8 @@
 
 #include <ql/types.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! FX SmileSection
 //! \ingroup termstructures

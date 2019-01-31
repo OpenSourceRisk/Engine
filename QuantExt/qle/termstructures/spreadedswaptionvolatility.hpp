@@ -26,6 +26,7 @@
 
 #include <ql/termstructures/volatility/swaption/spreadedswaptionvol.hpp>
 
+namespace QuantExt {
 using QuantLib::Date;
 using QuantLib::Handle;
 using QuantLib::Period;
@@ -35,8 +36,6 @@ using QuantLib::Real;
 using QuantLib::SmileSection;
 using QuantLib::Time;
 using QuantLib::Volatility;
-
-namespace QuantExt {
 
 class SpreadedSwaptionVolatility : public QuantLib::SpreadedSwaptionVolatility {
 public:

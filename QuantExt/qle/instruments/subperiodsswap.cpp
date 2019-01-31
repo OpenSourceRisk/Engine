@@ -38,16 +38,16 @@ SubPeriodsSwap::SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Pe
     Date terminationDate = effectiveDate + swapTenor;
 
     // Fixed leg
-    Schedule fixedSchedule = MakeSchedule()
-                                 .from(effectiveDate)
-                                 .to(terminationDate)
-                                 .withTenor(fixedTenor)
-                                 .withCalendar(fixedCalendar)
-                                 .withConvention(fixedConvention)
-                                 .withTerminationDateConvention(fixedConvention)
-                                 .withRule(rule);
+    fixedSchedule_ = MakeSchedule()
+                         .from(effectiveDate)
+                         .to(terminationDate)
+                         .withTenor(fixedTenor)
+                         .withCalendar(fixedCalendar)
+                         .withConvention(fixedConvention)
+                         .withTerminationDateConvention(fixedConvention)
+                         .withRule(rule);
 
-    legs_[0] = FixedRateLeg(fixedSchedule)
+    legs_[0] = FixedRateLeg(fixedSchedule_)
                    .withNotionals(nominal_)
                    .withCouponRates(fixedRate_, fixedDayCount_)
                    .withPaymentAdjustment(fixedConvention);
@@ -55,16 +55,16 @@ SubPeriodsSwap::SubPeriodsSwap(const Date& effectiveDate, Real nominal, const Pe
     // Sub Periods Leg, schedule is the PAY schedule
     BusinessDayConvention floatPmtConvention = iborIndex->businessDayConvention();
     Calendar floatPmtCalendar = iborIndex->fixingCalendar();
-    Schedule floatSchedule = MakeSchedule()
-                                 .from(effectiveDate)
-                                 .to(terminationDate)
-                                 .withTenor(floatPayTenor)
-                                 .withCalendar(floatPmtCalendar)
-                                 .withConvention(floatPmtConvention)
-                                 .withTerminationDateConvention(floatPmtConvention)
-                                 .withRule(rule);
+    floatSchedule_ = MakeSchedule()
+                         .from(effectiveDate)
+                         .to(terminationDate)
+                         .withTenor(floatPayTenor)
+                         .withCalendar(floatPmtCalendar)
+                         .withConvention(floatPmtConvention)
+                         .withTerminationDateConvention(floatPmtConvention)
+                         .withRule(rule);
 
-    legs_[1] = SubPeriodsLeg(floatSchedule, floatIndex_)
+    legs_[1] = SubPeriodsLeg(floatSchedule_, floatIndex_)
                    .withNotional(nominal_)
                    .withPaymentAdjustment(floatPmtConvention)
                    .withPaymentDayCounter(floatDayCount_)

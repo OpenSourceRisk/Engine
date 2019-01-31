@@ -29,9 +29,8 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Discounting Risky Bond Engine
 /*! WARNING: Only covers Vanilla coupon bonds (floating and fixed rate), and
@@ -53,6 +52,9 @@ public:
     DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
                                const Handle<DefaultProbabilityTermStructure>& defaultCurve,
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
+                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
+    //! alternative constructor (does not require default curve or recovery rate)
+    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;

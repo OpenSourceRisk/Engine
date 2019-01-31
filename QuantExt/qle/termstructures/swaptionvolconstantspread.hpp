@@ -28,11 +28,8 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <iostream>
-
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 namespace {
 class ConstantSpreadSmileSection : public SmileSection {
