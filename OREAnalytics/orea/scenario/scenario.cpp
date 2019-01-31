@@ -137,13 +137,10 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::CommodityVolatility;
     else if (str == "SecuritySpread")
         return RiskFactorKey::KeyType::SecuritySpread;
-<<<<<<< HEAD
     else if (str == "Correlation")
         return RiskFactorKey::KeyType::Correlation;
-=======
     else if (str == "CPR")
         return RiskFactorKey::KeyType::CPR;
->>>>>>> origin/master
 
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
