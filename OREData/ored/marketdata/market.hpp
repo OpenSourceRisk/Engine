@@ -39,6 +39,7 @@
 #include <ql/time/date.hpp>
 
 #include <qle/termstructures/pricetermstructure.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/indexes/equityindex.hpp>
 
@@ -204,6 +205,11 @@ public:
         const std::string& commodityName, const std::string& configuration = Market::defaultConfiguration) const = 0;
     //@}
 
+    //! \name Correlation
+    //@{
+    virtual QuantLib::Handle<QuantExt::CorrelationTermStructure> correlationCurve(
+                                                                                  const std::string& index1, const std::string& index2, const std::string& configuration = Market::defaultConfiguration) const = 0;
+    //@}
     //! \name Conditional Prepayment Rates
     //@{
     virtual Handle<Quote> cpr(const string& securityID,

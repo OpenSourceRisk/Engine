@@ -70,6 +70,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"INDEX_CDS_OPTION", MarketDatum::InstrumentType::INDEX_CDS_OPTION},
         {"COMMODITY", MarketDatum::InstrumentType::COMMODITY_SPOT},
         {"COMMODITY_FWD", MarketDatum::InstrumentType::COMMODITY_FWD},
+        {"CORRELATION", MarketDatum::InstrumentType::CORRELATION},
         {"COMMODITY_OPTION", MarketDatum::InstrumentType::COMMODITY_OPTION},
         {"CPR", MarketDatum::InstrumentType::CPR}
     };
@@ -477,6 +478,17 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
         QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE_LNVOL, "Quote type for " << datumName << " should be 'RATE_LNVOL'");
 
         return boost::make_shared<CommodityOptionQuote>(
+            value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
+    }
+
+    case MarketDatum::InstrumentType::CORRELATION: {
+        // Expects the following form:
+        // CORRELATION/RATE/<INDEX1>/<INDEX2>/<TENOR>/<STRIKE>
+        QL_REQUIRE(tokens.size() == 6, "6 tokens expected in " << datumName);
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::RATE || quoteType == MarketDatum::QuoteType::PRICE, 
+                "Quote type for " << datumName << " should be 'CORRELATION' or 'PRICE'");
+        
+        return boost::make_shared<CorrelationQuote>(
             value, asof, datumName, quoteType, tokens[2], tokens[3], tokens[4], tokens[5]);
     }
 

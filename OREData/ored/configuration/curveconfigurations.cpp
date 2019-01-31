@@ -125,6 +125,7 @@ std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarke
     addQuotes(quotes, fxSpotConfigs_, insertAll, CurveSpec::CurveType::FX, curveConfigIds);
     addQuotes(quotes, commodityCurveConfigs_, insertAll, CurveSpec::CurveType::Commodity, curveConfigIds);
     addQuotes(quotes, commodityVolatilityCurveConfigs_, insertAll, CurveSpec::CurveType::CommodityVolatility, curveConfigIds);
+    addQuotes(quotes, correlationCurveConfigs_, insertAll, CurveSpec::CurveType::Correlation, curveConfigIds);
 
     // FX spot is special in that we generally do not enter a curve configuration for it. Above, we ran over the 
     // curve configurations asking each for its quotes. We may end up missing FX spot quotes that are specified in a 
@@ -207,6 +208,10 @@ const boost::shared_ptr<CommodityVolatilityCurveConfig>& CurveConfigurations::co
     return get(curveID, commodityVolatilityCurveConfigs_);
 }
 
+const boost::shared_ptr<CorrelationCurveConfig>& CurveConfigurations::correlationCurveConfig(const string& curveID) const {
+    return get(curveID, correlationCurveConfigs_);
+}
+
 void CurveConfigurations::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CurveConfiguration");
 
@@ -229,6 +234,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
     parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);
     parseNode(node, "CommodityVolatilities", "CommodityVolatility", commodityVolatilityCurveConfigs_);
+    parseNode(node, "Correlations", "Correlation", correlationCurveConfigs_);
 }
 
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
@@ -250,6 +256,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
     addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
+    addNodes(doc, parent, "Correlations", correlationCurveConfigs_);
 
     return parent;
 }

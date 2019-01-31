@@ -59,6 +59,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
      * - FX loaded before FXVol
      * - Eq loaded before EqVol
      * - Inf loaded before InfVol
+     * - rate curves, swap indices, swaption vol surfaces before correlation curves
      */
     sort(curveSpecs.begin(), curveSpecs.end());
     auto itSpec = unique(curveSpecs.begin(), curveSpecs.end());

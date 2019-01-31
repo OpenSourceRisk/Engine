@@ -84,6 +84,13 @@ public:
                  const string& configuration) const override;
 };
 
+class DigitalCMSSpreadLegBuilder : public LegBuilder {
+public:
+    DigitalCMSSpreadLegBuilder() : LegBuilder("DigitalCMSSpread") {}
+    Leg buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                 const string& configuration) const override;
+};
+
 class EquityLegBuilder : public LegBuilder {
 public:
     EquityLegBuilder() : LegBuilder("Equity") {}

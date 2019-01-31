@@ -48,6 +48,8 @@
 #include <ql/math/integrals/gaussianquadratures.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
 
+#include <qle/termstructures/correlationtermstructure.hpp>
+#include <qle/quotes/exceptionquote.hpp>
 
 namespace QuantLib {
     class CmsSpreadCoupon;
@@ -57,6 +59,31 @@ namespace QuantLib {
 namespace QuantExt {
 using namespace QuantLib;
 
+    //! base pricer for vanilla CMS spread coupons with a correlation surface
+    class CmsSpreadCouponPricer2 : public CmsSpreadCouponPricer {
+      public:
+        explicit CmsSpreadCouponPricer2(
+                           const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>())
+        : CmsSpreadCouponPricer(Handle<Quote>(
+            boost::make_shared<ExceptionQuote>("CmsSpreadPricer2 doesn't support 'correlation()', instead use 'correlation(Time, Strike)'"))),
+            correlationCurve_(correlation) {
+            registerWith(correlationCurve_);
+        }
+
+        Real correlation(Time t, Real strike = 1) const{
+            return correlationCurve_->correlation(t, strike);
+        }
+
+        void setCorrelationCurve(
+                         const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>()) {
+            unregisterWith(correlationCurve_);
+            correlationCurve_ = correlation;
+            registerWith(correlationCurve_);
+            update();
+        }
+      private:
+        Handle<CorrelationTermStructure> correlationCurve_;
+    };
 
     //! CMS spread - coupon pricer
     /*! The swap rate adjustments are computed using the given
@@ -77,12 +104,12 @@ using namespace QuantLib;
         http://ssrn.com/abstract=2686998
     */
 
-    class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer {
+    class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer2 {
 
       public:
         LognormalCmsSpreadPricer(
             const boost::shared_ptr<CmsCouponPricer> cmsPricer,
-            const Handle<Quote> &correlation,
+            const Handle<QuantExt::CorrelationTermStructure> &correlation,
             const Handle<YieldTermStructure> &couponDiscountCurve =
                 Handle<YieldTermStructure>(),
             const Size IntegrationPoints = 16,
@@ -99,6 +126,8 @@ using namespace QuantLib;
 
       private:
         void initialize(const FloatingRateCoupon &coupon);
+        Real rho() const { return std::max(std::min(correlation(fixingTime_), 0.9999),
+                            -0.9999); } 
         Real optionletPrice(Option::Type optionType, Real strike) const;
 
         Real integrand(const Real) const;
@@ -130,7 +159,6 @@ using namespace QuantLib;
         Real adjustedRate1_, adjustedRate2_;
         Real vol1_, vol2_;
         Real mu1_, mu2_;
-        Real rho_;
 
         bool inheritedVolatilityType_;
         VolatilityType volType_;
@@ -142,6 +170,7 @@ using namespace QuantLib;
 
         boost::shared_ptr<CmsCoupon> c1_, c2_;
     };
+
 }
 
 #endif

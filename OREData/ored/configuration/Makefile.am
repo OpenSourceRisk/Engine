@@ -22,6 +22,7 @@ libOREDataConfiguration_la_SOURCES = \
     yieldcurveconfig.cpp \
 	commoditycurveconfig.cpp \
 	commodityvolcurveconfig.cpp \
+	correlationcurveconfig.cpp \
 	inflationcapfloorvolcurveconfig.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -45,6 +46,7 @@ this_include_HEADERS = \
     fxspotconfig.hpp \
 	commoditycurveconfig.hpp \
 	commodityvolcurveconfig.hpp \
+	correlationcurveconfig.hpp \
 	inflationcapfloorvolcurveconfig.hpp
 
 all.hpp: Makefile.am
