@@ -27,21 +27,21 @@
 
 namespace QuantLib {
 
-
-
-    class Chile : public Calendar {
-      private:
-        class SseImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Santiago Stock Exchange"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { SSE    // Santiago Stock Exchange
-        };
-        Chile(Market m = SSE);
+class Chile : public Calendar {
+private:
+    class SseImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Santiago Stock Exchange"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        SSE // Santiago Stock Exchange
+    };
+    Chile(Market m = SSE);
+};
+
+} // namespace QuantLib
 
 #endif

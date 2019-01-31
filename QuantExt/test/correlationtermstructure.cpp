@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 
@@ -40,33 +40,26 @@ BOOST_AUTO_TEST_CASE(testFlatCorrelation) {
     Handle<Quote> hq(q);
     Handle<FlatCorrelation> flatCorr(boost::make_shared<FlatCorrelation>(0, NullCalendar(), hq, Actual365Fixed()));
 
+    // check we get the expected quote value
+    BOOST_CHECK_MESSAGE(flatCorr->correlation(1) == 0.02, "unexpected correlation value: " << flatCorr->correlation(1));
 
-    //check we get the expected quote value
-    BOOST_CHECK_MESSAGE(flatCorr->correlation(1) == 0.02,
-                        "unexpected correlation value: " << flatCorr->correlation(1));
-
-                        
     // move market data
     q->setValue(0.03);
 
-    BOOST_CHECK_MESSAGE(flatCorr->correlation(1) == 0.03,
-                        "unexpected correlation value: " << flatCorr->correlation(1));
+    BOOST_CHECK_MESSAGE(flatCorr->correlation(1) == 0.03, "unexpected correlation value: " << flatCorr->correlation(1));
 
-    //check failures
+    // check failures
 
     q->setValue(-1.1);
-    BOOST_CHECK_THROW(flatCorr->correlation(1) ,
-                        QuantLib::Error);
+    BOOST_CHECK_THROW(flatCorr->correlation(1), QuantLib::Error);
 
     q->setValue(1.1);
-    BOOST_CHECK_THROW(flatCorr->correlation(1) ,
-                        QuantLib::Error);
-    
+    BOOST_CHECK_THROW(flatCorr->correlation(1), QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
 
-    //build interpolated correlation curve
+    // build interpolated correlation curve
     std::vector<Time> times;
     std::vector<boost::shared_ptr<SimpleQuote> > simpleQuotes;
     std::vector<Handle<Quote> > quotes;
@@ -79,53 +72,41 @@ BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
         simpleQuotes.push_back(boost::make_shared<SimpleQuote>(corr));
         quotes.push_back(Handle<Quote>(simpleQuotes.back()));
 
-        
         times.push_back(i);
     }
 
-    Handle<PiecewiseLinearCorrelationCurve> interpCorr( boost::make_shared<PiecewiseLinearCorrelationCurve>(times,
-            quotes,
-            Actual365Fixed(),
-            NullCalendar()));
+    Handle<PiecewiseLinearCorrelationCurve> interpCorr(
+        boost::make_shared<PiecewiseLinearCorrelationCurve>(times, quotes, Actual365Fixed(), NullCalendar()));
 
-    
     Time t = 1;
-    while(t < numYears) {
+    while (t < numYears) {
         BOOST_CHECK_MESSAGE(interpCorr->correlation(t) == 0.1,
-                        "unexpected correlation value: " << interpCorr->correlation(t));
-        t+=0.5;
+                            "unexpected correlation value: " << interpCorr->correlation(t));
+        t += 0.5;
     }
 
-    //Now check quotes update 
+    // Now check quotes update
     for (Size i = 0; i < simpleQuotes.size(); ++i) {
         simpleQuotes[i]->setValue(1);
     }
 
     t = 1;
-    while(t < numYears) {
+    while (t < numYears) {
         BOOST_CHECK_MESSAGE(interpCorr->correlation(t) == 1,
-                        "unexpected correlation value: " << interpCorr->correlation(t));
-        t+=0.5;
+                            "unexpected correlation value: " << interpCorr->correlation(t));
+        t += 0.5;
     }
 
-
-    //Now check interpolation
+    // Now check interpolation
     for (Size i = 0; i < simpleQuotes.size(); ++i) {
-        simpleQuotes[i]->setValue(0.1+0.01*i);
+        simpleQuotes[i]->setValue(0.1 + 0.01 * i);
     }
-
 
     Real tol = 1.0E-8;
-    BOOST_CHECK_CLOSE(interpCorr->correlation(1.5), 0.105,
-                        tol);
-    BOOST_CHECK_CLOSE(interpCorr->correlation(2.5), 0.115,
-                        tol);
-    BOOST_CHECK_CLOSE(interpCorr->correlation(3.5), 0.125,
-                        tol);
-    BOOST_CHECK_CLOSE(interpCorr->correlation(11), 0.18,
-                        tol);
-
-
+    BOOST_CHECK_CLOSE(interpCorr->correlation(1.5), 0.105, tol);
+    BOOST_CHECK_CLOSE(interpCorr->correlation(2.5), 0.115, tol);
+    BOOST_CHECK_CLOSE(interpCorr->correlation(3.5), 0.125, tol);
+    BOOST_CHECK_CLOSE(interpCorr->correlation(11), 0.18, tol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

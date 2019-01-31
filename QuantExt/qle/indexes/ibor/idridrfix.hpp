@@ -29,7 +29,6 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/currencies/asia.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

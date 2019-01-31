@@ -1,15 +1,15 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
  The license is also available online at <http://opensourcerisk.org>
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -29,47 +29,44 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-    //! Correlation term structure
-    /*! This abstract class defines the interface of concrete
-        correlation term structures which will be derived from this one.
+//! Correlation term structure
+/*! This abstract class defines the interface of concrete
+    correlation term structures which will be derived from this one.
 
-        \ingroup termstructures
+    \ingroup termstructures
+*/
+class CorrelationTermStructure : public TermStructure {
+public:
+    //! \name Constructors
+    //@{
+    CorrelationTermStructure(const DayCounter& dc = DayCounter());
+    CorrelationTermStructure(const Date& referenceDate, const Calendar& cal = Calendar(),
+                             const DayCounter& dc = DayCounter());
+    CorrelationTermStructure(Natural settlementDays, const Calendar& cal, const DayCounter& dc = DayCounter());
+    //@}
+
+    //! \name Correlations
+    //@{
+    Real correlation(Time t, Real strike = Null<Real>(), bool extrapolate = false) const;
+    Real correlation(const Date& d, Real strike = Null<Real>(), bool extrapolate = false) const;
+    //@}
+
+    //! The minimum time for which the curve can return values
+    virtual Time minTime() const;
+
+protected:
+    /*! \name Calculations
+        This method must be implemented in derived classes to
+        perform the actual calculations.
     */
-    class CorrelationTermStructure : public TermStructure {
-    public:
-        //! \name Constructors
-        //@{
-        CorrelationTermStructure(const DayCounter& dc = DayCounter());
-        CorrelationTermStructure(const Date& referenceDate,
-            const Calendar& cal = Calendar(),
-            const DayCounter& dc = DayCounter());
-        CorrelationTermStructure(Natural settlementDays,
-            const Calendar& cal,
-            const DayCounter& dc = DayCounter());
-        //@}
+    //@{
+    //! Correlation calculation
+    virtual Real correlationImpl(Time t, Real strike) const = 0;
+    //@}
 
-        //! \name Correlations
-        //@{
-        Real correlation(Time t, Real strike = Null<Real>(), bool extrapolate = false) const;
-        Real correlation(const Date& d, Real strike = Null<Real>(), bool extrapolate = false) const;
-        //@}
-
-        //! The minimum time for which the curve can return values
-        virtual Time minTime() const;
-
-    protected:
-        /*! \name Calculations
-            This method must be implemented in derived classes to
-            perform the actual calculations.
-        */
-        //@{
-        //! Correlation calculation
-        virtual Real correlationImpl(Time t, Real strike) const = 0;
-        //@}
-
-        //! Extra time range check for minimum time, then calls TermStructure::checkRange
-        void checkRange(Time t, bool extrapolate) const;
-    };
-}
+    //! Extra time range check for minimum time, then calls TermStructure::checkRange
+    void checkRange(Time t, bool extrapolate) const;
+};
+} // namespace QuantExt
 
 #endif

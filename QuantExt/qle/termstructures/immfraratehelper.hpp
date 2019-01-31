@@ -26,7 +26,6 @@
 
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

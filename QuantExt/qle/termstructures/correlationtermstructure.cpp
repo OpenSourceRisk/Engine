@@ -22,15 +22,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CorrelationTermStructure::CorrelationTermStructure(const DayCounter& dc)
-    : TermStructure(dc) {}
+CorrelationTermStructure::CorrelationTermStructure(const DayCounter& dc) : TermStructure(dc) {}
 
-CorrelationTermStructure::CorrelationTermStructure(const Date& referenceDate,
-    const Calendar& cal, const DayCounter& dc)
+CorrelationTermStructure::CorrelationTermStructure(const Date& referenceDate, const Calendar& cal, const DayCounter& dc)
     : TermStructure(referenceDate, cal, dc) {}
 
-CorrelationTermStructure::CorrelationTermStructure(Natural settlementDays,
-    const Calendar& cal, const DayCounter& dc)
+CorrelationTermStructure::CorrelationTermStructure(Natural settlementDays, const Calendar& cal, const DayCounter& dc)
     : TermStructure(settlementDays, cal, dc) {}
 
 Real CorrelationTermStructure::correlation(Time t, Real strike, bool extrapolate) const {
@@ -38,7 +35,8 @@ Real CorrelationTermStructure::correlation(Time t, Real strike, bool extrapolate
 
     // Fail if correlation is negative
     Real correlation = correlationImpl(t, strike);
-    QL_REQUIRE(correlation >= -1 && correlation <= 1, "Correlation returned from CorrelationTermStructure must be between -1 and 1 (" << correlation << ")");
+    QL_REQUIRE(correlation >= -1 && correlation <= 1,
+               "Correlation returned from CorrelationTermStructure must be between -1 and 1 (" << correlation << ")");
 
     return correlation;
 }
@@ -53,12 +51,11 @@ Time CorrelationTermStructure::minTime() const {
 }
 
 void CorrelationTermStructure::checkRange(Time t, bool extrapolate) const {
-    QL_REQUIRE(extrapolate || allowsExtrapolation()
-        || t >= minTime() || close_enough(t, minTime()),
-        "time (" << t << ") is before min curve time (" << minTime() << ")");
+    QL_REQUIRE(extrapolate || allowsExtrapolation() || t >= minTime() || close_enough(t, minTime()),
+               "time (" << t << ") is before min curve time (" << minTime() << ")");
 
     // Now, do the usual TermStructure checks
     TermStructure::checkRange(t, extrapolate);
 }
 
-}
+} // namespace QuantExt

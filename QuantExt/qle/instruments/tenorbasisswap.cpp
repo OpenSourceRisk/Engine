@@ -17,9 +17,9 @@
 */
 
 #include <ql/cashflows/iborcoupon.hpp>
+#include <ql/indexes/ibor/libor.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
-#include <ql/indexes/ibor/libor.hpp>
 
 #include <qle/instruments/tenorbasisswap.hpp>
 
@@ -80,8 +80,7 @@ TenorBasisSwap::TenorBasisSwap(const Date& effectiveDate, Real nominal, const Pe
     Date terminationDate = effectiveDate + swapTenor;
 
     boost::shared_ptr<Libor> longIndexAsLibor = boost::dynamic_pointer_cast<Libor>(longIndex_);
-    longIndexCalendar_ =
-        longIndexAsLibor != NULL ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
+    longIndexCalendar_ = longIndexAsLibor != NULL ? longIndexAsLibor->jointCalendar() : longIndex_->fixingCalendar();
     boost::shared_ptr<Libor> shortIndexAsLibor = boost::dynamic_pointer_cast<Libor>(shortIndex_);
     shortIndexCalendar_ =
         shortIndexAsLibor != NULL ? shortIndexAsLibor->jointCalendar() : shortIndex_->fixingCalendar();

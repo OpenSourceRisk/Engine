@@ -18,7 +18,7 @@
 
 /*! \file qle/instruments/commodityforward.hpp
     \brief Instrument representing a commodity forward contract
-    
+
     \ingroup instruments
 */
 
@@ -32,14 +32,14 @@
 namespace QuantExt {
 
 /*! Instrument representing a commodity forward contract.
-    
+
     \ingroup instruments
 */
 class CommodityForward : public QuantLib::Instrument {
 public:
     class arguments;
     class engine;
-    
+
     //! \name Constructors
     //@{
     /*! \param name         The commodity name.
@@ -49,12 +49,8 @@ public:
         \param maturityDate Maturity date of forward
         \param strike       The agreed forward price
     */
-    CommodityForward(const std::string& name, 
-        const QuantLib::Currency& currency,
-        QuantLib::Position::Type position,
-        QuantLib::Real quantity,
-        const QuantLib::Date& maturityDate,
-        QuantLib::Real strike);
+    CommodityForward(const std::string& name, const QuantLib::Currency& currency, QuantLib::Position::Type position,
+                     QuantLib::Real quantity, const QuantLib::Date& maturityDate, QuantLib::Real strike);
     //@}
 
     //! \name Instrument interface
@@ -96,6 +92,6 @@ public:
 
 //! \ingroup instruments
 class CommodityForward::engine : public QuantLib::GenericEngine<CommodityForward::arguments, Instrument::results> {};
-}
+} // namespace QuantExt
 
 #endif

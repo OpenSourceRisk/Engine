@@ -46,4 +46,4 @@ void EquityCouponPricer::initialize(const EquityCoupon& coupon) {
     dividendFactor_ = coupon.dividendFactor();
 }
 
-} // QuantExt
+} // namespace QuantExt

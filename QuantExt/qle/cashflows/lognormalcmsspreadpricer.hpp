@@ -45,132 +45,127 @@
 #include <ql/cashflows/cmscoupon.hpp>
 #include <ql/experimental/coupons/cmsspreadcoupon.hpp>
 #include <ql/experimental/coupons/swapspreadindex.hpp>
-#include <ql/math/integrals/gaussianquadratures.hpp>
 #include <ql/math/distributions/normaldistribution.hpp>
+#include <ql/math/integrals/gaussianquadratures.hpp>
 
-#include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/quotes/exceptionquote.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 
 namespace QuantLib {
-    class CmsSpreadCoupon;
-    class YieldTermStructure;
-}
+class CmsSpreadCoupon;
+class YieldTermStructure;
+} // namespace QuantLib
 
 namespace QuantExt {
 using namespace QuantLib;
 
-    //! base pricer for vanilla CMS spread coupons with a correlation surface
-    class CmsSpreadCouponPricer2 : public CmsSpreadCouponPricer {
-      public:
-        explicit CmsSpreadCouponPricer2(
-                           const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>())
-        : CmsSpreadCouponPricer(Handle<Quote>(
-            boost::make_shared<ExceptionQuote>("CmsSpreadPricer2 doesn't support 'correlation()', instead use 'correlation(Time, Strike)'"))),
-            correlationCurve_(correlation) {
-            registerWith(correlationCurve_);
-        }
+//! base pricer for vanilla CMS spread coupons with a correlation surface
+class CmsSpreadCouponPricer2 : public CmsSpreadCouponPricer {
+public:
+    explicit CmsSpreadCouponPricer2(
+        const Handle<CorrelationTermStructure>& correlation = Handle<CorrelationTermStructure>())
+        : CmsSpreadCouponPricer(Handle<Quote>(boost::make_shared<ExceptionQuote>(
+              "CmsSpreadPricer2 doesn't support 'correlation()', instead use 'correlation(Time, Strike)'"))),
+          correlationCurve_(correlation) {
+        registerWith(correlationCurve_);
+    }
 
-        Real correlation(Time t, Real strike = 1) const{
-            return correlationCurve_->correlation(t, strike);
-        }
+    Real correlation(Time t, Real strike = 1) const { return correlationCurve_->correlation(t, strike); }
 
-        void setCorrelationCurve(
-                         const Handle<CorrelationTermStructure> &correlation = Handle<CorrelationTermStructure>()) {
-            unregisterWith(correlationCurve_);
-            correlationCurve_ = correlation;
-            registerWith(correlationCurve_);
-            update();
-        }
-      private:
-        Handle<CorrelationTermStructure> correlationCurve_;
-    };
+    void setCorrelationCurve(const Handle<CorrelationTermStructure>& correlation = Handle<CorrelationTermStructure>()) {
+        unregisterWith(correlationCurve_);
+        correlationCurve_ = correlation;
+        registerWith(correlationCurve_);
+        update();
+    }
 
-    //! CMS spread - coupon pricer
-    /*! The swap rate adjustments are computed using the given
-        volatility structures for the underlyings in every case
-        (w.r.t. volatility type and shift).
+private:
+    Handle<CorrelationTermStructure> correlationCurve_;
+};
 
-        For the bivariate spread model, the volatility type and
-        the shifts can be inherited (default), or explicitly
-        specified. In the latter case the type, and (if lognormal)
-        the shifts must be given (or are defaulted to zero, if not
-        given).
+//! CMS spread - coupon pricer
+/*! The swap rate adjustments are computed using the given
+    volatility structures for the underlyings in every case
+    (w.r.t. volatility type and shift).
 
-        References:
+    For the bivariate spread model, the volatility type and
+    the shifts can be inherited (default), or explicitly
+    specified. In the latter case the type, and (if lognormal)
+    the shifts must be given (or are defaulted to zero, if not
+    given).
 
-        Brigo, Mercurio: Interst Rate Models - Theory and Practice,
-        2nd Edition, Springer, 2006, chapter 13.6.2
+    References:
 
-        http://ssrn.com/abstract=2686998
-    */
+    Brigo, Mercurio: Interst Rate Models - Theory and Practice,
+    2nd Edition, Springer, 2006, chapter 13.6.2
 
-    class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer2 {
+    http://ssrn.com/abstract=2686998
+*/
 
-      public:
-        LognormalCmsSpreadPricer(
-            const boost::shared_ptr<CmsCouponPricer> cmsPricer,
-            const Handle<QuantExt::CorrelationTermStructure> &correlation,
-            const Handle<YieldTermStructure> &couponDiscountCurve =
-                Handle<YieldTermStructure>(),
-            const Size IntegrationPoints = 16,
-            const boost::optional<VolatilityType> volatilityType= boost::none,
-            const Real shift1 = Null<Real>(), const Real shift2 = Null<Real>());
+class LognormalCmsSpreadPricer : public CmsSpreadCouponPricer2 {
 
-        /* */
-        virtual Real swapletPrice() const;
-        virtual Rate swapletRate() const;
-        virtual Real capletPrice(Rate effectiveCap) const;
-        virtual Rate capletRate(Rate effectiveCap) const;
-        virtual Real floorletPrice(Rate effectiveFloor) const;
-        virtual Rate floorletRate(Rate effectiveFloor) const;
+public:
+    LognormalCmsSpreadPricer(const boost::shared_ptr<CmsCouponPricer> cmsPricer,
+                             const Handle<QuantExt::CorrelationTermStructure>& correlation,
+                             const Handle<YieldTermStructure>& couponDiscountCurve = Handle<YieldTermStructure>(),
+                             const Size IntegrationPoints = 16,
+                             const boost::optional<VolatilityType> volatilityType = boost::none,
+                             const Real shift1 = Null<Real>(), const Real shift2 = Null<Real>());
 
-      private:
-        void initialize(const FloatingRateCoupon &coupon);
-        Real rho() const { return std::max(std::min(correlation(fixingTime_), 0.9999),
-                            -0.9999); } 
-        Real optionletPrice(Option::Type optionType, Real strike) const;
+    /* */
+    virtual Real swapletPrice() const;
+    virtual Rate swapletRate() const;
+    virtual Real capletPrice(Rate effectiveCap) const;
+    virtual Rate capletRate(Rate effectiveCap) const;
+    virtual Real floorletPrice(Rate effectiveFloor) const;
+    virtual Rate floorletRate(Rate effectiveFloor) const;
 
-        Real integrand(const Real) const;
-        Real integrand_normal(const Real) const;
+private:
+    void initialize(const FloatingRateCoupon& coupon);
+    Real rho() const { return std::max(std::min(correlation(fixingTime_), 0.9999), -0.9999); }
+    Real optionletPrice(Option::Type optionType, Real strike) const;
 
-        class integrand_f;
-        friend class integrand_f;
+    Real integrand(const Real) const;
+    Real integrand_normal(const Real) const;
 
-        boost::shared_ptr<CmsCouponPricer> cmsPricer_;
+    class integrand_f;
+    friend class integrand_f;
 
-        Handle<YieldTermStructure> couponDiscountCurve_;
+    boost::shared_ptr<CmsCouponPricer> cmsPricer_;
 
-        const CmsSpreadCoupon *coupon_;
+    Handle<YieldTermStructure> couponDiscountCurve_;
 
-        Date today_, fixingDate_, paymentDate_;
+    const CmsSpreadCoupon* coupon_;
 
-        Real fixingTime_;
+    Date today_, fixingDate_, paymentDate_;
 
-        Real gearing_, spread_;
-        Real spreadLegValue_;
-        Real discount_;
+    Real fixingTime_;
 
-        boost::shared_ptr<SwapSpreadIndex> index_;
+    Real gearing_, spread_;
+    Real spreadLegValue_;
+    Real discount_;
 
-        boost::shared_ptr<CumulativeNormalDistribution> cnd_;
-        boost::shared_ptr<GaussianQuadrature> integrator_;
+    boost::shared_ptr<SwapSpreadIndex> index_;
 
-        Real swapRate1_, swapRate2_, gearing1_, gearing2_;
-        Real adjustedRate1_, adjustedRate2_;
-        Real vol1_, vol2_;
-        Real mu1_, mu2_;
+    boost::shared_ptr<CumulativeNormalDistribution> cnd_;
+    boost::shared_ptr<GaussianQuadrature> integrator_;
 
-        bool inheritedVolatilityType_;
-        VolatilityType volType_;
-        Real shift1_, shift2_;
+    Real swapRate1_, swapRate2_, gearing1_, gearing2_;
+    Real adjustedRate1_, adjustedRate2_;
+    Real vol1_, vol2_;
+    Real mu1_, mu2_;
 
-        mutable Real phi_, a_, b_, s1_, s2_, m1_, m2_, v1_, v2_, k_;
-        mutable Real alpha_, psi_;
-        mutable Option::Type optionType_;
+    bool inheritedVolatilityType_;
+    VolatilityType volType_;
+    Real shift1_, shift2_;
 
-        boost::shared_ptr<CmsCoupon> c1_, c2_;
-    };
+    mutable Real phi_, a_, b_, s1_, s2_, m1_, m2_, v1_, v2_, k_;
+    mutable Real alpha_, psi_;
+    mutable Option::Type optionType_;
 
-}
+    boost::shared_ptr<CmsCoupon> c1_, c2_;
+};
+
+} // namespace QuantExt
 
 #endif

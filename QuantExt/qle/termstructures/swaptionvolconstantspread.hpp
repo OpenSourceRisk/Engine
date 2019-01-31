@@ -30,7 +30,6 @@
 
 #include <iostream>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

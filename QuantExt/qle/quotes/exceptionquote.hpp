@@ -26,12 +26,11 @@
 
 #include <ql/quote.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
 //! A dummy quote class that throws an exception when value is called.
-/*! 
+/*!
     \ingroup quotes
 */
 class ExceptionQuote : public Quote, public Observer {
@@ -39,12 +38,21 @@ public:
     ExceptionQuote(std::string exception = "you've hit an 'ExceptionQuote'") : exception_(exception) {}
     //! \name Inspectors
     //@{
-    Real quote() const { QL_FAIL(exception_); return 0; }
+    Real quote() const {
+        QL_FAIL(exception_);
+        return 0;
+    }
     //@}
     //! \name Quote interface
     //@{
-    Real value() const { QL_FAIL(exception_); return 0; }
-    bool isValid() const { QL_FAIL(exception_); return false; }
+    Real value() const {
+        QL_FAIL(exception_);
+        return 0;
+    }
+    bool isValid() const {
+        QL_FAIL(exception_);
+        return false;
+    }
     //@}
     //! \name Observer interface
     //@{

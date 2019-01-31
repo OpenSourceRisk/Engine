@@ -34,7 +34,6 @@
 
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

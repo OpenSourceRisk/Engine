@@ -28,7 +28,6 @@
 
 #include <ql/termstructures/yieldtermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

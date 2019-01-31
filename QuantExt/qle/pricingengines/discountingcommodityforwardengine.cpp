@@ -26,10 +26,11 @@ using namespace QuantLib;
 namespace QuantExt {
 
 DiscountingCommodityForwardEngine::DiscountingCommodityForwardEngine(const Handle<PriceTermStructure>& priceCurve,
-    const Handle<YieldTermStructure>& discountCurve, boost::optional<bool> includeSettlementDateFlows,
-    const Date& npvDate)
-    : priceCurve_(priceCurve), discountCurve_(discountCurve), 
-      includeSettlementDateFlows_(includeSettlementDateFlows), npvDate_(npvDate) {
+                                                                     const Handle<YieldTermStructure>& discountCurve,
+                                                                     boost::optional<bool> includeSettlementDateFlows,
+                                                                     const Date& npvDate)
+    : priceCurve_(priceCurve), discountCurve_(discountCurve), includeSettlementDateFlows_(includeSettlementDateFlows),
+      npvDate_(npvDate) {
 
     registerWith(priceCurve_);
     registerWith(discountCurve_);
@@ -40,8 +41,7 @@ void DiscountingCommodityForwardEngine::calculate() const {
     Date npvDate = npvDate_ == Null<Date>() ? priceCurve_->referenceDate() : npvDate_;
 
     results_.value = 0.0;
-    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(
-        Date(), includeSettlementDateFlows_)) {
+    if (!detail::simple_event(arguments_.maturityDate).hasOccurred(Date(), includeSettlementDateFlows_)) {
 
         Real buySellIndicator = arguments_.position == Position::Long ? 1.0 : -1.0;
 
@@ -54,4 +54,4 @@ void DiscountingCommodityForwardEngine::calculate() const {
     }
 }
 
-}
+} // namespace QuantExt

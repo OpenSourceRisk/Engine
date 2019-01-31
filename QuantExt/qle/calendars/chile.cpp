@@ -20,43 +20,41 @@
 
 namespace QuantLib {
 
-    Chile::Chile(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new Chile::SseImpl);
-        impl_ = impl;
-    }
-
-    // Missing Peter & Paul, Independence Day, Armed Forces Day and Reformation
-    // Day
-    bool Chile::SseImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-        if (isWeekend(w)
-            // New Years Day
-            || ((d == 1 || (d == 2 && w == Monday)) && 
-                m == January)
-            // Good Friday
-            || (dd == em-3)
-            // Labour Day
-            || (d == 1 && m == May)
-            // Battle of Iquique
-            || (d == 21 && m == May)
-            // Virgin del Carmen
-            || (d == 16 && m == July)
-            // Assumption Day
-            || (d == 15 && m == August)
-            // All Saints
-            || (d == 1 && m == November)
-            // Immaculate Conception
-            || (d == 8 && m == December)
-            // Christmas
-            || (d == 25 && m == December))
-            return false;
-        return true;
-    }
-
+Chile::Chile(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new Chile::SseImpl);
+    impl_ = impl;
 }
 
+// Missing Peter & Paul, Independence Day, Armed Forces Day and Reformation
+// Day
+bool Chile::SseImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+    if (isWeekend(w)
+        // New Years Day
+        || ((d == 1 || (d == 2 && w == Monday)) && m == January)
+        // Good Friday
+        || (dd == em - 3)
+        // Labour Day
+        || (d == 1 && m == May)
+        // Battle of Iquique
+        || (d == 21 && m == May)
+        // Virgin del Carmen
+        || (d == 16 && m == July)
+        // Assumption Day
+        || (d == 15 && m == August)
+        // All Saints
+        || (d == 1 && m == November)
+        // Immaculate Conception
+        || (d == 8 && m == December)
+        // Christmas
+        || (d == 25 && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantLib

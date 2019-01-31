@@ -18,8 +18,8 @@
 
 #include "utilities.hpp"
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/math/array.hpp>
@@ -524,11 +524,3 @@ BOOST_AUTO_TEST_CASE(testFxBsParametrizations) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-
-
-
-
-
-
-
-

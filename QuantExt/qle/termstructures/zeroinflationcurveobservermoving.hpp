@@ -30,7 +30,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/inflationtermstructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

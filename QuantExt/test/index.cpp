@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currency.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
@@ -78,29 +78,29 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
     Period pd(3, Months);
 
     IndTestData data[] = { { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
-                                  { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
-                                  { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
-                                  { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
-                                  { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name() },
-                                  { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name() },
-                                  { DKKOis(), "DKK-DKKOIS", Denmark().name(), DKKCurrency().name() },
-                                  { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
-                                  { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
-                                  { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
-                                  { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
-                                  { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
-                                  { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
-                                  { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
-                                  { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
-                                  { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
-                                  { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
-                                  { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
-                                  { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
-                                  { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
-                                  { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
-                                  { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
-                                  { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
-                                  { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
+                           { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
+                           { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
+                           { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
+                           { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name() },
+                           { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name() },
+                           { DKKOis(), "DKK-DKKOIS", Denmark().name(), DKKCurrency().name() },
+                           { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
+                           { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
+                           { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
+                           { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
+                           { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
+                           { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
+                           { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
+                           { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
+                           { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
+                           { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
+                           { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
+                           { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
+                           { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
+                           { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
+                           { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
+                           { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
+                           { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
 
     Size size = sizeof(data) / sizeof(data[0]);
 

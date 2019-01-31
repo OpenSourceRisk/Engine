@@ -23,69 +23,68 @@
 #ifndef quantext_cms_calibration_helper_h
 #define quantext_cms_calibration_helper_h
 
+#include <list>
+#include <ql/indexes/swapindex.hpp>
+#include <ql/instruments/capfloor.hpp>
+#include <ql/models/calibrationhelper.hpp>
+#include <ql/patterns/lazyobject.hpp>
 #include <ql/quote.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <ql/models/calibrationhelper.hpp>
-#include <ql/instruments/capfloor.hpp>
-#include <ql/patterns/lazyobject.hpp>
-#include <ql/instruments/capfloor.hpp>
-#include <ql/indexes/swapindex.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
-#include <list>
 
 namespace QuantExt {
 using namespace QuantLib;
-    class CmsCapHelper : public LazyObject, public CalibrationHelperBase {
-      public:
-        CmsCapHelper(Date asof, boost::shared_ptr<SwapIndex>& index1, boost::shared_ptr<SwapIndex>& index2, 
-                            const Handle<YieldTermStructure>& yts, const Handle<Quote>& price, const Handle<Quote>& correlation, const Period& length, 
-                            const Period& forwardStart, const Period& spotDays, const Period& cmsTenor, Natural fixingDays,
-                            const Calendar& calendar, const DayCounter& daycounter, const BusinessDayConvention& convention,
-                            boost::shared_ptr<FloatingRateCouponPricer>& pricer, boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer)
-        : asof_(asof), index1_(index1), index2_(index2), discountCurve_(yts), marketValue_(price->value()), correlation_(correlation), length_(length), 
-        forwardStart_(forwardStart), spotDays_(spotDays), cmsTenor_(cmsTenor), fixingDays_(fixingDays), 
-        calendar_(calendar), dayCounter_(daycounter), convention_(convention), pricer_(pricer), cmsPricer_(cmsPricer) {
+class CmsCapHelper : public LazyObject, public CalibrationHelperBase {
+public:
+    CmsCapHelper(Date asof, boost::shared_ptr<SwapIndex>& index1, boost::shared_ptr<SwapIndex>& index2,
+                 const Handle<YieldTermStructure>& yts, const Handle<Quote>& price, const Handle<Quote>& correlation,
+                 const Period& length, const Period& forwardStart, const Period& spotDays, const Period& cmsTenor,
+                 Natural fixingDays, const Calendar& calendar, const DayCounter& daycounter,
+                 const BusinessDayConvention& convention, boost::shared_ptr<FloatingRateCouponPricer>& pricer,
+                 boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer)
+        : asof_(asof), index1_(index1), index2_(index2), discountCurve_(yts), marketValue_(price->value()),
+          correlation_(correlation), length_(length), forwardStart_(forwardStart), spotDays_(spotDays),
+          cmsTenor_(cmsTenor), fixingDays_(fixingDays), calendar_(calendar), dayCounter_(daycounter),
+          convention_(convention), pricer_(pricer), cmsPricer_(cmsPricer) {
 
-            registerWith(correlation_);
-        }
+        registerWith(correlation_);
+    }
 
-        void performCalculations() const ;
+    void performCalculations() const;
 
-        //! returns the actual price of the instrument (from volatility)
-        QuantLib::Real marketValue() const { return marketValue_; }
+    //! returns the actual price of the instrument (from volatility)
+    QuantLib::Real marketValue() const { return marketValue_; }
 
-        //! returns the price of the instrument according to the model
-        QuantLib::Real modelValue() const;
+    //! returns the price of the instrument according to the model
+    QuantLib::Real modelValue() const;
 
-        //! returns the error resulting from the model valuation
-        QuantLib::Real calibrationError() {return marketValue() - modelValue(); }
+    //! returns the error resulting from the model valuation
+    QuantLib::Real calibrationError() { return marketValue() - modelValue(); }
 
+protected:
+    Date asof_;
+    boost::shared_ptr<SwapIndex> index1_;
+    boost::shared_ptr<SwapIndex> index2_;
+    Handle<YieldTermStructure> discountCurve_;
+    Real marketValue_;
+    Handle<Quote> correlation_;
+    Period length_;
 
-      protected:
-        Date asof_;
-        boost::shared_ptr<SwapIndex> index1_;
-        boost::shared_ptr<SwapIndex> index2_;
-        Handle<YieldTermStructure> discountCurve_;
-        Real marketValue_;
-        Handle<Quote> correlation_;
-        Period length_;
+    Period forwardStart_;
+    Period spotDays_;
+    Period cmsTenor_;
+    Natural fixingDays_;
+    Calendar calendar_;
+    DayCounter dayCounter_;
+    BusinessDayConvention convention_;
 
-        Period forwardStart_;
-        Period spotDays_;
-        Period cmsTenor_;
-        Natural fixingDays_;
-        Calendar calendar_;
-        DayCounter dayCounter_;
-        BusinessDayConvention convention_;
+    boost::shared_ptr<FloatingRateCouponPricer> pricer_;
+    boost::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer_;
 
-        boost::shared_ptr<FloatingRateCouponPricer> pricer_;
-        boost::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer_;
+private:
+    mutable boost::shared_ptr<QuantLib::Swap> cap_;
+};
 
-      private:
-        mutable boost::shared_ptr<QuantLib::Swap> cap_;
-    };
-
-}
-
+} // namespace QuantExt
 
 #endif

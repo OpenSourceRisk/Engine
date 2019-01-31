@@ -27,7 +27,6 @@
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using std::vector;

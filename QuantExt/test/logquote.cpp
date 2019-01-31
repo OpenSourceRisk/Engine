@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <qle/quotes/logquote.hpp>
 
@@ -25,7 +25,7 @@ using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using QuantExt::LogQuote;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture) 
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(LogQuoteTest)
 
