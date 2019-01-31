@@ -6,6 +6,7 @@ configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
+configuration/correlationcurveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
@@ -21,6 +22,7 @@ marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
+marketdata/correlationcurve.cpp
 marketdata/csvloader.cpp
 marketdata/curveloader.cpp
 marketdata/curvespec.cpp
@@ -119,6 +121,7 @@ configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
 configuration/conventions.hpp
+configuration/correlationcurveconfig.hpp
 configuration/curveconfig.hpp
 configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
@@ -137,6 +140,7 @@ marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
+marketdata/correlationcurve.hpp
 marketdata/csvloader.hpp
 marketdata/curveloader.hpp
 marketdata/curvespec.hpp
