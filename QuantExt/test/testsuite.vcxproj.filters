@@ -110,6 +110,9 @@
     <ClCompile Include="bondoption.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="cpicapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -120,48 +123,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="currency.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="discountcurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="index.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="logquote.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="analyticlgmswaptionengine.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodel.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodel2.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodelparametrizations.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamicblackvoltermstructure.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamicswaptionvolmatrix.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="blackvariancecurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cashflow.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="swaptionvolatilityconverter.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="swaptionmarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
@@ -171,67 +132,7 @@
     <ClInclude Include="capfloormarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="optionletstripper.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="deposit.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ratehelpers.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="stabilisedglls.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="survivalprobabilitycurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="swaptionvolconstantspread.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fxvolsmile.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="payment.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="utilities.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="deltagammavar.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="pricecurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="commodityforward.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="discountingcommodityforwardengine.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="pricetermstructureadapter.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="bonds.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="qle_calendars.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="discountratiomodifiedcurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossccyfixfloatswap.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossccyfixfloatswaphelper.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossccybasismtmresetswaphelper.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossccybasismtmresetswap.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

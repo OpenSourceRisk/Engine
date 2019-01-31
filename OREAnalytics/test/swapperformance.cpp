@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -49,7 +51,6 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <test/swapperformance.hpp>
 #include <test/testmarket.hpp>
 
 using namespace std;
@@ -60,7 +61,11 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SwapPerformaceTest)
 
 // Returns an int in the interval [min, max]. Inclusive.
 inline unsigned long randInt(MersenneTwisterUniformRng& rng, Size min, Size max) {
@@ -478,7 +483,7 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     return res;
 }
 
-void SwapPerformanceTest::testSwapPerformanceNoneObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceNoneObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (None observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -513,7 +518,7 @@ void SwapPerformanceTest::testSwapPerformanceNoneObs() {
     }
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceNoneObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceNoneObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (None observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -543,7 +548,7 @@ void SwapPerformanceTest::testSingleSwapPerformanceNoneObs() {
     }
 }
 
-void SwapPerformanceTest::testSwapPerformanceDisableObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceDisableObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Disable observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Disable;
@@ -578,7 +583,7 @@ void SwapPerformanceTest::testSwapPerformanceDisableObs() {
     }
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceDisableObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceDisableObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Disable observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Disable;
@@ -608,7 +613,7 @@ void SwapPerformanceTest::testSingleSwapPerformanceDisableObs() {
     }
 }
 
-void SwapPerformanceTest::testSwapPerformanceDeferObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceDeferObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Defer observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Defer;
@@ -643,7 +648,7 @@ void SwapPerformanceTest::testSwapPerformanceDeferObs() {
     }
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceDeferObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceDeferObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Defer observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Defer;
@@ -673,7 +678,7 @@ void SwapPerformanceTest::testSingleSwapPerformanceDeferObs() {
     }
 }
 
-void SwapPerformanceTest::testSwapPerformanceUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Unregister observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Unregister;
@@ -708,7 +713,7 @@ void SwapPerformanceTest::testSwapPerformanceUnregisterObs() {
     }
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Unregister observation mode)");
     // Set the Observation mode here
     ObservationMode::Mode om = ObservationMode::Mode::Unregister;
@@ -738,21 +743,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
     }
 }
 
-test_suite* SwapPerformanceTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SwapPerformanceTest");
-    // (2017-03-28) The single swap performance tests should each complete within 20-25 seconds
-    // The portfolio swap performance tests should completed within 400-700 seconds
-    // Unregister and Disable should be faster than None and Defer
-    // The actual run-times are not checked with any unit test assertions
-    // This is because the actual run-times may vary depending upon the machine specs and other competing processes
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceNoneObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceDisableObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceDeferObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceNoneObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceDisableObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceDeferObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceUnregisterObs));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

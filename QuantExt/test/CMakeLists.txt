@@ -5,6 +5,7 @@ blackvariancecurve.cpp
 bonds.cpp
 cashflow.cpp
 commodityforward.cpp
+cpicapfloor.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp

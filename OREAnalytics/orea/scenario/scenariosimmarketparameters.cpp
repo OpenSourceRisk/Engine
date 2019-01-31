@@ -322,7 +322,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityCurveTenors_ != rhs.commodityCurveTenors_ || commodityCurveDayCounters_ != rhs.commodityCurveDayCounters_ ||
         commodityVolSimulate_ != rhs.commodityVolSimulate_ || commodityVolDecayMode_ != rhs.commodityVolDecayMode_ ||
         commodityVolNames_ != rhs.commodityVolNames_ || commodityVolExpiries_ != rhs.commodityVolExpiries_ ||
-        commodityVolMoneyness_ != rhs.commodityVolMoneyness_ || commodityVolDayCounters_ != rhs.commodityVolDayCounters_) {
+        commodityVolMoneyness_ != rhs.commodityVolMoneyness_ || commodityVolDayCounters_ != rhs.commodityVolDayCounters_ ||
+        cprSimulate_ != rhs.cprSimulate_) {
         return false;
     } else {
         return true;
@@ -682,8 +683,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading Securities");
     nodeChild = XMLUtils::getChildNode(node, "Securities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        // TODO 1) this should be renamed to SimulateSpread?
+        //      2) add security recovery rates here separate from default curves?
         securitySpreadsSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false);
         securities_ = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
+        // if SimulateCPR is not given, we set it to false
+        XMLNode* cprNode = XMLUtils::getChildNode(nodeChild, "SimulateCPR");
+        cprSimulate_ = cprNode ? parseBool(XMLUtils::getNodeValue(cprNode)) : false;
     }
 
     DLOG("Loading BaseCorrelations");

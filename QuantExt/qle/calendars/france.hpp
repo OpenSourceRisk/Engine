@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,24 +16,31 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file test/scenariosimmarket.hpp
-    \brief scenario market test
-    \ingroup tests
+/*! \file france.hpp
+    \brief French calendar
 */
 
-#pragma once
+#ifndef quantext_french_calendar_hpp
+#define quantext_french_calendar_hpp
 
-#include <boost/test/unit_test.hpp>
+#include <ql/time/calendar.hpp>
 
-namespace testsuite {
+namespace QuantExt {
+using namespace QuantLib;
 
-//! Test ScenarioSimMarket setup
-/*!
-  \ingroup tests
-*/
-class ScenarioSimMarketTest {
-public:
-    static void testScenarioSimMarket();
-    static boost::unit_test_framework::test_suite* suite();
-};
-} // namespace testsuite
+  class France : public Calendar {
+      private:
+        class SettlementImpl : public Calendar::WesternImpl {
+          public:
+            std::string name() const { return "French settlement"; }
+            bool isBusinessDay(const Date&) const;
+        };
+      public:
+        enum Market { Settlement    // generic settlement calendar
+        };
+        France(Market m = Settlement);
+    };
+
+}
+
+#endif

@@ -170,6 +170,18 @@ Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface
                                                        "inflation cap floor price surface");
 }
 
+Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapVolatilitySurface(const string& indexName, 
+                                                                          const string& configuration) const { 
+    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapVolatilitySurfaces_, indexName, configuration, 
+                                                "cpi cap volatility surface"); 
+} 
+ 
+Handle<CPIVolatilitySurface> MarketImpl::cpiInflationFloorVolatilitySurface(const string& indexName, 
+                                                                            const string& configuration) const { 
+    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationFloorVolatilitySurfaces_, indexName, configuration, 
+                                                "cpi floor volatility surface"); 
+} 
+
 Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
                                                                                  const string& configuration) const {
     return lookup<Handle<YoYCapFloorTermPriceSurface>>(yoyInflationCapFloorPriceSurfaces_, indexName, configuration,
@@ -216,6 +228,10 @@ Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodi
 
 Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName, const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
+}
+
+Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {
+    return lookup<Handle<Quote>>(cprs_, securityID, configuration, "cpr");
 }
 
 void MarketImpl::addSwapIndex(const string& swapIndex, const string& discountIndex, const string& configuration) {

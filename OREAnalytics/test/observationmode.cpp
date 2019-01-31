@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -49,8 +51,7 @@
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <test/observationmode.hpp>
-#include <test/testmarket.hpp>
+#include "testmarket.hpp"
 
 using namespace std;
 using namespace QuantLib;
@@ -60,7 +61,7 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
 
 boost::shared_ptr<data::Conventions> conventions() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -347,7 +348,11 @@ void simulation(string dateGridString, bool checkFixings) {
     }
 }
 
-void ObservationModeTest::testDisableShort() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(ObservationModeTest)
+		
+BOOST_AUTO_TEST_CASE(testDisableShort) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Short Grid, No Fixing Checks");
@@ -357,7 +362,7 @@ void ObservationModeTest::testDisableShort() {
     simulation("10,1Y", true);
 }
 
-void ObservationModeTest::testDisableLong() {
+BOOST_AUTO_TEST_CASE(testDisableLong) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Disable, Long Grid, No Fixing Checks");
@@ -367,7 +372,7 @@ void ObservationModeTest::testDisableLong() {
     simulation("11,1Y", true);
 }
 
-void ObservationModeTest::testNone() {
+BOOST_AUTO_TEST_CASE(testNone) {
     ObservationMode::instance().setMode(ObservationMode::Mode::None);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode None, Short Grid, No Fixing Checks");
@@ -383,7 +388,7 @@ void ObservationModeTest::testNone() {
     simulation("11,1Y", true);
 }
 
-void ObservationModeTest::testUnregister() {
+BOOST_AUTO_TEST_CASE(testUnregister) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Unregister);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Unregister, Long Grid, No Fixing Checks");
@@ -399,7 +404,7 @@ void ObservationModeTest::testUnregister() {
     simulation("10,1Y", true);
 }
 
-void ObservationModeTest::testDefer() {
+BOOST_AUTO_TEST_CASE(testDefer) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Defer);
 
     BOOST_TEST_MESSAGE("Testing Observation Mode Defer, Long Grid, No Fixing Checks");
@@ -415,14 +420,6 @@ void ObservationModeTest::testDefer() {
     simulation("10,1Y", true);
 }
 
-test_suite* ObservationModeTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ObservationModeTest");
-    // Set the Observation mode here
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testNone));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testUnregister));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDefer));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableShort));
-    suite->add(BOOST_TEST_CASE(&ObservationModeTest::testDisableLong));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

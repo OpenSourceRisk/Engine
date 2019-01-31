@@ -38,6 +38,7 @@
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
       <xs:element type="varianceSwapData" name="VarianceSwapData"/>
+      <xs:element type="cpiCapFloorData" name="CPICapFloorData"/>
     </xs:choice>
   </xs:group>
 
@@ -426,7 +427,8 @@
       <xs:enumeration value="CommodityOption"/>
       <xs:enumeration value="Bond"/>
       <xs:enumeration value="CreditDefaultSwap"/>
-      <xs:enumeration value="CMS"/>
+      <xs:enumeration value="CMS"/>      
+      <xs:enumeration value="CPICapFloor"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -592,6 +594,25 @@
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
+  </xs:complexType>
+  
+  <xs:complexType name="cpiCapFloorData">
+    <xs:sequence>      
+      <xs:element type="longShort" name="LongShort"/>
+      <xs:element type="capFloor" name="CapFloor"/>
+      <xs:element type="currencyCode" name="Currency"/>      
+      <xs:element type="xs:float" name="Notional"/>
+      <xs:element type="date" name="StartDate"/>
+      <xs:element type="date" name="MaturityDate"/>
+      <xs:element type="xs:string" name="Index"/>
+      <xs:element type="xs:string" name="ObservationLag"/>
+      <xs:element type="xs:float" name="BaseCPI"/>
+      <xs:element type="xs:float" name="Strike"/>
+      <xs:element type="calendar" name="FixCalendar"/>
+      <xs:element type="calendar" name="PayCalendar"/>
+      <xs:element type="businessDayConvention" name="FixConvention"/>
+      <xs:element type="businessDayConvention" name="PayConvention"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="nameData">

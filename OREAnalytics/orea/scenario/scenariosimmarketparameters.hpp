@@ -53,7 +53,8 @@ public:
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false), fxVolSimulate_(false),
           fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false),
           equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), securitySpreadsSimulate_(false),
-          baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
+          cprSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false),
+          commodityVolSimulate_(false) {
 
         // set defaults
         setDefaults();
@@ -244,6 +245,7 @@ public:
 
     bool& securitySpreadsSimulate() { return securitySpreadsSimulate_; }
     vector<string>& securities() { return securities_; }
+    bool& cprSimulate() { return cprSimulate_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -371,6 +373,7 @@ private:
 
     bool securitySpreadsSimulate_;
     vector<string> securities_;
+    bool cprSimulate_;
 
     bool baseCorrelationSimulate_;
     vector<string> baseCorrelationNames_;

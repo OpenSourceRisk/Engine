@@ -50,8 +50,16 @@ Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
             }
         }
 
-        if (!spread_.empty() && !recoveryRate_.empty())
-            return;
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CPR) {
+            boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to CPRQuote");
+            if (q->securityID() == spec.securityID()) {
+                cpr_ = q->quote();
+            }
+        }
+
+        // we loop through all quotes, if there are duplicates the last one will overwrite previous ones
+
     }
     if (recoveryRate_.empty())
         WLOG("No security-specific recovery rate found for " << spec);

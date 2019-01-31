@@ -2,7 +2,9 @@
 
 set(QuantExt_SRC calendars/chile.cpp
 calendars/colombia.cpp
+calendars/france.cpp
 calendars/malaysia.cpp
+calendars/netherlands.cpp
 calendars/peru.cpp
 calendars/philippines.cpp
 calendars/thailand.cpp
@@ -21,6 +23,7 @@ cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
+currencies/metals.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/inflationindexwrapper.cpp
@@ -76,6 +79,9 @@ pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
+pricingengines/cpibacheliercapfloorengine.cpp
+pricingengines/cpiblackcapfloorengine.cpp
+pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
@@ -134,7 +140,9 @@ set(QuantExt_HDR auto_link.hpp
 version.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
+calendars/france.hpp
 calendars/malaysia.hpp
+calendars/netherlands.hpp
 calendars/peru.hpp
 calendars/philippines.hpp
 calendars/thailand.hpp
@@ -154,6 +162,7 @@ cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
 currencies/america.hpp
 currencies/asia.hpp
+currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
@@ -260,6 +269,9 @@ pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
+pricingengines/cpibacheliercapfloorengine.hpp
+pricingengines/cpiblackcapfloorengine.hpp
+pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
@@ -324,6 +336,7 @@ termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
+termstructures/strippedcpivolatilitystructure.hpp
 termstructures/tenorbasisswaphelper.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp

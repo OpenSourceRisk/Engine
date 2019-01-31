@@ -25,6 +25,8 @@
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/netherlands.hpp>
+#include <qle/calendars/france.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -212,6 +214,59 @@ BOOST_AUTO_TEST_CASE(testChileanCalendar) {
     BOOST_CHECK(hol.size() == expectedHolidays.size());
 
     check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testNetherlandianCalendar) {
+  
+  BOOST_TEST_MESSAGE("Testing Netherlandian holiday list");
+  
+  std::vector<Date> expectedHolidays;
+  
+  expectedHolidays.push_back(Date(1, January, 2018));
+  expectedHolidays.push_back(Date(30, March, 2018));
+  expectedHolidays.push_back(Date(2, April, 2018));
+  expectedHolidays.push_back(Date(27, April, 2018));
+  expectedHolidays.push_back(Date(10, May, 2018));
+  expectedHolidays.push_back(Date(21, May, 2018));
+  expectedHolidays.push_back(Date(25, December, 2018));
+  expectedHolidays.push_back(Date(26, December, 2018));
+  
+  Calendar c = Netherlands();
+  
+  
+  std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+  
+  BOOST_CHECK(hol.size() == expectedHolidays.size());
+  
+  check::checkCalendars(expectedHolidays, hol);
+}
+
+BOOST_AUTO_TEST_CASE(testFrenchCalendar) {
+  
+  BOOST_TEST_MESSAGE("Testing French holiday list");
+  
+  std::vector<Date> expectedHolidays;
+  
+  expectedHolidays.push_back(Date(1, January, 2018));
+  expectedHolidays.push_back(Date(30, March, 2018));
+  expectedHolidays.push_back(Date(2, April, 2018));
+  expectedHolidays.push_back(Date(1, May, 2018));
+  expectedHolidays.push_back(Date(8, May, 2018));
+  expectedHolidays.push_back(Date(10, May, 2018));
+  expectedHolidays.push_back(Date(21, May, 2018));
+  expectedHolidays.push_back(Date(15, August, 2018));
+  expectedHolidays.push_back(Date(1, November, 2018));
+  expectedHolidays.push_back(Date(25, December, 2018));
+  expectedHolidays.push_back(Date(26, December, 2018));
+  
+  Calendar c = France();
+  
+  
+  std::vector<Date> hol = Calendar::holidayList(c, Date(1, January, 2018), Date(31, December, 2018));
+  
+  BOOST_CHECK(hol.size() == expectedHolidays.size());
+  
+  check::checkCalendars(expectedHolidays, hol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

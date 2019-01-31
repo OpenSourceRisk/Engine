@@ -492,7 +492,9 @@
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
+    <ClInclude Include="qle\calendars\france.hpp" />
     <ClInclude Include="qle\calendars\malaysia.hpp" />
+    <ClInclude Include="qle\calendars\netherlands.hpp" />
     <ClInclude Include="qle\calendars\peru.hpp" />
     <ClInclude Include="qle\calendars\philippines.hpp" />
     <ClInclude Include="qle\calendars\thailand.hpp" />
@@ -512,6 +514,7 @@
     <ClInclude Include="qle\currencies\africa.hpp" />
     <ClInclude Include="qle\currencies\america.hpp" />
     <ClInclude Include="qle\currencies\asia.hpp" />
+    <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
@@ -619,6 +622,9 @@
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
 	<ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
+    <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
     <ClInclude Include="qle\pricingengines\crossccyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\depositengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp" />
@@ -695,7 +701,9 @@
   <ItemGroup>
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
+    <ClCompile Include="qle\calendars\france.cpp" />
     <ClCompile Include="qle\calendars\malaysia.cpp" />
+    <ClCompile Include="qle\calendars\netherlands.cpp" />
     <ClCompile Include="qle\calendars\peru.cpp" />
     <ClCompile Include="qle\calendars\philippines.cpp" />
     <ClCompile Include="qle\calendars\thailand.cpp" />
@@ -714,6 +722,7 @@
     <ClCompile Include="qle\currencies\africa.cpp" />
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
+    <ClCompile Include="qle\currencies\metals.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
@@ -770,6 +779,9 @@
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
 	<ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
+    <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />
     <ClCompile Include="qle\pricingengines\crossccyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\depositengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp" />
