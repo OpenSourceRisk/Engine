@@ -62,11 +62,8 @@ public:
     const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyVolSurface_; }
     bool useMarketYoyCurve() const { return useMarketYoyCurve_; }
     const boost::shared_ptr<YoYInflationTermStructure> yoyInflationAtmCurve() const { return yoyTs_; }
-    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationFloorVolSurface() const { 
-        return cpiFloorVolSurface_; 
-    } 
-    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapVolSurface() const { 
-        return cpiCapVolSurface_; 
+    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapFloorVolSurface() const { 
+        return cpiCapFloorVolSurface_; 
     } 
 
 private:
@@ -75,7 +72,7 @@ private:
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
     bool useMarketYoyCurve_;
     boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
-    boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiCapVolSurface_, cpiFloorVolSurface_; 
+    boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiCapFloorVolSurface_;
 };
 } // namespace data
 } // namespace ore
