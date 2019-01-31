@@ -34,7 +34,6 @@
   FOR A PARTICULAR PURPOSE.  See the license for more details.
  */
 
-#include <iostream>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/instruments/makecds.hpp>

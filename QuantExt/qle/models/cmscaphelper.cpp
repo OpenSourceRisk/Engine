@@ -25,7 +25,6 @@
 #include <ql/time/daycounters/actual360.hpp>
 #include <qle/models/cmscaphelper.hpp>
 
-#include <iostream>
 namespace QuantExt {
 
 QuantLib::Real CmsCapHelper::modelValue() const {
@@ -137,9 +136,6 @@ void CmsCapHelper::performCalculations() const {
     cap_ = boost::make_shared<QuantLib::Swap>(legs, legPayers);
     boost::shared_ptr<PricingEngine> swapEngine2(new DiscountingSwapEngine(discountCurve_, false));
     cap_->setPricingEngine(swapEngine2);
-
-    // std::cout<<"performCalc, noCoupons " << cmsLeg1b.size() << " spread " << spread << " marketVal
-    // "<<marketValue()<<", modelVal " << cap_->NPV()<<std::endl;
 }
 
 } // namespace QuantExt

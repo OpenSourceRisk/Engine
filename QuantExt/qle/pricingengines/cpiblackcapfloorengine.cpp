@@ -24,8 +24,6 @@
 
 #include <ql/time/daycounters/actualactual.hpp>
 
-#include <iomanip>
-#include <iostream>
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
@@ -85,11 +83,6 @@ void CPIBlackCapFloorEngine::calculate() const {
     Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above
     Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate, obsLag));
     results_.value = blackFormula(arguments_.type, K, F, stdDev, d);
-
-    // std::cout << std::setprecision(8) << "npv=" << results_.value << " TB=" << timeFromBase << " TS=" <<
-    // timeFromStart
-    //           << " K=" << K << " F=" << F << " SD=" << stdDev << " d=" << d << " " << baseFixing << " "
-    //           << arguments_.baseCPI << std::endl;
 }
 
 } // namespace QuantExt

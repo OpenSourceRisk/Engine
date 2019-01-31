@@ -32,8 +32,6 @@
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 
-#include <iostream>
-
 using namespace std;
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
