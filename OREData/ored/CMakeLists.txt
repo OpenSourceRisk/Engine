@@ -58,6 +58,7 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/bondoption.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
@@ -176,6 +177,7 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/bondoption.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
@@ -207,6 +209,7 @@ portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
 portfolio/builders/bond.hpp
+portfolio/builders/bondoption.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp

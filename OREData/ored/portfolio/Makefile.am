@@ -32,6 +32,7 @@ libOREDataPortfolio_la_SOURCES = \
 	nettingsetmanager.cpp \
 	capfloor.cpp \
 	bond.cpp \
+	bondoption.cpp \
 	creditdefaultswap.cpp \
 	creditdefaultswapdata.cpp \
     forwardrateagreement.cpp \
@@ -66,6 +67,7 @@ this_include_HEADERS = \
 	nettingsetmanager.hpp \
 	capfloor.hpp \
 	bond.hpp \
+	bondoption.hpp \
 	creditdefaultswap.hpp \
 	creditdefaultswapdata.hpp \
     forwardrateagreement.hpp \
