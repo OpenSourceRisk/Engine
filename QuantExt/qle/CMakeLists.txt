@@ -52,6 +52,7 @@ instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
+models/cmscaphelper.cpp
 models/cpicapfloorhelper.cpp
 models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
@@ -103,6 +104,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/capfloortermvolsurface.cpp
+termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
@@ -112,6 +114,7 @@ termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
+termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
@@ -233,6 +236,7 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 models/cdsoptionhelper.hpp
+models/cmscaphelper.hpp
 models/cpicapfloorhelper.hpp
 models/crlgm1fparametrization.hpp
 models/crossassetanalytics.hpp
@@ -286,6 +290,7 @@ pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
@@ -294,6 +299,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
@@ -307,11 +313,13 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/equityvolconstantspread.hpp
+termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/immfraratehelper.hpp
+termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
@@ -329,6 +337,7 @@ termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
+termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter2.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
@@ -336,7 +345,6 @@ termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
-termstructures/strippedcpivolatilitystructure.hpp
 termstructures/tenorbasisswaphelper.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
