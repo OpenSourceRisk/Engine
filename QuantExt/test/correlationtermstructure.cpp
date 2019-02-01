@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedCorrelationCurve) {
         simpleQuotes.push_back(boost::make_shared<SimpleQuote>(corr));
         quotes.push_back(Handle<Quote>(simpleQuotes.back()));
 
-        times.push_back(i);
+        times.push_back(static_cast<Time>(i));
     }
 
     Handle<PiecewiseLinearCorrelationCurve> interpCorr(
