@@ -1012,7 +1012,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         vector<string> keys(parameters->yoyInflationTenors(yic).size());
 
         string ccy = yoyInflationIndex->currency().code();
-        Handle<YieldTermStructure> yts = initMarket->discountCurve(ccy, configuration);
+        Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
         Date date0 = asof_ - yoyInflationTs->observationLag();
         DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));

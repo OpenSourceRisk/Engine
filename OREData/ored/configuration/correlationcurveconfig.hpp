@@ -115,9 +115,9 @@ public:
     //@}
 
 private:
+    Dimension dimension_;
     CorrelationType correlationType_;
     string conventions_;
-    Dimension dimension_;
     QuoteType quoteType_;
     bool extrapolate_;
     vector<Period> optionTenors_;

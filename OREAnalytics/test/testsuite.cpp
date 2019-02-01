@@ -68,7 +68,7 @@ public:
         seconds -= hours * 3600;
         int minutes = int(seconds / 60);
         seconds -= minutes * 60;
-        cout << endl << "OREData tests completed in ";
+        cout << endl << "OREAnalytics tests completed in ";
         if (hours > 0)
             cout << hours << " h ";
         if (hours > 0 || minutes > 0)

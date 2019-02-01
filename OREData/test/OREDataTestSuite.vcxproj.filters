@@ -100,5 +100,11 @@
     <ClCompile Include="yieldcurve.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="correlationcurveconfig.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="digitalcms.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
