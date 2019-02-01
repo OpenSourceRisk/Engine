@@ -66,7 +66,7 @@ public:
     const string& baseCcy() const { return baseCcy_; }
     const vector<string>& ccys() const { return ccys_; }
     vector<string> paramsLookup(RiskFactorKey::KeyType kt) const;
-    bool ScenarioSimMarketParameters::hasParamsKey(RiskFactorKey::KeyType kt, string name) const; 
+    bool hasParamsKey(RiskFactorKey::KeyType kt, string name) const; 
     void addParams(RiskFactorKey::KeyType kt, vector<string> names);
 
     vector<string> discountCurveNames() const { return paramsLookup(RiskFactorKey::KeyType::DiscountCurve); }
