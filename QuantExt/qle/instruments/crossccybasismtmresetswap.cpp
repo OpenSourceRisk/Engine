@@ -27,17 +27,15 @@ using boost::assign::list_of;
 
 namespace QuantExt {
 
-CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real foreignNominal, const Currency& foreignCurrency,
-                                                     const Schedule& foreignSchedule,
-                                                     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
-                                                     const Currency& domesticCurrency, const Schedule& domesticSchedule,
-                                                     const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-                                                     const boost::shared_ptr<FxIndex>& fxIdx, 
-                                                     bool invertFxIdx, bool receiveDomestic)
-    : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency), foreignSchedule_(foreignSchedule),
-      foreignIndex_(foreignIndex), foreignSpread_(foreignSpread), domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule),
-      domesticIndex_(domesticIndex), domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx),
-      receiveDomestic_(receiveDomestic) {
+CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
+    Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
+    const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
+    const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
+    const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx, bool receiveDomestic)
+    : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
+      foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
+      domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
+      domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx), receiveDomestic_(receiveDomestic) {
 
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
@@ -49,7 +47,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
     legs_[0] = IborLeg(foreignSchedule_, foreignIndex_).withNotionals(foreignNominal_).withSpreads(foreignSpread_);
     receiveDomestic_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
-    
+
     currencies_[0] = foreignCurrency_;
     // Pay leg notional exchange at start.
     Date initialPayDate = foreignSchedule_.dates().front();

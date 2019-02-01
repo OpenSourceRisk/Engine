@@ -35,7 +35,7 @@ Allowable values: Any real number.
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
-  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION} \\
+  EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION, CPR} \\
 \hline
   Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
@@ -1090,6 +1090,58 @@ This quote provides the spread for a specified bond over the benchmark rate.
 Examples:
 \begin{itemize}
 	\item BOND/YIELD\_SPREAD/SECURITY\_1
+\end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Correlations}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{Correlation} & \\ \hline
+    Quote Type & \emph{RATE or PRICE} & \\ \hline
+    Index1 & String & Identifying name of the first index \\ \hline
+    Index2 & String & Identifying name of the second index \\ \hline
+  \end{tabular}
+  \caption{Correlation quotes}
+  \label{tab:correlation_quote}
+\end{table}
+
+This quote either provides the correlation between two indices, in which case Quote Type is RATE,
+or a premium that can be used to bootstrap the correlations, in which case Quote Type is Price.
+Currently only CMS Spread correlations are supported, in this case the Price quote is the price of a CMS Spread Cap.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM
+\end{itemize}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Conditional Prepayment Rates}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{CPR} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Name & String & Identifying name of the bond \\ \hline
+  \end{tabular}
+  \caption{Conditional Prepayment Rates}
+  \label{tab:cpr_quote}
+\end{table}
+
+This quote provides the spread for a specified bond over the benchmark rate.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item CPR/RATE/SECURITY\_1
 \end{itemize}
 
 % %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

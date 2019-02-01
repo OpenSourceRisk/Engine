@@ -23,6 +23,7 @@
 #include <ored/utilities/strike.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -297,6 +298,70 @@ BOOST_AUTO_TEST_CASE(testDatePeriodParsing) {
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("3M.", d, p, isDate), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseDateOrPeriod("xx17-06-05", d, p, isDate), QuantLib::Error);
 }
+
+BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
+
+    BOOST_TEST_MESSAGE("Testing market datum parsing...");
+
+
+    BOOST_TEST_MESSAGE("Testing correlation market datum parsing...");
+
+    { //test rate quote
+    Date d(1,Jan,1990);
+    Real value = 1;
+
+    string input = "CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM";
+
+    boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+    BOOST_CHECK(datum->asofDate() == d);
+    BOOST_CHECK(datum->quote()->value() == value);
+    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE);
+
+    boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+
+
+    BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+    BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+    BOOST_CHECK(spreadDatum->expiry() == "1Y");
+    BOOST_CHECK(spreadDatum->strike() == "ATM");
+    
+    }
+    
+    { //test price quote
+    Date d(3,Mar,2018);
+    Real value = 10;
+
+    string input = "CORRELATION/PRICE/INDEX1/INDEX2/1Y/0.1";
+
+    boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+
+    BOOST_CHECK(datum->asofDate() == d);
+    BOOST_CHECK(datum->quote()->value() == value);
+    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
+
+    boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+
+
+    BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+    BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+    BOOST_CHECK(spreadDatum->expiry() == "1Y");
+    BOOST_CHECK(spreadDatum->strike() == "0.1");
+    
+    }
+    
+    { //test parsing throws
+    Date d(3,Mar,2018);
+    Real value = 10;
+
+    BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/1Y/SS", value), QuantLib::Error);
+    BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value), QuantLib::Error);
+
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

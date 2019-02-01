@@ -25,34 +25,34 @@
 #define quantext_cpi_black_capfloor_engine_hpp
 
 #include <ql/instruments/cpicapfloor.hpp>
-#include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 
 namespace QuantExt {
 
-    class CPIBlackCapFloorEngine : public QuantLib::CPICapFloor::engine {
-    public:
-        CPIBlackCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-                               const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
+class CPIBlackCapFloorEngine : public QuantLib::CPICapFloor::engine {
+public:
+    CPIBlackCapFloorEngine(const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                           const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface);
 
-        virtual void calculate() const;
-        virtual std::string name() const { return "CPIBlackCapFloorEngine"; }
+    virtual void calculate() const;
+    virtual std::string name() const { return "CPIBlackCapFloorEngine"; }
 
-        virtual ~CPIBlackCapFloorEngine() {}
+    virtual ~CPIBlackCapFloorEngine() {}
 
-        void setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface) {
-            if (!volatilitySurface_.empty())
-                unregisterWith(volatilitySurface_);
-            volatilitySurface_ = surface;
-            registerWith(volatilitySurface_);
-            update();
-        }
-        
-    protected:
-        QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
-        QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
-    };
+    void setVolatility(const QuantLib::Handle<QuantLib::CPIVolatilitySurface>& surface) {
+        if (!volatilitySurface_.empty())
+            unregisterWith(volatilitySurface_);
+        volatilitySurface_ = surface;
+        registerWith(volatilitySurface_);
+        update();
+    }
+
+protected:
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountCurve_;
+    QuantLib::Handle<QuantLib::CPIVolatilitySurface> volatilitySurface_;
+};
 
 } // namespace QuantExt
 
-#endif 
+#endif

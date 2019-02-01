@@ -20,6 +20,7 @@
       <xs:element type="crossCurrencyFixFloatType" name="CrossCurrencyFixFloat"/>
       <xs:element type="swapIndexType" name="SwapIndex"/>
       <xs:element type="inflationswapType" name="InflationSwap"/>
+      <xs:element type="cmsSpreadOptionType" name="CmsSpreadOption"/>
     </xs:choice>
   </xs:complexType>
 
@@ -220,6 +221,19 @@
       <xs:element type="bool" name="AdjustInflationObservationDates" minOccurs="1" maxOccurs="1"/>
       <xs:element type="xs:string" name="InflationCalendar" minOccurs="1" maxOccurs="1"/>
       <xs:element type="businessDayConvention" name="InflationConvention" minOccurs="1" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="cmsSpreadOptionType">
+    <xs:sequence>
+      <xs:element type="xs:string" name="Id" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="ForwardStart" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SpotDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="SwapTenor" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:integer" name="FixingDays" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="xs:string" name="Calendar" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="1" maxOccurs="1"/>
+      <xs:element type="businessDayConvention" name="RollConvention" minOccurs="1" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

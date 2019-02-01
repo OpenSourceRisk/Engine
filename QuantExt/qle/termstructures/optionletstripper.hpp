@@ -24,76 +24,73 @@
 #define quantext_optionletstripper_hpp
 
 #include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
-#include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/volatilitytype.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
+#include <qle/termstructures/capfloortermvolsurface.hpp>
 
 namespace QuantLib {
-    class IborIndex;
+class IborIndex;
 }
 
 namespace QuantExt {
 using namespace QuantLib;
 
+/*! Copy of the QL class that uses an QuantExt::CapFloorTermVolSurface
+    to support BiLinearInterpolation
+*/
+class OptionletStripper : public StrippedOptionletBase {
+public:
+    //! \name StrippedOptionletBase interface
+    //@{
+    const std::vector<Rate>& optionletStrikes(Size i) const;
+    const std::vector<Volatility>& optionletVolatilities(Size i) const;
 
-    /*! Copy of the QL class that uses an QuantExt::CapFloorTermVolSurface
-        to support BiLinearInterpolation
-    */
-    class OptionletStripper : public StrippedOptionletBase {
-      public:
-        //! \name StrippedOptionletBase interface
-        //@{
-        const std::vector<Rate>& optionletStrikes(Size i) const;
-        const std::vector<Volatility>& optionletVolatilities(Size i) const;
+    const std::vector<Date>& optionletFixingDates() const;
+    const std::vector<Time>& optionletFixingTimes() const;
+    Size optionletMaturities() const;
 
-        const std::vector<Date>& optionletFixingDates() const;
-        const std::vector<Time>& optionletFixingTimes() const;
-        Size optionletMaturities() const;
+    const std::vector<Rate>& atmOptionletRates() const;
 
-        const std::vector<Rate>& atmOptionletRates() const;
+    DayCounter dayCounter() const;
+    Calendar calendar() const;
+    Natural settlementDays() const;
+    BusinessDayConvention businessDayConvention() const;
+    //@}
 
-        DayCounter dayCounter() const;
-        Calendar calendar() const;
-        Natural settlementDays() const;
-        BusinessDayConvention businessDayConvention() const;
-        //@}
+    const std::vector<Period>& optionletFixingTenors() const;
+    const std::vector<Date>& optionletPaymentDates() const;
+    const std::vector<Time>& optionletAccrualPeriods() const;
+    ext::shared_ptr<CapFloorTermVolSurface> termVolSurface() const;
+    ext::shared_ptr<IborIndex> iborIndex() const;
+    Real displacement() const;
+    VolatilityType volatilityType() const;
 
-        const std::vector<Period>& optionletFixingTenors() const;
-        const std::vector<Date>& optionletPaymentDates() const;
-        const std::vector<Time>& optionletAccrualPeriods() const;
-        ext::shared_ptr<CapFloorTermVolSurface> termVolSurface() const;
-        ext::shared_ptr<IborIndex> iborIndex() const;
-        Real displacement() const;
-        VolatilityType volatilityType() const;
+protected:
+    OptionletStripper(const ext::shared_ptr<QuantExt::CapFloorTermVolSurface>&,
+                      const ext::shared_ptr<IborIndex>& iborIndex_,
+                      const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
+                      const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
+    ext::shared_ptr<CapFloorTermVolSurface> termVolSurface_;
+    ext::shared_ptr<IborIndex> iborIndex_;
+    Handle<YieldTermStructure> discount_;
+    Size nStrikes_;
+    Size nOptionletTenors_;
 
-      protected:
-        OptionletStripper(const ext::shared_ptr< QuantExt::CapFloorTermVolSurface > &,
-                          const ext::shared_ptr< IborIndex > &iborIndex_,
-                          const Handle< YieldTermStructure > &discount =
-                              Handle< YieldTermStructure >(),
-                          const VolatilityType type = ShiftedLognormal,
-                          const Real displacement = 0.0);
-        ext::shared_ptr<CapFloorTermVolSurface> termVolSurface_;
-        ext::shared_ptr<IborIndex> iborIndex_;
-        Handle<YieldTermStructure> discount_;
-        Size nStrikes_;
-        Size nOptionletTenors_;
+    mutable std::vector<std::vector<Rate> > optionletStrikes_;
+    mutable std::vector<std::vector<Volatility> > optionletVolatilities_;
 
-        mutable std::vector<std::vector<Rate> > optionletStrikes_;
-        mutable std::vector<std::vector<Volatility> > optionletVolatilities_;
+    mutable std::vector<Time> optionletTimes_;
+    mutable std::vector<Date> optionletDates_;
+    std::vector<Period> optionletTenors_;
+    mutable std::vector<Rate> atmOptionletRate_;
+    mutable std::vector<Date> optionletPaymentDates_;
+    mutable std::vector<Time> optionletAccrualPeriods_;
 
-        mutable std::vector<Time> optionletTimes_;
-        mutable std::vector<Date> optionletDates_;
-        std::vector<Period> optionletTenors_;
-        mutable std::vector<Rate> atmOptionletRate_;
-        mutable std::vector<Date> optionletPaymentDates_;
-        mutable std::vector<Time> optionletAccrualPeriods_;
+    std::vector<Period> capFloorLengths_;
+    const VolatilityType volatilityType_;
+    const Real displacement_;
+};
 
-        std::vector<Period> capFloorLengths_;
-        const VolatilityType volatilityType_;
-        const Real displacement_;
-    };
-
-}
+} // namespace QuantExt
 
 #endif

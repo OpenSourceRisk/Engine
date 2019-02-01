@@ -411,6 +411,12 @@
     <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\correlationcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\correlationcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">
@@ -736,6 +742,12 @@
     </ClCompile>
     <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp">
       <Filter>portfolio\builders</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\correlationcurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\correlationcurve.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

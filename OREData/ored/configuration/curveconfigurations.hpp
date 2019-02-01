@@ -39,6 +39,7 @@
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
+#include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
@@ -136,6 +137,11 @@ public:
     };
     const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
     
+    boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
+        return correlationCurveConfigs_[curveID];
+    };
+    const boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) const;
+    
     /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
         
         If \p todaysMarketParams is a `nullptr`, the set of quotes required by all CurveConfig elements is returned.
@@ -168,6 +174,7 @@ private:
     std::map<std::string, boost::shared_ptr<FXSpotConfig>> fxSpotConfigs_;
     std::map<std::string, boost::shared_ptr<CommodityCurveConfig>> commodityCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CommodityVolatilityCurveConfig>> commodityVolatilityCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<CorrelationCurveConfig>> correlationCurveConfigs_;
 };
 } // namespace data
 } // namespace ore

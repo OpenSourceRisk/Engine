@@ -31,7 +31,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

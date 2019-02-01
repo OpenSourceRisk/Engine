@@ -27,7 +27,6 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/credit/hazardratestructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

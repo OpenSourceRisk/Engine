@@ -28,7 +28,6 @@
 
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

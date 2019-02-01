@@ -26,8 +26,8 @@
 
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/chile.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <qle/calendars/chile.hpp>
 
 namespace QuantExt {
 
@@ -36,9 +36,10 @@ namespace QuantExt {
 
 class CLPCamara : public QuantLib::OvernightIndex {
 public:
-    CLPCamara(const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
-        : QuantLib::OvernightIndex("CLP-CAMARA", 2, QuantLib::CLPCurrency(), QuantLib::Chile(), QuantLib::Actual360(), h) {}
-
+    CLPCamara(
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
+        : QuantLib::OvernightIndex("CLP-CAMARA", 2, QuantLib::CLPCurrency(), QuantLib::Chile(), QuantLib::Actual360(),
+                                   h) {}
 };
 } // namespace QuantExt
 

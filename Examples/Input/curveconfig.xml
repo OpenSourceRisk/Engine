@@ -3219,5 +3219,45 @@
       <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
     </CommodityVolatility>
   </CommodityVolatilities>
+  <Correlations>
+    <Correlation>
+      <CurveId>EUR-CORR</CurveId>
+      <CurveDescription>EUR CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
+      <Currency>EUR</Currency>
+      <!-- ATM, Constant -->
+      <Dimension>ATM</Dimension>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Ccalendar and Business day convention for option tenor to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y,2Y</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>USD-CORR</CurveId>
+      <CurveDescription>USD CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>USD-CMS-10Y</Index1>
+      <Index2>USD-CMS-1Y</Index2>
+      <Currency>USD</Currency>
+      <!-- ATM, Constant -->
+      <Dimension>Constant</Dimension>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Ccalendar and Business day convention for option tenor to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y</OptionTenors>
+    </Correlation>
+  </Correlations>
 </CurveConfiguration>
 

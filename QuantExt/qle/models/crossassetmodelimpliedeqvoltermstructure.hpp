@@ -28,7 +28,6 @@
 
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

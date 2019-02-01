@@ -23,6 +23,7 @@
 
 #include <boost/range/adaptor/map.hpp>
 #include <ored/marketdata/basecorrelationcurve.hpp>
+#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
@@ -95,7 +96,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<Security>> requiredSecurities;
     map<string, boost::shared_ptr<CommodityCurve>> requiredCommodityCurves;
     map<string, boost::shared_ptr<CommodityVolCurve>> requiredCommodityVolCurves;
-
+    map<string, boost::shared_ptr<CorrelationCurve>> requiredCorrelationCurves;
+    
     // store all curve build errors
     map<string, string> buildErrors;
 
@@ -700,6 +702,8 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 securitySpreads_[make_pair(configuration.first, it.first)] = itr->second->spread();
                             if (!itr->second->recoveryRate().empty())
                                 recoveryRates_[make_pair(configuration.first, it.first)] = itr->second->recoveryRate();
+                            if (!itr->second->cpr().empty())
+                                cprs_[make_pair(configuration.first, it.first)] = itr->second->cpr();
                         }
                     }
 
@@ -772,6 +776,35 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             bvts = boost::make_shared<QuantExt::BlackVolatilityWithATM>(bvts, spot, discount, yield);
                             commodityVols_[make_pair(configuration.first, it.first)] =
                                 Handle<BlackVolTermStructure>(bvts);
+                        }
+                    }
+                    break;
+                }
+
+                case CurveSpec::CurveType::Correlation: {
+                    boost::shared_ptr<CorrelationCurveSpec> corrspec = boost::dynamic_pointer_cast<CorrelationCurveSpec>(spec);
+                    QL_REQUIRE(corrspec, "Failed to convert spec " << *spec);
+
+                    // have we built the curve already ?
+                    auto itr = requiredCorrelationCurves.find(corrspec->name());
+                    if (itr == requiredCorrelationCurves.end()) {
+                        // build the curve
+                        LOG("Building CorrelationCurve for asof " << asof);
+                        boost::shared_ptr<CorrelationCurve> corrCurve = boost::make_shared<CorrelationCurve>(
+                            asof, *corrspec, loader, curveConfigs, conventions, requiredSwapIndices,requiredYieldCurves, 
+                            requiredSwaptionVolCurves);
+                        itr = requiredCorrelationCurves.insert(make_pair(corrspec->name(), corrCurve)).first;
+                    }
+
+                    for (const auto it : params.mapping(MarketObject::Correlation, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding CorrelationCurve (" << it.first << ") with spec " << *corrspec
+                                << " to configuration " << configuration.first);
+
+                            vector<string> tokens;
+                            boost::split(tokens, it.first, boost::is_any_of("/:"));
+                            correlationCurves_[make_tuple(configuration.first, tokens[0], tokens[1])] =
+                                Handle<QuantExt::CorrelationTermStructure>(itr->second->corrTermStructure());
                         }
                     }
                     break;

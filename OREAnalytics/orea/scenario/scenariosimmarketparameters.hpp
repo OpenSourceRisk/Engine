@@ -54,7 +54,8 @@ public:
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false), fxVolSimulate_(false),
           fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false),
           equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), securitySpreadsSimulate_(false),
-          baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
+          cprSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false),
+          correlationSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}){
 
         // set defaults
         setDefaults();
@@ -177,10 +178,16 @@ public:
     const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
     const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
     const std::string& commodityVolDayCounter(const std::string& commodityName) const;
+        
+    bool simulateCorrelations() const { return correlationSimulate_; }
+    bool correlationIsSurface() const { return correlationIsSurface_; }
+    const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
+    vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
+    const string& correlationDayCounter(const string& index1, const string& index2) const;
+    const vector<Real>& correlationStrikes() const { return correlationStrikes_; }   
 
     // Get the parameters
     const std::map<RiskFactorKey::KeyType, std::set<std::string>>& parameters() const { return params_; }
-
     //@}
 
     //! \name Setters
@@ -259,6 +266,7 @@ public:
     bool& securitySpreadsSimulate() { return securitySpreadsSimulate_; }
     void setSecurities(vector<string> names); 
     void setRecoveryRates(vector<string> names);
+    bool& cprSimulate() { return cprSimulate_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -295,6 +303,13 @@ public:
         return commodityVolMoneyness_[commodityName];
     }
     void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
+    
+    bool& simulateCorrelations() { return correlationSimulate_; }
+    bool& correlationIsSurface() { return correlationIsSurface_; }
+    vector<Period>& correlationExpiries() { return correlationExpiries_; }
+    void setCorrelationPairs(vector<string> names);
+    void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
+    vector<Real>& correlationStrikes(){ return correlationStrikes_; }
     //@}
 
     //! \name Serialisation
@@ -376,6 +391,7 @@ private:
     vector<string> additionalScenarioDataCcys_;
 
     bool securitySpreadsSimulate_;
+    bool cprSimulate_;
 
     bool baseCorrelationSimulate_;
     vector<Period> baseCorrelationTerms_;
@@ -389,6 +405,7 @@ private:
 
     // Commodity price curve data
     bool commodityCurveSimulate_;
+
     std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
     std::map<std::string, std::string> commodityCurveDayCounters_;
 
@@ -398,6 +415,12 @@ private:
     std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
     std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
     std::map<std::string, std::string> commodityVolDayCounters_;
+
+    bool correlationSimulate_;
+    bool correlationIsSurface_;
+    map<pair<string, string>, string> correlationDayCounters_;
+    vector<Period> correlationExpiries_;
+    vector<Real> correlationStrikes_;
 
     std::map<RiskFactorKey::KeyType, std::set<std::string>> params_;
 

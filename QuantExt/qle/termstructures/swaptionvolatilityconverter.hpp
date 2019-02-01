@@ -30,7 +30,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using std::vector;

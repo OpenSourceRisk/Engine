@@ -56,8 +56,8 @@ void BlackVarianceCurve3::performCalculations() const {
         variances_[j] = times_[j] * quotes_[j - 1]->value() * quotes_[j - 1]->value();
         if (requireMonotoneVariance_) {
             QL_REQUIRE(variances_[j] >= variances_[j - 1],
-                "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
-                << " and var[j-1]:" << variances_[j - 1]);
+                       "variance must be non-decreasing at j:" << j << " got var[j]:" << variances_[j]
+                                                               << " and var[j-1]:" << variances_[j - 1]);
         }
     }
     varianceCurve_.update();

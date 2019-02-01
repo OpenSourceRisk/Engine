@@ -49,7 +49,6 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantLib {
 class YieldTermStructure;
 class Claim;

@@ -97,6 +97,22 @@ Leg CMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<E
                             engineFactory);
 }
 
+Leg DigitalCMSSpreadLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
+                                  const string& configuration) const {
+    auto digitalCmsSpreadData = boost::dynamic_pointer_cast<DigitalCMSSpreadLegData>(data.concreteLegData());
+    QL_REQUIRE(digitalCmsSpreadData, "Wrong LegType, expected DigitalCMSSpread");
+
+    auto cmsSpreadData = boost::dynamic_pointer_cast<CMSSpreadLegData>(digitalCmsSpreadData->underlying());
+    QL_REQUIRE(cmsSpreadData, "Incomplete DigitalCmsSpread Leg, expected CMSSpread data");
+
+    auto index1 = *engineFactory->market()->swapIndex(cmsSpreadData->swapIndex1(), configuration);
+    auto index2 = *engineFactory->market()->swapIndex(cmsSpreadData->swapIndex2(), configuration);
+
+    return makeDigitalCMSSpreadLeg(data, boost::make_shared<QuantLib::SwapSpreadIndex>(
+                                "CMSSpread_" + index1->familyName() + "_" + index2->familyName(), index1, index2),
+                            engineFactory);
+}
+
 Leg EquityLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,
     const string& configuration) const {
     auto eqData = boost::dynamic_pointer_cast<EquityLegData>(data.concreteLegData());

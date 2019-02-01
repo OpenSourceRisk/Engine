@@ -112,6 +112,7 @@ public:
     const map<string, string>& commodityCurrencies() const { return commodityCurrencies_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() const { return commodityCurveShiftData_; }
     const map<string, VolShiftData>& commodityVolShiftData() const { return commodityVolShiftData_; }
+    const map<string, VolShiftData>& correlationShiftData() const { return correlationShiftData_; }
     const map<string, SpotShiftData>& securityShiftData() const { return securityShiftData_; }
 
     const vector<pair<string, string>>& crossGammaFilter() const { return crossGammaFilter_; }
@@ -145,6 +146,7 @@ public:
     map<string, string>& commodityCurrencies() { return commodityCurrencies_; }
     map<string, boost::shared_ptr<CurveShiftData>>& commodityCurveShiftData() { return commodityCurveShiftData_; }
     map<string, VolShiftData>& commodityVolShiftData() { return commodityVolShiftData_; }
+    map<string, VolShiftData>& correlationShiftData() { return correlationShiftData_; }
     map<string, SpotShiftData>& securityShiftData() { return securityShiftData_; }
 
     vector<pair<string, string>>& crossGammaFilter() { return crossGammaFilter_; }
@@ -200,6 +202,7 @@ protected:
     map<string, SpotShiftData> commodityShiftData_;
     map<string, std::string> commodityCurrencies_;
     map<string, boost::shared_ptr<CurveShiftData>> commodityCurveShiftData_;
+    map<string, VolShiftData> correlationShiftData_;
     map<string, VolShiftData> commodityVolShiftData_;
     map<string, SpotShiftData> securityShiftData_; // key: security name
 

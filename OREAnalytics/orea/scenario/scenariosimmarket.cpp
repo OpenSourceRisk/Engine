@@ -56,6 +56,8 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
+#include <qle/termstructures/interpolatedcorrelationcurve.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 #include <boost/timer.hpp>
 
@@ -207,6 +209,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::SecuritySpread);
     if (!parameters->simulateFxSpots())
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::FXSpot);
+    if (!parameters->simulateCorrelations())
+        nonSimulatedFactors_.insert(RiskFactorKey::KeyType::Correlation);
 
     // Build fixing manager
     fixingManager_ = boost::make_shared<FixingManager>(asof_);
@@ -218,7 +222,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     for (const auto& param : params) {
 
         switch (param.first) {
-        case RiskFactorKey::KeyType::FXSpot: 
+        case RiskFactorKey::KeyType::FXSpot:
             for (const auto& name : param.second) {
                 // constructing fxSpots_
                 LOG("adding " << name << " FX rates");
@@ -255,7 +259,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 equitySpots_.insert(
                     pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name), qh));
                 simData_.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(param.first, name), 
+                    std::forward_as_tuple(param.first, name),
                     std::forward_as_tuple(q));
                 LOG("adding " << name << " equity spot done");
             }
@@ -1178,6 +1182,65 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 DLOG("Commodity volatility curve built for " << name);
             }
             continue;
+        
+        case RiskFactorKey::KeyType::Correlation:
+            for (const auto& name : param.second) {
+                LOG("Adding correlations for " << name << " from configuration " << configuration);
+                
+                vector<string> tokens;
+                boost::split(tokens, name, boost::is_any_of(":"));
+                QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << name);
+                pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
+
+                boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
+                Handle<QuantExt::CorrelationTermStructure> baseCorr = initMarket->correlationCurve(pair.first, pair.second, configuration);
+
+
+                Handle<QuantExt::CorrelationTermStructure> ch;
+                if (parameters->simulateCorrelations()) {                    
+                    Size n = parameters->correlationStrikes().size();
+                    Size m = parameters->correlationExpiries().size();
+                    vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+                    vector<Time> times(m);
+                    Calendar cal = baseCorr->calendar();
+                    DayCounter dc = ore::data::parseDayCounter(parameters->correlationDayCounter(pair.first, pair.second));
+
+                    for (Size i = 0; i < n; i++) {
+                        Real strike = parameters->correlationStrikes()[i];
+
+                        for (Size j = 0; j < m; j++) {
+                            // Index is expiries then strike TODO: is this the best?
+                            Size idx = i * m + j;
+                            times[j] = dc.yearFraction(asof_, asof_ + parameters->correlationExpiries()[j]);
+                            Real correlation = baseCorr->correlation(asof_ + parameters->correlationExpiries()[j], strike);
+                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(correlation));
+                            simData_.emplace(std::piecewise_construct,
+                                std::forward_as_tuple(RiskFactorKey::KeyType::Correlation, name, idx),
+                                std::forward_as_tuple(q));
+                            quotes[i][j] = Handle<Quote>(q);
+                        }
+                    }
+
+                    if (n == 1 && m == 1) {
+                        ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>
+                            (baseCorr->settlementDays(), cal, quotes[0][0], dc));
+                    }
+                    else if (n == 1) {
+                        ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc, cal));
+                    }
+                    else {
+                        QL_FAIL("only atm or flat correlation termstructures currently supported");
+                    }
+
+                    ch->enableExtrapolation(baseCorr->allowsExtrapolation());
+                }
+                else {
+                    ch = Handle<QuantExt::CorrelationTermStructure>(*baseCorr);
+                }
+                               
+                correlationCurves_[make_tuple(Market::defaultConfiguration, pair.first, pair.second)] = ch;
+            }
+            continue;
         }
     }
 
@@ -1191,7 +1254,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         addSwapIndex(indexName, discounting, Market::defaultConfiguration);
         LOG("Adding swap index " << indexName << " done.");
     }
-
+    
     LOG("building base scenario");
     baseScenario_ = boost::make_shared<SimpleScenario>(initMarket->asofDate(), "BASE", 1.0);
     for (auto const& data : simData_) {

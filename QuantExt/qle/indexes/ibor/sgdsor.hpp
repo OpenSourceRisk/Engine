@@ -29,7 +29,6 @@
 #include <ql/time/calendars/singapore.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

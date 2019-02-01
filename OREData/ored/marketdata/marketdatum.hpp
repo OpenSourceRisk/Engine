@@ -98,7 +98,9 @@ public:
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
-        COMMODITY_OPTION
+        CORRELATION,
+        COMMODITY_OPTION,
+        CPR
     };
 
     //! Supported market quote types
@@ -1245,6 +1247,66 @@ private:
     std::string quoteCurrency_;
     std::string expiry_;
     std::string strike_;
+};
+
+//! Spread data class
+/*! This class holds single market points of type SPREAD
+    \ingroup marketdata
+*/
+class CorrelationQuote : public MarketDatum {
+public:
+    //! Constructor
+    /*! \param value         The correlation value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE or PRICE 
+        \param index1        The name of the first index
+        \param index2        The name of the second index
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATM 
+    */
+    CorrelationQuote(QuantLib::Real value, 
+        const QuantLib::Date& asof, 
+        const std::string& name, 
+        QuoteType quoteType, 
+        const std::string& index1,
+        const std::string& index2,
+        const std::string& expiry,
+        const std::string& strike);
+
+    //! \name Inspectors
+    //@{
+    const std::string& index1() const { return index1_; }
+    const std::string& index2() const { return index2_; }
+    const std::string& expiry() const { return expiry_; }
+    const std::string& strike() const { return strike_; }
+    //@}
+
+private:
+    std::string index1_;
+    std::string index2_;
+    std::string expiry_;
+    std::string strike_;
+};
+
+//! CPR data class
+/*!
+This class holds single market points of type
+- CPR
+\ingroup marketdata
+*/
+class CPRQuote : public MarketDatum {
+public:
+    //! Constructor
+    CPRQuote(Real value, Date asofDate, const string& name, const string& securityId)
+        : MarketDatum(value, asofDate, name, QuoteType::RATE, InstrumentType::CPR), securityID_(securityId) {}
+
+    //! \name Inspectors
+    //@{
+    const string& securityID() const { return securityID_; }
+    //@}
+private:
+    string securityID_;
 };
 
 } // namespace data

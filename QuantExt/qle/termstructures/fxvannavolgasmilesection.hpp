@@ -26,7 +26,6 @@
 
 #include <qle/termstructures/fxsmilesection.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

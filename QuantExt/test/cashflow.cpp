@@ -16,25 +16,25 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
+#include <qle/cashflows/fxlinkedcashflow.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CashFlowTest)
 
@@ -115,8 +115,10 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     Calendar cal = TARGET();
     Natural fixingLag = 2;
     Real divFactor = 1.0;
-    Handle<YieldTermStructure> dividend(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
-    Handle<YieldTermStructure> equityforecast(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc)));  // Equity Forecast Curve
+    Handle<YieldTermStructure> dividend(
+        boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.01, dc))); // Dividend Curve
+    Handle<YieldTermStructure> equityforecast(
+        boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // Equity Forecast Curve
 
     boost::shared_ptr<EquityIndex> eqIndex =
         boost::make_shared<EquityIndex>(eqName, cal, spot, equityforecast, dividend);
@@ -144,20 +146,20 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 
     // Price Return coupon
     Time dt = dc.yearFraction(today, cfDate2);
-    Real forward = spot->value() * std::exp((0.02 - 0.01)*dt);
+    Real forward = spot->value() * std::exp((0.02 - 0.01) * dt);
     Real expectedAmount = nominal * (forward - spot->value()) / spot->value();
     BOOST_TEST_MESSAGE("Check Price Return is correct.");
     BOOST_CHECK_CLOSE(eq1.amount(), expectedAmount, 1e-10);
 
     // Total Return Coupon
     forward = spot->value() * std::exp((0.02 - 0.01) * dt);
-    Real div = spot->value() * std::exp((0.02) * dt)  - forward;
+    Real div = spot->value() * std::exp((0.02) * dt) - forward;
     expectedAmount = nominal * (forward + divFactor * div - spot->value()) / spot->value();
     BOOST_TEST_MESSAGE("Check Total Return is correct");
     BOOST_CHECK_CLOSE(eq2.amount(), expectedAmount, 1e-10);
-    
+
     // Historical starting Price Return coupon
-    forward = spot->value() * std::exp((0.02 - 0.01)*dt);
+    forward = spot->value() * std::exp((0.02 - 0.01) * dt);
     expectedAmount = nominal * (forward - eqIndex->fixing(cfDate1)) / eqIndex->fixing(cfDate1);
     BOOST_TEST_MESSAGE("Check Historical starting Price Return is correct.");
     BOOST_CHECK_CLOSE(eq3.amount(), expectedAmount, 1e-10);
@@ -173,4 +175,3 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-

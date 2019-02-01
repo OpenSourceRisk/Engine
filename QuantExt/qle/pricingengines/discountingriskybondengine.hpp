@@ -29,7 +29,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/period.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -55,9 +54,8 @@ public:
                                const Handle<Quote>& recoveryRate, const Handle<Quote>& securitySpread,
                                Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
     //! alternative constructor (does not require default curve or recovery rate)
-    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-        const Handle<Quote>& securitySpread, Period timestepPeriod, 
-        boost::optional<bool> includeSettlementDateFlows = boost::none);
+    DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve, const Handle<Quote>& securitySpread,
+                               Period timestepPeriod, boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
     Real calculateNpv(Date npvDate) const;

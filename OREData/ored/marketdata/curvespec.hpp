@@ -56,7 +56,8 @@ public:
         Security,
         BaseCorrelation,
         Commodity,
-        CommodityVolatility
+        CommodityVolatility,
+        Correlation
     };
     
     //! Default constructor
@@ -115,6 +116,8 @@ public:
             return "Commodity";
         case CurveType::CommodityVolatility:
             return "CommodityVolatility";
+        case CurveType::Correlation:
+            return "Correlation";
         default:
             return "N/A";
         }
@@ -498,6 +501,28 @@ public:
 private:
     std::string currency_;
     std::string curveConfigId_;
+};
+
+//! Correlation curve description
+/*! \ingroup curves
+ */
+class CorrelationCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CorrelationCurveSpec() {}
+    //! Detailed constructor
+    CorrelationCurveSpec(const string& curveConfigID)
+        : CurveSpec(curveConfigID) {}
+    //@}
+
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::Correlation; }
+    string subName() const { return curveConfigID(); }
+    //@}
+private:
 };
 
 } // namespace data

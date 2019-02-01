@@ -26,7 +26,6 @@
 
 #include <ql/types.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

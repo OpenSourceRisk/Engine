@@ -23,7 +23,6 @@
 #ifndef quantext_stripped_cpi_volatility_structure_hpp
 #define quantext_stripped_cpi_volatility_structure_hpp
 
-#include <iostream>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
@@ -160,11 +159,7 @@ template <class Interpolator2D> void StrippedCPIVolatilitySurface<Interpolator2D
                 ObjectiveFunction func(priceToMatch, useFloor, strikes_[i], startDate, maturityDate, baseCPI_,
                                        priceSurface_, index_, engine_);
                 QuantLib::Real found = solver.solve(func, solverTolerance_, guess, lowerVolBound_, upperVolBound_);
-                // std::cout << (useFloor ? "Floor" : "Cap") << " strike=" << strikes_[i] << " term=" << maturities_[j]
-                //           << " price=" << priceToMatch << " baseCPI=" << baseCPI_;
                 volData_[i][j] = found;
-
-                // std::cout << " vol=" << found << std::endl;
             } catch (std::exception& e) {
                 QL_FAIL("failed to find implied vol for " << (useFloor ? "Floor" : "Cap") << " with strike "
                                                           << strikes_[i] << " and maturity " << maturities_[j]
@@ -287,7 +282,6 @@ operator()(QuantLib::Volatility guess) const {
 
     engine_->setVolatility(QuantLib::Handle<QuantLib::CPIVolatilitySurface>(vol));
 
-    // std::cout << "Guess = " << guess << " price=" << priceToMatch_ << std::endl;
     QuantLib::Real npv = cpiCapFloor_.NPV();
     return priceToMatch_ - npv;
 }

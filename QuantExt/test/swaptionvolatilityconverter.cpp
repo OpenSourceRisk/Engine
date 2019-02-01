@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include "toplevelfixture.hpp"
 #include "swaptionmarketdata.hpp"
+#include "toplevelfixture.hpp"
 #include "yieldcurvemarketdata.hpp"
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
@@ -83,10 +83,10 @@ struct CommonVars {
 };
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SwaptionVolatilityConverterTest)
- 
+
 BOOST_AUTO_TEST_CASE(testNormalToLognormal) {
     BOOST_TEST_MESSAGE("Testing conversion of swaption vols from normal to lognormal...");
 
