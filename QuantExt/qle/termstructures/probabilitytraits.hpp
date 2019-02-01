@@ -1,15 +1,15 @@
 /*
  Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
  The license is also available online at <http://opensourcerisk.org>
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -23,24 +23,23 @@
 #ifndef quantext_probability_traits_hpp
 #define quantext_probability_traits_hpp
 
-#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
-#include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
-#include <ql/termstructures/credit/interpolateddefaultdensitycurve.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
+#include <ql/termstructures/credit/interpolateddefaultdensitycurve.hpp>
+#include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
+#include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 
 namespace QuantExt {
 
 namespace detail {
-    const QuantLib::Real avgHazardRate = 0.01;
-    const QuantLib::Real maxHazardRate = 3.0;
-}
+const QuantLib::Real avgHazardRate = 0.01;
+const QuantLib::Real maxHazardRate = 3.0;
+} // namespace detail
 
 //! Survival probability curve traits
 struct SurvivalProbability {
-        
+
     // interpolated curve type
-    template <class Interpolator>
-    struct curve {
+    template <class Interpolator> struct curve {
         typedef QuantLib::InterpolatedSurvivalProbabilityCurve<Interpolator> type;
     };
 
@@ -48,19 +47,14 @@ struct SurvivalProbability {
     typedef QuantLib::BootstrapHelper<QuantLib::DefaultProbabilityTermStructure> helper;
 
     // start of curve data
-    static QuantLib::Date initialDate(const QuantLib::DefaultProbabilityTermStructure* c) {
-        return c->referenceDate();
-    }
+    static QuantLib::Date initialDate(const QuantLib::DefaultProbabilityTermStructure* c) { return c->referenceDate(); }
 
     // value at reference date
-    static QuantLib::Real initialValue(const QuantLib::DefaultProbabilityTermStructure*) {
-        return 1.0;
-    }
+    static QuantLib::Real initialValue(const QuantLib::DefaultProbabilityTermStructure*) { return 1.0; }
 
     // guesses
-    template <class C>
-    static QuantLib::Real guess(QuantLib::Size i, const C* c, bool validData, QuantLib::Size) {
-            
+    template <class C> static QuantLib::Real guess(QuantLib::Size i, const C* c, bool validData, QuantLib::Size) {
+
         // If have already bootstrapped some points, use the previous point
         if (validData)
             return c->data()[i];
@@ -77,19 +71,19 @@ struct SurvivalProbability {
     // constraints
     template <class C>
     static QuantLib::Real minValueAfter(QuantLib::Size i, const C* c, bool validData, QuantLib::Size) {
-            
+
         if (validData) {
             return c->data().back() / 2.0;
         }
 
-        Time dt = c->times()[i] - c->times()[i-1];
-        return c->data()[i-1] * std::exp(-detail::maxHazardRate * dt);
+        Time dt = c->times()[i] - c->times()[i - 1];
+        return c->data()[i - 1] * std::exp(-detail::maxHazardRate * dt);
     }
 
     template <class C>
     static QuantLib::Real maxValueAfter(QuantLib::Size i, const C* c, bool validData, QuantLib::Size) {
         // survival probability cannot increase
-        return c->data()[i-1];
+        return c->data()[i - 1];
     }
 
     // root-finding update
@@ -101,6 +95,6 @@ struct SurvivalProbability {
     static QuantLib::Size maxIterations() { return 50; }
 };
 
-}
+} // namespace QuantExt
 
 #endif

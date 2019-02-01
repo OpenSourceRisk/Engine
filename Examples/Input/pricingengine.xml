@@ -152,12 +152,7 @@
   <!-- CMS Spread Brigo Mercurio Model -->
   <Product type="CMSSpread">
     <Model>BrigoMercurio</Model>
-    <ModelParameters>
-      <Parameter name="Correlation_EUR">0.8</Parameter>
-      <Parameter name="Correlation_USD">0.75</Parameter>
-      <Parameter name="Correlation_GBP">0.72</Parameter>
-      <Parameter name="Correlation_CHF">0.7</Parameter>
-    </ModelParameters>
+    <ModelParameters/>
     <Engine>Analytic</Engine>
     <EngineParameters>
       <Parameter name="IntegrationPoints">16</Parameter>

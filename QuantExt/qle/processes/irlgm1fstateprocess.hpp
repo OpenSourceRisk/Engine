@@ -27,7 +27,6 @@
 #include <ql/stochasticprocess.hpp>
 #include <qle/models/irlgm1fparametrization.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

@@ -31,7 +31,6 @@
 #include <ql/money.hpp>
 #include <ql/quote.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

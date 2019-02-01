@@ -30,7 +30,6 @@
 #include <ql/models/calibrationhelper.hpp>
 #include <ql/quotes/simplequote.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 //! CDS option helper
@@ -39,15 +38,15 @@ using namespace QuantLib;
  */
 class CdsOptionHelper : public BlackCalibrationHelper {
 public:
-    CdsOptionHelper(const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
-                    const Schedule& schedule, const BusinessDayConvention paymentConvention,
-                    const DayCounter& dayCounter, const Handle<DefaultProbabilityTermStructure>& probability,
-                    const Real recoveryRate, const Handle<YieldTermStructure>& termStructure,
-                    const Rate spread = Null<Rate>(), const Rate upfront = Null<Rate>(),
-                    const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
-                    const Date protectionStart = Date(), const Date upfrontDate = Date(),
-                    const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
-                    const BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
+    CdsOptionHelper(
+        const Date& exerciseDate, const Handle<Quote>& volatility, const Protection::Side side,
+        const Schedule& schedule, const BusinessDayConvention paymentConvention, const DayCounter& dayCounter,
+        const Handle<DefaultProbabilityTermStructure>& probability, const Real recoveryRate,
+        const Handle<YieldTermStructure>& termStructure, const Rate spread = Null<Rate>(),
+        const Rate upfront = Null<Rate>(), const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
+        const Date protectionStart = Date(), const Date upfrontDate = Date(),
+        const boost::shared_ptr<Claim>& claim = boost::shared_ptr<Claim>(),
+        const BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
 
     virtual void addTimesTo(std::list<Time>& times) const {}
     virtual Real modelValue() const;

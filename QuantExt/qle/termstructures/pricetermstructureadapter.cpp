@@ -1,15 +1,15 @@
 /*
  Copyright (C) 2018 Quaternion Risk Management Ltd
  All rights reserved.
- 
+
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
  The license is also available online at <http://opensourcerisk.org>
- 
+
  This program is distributed on the basis that it will form a useful
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -24,10 +24,12 @@ using namespace QuantLib;
 namespace QuantExt {
 
 PriceTermStructureAdapter::PriceTermStructureAdapter(const boost::shared_ptr<Quote>& spotQuote,
-    const boost::shared_ptr<PriceTermStructure>& priceCurve, const boost::shared_ptr<YieldTermStructure>& discount)
+                                                     const boost::shared_ptr<PriceTermStructure>& priceCurve,
+                                                     const boost::shared_ptr<YieldTermStructure>& discount)
     : spotQuote_(spotQuote), priceCurve_(priceCurve), discount_(discount) {
 
-    QL_REQUIRE(priceCurve_->referenceDate() == discount_->referenceDate(),
+    QL_REQUIRE(
+        priceCurve_->referenceDate() == discount_->referenceDate(),
         "PriceTermStructureAdapter: The reference date of the discount curve and price curve should be the same");
 
     registerWith(spotQuote_);
@@ -42,26 +44,19 @@ Date PriceTermStructureAdapter::maxDate() const {
 }
 
 const Date& PriceTermStructureAdapter::referenceDate() const {
-    QL_REQUIRE(priceCurve_->referenceDate() == discount_->referenceDate(), 
+    QL_REQUIRE(
+        priceCurve_->referenceDate() == discount_->referenceDate(),
         "PriceTermStructureAdapter: The reference date of the discount curve and price curve should be the same");
     return priceCurve_->referenceDate();
 }
 
-DayCounter PriceTermStructureAdapter::dayCounter() const {
-    return priceCurve_->dayCounter();
-}
+DayCounter PriceTermStructureAdapter::dayCounter() const { return priceCurve_->dayCounter(); }
 
-const boost::shared_ptr<Quote>& PriceTermStructureAdapter::spotQuote() const {
-    return spotQuote_;
-}
+const boost::shared_ptr<Quote>& PriceTermStructureAdapter::spotQuote() const { return spotQuote_; }
 
-const boost::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const {
-    return priceCurve_;
-}
+const boost::shared_ptr<PriceTermStructure>& PriceTermStructureAdapter::priceCurve() const { return priceCurve_; }
 
-const boost::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const {
-    return discount_;
-}
+const boost::shared_ptr<YieldTermStructure>& PriceTermStructureAdapter::discount() const { return discount_; }
 
 DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     // Returns discount factor exp(-s(t) * t) where s(t) is defined such that
@@ -71,4 +66,4 @@ DiscountFactor PriceTermStructureAdapter::discountImpl(Time t) const {
     return discount * forwardPrice / spotQuote_->value();
 }
 
-}
+} // namespace QuantExt

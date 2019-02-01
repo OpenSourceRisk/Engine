@@ -22,8 +22,8 @@
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
-#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
+#include <ql/termstructures/yield/zerospreadedtermstructure.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
 using namespace std;
@@ -47,10 +47,10 @@ DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStr
 }
 
 DiscountingRiskyBondEngine::DiscountingRiskyBondEngine(const Handle<YieldTermStructure>& discountCurve,
-    const Handle<Quote>& securitySpread, Period timestepPeriod,
-    boost::optional<bool> includeSettlementDateFlows)
-    : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod), 
-    includeSettlementDateFlows_(includeSettlementDateFlows) {
+                                                       const Handle<Quote>& securitySpread, Period timestepPeriod,
+                                                       boost::optional<bool> includeSettlementDateFlows)
+    : securitySpread_(securitySpread), timestepPeriod_(timestepPeriod),
+      includeSettlementDateFlows_(includeSettlementDateFlows) {
     discountCurve_ =
         Handle<YieldTermStructure>(boost::make_shared<ZeroSpreadedTermStructure>(discountCurve, securitySpread));
     registerWith(discountCurve_);
@@ -80,11 +80,13 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
     Real npvValue = 0;
 
     // handle case where we wish to price simply with benchmark curve and scalar security spread
-        // i.e. credit curve term structure (and recovery) have not been specified
-        // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already captured within security spread)
-    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr = defaultCurve_.empty() ?
-        boost::make_shared<QuantLib::FlatHazardRate>(results_.valuationDate, 0.0, discountCurve_->dayCounter()) :
-        defaultCurve_.currentLink(); 
+    // i.e. credit curve term structure (and recovery) have not been specified
+    // we set the default probability and recovery rate to zero in this instance (issuer credit worthiness already
+    // captured within security spread)
+    boost::shared_ptr<DefaultProbabilityTermStructure> creditCurvePtr =
+        defaultCurve_.empty()
+            ? boost::make_shared<QuantLib::FlatHazardRate>(results_.valuationDate, 0.0, discountCurve_->dayCounter())
+            : defaultCurve_.currentLink();
     Rate recoveryVal = recoveryRate_.empty() ? 0.0 : recoveryRate_->value();
 
     Size numCoupons = 0;
@@ -118,7 +120,7 @@ Real DiscountingRiskyBondEngine::calculateNpv(Date npvDate) const {
 
     // the ql instrument might not yet be expired and still have not anything to value if
     // the npvDate > evaluation date
-    if(!hasLiveCashFlow)
+    if (!hasLiveCashFlow)
         return 0.0;
 
     if (arguments_.cashflows.size() > 1 && numCoupons == 0) {

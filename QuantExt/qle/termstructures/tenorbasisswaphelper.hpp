@@ -28,7 +28,6 @@
 
 #include <qle/instruments/tenorbasisswap.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

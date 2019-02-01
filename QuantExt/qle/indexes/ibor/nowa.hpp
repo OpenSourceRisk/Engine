@@ -37,10 +37,12 @@ namespace QuantExt {
 */
 class Nowa : public QuantLib::OvernightIndex {
 public:
-    explicit Nowa(const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
-        : OvernightIndex("Nowa", 0, QuantLib::NOKCurrency(), QuantLib::Norway(), QuantLib::ActualActual(QuantLib::ActualActual::ISMA), h) {}
+    explicit Nowa(
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
+        : OvernightIndex("Nowa", 0, QuantLib::NOKCurrency(), QuantLib::Norway(),
+                         QuantLib::ActualActual(QuantLib::ActualActual::ISMA), h) {}
 };
 
-}
+} // namespace QuantExt
 
 #endif

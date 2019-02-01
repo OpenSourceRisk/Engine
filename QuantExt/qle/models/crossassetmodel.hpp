@@ -39,7 +39,6 @@
 
 #include <boost/bind.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

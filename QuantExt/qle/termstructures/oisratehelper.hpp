@@ -27,7 +27,6 @@
 #include <ql/instruments/overnightindexedswap.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

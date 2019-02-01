@@ -27,18 +27,18 @@
 
 namespace QuantExt {
 
-    //! Sweden as geographical/economic region
-    class SwedenRegion : public QuantLib::Region {
-      public:
-        SwedenRegion();
-    };
+//! Sweden as geographical/economic region
+class SwedenRegion : public QuantLib::Region {
+public:
+    SwedenRegion();
+};
 
-    //! Denmark as geographical/economic region
-    class DenmarkRegion : public QuantLib::Region {
-      public:
-        DenmarkRegion();
-    };
+//! Denmark as geographical/economic region
+class DenmarkRegion : public QuantLib::Region {
+public:
+    DenmarkRegion();
+};
 
-}
+} // namespace QuantExt
 
 #endif

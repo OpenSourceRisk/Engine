@@ -37,7 +37,6 @@
 
 #include <vector>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using namespace boost::accumulators;

@@ -16,14 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-#include <qle/pricingengines/depositengine.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
+#include <qle/pricingengines/depositengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -31,12 +30,12 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-BOOST_FIXTURE_TEST_SUITE(QleDataTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QleDataTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(DepositTest)
 
 BOOST_AUTO_TEST_CASE(testRepricing) {
-    
+
     BOOST_TEST_MESSAGE("Testing Repricing of a Deposit on a depo curve...");
 
     SavedSettings backup;

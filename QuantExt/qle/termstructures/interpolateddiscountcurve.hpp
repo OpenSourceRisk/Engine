@@ -28,7 +28,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/quotes/logquote.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

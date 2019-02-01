@@ -28,9 +28,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <iostream>
-
-
 namespace QuantExt {
 using namespace QuantLib;
 

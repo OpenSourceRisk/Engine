@@ -24,6 +24,7 @@
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -298,6 +299,10 @@ TestMarket::TestMarket(Date asof) {
     // Commodity volatilities
     commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_GOLD_USD")] = flatRateFxv(0.15);
     commodityVols_[make_pair(Market::defaultConfiguration, "COMDTY_WTI_USD")] = flatRateFxv(0.20);
+    
+    // Correlations
+    correlationCurves_[make_tuple(Market::defaultConfiguration, "EUR-CMS-10Y", "EUR-CMS-1Y")] = flatCorrelation(0.15);
+    correlationCurves_[make_tuple(Market::defaultConfiguration, "USD-CMS-10Y", "USD-CMS-1Y")] = flatCorrelation(0.2);
 }
 
 Handle<ZeroInflationIndex> TestMarket::makeZeroInflationIndex(string index, vector<Date> dates, vector<Rate> rates,

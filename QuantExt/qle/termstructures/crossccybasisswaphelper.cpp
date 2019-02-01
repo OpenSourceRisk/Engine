@@ -20,7 +20,6 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #endif
 
-
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 
 #include <boost/make_shared.hpp>

@@ -29,7 +29,6 @@
 #include <ql/time/calendars/brazil.hpp>
 #include <ql/time/daycounters/business252.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -37,10 +36,8 @@ using namespace QuantLib;
 
 class BRLCdi : public OvernightIndex {
 public:
-    BRLCdi(const Handle<YieldTermStructure>& h
-        = Handle<YieldTermStructure>())
-        : OvernightIndex("BRL-CDI", 1, BRLCurrency(),
-            Brazil(Brazil::Settlement), Business252(), h) {}
+    BRLCdi(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("BRL-CDI", 1, BRLCurrency(), Brazil(Brazil::Settlement), Business252(), h) {}
 };
 } // namespace QuantExt
 

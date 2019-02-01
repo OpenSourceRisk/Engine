@@ -27,7 +27,6 @@
 
 #include <qle/instruments/averageois.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
