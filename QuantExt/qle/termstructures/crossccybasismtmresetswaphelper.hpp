@@ -52,18 +52,16 @@ namespace QuantExt {
 */
 class CrossCcyBasisMtMResetSwapHelper : public RelativeDateRateHelper {
 public:
-    CrossCcyBasisMtMResetSwapHelper(const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
-                            const Calendar& settlementCalendar, const Period& swapTenor,
-                            BusinessDayConvention rollConvention,
-                            const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
-                            const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
-                            const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
-                            const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
-                            const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
-                            bool eom = false,
-                            bool spreadOnForeignCcy = true,
-                            bool invertFxIndex = false);
+    CrossCcyBasisMtMResetSwapHelper(
+        const Handle<Quote>& spreadQuote, const Handle<Quote>& spotFX, Natural settlementDays,
+        const Calendar& settlementCalendar, const Period& swapTenor, BusinessDayConvention rollConvention,
+        const boost::shared_ptr<QuantLib::IborIndex>& foreignCcyIndex,
+        const boost::shared_ptr<QuantLib::IborIndex>& domesticCcyIndex,
+        const Handle<YieldTermStructure>& foreignCcyDiscountCurve,
+        const Handle<YieldTermStructure>& domesticCcyDiscountCurve,
+        const Handle<YieldTermStructure>& foreignCcyFxFwdRateCurve = Handle<YieldTermStructure>(),
+        const Handle<YieldTermStructure>& domesticCcyFxFwdRateCurve = Handle<YieldTermStructure>(), bool eom = false,
+        bool spreadOnForeignCcy = true, bool invertFxIndex = false);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;

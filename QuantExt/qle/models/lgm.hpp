@@ -31,7 +31,6 @@
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <ql/stochasticprocess.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 //! Linear Gauss Morkov Model
@@ -177,10 +176,9 @@ inline void LinearGaussMarkovModel::calibrateVolatilitiesIterative(
     }
 }
 
-inline void
-LinearGaussMarkovModel::calibrateReversionsIterative(const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
-                                                     const Constraint& constraint, const std::vector<Real>& weights) {
+inline void LinearGaussMarkovModel::calibrateReversionsIterative(
+    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
+    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveReversion(i));

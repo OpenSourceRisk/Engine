@@ -32,7 +32,6 @@
 #include <ql/models/marketmodels/browniangenerators/sobolbrowniangenerator.hpp>
 #include <ql/stochasticprocess.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
 #include "utilities.hpp"
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 
@@ -35,7 +35,7 @@ using namespace boost::unit_test_framework;
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StaticallyCorrectedYieVldTermStructureTest)
- 
+
 BOOST_AUTO_TEST_CASE(testCorrectedYts) {
 
     SavedSettings backup;

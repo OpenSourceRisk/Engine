@@ -20,14 +20,13 @@
 
 namespace QuantExt {
 
-    SwedenRegion::SwedenRegion() {
-        static boost::shared_ptr<Data> SEdata(new Data("Sweden","SE"));
-        data_ = SEdata;
-    }
-
-    DenmarkRegion::DenmarkRegion() {
-        static boost::shared_ptr<Data> DKdata(new Data("Denmark","DK"));
-        data_ = DKdata;
-    }
+SwedenRegion::SwedenRegion() {
+    static boost::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
+    data_ = SEdata;
 }
 
+DenmarkRegion::DenmarkRegion() {
+    static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
+    data_ = DKdata;
+}
+} // namespace QuantExt

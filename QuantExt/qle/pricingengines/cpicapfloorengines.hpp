@@ -43,9 +43,9 @@
 #ifndef quantext_cpicapfloorengines_hpp
 #define quantext_cpicapfloorengines_hpp
 
+#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/pricingengines/genericmodelengine.hpp>
-#include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 
 namespace QuantExt {
 

@@ -49,5 +49,5 @@ public:
     }
 };
 
-}
-}
+} // namespace test
+} // namespace qle

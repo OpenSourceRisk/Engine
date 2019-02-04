@@ -30,7 +30,6 @@
 
 #include <boost/unordered_map.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

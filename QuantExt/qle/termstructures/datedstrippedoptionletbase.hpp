@@ -33,7 +33,6 @@
 
 #include <vector>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 using std::vector;

@@ -20,9 +20,9 @@
     \brief fx vol smile
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>

@@ -23,37 +23,29 @@
 #ifndef quantext_dkcpi_hpp
 #define quantext_dkcpi_hpp
 
-#include <ql/indexes/inflationindex.hpp>
 #include <ql/currencies/europe.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <qle/indexes/region.hpp>
 
 namespace QuantExt {
 
-    //! DK CPI index
-    /*! Both CPI and HICP are defined by ISDA for Danish inflation
-     *   https://www.isda.org/a/EoMDE/2008-inflation-defs.pdf
-     *  and FpML supports both
-     *   http://www.fpml.org/spec/coding-scheme/fpml-schemes.html#s5.105
-     *  However looking at thing on the internet, e.g.
-     *   https://e-markets.nordea.com/research/attachment/15539
-     *   https://e-markets.nordea.com/api/research/attachment/70696
-     *  It appears that DK CPI is the most commonly used
-     */
-    class DKCPI : public ZeroInflationIndex {
-      public:
-        DKCPI(bool interpolated,
-              const Handle<ZeroInflationTermStructure>& ts =
-                                        Handle<ZeroInflationTermStructure>())
-        : ZeroInflationIndex("CPI",
-                             DenmarkRegion(),
-                             false,
-                             interpolated,
-                             Monthly,
-                             Period(1, Months), // availability
-                             DKKCurrency(),
-                             ts) {}
-    };
+//! DK CPI index
+/*! Both CPI and HICP are defined by ISDA for Danish inflation
+ *   https://www.isda.org/a/EoMDE/2008-inflation-defs.pdf
+ *  and FpML supports both
+ *   http://www.fpml.org/spec/coding-scheme/fpml-schemes.html#s5.105
+ *  However looking at thing on the internet, e.g.
+ *   https://e-markets.nordea.com/research/attachment/15539
+ *   https://e-markets.nordea.com/api/research/attachment/70696
+ *  It appears that DK CPI is the most commonly used
+ */
+class DKCPI : public ZeroInflationIndex {
+public:
+    DKCPI(bool interpolated, const Handle<ZeroInflationTermStructure>& ts = Handle<ZeroInflationTermStructure>())
+        : ZeroInflationIndex("CPI", DenmarkRegion(), false, interpolated, Monthly, Period(1, Months), // availability
+                             DKKCurrency(), ts) {}
+};
 
-}
+} // namespace QuantExt
 
 #endif

@@ -16,16 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-#include <qle/instruments/payment.hpp>
-#include <qle/pricingengines/paymentdiscountingengine.hpp>
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/instruments/payment.hpp>
+#include <qle/pricingengines/paymentdiscountingengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -38,7 +37,7 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(PaymentTest)
 
 BOOST_AUTO_TEST_CASE(testDomesicPayment) {
-    
+
     BOOST_TEST_MESSAGE("Testing Domestic Payment NPV...");
 
     SavedSettings backup;
@@ -57,7 +56,7 @@ BOOST_AUTO_TEST_CASE(testDomesicPayment) {
 }
 
 BOOST_AUTO_TEST_CASE(testForeignPayment) {
-    
+
     BOOST_TEST_MESSAGE("Testing Foreign Payment NPV...");
 
     SavedSettings backup;

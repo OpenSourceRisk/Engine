@@ -17,21 +17,21 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 #include "toplevelfixture.hpp"
-#include <boost/test/unit_test.hpp>
 #include "utilities.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 
-#include <ql/math/matrix.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/math/matrix.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
-#include <ql/indexes/inflation/euhicp.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     Date asof_ = Date(18, July, 2016);
     Settings::instance().evaluationDate() = asof_;
 
-    Handle<YieldTermStructure> nominalTs = 
+    Handle<YieldTermStructure> nominalTs =
         Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, TARGET(), 0.005, Actual365Fixed()));
 
     std::vector<Rate> capStrikes;
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     floorStrikes.push_back(0.0);
     floorStrikes.push_back(0.01);
     floorStrikes.push_back(0.02);
-    
+
     std::vector<Period> maturities;
     maturities.push_back(Period(2, Years));
     maturities.push_back(Period(5, Years));
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     maturities.push_back(Period(20, Years));
 
     Matrix capPrice(capStrikes.size(), maturities.size(), Null<Real>()),
-            floorPrice(floorStrikes.size(), maturities.size(), Null<Real>());
+        floorPrice(floorStrikes.size(), maturities.size(), Null<Real>());
 
     capPrice[0][0] = 0.00874;
     capPrice[1][0] = 0.00146;
@@ -137,20 +137,20 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     floorPrice[3][5] = 0.05269;
     floorPrice[4][5] = 0.12839;
 
-    // build a 
+    // build a
     std::vector<Date> datesZCII;
-    datesZCII.push_back( asof_ + 1 * Years );
+    datesZCII.push_back(asof_ + 1 * Years);
     std::vector<Rate> ratesZCII;
-    ratesZCII.push_back( 1.1625 );
+    ratesZCII.push_back(1.1625);
 
     // build EUHICPXT fixing history
     Schedule fixingDatesEUHICPXT =
         MakeSchedule().from(Date(1, May, 2015)).to(Date(1, July, 2016)).withTenor(1 * Months);
-    std::vector<Real>fixingRatesEUHICPXT(15, 100);
+    std::vector<Real> fixingRatesEUHICPXT(15, 100);
 
     Handle<ZeroInflationIndex> hEUHICPXT;
     boost::shared_ptr<EUHICPXT> ii = boost::shared_ptr<EUHICPXT>(new EUHICPXT(false));
-    boost::shared_ptr<ZeroInflationTermStructure> cpiTS;        
+    boost::shared_ptr<ZeroInflationTermStructure> cpiTS;
     for (Size i = 0; i < fixingDatesEUHICPXT.size(); i++) {
         ii->addFixing(fixingDatesEUHICPXT[i], fixingRatesEUHICPXT[i], true);
     };
@@ -158,16 +158,14 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     std::vector<boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > > instruments;
     for (Size i = 0; i < datesZCII.size(); i++) {
         Handle<Quote> quote(boost::shared_ptr<Quote>(new SimpleQuote(ratesZCII[i] / 100.0)));
-        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(
-            new ZeroCouponInflationSwapHelper(quote, Period(3, Months), datesZCII[i], TARGET(),
-                ModifiedFollowing, Actual365Fixed(), ii));
+        boost::shared_ptr<BootstrapHelper<ZeroInflationTermStructure> > anInstrument(new ZeroCouponInflationSwapHelper(
+            quote, Period(3, Months), datesZCII[i], TARGET(), ModifiedFollowing, Actual365Fixed(), ii));
         instruments.push_back(anInstrument);
     };
 
     Rate baseZeroRate = ratesZCII[0] / 100.0;
     boost::shared_ptr<PiecewiseZeroInflationCurve<Linear> > pCPIts(new PiecewiseZeroInflationCurve<Linear>(
-        asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, false,
-        baseZeroRate, nominalTs, instruments));
+        asof_, TARGET(), Actual365Fixed(), Period(3, Months), Monthly, false, baseZeroRate, nominalTs, instruments));
     pCPIts->recalculate();
     cpiTS = boost::dynamic_pointer_cast<ZeroInflationTermStructure>(pCPIts);
 
@@ -175,13 +173,13 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     boost::shared_ptr<ZeroInflationIndex> zeroIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(zii);
 
     boost::shared_ptr<YoYInflationIndex> yoyIndex;
-        
-    yoyIndex = boost::make_shared<QuantExt::YoYInflationIndexWrapper>(
-        zeroIndex, true, Handle<YoYInflationTermStructure>());
+
+    yoyIndex =
+        boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex, true, Handle<YoYInflationTermStructure>());
 
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(
-        0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes,
-        floorStrikes, maturities, capPrice, floorPrice);
+        0, Period(3, Months), yoyIndex, 1, nominalTs, Actual365Fixed(), TARGET(), Following, capStrikes, floorStrikes,
+        maturities, capPrice, floorPrice);
 
     boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
@@ -191,14 +189,13 @@ BOOST_AUTO_TEST_CASE(testInterpolatedYoyCapFloorTermPriceSurface) {
     for (Size i = 0; i < maturities.size(); i++) {
         Date m = yoySurface->yoyOptionDateFromTenor(maturities[i]);
         for (Size j = 0; j < capStrikes.size(); j++) {
-            BOOST_CHECK_CLOSE(yoySurface->capPrice(m, capStrikes[j]), capPrice[j][i],tol);
+            BOOST_CHECK_CLOSE(yoySurface->capPrice(m, capStrikes[j]), capPrice[j][i], tol);
         }
         for (Size j = 0; j < floorStrikes.size(); j++) {
             BOOST_CHECK_CLOSE(yoySurface->floorPrice(m, floorStrikes[j]), floorPrice[j][i], tol);
         }
     }
 } // testInterpolatedYoyCapFloorTermPriceSurface
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

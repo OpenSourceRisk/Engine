@@ -28,7 +28,6 @@
 
 #include <qle/instruments/subperiodsswap.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

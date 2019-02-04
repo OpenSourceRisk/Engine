@@ -28,7 +28,6 @@
 
 #include <ql/termstructures/inflationtermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

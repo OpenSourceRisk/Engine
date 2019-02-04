@@ -16,9 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
-#include "utilities.hpp"
 #include "toplevelfixture.hpp"
+#include "utilities.hpp"
 #include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>

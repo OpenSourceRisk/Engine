@@ -22,48 +22,47 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    France::France(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new France::SettlementImpl);
-        impl_ = impl;
-    }
-
-    bool France::SettlementImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-        if (isWeekend(w)
-            // New Years Day
-            || (d == 1 && m == January)
-            // Good Friday
-            || (dd == em-3)
-            // Easter Monday
-            || (dd == em)
-            // Labour Day
-            || (d == 1 && m == May)
-            // Armistice (V-E) Day
-            || (d == 8 && m == May)
-            // Ascension Thursday
-            || (dd == em+38)
-            // Whit Monday
-            || (dd == em+49)
-            // Bastille Day
-            || (d == 14 && m == July)
-            // Assumption Day
-            || (d == 15 && m == August)
-            // All Saints' Day
-            || (d == 1 && m == November)
-            // Armistice Day
-            || (d == 11 && m == November)
-            // Christmas
-            || (d == 25 && m == December)
-            // Boxing Day
-            || (d == 26 && m == December))
-            return false;
-        return true;
-    }
-
+France::France(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new France::SettlementImpl);
+    impl_ = impl;
 }
 
+bool France::SettlementImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+    if (isWeekend(w)
+        // New Years Day
+        || (d == 1 && m == January)
+        // Good Friday
+        || (dd == em - 3)
+        // Easter Monday
+        || (dd == em)
+        // Labour Day
+        || (d == 1 && m == May)
+        // Armistice (V-E) Day
+        || (d == 8 && m == May)
+        // Ascension Thursday
+        || (dd == em + 38)
+        // Whit Monday
+        || (dd == em + 49)
+        // Bastille Day
+        || (d == 14 && m == July)
+        // Assumption Day
+        || (d == 15 && m == August)
+        // All Saints' Day
+        || (d == 1 && m == November)
+        // Armistice Day
+        || (d == 11 && m == November)
+        // Christmas
+        || (d == 25 && m == December)
+        // Boxing Day
+        || (d == 26 && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantExt
