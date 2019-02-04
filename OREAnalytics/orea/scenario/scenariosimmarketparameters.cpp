@@ -305,6 +305,7 @@ bool& ScenarioSimMarketParameters::commodityCurveSimulate() {
 
 void ScenarioSimMarketParameters::setCommodityNames(vector<string> names) {
     addParams(RiskFactorKey::KeyType::CommoditySpot, names);
+    setCommodityCurves(names);
 }
 
 void ScenarioSimMarketParameters::setCommodityCurveTenors(const string& commodityName, const vector<Period>& p) {
@@ -902,7 +903,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
 
         vector<string> commodityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setCommodityNames(commodityNames);
-        setCommodityCurves(commodityNames);
         commodityCurveTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Tenors", true);
 
         // If present, override DayCounter for _all_ commodity price curves
