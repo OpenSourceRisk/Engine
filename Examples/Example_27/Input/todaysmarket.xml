@@ -223,4 +223,8 @@
       <CommodityVolatility name="COMDTY_GOLD_USD">CommodityVolatility/USD/GOLD_USD_VOLS</CommodityVolatility>
       <CommodityVolatility name="COMDTY_WTI_USD">CommodityVolatility/USD/WTI_USD_VOLS</CommodityVolatility>
   </CommodityVolatilities>
+  <Correlations id="default">
+      <Correlation name="EUR-CMS-10Y:EUR-CMS-2Y">Correlation/EUR-CORR</Correlation>
+      <Correlation name="USD-CMS-10Y:USD-CMS-1Y">Correlation/USD-CORR</Correlation>
+  </Correlations>
 </TodaysMarket>
