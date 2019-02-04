@@ -485,14 +485,14 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -632,14 +632,14 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -777,14 +777,14 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->interpolation() = "LogLinear";
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -918,19 +918,19 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
     simMarketConfig->fxVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->fxVolDecayMode() = "ForwardVariance";
-    simMarketConfig->fxVolCcyPairs() = {"USDEUR"};
+    simMarketConfig->setFxVolCcyPairs({"USDEUR"});
     simMarketConfig->setFxVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1053,13 +1053,13 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     simMarketConfig->simulateEquityVols() = false;
 
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M"});
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
@@ -1184,17 +1184,17 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     simMarketConfig->simulateFXVols() = false;
     simMarketConfig->simulateEquityVols() = false;
     simMarketConfig->baseCcy() = "EUR";
-    simMarketConfig->ccys() = {"EUR", "USD", "GBP"};
-    simMarketConfig->indices() = {"EUR-EURIBOR-6M"};
+    simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
+    simMarketConfig->setIndices({"EUR-EURIBOR-6M"});
     simMarketConfig->swapVolExpiries() = {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     simMarketConfig->swapVolTerms() = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years};
     simMarketConfig->setSwapVolDayCounters("", "ACT/ACT");
-    simMarketConfig->fxCcyPairs() = {"USDEUR", "GBPEUR"};
-    simMarketConfig->zeroInflationIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
+    simMarketConfig->setZeroInflationIndices({"UKRPI", "EUHICPXT"});
     simMarketConfig->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years, 5 * Years,
                                                  7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years});
     simMarketConfig->setZeroInflationDayCounters("", "ACT/ACT");
-    simMarketConfig->cpiIndices() = {"UKRPI", "EUHICPXT"};
+    simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
     boost::shared_ptr<ScenarioGeneratorData> sgd(new ScenarioGeneratorData);
