@@ -55,11 +55,11 @@ StressTest::StressTest(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
                        const boost::shared_ptr<ore::data::EngineData>& engineData,
                        boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                        const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
-                       boost::shared_ptr<ScenarioFactory> scenarioFactory, const bool continueOnError) {
+                       boost::shared_ptr<ScenarioFactory> scenarioFactory, bool continueOnError) {
 
     LOG("Build Simulation Market");
     boost::shared_ptr<ScenarioSimMarket> simMarket =
-        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, continueOnError);
+        boost::make_shared<ScenarioSimMarket>(market, simMarketData, conventions, marketConfiguration, continueOnError);
 
     LOG("Build Stress Scenario Generator");
     Date asof = market->asofDate();
