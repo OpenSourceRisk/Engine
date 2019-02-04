@@ -64,7 +64,7 @@ struct TestData {
 
 } // anonymous namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuire, qle::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(DynamicSwaptionVolMatrixTest)
 
