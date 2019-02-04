@@ -31,12 +31,6 @@ void IrLgmData::fromXML(XMLNode* node) {
 
     XMLNode* optionsNode = XMLUtils::getChildNode(node, "CalibrationSwaptions");
 
-    string calibrationStrategyStr = XMLUtils::getChildValue(optionsNode, "CalibrationStrategy", false);
-    if (calibrationStrategyStr != "") {
-        calibrationStrategy() = parseCalibrationStrategy(calibrationStrategyStr);
-        LOG("LGM Bermudan Calibration Strategy " << calibrationStrategy());
-    }
-
     optionExpiries() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Expiries", false);
     optionTerms() = XMLUtils::getChildrenValuesAsStrings(optionsNode, "Terms", false);
     QL_REQUIRE(optionExpiries().size() == optionTerms().size(),
@@ -62,7 +56,6 @@ XMLNode* IrLgmData::toXML(XMLDocument& doc) {
 
     // swaption calibration
     XMLNode* calibrationSwaptionsNode = XMLUtils::addChild(doc, node, "CalibrationSwaptions");
-    XMLUtils::addGenericChild(doc, calibrationSwaptionsNode, "CalibrationStrategy", calibrationStrategy());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Expiries", optionExpiries());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Terms", optionTerms());
     XMLUtils::addGenericChildAsList(doc, calibrationSwaptionsNode, "Strikes", optionStrikes());

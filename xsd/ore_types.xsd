@@ -366,6 +366,14 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="ATM"/>
       <xs:enumeration value="Smile"/>
+      <xs:enumeration value="Constant"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="correlationQuoteType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Rate"/>
+      <xs:enumeration value="Price"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -420,6 +428,22 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="Physical"/>
       <xs:enumeration value="Cash"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="settlementMethod">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="PhysicalOTC"/>
+      <xs:enumeration value="PhysicalCleared"/>
+      <xs:enumeration value="CollateralizedCashPrice"/>
+      <xs:enumeration value="ParYieldCurve"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="capFloor">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Cap"/>
+      <xs:enumeration value="Floor"/>
     </xs:restriction>
   </xs:simpleType>
 

@@ -42,7 +42,7 @@ namespace QuantExt {
     option expiry are considered to be
     part of the exercise into right.
 
-    \warning Cash settled swaptions are not supported
+    \warning Cash ParYieldCurve-settled swaptions are not supported
 
     Reference: Hagan, Methodology for callable swaps and Bermudan
                exercise into swaptions
@@ -72,8 +72,8 @@ protected:
         CumulativeNormalDistribution N;
         NormalDistribution G;
 
-        y_.resize(2 * my_ + 1);         // x-coordinate / standard deviation of x
-        w_.resize(2 * my_ + 1);         // probability weight around y-grid point i
+        y_.resize(2 * my_ + 1); // x-coordinate / standard deviation of x
+        w_.resize(2 * my_ + 1); // probability weight around y-grid point i
         for (int i = 0; i <= 2 * my_; i++) {
             y_[i] = h_ * (i - my_);
             if (i == 0 || i == 2 * my_)

@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -55,7 +57,6 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <test/sensitivityanalysis.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -67,7 +68,20 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildEuropeanSwaption;
+using testsuite::TestConfigurationObjects;
+using testsuite::buildBermudanSwaption;
+using testsuite::buildFxOption;
+using testsuite::buildCap;
+using testsuite::buildFloor;
+using testsuite::buildZeroBond;
+using testsuite::buildEquityOption;
+using testsuite::buildCPIInflationSwap;
+using testsuite::buildYYInflationSwap;
+using testsuite::buildCommodityForward;
+using testsuite::buildCommodityOption;
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
@@ -791,22 +805,26 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityNoneObs() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
+		
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityNoneObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (None observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::None);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityDisableObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityDisableObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Disable observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Disable);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityDeferObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityDeferObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Defer observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Defer);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Unregister observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Unregister);
 }
@@ -907,11 +925,11 @@ void test1dShifts(bool granular) {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::test1dShiftsSparse() { test1dShifts(false); }
+BOOST_AUTO_TEST_CASE(test1dShiftsSparse) { test1dShifts(false); }
 
-void SensitivityAnalysisTest::test1dShiftsGranular() { test1dShifts(true); }
+BOOST_AUTO_TEST_CASE(test1dShiftsGranular) { test1dShifts(true); }
 
-void SensitivityAnalysisTest::test2dShifts() {
+BOOST_AUTO_TEST_CASE(test2dShifts) {
     BOOST_TEST_MESSAGE("Testing 2d shifts");
 
     SavedSettings backup;
@@ -1023,7 +1041,7 @@ void SensitivityAnalysisTest::test2dShifts() {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
+BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
 
@@ -1227,7 +1245,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     }
 }
 
-void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
+BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing FX option sensitivities against QL analytic greeks");
 
@@ -1567,7 +1585,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testCrossGamma() {
+BOOST_AUTO_TEST_CASE(testCrossGamma) {
 
     BOOST_TEST_MESSAGE("Testing cross-gamma sensitivities against cached results");
 
@@ -1970,19 +1988,6 @@ void SensitivityAnalysisTest::testCrossGamma() {
     IndexManager::instance().clearHistories();
 }
 
-test_suite* SensitivityAnalysisTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
-    // Set the Observation mode here
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testEquityOptionDeltaGamma));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -159,6 +159,11 @@ void SensitivityScenarioGenerator::generateScenarios() {
         generateSecuritySpreadScenarios(false);
     }
 
+    if (simMarketData_->simulateCorrelations()) {
+        generateCorrelationScenarios(true);
+        generateCorrelationScenarios(false);
+    }
+
     // add simultaneous up-moves in two risk factors for cross gamma calculation
 
     // store base scenario values
@@ -1828,6 +1833,108 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
     LOG("Commodity volatility scenarios done");
 }
 
+void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
+    Date asof = baseScenario_->asof();
+    for (auto sim_cap : simMarketData_->correlationPairs()) {
+        std::string label = sim_cap.first + ":" + sim_cap.second;
+        if (sensitivityData_->correlationShiftData().find(label) ==
+            sensitivityData_->correlationShiftData().end()) {
+            ALOG("Correlation " << label << " in simmarket is not included in sensitivities analysis");
+        }
+    }
+
+    Size n_c_strikes = simMarketData_->correlationStrikes().size();
+    vector<Real> corrStrikes = simMarketData_->correlationStrikes();
+
+    for (auto c : sensitivityData_->correlationShiftData()) {
+        std::string label = c.first;
+        std::vector<std::string> tokens;
+        boost::split(tokens, label, boost::is_any_of(":"));
+        std::pair<string, string> pair(tokens[0], tokens[1]);
+        Size n_c_exp = simMarketData_->correlationExpiries().size();
+        SensitivityScenarioData::VolShiftData data = c.second;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+        vector<vector<Real>> corrData(n_c_exp, vector<Real>(n_c_strikes, 0.0));
+        vector<Real> corrExpiryTimes(n_c_exp, 0.0);
+        vector<vector<Real>> shiftedCorrData(n_c_exp, vector<Real>(n_c_strikes, 0.0));
+
+        std::vector<Period> expiries = overrideTenors_ 
+                                           ? simMarketData_->correlationExpiries()
+                                           : data.shiftExpiries;
+        QL_REQUIRE(expiries.size() == data.shiftExpiries.size(), "mismatch between effective shift expiries ("
+                                                                     << expiries.size() << ") and shift tenors ("
+                                                                     << data.shiftExpiries.size());
+        vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
+        vector<Real> shiftStrikes = data.shiftStrikes;
+
+        DayCounter dc = parseDayCounter(simMarketData_->correlationDayCounter(pair.first, pair.second));
+
+        // cache original vol data
+        for (Size j = 0; j < n_c_exp; ++j) {
+            Date expiry = asof + simMarketData_->correlationExpiries()[j];
+            corrExpiryTimes[j] = dc.yearFraction(asof, expiry);
+        }
+        for (Size j = 0; j < n_c_exp; ++j) {
+            for (Size k = 0; k < n_c_strikes; ++k) {
+                Size idx = j * n_c_strikes + k;
+                RiskFactorKey key(RiskFactorKey::KeyType::Correlation, label, idx);
+                corrData[j][k] = baseScenario_->get(key);
+            }
+        }
+
+        // cache tenor times
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
+            shiftExpiryTimes[j] = dc.yearFraction(asof, asof + expiries[j]);
+
+        // Can we store a valid shift size?
+        bool validShiftSize = std::equal(corrExpiryTimes.begin(), corrExpiryTimes.end(), shiftExpiryTimes.begin(), close);
+        validShiftSize = validShiftSize && std::equal(corrStrikes.begin(), corrStrikes.end(), shiftStrikes.begin(), close);
+
+        // loop over shift expiries and terms
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
+            for (Size k = 0; k < shiftStrikes.size(); ++k) {
+                boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+
+                scenarioDescriptions_.push_back(correlationScenarioDescription(label, j, k, up));
+
+                applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, corrExpiryTimes, corrStrikes,
+                           corrData, shiftedCorrData, true);
+                
+                // add shifted vol data to the scenario
+                for (Size jj = 0; jj < n_c_exp; ++jj) {
+                    for (Size kk = 0; kk < n_c_strikes; ++kk) {
+                        Size idx = jj * n_c_strikes + kk;
+                        RiskFactorKey key(RFType::Correlation, label, idx);
+                        
+                        if (shiftedCorrData[jj][kk] > 1) {
+                            shiftedCorrData[jj][kk] = 1;
+                        } else if (shiftedCorrData[jj][kk] < -1) {
+                            shiftedCorrData[jj][kk] = -1;
+                        }
+
+                        scenario->add(key, shiftedCorrData[jj][kk]);
+
+                        LOG(jj << " " << kk << " " << shiftedCorrData[jj][kk] << " " << corrData[jj][kk]);
+                        // Possibly store valid shift size
+                        if (validShiftSize && up && j == jj && k == kk) {
+                            shiftSizes_[key] = shiftedCorrData[jj][kk] - corrData[jj][kk];
+                        }
+                    }
+                }
+
+                // Give the scenario a label
+                scenario->label(to_string(scenarioDescriptions_.back()));
+
+                // add this scenario to the scenario vector
+                scenarios_.push_back(scenario);
+                DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
+            }
+        }
+    }
+    LOG("Correlation scenarios done");
+}
+
 void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     Date asof = baseScenario_->asof();
@@ -2235,6 +2342,32 @@ SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& comm
     if (up) shiftSizes_[key] = 0.0;
 
     return ScenarioDescription(type, key, o.str());
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket,
+                                                             bool up) {
+    QL_REQUIRE(sensitivityData_->correlationShiftData().find(pair) != sensitivityData_->correlationShiftData().end(),
+               "pair " << pair << " not found in correlation shift data");
+    SensitivityScenarioData::VolShiftData data = sensitivityData_->correlationShiftData()[pair];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+    // Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
+    Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::Correlation, pair, index);
+    std::ostringstream o;
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
+        o << data.shiftExpiries[expiryBucket] << "/ATM";
+    } else {
+        o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
+    }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+
+    if (up) shiftSizes_[key] = 0.0;
+
+    return desc;
 }
 
 SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::securitySpreadScenarioDescription(

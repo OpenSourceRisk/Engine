@@ -43,14 +43,14 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) cons
     return fixing(fixingDate, forecastTodaysFixing, false);
 }
 
-Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDiviend) const {
+Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const {
 
     QL_REQUIRE(isValidFixingDate(fixingDate), "Fixing date " << fixingDate << " is not valid");
 
     Date today = Settings::instance().evaluationDate();
 
     if (fixingDate > today || (fixingDate == today && forecastTodaysFixing))
-        return forecastFixing(fixingDate, incDiviend);
+        return forecastFixing(fixingDate, incDividend);
 
     Real result = Null<Decimal>();
 
@@ -67,24 +67,20 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool
             ; // fall through and forecast
         }
         if (result == Null<Real>())
-            return forecastFixing(fixingDate, incDiviend);
+            return forecastFixing(fixingDate, incDividend);
     }
 
     return result;
 }
 
-Real EquityIndex::forecastFixing(const Date& fixingDate) const {
-    return forecastFixing(fixingDate, false);
-}
+Real EquityIndex::forecastFixing(const Date& fixingDate) const { return forecastFixing(fixingDate, false); }
 
 Real EquityIndex::forecastFixing(const Date& fixingDate, bool incDividend) const {
     QL_REQUIRE(!rate_.empty(), "null term structure set to this instance of " << name());
     return forecastFixing(rate_->timeFromReference(fixingDate), incDividend);
 }
 
-Real EquityIndex::forecastFixing(const Time& fixingTime) const {
-    return forecastFixing(fixingTime, false);
-}
+Real EquityIndex::forecastFixing(const Time& fixingTime) const { return forecastFixing(fixingTime, false); }
 
 Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const {
     QL_REQUIRE(!spotQuote_.empty(), "null spot quote set to this instance of " << name());
@@ -97,11 +93,32 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     Real forward;
     if (incDividend) {
         forward = price / rate_->discount(fixingTime);
-    }
-    else {
+    } else {
         forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime);
     }
     return forward;
+}
+
+void EquityIndex::addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite) {
+    name_ = dividendName();
+    Index::addFixing(fixingDate, fixing, forceOverwrite);
+    resetName();
+}
+
+Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDate) const {
+    const Date& today = Settings::instance().evaluationDate();
+
+    const TimeSeries<Real>& history = dividendFixings();
+    Real dividends = 0.0;
+
+    if (!history.empty() && history.firstDate() <= endDate && history.lastDate() >= startDate) {
+        for (TimeSeries<Real>::const_iterator fd = history.begin();
+             fd != history.end() && fd->first <= std::min(endDate, today); ++fd) {
+            if (fd->first >= startDate)
+                dividends += fd->second;
+        }
+    }
+    return dividends;
 }
 
 boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
@@ -109,4 +126,4 @@ boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote,
     return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), spotQuote, rate, dividend);
 }
 
-} // namespace QuantLib
+} // namespace QuantExt

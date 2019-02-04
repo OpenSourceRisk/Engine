@@ -30,7 +30,6 @@
 #include <ql/instruments/yearonyearinflationswap.hpp>
 #include <ql/termstructures/inflationtermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

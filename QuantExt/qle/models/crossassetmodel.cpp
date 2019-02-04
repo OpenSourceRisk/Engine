@@ -607,18 +607,19 @@ void CrossAssetModel::calibrateBsVolatilitiesIterative(
     update();
 }
 
-void CrossAssetModel::calibrateBsVolatilitiesGlobal(const AssetType& assetType, const Size aIdx,
-                                                    const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-                                                    OptimizationMethod& method, const EndCriteria& endCriteria,
-                                                    const Constraint& constraint, const std::vector<Real>& weights) {
+void CrossAssetModel::calibrateBsVolatilitiesGlobal(
+    const AssetType& assetType, const Size aIdx, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     QL_REQUIRE(assetType == FX || assetType == EQ, "Unsupported AssetType for BS calibration");
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(assetType, 0, aIdx, Null<Size>()));
     update();
 }
 
 void CrossAssetModel::calibrateInfDkVolatilitiesIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, i));
@@ -627,8 +628,9 @@ void CrossAssetModel::calibrateInfDkVolatilitiesIterative(
 }
 
 void CrossAssetModel::calibrateInfDkReversionsIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, i));
@@ -637,23 +639,25 @@ void CrossAssetModel::calibrateInfDkReversionsIterative(
 }
 
 void CrossAssetModel::calibrateInfDkVolatilitiesGlobal(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 0, index, Null<Size>()));
     update();
 }
 
-void CrossAssetModel::calibrateInfDkReversionsGlobal(const Size index,
-                                                     const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
-                                                     OptimizationMethod& method, const EndCriteria& endCriteria,
-                                                     const Constraint& constraint, const std::vector<Real>& weights) {
+void CrossAssetModel::calibrateInfDkReversionsGlobal(
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     calibrate(helpers, method, endCriteria, constraint, weights, MoveParameter(INF, 1, index, Null<Size>()));
     update();
 }
 
 void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(CR, 0, index, i));
@@ -662,8 +666,9 @@ void CrossAssetModel::calibrateCrLgm1fVolatilitiesIterative(
 }
 
 void CrossAssetModel::calibrateCrLgm1fReversionsIterative(
-    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers, OptimizationMethod& method,
-    const EndCriteria& endCriteria, const Constraint& constraint, const std::vector<Real>& weights) {
+    const Size index, const std::vector<boost::shared_ptr<BlackCalibrationHelper> >& helpers,
+    OptimizationMethod& method, const EndCriteria& endCriteria, const Constraint& constraint,
+    const std::vector<Real>& weights) {
     for (Size i = 0; i < helpers.size(); ++i) {
         std::vector<boost::shared_ptr<BlackCalibrationHelper> > h(1, helpers[i]);
         calibrate(h, method, endCriteria, constraint, weights, MoveParameter(CR, 1, index, i));

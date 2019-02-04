@@ -16,20 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccyfixfloatswaphelper.hpp"
-
-#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include "toplevelfixture.hpp"
+#include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ql/currencies/all.hpp>
+#include <ql/indexes/ibor/usdlibor.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
-#include <ql/indexes/ibor/usdlibor.hpp>
-#include <ql/currencies/all.hpp>
-#include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 #include <ql/types.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -39,7 +39,7 @@ using namespace QuantExt;
 namespace {
 
 struct CommonVars {
-    
+
     Date asof;
     Natural settlementDays;
     Calendar payCalendar;
@@ -82,15 +82,16 @@ struct CommonVars {
         rate = Handle<Quote>(boost::make_shared<SimpleQuote>(0.25));
         spotFx = boost::make_shared<SimpleQuote>(6.4304);
         spread = boost::make_shared<SimpleQuote>(0.0);
-        liborProjCurve = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            0, NullCalendar(), 0.029773, Actual365Fixed()));
+        liborProjCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.029773, Actual365Fixed()));
         index = boost::make_shared<USDLibor>(3 * Months, liborProjCurve);
-        usdDiscCurve = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(
-            0, NullCalendar(), 0.026727, Actual365Fixed()));
+        usdDiscCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, NullCalendar(), 0.026727, Actual365Fixed()));
     }
 };
 
-boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars, const Handle<YieldTermStructure>& discCurve) {
+boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars,
+                                                     const Handle<YieldTermStructure>& discCurve) {
 
     // Swap start and end date
     Date referenceDate = Settings::instance().evaluationDate();
@@ -99,31 +100,18 @@ boost::shared_ptr<CrossCcyFixFloatSwap> makeTestSwap(const CommonVars& vars, con
     Date end = start + vars.tenor;
 
     // Fixed TRY schedule
-    Schedule fixedSchedule(start, end, Period(vars.fixedFrequency), vars.payCalendar, 
-        vars.payConvention, vars.payConvention, DateGeneration::Backward, false);
+    Schedule fixedSchedule(start, end, Period(vars.fixedFrequency), vars.payCalendar, vars.payConvention,
+                           vars.payConvention, DateGeneration::Backward, false);
 
     // Float USD schedule
-    Schedule floatSchedule(start, end, vars.index->tenor(), vars.payCalendar, vars.payConvention,
-        vars.payConvention, DateGeneration::Backward, false);
+    Schedule floatSchedule(start, end, vars.index->tenor(), vars.payCalendar, vars.payConvention, vars.payConvention,
+                           DateGeneration::Backward, false);
 
     // Create swap
     boost::shared_ptr<CrossCcyFixFloatSwap> swap(new CrossCcyFixFloatSwap(
-        CrossCcyFixFloatSwap::Payer,
-        vars.usdNominal * vars.spotFx->value(),
-        vars.fixedCurrency,
-        fixedSchedule,
-        vars.rate->value(),
-        vars.fixedDayCount,
-        vars.payConvention,
-        vars.payLag,
-        vars.payCalendar,
-        vars.usdNominal,
-        vars.index->currency(),
-        floatSchedule,
-        vars.index,
-        vars.spread->value(),
-        vars.payConvention,
-        vars.payLag,
+        CrossCcyFixFloatSwap::Payer, vars.usdNominal * vars.spotFx->value(), vars.fixedCurrency, fixedSchedule,
+        vars.rate->value(), vars.fixedDayCount, vars.payConvention, vars.payLag, vars.payCalendar, vars.usdNominal,
+        vars.index->currency(), floatSchedule, vars.index, vars.spread->value(), vars.payConvention, vars.payLag,
         vars.payCalendar));
 
     // Attach pricing engine
@@ -140,21 +128,23 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
     // Create a helper
     vector<boost::shared_ptr<RateHelper> > helpers(1);
     vars.helper.reset(new CrossCcyFixFloatSwapHelper(
-        vars.rate, Handle<Quote>(vars.spotFx), vars.settlementDays, vars.payCalendar, vars.payConvention, 
-        vars.tenor, vars.fixedCurrency, vars.fixedFrequency, vars.payConvention, vars.fixedDayCount, 
-        vars.index, vars.usdDiscCurve, Handle<Quote>(vars.spread)));
+        vars.rate, Handle<Quote>(vars.spotFx), vars.settlementDays, vars.payCalendar, vars.payConvention, vars.tenor,
+        vars.fixedCurrency, vars.fixedFrequency, vars.payConvention, vars.fixedDayCount, vars.index, vars.usdDiscCurve,
+        Handle<Quote>(vars.spread)));
     helpers[0] = vars.helper;
 
     // Create a yield curve referencing the helper
-    return Handle<YieldTermStructure>(boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(
-        0, NullCalendar(), helpers, Actual365Fixed()));
+    return Handle<YieldTermStructure>(
+        boost::make_shared<PiecewiseYieldCurve<Discount, LogLinear> >(0, NullCalendar(), helpers, Actual365Fixed()));
 }
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void CrossCurrencyFixFloatSwapHelperTest::testBootstrap() {
+BOOST_AUTO_TEST_SUITE(CrossCurrencyFixFloatSwapHelperTest)
+
+BOOST_AUTO_TEST_CASE(testBootstrap) {
 
     BOOST_TEST_MESSAGE("Test simple bootstrap against cross currency fix float swap");
 
@@ -163,7 +153,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testBootstrap() {
     CommonVars vars;
 
     Settings::instance().evaluationDate() = vars.asof;
-    
+
     // Create a helper and bootstrapped curve
     Handle<YieldTermStructure> tryDiscCurve = bootstrappedCurve(vars);
 
@@ -173,17 +163,17 @@ void CrossCurrencyFixFloatSwapHelperTest::testBootstrap() {
     // Swap should have NPV = 0.0. On notional = $10M i.e. TRY60.5M, 1e-5 is enough.
     Real absTol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), absTol);
-    
+
     // Check fair fixed rates match. Bootstrap uses 1e-12 accuracy.
     Real relTol = 1e-10;
     BOOST_CHECK_CLOSE(vars.rate->value(), swap->fairFixedRate(), relTol);
-    
+
     // Check the 5Y discount factor
     DiscountFactor expDisc = 0.3299260408883904;
     BOOST_CHECK_CLOSE(expDisc, tryDiscCurve->discount(vars.asof + 5 * Years), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
+BOOST_AUTO_TEST_CASE(testSpotFxChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under spot FX change");
 
@@ -202,7 +192,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
     // Check NPV = 0.0
     Real absTol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), absTol);
-    
+
     // Check the 5Y discount factor
     Real relTol = 1e-10;
     DiscountFactor expDisc = 0.3299260408883904;
@@ -219,7 +209,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
 
     // Check that the new swap's NPV is 0.0
     BOOST_CHECK_SMALL(swap->NPV(), absTol);
-    
+
     // Check the 5Y discount factor again. It should be the same.
     BOOST_CHECK_CLOSE(expDisc, tryDiscCurve->discount(vars.asof + 5 * Years), relTol);
 
@@ -227,7 +217,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange() {
     BOOST_CHECK_CLOSE(vars.spotFx->value(), vars.helper->swap()->fixedNominal(), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testSpreadChange() {
+BOOST_AUTO_TEST_CASE(testSpreadChange) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap under helper spread change");
 
@@ -272,7 +262,7 @@ void CrossCurrencyFixFloatSwapHelperTest::testSpreadChange() {
     BOOST_CHECK_CLOSE(vars.spread->value(), vars.helper->swap()->floatSpread(), relTol);
 }
 
-void CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate() {
+BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
 
     BOOST_TEST_MESSAGE("Test rebootstrap after moving evaluation date");
 
@@ -314,20 +304,10 @@ void CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate() {
     expDisc = 0.3299334970640459;
     BOOST_CHECK_CLOSE(expDisc, tryDiscCurve->discount(vars.asof + 5 * Years), relTol);
 
-    // Check the start date of the helper swap. Should be 1 day greater. 
+    // Check the start date of the helper swap. Should be 1 day greater.
     BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
 }
 
-test_suite* CrossCurrencyFixFloatSwapHelperTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CrossCurrencyFixFloatSwapHelperTests");
-
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testBootstrap));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testSpotFxChange));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testSpreadChange));
-    suite->add(BOOST_TEST_CASE(&CrossCurrencyFixFloatSwapHelperTest::testMovingEvaluationDate));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

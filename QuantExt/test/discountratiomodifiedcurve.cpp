@@ -15,18 +15,17 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-#include "discountratiomodifiedcurve.hpp"
-
-#include <qle/termstructures/discountratiomodifiedcurve.hpp>
+#include "toplevelfixture.hpp"
+#include <boost/assign/list_of.hpp>
+#include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/settings.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
+#include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/math/comparison.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/assign/list_of.hpp>
+#include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
 using QuantExt::DiscountRatioModifiedCurve;
 using namespace QuantLib;
@@ -34,10 +33,12 @@ using namespace boost::unit_test_framework;
 using namespace boost::assign;
 using std::vector;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void DiscountingRatioModifiedCurveTest::testStandardCurves() {
-    
+BOOST_AUTO_TEST_SUITE(DiscountingRatioModifiedCurveTest)
+
+BOOST_AUTO_TEST_CASE(testStandardCurves) {
+
     BOOST_TEST_MESSAGE("Testing discount ratio modified curve with some standard curves");
 
     SavedSettings backup;
@@ -65,27 +66,30 @@ void DiscountingRatioModifiedCurveTest::testStandardCurves() {
     DiscountRatioModifiedCurve curve(baseCurve, numCurve, denCurve);
 
     Date discountDate = today + 18 * Months;
-    BOOST_CHECK(close(curve.discount(discountDate), 
-        baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(discountDate)));
-    
-    discountDate = today + 3 * Years;
-    BOOST_CHECK(close(curve.discount(discountDate),
-        baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(discountDate)));
+    BOOST_CHECK(
+        close(curve.discount(discountDate),
+              baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(discountDate)));
 
-    // When we change evaluation date, we may not get what we expect here because reference date is taken from the 
-    // base curve which has been set up here with a fixed reference date. However, the denominator curve has been 
+    discountDate = today + 3 * Years;
+    BOOST_CHECK(
+        close(curve.discount(discountDate),
+              baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(discountDate)));
+
+    // When we change evaluation date, we may not get what we expect here because reference date is taken from the
+    // base curve which has been set up here with a fixed reference date. However, the denominator curve has been
     // set up here with a floating reference date. See the warning in the ctor of DiscountRatioModifiedCurve
     Settings::instance().evaluationDate() = today + 3 * Months;
     BOOST_TEST_MESSAGE("Changed evaluation date to " << Settings::instance().evaluationDate());
 
-    BOOST_CHECK(!close(curve.discount(discountDate),
-        baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(discountDate)));
+    BOOST_CHECK(!close(curve.discount(discountDate), baseCurve->discount(discountDate) *
+                                                         numCurve->discount(discountDate) /
+                                                         denCurve->discount(discountDate)));
     Time t = dc.yearFraction(curve.referenceDate(), discountDate);
     BOOST_CHECK(close(curve.discount(discountDate),
-        baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(t)));
+                      baseCurve->discount(discountDate) * numCurve->discount(discountDate) / denCurve->discount(t)));
 }
 
-void DiscountingRatioModifiedCurveTest::testExtrapolationSettings() {
+BOOST_AUTO_TEST_CASE(testExtrapolationSettings) {
 
     BOOST_TEST_MESSAGE("Testing extrapolation settings for discount ratio modified curve");
 
@@ -128,7 +132,7 @@ void DiscountingRatioModifiedCurveTest::testExtrapolationSettings() {
     BOOST_CHECK_NO_THROW(curve.discount(Date(15, Aug, 2020) + 1 * Days));
 }
 
-void DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThrow() {
+BOOST_AUTO_TEST_CASE(testConstructionNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing construction with null underlying curves throw");
 
@@ -138,31 +142,38 @@ void DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThro
     Handle<YieldTermStructure> baseCurve;
     Handle<YieldTermStructure> numCurve;
     Handle<YieldTermStructure> denCurve;
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve), QuantLib::Error);
+    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve),
+                      QuantLib::Error);
 
     // Numerator and denominator empty handles throw
-    Handle<YieldTermStructure> baseCurve_1(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve, denCurve), QuantLib::Error);
+    Handle<YieldTermStructure> baseCurve_1(
+        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve, denCurve),
+                      QuantLib::Error);
 
     // Denominator empty handles throw
     Handle<YieldTermStructure> numCurve_1(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve), QuantLib::Error);
+    BOOST_CHECK_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve),
+                      QuantLib::Error);
 
     // No empty handles succeeds
     Handle<YieldTermStructure> denCurve_1(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
     BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve_1, numCurve_1, denCurve_1));
 }
 
-void DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow() {
+BOOST_AUTO_TEST_CASE(testLinkingNullUnderlyingCurvesThrow) {
 
     BOOST_TEST_MESSAGE("Testing that linking with null underlying curves throw");
 
     boost::shared_ptr<DiscountRatioModifiedCurve> curve;
 
     // All empty handles throw
-    RelinkableHandle<YieldTermStructure> baseCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    RelinkableHandle<YieldTermStructure> numCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
-    RelinkableHandle<YieldTermStructure> denCurve(boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    RelinkableHandle<YieldTermStructure> baseCurve(
+        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    RelinkableHandle<YieldTermStructure> numCurve(
+        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
+    RelinkableHandle<YieldTermStructure> denCurve(
+        boost::make_shared<FlatForward>(0, NullCalendar(), 0.0255, Actual365Fixed()));
 
     // Curve building succeeds since no empty handles
     BOOST_CHECK_NO_THROW(curve = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve, numCurve, denCurve));
@@ -179,15 +190,6 @@ void DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow() {
     BOOST_CHECK_THROW(denCurve.linkTo(boost::shared_ptr<YieldTermStructure>()), QuantLib::Error);
 }
 
-test_suite* DiscountingRatioModifiedCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DiscountingRatioModifiedCurveTests");
-    
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testStandardCurves));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testExtrapolationSettings));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testConstructionNullUnderlyingCurvesThrow));
-    suite->add(BOOST_TEST_CASE(&DiscountingRatioModifiedCurveTest::testLinkingNullUnderlyingCurvesThrow));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()

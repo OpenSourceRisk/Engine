@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "dynamicblackvoltermstructure.hpp"
+#include "toplevelfixture.hpp"
 #include "utilities.hpp"
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 
@@ -83,9 +84,11 @@ struct TestData {
 
 } // anonymous namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike() {
+BOOST_AUTO_TEST_SUITE(DynamicBlackVolTermStructureTest)
+
+BOOST_AUTO_TEST_CASE(testConstantVarianceStickyStrike) {
 
     BOOST_TEST_MESSAGE("Testing constant variance, sticky strike dynamics of "
                        "DynamicBlackVolTermStructure...");
@@ -149,7 +152,7 @@ void DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike() {
 
 } // testConstantVarianceStickyStrike
 
-void DynamicBlackVolTermStructureTest::testConstantVarianceStickyLogMoneyness() {
+BOOST_AUTO_TEST_CASE(testConstantVarianceStickyLogMoneyness) {
 
     BOOST_TEST_MESSAGE("Testing constant variance, sticky log-moneyness "
                        "dynamics of DynamicBlackVolTermStructure...");
@@ -223,7 +226,7 @@ void DynamicBlackVolTermStructureTest::testConstantVarianceStickyLogMoneyness() 
 
 } // testConstantVarianceStickyLogMoneyness
 
-void DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike() {
+BOOST_AUTO_TEST_CASE(testForwardVarianceStickyStrike) {
 
     BOOST_TEST_MESSAGE("Testing forward-forward variance, sticky strike "
                        "dynamics of DynamicBlackVolTermStructure...");
@@ -288,7 +291,7 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike() {
 
 } // testForwardVarianceStickyLogMoneyness
 
-void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
+BOOST_AUTO_TEST_CASE(testForwardVarianceStickyLogMoneyness) {
 
     BOOST_TEST_MESSAGE("Testing forward-forward variance, sticky log-moneyness "
                        "dynamics of DynamicBlackVolTermStructure...");
@@ -343,13 +346,6 @@ void DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness() {
                       tol);
 
 } // testForwardVarianceStickyLogMoneyness
+BOOST_AUTO_TEST_SUITE_END()
 
-test_suite* DynamicBlackVolTermStructureTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("DynamicBlackVolTermStructure tests");
-    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyStrike));
-    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testConstantVarianceStickyLogMoneyness));
-    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyStrike));
-    suite->add(BOOST_TEST_CASE(&DynamicBlackVolTermStructureTest::testForwardVarianceStickyLogMoneyness));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

@@ -27,17 +27,15 @@ using boost::assign::list_of;
 
 namespace QuantExt {
 
-CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(Real foreignNominal, const Currency& foreignCurrency,
-                                                     const Schedule& foreignSchedule,
-                                                     const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
-                                                     const Currency& domesticCurrency, const Schedule& domesticSchedule,
-                                                     const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
-                                                     const boost::shared_ptr<FxIndex>& fxIdx, 
-                                                     bool invertFxIdx, bool receiveDomestic)
-    : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency), foreignSchedule_(foreignSchedule),
-      foreignIndex_(foreignIndex), foreignSpread_(foreignSpread), domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule),
-      domesticIndex_(domesticIndex), domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx),
-      receiveDomestic_(receiveDomestic) {
+CrossCcyBasisMtMResetSwap::CrossCcyBasisMtMResetSwap(
+    Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
+    const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread, const Currency& domesticCurrency,
+    const Schedule& domesticSchedule, const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
+    const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx, bool receiveDomestic)
+    : CrossCcySwap(3), foreignNominal_(foreignNominal), foreignCurrency_(foreignCurrency),
+      foreignSchedule_(foreignSchedule), foreignIndex_(foreignIndex), foreignSpread_(foreignSpread),
+      domesticCurrency_(domesticCurrency), domesticSchedule_(domesticSchedule), domesticIndex_(domesticIndex),
+      domesticSpread_(domesticSpread), fxIndex_(fxIdx), invertFxIndex_(invertFxIdx), receiveDomestic_(receiveDomestic) {
 
     registerWith(foreignIndex_);
     registerWith(domesticIndex_);
@@ -49,7 +47,7 @@ void CrossCcyBasisMtMResetSwap::initialize() {
     // Pay (foreign) leg
     legs_[0] = IborLeg(foreignSchedule_, foreignIndex_).withNotionals(foreignNominal_).withSpreads(foreignSpread_);
     receiveDomestic_ ? payer_[0] = -1.0 : payer_[0] = +1.0;
-    
+
     currencies_[0] = foreignCurrency_;
     // Pay leg notional exchange at start.
     Date initialPayDate = foreignSchedule_.dates().front();
@@ -71,12 +69,8 @@ void CrossCcyBasisMtMResetSwap::initialize() {
         boost::shared_ptr<FloatingRateCoupon> coupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[1][j]);
         Date fixingDate = fxIndex_->fixingCalendar().advance(coupon->accrualStartDate(),
                                                              -static_cast<Integer>(fxIndex_->fixingDays()), Days);
-        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(new FloatingRateFXLinkedNotionalCoupon(
-            foreignNominal_, fixingDate, fxIndex_, invertFxIndex_, coupon->date(), coupon->accrualStartDate(),
-            coupon->accrualEndDate(), coupon->fixingDays(), coupon->index(), coupon->gearing(), coupon->spread(),
-            coupon->referencePeriodStart(), coupon->referencePeriodEnd(), coupon->dayCounter(), coupon->isInArrears()));
-        // set the same pricer
-        fxLinkedCoupon->setPricer(coupon->pricer());
+        boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon(
+            new FloatingRateFXLinkedNotionalCoupon(fixingDate, foreignNominal_, fxIndex_, invertFxIndex_, coupon));
         legs_[1][j] = fxLinkedCoupon;
     }
     // now build a separate leg to store the domestic (resetting) notionals

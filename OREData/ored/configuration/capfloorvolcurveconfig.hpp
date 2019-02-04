@@ -48,13 +48,16 @@ class CapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
+    static const string defaultInterpolationMethod; // BicubicSpline
+
     CapFloorVolatilityCurveConfig() {}
     CapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
                                   const VolatilityType& volatilityType, const bool extrapolate,
                                   const bool flatExtrapolation, bool inlcudeAtm, const vector<Period>& tenors,
                                   const vector<double>& strikes, const DayCounter& dayCounter, Natural settleDays,
                                   const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& iborIndex, const string& discountCurve);
+                                  const string& iborIndex, const string& discountCurve,
+                                  const string& interpolationMethod = defaultInterpolationMethod);
 
     //! \name XMLSerializable interface
     //@{
@@ -76,6 +79,7 @@ public:
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& iborIndex() const { return iborIndex_; }
     const string& discountCurve() const { return discountCurve_; }
+    const string& interpolationMethod() const { return interpolationMethod_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -92,6 +96,7 @@ public:
     Calendar& calendar() { return calendar_; }
     string& iborIndex() { return iborIndex_; }
     string& discountCurve() { return discountCurve_; }
+    string& interpolationMethod() { return interpolationMethod_; }
     //@}
 
 private:
@@ -105,6 +110,7 @@ private:
     BusinessDayConvention businessDayConvention_;
     string iborIndex_;
     string discountCurve_;
+    string interpolationMethod_;
 };
 
 std::ostream& operator<<(std::ostream& out, CapFloorVolatilityCurveConfig::VolatilityType t);

@@ -18,56 +18,33 @@
 
 #include <qle/instruments/crossccyfixfloatswap.hpp>
 
-#include <ql/cashflows/iborcoupon.hpp>
-#include <ql/cashflows/fixedratecoupon.hpp>
-#include <ql/cashflows/simplecashflow.hpp>
 #include <boost/make_shared.hpp>
+#include <ql/cashflows/fixedratecoupon.hpp>
+#include <ql/cashflows/iborcoupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 
 namespace QuantExt {
 
-CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(Type type,
-    Real fixedNominal,
-    const Currency& fixedCurrency,
-    const Schedule& fixedSchedule,
-    Rate fixedRate,
-    const DayCounter& fixedDayCount,
-    BusinessDayConvention fixedPaymentBdc,
-    Natural fixedPaymentLag,
-    const Calendar& fixedPaymentCalendar,
-    Real floatNominal,
-    const Currency& floatCurrency,
-    const Schedule& floatSchedule,
-    const boost::shared_ptr<IborIndex>& floatIndex,
-    Spread floatSpread,
-    BusinessDayConvention floatPaymentBdc,
-    Natural floatPaymentLag,
-    const Calendar& floatPaymentCalendar) 
-    : CrossCcySwap(2), 
-      type_(type), 
-      fixedNominal_(fixedNominal), 
-      fixedCurrency_(fixedCurrency), 
-      fixedSchedule_(fixedSchedule), 
-      fixedRate_(fixedRate), 
-      fixedDayCount_(fixedDayCount), 
-      fixedPaymentBdc_(fixedPaymentBdc), 
-      fixedPaymentLag_(fixedPaymentLag), 
-      fixedPaymentCalendar_(fixedPaymentCalendar), 
-      floatNominal_(floatNominal), 
-      floatCurrency_(floatCurrency), 
-      floatSchedule_(floatSchedule), 
-      floatIndex_(floatIndex), 
-      floatSpread_(floatSpread), 
-      floatPaymentBdc_(floatPaymentBdc), 
-      floatPaymentLag_(floatPaymentLag), 
-      floatPaymentCalendar_(floatPaymentCalendar) {
+CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(
+    Type type, Real fixedNominal, const Currency& fixedCurrency, const Schedule& fixedSchedule, Rate fixedRate,
+    const DayCounter& fixedDayCount, BusinessDayConvention fixedPaymentBdc, Natural fixedPaymentLag,
+    const Calendar& fixedPaymentCalendar, Real floatNominal, const Currency& floatCurrency,
+    const Schedule& floatSchedule, const boost::shared_ptr<IborIndex>& floatIndex, Spread floatSpread,
+    BusinessDayConvention floatPaymentBdc, Natural floatPaymentLag, const Calendar& floatPaymentCalendar)
+    : CrossCcySwap(2), type_(type), fixedNominal_(fixedNominal), fixedCurrency_(fixedCurrency),
+      fixedSchedule_(fixedSchedule), fixedRate_(fixedRate), fixedDayCount_(fixedDayCount),
+      fixedPaymentBdc_(fixedPaymentBdc), fixedPaymentLag_(fixedPaymentLag), fixedPaymentCalendar_(fixedPaymentCalendar),
+      floatNominal_(floatNominal), floatCurrency_(floatCurrency), floatSchedule_(floatSchedule),
+      floatIndex_(floatIndex), floatSpread_(floatSpread), floatPaymentBdc_(floatPaymentBdc),
+      floatPaymentLag_(floatPaymentLag), floatPaymentCalendar_(floatPaymentCalendar) {
 
     // Build the float leg
     Leg floatLeg = IborLeg(floatSchedule_, floatIndex_)
-        .withNotionals(floatNominal_)
-        .withSpreads(floatSpread_)
-        .withPaymentAdjustment(floatPaymentBdc_)
-        .withPaymentLag(floatPaymentLag_)
-        .withPaymentCalendar(floatPaymentCalendar_);
+                       .withNotionals(floatNominal_)
+                       .withSpreads(floatSpread_)
+                       .withPaymentAdjustment(floatPaymentBdc_)
+                       .withPaymentLag(floatPaymentLag_)
+                       .withPaymentCalendar(floatPaymentCalendar_);
 
     // Register with each floating rate coupon
     for (Leg::const_iterator it = floatLeg.begin(); it < floatLeg.end(); ++it)
@@ -78,7 +55,7 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(Type type,
     aDate = floatPaymentCalendar_.adjust(aDate, floatPaymentBdc_);
     boost::shared_ptr<CashFlow> aCashflow = boost::make_shared<SimpleCashFlow>(-floatNominal_, aDate);
     floatLeg.insert(floatLeg.begin(), aCashflow);
-    
+
     // Final notional exchange
     aDate = floatLeg.back()->date();
     aCashflow = boost::make_shared<SimpleCashFlow>(floatNominal_, aDate);
@@ -86,11 +63,11 @@ CrossCcyFixFloatSwap::CrossCcyFixFloatSwap(Type type,
 
     // Build the fixed rate leg
     Leg fixedLeg = FixedRateLeg(fixedSchedule_)
-        .withNotionals(fixedNominal_)
-        .withCouponRates(fixedRate_, fixedDayCount_)
-        .withPaymentAdjustment(fixedPaymentBdc_)
-        .withPaymentLag(fixedPaymentLag)
-        .withPaymentCalendar(fixedPaymentCalendar);
+                       .withNotionals(fixedNominal_)
+                       .withCouponRates(fixedRate_, fixedDayCount_)
+                       .withPaymentAdjustment(fixedPaymentBdc_)
+                       .withPaymentLag(fixedPaymentLag)
+                       .withPaymentCalendar(fixedPaymentCalendar);
 
     // Initial notional exchange
     aDate = fixedSchedule_.dates().front();
@@ -179,4 +156,4 @@ void CrossCcyFixFloatSwap::results::reset() {
     fairSpread = Null<Spread>();
 }
 
-}
+} // namespace QuantExt

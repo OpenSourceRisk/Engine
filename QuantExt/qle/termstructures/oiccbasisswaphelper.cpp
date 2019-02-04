@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <iostream>
 #include <ql/currencies/europe.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>

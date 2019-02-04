@@ -27,7 +27,6 @@
 #include <ql/instruments/vanillaoption.hpp>
 #include <ql/models/calibrationhelper.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -41,14 +40,15 @@ public:
         a slight approximation is introduced because there is no
         settlement lag, however this applies consistently to
         the black and the model pricing */
-    FxEqOptionHelper(const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> spot,
-                     const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
-                     const Handle<YieldTermStructure>& foreignYield,
-                     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
-    FxEqOptionHelper(const Date& exerciseDate, const Real strike, const Handle<Quote> spot,
-                     const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
-                     const Handle<YieldTermStructure>& foreignYield,
-                     BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
+    FxEqOptionHelper(
+        const Period& maturity, const Calendar& calendar, const Real strike, const Handle<Quote> spot,
+        const Handle<Quote> volatility, const Handle<YieldTermStructure>& domesticYield,
+        const Handle<YieldTermStructure>& foreignYield,
+        BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
+    FxEqOptionHelper(
+        const Date& exerciseDate, const Real strike, const Handle<Quote> spot, const Handle<Quote> volatility,
+        const Handle<YieldTermStructure>& domesticYield, const Handle<YieldTermStructure>& foreignYield,
+        BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
     void addTimesTo(std::list<Time>&) const {}
     void performCalculations() const;
     Real modelValue() const;

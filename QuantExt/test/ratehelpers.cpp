@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "ratehelpers.hpp"
-
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/piecewiseyieldcurve.hpp>
@@ -29,9 +29,11 @@
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void RateHelpersTest::testTenorBasisSwapHelperLastRelevantDate() {
+BOOST_AUTO_TEST_SUITE(RateHelpersTest)
+
+BOOST_AUTO_TEST_CASE(testTenorBasisSwapHelperLastRelevantDate) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::TenorBasisSwapHelper last relevant date (regression test case)...");
 
@@ -52,7 +54,7 @@ void RateHelpersTest::testTenorBasisSwapHelperLastRelevantDate() {
     BOOST_CHECK_NO_THROW(curve.discount(1.0));
 }
 
-void RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule() {
+BOOST_AUTO_TEST_CASE(testTenorBasisSwapHelperDegenerateSchedule) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::TenorBasisSwapHelper degenerate schedule (regression test case)...");
 
@@ -73,10 +75,6 @@ void RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule() {
     BOOST_CHECK_NO_THROW(curve.discount(1.0));
 }
 
-test_suite* RateHelpersTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("RateHelpersTests");
-    suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperLastRelevantDate));
-    suite->add(BOOST_TEST_CASE(&RateHelpersTest::testTenorBasisSwapHelperDegenerateSchedule));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

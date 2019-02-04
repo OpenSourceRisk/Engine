@@ -27,21 +27,21 @@
 
 namespace QuantLib {
 
-
-
-    class Malaysia : public Calendar {
-      private:
-        class MyxImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Malaysia Stock Exchange"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { MYX    //Malaysia Stock Exchange
-        };
-        Malaysia(Market m = MYX);
+class Malaysia : public Calendar {
+private:
+    class MyxImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Malaysia Stock Exchange"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        MYX // Malaysia Stock Exchange
+    };
+    Malaysia(Market m = MYX);
+};
+
+} // namespace QuantLib
 
 #endif

@@ -35,18 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="aggregationscenariodata.hpp" />
-    <ClInclude Include="cube.hpp" />
-    <ClInclude Include="observationmode.hpp" />
-    <ClInclude Include="scenariogenerator.hpp" />
-    <ClInclude Include="scenariosimmarket.hpp" />
-    <ClInclude Include="sensitivityaggregator.hpp" />
-    <ClInclude Include="sensitivityanalysis.hpp" />
-    <ClInclude Include="sensitivityanalysisanalytic.hpp" />
-    <ClInclude Include="sensitivityperformance.hpp" />
-    <ClInclude Include="shiftscenariogenerator.hpp" />
-    <ClInclude Include="stresstest.hpp" />
-    <ClInclude Include="swapperformance.hpp" />
     <ClInclude Include="testmarket.hpp" />
     <ClInclude Include="testportfolio.hpp" />
   </ItemGroup>

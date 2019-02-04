@@ -29,7 +29,6 @@
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

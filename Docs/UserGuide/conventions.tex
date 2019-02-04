@@ -506,3 +506,40 @@ The meaning of the elements is as follows:
 \item InfCalendar: The calendar for the inflation leg of the swap.
 \item InfConvention: The rolling convention for the inflation leg of the swap.
 \end{itemize}
+
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsubsection{CMS Spread Option Conventions}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+A node with name \emph{InflationSwap} is used to store conventions for zero or year on year inflation swap quotes. The
+structure of this node is shown in Listing \ref{lst:inflation_conventions}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+  <CmsSpreadOption>
+    <Id>EUR-CMS-10Y-2Y-CONVENTION</Id>
+    <ForwardStart>0M</ForwardStart>
+    <SpotDays>2D</SpotDays>
+    <SwapTenor>3M</SwapTenor>
+    <FixingDays>2</FixingDays>
+    <Calendar>TARGET</Calendar>
+    <DayCounter>A360</DayCounter>
+    <RollConvention>MF</RollConvention>
+  </CmsSpreadOption>
+\end{minted}
+\caption{Inflation swap conventions}
+\label{lst:inflation_conventions}
+\end{listing}
+
+The meaning of the elements is as follows:
+
+\begin{itemize}
+\item ForwardStart: The calendar for the fixed rate leg of the swap.
+\item SpotDays: The number of business days to spot for the CMS Spread Index.
+\item SwapTenor: The frequency of payments on the CMS Spread leg.
+\item FixingDays: The number of fixing days.
+\item Calendar: The calendar for the CMS Spread leg.
+\item DayCounter: The day counter for the CMS Spread leg.
+\item RollConvention: The rolling convention for the CMS Spread Leg.
+\end{itemize}

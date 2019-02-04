@@ -16,7 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "index.hpp"
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currency.hpp>
 #include <ql/index.hpp>
 #include <qle/indexes/ibor/audbbsw.hpp>
@@ -66,55 +67,50 @@ struct IndTestData {
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void dataCheck(struct IndTestData& data) {
+BOOST_AUTO_TEST_SUITE(IndexTest)
 
-    BOOST_CHECK_EQUAL(data.ind.familyName(), data.name);
-    BOOST_CHECK_EQUAL(data.ind.fixingCalendar().name(), data.calName);
-    BOOST_CHECK_EQUAL(data.ind.currency().name(), data.ccyName);
-}
-
-void IndexTest::testIborIndex() {
+BOOST_AUTO_TEST_CASE(testIborIndex) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt indexes");
 
     Period pd(3, Months);
 
-    struct IndTestData data[] = { { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
-                                  { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
-                                  { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
-                                  { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
-                                  { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name() },
-                                  { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name() },
-                                  { DKKOis(), "DKK-DKKOIS", Denmark().name(), DKKCurrency().name() },
-                                  { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
-                                  { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
-                                  { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
-                                  { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
-                                  { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
-                                  { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
-                                  { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
-                                  { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
-                                  { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
-                                  { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
-                                  { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
-                                  { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
-                                  { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
-                                  { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
-                                  { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
-                                  { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
-                                  { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
+    IndTestData data[] = { { AUDbbsw(pd), "AUD-BBSW", Australia().name(), AUDCurrency().name() },
+                           { CHFTois(), "CHF-TOIS", Switzerland().name(), CHFCurrency().name() },
+                           { CHFSaron(), "CHF-SARON", Switzerland().name(), CHFCurrency().name() },
+                           { CORRA(), "CORRA", Canada().name(), CADCurrency().name() },
+                           { CZKPribor(pd), "CZK-PRIBOR", CzechRepublic().name(), CZKCurrency().name() },
+                           { DKKCibor(pd), "DKK-CIBOR", Denmark().name(), DKKCurrency().name() },
+                           { DKKOis(), "DKK-DKKOIS", Denmark().name(), DKKCurrency().name() },
+                           { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
+                           { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
+                           { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
+                           { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
+                           { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
+                           { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
+                           { NZDBKBM(pd), "NZD-BKBM", NewZealand().name(), NZDCurrency().name() },
+                           { PLNWibor(pd), "PLN-WIBOR", Poland().name(), PLNCurrency().name() },
+                           { SEKStibor(pd), "SEK-STIBOR", Sweden().name(), SEKCurrency().name() },
+                           { SEKSior(), "SEK-SIOR", Sweden().name(), SEKCurrency().name() },
+                           { SGDSibor(pd), "SGD-SIBOR", Singapore().name(), SGDCurrency().name() },
+                           { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
+                           { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
+                           { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
+                           { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
+                           { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
+                           { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
 
     Size size = sizeof(data) / sizeof(data[0]);
 
-    for (Size i = 0; i < size; i++)
-        dataCheck(data[i]);
+    for (Size i = 0; i < size; i++) {
+        BOOST_CHECK_EQUAL(data[i].ind.familyName(), data[i].name);
+        BOOST_CHECK_EQUAL(data[i].ind.fixingCalendar().name(), data[i].calName);
+        BOOST_CHECK_EQUAL(data[i].ind.currency().name(), data[i].ccyName);
+    }
 }
 
-test_suite* IndexTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("IborIndexTests");
-    suite->add(BOOST_TEST_CASE(&IndexTest::testIborIndex));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -147,7 +147,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
 
             if (isATM) {
                 // ATM
-                vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc));
+                // Set forceMonotoneVariance to false - allowing decreasing variance
+                vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
             } else {
                 // Smile
                 auto fxSpot = getHandle<Quote>(config->fxSpotID(), fxSpots);
@@ -155,7 +156,7 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                 auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS));
+                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false));
             }
         }
         vol_->enableExtrapolation();

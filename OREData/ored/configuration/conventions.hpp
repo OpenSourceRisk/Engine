@@ -63,7 +63,8 @@ public:
         CDS,
         SwapIndex,
         InflationSwap,
-        SecuritySpread
+        SecuritySpread,
+        CMSSpreadOption
     };
 
     //! Default destructor
@@ -1001,6 +1002,58 @@ private:
     string strSpotCalendar_;
     string strRollConvention_;
     string strEom_;
+};
+
+//! Container for storing CMS Spread Option conventions
+/*!
+  \ingroup marketdata
+ */
+class CmsSpreadOptionConvention : public Convention {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    CmsSpreadOptionConvention() {}
+    //! Detailed constructor
+    CmsSpreadOptionConvention(const string& id, const string& strForwardStart, const string& strSpotDays,
+                                const string& strSwapTenor, const string& strFixingDays, const string& strCalendar,
+                                const string& strDayCounter, const string& strConvention);
+    //@}
+
+    //! \name Inspectors
+    //@{
+    const Period& forwardStart() const { return forwardStart_; }
+    const Period spotDays() const { return spotDays_; }
+    const Period& swapTenor() { return swapTenor_; }
+    Natural fixingDays() const { return fixingDays_; }
+    const Calendar& calendar() const { return calendar_; }
+    const DayCounter& dayCounter() const { return dayCounter_; }
+    BusinessDayConvention rollConvention() const { return rollConvention_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void build();
+    //@}
+private:
+    Period forwardStart_;
+    Period spotDays_;
+    Period swapTenor_;
+    Natural fixingDays_;
+    Calendar calendar_;
+    DayCounter dayCounter_;
+    BusinessDayConvention rollConvention_;
+
+    // Strings to store the inputs
+    string strForwardStart_;
+    string strSpotDays_;
+    string strSwapTenor_;
+    string strFixingDays_;
+    string strCalendar_;
+    string strDayCounter_;
+    string strRollConvention_;
 };
 } // namespace data
 } // namespace ore

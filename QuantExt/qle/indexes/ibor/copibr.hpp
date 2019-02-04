@@ -26,9 +26,8 @@
 
 #include <ql/currencies/america.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/colombia.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-
+#include <qle/calendars/colombia.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -39,8 +38,7 @@ using namespace QuantLib;
 class COPIbr : public IborIndex {
 public:
     COPIbr(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("COP-IBR", tenor, 2, COPCurrency(), Colombia(), ModifiedFollowing, false, Actual360(),
-                    h) {}
+        : IborIndex("COP-IBR", tenor, 2, COPCurrency(), Colombia(), ModifiedFollowing, false, Actual360(), h) {}
 };
 } // namespace QuantExt
 

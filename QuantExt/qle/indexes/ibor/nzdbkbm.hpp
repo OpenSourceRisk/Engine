@@ -29,7 +29,6 @@
 #include <ql/time/calendars/newzealand.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "staticallycorrectedyieldtermstructure.hpp"
+#include "toplevelfixture.hpp"
 #include "utilities.hpp"
+#include <boost/test/unit_test.hpp>
 
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 
@@ -31,9 +32,11 @@ using namespace QuantExt;
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void StaticallyCorrectedYieldTermStructureTest::testCorrectedYts() {
+BOOST_AUTO_TEST_SUITE(StaticallyCorrectedYieVldTermStructureTest)
+
+BOOST_AUTO_TEST_CASE(testCorrectedYts) {
 
     SavedSettings backup;
 
@@ -117,9 +120,6 @@ void StaticallyCorrectedYieldTermStructureTest::testCorrectedYts() {
                             << ", tolerance is " << tol);
 }
 
-test_suite* StaticallyCorrectedYieldTermStructureTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("StaticallyCorrectedYieldTermStructure tests");
-    suite->add(BOOST_TEST_CASE(&StaticallyCorrectedYieldTermStructureTest::testCorrectedYts));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

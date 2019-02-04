@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ql/termstructures/inflationtermstructure.hpp>
+#include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp> 
 
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
@@ -39,6 +40,7 @@ namespace data {
 using QuantLib::Date;
 using QuantLib::InflationTermStructure;
 using QuantLib::CPICapFloorTermPriceSurface;
+using QuantLib::CPIVolatilitySurface;
 using ore::data::CurveConfigurations;
 using ore::data::Conventions;
 
@@ -60,6 +62,12 @@ public:
     const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyVolSurface_; }
     bool useMarketYoyCurve() const { return useMarketYoyCurve_; }
     const boost::shared_ptr<YoYInflationTermStructure> yoyInflationAtmCurve() const { return yoyTs_; }
+    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationFloorVolSurface() const { 
+        return cpiFloorVolSurface_; 
+    } 
+    const boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiInflationCapVolSurface() const { 
+        return cpiCapVolSurface_; 
+    } 
 
 private:
     InflationCapFloorPriceSurfaceSpec spec_;
@@ -67,6 +75,7 @@ private:
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyVolSurface_;
     bool useMarketYoyCurve_;
     boost::shared_ptr<YoYInflationTermStructure> yoyTs_;
+    boost::shared_ptr<QuantLib::CPIVolatilitySurface> cpiCapVolSurface_, cpiFloorVolSurface_; 
 };
 } // namespace data
 } // namespace ore

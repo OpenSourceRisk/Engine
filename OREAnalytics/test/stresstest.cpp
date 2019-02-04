@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -52,7 +54,6 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/stresstest.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -64,7 +65,12 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildCap;
+using testsuite::buildFloor;
+using testsuite::buildFxOption;
+using testsuite::buildEuropeanSwaption;
 
 boost::shared_ptr<data::Conventions> stressConv() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -234,7 +240,11 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     return stressData;
 }
 
-void StressTestingTest::regression() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalytics, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(StressTestingTest)
+
+BOOST_AUTO_TEST_CASE(regression) {
     BOOST_TEST_MESSAGE("Testing Sensitivity Par Conversion");
 
     SavedSettings backup;
@@ -376,11 +386,6 @@ void StressTestingTest::regression() {
     IndexManager::instance().clearHistories();
 }
 
-test_suite* StressTestingTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("StressTestingTest");
-    // Set the Observation mode here
-    ObservationMode::instance().setMode(ObservationMode::Mode::None);
-    suite->add(BOOST_TEST_CASE(&StressTestingTest::regression));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

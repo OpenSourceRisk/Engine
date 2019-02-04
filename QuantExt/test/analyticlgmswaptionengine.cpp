@@ -16,9 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "analyticlgmswaptionengine.hpp"
 #include "utilities.hpp"
 
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <qle/models/cdsoptionhelper.hpp>
 #include <qle/models/cpicapfloorhelper.hpp>
 #include <qle/models/crlgm1fparametrization.hpp>
@@ -90,9 +91,11 @@ using namespace QuantExt;
 
 using boost::unit_test_framework::test_suite;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void AnalyticLgmSwaptionEngineTest::testMonoCurve() {
+BOOST_AUTO_TEST_SUITE(AnalyticLgmSwaptionEngineTest)
+
+BOOST_AUTO_TEST_CASE(testMonoCurve) {
 
     BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine coupon "
                        "adjustments in mono curve setup...");
@@ -198,7 +201,7 @@ void AnalyticLgmSwaptionEngineTest::testMonoCurve() {
     }
 }
 
-void AnalyticLgmSwaptionEngineTest::testDualCurve() {
+BOOST_AUTO_TEST_CASE(testDualCurve) {
 
     BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine coupon "
                        "adjustments in dual curve setup...");
@@ -303,7 +306,7 @@ void AnalyticLgmSwaptionEngineTest::testDualCurve() {
     }
 }
 
-void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
+BOOST_AUTO_TEST_CASE(testAgainstOtherEngines) {
 
     BOOST_TEST_MESSAGE("Testing analytic LGM swaption engine against "
                        "G1d adaptor / Gsr integral and Hull White fd engines...");
@@ -467,7 +470,7 @@ void AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines() {
     }
 } // testAgainstOtherEngines
 
-void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
+BOOST_AUTO_TEST_CASE(testLgmInvariances) {
 
     BOOST_TEST_MESSAGE("Testing LGM model invariances in the analytic LGM "
                        "swaption engine...");
@@ -560,12 +563,6 @@ void AnalyticLgmSwaptionEngineTest::testLgmInvariances() {
     }
 } // testInvariances
 
-test_suite* AnalyticLgmSwaptionEngineTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("Analytic LGM swaption engine tests");
-    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testMonoCurve));
-    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testDualCurve));
-    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testAgainstOtherEngines));
-    suite->add(BOOST_TEST_CASE(&AnalyticLgmSwaptionEngineTest::testLgmInvariances));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

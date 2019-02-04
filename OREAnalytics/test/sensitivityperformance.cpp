@@ -16,7 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "sensitivityperformance.hpp"
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <oret/enableperformancetests.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
@@ -606,9 +608,11 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 }
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
-void SensitivityPerformanceTest::testSensiPerformanceNoneObs() {
+BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest, *boost::unit_test::precondition(ore::test::enablePerformanceTests()))
+
+BOOST_AUTO_TEST_CASE(testSensiPerformanceNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -616,7 +620,7 @@ void SensitivityPerformanceTest::testSensiPerformanceNoneObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceDisableObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceDisableObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::Disable;
@@ -624,7 +628,7 @@ void SensitivityPerformanceTest::testSensiPerformanceDisableObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceDeferObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceDeferObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::Defer;
@@ -632,7 +636,7 @@ void SensitivityPerformanceTest::testSensiPerformanceDeferObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceUnregisterObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::Unregister;
@@ -640,7 +644,7 @@ void SensitivityPerformanceTest::testSensiPerformanceUnregisterObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceCrossGammaNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceCrossGammaNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -648,7 +652,7 @@ void SensitivityPerformanceTest::testSensiPerformanceCrossGammaNoneObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigScenarioNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigScenarioNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -656,7 +660,7 @@ void SensitivityPerformanceTest::testSensiPerformanceBigScenarioNoneObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -664,7 +668,7 @@ void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioNoneObs() {
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioBigScenarioNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -672,7 +676,7 @@ void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioNone
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioCrossGammaNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -680,7 +684,7 @@ void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaNoneO
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigScenarioCrossGammaNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -688,7 +692,7 @@ void SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaNoneOb
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs() {
+BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs) {
     boost::timer t_base;
     t_base.restart();
     ObservationMode::Mode om = ObservationMode::Mode::None;
@@ -696,29 +700,6 @@ void SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCros
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 
-test_suite* SensitivityPerformanceTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityPerformanceTest");
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceNoneObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceDisableObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceDeferObs));
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceUnregisterObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceCrossGammaNoneObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioNoneObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioNoneObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioNoneObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioCrossGammaNoneObs));
-
-    suite->add(BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigScenarioCrossGammaNoneObs));
-
-    suite->add(
-        BOOST_TEST_CASE(&SensitivityPerformanceTest::testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

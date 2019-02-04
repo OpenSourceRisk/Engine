@@ -31,7 +31,6 @@
 #include <boost/math/special_functions/erf.hpp>
 #endif
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

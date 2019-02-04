@@ -48,6 +48,9 @@ public:
     //! Load fixings
     const std::vector<Fixing>& loadFixings() const override { return fixings_; }
 
+    //! Load Dividends
+    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
         try {
@@ -68,6 +71,7 @@ public:
 protected:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
+    std::vector<Fixing> dividends_;
 };
 
 //! Utility function for loading market quotes and fixings from an in memory csv buffer

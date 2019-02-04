@@ -16,9 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossccybasismtmresetswap.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
+#include <ql/cashflows/couponpricer.hpp>
+#include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/indexes/ibor/gbplibor.hpp>
 #include <ql/indexes/ibor/usdlibor.hpp>
@@ -27,12 +29,8 @@
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/types.hpp>
-#include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/couponpricer.hpp>
 #include <qle/instruments/crossccybasismtmresetswap.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
-
-#include <iostream>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -299,34 +297,29 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(Rate spotFx, Spread GB
     JointCalendar payCalendar = JointCalendar(UnitedStates(), UnitedKingdom());
     Date referenceDate = Settings::instance().evaluationDate();
     referenceDate = payCalendar.adjust(referenceDate);
-    Date start = payCalendar.advance(referenceDate, 2*Days);
-    Date end = start + 5*Years;
-    Schedule schedule(start, end, 3*Months, payCalendar, 
-                      ModifiedFollowing, ModifiedFollowing,
+    Date start = payCalendar.advance(referenceDate, 2 * Days);
+    Date end = start + 5 * Years;
+    Schedule schedule(start, end, 3 * Months, payCalendar, ModifiedFollowing, ModifiedFollowing,
                       DateGeneration::Backward, false);
 
     // Indices
-    boost::shared_ptr<IborIndex> USDindex 
-        = boost::make_shared<USDLibor>(3*Months, USDProjectionCurve());
-    boost::shared_ptr<IborIndex> GBPindex 
-        = boost::make_shared<GBPLibor>(3*Months, GBPProjectionCurve());
-    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>("dummy", 0, GBPCurrency(), 
-                                                                     USDCurrency(), payCalendar, 
-                                                                     fxSpotQuote, GBPDiscountCurve(), 
-                                                                     USDDiscountCurve());
+    boost::shared_ptr<IborIndex> USDindex = boost::make_shared<USDLibor>(3 * Months, USDProjectionCurve());
+    boost::shared_ptr<IborIndex> GBPindex = boost::make_shared<GBPLibor>(3 * Months, GBPProjectionCurve());
+    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
+        "dummy", 0, GBPCurrency(), USDCurrency(), payCalendar, fxSpotQuote, GBPDiscountCurve(), USDDiscountCurve());
 
     // Create swap
     return boost::shared_ptr<CrossCcyBasisMtMResetSwap>(
-        new CrossCcyBasisMtMResetSwap(GBPNominal, GBPCurrency(), schedule, 
-                                      GBPindex, GBPSpread, USDCurrency(), schedule,
+        new CrossCcyBasisMtMResetSwap(GBPNominal, GBPCurrency(), schedule, GBPindex, GBPSpread, USDCurrency(), schedule,
                                       USDindex, 0.0, fxIndex, false));
 }
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
+BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapTest)
 
+BOOST_AUTO_TEST_CASE(testSwapPricing) {
 
     BOOST_TEST_MESSAGE("Test cross currency MtM resetting swap pricing against known results");
 
@@ -348,20 +341,12 @@ void CrossCcyBasisMtMResetSwapTest::testSwapPricing() {
     // Check values
     Real tol = 0.01;
 
-    Real expNpv = -9.9134377108421177; // cached value. Not exactly zero, due to QL_USE_INDEXED_COUPON discrepancy
-    BOOST_CHECK_SMALL(swap->NPV() - expNpv, tol);
+    BOOST_CHECK_SMALL(swap->NPV(), tol);
 
     Real expBps = -4670.170509677384; // cached value
     BOOST_CHECK_SMALL(swap->legBPS(0) - expBps, tol);
 }
 
-test_suite* CrossCcyBasisMtMResetSwapTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("CrossCcyBasisMtMResetSwapTests");
-
-    suite->add(BOOST_TEST_CASE(&CrossCcyBasisMtMResetSwapTest::testSwapPricing));
-
-    return suite;
-}
-
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

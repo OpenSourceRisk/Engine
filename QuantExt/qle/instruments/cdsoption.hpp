@@ -47,7 +47,6 @@
 
 #include <ql/option.hpp>
 
-
 namespace QuantLib {
 class Quote;
 class YieldTermStructure;
