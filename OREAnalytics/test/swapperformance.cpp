@@ -18,6 +18,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
+#include <oret/enableperformancetests.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -65,7 +66,7 @@ using testsuite::TestMarket;
 
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(SwapPerformaceTest)
+BOOST_AUTO_TEST_SUITE(SwapPerformaceTest, *boost::unit_test::precondition(ore::test::enablePerformanceTests()))
 
 // Returns an int in the interval [min, max]. Inclusive.
 inline unsigned long randInt(MersenneTwisterUniformRng& rng, Size min, Size max) {
