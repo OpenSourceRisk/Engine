@@ -152,7 +152,7 @@ public:
     const string& baseCorrelationDayCounter(const string& key) const;
 
     vector<string> cpiIndices() const { return paramsLookup(RiskFactorKey::KeyType::CPIIndex); }
-    vector<string> zeroInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::FXVolatility);}
+    vector<string> zeroInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCurve);}
     const string& zeroInflationDayCounter(const string& key) const;
     const vector<Period>& zeroInflationTenors(const string& key) const;
     bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }

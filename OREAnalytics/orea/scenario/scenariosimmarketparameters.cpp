@@ -320,6 +320,7 @@ void ScenarioSimMarketParameters::setCommodityVolDayCounter(const string& commod
 }
 
 void ScenarioSimMarketParameters::setDiscountCurveNames(vector<string> names) {
+    ccys_ = names;
     addParams(RiskFactorKey::KeyType::DiscountCurve, names);
 }
 
@@ -353,6 +354,8 @@ void ScenarioSimMarketParameters::setCdsVolNames(vector<string> names) {
 
 void ScenarioSimMarketParameters::setEquityNames(vector<string> names) {
     addParams(RiskFactorKey::KeyType::EquitySpot, names);
+    setEquityForecastCurves(names);
+    setEquityDividendCurves(names);
 }
 
 void ScenarioSimMarketParameters::setEquityForecastCurves(vector<string> names) {
@@ -374,6 +377,7 @@ void ScenarioSimMarketParameters::setEquityVolNames(vector<string> names) {
 
 void ScenarioSimMarketParameters::setSecurities(vector<string> names) {
     addParams(RiskFactorKey::KeyType::SecuritySpread, names);
+    setRecoveryRates(names);
 }
 
 void ScenarioSimMarketParameters::setRecoveryRates(vector<string> names) {
@@ -473,8 +477,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     // TODO: add in checks (checkNode or QL_REQUIRE) on mandatory nodes
     DLOG("Loading Currencies");
     baseCcy_ = XMLUtils::getChildValue(node, "BaseCurrency");
-    ccys_ = XMLUtils::getChildrenValues(node, "Currencies", "Currency");
-    setDiscountCurveNames(ccys_);
+    setDiscountCurveNames(XMLUtils::getChildrenValues(node, "Currencies", "Currency"));
 
     DLOG("Loading BenchmarkCurve");
     XMLNode* nodeChild = XMLUtils::getChildNode(node, "BenchmarkCurves");
@@ -717,8 +720,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             dividendYieldSimulate_ = false;
         vector<string> equityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setEquityNames(equityNames);
-        setEquityForecastCurves(equityNames);
-        setEquityDividendCurves(equityNames);
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
         equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     }
@@ -866,7 +867,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         securitySpreadsSimulate_ = XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false);
         vector<string> securities = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
         setSecurities(securities);
-        setRecoveryRates(securities);
         // if SimulateCPR is not given, we set it to false
         XMLNode* cprNode = XMLUtils::getChildNode(nodeChild, "SimulateCPR");
         cprSimulate_ = cprNode ? parseBool(XMLUtils::getNodeValue(cprNode)) : false;
