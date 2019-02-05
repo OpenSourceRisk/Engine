@@ -61,8 +61,7 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
     // Check that we have a model/engine for tradetype
-    QL_REQUIRE(engineData_->hasProduct(tradeType), "EngineFactory does not have a "
-                                                   "model/engine for trade type "
+    QL_REQUIRE(engineData_->hasProduct(tradeType), "No Pricing Engine configuration was provided for trade type "
                                                        << tradeType);
 
     // Find a builder for the model/engine/tradeType
