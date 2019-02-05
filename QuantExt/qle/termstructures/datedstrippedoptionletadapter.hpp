@@ -28,7 +28,6 @@
 #include <ql/math/interpolation.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

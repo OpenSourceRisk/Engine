@@ -22,38 +22,37 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-    Netherlands::Netherlands(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new Netherlands::SettlementImpl);
-        impl_ = impl;
-    }
-
-    bool Netherlands::SettlementImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-        if (isWeekend(w)
-            // New Years Day
-            || (d == 1 && m == January)
-            // Good Friday
-            || (dd == em-3)
-            // Easter Monday
-            || (dd == em)
-            // King's Birthday
-            || (d == 27 && m == April)
-            // Ascension Thursday
-            || (dd == em+38)
-            // Whit Monday
-            || (dd == em+49)
-            // Christmas
-            || (d == 25 && m == December)
-            // Boxing Day
-            || (d == 26 && m == December))
-            return false;
-        return true;
-    }
-
+Netherlands::Netherlands(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new Netherlands::SettlementImpl);
+    impl_ = impl;
 }
 
+bool Netherlands::SettlementImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+    if (isWeekend(w)
+        // New Years Day
+        || (d == 1 && m == January)
+        // Good Friday
+        || (dd == em - 3)
+        // Easter Monday
+        || (dd == em)
+        // King's Birthday
+        || (d == 27 && m == April)
+        // Ascension Thursday
+        || (dd == em + 38)
+        // Whit Monday
+        || (dd == em + 49)
+        // Christmas
+        || (d == 25 && m == December)
+        // Boxing Day
+        || (d == 26 && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantExt

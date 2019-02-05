@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -33,12 +32,12 @@ using namespace boost::unit_test_framework;
 using namespace QuantLib;
 using std::vector;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SurvivalProbabilityCruveTest)
 
 BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
-    
+
     BOOST_TEST_MESSAGE("Testing QuantExt::SurvivalProbabilityCurve...");
 
     Settings::instance().evaluationDate() = Date(1, Dec, 2015);

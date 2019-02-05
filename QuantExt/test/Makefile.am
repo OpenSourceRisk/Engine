@@ -38,6 +38,8 @@ QLE_TESTS = \
 	crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.cpp \
 	cpicapfloor.cpp 
+    correlationtermstructure.cpp \
+	cpicapfloor.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

@@ -16,11 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
-#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <boost/make_shared.hpp>
 #include <ql/cashflows/fixedratecoupon.hpp>
 #include <ql/math/comparison.hpp>
-#include <boost/make_shared.hpp>
+#include <qle/pricingengines/crossccyswapengine.hpp>
+#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
 
 using QuantExt::CrossCcySwapEngine;
 using QuantLib::YieldTermStructure;
@@ -31,37 +31,18 @@ namespace QuantExt {
 
 namespace {
 void no_deletion(YieldTermStructure*) {}
-}
+} // namespace
 
 CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
-    const Handle<Quote>& rate,
-    const Handle<Quote>& spotFx,
-    Natural settlementDays,
-    const Calendar& paymentCalendar,
-    BusinessDayConvention paymentConvention,
-    const Period& tenor,
-    const Currency& fixedCurrency,
-    Frequency fixedFrequency,
-    BusinessDayConvention fixedConvention,
-    const DayCounter& fixedDayCount,
-    const boost::shared_ptr<IborIndex>& index,
-    const Handle<YieldTermStructure>& floatDiscount,
-    const Handle<Quote>& spread, 
-    bool endOfMonth) 
-    : RelativeDateRateHelper(rate), 
-      spotFx_(spotFx), 
-      settlementDays_(settlementDays), 
-      paymentCalendar_(paymentCalendar), 
-      paymentConvention_(paymentConvention), 
-      tenor_(tenor), 
-      fixedCurrency_(fixedCurrency), 
-      fixedFrequency_(fixedFrequency), 
-      fixedConvention_(fixedConvention), 
-      fixedDayCount_(fixedDayCount), 
-      index_(index), 
-      floatDiscount_(floatDiscount), 
-      spread_(spread), 
-      endOfMonth_(endOfMonth) {
+    const Handle<Quote>& rate, const Handle<Quote>& spotFx, Natural settlementDays, const Calendar& paymentCalendar,
+    BusinessDayConvention paymentConvention, const Period& tenor, const Currency& fixedCurrency,
+    Frequency fixedFrequency, BusinessDayConvention fixedConvention, const DayCounter& fixedDayCount,
+    const boost::shared_ptr<IborIndex>& index, const Handle<YieldTermStructure>& floatDiscount,
+    const Handle<Quote>& spread, bool endOfMonth)
+    : RelativeDateRateHelper(rate), spotFx_(spotFx), settlementDays_(settlementDays), paymentCalendar_(paymentCalendar),
+      paymentConvention_(paymentConvention), tenor_(tenor), fixedCurrency_(fixedCurrency),
+      fixedFrequency_(fixedFrequency), fixedConvention_(fixedConvention), fixedDayCount_(fixedDayCount), index_(index),
+      floatDiscount_(floatDiscount), spread_(spread), endOfMonth_(endOfMonth) {
 
     QL_REQUIRE(!spotFx_.empty(), "Spot FX quote cannot be empty.");
     QL_REQUIRE(fixedCurrency_ != index_->currency(), "Fixed currency should not equal float leg currency.");
@@ -76,14 +57,14 @@ CrossCcyFixFloatSwapHelper::CrossCcyFixFloatSwapHelper(
 
 void CrossCcyFixFloatSwapHelper::update() {
     // Maybe FX spot quote or spread quote changed
-    if (!close(spotFx_->value(), swap_->fixedNominal()) || 
+    if (!close(spotFx_->value(), swap_->fixedNominal()) ||
         (!spread_.empty() && !close(spread_->value(), swap_->floatSpread()))) {
         initializeDates();
     }
-    
+
     // Maybe evaluation date changed. RelativeDateRateHelper will take care of this
-    // Note: if initializeDates() was called in above if statement, it will not be called 
-    // again in RelativeDateRateHelper::update() because evaluationDate_ is set in 
+    // Note: if initializeDates() was called in above if statement, it will not be called
+    // again in RelativeDateRateHelper::update() because evaluationDate_ is set in
     // initializeDates(). So, redundant instrument builds are avoided.
     RelativeDateRateHelper::update();
 }
@@ -118,21 +99,22 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     // Nominals
     Real floatNominal = 1.0;
     Real fixedNominal = spotFx_->value();
-    
+
     // Fixed schedule
-    Schedule fixedSchedule(start, end, Period(fixedFrequency_), paymentCalendar_, 
-        fixedConvention_, fixedConvention_, DateGeneration::Backward, endOfMonth_);
+    Schedule fixedSchedule(start, end, Period(fixedFrequency_), paymentCalendar_, fixedConvention_, fixedConvention_,
+                           DateGeneration::Backward, endOfMonth_);
 
     // Float schedule
-    Schedule floatSchedule(start, end, index_->tenor(), paymentCalendar_, 
-        paymentConvention_, paymentConvention_, DateGeneration::Backward, endOfMonth_);
+    Schedule floatSchedule(start, end, index_->tenor(), paymentCalendar_, paymentConvention_, paymentConvention_,
+                           DateGeneration::Backward, endOfMonth_);
 
     // Create the swap
     Natural paymentLag = 0;
     Spread floatSpread = spread_.empty() ? 0.0 : spread_->value();
-    swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, 
-        fixedNominal, fixedCurrency_, fixedSchedule, 0.0, fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, 
-        floatNominal, index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_, paymentLag, paymentCalendar_));
+    swap_.reset(new CrossCcyFixFloatSwap(CrossCcyFixFloatSwap::Payer, fixedNominal, fixedCurrency_, fixedSchedule, 0.0,
+                                         fixedDayCount_, paymentConvention_, paymentLag, paymentCalendar_, floatNominal,
+                                         index_->currency(), floatSchedule, index_, floatSpread, paymentConvention_,
+                                         paymentLag, paymentCalendar_));
 
     earliestDate_ = swap_->startDate();
     maturityDate_ = swap_->maturityDate();
@@ -150,4 +132,4 @@ void CrossCcyFixFloatSwapHelper::initializeDates() {
     swap_->setPricingEngine(engine);
 }
 
-}
+} // namespace QuantExt

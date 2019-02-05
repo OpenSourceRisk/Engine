@@ -1,19 +1,20 @@
 # cpp files, this list is maintained manually
 
-set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp 
+set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 bonds.cpp
 bondoption.cpp
 cashflow.cpp
 commodityforward.cpp
+correlationtermstructure.cpp
 cpicapfloor.cpp
 crossassetmodel.cpp
 crossassetmodel2.cpp
 crossassetmodelparametrizations.cpp
-crossccyfixfloatswap.cpp
-crossccyfixfloatswaphelper.cpp
 crossccybasismtmresetswap.cpp
 crossccybasismtmresetswaphelper.cpp
+crossccyfixfloatswap.cpp
+crossccyfixfloatswaphelper.cpp
 currency.cpp
 deltagammavar.cpp
 deposit.cpp

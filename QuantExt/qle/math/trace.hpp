@@ -26,7 +26,6 @@
 
 #include <ql/math/matrix.hpp>
 
-
 namespace QuantExt {
 using QuantLib::Size;
 using QuantLib::Real;

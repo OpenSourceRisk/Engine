@@ -26,7 +26,6 @@
 
 #include <ql/termstructures/volatility/spreadedsmilesection.hpp>
 
-
 namespace QuantExt {
 using QuantLib::Handle;
 using QuantLib::Quote;

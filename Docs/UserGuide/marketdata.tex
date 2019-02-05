@@ -1093,6 +1093,33 @@ Examples:
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\subsection{Correlations}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+\begin{table}[H]
+\centering
+  \begin{tabular}{|p{3cm}|p{3.5cm}|p{7cm}|}
+  \hline
+  {\bf Property} & {\bf Allowable values} & {\bf Description} \\ \hline
+    Instrument Type & \emph{Correlation} & \\ \hline
+    Quote Type & \emph{RATE or PRICE} & \\ \hline
+    Index1 & String & Identifying name of the first index \\ \hline
+    Index2 & String & Identifying name of the second index \\ \hline
+  \end{tabular}
+  \caption{Correlation quotes}
+  \label{tab:correlation_quote}
+\end{table}
+
+This quote either provides the correlation between two indices, in which case Quote Type is RATE,
+or a premium that can be used to bootstrap the correlations, in which case Quote Type is Price.
+Currently only CMS Spread correlations are supported, in this case the Price quote is the price of a CMS Spread Cap.
+
+\medskip
+Examples:
+\begin{itemize}
+	\item CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM
+\end{itemize}
+%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Conditional Prepayment Rates}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

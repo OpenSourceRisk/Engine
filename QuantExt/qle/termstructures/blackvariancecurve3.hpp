@@ -29,7 +29,6 @@
 #include <ql/quote.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

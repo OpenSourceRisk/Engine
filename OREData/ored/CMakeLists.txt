@@ -6,6 +6,7 @@ configuration/cdsvolcurveconfig.cpp
 configuration/commoditycurveconfig.cpp
 configuration/commodityvolcurveconfig.cpp
 configuration/conventions.cpp
+configuration/correlationcurveconfig.cpp
 configuration/curveconfigurations.cpp
 configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
@@ -21,6 +22,7 @@ marketdata/capfloorvolcurve.cpp
 marketdata/cdsvolcurve.cpp
 marketdata/commoditycurve.cpp
 marketdata/commodityvolcurve.cpp
+marketdata/correlationcurve.cpp
 marketdata/csvloader.cpp
 marketdata/curveloader.cpp
 marketdata/curvespec.cpp
@@ -59,6 +61,14 @@ model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
 portfolio/bondoption.cpp
+portfolio/builders/capfloor.cpp
+portfolio/builders/capfloorediborleg.cpp
+portfolio/builders/cms.cpp
+portfolio/builders/cmsspread.cpp
+portfolio/builders/commodityoption.cpp
+portfolio/builders/cpicapfloor.cpp
+portfolio/builders/swaption.cpp
+portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
@@ -88,14 +98,6 @@ portfolio/swaption.cpp
 portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
-portfolio/builders/capfloor.cpp
-portfolio/builders/capfloorediborleg.cpp
-portfolio/builders/cms.cpp
-portfolio/builders/cmsspread.cpp
-portfolio/builders/commodityoption.cpp
-portfolio/builders/cpicapfloor.cpp
-portfolio/builders/swaption.cpp
-portfolio/builders/yoycapfloor.cpp
 report/csvreport.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
@@ -113,13 +115,13 @@ utilities/xmlutils.cpp)
 # hpp files, this list is maintained manually
 
 set(OREData_HDR auto_link.hpp
-version.hpp
 configuration/basecorrelationcurveconfig.hpp
 configuration/capfloorvolcurveconfig.hpp
 configuration/cdsvolcurveconfig.hpp
 configuration/commoditycurveconfig.hpp
 configuration/commodityvolcurveconfig.hpp
 configuration/conventions.hpp
+configuration/correlationcurveconfig.hpp
 configuration/curveconfig.hpp
 configuration/curveconfigurations.hpp
 configuration/defaultcurveconfig.hpp
@@ -138,6 +140,7 @@ marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
 marketdata/commoditycurve.hpp
 marketdata/commodityvolcurve.hpp
+marketdata/correlationcurve.hpp
 marketdata/csvloader.hpp
 marketdata/curveloader.hpp
 marketdata/curvespec.hpp
@@ -178,6 +181,24 @@ model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
 portfolio/bondoption.hpp
+portfolio/builders/bond.hpp
+portfolio/builders/cachingenginebuilder.hpp
+portfolio/builders/capfloor.hpp
+portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/cms.hpp
+portfolio/builders/cmsspread.hpp
+portfolio/builders/commodityforward.hpp
+portfolio/builders/commodityoption.hpp
+portfolio/builders/cpicapfloor.hpp
+portfolio/builders/creditdefaultswap.hpp
+portfolio/builders/equityforward.hpp
+portfolio/builders/equityoption.hpp
+portfolio/builders/fxforward.hpp
+portfolio/builders/fxoption.hpp
+portfolio/builders/swap.hpp
+portfolio/builders/swaption.hpp
+portfolio/builders/yoycapfloor.hpp
+>>>>>>> master
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
@@ -243,7 +264,8 @@ utilities/strike.hpp
 utilities/timeperiod.hpp
 utilities/to_string.hpp
 utilities/vectorutils.hpp
-utilities/xmlutils.hpp)
+utilities/xmlutils.hpp
+version.hpp)
 
 writeAll("ored" "ored.hpp" "auto_link.hpp" "${OREData_HDR}")
 add_library(${ORED_LIB_NAME} ${OREData_SRC})

@@ -607,10 +607,10 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 }
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest)
-		
+BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest, *boost::unit_test::disabled())
+
 BOOST_AUTO_TEST_CASE(testSensiPerformanceNoneObs) {
     boost::timer t_base;
     t_base.restart();

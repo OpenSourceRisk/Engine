@@ -28,19 +28,21 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-  class France : public Calendar {
-      private:
-        class SettlementImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "French settlement"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { Settlement    // generic settlement calendar
-        };
-        France(Market m = Settlement);
+class France : public Calendar {
+private:
+    class SettlementImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "French settlement"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        Settlement // generic settlement calendar
+    };
+    France(Market m = Settlement);
+};
+
+} // namespace QuantExt
 
 #endif

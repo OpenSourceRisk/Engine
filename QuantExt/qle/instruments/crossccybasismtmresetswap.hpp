@@ -28,14 +28,14 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
 
-#include <qle/instruments/crossccyswap.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/instruments/crossccyswap.hpp>
 
 namespace QuantExt {
 
 //! Cross currency basis MtM resettable swap
 /*! The foreign leg holds the pay currency cashflows and domestic leg holds
-    the receive currency cashflows. The notional resets are applied to the 
+    the receive currency cashflows. The notional resets are applied to the
     domestic leg.
 
             \ingroup instruments
@@ -50,11 +50,11 @@ public:
         holds the receive currency cashflows.
     */
     CrossCcyBasisMtMResetSwap(Real foreignNominal, const Currency& foreignCurrency, const Schedule& foreignSchedule,
-                      const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
-                      const Currency& domesticCurrency, const Schedule& domesticSchedule,
-                      const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread, 
-                      const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false,
-                      bool receiveDomestic = true);
+                              const boost::shared_ptr<IborIndex>& foreignIndex, Spread foreignSpread,
+                              const Currency& domesticCurrency, const Schedule& domesticSchedule,
+                              const boost::shared_ptr<IborIndex>& domesticIndex, Spread domesticSpread,
+                              const boost::shared_ptr<FxIndex>& fxIdx, bool invertFxIdx = false,
+                              bool receiveDomestic = true);
     //@}
     //! \name Instrument interface
     //@{

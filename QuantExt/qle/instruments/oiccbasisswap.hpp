@@ -31,7 +31,6 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

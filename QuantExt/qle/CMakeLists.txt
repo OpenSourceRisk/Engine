@@ -52,6 +52,7 @@ instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
+models/cmscaphelper.cpp
 models/cpicapfloorhelper.cpp
 models/crossassetanalytics.cpp
 models/crossassetmodel.cpp
@@ -104,6 +105,7 @@ termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/capfloortermvolsurface.cpp
+termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
 termstructures/crossccyfixfloatswaphelper.cpp
@@ -113,6 +115,7 @@ termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
+termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
@@ -138,7 +141,6 @@ termstructures/yoyinflationoptionletvolstripper.cpp)
 # hpp files, this list is maintained manually
 
 set(QuantExt_HDR auto_link.hpp
-version.hpp
 calendars/chile.hpp
 calendars/colombia.hpp
 calendars/france.hpp
@@ -169,10 +171,6 @@ indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
 indexes/genericiborindex.hpp
-indexes/inflationindexobserver.hpp
-indexes/inflationindexwrapper.hpp
-indexes/region.hpp
-indexes/secpi.hpp
 indexes/ibor/audbbsw.hpp
 indexes/ibor/brlcdi.hpp
 indexes/ibor/chfsaron.hpp
@@ -205,6 +203,10 @@ indexes/ibor/skkbribor.hpp
 indexes/ibor/thbbibor.hpp
 indexes/ibor/tonar.hpp
 indexes/ibor/twdtaibor.hpp
+indexes/inflationindexobserver.hpp
+indexes/inflationindexwrapper.hpp
+indexes/region.hpp
+indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
@@ -234,6 +236,7 @@ math/stabilisedglls.hpp
 math/trace.hpp
 methods/multipathgeneratorbase.hpp
 models/cdsoptionhelper.hpp
+models/cmscaphelper.hpp
 models/cpicapfloorhelper.hpp
 models/crlgm1fparametrization.hpp
 models/crossassetanalytics.hpp
@@ -288,6 +291,7 @@ pricingengines/oiccbasisswapengine.hpp
 pricingengines/paymentdiscountingengine.hpp
 processes/crossassetstateprocess.hpp
 processes/irlgm1fstateprocess.hpp
+quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
@@ -296,6 +300,7 @@ termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
 termstructures/crossccyfixfloatswaphelper.hpp
@@ -309,11 +314,13 @@ termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
 termstructures/equityvolconstantspread.hpp
+termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp
 termstructures/fxsmilesection.hpp
 termstructures/fxvannavolgasmilesection.hpp
 termstructures/hazardspreadeddefaulttermstructure.hpp
 termstructures/immfraratehelper.hpp
+termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
@@ -331,6 +338,7 @@ termstructures/spreadedoptionletvolatility.hpp
 termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
+termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter2.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
@@ -338,14 +346,14 @@ termstructures/swaptionvolatilityconverter.hpp
 termstructures/swaptionvolconstantspread.hpp
 termstructures/swaptionvolcube2.hpp
 termstructures/swaptionvolcubewithatm.hpp
-termstructures/strippedcpivolatilitystructure.hpp
 termstructures/tenorbasisswaphelper.hpp
 termstructures/yoyinflationcurveobservermoving.hpp
 termstructures/yoyinflationcurveobserverstatic.hpp
 termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
-termstructures/zeroinflationcurveobserverstatic.hpp)
+termstructures/zeroinflationcurveobserverstatic.hpp
+version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})

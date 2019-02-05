@@ -26,7 +26,6 @@
 
 #include <ql/termstructures/volatility/optionlet/spreadedoptionletvol.hpp>
 
-
 namespace QuantExt {
 using QuantLib::Date;
 using QuantLib::Handle;

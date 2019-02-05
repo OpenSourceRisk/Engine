@@ -20,66 +20,57 @@
 
 namespace QuantLib {
 
-    Colombia::Colombia(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new Colombia::CseImpl);
-        impl_ = impl;
-    }
-
-    bool Colombia::CseImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-        if (isWeekend(w)
-            // New Years Day
-            || ((d == 1 || (d == 2 && w == Monday)) && 
-                m == January)
-            // Dia de los Reyes Magos
-            || ((d >=6 && d <= 12) && w == Monday && 
-                m == January)
-            // St. Josephs Day
-            || ((d >= 19 && d <= 25) && w == Monday &&
-                m == March)
-            // Maundy Thursday
-            || (dd == em-4)
-            // Good Friday
-            || (dd == em-3)
-            // Labour Day
-            || (d == 1 && m == May)
-            // Ascension Day
-            || (dd == em + 42)
-            // Corpus Christi 
-            || (dd == em + 63)
-            // Sacred Heart
-            || (dd == em + 70)
-            // Saint Peter and Saint Paul
-            || (((d >= 29 && m == June) || ( d <= 5 && 
-                m == July)) && w == Monday)
-            // Declaration of Independence 
-            || (d == 20 && m == July)
-            // Battle of Boyaca
-            || ( d == 7 && m == August)
-            // Assumption
-            || ((d >= 15 && d <= 21) && w == Monday &&
-                m == August)
-            // Colombus Day
-            || ((d >= 12 && d <= 18) && w == Monday &&
-                m == October)
-            // All Saints Day
-            || ((d >= 1 && d <= 7) && w == Monday &&
-                m == November)
-            // Independence of Cartagena
-            || ((d >= 12 && d <= 18) && w == Monday &&
-                m == November)
-            // Immaculate Conception
-            || (d == 8 && m == December)
-            // Christmas
-            || (d == 25 && m == December))
-            return false;
-        return true;
-    }
-
+Colombia::Colombia(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new Colombia::CseImpl);
+    impl_ = impl;
 }
 
+bool Colombia::CseImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+    if (isWeekend(w)
+        // New Years Day
+        || ((d == 1 || (d == 2 && w == Monday)) && m == January)
+        // Dia de los Reyes Magos
+        || ((d >= 6 && d <= 12) && w == Monday && m == January)
+        // St. Josephs Day
+        || ((d >= 19 && d <= 25) && w == Monday && m == March)
+        // Maundy Thursday
+        || (dd == em - 4)
+        // Good Friday
+        || (dd == em - 3)
+        // Labour Day
+        || (d == 1 && m == May)
+        // Ascension Day
+        || (dd == em + 42)
+        // Corpus Christi
+        || (dd == em + 63)
+        // Sacred Heart
+        || (dd == em + 70)
+        // Saint Peter and Saint Paul
+        || (((d >= 29 && m == June) || (d <= 5 && m == July)) && w == Monday)
+        // Declaration of Independence
+        || (d == 20 && m == July)
+        // Battle of Boyaca
+        || (d == 7 && m == August)
+        // Assumption
+        || ((d >= 15 && d <= 21) && w == Monday && m == August)
+        // Colombus Day
+        || ((d >= 12 && d <= 18) && w == Monday && m == October)
+        // All Saints Day
+        || ((d >= 1 && d <= 7) && w == Monday && m == November)
+        // Independence of Cartagena
+        || ((d >= 12 && d <= 18) && w == Monday && m == November)
+        // Immaculate Conception
+        || (d == 8 && m == December)
+        // Christmas
+        || (d == 25 && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantLib

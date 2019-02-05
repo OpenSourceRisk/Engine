@@ -1,17 +1,17 @@
 # cpp files, this list is maintained manually
 
-set(OREAnalytics-Test_SRC aggregationscenariodata.cpp  
+set(OREAnalytics-Test_SRC aggregationscenariodata.cpp
 cube.cpp
 observationmode.cpp
-scenariosimmarket.cpp
 scenariogenerator.cpp
-sensitivityaggregator.cpp 
+scenariosimmarket.cpp
+sensitivityaggregator.cpp
 sensitivityanalysis.cpp
 sensitivityanalysisanalytic.cpp
 sensitivityperformance.cpp
 shiftscenariogenerator.cpp
-swapperformance.cpp
 stresstest.cpp
+swapperformance.cpp
 testmarket.cpp
 testportfolio.cpp
 testsuite.cpp)

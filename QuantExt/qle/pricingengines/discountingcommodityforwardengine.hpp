@@ -36,7 +36,7 @@ namespace QuantExt {
 
 /*! This class implements pricing of a commodity forward by discounting the future
     nominal cash flows using the respective yield curve.
-    
+
     \ingroup engines
 */
 class DiscountingCommodityForwardEngine : public CommodityForward::engine {
@@ -45,15 +45,14 @@ public:
     //@{
     /*! \param priceCurve                 The commodity price curve for estimating future prices.
         \param discountCurve              The discount curve to discount the forward cashflow.
-        \param includeSettlementDateFlows If true (false), cashflows on the forward maturity 
+        \param includeSettlementDateFlows If true (false), cashflows on the forward maturity
                                           are (are not) included in the NPV.
         \param npvDate                    Discount to this date. If not given, is set to the evaluation date
     */
-    DiscountingCommodityForwardEngine(
-        const QuantLib::Handle<PriceTermStructure>& priceCurve, 
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
-        boost::optional<bool> includeSettlementDateFlows = boost::none,
-        const QuantLib::Date& npvDate = QuantLib::Date());
+    DiscountingCommodityForwardEngine(const QuantLib::Handle<PriceTermStructure>& priceCurve,
+                                      const QuantLib::Handle<QuantLib::YieldTermStructure>& discountCurve,
+                                      boost::optional<bool> includeSettlementDateFlows = boost::none,
+                                      const QuantLib::Date& npvDate = QuantLib::Date());
     //@}
 
     //! \name PricingEngine interface
@@ -73,6 +72,6 @@ private:
     boost::optional<bool> includeSettlementDateFlows_;
     QuantLib::Date npvDate_;
 };
-}
+} // namespace QuantExt
 
 #endif
