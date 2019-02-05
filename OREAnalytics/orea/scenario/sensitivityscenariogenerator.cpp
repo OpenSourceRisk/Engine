@@ -73,6 +73,10 @@ bool close(const Real& t_1, const Real& t_2) {
     return QuantLib::close(t_1, t_2);
 }
 
+bool vectorEqual(const vector<Real>& v_1, const vector<Real>& v_2) {
+    return (v_1.size() == v_2.size() && std::equal(v_1.begin(), v_1.end(), v_2.begin(), close));
+}
+
 void SensitivityScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
 
@@ -407,7 +411,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -494,7 +498,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Index shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -579,7 +583,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -662,7 +666,7 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(bool up)
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -747,7 +751,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -832,7 +836,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
 
         // Can we store a valid shift size?
         // Will only work currently if simulation market has a single strike
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
         validShiftSize = validShiftSize && n_fxvol_strikes == 1;
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -918,7 +922,7 @@ void SensitivityScenarioGenerator::generateEquityVolScenarios(bool up) {
 
         // Can we store a valid shift size?
         // Will only work currently if simulation market has a single strike
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
         validShiftSize = validShiftSize && n_eqvol_strikes == 1;
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -1035,9 +1039,9 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
             shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(volExpiryTimes.begin(), volExpiryTimes.end(), shiftExpiryTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(volTermTimes.begin(), volTermTimes.end(), shiftTermTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(volStrikes.begin(), volStrikes.end(), shiftStrikes.begin(), close);
+        bool validShiftSize = vectorEqual(volExpiryTimes, shiftExpiryTimes);
+        validShiftSize = validShiftSize && vectorEqual(volTermTimes, shiftTermTimes);
+        validShiftSize = validShiftSize && vectorEqual(volStrikes, shiftStrikes);
 
         // loop over shift expiries, terms and strikes
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
@@ -1149,8 +1153,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + expiries[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(volExpiryTimes.begin(), volExpiryTimes.end(), shiftExpiryTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(volStrikes.begin(), volStrikes.end(), shiftStrikes.begin(), close);
+        bool validShiftSize = vectorEqual(volExpiryTimes, shiftExpiryTimes);
+        validShiftSize = validShiftSize && vectorEqual(volStrikes, shiftStrikes);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
@@ -1243,7 +1247,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -1323,7 +1327,7 @@ void SensitivityScenarioGenerator::generateCdsVolScenarios(bool up) {
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(volExpiryTimes.begin(), volExpiryTimes.end(), shiftExpiryTimes.begin(), close);
+        bool validShiftSize = vectorEqual(volExpiryTimes, shiftExpiryTimes);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
@@ -1399,7 +1403,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "Zero Inflation Index shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -1483,7 +1487,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         QL_REQUIRE(shiftTenors.size() > 0, "YoY Inflation Index shift tenors not specified");
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
 
@@ -1567,8 +1571,8 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
             shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(termTimes.begin(), termTimes.end(), shiftTermTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(levels.begin(), levels.end(), shiftLevels.begin(), close);
+        bool validShiftSize = vectorEqual(termTimes, shiftTermTimes);
+        validShiftSize = validShiftSize && vectorEqual(levels, shiftLevels);
 
         // loop over shift levels and terms
         for (Size j = 0; j < shiftLevels.size(); ++j) {
@@ -1709,7 +1713,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         }
         
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
 
         // Generate the scenarios for each shift
         for (Size j = 0; j < shiftTenors.size(); ++j) {
@@ -1794,8 +1798,8 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         }
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(times.begin(), times.end(), shiftTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(moneyness.begin(), moneyness.end(), sd.shiftStrikes.begin(), close);
+        bool validShiftSize = vectorEqual(times, shiftTimes);
+        validShiftSize = validShiftSize && vectorEqual(moneyness, sd.shiftStrikes);
 
         // Loop and apply scenarios
         for (Size sj = 0; sj < sd.shiftExpiries.size(); ++sj) {
@@ -1888,8 +1892,8 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
             shiftExpiryTimes[j] = dc.yearFraction(asof, asof + expiries[j]);
 
         // Can we store a valid shift size?
-        bool validShiftSize = std::equal(corrExpiryTimes.begin(), corrExpiryTimes.end(), shiftExpiryTimes.begin(), close);
-        validShiftSize = validShiftSize && std::equal(corrStrikes.begin(), corrStrikes.end(), shiftStrikes.begin(), close);
+        bool validShiftSize = vectorEqual(corrExpiryTimes, shiftExpiryTimes);
+        validShiftSize = validShiftSize && vectorEqual(corrStrikes, shiftStrikes);
 
         // loop over shift expiries and terms
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
