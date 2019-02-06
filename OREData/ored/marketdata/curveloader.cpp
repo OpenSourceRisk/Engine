@@ -28,10 +28,22 @@ namespace data {
 
 // Returns true if we can build this YieldCurveSpec with the given curve specs
 static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::shared_ptr<YieldCurveSpec>>& specs,
-                     const CurveConfigurations& curveConfigs, map<string, string>& missingDependents) {
+                     const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
+                     map<string, string>& errors, bool continueOnError) {
+    
     string yieldCurveID = ycs->curveConfigID();
-    boost::shared_ptr<YieldCurveConfig> curveConfig = curveConfigs.yieldCurveConfig(yieldCurveID);
-    QL_REQUIRE(curveConfig, "No yield curve configuration found for config ID " << yieldCurveID);
+    boost::shared_ptr<YieldCurveConfig> curveConfig;
+    try {
+        curveConfig = curveConfigs.yieldCurveConfig(yieldCurveID);
+    } catch (const Error& e) {
+        if (continueOnError) {
+            errors[ycs->name()] = e.what();
+            TLOG("Got error while determining if we can build " << yieldCurveID << ": " << e.what());
+            return false;
+        } else {
+            QL_FAIL(e.what());
+        }
+    }
 
     set<string> requiredYieldCurveIDs = curveConfig->requiredYieldCurveIDs();
     for (auto it : requiredYieldCurveIDs) {
@@ -52,7 +64,8 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
     return true;
 }
 
-void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs, std::map<std::string, std::string>& errors) {
+void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs, 
+    std::map<std::string, std::string>& errors, bool continueOnError) {
 
     /* Order the curve specs and remove duplicates (i.e. those with same name).
      * The sort() call relies on CurveSpec::operator< which ensures a few properties:
@@ -92,7 +105,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
 
         auto it = yieldCurveSpecs.begin();
         while (it != yieldCurveSpecs.end()) {
-            if (canBuild(*it, sortedYieldCurveSpecs, curveConfigs, missingDependents)) {
+            if (canBuild(*it, sortedYieldCurveSpecs, curveConfigs, missingDependents, errors, continueOnError)) {
                 DLOG("can build " << (*it)->curveConfigID());
                 sortedYieldCurveSpecs.push_back(*it);
                 it = yieldCurveSpecs.erase(it);
@@ -104,8 +117,12 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
 
         if (n == yieldCurveSpecs.size()) {
             for (auto ycs : yieldCurveSpecs) {
-                WLOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
-                errors[ycs->name()] = "dependent curves missing - " + missingDependents[ycs->curveConfigID()];
+                if (errors.count(ycs->name()) > 0) {
+                    WLOG("Cannot build curve " << ycs->curveConfigID() << " due to error: " << errors.at(ycs->name()));
+                } else {
+                    WLOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
+                    errors[ycs->name()] = "dependent curves missing - " + missingDependents[ycs->curveConfigID()];
+                }
             }
             break;
         }

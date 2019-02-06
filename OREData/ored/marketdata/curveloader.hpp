@@ -44,6 +44,7 @@ using ore::data::CurveConfigurations;
  */
 void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, 
     const CurveConfigurations& curveConfigs, 
-    std::map<std::string, std::string>& errors);
+    std::map<std::string, std::string>& errors,
+    bool continueOnError = false);
 } // namespace data
 } // namespace ore

@@ -118,7 +118,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         }
 
         // order them
-        order(specs, curveConfigs, buildErrors);
+        order(specs, curveConfigs, buildErrors, continueOnError);
         bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
