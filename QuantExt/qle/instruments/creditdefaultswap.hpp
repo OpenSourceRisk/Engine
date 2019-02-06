@@ -226,7 +226,7 @@ public:
         \bug this should use the ISDA standard pricing engine
     */
     virtual Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
-                            const DayCounter& dayCounter) const;
+                                    const DayCounter& dayCounter) const;
     //@}
 protected:
     //! \name Instrument interface
