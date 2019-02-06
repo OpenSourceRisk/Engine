@@ -279,6 +279,24 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
                     Handle<Quote>(spreadQuote)));
+
+                DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
+                // security recovery rates are optional, so we need a try-catch block
+                try {
+                    boost::shared_ptr<SimpleQuote> recoveryQuote(
+                        new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+                    // TODO this comes from the default curves section in the parameters,
+                    // do we want to specify the simulation of security recovery rates separately?
+                    if (parameters->simulateRecoveryRates()) {
+                        simData_.emplace(std::piecewise_construct,
+                            std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                            std::forward_as_tuple(recoveryQuote));
+                    }
+                    recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                        make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
+                }
+                catch (...) {
+                }
             }
             continue;
 
