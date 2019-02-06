@@ -59,11 +59,9 @@ public:
         return spreadQuote_;
     }
     const string& recoveryRatesQuote() {
-        QL_REQUIRE(recoveryQuote_ != "", "Recovery Rates Quote not defined in security config");
         return recoveryQuote_;
     }
     const string& cprQuote() {
-        QL_REQUIRE(cprQuote_ != "", "CPR Quote not defined in security config");
         return cprQuote_;
     }
     //@}

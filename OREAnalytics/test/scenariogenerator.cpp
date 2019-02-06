@@ -194,7 +194,7 @@ struct TestData {
 
 } // anonymous namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalytics, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
 

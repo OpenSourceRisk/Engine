@@ -240,7 +240,7 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     return stressData;
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalytics, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(StressTestingTest)
 

@@ -182,16 +182,10 @@ Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface
                                                        "inflation cap floor price surface");
 }
 
-Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapVolatilitySurface(const string& indexName, 
+Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName, 
                                                                           const string& configuration) const { 
-    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapVolatilitySurfaces_, indexName, configuration, 
-                                                "cpi cap volatility surface"); 
-} 
- 
-Handle<CPIVolatilitySurface> MarketImpl::cpiInflationFloorVolatilitySurface(const string& indexName, 
-                                                                            const string& configuration) const { 
-    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationFloorVolatilitySurfaces_, indexName, configuration, 
-                                                "cpi floor volatility surface"); 
+    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapFloorVolatilitySurfaces_, indexName, configuration, 
+                                                "cpi cap floor volatility surface"); 
 } 
 
 Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
