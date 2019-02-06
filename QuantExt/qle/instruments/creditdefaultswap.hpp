@@ -189,8 +189,8 @@ public:
                 IMM dates, settle on trade date +1 and upfront
                 settle on trade date +3.
     */
-    virtual Rate impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
-                                   const DayCounter& dayCounter, Real recoveryRate = 0.4, Real accuracy = 1.0e-6) const;
+    Rate impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
+                           const DayCounter& dayCounter, Real recoveryRate = 0.4, Real accuracy = 1.0e-6) const;
 
     //! Conventional/standard upfront-to-spread conversion
     /*! Under a standard ISDA model and a set of standardised
@@ -225,8 +225,8 @@ public:
 
         \bug this should use the ISDA standard pricing engine
     */
-    virtual Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
-                                    const DayCounter& dayCounter) const;
+    Rate conventionalSpread(Real conventionalRecovery, const Handle<YieldTermStructure>& discountCurve,
+                            const DayCounter& dayCounter) const;
     //@}
 protected:
     //! \name Instrument interface
@@ -249,6 +249,12 @@ protected:
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
     mutable Real defaultLegNPV_, accrualRebateNPV_;
+    //! \name Additional interface
+    //@{
+    virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
+                                                                Real r,
+                                                                const Handle<YieldTermStructure>& d) const;
+    //@}
 };
 
 //! \ingroup instruments
