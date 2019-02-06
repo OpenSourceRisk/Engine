@@ -32,19 +32,18 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
                      map<string, string>& errors, bool continueOnError) {
     
     string yieldCurveID = ycs->curveConfigID();
-    boost::shared_ptr<YieldCurveConfig> curveConfig;
-    try {
-        curveConfig = curveConfigs.yieldCurveConfig(yieldCurveID);
-    } catch (const Error& e) {
+    if (!curveConfigs.hasYieldCurveConfig(yieldCurveID)) {
+        string errMsg = "Can't get yield curve configuration for " + yieldCurveID;
         if (continueOnError) {
-            errors[ycs->name()] = e.what();
-            TLOG("Got error while determining if we can build " << yieldCurveID << ": " << e.what());
+            errors[ycs->name()] = errMsg;
+            TLOG(errMsg);
             return false;
         } else {
-            QL_FAIL(e.what());
+            QL_FAIL(errMsg);
         }
     }
 
+    boost::shared_ptr<YieldCurveConfig> curveConfig = curveConfigs.yieldCurveConfig(yieldCurveID);
     set<string> requiredYieldCurveIDs = curveConfig->requiredYieldCurveIDs();
     for (auto it : requiredYieldCurveIDs) {
         // search for this name in the vector specs, return false if not found, otherwise move to next required id
@@ -59,6 +58,7 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
             return false;
         }
     }
+
     // We can build everything required
     missingDependents[yieldCurveID] = "";
     return true;

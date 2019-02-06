@@ -27,6 +27,12 @@
 namespace ore {
 namespace data {
 
+// check if map has an entry for the given id
+template <class T>
+bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) {
+    return m.count(id) == 1;
+}
+
 // utility function for getting a value from a map, throwing if it is not present
 template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
     auto it = m.find(id);
@@ -138,12 +144,25 @@ std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarke
 
     return quotes;
 }
+
+bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const {
+    return has(curveID, yieldCurveConfigs_);
+}
+
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
     return get(curveID, yieldCurveConfigs_);
 }
 
+bool CurveConfigurations::hasFxVolCurveConfig(const string& curveID) const {
+    return has(curveID, fxVolCurveConfigs_);
+}
+
 const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::fxVolCurveConfig(const string& curveID) const {
     return get(curveID, fxVolCurveConfigs_);
+}
+
+bool CurveConfigurations::hasSwaptionVolCurveConfig(const string& curveID) const {
+    return has(curveID, swaptionVolCurveConfigs_);
 }
 
 const boost::shared_ptr<SwaptionVolatilityCurveConfig>&
@@ -151,17 +170,33 @@ CurveConfigurations::swaptionVolCurveConfig(const string& curveID) const {
     return get(curveID, swaptionVolCurveConfigs_);
 }
 
+bool CurveConfigurations::hasCapFloorVolCurveConfig(const string& curveID) const {
+    return has(curveID, capFloorVolCurveConfigs_);
+}
+
 const boost::shared_ptr<CapFloorVolatilityCurveConfig>&
 CurveConfigurations::capFloorVolCurveConfig(const string& curveID) const {
     return get(curveID, capFloorVolCurveConfigs_);
+}
+
+bool CurveConfigurations::hasDefaultCurveConfig(const string& curveID) const {
+    return has(curveID, defaultCurveConfigs_);
 }
 
 const boost::shared_ptr<DefaultCurveConfig>& CurveConfigurations::defaultCurveConfig(const string& curveID) const {
     return get(curveID, defaultCurveConfigs_);
 }
 
+bool CurveConfigurations::hasCdsVolCurveConfig(const string& curveID) const {
+    return has(curveID, cdsVolCurveConfigs_);
+}
+
 const boost::shared_ptr<CDSVolatilityCurveConfig>& CurveConfigurations::cdsVolCurveConfig(const string& curveID) const {
     return get(curveID, cdsVolCurveConfigs_);
+}
+
+bool CurveConfigurations::hasBaseCorrelationCurveConfig(const string& curveID) const {
+    return has(curveID, baseCorrelationCurveConfigs_);
 }
 
 const boost::shared_ptr<BaseCorrelationCurveConfig>&
@@ -169,8 +204,16 @@ CurveConfigurations::baseCorrelationCurveConfig(const string& curveID) const {
     return get(curveID, baseCorrelationCurveConfigs_);
 }
 
+bool CurveConfigurations::hasInflationCurveConfig(const string& curveID) const {
+    return has(curveID, inflationCurveConfigs_);
+}
+
 const boost::shared_ptr<InflationCurveConfig>& CurveConfigurations::inflationCurveConfig(const string& curveID) const {
     return get(curveID, inflationCurveConfigs_);
+}
+
+bool CurveConfigurations::hasInflationCapFloorPriceSurfaceConfig(const string& curveID) const {
+    return has(curveID, inflationCapFloorPriceSurfaceConfigs_);
 }
 
 const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
@@ -178,13 +221,25 @@ CurveConfigurations::inflationCapFloorPriceSurfaceConfig(const string& curveID) 
     return get(curveID, inflationCapFloorPriceSurfaceConfigs_);
 }
 
+bool CurveConfigurations::hasInflationCapFloorVolCurveConfig(const string& curveID) const {
+    return has(curveID, inflationCapFloorVolCurveConfigs_);
+}
+
 const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
 CurveConfigurations::inflationCapFloorVolCurveConfig(const string& curveID) const {
     return get(curveID, inflationCapFloorVolCurveConfigs_);
 }
 
+bool CurveConfigurations::hasEquityCurveConfig(const string& curveID) const {
+    return has(curveID, equityCurveConfigs_);
+}
+
 const boost::shared_ptr<EquityCurveConfig>& CurveConfigurations::equityCurveConfig(const string& curveID) const {
     return get(curveID, equityCurveConfigs_);
+}
+
+bool CurveConfigurations::hasEquityVolCurveConfig(const string& curveID) const {
+    return has(curveID, equityVolCurveConfigs_);
 }
 
 const boost::shared_ptr<EquityVolatilityCurveConfig>&
@@ -192,20 +247,40 @@ CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
     return get(curveID, equityVolCurveConfigs_);
 }
 
+bool CurveConfigurations::hasSecurityConfig(const string& curveID) const {
+    return has(curveID, securityConfigs_);
+}
+
 const boost::shared_ptr<SecurityConfig>& CurveConfigurations::securityConfig(const string& curveID) const {
     return get(curveID, securityConfigs_);
+}
+
+bool CurveConfigurations::hasFxSpotConfig(const string& curveID) const {
+    return has(curveID, fxSpotConfigs_);
 }
 
 const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const string& curveID) const {
     return get(curveID, fxSpotConfigs_);
 }
 
+bool CurveConfigurations::hasCommodityCurveConfig(const string& curveID) const {
+    return has(curveID, commodityCurveConfigs_);
+}
+
 const boost::shared_ptr<CommodityCurveConfig>& CurveConfigurations::commodityCurveConfig(const string& curveID) const {
     return get(curveID, commodityCurveConfigs_);
 }
 
+bool CurveConfigurations::hasCommodityVolatilityCurveConfig(const string& curveID) const {
+    return has(curveID, commodityVolatilityCurveConfigs_);
+}
+
 const boost::shared_ptr<CommodityVolatilityCurveConfig>& CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
     return get(curveID, commodityVolatilityCurveConfigs_);
+}
+
+bool CurveConfigurations::hasCorrelationCurveConfig(const string& curveID) const {
+    return has(curveID, correlationCurveConfigs_);
 }
 
 const boost::shared_ptr<CorrelationCurveConfig>& CurveConfigurations::correlationCurveConfig(const string& curveID) const {
