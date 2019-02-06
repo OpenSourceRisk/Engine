@@ -181,11 +181,11 @@ void simulation(string dateGridString, bool checkFixings) {
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
     parameters->setSwapVolCcys(ccys);
     parameters->swapVolDecayMode() = "ForwardVariance";
-    parameters->simulateSwapVols() = false;
+    parameters->setSimulateSwapVols(false);
 
     parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
-    parameters->simulateFXVols() = false;
+    parameters->setSimulateFXVols(false);
 
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 

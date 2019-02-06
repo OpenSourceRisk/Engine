@@ -404,7 +404,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setDefaultTenors(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->setSecurities({"Bond1"});
-    simMarketData->simulateSurvivalProbabilities() = true;
+    simMarketData->setSimulateSurvivalProbabilities(true);
     simMarketData->setDefaultCurveDayCounters("", "ACT/ACT");
     simMarketData->setDefaultCurveCalendars("", "TARGET");
     simMarketData->interpolation() = "LogLinear";
@@ -416,12 +416,12 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                         5 * Years,  7 * Years, 10 * Years, 20 * Years};
     simMarketData->setSwapVolCcys({"EUR", "GBP"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
-    simMarketData->simulateSwapVols() = true;
+    simMarketData->setSimulateSwapVols(true);
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
     simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
-    simMarketData->simulateFXVols() = true;
+    simMarketData->setSimulateFXVols(true);
     simMarketData->setFxVolCcyPairs({"EURGBP"});
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
@@ -429,7 +429,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->setFxCcyPairs({"EURGBP"});
 
-    simMarketData->simulateCapFloorVols() = false;
+    simMarketData->setSimulateCapFloorVols(false);
 
     return simMarketData;
 }
@@ -457,12 +457,12 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                         5 * Years,  7 * Years, 10 * Years, 20 * Years};
     simMarketData->setSwapVolCcys({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->swapVolDecayMode() = "ForwardVariance";
-    simMarketData->simulateSwapVols() = true; // false;
+    simMarketData->setSimulateSwapVols(true); // false;
     simMarketData->setSwapVolDayCounters("", "ACT/ACT");
 
     simMarketData->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     simMarketData->fxVolDecayMode() = "ConstantVariance";
-    simMarketData->simulateFXVols() = true; // false;
+    simMarketData->setSimulateFXVols(true); // false;
     simMarketData->setFxVolCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY", "GBPCHF"});
     simMarketData->fxVolIsSurface() = true;
     simMarketData->fxVolMoneyness() = {0.1, 0.2, 0.3, 0.5, 1, 2, 3};
@@ -470,7 +470,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
 
     simMarketData->setFxCcyPairs({"EURUSD", "EURGBP", "EURCHF", "EURJPY"});
 
-    simMarketData->simulateCapFloorVols() = true;
+    simMarketData->setSimulateCapFloorVols(true);
     simMarketData->capFloorVolDecayMode() = "ForwardVariance";
     simMarketData->setCapFloorVolCcys({"EUR", "USD"});
     simMarketData->setCapFloorVolDayCounters("", "ACT/ACT");
@@ -481,7 +481,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setDefaultNames({"BondIssuer1"});
     simMarketData->setDefaultTenors(
         "", {6 * Months, 1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
-    simMarketData->simulateSurvivalProbabilities() = true;
+    simMarketData->setSimulateSurvivalProbabilities(true);
     simMarketData->setSecurities({"Bond1"});
     simMarketData->setDefaultCurveDayCounters("", "ACT/ACT");
     simMarketData->setDefaultCurveCalendars("", "TARGET");
@@ -496,7 +496,7 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
                                            {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
 
-    simMarketData->simulateEquityVols() = true;
+    simMarketData->setSimulateEquityVols(true);
     simMarketData->equityVolDecayMode() = "ForwardVariance";
     simMarketData->setEquityVolNames({"SP5", "Lufthansa"});
     simMarketData->equityVolExpiries() = {6 * Months, 1 * Years, 2 * Years,  3 * Years,
@@ -515,12 +515,12 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
         "UKRPI", {1 * Years, 2 * Years, 3 * Years, 5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years});
     simMarketData->setYoyInflationDayCounters("", "ACT/ACT");
 
-    simMarketData->commodityCurveSimulate() = true;
+    simMarketData->setCommodityCurveSimulate(true);
     simMarketData->setCommodityNames({"COMDTY_GOLD_USD", "COMDTY_WTI_USD"});
     simMarketData->setCommodityCurveDayCounter("", "A365");
     simMarketData->setCommodityCurveTenors("", { 0 * Days, 1 * Years, 2 * Years, 5 * Years });
 
-    simMarketData->commodityVolSimulate() = true;
+    simMarketData->setCommodityVolSimulate(true);
     simMarketData->commodityVolDecayMode() = "ForwardVariance";
     simMarketData->setCommodityVolNames({ "COMDTY_GOLD_USD", "COMDTY_WTI_USD" });
     simMarketData->commodityVolExpiries("COMDTY_GOLD_USD") = { 1 * Years, 2 * Years, 5 * Years };

@@ -79,10 +79,10 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});
     parameters->setDefaultCurveDayCounters("", "ACT/ACT");
 
-    parameters->simulateFXVols() = false;
+    parameters->setSimulateFXVols(false);
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
-    parameters->simulateEquityVols() = false;
+    parameters->setSimulateEquityVols(false);
     parameters->setFxVolDayCounters("", "ACT/ACT");
 
     parameters->setFxVolCcyPairs({"USDEUR"});
@@ -93,7 +93,7 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
-    parameters->simulateCorrelations() = false;
+    parameters->setSimulateCorrelations(false);
     parameters->correlationExpiries() = {1 * Years, 2 * Years};
     parameters->setCorrelationPairs({"EUR-CMS-10Y:EUR-CMS-1Y", "USD-CMS-10Y:USD-CMS-1Y"});
     return parameters;

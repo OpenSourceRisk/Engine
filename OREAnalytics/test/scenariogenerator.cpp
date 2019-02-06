@@ -217,8 +217,8 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     simMarketConfig->setYieldCurveTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
     // Multi path generator: Pseudo Random
     BigNatural seed = 42;
@@ -321,8 +321,8 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
     simMarketConfig->setZeroInflationTenors("", {3 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                                  5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                                  30 * Years, 40 * Years, 50 * Years});
@@ -481,8 +481,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
@@ -628,8 +628,8 @@ BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
@@ -773,8 +773,8 @@ BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
@@ -928,8 +928,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     simMarketConfig->setFxVolCcyPairs({"USDEUR"});
     simMarketConfig->setFxVolDayCounters("", "ACT/ACT");
     simMarketConfig->setFxCcyPairs({"USDEUR", "GBPEUR"});
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
     simMarketConfig->setCpiIndices({"UKRPI", "EUHICPXT"});
 
     BOOST_TEST_MESSAGE("set up scenario generator builder");
@@ -1049,8 +1049,8 @@ BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
 
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
@@ -1181,8 +1181,8 @@ BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
                                               5 * Years, 7 * Years, 10 * Years, 12 * Years, 15 * Years, 20 * Years,
                                               30 * Years, 40 * Years, 50 * Years});
     simMarketConfig->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketConfig->simulateFXVols() = false;
-    simMarketConfig->simulateEquityVols() = false;
+    simMarketConfig->setSimulateFXVols(false);
+    simMarketConfig->setSimulateEquityVols(false);
     simMarketConfig->baseCcy() = "EUR";
     simMarketConfig->setDiscountCurveNames({"EUR", "USD", "GBP"});
     simMarketConfig->setIndices({"EUR-EURIBOR-6M"});

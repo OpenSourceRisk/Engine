@@ -293,7 +293,7 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
-    parameters->simulateSwapVols() = false;
+    parameters->setSimulateSwapVols(false);
     parameters->swapVolTerms() = {6 * Months, 1 * Years};
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
     parameters->swapVolCcys() = ccys;
@@ -303,7 +303,7 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
     parameters->setFxVolDayCounters("", "ACT/ACT");
-    parameters->simulateFXVols() = false;
+    parameters->setSimulateFXVols(false);
 
     parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
     parameters->setFxCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
@@ -311,7 +311,7 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
     parameters->equityVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->equityVolDecayMode() = "ConstantVariance";
     parameters->setEquityVolDayCounters("", "ACT/ACT");
-    parameters->simulateEquityVols() = false;
+    parameters->setSimulateEquityVols(false);
 
     // Config
 
