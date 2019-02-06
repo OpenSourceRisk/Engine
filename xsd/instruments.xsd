@@ -418,7 +418,7 @@
   </xs:complexType>
 
   <xs:complexType name="scheduleData">
-    <xs:choice>
+    <xs:choice maxOccurs="unbounded">
       <xs:element name="Rules">
         <xs:complexType>
           <xs:all>
@@ -438,13 +438,12 @@
       <xs:element name="Dates">
         <xs:complexType>
           <xs:all>
-            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+            <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
             <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="calendar" name="Calendar" minOccurs="0"/>
-                  <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
-                  <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
                   <xs:element type="date" name="Date" maxOccurs="unbounded"/>
                 </xs:sequence>
               </xs:complexType>
