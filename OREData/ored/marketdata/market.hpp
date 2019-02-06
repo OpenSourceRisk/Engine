@@ -149,11 +149,8 @@ public:
 
     //! Inflation Cap Floor Volatility Surfaces 
     virtual Handle<CPIVolatilitySurface> 
-    cpiInflationCapVolatilitySurface(const string& indexName, 
-				     const string& configuration = Market::defaultConfiguration) const = 0; 
-    virtual Handle<CPIVolatilitySurface> 
-    cpiInflationFloorVolatilitySurface(const string& indexName, 
-				       const string& configuration = Market::defaultConfiguration) const = 0; 
+    cpiInflationCapFloorVolatilitySurface(const string& indexName, 
+					  const string& configuration = Market::defaultConfiguration) const = 0; 
 
     //! Inflation Cap Floor Price Surfaces
     virtual Handle<YoYCapFloorTermPriceSurface>

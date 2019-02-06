@@ -65,13 +65,11 @@ portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
 portfolio/builders/cmsspread.cpp
 portfolio/builders/commodityoption.cpp
-portfolio/builders/cpicapfloor.cpp
 portfolio/builders/swaption.cpp
 portfolio/builders/yoycapfloor.cpp
 portfolio/capfloor.cpp
 portfolio/commodityforward.cpp
 portfolio/commodityoption.cpp
-portfolio/cpicapfloor.cpp
 portfolio/creditdefaultswap.cpp
 portfolio/creditdefaultswapdata.cpp
 portfolio/enginedata.cpp
@@ -187,7 +185,6 @@ portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
-portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
@@ -199,7 +196,6 @@ portfolio/builders/yoycapfloor.hpp
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
-portfolio/cpicapfloor.hpp
 portfolio/creditdefaultswap.hpp
 portfolio/creditdefaultswapdata.hpp
 portfolio/enginedata.hpp
