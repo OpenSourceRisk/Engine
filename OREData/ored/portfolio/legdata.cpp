@@ -1025,7 +1025,7 @@ Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLi
     vector<double> callStrikes = ore::data::buildScheduledVector(digitalCmsSpreadData->callStrikes(), digitalCmsSpreadData->callStrikeDates(), schedule);
 
     for (Size i = 0; i < callStrikes.size(); i++) {
-        if ( abs(callStrikes[i]) < eps / 2) {
+        if ( std::fabs(callStrikes[i]) < eps / 2) {
             callStrikes[i] = eps / 2;
         }
     }
