@@ -1086,6 +1086,10 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     return it->second;
 }
 
+bool Conventions::has(const string& id) const {
+    return data_.count(id) == 1;
+}
+
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     const string& id = convention->id();
     QL_REQUIRE(data_.find(id) == data_.end(), "Convention already exists for id " << id);
