@@ -456,9 +456,13 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             vector<Period> swapTenors = parameters->swapVolTerms();
             vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
             bool atmOnly = parameters->simulateSwapVolATMOnly();
+            DLOG("Swaption atmOnly : " << (atmOnly ? "True" : "False"));
+            DLOG("Swaption isCube : " << (isCube ? "True" : "False"));
             if (atmOnly) {
                 QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                            "for atmOnly strikeSpreads must be {0.0}");
+            } else {
+                QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
             }
             boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
             if (isCube) {
@@ -479,8 +483,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             for (Size k = 0; k < strikeSpreads.size(); ++k) {
                 for (Size i = 0; i < optionTenors.size(); ++i) {
                     for (Size j = 0; j < swapTenors.size(); ++j) {
-                        Real strike =
-                            atmOnly ? Null<Real>() : cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
+                        Real strike = Null<Real>();
+                        if (!atmOnly && cube)
+                            strike = cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
                         Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
