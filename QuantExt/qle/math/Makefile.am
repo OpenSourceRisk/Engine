@@ -12,7 +12,8 @@ this_include_HEADERS = \
 	nadarayawatson.hpp \
 	stabilisedglls.hpp \
 	deltagammavar.hpp \
-	trace.hpp
+	trace.hpp \
+    cumulativenormaldistribution.hpp
 
 noinst_LTLIBRARIES = libMath.la
 
