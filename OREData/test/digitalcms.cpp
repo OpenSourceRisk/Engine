@@ -229,8 +229,8 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(DigitalCmsTests)
 
 // TODO FIXME
-BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon, *boost::unit_test::disabled()) {
-    BOOST_TEST_MESSAGE("Testing CMS Analytic Hagan price...");
+BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
+    BOOST_TEST_MESSAGE("Testing CMS Digital CMS Spread coupon...");
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();

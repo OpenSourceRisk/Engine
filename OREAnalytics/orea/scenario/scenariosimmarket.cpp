@@ -512,8 +512,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             if (wrapper->volatilityType() != Normal) {
                 // FIXME we can not convert constant swaption vol structures yet
                 if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
-                    ALOG("Constant swaption volatility found in configuration "
-                         << configuration << " for currency " << ccy << " will not be converted to normal");
+                    ALOG("Constant swaption volatility found in configuration " << configuration << " for currency " << ccy
+                                                                                << " will not be converted to normal");
                 } else {
                     // Get swap index associated with this volatility structure
                     string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
@@ -525,12 +525,12 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
                     wrapper.linkTo(converter.convert());
 
-                    LOG("Converting swaption volatilities in configuration "
-                        << configuration << " with currency " << ccy << " to normal swaption volatilities");
+                    LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
+                                                                             << " to normal swaption volatilities");
                 }
             }
+        
             Handle<SwaptionVolatilityStructure> svp;
-
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
             if (parameters->simulateSwapVols()) {
                 LOG("Simulating (" << wrapper->volatilityType() << ") Swaption vols for ccy " << ccy);
@@ -538,9 +538,13 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 vector<Period> swapTenors = parameters->swapVolTerms();
                 vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
                 bool atmOnly = parameters->simulateSwapVolATMOnly();
+                DLOG("Swaption atmOnly : " << (atmOnly ? "True" : "False"));
+                DLOG("Swaption isCube : " << (isCube ? "True" : "False"));
                 if (atmOnly) {
                     QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
                                "for atmOnly strikeSpreads must be {0.0}");
+                } else {
+                    QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
                 }
                 boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
                 if (isCube) {
@@ -557,20 +561,19 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 Size atmSlice = std::find_if(strikeSpreads.begin(), strikeSpreads.end(),
                                              [](const Real s) { return close_enough(s, 0.0); }) -
                                 strikeSpreads.begin();
-                QL_REQUIRE(atmSlice < strikeSpreads.size(),
-                           "could not find atm slice (strikeSpreads do not contain 0.0)");
+                QL_REQUIRE(atmSlice < strikeSpreads.size(), "could not find atm slice (strikeSpreads do not contain 0.0)");
                 for (Size k = 0; k < strikeSpreads.size(); ++k) {
                     for (Size i = 0; i < optionTenors.size(); ++i) {
                         for (Size j = 0; j < swapTenors.size(); ++j) {
-                            Real strike = atmOnly ? Null<Real>()
-                                                  : cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
-                            Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike);
+                            Real strike = Null<Real>();
+                            if (!atmOnly && cube)
+                                strike = cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
+                            Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
                             boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
                             Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
 
-                            simDataTmp.emplace(
-                                std::piecewise_construct,
+                            simDataTmp.emplace(std::piecewise_construct,
                                 std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
                                 std::forward_as_tuple(q));
                             auto tmp = Handle<Quote>(q);
@@ -578,8 +581,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                             if (k == atmSlice) {
                                 atmQuotes[i][j] = tmp;
                                 shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
-                                                  ? wrapper->shift(optionTenors[i], swapTenors[j])
-                                                  : 0.0;
+                                    ? wrapper->shift(optionTenors[i], swapTenors[j])
+                                    : 0.0;
                             }
                         }
                     }
@@ -611,7 +614,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                         *initMarket->swapIndex(shortSwapIndexBase, configuration), false, flatExtrapolation, false));
                     svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolCubeWithATM>(tmp));
                 }
-
             } else {
                 string decayModeString = parameters->swapVolDecayMode();
                 ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -621,7 +623,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     WLOG("Only ATM slice is considered from init market's cube");
                 boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                     boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(),
-                                                                                  decayMode);
+                                                                                    decayMode);
                 svp = Handle<SwaptionVolatilityStructure>(svolp);
             }
 

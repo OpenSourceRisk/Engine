@@ -244,7 +244,7 @@ bool check(const Real reference, const Real value) {
 
 } // anonymous namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnaltyicsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisAnalyticTest)
 		

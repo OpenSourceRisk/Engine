@@ -25,7 +25,6 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
-#include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -61,8 +60,7 @@ void EngineFactory::registerBuilder(const boost::shared_ptr<EngineBuilder>& buil
 
 boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType) {
     // Check that we have a model/engine for tradetype
-    QL_REQUIRE(engineData_->hasProduct(tradeType), "EngineFactory does not have a "
-                                                   "model/engine for trade type "
+    QL_REQUIRE(engineData_->hasProduct(tradeType), "No Pricing Engine configuration was provided for trade type "
                                                        << tradeType);
 
     // Find a builder for the model/engine/tradeType
@@ -120,8 +118,6 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
-    registerBuilder(boost::make_shared<CPICapFloorEngineBuilder>());
-    registerBuilder(boost::make_shared<CPIBlackCapFloorEngineBuilder>());
 
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());

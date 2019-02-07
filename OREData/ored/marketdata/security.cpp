@@ -28,43 +28,52 @@
 namespace ore {
 namespace data {
 
-Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader) {
+Security::Security(const Date& asof, SecuritySpec spec, const Loader& loader, const CurveConfigurations& curveConfigs) {
 
-    for (auto& md : loader.loadQuotes(asof)) {
+    try {
+        const boost::shared_ptr<SecurityConfig>& config =
+        curveConfigs.securityConfig(spec.securityID());
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::BOND) {
 
-            boost::shared_ptr<SecuritySpreadQuote> q = boost::dynamic_pointer_cast<SecuritySpreadQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to SecuritySpreadQuote");
-            if (q->securityID() == spec.securityID()) {
-                spread_ = q->quote();
-            }
+        //get spread quote
+        string spreadQuote = config->spreadQuote();
+        if (spreadQuote != "") {
+            QL_REQUIRE(loader.has(spreadQuote, asof), "required spread quote " << spreadQuote << " not found for " << spec);
+            boost::shared_ptr<SecuritySpreadQuote> q = boost::dynamic_pointer_cast<SecuritySpreadQuote>(loader.get(spreadQuote, asof));
+            QL_REQUIRE(q, "Failed to cast " << spreadQuote << " to SecuritySpreadQuote");
+            spread_ = q->quote();
         }
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
-
-            boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to RecoveryRateQuote");
-            if (q->underlyingName() == spec.securityID()) {
-                recoveryRate_ = q->quote();
-            }
+        //get recovery quote
+        string recoveryQuote = config->recoveryRatesQuote();
+        if (recoveryQuote != "") {
+            QL_REQUIRE(loader.has(recoveryQuote, asof), "required recovery quote " << recoveryQuote << " not found for " << spec);
+            boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(loader.get(recoveryQuote, asof));
+            QL_REQUIRE(q, "Failed to cast " << recoveryQuote << " to RecoveryRateQuote");
+            recoveryRate_ = q->quote();
         }
 
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CPR) {
-            boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to CPRQuote");
-            if (q->securityID() == spec.securityID()) {
-                cpr_ = q->quote();
-            }
+        //get cpr quote
+        string cprQuote = config->cprQuote();
+        if (cprQuote != "" && (loader.has(cprQuote, asof)) ) {
+            boost::shared_ptr<CPRQuote> q = boost::dynamic_pointer_cast<CPRQuote>(loader.get(cprQuote, asof));
+            QL_REQUIRE(q, "Failed to cast " << cprQuote << " to CPRQuote");
+            cpr_ = q->quote();
         }
 
-        // we loop through all quotes, if there are duplicates the last one will overwrite previous ones
+        if (recoveryRate_.empty())
+            WLOG("No security-specific recovery rate found for " << spec);
+        if (cpr_.empty())
+            WLOG("No security-specific cpr found for " << spec);
+        if (spread_.empty())
+            QL_FAIL("Failed to find a spread quote for " << spec);
 
+    } catch (std::exception& e) {
+        QL_FAIL("Security building failed for curve " << spec.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
+    } catch (...) {
+        QL_FAIL("Security building failed: unknown error");
     }
-    if (recoveryRate_.empty())
-        WLOG("No security-specific recovery rate found for " << spec);
-    if (spread_.empty())
-        QL_FAIL("Failed to find a spread quote for " << spec);
+
 
     return;
 }

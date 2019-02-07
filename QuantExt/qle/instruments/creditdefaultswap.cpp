@@ -258,6 +258,12 @@ private:
 };
 } // namespace
 
+boost::shared_ptr<PricingEngine> CreditDefaultSwap::buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
+                                                                       Real r,
+                                                                       const Handle<YieldTermStructure>& d) const {
+    return boost::make_shared<MidPointCdsEngine>(p,r,d,true);
+}
+
 Rate CreditDefaultSwap::impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,
                                           const DayCounter& dayCounter, Real recoveryRate, Real accuracy) const {
 
@@ -266,11 +272,11 @@ Rate CreditDefaultSwap::impliedHazardRate(Real targetNPV, const Handle<YieldTerm
     Handle<DefaultProbabilityTermStructure> probability(boost::shared_ptr<DefaultProbabilityTermStructure>(
         new FlatHazardRate(0, WeekendsOnly(), Handle<Quote>(flatRate), dayCounter)));
 
-    QuantExt::MidPointCdsEngine engine(probability, recoveryRate, discountCurve);
-    setupArguments(engine.getArguments());
-    const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine.getResults());
+    boost::shared_ptr<PricingEngine> engine = buildPricingEngine(probability, recoveryRate, discountCurve);
+    setupArguments(engine->getArguments());
+    const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine->getResults());
 
-    ObjectiveFunction f(targetNPV, *flatRate, engine, results);
+    ObjectiveFunction f(targetNPV, *flatRate, *engine, results);
     Rate guess = 0.001;
     Rate step = guess * 0.1;
 
@@ -284,10 +290,10 @@ Rate CreditDefaultSwap::conventionalSpread(Real conventionalRecovery, const Hand
     Handle<DefaultProbabilityTermStructure> probability(boost::shared_ptr<DefaultProbabilityTermStructure>(
         new FlatHazardRate(0, WeekendsOnly(), flatHazardRate, dayCounter)));
 
-    QuantExt::MidPointCdsEngine engine(probability, conventionalRecovery, discountCurve, true);
-    setupArguments(engine.getArguments());
-    engine.calculate();
-    const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine.getResults());
+    boost::shared_ptr<PricingEngine> engine = buildPricingEngine(probability, conventionalRecovery, discountCurve);
+    setupArguments(engine->getArguments());
+    engine->calculate();
+    const CreditDefaultSwap::results* results = dynamic_cast<const CreditDefaultSwap::results*>(engine->getResults());
     return results->fairSpread;
 }
 
