@@ -194,6 +194,7 @@ protected:
     bool stress_;
     bool parametricVar_;
     bool writeBaseScenario_;
+    bool continueOnError_;
     std::string inputPath_;
     std::string outputPath_;
 

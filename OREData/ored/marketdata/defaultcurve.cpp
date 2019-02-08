@@ -158,6 +158,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");
             }
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 
@@ -192,6 +194,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     "hazard rate curve, because none is given.");
                 recoveryRate_ = 0.0;
             }
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 
@@ -225,6 +229,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                       "for benchmark implied curve type, it is assumed to "
                                                       "be 0.0");
             recoveryRate_ = 0.0;
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 

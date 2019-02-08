@@ -126,6 +126,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
     quotes.push_back(Handle<Quote>(q));
     vector<Real> discounts(yieldCurveTimes.size());
     RiskFactorKey::KeyType rf = yieldCurveRiskFactor(y);
+    std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
     for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapper->discount(yieldCurveDates[i + 1])));
         Handle<Quote> qh(q);
@@ -133,7 +134,7 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 
         // Check if the risk factor is simulated before adding it
         if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
-            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
+            simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(rf, key, i), std::forward_as_tuple(q));
             DLOG("ScenarioSimMarket yield curve " << key << " discount[" << i << "]=" << q->value());
         }
     }
@@ -153,11 +154,13 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
         ych->enableExtrapolation();
     yieldCurves_.insert(pair<tuple<string, ore::data::YieldCurveType, string>, Handle<YieldTermStructure>>(
         make_tuple(Market::defaultConfiguration, y, key), ych));
+    simData_.insert(simDataTmp.begin(), simDataTmp.end());
 }
 
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
-                                     const Conventions& conventions, const std::string& configuration)
+                                     const Conventions& conventions, const std::string& configuration,
+                                     const bool continueOnError)
     : SimMarket(conventions), parameters_(parameters), filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
@@ -200,75 +203,129 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // constructing fxSpots_
     LOG("building FX triangulation..");
     for (const auto& ccyPair : parameters->fxCcyPairs()) {
-        LOG("adding " << ccyPair << " FX rates");
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(initMarket->fxSpot(ccyPair, configuration)->value()));
-        Handle<Quote> qh(q);
-        fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
-        // Check if the risk factor is simulated before adding it
-        RiskFactorKey::KeyType rf = RiskFactorKey::KeyType::FXSpot;
-        if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
-            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, ccyPair),
-                std::forward_as_tuple(q));
+        try {
+            LOG("adding " << ccyPair << " FX rates");
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(initMarket->fxSpot(ccyPair, configuration)->value()));
+            Handle<Quote> qh(q);
+            fxSpots_[Market::defaultConfiguration].addQuote(ccyPair, qh);
+            // Check if the risk factor is simulated before adding it
+            RiskFactorKey::KeyType rf = RiskFactorKey::KeyType::FXSpot;
+            if (nonSimulatedFactors_.find(rf) == nonSimulatedFactors_.end()) {
+                simData_.emplace(std::piecewise_construct, std::forward_as_tuple(rf, ccyPair),
+                                 std::forward_as_tuple(q));
+            }
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
     }
+
     LOG("FX triangulation done");
 
     // constructing discount yield curves
     LOG("building discount yield curves...");
     for (const auto& ccy : parameters->ccys()) {
-        LOG("building " << ccy << " discount yield curve..");
-        vector<Period> tenors = parameters->yieldCurveTenors(ccy);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Discount, ccy, tenors,
-                      parameters->yieldCurveDayCounter(ccy));
-        LOG("building " << ccy << " discount yield curve done");
+        try {
+            LOG("building " << ccy << " discount yield curve..");
+            vector<Period> tenors = parameters->yieldCurveTenors(ccy);
+            addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Discount, ccy, tenors,
+                          parameters->yieldCurveDayCounter(ccy));
+            LOG("building " << ccy << " discount yield curve done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     LOG("discount yield curves done");
 
     LOG("building benchmark yield curves...");
     for (const auto& name : parameters->yieldCurveNames()) {
-        LOG("building benchmark yield curve name " << name);
-        vector<Period> tenors = parameters->yieldCurveTenors(name);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Yield, name, tenors,
-                      parameters->yieldCurveDayCounter(name));
-        LOG("building benchmark yield curve " << name << " done");
+        try {
+            LOG("building benchmark yield curve name " << name);
+            vector<Period> tenors = parameters->yieldCurveTenors(name);
+            addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::Yield, name, tenors,
+                          parameters->yieldCurveDayCounter(name));
+            LOG("building benchmark yield curve " << name << " done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     LOG("benchmark yield curves done");
 
     // building equity yield curves
     LOG("building equity curves...");
     for (const auto& eqName : parameters->equityNames()) {
-
-        // building equity spots
-        LOG("adding " << eqName << " equity spot...");
-        Real spotVal = initMarket->equitySpot(eqName, configuration)->value();
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
-        Handle<Quote> qh(q);
-        equitySpots_.insert(
-            pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
-            std::forward_as_tuple(q));
-        LOG("adding " << eqName << " equity spot done");
-        
-        LOG("building " << eqName << " equity dividend yield curve..");
-        vector<Period> divTenors = parameters->equityDividendTenors(eqName);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityDividend, eqName, divTenors,
-                      parameters->yieldCurveDayCounter(eqName));
-        LOG("building " << eqName << " equity dividend yield curve done");
-        LOG("building " << eqName << " equity forecast curve..");
-        vector<Period> foreTenors = parameters->equityForecastTenors(eqName);
-        addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityForecast, eqName, foreTenors,
-                      parameters->yieldCurveDayCounter(eqName));
-        LOG("building " << eqName << " forecast curve done");
-
-        Handle<EquityIndex> curve = initMarket->equityCurve(eqName, configuration);
-
-        boost::shared_ptr<EquityIndex> ei(curve->clone(equitySpot(eqName, configuration),
-                                                       yieldCurve(YieldCurveType::EquityForecast, eqName, configuration),
-                                                       yieldCurve(YieldCurveType::EquityDividend, eqName, configuration)));
-        Handle<EquityIndex> eh(ei);
-        equityCurves_.insert(
-            pair<pair<string, string>, Handle<EquityIndex>>(make_pair(Market::defaultConfiguration, eqName), eh));
-
+        try {
+            // building equity spots
+            LOG("adding " << eqName << " equity spot...");
+            Real spotVal = initMarket->equitySpot(eqName, configuration)->value();
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(spotVal));
+            Handle<Quote> qh(q);
+            equitySpots_.insert(
+                pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, eqName), qh));
+            simData_.emplace(std::piecewise_construct,
+                             std::forward_as_tuple(RiskFactorKey::KeyType::EquitySpot, eqName),
+                             std::forward_as_tuple(q));
+            LOG("adding " << eqName << " equity spot done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+        try {
+            LOG("building " << eqName << " equity dividend yield curve..");
+            vector<Period> divTenors = parameters->equityDividendTenors(eqName);
+            addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityDividend, eqName, divTenors,
+                          parameters->yieldCurveDayCounter(eqName));
+            LOG("building " << eqName << " equity dividend yield curve done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+        try {
+            LOG("building " << eqName << " equity forecast curve..");
+            vector<Period> foreTenors = parameters->equityForecastTenors(eqName);
+            addYieldCurve(initMarket, configuration, ore::data::YieldCurveType::EquityForecast, eqName, foreTenors,
+                          parameters->yieldCurveDayCounter(eqName));
+            LOG("building " << eqName << " forecast curve done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
+        try {
+            LOG("building " << eqName << " equity index curve..");
+            Handle<EquityIndex> curve = initMarket->equityCurve(eqName, configuration);
+            boost::shared_ptr<EquityIndex> ei(curve->clone(
+                equitySpot(eqName, configuration), yieldCurve(YieldCurveType::EquityForecast, eqName, configuration),
+                yieldCurve(YieldCurveType::EquityDividend, eqName, configuration)));
+            Handle<EquityIndex> eh(ei);
+            equityCurves_.insert(
+                pair<pair<string, string>, Handle<EquityIndex>>(make_pair(Market::defaultConfiguration, eqName), eh));
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     LOG("equity yield curves done");
 
@@ -276,16 +333,23 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     LOG("building security spreads...");
     for (const auto& name : parameters->securities()) {
         DLOG("Adding security spread " << name << " from configuration " << configuration);
-        // we have a security spread for each security, so no try-catch block required
-        boost::shared_ptr<SimpleQuote> spreadQuote(
-            new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
-        if (parameters->securitySpreadsSimulate()) {
-            simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
-                             std::forward_as_tuple(spreadQuote));
+        try {
+            boost::shared_ptr<SimpleQuote> spreadQuote(
+                new SimpleQuote(initMarket->securitySpread(name, configuration)->value()));
+            if (parameters->securitySpreadsSimulate()) {
+                simData_.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::SecuritySpread, name),
+                                 std::forward_as_tuple(spreadQuote));
+            }
+            securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(
+                make_pair(Market::defaultConfiguration, name), Handle<Quote>(spreadQuote)));
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-        securitySpreads_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
-                                                                          Handle<Quote>(spreadQuote)));
     }
     LOG("security spreads done...");
 
@@ -293,7 +357,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     LOG("building security recovery rates...");
     for (const auto& name : parameters->securities()) {
         DLOG("Adding security recovery rate " << name << " from configuration " << configuration);
-        // security recovery rates are optional, so we need a try-catch block
         try {
             boost::shared_ptr<SimpleQuote> recoveryQuote(
                 new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
@@ -306,7 +369,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             }
             recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
                 make_pair(Market::defaultConfiguration, name), Handle<Quote>(recoveryQuote)));
-        } catch (...) {
+        } catch (const std::exception& e) {
+            // security recovery rates are optional, therefore we never throw
+            ALOG("skipping this object: " << e.what());
         }
     }
     LOG("security recovery rates done...");
@@ -334,227 +399,252 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // constructing index curves
     LOG("building index curves...");
     for (const auto& ind : parameters->indices()) {
-        LOG("building " << ind << " index curve");
-        std::vector<string> indexTokens;
-        split(indexTokens, ind, boost::is_any_of("-"));
-        Handle<IborIndex> index;
-        if (indexTokens[1] == "GENERIC") {
-            // If we have a generic curve build the index using the index currency's discount curve
-            index = Handle<IborIndex>(parseIborIndex(ind, initMarket->discountCurve(indexTokens[0], configuration)));
-        } else {
-            index = initMarket->iborIndex(ind, configuration);
-        }  
-        QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
-        Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
-        QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
-        vector<string> keys(parameters->yieldCurveTenors(ind).size());
+        try {
+            LOG("building " << ind << " index curve");
+            std::vector<string> indexTokens;
+            split(indexTokens, ind, boost::is_any_of("-"));
+            Handle<IborIndex> index;
+            if (indexTokens[1] == "GENERIC") {
+                // If we have a generic curve build the index using the index currency's discount curve
+                index =
+                    Handle<IborIndex>(parseIborIndex(ind, initMarket->discountCurve(indexTokens[0], configuration)));
+            } else {
+                index = initMarket->iborIndex(ind, configuration);
+            }
+            QL_REQUIRE(!index.empty(), "index object for " << ind << " not provided");
+            Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
+            QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << ind);
+            vector<string> keys(parameters->yieldCurveTenors(ind).size());
 
-        DayCounter dc = ore::data::parseDayCounter(
-            parameters->yieldCurveDayCounter(ind)); // used to convert YieldCurve Periods to Times
-        vector<Time> yieldCurveTimes(1, 0.0);       // include today
-        vector<Date> yieldCurveDates(1, asof_);
-        QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
-        for (auto& tenor : parameters->yieldCurveTenors(ind)) {
-            yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-            yieldCurveDates.push_back(asof_ + tenor);
+            DayCounter dc = ore::data::parseDayCounter(
+                parameters->yieldCurveDayCounter(ind)); // used to convert YieldCurve Periods to Times
+            vector<Time> yieldCurveTimes(1, 0.0);       // include today
+            vector<Date> yieldCurveDates(1, asof_);
+            QL_REQUIRE(parameters->yieldCurveTenors(ind).front() > 0 * Days, "yield curve tenors must not include t=0");
+            for (auto& tenor : parameters->yieldCurveTenors(ind)) {
+                yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                yieldCurveDates.push_back(asof_ + tenor);
+            }
+
+            // include today
+            vector<Handle<Quote>> quotes;
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+            quotes.push_back(Handle<Quote>(q));
+
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
+                Handle<Quote> qh(q);
+                quotes.push_back(qh);
+                simDataTmp.emplace(std::piecewise_construct,
+                                   std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
+                                   std::forward_as_tuple(q));
+
+                DLOG("ScenarioSimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
+            }
+            // FIXME interpolation fixed to linear, added to xml??
+            boost::shared_ptr<YieldTermStructure> indexCurve;
+            if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                    new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
+            } else {
+                indexCurve = boost::shared_ptr<YieldTermStructure>(
+                    new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+            }
+
+            // wrapped curve, is slower than a native curve
+            // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
+            //     new StaticallyCorrectedYieldTermStructure(
+            //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
+            //         wrapperIndex));
+
+            Handle<YieldTermStructure> ich(indexCurve);
+            // Handle<YieldTermStructure> ich(correctedIndexCurve);
+            if (wrapperIndex->allowsExtrapolation())
+                ich->enableExtrapolation();
+
+            boost::shared_ptr<IborIndex> i(index->clone(ich));
+            Handle<IborIndex> ih(i);
+            iborIndices_.insert(
+                pair<pair<string, string>, Handle<IborIndex>>(make_pair(Market::defaultConfiguration, ind), ih));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+            LOG("building " << ind << " index curve done");
+        } catch (const std::exception& e) {
+            ALOG("skipping this object: " << e.what());
         }
-
-        // include today
-        vector<Handle<Quote>> quotes;
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-
-        for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
-
-            simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::IndexCurve, ind, i),
-                             std::forward_as_tuple(q));
-
-            DLOG("ScenarioSimMarket index curve " << ind << " discount[" << i << "]=" << q->value());
-        }
-        // FIXME interpolation fixed to linear, added to xml??
-        boost::shared_ptr<YieldTermStructure> indexCurve;
-        if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve(yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
-        } else {
-            indexCurve = boost::shared_ptr<YieldTermStructure>(
-                new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
-        }
-
-        // wrapped curve, is slower than a native curve
-        // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
-        //     new StaticallyCorrectedYieldTermStructure(
-        //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
-        //         wrapperIndex));
-
-        Handle<YieldTermStructure> ich(indexCurve);
-        // Handle<YieldTermStructure> ich(correctedIndexCurve);
-        if (wrapperIndex->allowsExtrapolation())
-            ich->enableExtrapolation();
-
-        boost::shared_ptr<IborIndex> i(index->clone(ich));
-        Handle<IborIndex> ih(i);
-        iborIndices_.insert(
-            pair<pair<string, string>, Handle<IborIndex>>(make_pair(Market::defaultConfiguration, ind), ih));
-        LOG("building " << ind << " index curve done");
     }
     LOG("index curves done");
 
     // swap indices
     LOG("building swap indices...");
     for (const auto& it : parameters->swapIndices()) {
-        const string& indexName = it.first;
-        const string& discounting = it.second;
-        LOG("Adding swap index " << indexName << " with discounting index " << discounting);
+        try {
+            const string& indexName = it.first;
+            const string& discounting = it.second;
+            LOG("Adding swap index " << indexName << " with discounting index " << discounting);
 
-        addSwapIndex(indexName, discounting, Market::defaultConfiguration);
-        LOG("Adding swap index " << indexName << " done.");
+            addSwapIndex(indexName, discounting, Market::defaultConfiguration);
+            LOG("Adding swap index " << indexName << " done.");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
 
     // constructing swaption volatility curves
     LOG("building swaption volatility curves...");
     for (const auto& ccy : parameters->swapVolCcys()) {
-        LOG("building " << ccy << " swaption volatility curve...");
-        RelinkableHandle<SwaptionVolatilityStructure> wrapper(*initMarket->swaptionVol(ccy, configuration));
+        try {
+            LOG("building " << ccy << " swaption volatility curve...");
+            RelinkableHandle<SwaptionVolatilityStructure> wrapper(*initMarket->swaptionVol(ccy, configuration));
 
-        LOG("Initial market " << ccy << " swaption volatility type = " << wrapper->volatilityType());
+            LOG("Initial market " << ccy << " swaption volatility type = " << wrapper->volatilityType());
 
-        string shortSwapIndexBase = initMarket->shortSwapIndexBase(ccy, configuration);
-        string swapIndexBase = initMarket->swapIndexBase(ccy, configuration);
+            string shortSwapIndexBase = initMarket->shortSwapIndexBase(ccy, configuration);
+            string swapIndexBase = initMarket->swapIndexBase(ccy, configuration);
 
-        bool isCube = parameters->swapVolIsCube();
+            bool isCube = parameters->swapVolIsCube();
 
-        // If swaption volatility type is not Normal, convert to Normal for the simulation
-        if (wrapper->volatilityType() != Normal) {
-            // FIXME we can not convert constant swaption vol structures yet
-            if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
-                ALOG("Constant swaption volatility found in configuration " << configuration << " for currency " << ccy
-                                                                            << " will not be converted to normal");
-            } else {
-                // Get swap index associated with this volatility structure
-                string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
-                string shortSwapIndexName = initMarket->shortSwapIndexBase(ccy, configuration);
-                Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexName, configuration);
-                Handle<SwapIndex> shortSwapIndex = initMarket->swapIndex(shortSwapIndexName, configuration);
+            // If swaption volatility type is not Normal, convert to Normal for the simulation
+            if (wrapper->volatilityType() != Normal) {
+                // FIXME we can not convert constant swaption vol structures yet
+                if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
+                    ALOG("Constant swaption volatility found in configuration " << configuration << " for currency " << ccy
+                                                                                << " will not be converted to normal");
+                } else {
+                    // Get swap index associated with this volatility structure
+                    string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
+                    string shortSwapIndexName = initMarket->shortSwapIndexBase(ccy, configuration);
+                    Handle<SwapIndex> swapIndex = initMarket->swapIndex(swapIndexName, configuration);
+                    Handle<SwapIndex> shortSwapIndex = initMarket->swapIndex(shortSwapIndexName, configuration);
 
-                // Set up swaption volatility converter
-                SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
-                wrapper.linkTo(converter.convert());
+                    // Set up swaption volatility converter
+                    SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
+                    wrapper.linkTo(converter.convert());
 
-                LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
-                                                                         << " to normal swaption volatilities");
+                    LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
+                                                                             << " to normal swaption volatilities");
+                }
             }
-        }
-        Handle<SwaptionVolatilityStructure> svp;
-        if (parameters->simulateSwapVols()) {
-            LOG("Simulating (" << wrapper->volatilityType() << ") Swaption vols for ccy " << ccy);
-            vector<Period> optionTenors = parameters->swapVolExpiries();
-            vector<Period> swapTenors = parameters->swapVolTerms();
-            vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
-            bool atmOnly = parameters->simulateSwapVolATMOnly();
-            DLOG("Swaption atmOnly : " << (atmOnly ? "True" : "False"));
-            DLOG("Swaption isCube : " << (isCube ? "True" : "False"));
-            if (atmOnly) {
-                QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
-                           "for atmOnly strikeSpreads must be {0.0}");
-            } else {
-                QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
-            }
-            boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
-            if (isCube) {
-                boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
-                    boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
-                QL_REQUIRE(tmp, "swaption cube missing")
-                cube = tmp->cube();
-            }
-            vector<vector<Handle<Quote>>> quotes, atmQuotes;
-            quotes.resize(optionTenors.size() * swapTenors.size(),
-                          vector<Handle<Quote>>(strikeSpreads.size(), Handle<Quote>()));
-            atmQuotes.resize(optionTenors.size(), std::vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>()));
-            vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
-            Size atmSlice = std::find_if(strikeSpreads.begin(), strikeSpreads.end(),
-                                         [](const Real s) { return close_enough(s, 0.0); }) -
-                            strikeSpreads.begin();
-            QL_REQUIRE(atmSlice < strikeSpreads.size(), "could not find atm slice (strikeSpreads do not contain 0.0)");
-            for (Size k = 0; k < strikeSpreads.size(); ++k) {
-                for (Size i = 0; i < optionTenors.size(); ++i) {
-                    for (Size j = 0; j < swapTenors.size(); ++j) {
-                        Real strike = Null<Real>();
-                        if (!atmOnly && cube)
-                            strike = cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
-                        Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
-                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+        
+            Handle<SwaptionVolatilityStructure> svp;
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->simulateSwapVols()) {
+                LOG("Simulating (" << wrapper->volatilityType() << ") Swaption vols for ccy " << ccy);
+                vector<Period> optionTenors = parameters->swapVolExpiries();
+                vector<Period> swapTenors = parameters->swapVolTerms();
+                vector<Real> strikeSpreads = parameters->swapVolStrikeSpreads();
+                bool atmOnly = parameters->simulateSwapVolATMOnly();
+                DLOG("Swaption atmOnly : " << (atmOnly ? "True" : "False"));
+                DLOG("Swaption isCube : " << (isCube ? "True" : "False"));
+                if (atmOnly) {
+                    QL_REQUIRE(strikeSpreads.size() == 1 && close_enough(strikeSpreads[0], 0),
+                               "for atmOnly strikeSpreads must be {0.0}");
+                } else {
+                    QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
+                }
+                boost::shared_ptr<QuantLib::SwaptionVolatilityCube> cube;
+                if (isCube) {
+                    boost::shared_ptr<SwaptionVolCubeWithATM> tmp =
+                        boost::dynamic_pointer_cast<SwaptionVolCubeWithATM>(*wrapper);
+                    QL_REQUIRE(tmp, "swaption cube missing")
+                    cube = tmp->cube();
+                }
+                vector<vector<Handle<Quote>>> quotes, atmQuotes;
+                quotes.resize(optionTenors.size() * swapTenors.size(),
+                              vector<Handle<Quote>>(strikeSpreads.size(), Handle<Quote>()));
+                atmQuotes.resize(optionTenors.size(), std::vector<Handle<Quote>>(swapTenors.size(), Handle<Quote>()));
+                vector<vector<Real>> shift(optionTenors.size(), vector<Real>(swapTenors.size(), 0.0));
+                Size atmSlice = std::find_if(strikeSpreads.begin(), strikeSpreads.end(),
+                                             [](const Real s) { return close_enough(s, 0.0); }) -
+                                strikeSpreads.begin();
+                QL_REQUIRE(atmSlice < strikeSpreads.size(), "could not find atm slice (strikeSpreads do not contain 0.0)");
+                for (Size k = 0; k < strikeSpreads.size(); ++k) {
+                    for (Size i = 0; i < optionTenors.size(); ++i) {
+                        for (Size j = 0; j < swapTenors.size(); ++j) {
+                            Real strike = Null<Real>();
+                            if (!atmOnly && cube)
+                                strike = cube->atmStrike(optionTenors[i], swapTenors[j]) + strikeSpreads[k];
+                            Real vol = wrapper->volatility(optionTenors[i], swapTenors[j], strike, true);
+                            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
 
-                        Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
+                            Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
 
-                        simData_.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
-                                         std::forward_as_tuple(q));
-                        auto tmp = Handle<Quote>(q);
-                        quotes[i * swapTenors.size() + j][k] = tmp;
-                        if (k == atmSlice) {
-                            atmQuotes[i][j] = tmp;
-                            shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
-                                              ? wrapper->shift(optionTenors[i], swapTenors[j])
-                                              : 0.0;
+                            simDataTmp.emplace(std::piecewise_construct,
+                                std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
+                                std::forward_as_tuple(q));
+                            auto tmp = Handle<Quote>(q);
+                            quotes[i * swapTenors.size() + j][k] = tmp;
+                            if (k == atmSlice) {
+                                atmQuotes[i][j] = tmp;
+                                shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
+                                    ? wrapper->shift(optionTenors[i], swapTenors[j])
+                                    : 0.0;
+                            }
                         }
                     }
                 }
-            }
-            bool flatExtrapolation = true; // FIXME: get this from curve configuration
-            VolatilityType volType = wrapper->volatilityType();
-            DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(ccy));
-            Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
-                wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, atmQuotes, dc,
-                flatExtrapolation, volType, shift));
-            if (atmOnly) {
-                // floating reference date matrix in sim market
-                // if we have a cube, we keep the vol spreads constant under scenarios
-                // notice that cube is from todaysmarket, so it has a fixed reference date, which means that
-                // we keep the smiles constant in terms of vol spreads when moving forward in time;
-                // notice also that the volatility will be "sticky strike", i.e. it will not react to
-                // changes in the ATM level
-                if (isCube) {
-                    svp = Handle<SwaptionVolatilityStructure>(
-                        boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
+                bool flatExtrapolation = true; // FIXME: get this from curve configuration
+                VolatilityType volType = wrapper->volatilityType();
+                DayCounter dc = ore::data::parseDayCounter(parameters->swapVolDayCounter(ccy));
+                Handle<SwaptionVolatilityStructure> atm(boost::make_shared<SwaptionVolatilityMatrix>(
+                    wrapper->calendar(), wrapper->businessDayConvention(), optionTenors, swapTenors, atmQuotes, dc,
+                    flatExtrapolation, volType, shift));
+                if (atmOnly) {
+                    // floating reference date matrix in sim market
+                    // if we have a cube, we keep the vol spreads constant under scenarios
+                    // notice that cube is from todaysmarket, so it has a fixed reference date, which means that
+                    // we keep the smiles constant in terms of vol spreads when moving forward in time;
+                    // notice also that the volatility will be "sticky strike", i.e. it will not react to
+                    // changes in the ATM level
+                    if (isCube) {
+                        svp = Handle<SwaptionVolatilityStructure>(
+                            boost::make_shared<SwaptionVolatilityConstantSpread>(atm, wrapper));
+                    } else {
+                        svp = atm;
+                    }
                 } else {
-                    svp = atm;
+                    QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
+                    boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
+                        atm, optionTenors, swapTenors, strikeSpreads, quotes,
+                        *initMarket->swapIndex(swapIndexBase, configuration),
+                        *initMarket->swapIndex(shortSwapIndexBase, configuration), false, flatExtrapolation, false));
+                    svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolCubeWithATM>(tmp));
                 }
             } else {
-                QL_REQUIRE(isCube, "Only atmOnly simulation supported for swaption vol surfaces");
-                boost::shared_ptr<SwaptionVolatilityCube> tmp(new QuantExt::SwaptionVolCube2(
-                    atm, optionTenors, swapTenors, strikeSpreads, quotes,
-                    *initMarket->swapIndex(swapIndexBase, configuration),
-                    *initMarket->swapIndex(shortSwapIndexBase, configuration), false, flatExtrapolation, false));
-                svp = Handle<SwaptionVolatilityStructure>(boost::make_shared<SwaptionVolCubeWithATM>(tmp));
+                string decayModeString = parameters->swapVolDecayMode();
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+                LOG("Dynamic (" << wrapper->volatilityType() << ") Swaption vols (" << decayModeString << ") for ccy "
+                                << ccy);
+                if (isCube)
+                    WLOG("Only ATM slice is considered from init market's cube");
+                boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
+                    boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(),
+                                                                                    decayMode);
+                svp = Handle<SwaptionVolatilityStructure>(svolp);
             }
 
-        } else {
-            string decayModeString = parameters->swapVolDecayMode();
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-            LOG("Dynamic (" << wrapper->volatilityType() << ") Swaption vols (" << decayModeString << ") for ccy "
-                            << ccy);
-            if (isCube)
-                WLOG("Only ATM slice is considered from init market's cube");
-            boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
-                boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(), decayMode);
-            svp = Handle<SwaptionVolatilityStructure>(svolp);
+            svp->enableExtrapolation(); // FIXME
+            swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
+                make_pair(Market::defaultConfiguration, ccy), svp));
+
+            LOG("Simulaton market " << ccy << " swaption volatility type = " << svp->volatilityType());
+
+            swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
+                make_pair(Market::defaultConfiguration, ccy), make_pair(shortSwapIndexBase, swapIndexBase)));
+            swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
+                make_pair(Market::defaultConfiguration, ccy), make_pair(swapIndexBase, swapIndexBase)));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        svp->enableExtrapolation(); // FIXME
-        swaptionCurves_.insert(pair<pair<string, string>, Handle<SwaptionVolatilityStructure>>(
-            make_pair(Market::defaultConfiguration, ccy), svp));
-
-        LOG("Simulaton market " << ccy << " swaption volatility type = " << svp->volatilityType());
-
-        swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
-            make_pair(Market::defaultConfiguration, ccy), make_pair(shortSwapIndexBase, swapIndexBase)));
-        swaptionIndexBases_.insert(pair<pair<string, string>, pair<string, string>>(
-            make_pair(Market::defaultConfiguration, ccy), make_pair(swapIndexBase, swapIndexBase)));
     }
 
     LOG("swaption volatility curves done");
@@ -562,56 +652,67 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // Constructing caplet/floorlet volatility surfaces
     LOG("building cap/floor volatility curves...");
     for (const auto& ccy : parameters->capFloorVolCcys()) {
-        LOG("building " << ccy << " cap/floor volatility curve...");
-        Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(ccy, configuration);
+        try {
+            LOG("building " << ccy << " cap/floor volatility curve...");
+            Handle<OptionletVolatilityStructure> wrapper = initMarket->capFloorVol(ccy, configuration);
 
-        LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
+            LOG("Initial market cap/floor volatility type = " << wrapper->volatilityType());
 
-        Handle<OptionletVolatilityStructure> hCapletVol;
+            Handle<OptionletVolatilityStructure> hCapletVol;
 
-        if (parameters->simulateCapFloorVols()) {
-            LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
-            vector<Period> optionTenors = parameters->capFloorVolExpiries(ccy);
-            vector<Date> optionDates(optionTenors.size());
-            vector<Real> strikes = parameters->capFloorVolStrikes();
-            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
-                                                 vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
-            for (Size i = 0; i < optionTenors.size(); ++i) {
-                optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
-                for (Size j = 0; j < strikes.size(); ++j) {
-                    Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                    Size index = i * strikes.size() + j;
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::OptionletVolatility, ccy, index),
-                                     std::forward_as_tuple(q));
-                    quotes[i][j] = Handle<Quote>(q);
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->simulateCapFloorVols()) {
+                LOG("Simulating Cap/Floor Optionlet vols for ccy " << ccy);
+                vector<Period> optionTenors = parameters->capFloorVolExpiries(ccy);
+                vector<Date> optionDates(optionTenors.size());
+                vector<Real> strikes = parameters->capFloorVolStrikes();
+                vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
+                                                     vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+                for (Size i = 0; i < optionTenors.size(); ++i) {
+                    optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
+                    for (Size j = 0; j < strikes.size(); ++j) {
+                        Real vol = wrapper->volatility(optionTenors[i], strikes[j], wrapper->allowsExtrapolation());
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                        Size index = i * strikes.size() + j;
+                        simDataTmp.emplace(
+                            std::piecewise_construct,
+                            std::forward_as_tuple(RiskFactorKey::KeyType::OptionletVolatility, ccy, index),
+                            std::forward_as_tuple(q));
+                        quotes[i][j] = Handle<Quote>(q);
+                    }
                 }
+                DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(ccy));
+                // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
+                // TODO: Build floating reference date StrippedOptionlet class for MC path generators
+                boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
+                    0, // FIXME: settlement days
+                    wrapper->calendar(), wrapper->businessDayConvention(),
+                    boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
+                    optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
+                boost::shared_ptr<StrippedOptionletAdapter2> adapter =
+                    boost::make_shared<StrippedOptionletAdapter2>(optionlet, true); // FIXME always flat extrapolation
+                hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
+            } else {
+                string decayModeString = parameters->capFloorVolDecayMode();
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+                boost::shared_ptr<OptionletVolatilityStructure> capletVol =
+                    boost::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
+                hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
             }
-            DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(ccy));
-            // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
-            // TODO: Build floating reference date StrippedOptionlet class for MC path generators
-            boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
-                0, // FIXME: settlement days
-                wrapper->calendar(), wrapper->businessDayConvention(),
-                boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
-                optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
-            boost::shared_ptr<StrippedOptionletAdapter2> adapter =
-                boost::make_shared<StrippedOptionletAdapter2>(optionlet, true); // FIXME always flat extrapolation
-            hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
-        } else {
-            string decayModeString = parameters->capFloorVolDecayMode();
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-            boost::shared_ptr<OptionletVolatilityStructure> capletVol =
-                boost::make_shared<DynamicOptionletVolatilityStructure>(*wrapper, 0, NullCalendar(), decayMode);
-            hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
+
+            hCapletVol->enableExtrapolation(); // FIXME
+            capFloorCurves_.emplace(std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, ccy),
+                                    std::forward_as_tuple(hCapletVol));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+
+            LOG("Simulaton market cap/floor volatility type = " << hCapletVol->volatilityType());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        hCapletVol->enableExtrapolation(); // FIXME
-        capFloorCurves_.emplace(std::piecewise_construct, std::forward_as_tuple(Market::defaultConfiguration, ccy),
-                                std::forward_as_tuple(hCapletVol));
-
-        LOG("Simulaton market cap/floor volatility type = " << hCapletVol->volatilityType());
     }
 
     LOG("cap/floor volatility curves done");
@@ -619,570 +720,685 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     // building default curves
     LOG("building default curves...");
     for (const auto& name : parameters->defaultNames()) {
-        LOG("building " << name << " default curve..");
-        Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
-        vector<Handle<Quote>> quotes;
+        try {
+            LOG("building " << name << " default curve..");
+            Handle<DefaultProbabilityTermStructure> wrapper = initMarket->defaultCurve(name, configuration);
+            vector<Handle<Quote>> quotes;
 
-        QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days, "default curve tenors must not include t=0");
+            QL_REQUIRE(parameters->defaultTenors(name).front() > 0 * Days, "default curve tenors must not include t=0");
 
-        vector<Date> dates(1, asof_);
+            vector<Date> dates(1, asof_);
 
-        for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
-            dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
-        }
-
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-        quotes.push_back(Handle<Quote>(q));
-        for (Size i = 0; i < dates.size() - 1; i++) {
-            Probability prob = wrapper->survivalProbability(dates[i + 1], true);
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
-            if (parameters->simulateSurvivalProbabilities()) {
-                simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
-                                 std::forward_as_tuple(q));
-                DLOG("ScenarioSimMarket default curve " << name << " survival[" << i << "]=" << prob);
+            for (Size i = 0; i < parameters->defaultTenors(name).size(); i++) {
+                dates.push_back(asof_ + parameters->defaultTenors(name)[i]);
             }
-            Handle<Quote> qh(q);
-            quotes.push_back(qh);
+
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+            quotes.push_back(Handle<Quote>(q));
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            for (Size i = 0; i < dates.size() - 1; i++) {
+                Probability prob = wrapper->survivalProbability(dates[i + 1], true);
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(prob));
+                if (parameters->simulateSurvivalProbabilities()) {
+                    simDataTmp.emplace(std::piecewise_construct,
+                                       std::forward_as_tuple(RiskFactorKey::KeyType::SurvivalProbability, name, i),
+                                       std::forward_as_tuple(q));
+                    DLOG("ScenarioSimMarket default curve " << name << " survival[" << i << "]=" << prob);
+                }
+                Handle<Quote> qh(q);
+                quotes.push_back(qh);
+            }
+            DayCounter dc = ore::data::parseDayCounter(parameters->defaultCurveDayCounter(name));
+            Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
+            // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
+            boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
+                new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
+            Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
+
+            dch->enableExtrapolation();
+
+            // add recovery rate
+            boost::shared_ptr<SimpleQuote> rrQuote(
+                new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
+            if (parameters->simulateRecoveryRates()) {
+                simDataTmp.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                 std::forward_as_tuple(rrQuote));
+            }
+            defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
+                make_pair(Market::defaultConfiguration, name), dch));
+            recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(
+                make_pair(Market::defaultConfiguration, name), Handle<Quote>(rrQuote)));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-        DayCounter dc = ore::data::parseDayCounter(parameters->defaultCurveDayCounter(name));
-        Calendar cal = ore::data::parseCalendar(parameters->defaultCurveCalendar(name));
-        // FIXME riskmarket uses SurvivalProbabilityCurve but this isn't added to ore
-        boost::shared_ptr<DefaultProbabilityTermStructure> defaultCurve(
-            new QuantExt::SurvivalProbabilityCurve<Linear>(dates, quotes, dc, cal));
-        Handle<DefaultProbabilityTermStructure> dch(defaultCurve);
-
-        dch->enableExtrapolation();
-
-        defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
-            make_pair(Market::defaultConfiguration, name), dch));
-
-        // add recovery rate
-        boost::shared_ptr<SimpleQuote> rrQuote(new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
-        if (parameters->simulateRecoveryRates()) {
-            simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                             std::forward_as_tuple(rrQuote));
-        }
-        recoveryRates_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
-                                                                        Handle<Quote>(rrQuote)));
     }
     LOG("default curves done");
 
     // building cds volatilities
     LOG("building cds volatilities...");
     for (const auto& name : parameters->cdsVolNames()) {
-        LOG("building " << name << "  cds vols..");
-        Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
-        Handle<BlackVolTermStructure> cvh;
-        if (parameters->simulateCdsVols()) {
-            LOG("Simulating CDS Vols for " << name);
-            vector<Handle<Quote>> quotes;
-            vector<Time> times;
-            for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
-                Date date = asof_ + parameters->cdsVolExpiries()[i];
-                Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
-                times.push_back(wrapper->timeFromReference(date));
-                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                if (parameters->simulateCdsVols()) {
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
-                                     std::forward_as_tuple(q));
+        try {
+            LOG("building " << name << "  cds vols..");
+            Handle<BlackVolTermStructure> wrapper = initMarket->cdsVol(name, configuration);
+            Handle<BlackVolTermStructure> cvh;
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->simulateCdsVols()) {
+                LOG("Simulating CDS Vols for " << name);
+                vector<Handle<Quote>> quotes;
+                vector<Time> times;
+                for (Size i = 0; i < parameters->cdsVolExpiries().size(); i++) {
+                    Date date = asof_ + parameters->cdsVolExpiries()[i];
+                    Volatility vol = wrapper->blackVol(date, Null<Real>(), true);
+                    times.push_back(wrapper->timeFromReference(date));
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                    if (parameters->simulateCdsVols()) {
+                        simDataTmp.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                         std::forward_as_tuple(q));
+                    }
+                    quotes.emplace_back(q);
                 }
-                quotes.emplace_back(q);
+
+                DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
+                boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(
+                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
+
+                cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
+            } else {
+                string decayModeString = parameters->cdsVolDecayMode();
+                LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+                // currently only curves (i.e. strike indepdendent) CDS volatility structures are
+                // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+                // strike stickyness, since then no yield term structures and no fx spot are required
+                // that define the ATM level
+                cvh = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(wrapper, 0, NullCalendar(),
+                                                                                           decayMode, StickyStrike));
             }
 
-            DayCounter dc = ore::data::parseDayCounter(parameters->cdsVolDayCounter(name));
-            boost::shared_ptr<BlackVolTermStructure> cdsVolCurve(
-                new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes));
-
-            cvh = Handle<BlackVolTermStructure>(cdsVolCurve);
-        } else {
-            string decayModeString = parameters->cdsVolDecayMode();
-            LOG("Deterministic CDS Vols with decay mode " << decayModeString << " for " << name);
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-
-            // currently only curves (i.e. strike indepdendent) CDS volatility structures are
-            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-            // strike stickyness, since then no yield term structures and no fx spot are required
-            // that define the ATM level
-            cvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+            if (wrapper->allowsExtrapolation())
+                cvh->enableExtrapolation();
+            cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+                make_pair(Market::defaultConfiguration, name), cvh));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        if (wrapper->allowsExtrapolation())
-            cvh->enableExtrapolation();
-        cdsVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, name), cvh));
     }
     LOG("cds volatilities done");
+
     // building fx volatilities
     LOG("building fx volatilities...");
     for (const auto& ccyPair : parameters->fxVolCcyPairs()) {
-        Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(ccyPair, configuration);
-        Handle<Quote> spot = fxSpot(ccyPair);
-        QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
-        string forCcy = ccyPair.substr(0, 3);
-        string domCcy = ccyPair.substr(3, 3);
-        Handle<YieldTermStructure> forTS = discountCurve(forCcy);
-        Handle<YieldTermStructure> domTS = discountCurve(domCcy);
-        Handle<BlackVolTermStructure> fvh;
+        try {
+            Handle<BlackVolTermStructure> wrapper = initMarket->fxVol(ccyPair, configuration);
+            Handle<Quote> spot = fxSpot(ccyPair);
+            QL_REQUIRE(ccyPair.length() == 6, "invalid ccy pair length");
+            string forCcy = ccyPair.substr(0, 3);
+            string domCcy = ccyPair.substr(3, 3);
+            Handle<YieldTermStructure> forTS = discountCurve(forCcy);
+            Handle<YieldTermStructure> domTS = discountCurve(domCcy);
+            Handle<BlackVolTermStructure> fvh;
 
-        if (parameters->simulateFXVols()) {
-            LOG("Simulating FX Vols (BlackVarianceCurve3) for " << ccyPair);
-            Size n = parameters->fxVolExpiries().size();
-            Size m = parameters->fxVolMoneyness().size();
-            vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
-            Calendar cal = wrapper->calendar();
-            // FIXME hardcoded in todaysmarket
-            DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(ccyPair));
-            vector<Time> times;
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->simulateFXVols()) {
+                LOG("Simulating FX Vols (BlackVarianceCurve3) for " << ccyPair);
+                Size n = parameters->fxVolExpiries().size();
+                Size m = parameters->fxVolMoneyness().size();
+                vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
+                Calendar cal = wrapper->calendar();
+                // FIXME hardcoded in todaysmarket
+                DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(ccyPair));
+                vector<Time> times;
 
-            for (Size i = 0; i < n; i++) {
-                Date date = asof_ + parameters->fxVolExpiries()[i];
+                for (Size i = 0; i < n; i++) {
+                    Date date = asof_ + parameters->fxVolExpiries()[i];
 
-                times.push_back(wrapper->timeFromReference(date));
+                    times.push_back(wrapper->timeFromReference(date));
 
-                for (Size j = 0; j < m; j++) {
-                    Size idx = j * n + i;
-                    Real mon = parameters->fxVolMoneyness()[j]; // 0 if ATM
+                    for (Size j = 0; j < m; j++) {
+                        Size idx = j * n + i;
+                        Real mon = parameters->fxVolMoneyness()[j]; // 0 if ATM
 
-                    // strike (assuming forward prices)
-                    Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
-                    Volatility vol = wrapper->blackVol(date, k, true);
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx),
-                                     std::forward_as_tuple(q));
-                    quotes[j][i] = Handle<Quote>(q);
+                        // strike (assuming forward prices)
+                        Real k = spot->value() * mon * forTS->discount(date) / domTS->discount(date);
+                        Volatility vol = wrapper->blackVol(date, k, true);
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                        simDataTmp.emplace(std::piecewise_construct,
+                                         std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx),
+                                         std::forward_as_tuple(q));
+                        quotes[j][i] = Handle<Quote>(q);
+                    }
                 }
-            }
 
-            boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
-            if (parameters->fxVolIsSurface()) {
-                bool stickyStrike = true;
-                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessForward(
-                    cal, spot, times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
+                boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
+                if (parameters->fxVolIsSurface()) {
+                    bool stickyStrike = true;
+                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessForward(
+                        cal, spot, times, parameters->fxVolMoneyness(), quotes, dc, forTS, domTS, stickyStrike));
+                } else {
+                    fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
+                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                }
+                fvh = Handle<BlackVolTermStructure>(fxVolCurve);
+
             } else {
-                fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
+                string decayModeString = parameters->fxVolDecayMode();
+                LOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << ccyPair);
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+
+                // currently only curves (i.e. strike indepdendent) FX volatility structures are
+                // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+                // strike stickyness, since then no yield term structures and no fx spot are required
+                // that define the ATM level - to be revisited when FX surfaces are supported
+                fvh = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(wrapper, 0, NullCalendar(),
+                                                                                           decayMode, StickyStrike));
             }
-            fvh = Handle<BlackVolTermStructure>(fxVolCurve);
 
-        } else {
-            string decayModeString = parameters->fxVolDecayMode();
-            LOG("Deterministic FX Vols with decay mode " << decayModeString << " for " << ccyPair);
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+            fvh->enableExtrapolation();
+            fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+                make_pair(Market::defaultConfiguration, ccyPair), fvh));
 
-            // currently only curves (i.e. strike indepdendent) FX volatility structures are
-            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-            // strike stickyness, since then no yield term structures and no fx spot are required
-            // that define the ATM level - to be revisited when FX surfaces are supported
-            fvh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
+            // build inverted surface
+            QL_REQUIRE(ccyPair.size() == 6, "Invalid Ccy pair " << ccyPair);
+            string reverse = ccyPair.substr(3) + ccyPair.substr(0, 3);
+            Handle<QuantLib::BlackVolTermStructure> ifvh(boost::make_shared<BlackInvertedVolTermStructure>(fvh));
+            ifvh->enableExtrapolation();
+            fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+                make_pair(Market::defaultConfiguration, reverse), ifvh));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        fvh->enableExtrapolation();
-        fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, ccyPair), fvh));
-
-        // build inverted surface
-        QL_REQUIRE(ccyPair.size() == 6, "Invalid Ccy pair " << ccyPair);
-        string reverse = ccyPair.substr(3) + ccyPair.substr(0, 3);
-        Handle<QuantLib::BlackVolTermStructure> ifvh(boost::make_shared<BlackInvertedVolTermStructure>(fvh));
-        ifvh->enableExtrapolation();
-        fxVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, reverse), ifvh));
     }
     LOG("fx volatilities done");
 
     // building eq volatilities
     LOG("building eq volatilities...");
     for (const auto& equityName : parameters->equityVolNames()) {
-        Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(equityName, configuration);
+        try {
+            Handle<BlackVolTermStructure> wrapper = initMarket->equityVol(equityName, configuration);
 
-        Handle<BlackVolTermStructure> evh;
+            Handle<BlackVolTermStructure> evh;
 
-        if (parameters->simulateEquityVols()) {
-            Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
-            Size n = parameters->equityVolMoneyness().size();
-            Size m = parameters->equityVolExpiries().size();
-            vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
-            vector<Time> times(m);
-            Calendar cal = wrapper->calendar();
-            DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(equityName));
-            bool atmOnly = parameters->simulateEquityVolATMOnly();
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->simulateEquityVols()) {
+                Handle<Quote> spot = equitySpots_[make_pair(Market::defaultConfiguration, equityName)];
+                Size n = parameters->equityVolMoneyness().size();
+                Size m = parameters->equityVolExpiries().size();
+                vector<vector<Handle<Quote>>> quotes(n, vector<Handle<Quote>>(m, Handle<Quote>()));
+                vector<Time> times(m);
+                Calendar cal = wrapper->calendar();
+                DayCounter dc = ore::data::parseDayCounter(parameters->equityVolDayCounter(equityName));
+                bool atmOnly = parameters->simulateEquityVolATMOnly();
 
-            for (Size i = 0; i < n; i++) {
-                Real mon = parameters->equityVolMoneyness()[i];
-                // strike
-                Real k = atmOnly ? Null<Real>() : spot->value() * mon;
+                for (Size i = 0; i < n; i++) {
+                    Real mon = parameters->equityVolMoneyness()[i];
+                    // strike
+                    Real k = atmOnly ? Null<Real>() : spot->value() * mon;
 
-                for (Size j = 0; j < m; j++) {
-                    // Index is expires then moneyness. TODO: is this the best?
-                    Size idx = i * m + j;
-                    times[j] = dc.yearFraction(asof_, asof_ + parameters->equityVolExpiries()[j]);
-                    Volatility vol = wrapper->blackVol(asof_ + parameters->equityVolExpiries()[j], k);
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
-                                     std::forward_as_tuple(q));
-                    quotes[i][j] = Handle<Quote>(q);
+                    for (Size j = 0; j < m; j++) {
+                        // Index is expires then moneyness. TODO: is this the best?
+                        Size idx = i * m + j;
+                        times[j] = dc.yearFraction(asof_, asof_ + parameters->equityVolExpiries()[j]);
+                        Volatility vol = wrapper->blackVol(asof_ + parameters->equityVolExpiries()[j], k);
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                        simDataTmp.emplace(
+                            std::piecewise_construct,
+                            std::forward_as_tuple(RiskFactorKey::KeyType::EquityVolatility, equityName, idx),
+                            std::forward_as_tuple(q));
+                        quotes[i][j] = Handle<Quote>(q);
+                    }
                 }
-            }
-            boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
-            if (!parameters->simulateEquityVolATMOnly()) {
-                LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
-                // If true, the strikes are fixed, if false they move with the spot handle
-                // Should probably be false, but some people like true for sensi runs.
-                bool stickyStrike = true;
+                boost::shared_ptr<BlackVolTermStructure> eqVolCurve;
+                if (!parameters->simulateEquityVolATMOnly()) {
+                    LOG("Simulating EQ Vols (BlackVarianceSurfaceMoneyness) for " << equityName);
+                    // If true, the strikes are fixed, if false they move with the spot handle
+                    // Should probably be false, but some people like true for sensi runs.
+                    bool stickyStrike = true;
 
-                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
-                    cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
-                eqVolCurve->enableExtrapolation();
+                    eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceSurfaceMoneynessSpot(
+                        cal, spot, times, parameters->equityVolMoneyness(), quotes, dc, stickyStrike));
+                    eqVolCurve->enableExtrapolation();
+                } else {
+                    LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
+                    eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
+                        0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
+                }
+
+                // if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0 surface
+                if (parameters->equityVolIsSurface() && parameters->simulateEquityVolATMOnly()) {
+                    LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << equityName);
+                    evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(
+                        Handle<BlackVolTermStructure>(eqVolCurve), wrapper));
+                } else {
+                    evh = Handle<BlackVolTermStructure>(eqVolCurve);
+                }
             } else {
-                LOG("Simulating EQ Vols (BlackVarianceCurve3) for " << equityName);
-                eqVolCurve = boost::shared_ptr<BlackVolTermStructure>(
-                    new BlackVarianceCurve3(0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0]));
-            }
+                string decayModeString = parameters->equityVolDecayMode();
+                DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
 
-            // if we have a surface but are only simulating atm vols we wrap the atm curve and the full t0 surface
-            if (parameters->equityVolIsSurface() && parameters->simulateEquityVolATMOnly()) {
-                LOG("Simulating EQ Vols (EquityVolatilityConstantSpread) for " << equityName);
-                evh = Handle<BlackVolTermStructure>(boost::make_shared<EquityVolatilityConstantSpread>(
-                    Handle<BlackVolTermStructure>(eqVolCurve), wrapper));
+                // currently only curves (i.e. strike indepdendent) EQ volatility structures are
+                // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
+                // strike stickyness, since then no yield term structures and no EQ spot are required
+                // that define the ATM level - to be revisited when EQ surfaces are supported
+                evh = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(wrapper, 0, NullCalendar(),
+                                                                                           decayMode, StickyStrike));
+            }
+            if (wrapper->allowsExtrapolation())
+                evh->enableExtrapolation();
+            equityVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
+                make_pair(Market::defaultConfiguration, equityName), evh));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+            DLOG("EQ volatility curve built for " << equityName);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
             } else {
-                evh = Handle<BlackVolTermStructure>(eqVolCurve);
+                QL_FAIL(e.what());
             }
-        } else {
-            string decayModeString = parameters->equityVolDecayMode();
-            DLOG("Deterministic EQ Vols with decay mode " << decayModeString << " for " << equityName);
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-
-            // currently only curves (i.e. strike indepdendent) EQ volatility structures are
-            // supported, so we use a) the more efficient curve tag and b) a hard coded sticky
-            // strike stickyness, since then no yield term structures and no EQ spot are required
-            // that define the ATM level - to be revisited when EQ surfaces are supported
-            evh = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                wrapper, 0, NullCalendar(), decayMode, StickyStrike));
         }
-        if (wrapper->allowsExtrapolation())
-            evh->enableExtrapolation();
-        equityVols_.insert(pair<pair<string, string>, Handle<BlackVolTermStructure>>(
-            make_pair(Market::defaultConfiguration, equityName), evh));
-        DLOG("EQ volatility curve built for " << equityName);
     }
     LOG("equity volatilities done");
 
     // building base correlation structures
     LOG("building base correlations...");
     for (const auto& bcName : parameters->baseCorrelationNames()) {
-        Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
-            initMarket->baseCorrelation(bcName, configuration);
-        if (!parameters->simulateBaseCorrelations())
-            baseCorrelations_.insert(
-                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
-                    make_pair(Market::defaultConfiguration, bcName), wrapper));
-        else {
-            Size nd = parameters->baseCorrelationDetachmentPoints().size();
-            Size nt = parameters->baseCorrelationTerms().size();
-            vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
-            vector<Period> terms(nt);
-            for (Size i = 0; i < nd; ++i) {
-                Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
-                for (Size j = 0; j < nt; ++j) {
-                    Period term = parameters->baseCorrelationTerms()[j];
-                    if (i == 0)
-                        terms[j] = term;
-                    Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
-                    simData_.emplace(std::piecewise_construct,
-                                     std::forward_as_tuple(RiskFactorKey::KeyType::BaseCorrelation, bcName, i * nt + j),
-                                     std::forward_as_tuple(q));
-                    quotes[i][j] = Handle<Quote>(q);
+        try {
+            Handle<BaseCorrelationTermStructure<BilinearInterpolation>> wrapper =
+                initMarket->baseCorrelation(bcName, configuration);
+            if (!parameters->simulateBaseCorrelations())
+                baseCorrelations_.insert(
+                    pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                        make_pair(Market::defaultConfiguration, bcName), wrapper));
+            else {
+                Size nd = parameters->baseCorrelationDetachmentPoints().size();
+                Size nt = parameters->baseCorrelationTerms().size();
+                vector<vector<Handle<Quote>>> quotes(nd, vector<Handle<Quote>>(nt));
+                vector<Period> terms(nt);
+                std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+                for (Size i = 0; i < nd; ++i) {
+                    Real lossLevel = parameters->baseCorrelationDetachmentPoints()[i];
+                    for (Size j = 0; j < nt; ++j) {
+                        Period term = parameters->baseCorrelationTerms()[j];
+                        if (i == 0)
+                            terms[j] = term;
+                        Real bc = wrapper->correlation(asof_ + term, lossLevel, true); // extrapolate
+                        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(bc));
+                        simDataTmp.emplace(
+                            std::piecewise_construct,
+                            std::forward_as_tuple(RiskFactorKey::KeyType::BaseCorrelation, bcName, i * nt + j),
+                            std::forward_as_tuple(q));
+                        quotes[i][j] = Handle<Quote>(q);
+                    }
                 }
-            }
 
-            // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
-            if (nt == 1) {
-                terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
-                for (Size i = 0; i < nd; ++i)
-                    quotes[i].push_back(quotes[i][0]);
-            }
-            DayCounter dc = ore::data::parseDayCounter(parameters->baseCorrelationDayCounter(bcName));
-            boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
-                boost::make_shared<BilinearBaseCorrelationTermStructure>(
-                    wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(), terms,
-                    parameters->baseCorrelationDetachmentPoints(), quotes, dc);
+                // FIXME: Same change as in ored/market/basecorrelationcurve.cpp
+                if (nt == 1) {
+                    terms.push_back(terms[0] + 1 * Days); // arbitrary, but larger than the first term
+                    for (Size i = 0; i < nd; ++i)
+                        quotes[i].push_back(quotes[i][0]);
+                }
+                DayCounter dc = ore::data::parseDayCounter(parameters->baseCorrelationDayCounter(bcName));
+                boost::shared_ptr<BilinearBaseCorrelationTermStructure> bcp =
+                    boost::make_shared<BilinearBaseCorrelationTermStructure>(
+                        wrapper->settlementDays(), wrapper->calendar(), wrapper->businessDayConvention(), terms,
+                        parameters->baseCorrelationDetachmentPoints(), quotes, dc);
 
-            bcp->enableExtrapolation(wrapper->allowsExtrapolation());
-            Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
-            baseCorrelations_.insert(
-                pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
-                    make_pair(Market::defaultConfiguration, bcName), bch));
+                bcp->enableExtrapolation(wrapper->allowsExtrapolation());
+                Handle<BilinearBaseCorrelationTermStructure> bch(bcp);
+                baseCorrelations_.insert(
+                    pair<pair<string, string>, Handle<BaseCorrelationTermStructure<BilinearInterpolation>>>(
+                        make_pair(Market::defaultConfiguration, bcName), bch));
+                simData_.insert(simDataTmp.begin(), simDataTmp.end());
+            }
+            DLOG("Base correlations built for " << bcName);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-        DLOG("Base correlations built for " << bcName);
     }
     LOG("base correlations done");
 
     LOG("building CPI Indices...");
     for (const auto& ci : parameters->cpiIndices()) {
+        try {
 
-        DLOG("adding " << ci << " base CPI price");
-        Handle<ZeroInflationIndex> zeroInflationIndex = initMarket->zeroInflationIndex(ci, configuration);
-        Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
-        Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
-        Real baseCPI = zeroInflationIndex->fixing(fixingDate);
+            DLOG("adding " << ci << " base CPI price");
+            Handle<ZeroInflationIndex> zeroInflationIndex = initMarket->zeroInflationIndex(ci, configuration);
+            Period obsLag = zeroInflationIndex->zeroInflationTermStructure()->observationLag();
+            Date fixingDate = zeroInflationIndex->zeroInflationTermStructure()->baseDate();
+            Real baseCPI = zeroInflationIndex->fixing(fixingDate);
 
-        boost::shared_ptr<SimpleQuote> q(new SimpleQuote(baseCPI));
-        Handle<Quote> qh(q);
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(baseCPI));
+            Handle<Quote> qh(q);
 
-        boost::shared_ptr<InflationIndex> inflationIndex =
-            boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
-        Handle<InflationIndexObserver> inflObserver(
-            boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
+            boost::shared_ptr<InflationIndex> inflationIndex =
+                boost::dynamic_pointer_cast<InflationIndex>(*zeroInflationIndex);
+            Handle<InflationIndexObserver> inflObserver(
+                boost::make_shared<InflationIndexObserver>(inflationIndex, qh, obsLag));
 
-        baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(
-            make_pair(Market::defaultConfiguration, ci), inflObserver));
-        simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, ci),
-                         std::forward_as_tuple(q));
+            baseCpis_.insert(pair<pair<string, string>, Handle<InflationIndexObserver>>(
+                make_pair(Market::defaultConfiguration, ci), inflObserver));
+            simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPIIndex, ci),
+                             std::forward_as_tuple(q));
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     LOG("CPI Indices done");
 
     LOG("building zero inflation curves...");
     for (const auto& zic : parameters->zeroInflationIndices()) {
-        LOG("building " << zic << " zero inflation curve");
+        try {
+            LOG("building " << zic << " zero inflation curve");
 
-        Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(zic, configuration);
-        Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
-        vector<string> keys(parameters->zeroInflationTenors(zic).size());
+            Handle<ZeroInflationIndex> inflationIndex = initMarket->zeroInflationIndex(zic, configuration);
+            Handle<ZeroInflationTermStructure> inflationTs = inflationIndex->zeroInflationTermStructure();
+            vector<string> keys(parameters->zeroInflationTenors(zic).size());
 
-        string ccy = inflationIndex->currency().code();
-        Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
+            string ccy = inflationIndex->currency().code();
+            Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
 
-        Date date0 = asof_ - inflationTs->observationLag();
-        DayCounter dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
-        vector<Date> quoteDates;
-        vector<Time> zeroCurveTimes(1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
-        vector<Handle<Quote>> quotes;
-        QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days,
-                   "zero inflation tenors must not include t=0");
+            Date date0 = asof_ - inflationTs->observationLag();
+            DayCounter dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
+            vector<Date> quoteDates;
+            vector<Time> zeroCurveTimes(
+                1, -dc.yearFraction(inflationPeriod(date0, inflationTs->frequency()).first, asof_));
+            vector<Handle<Quote>> quotes;
+            QL_REQUIRE(parameters->zeroInflationTenors(zic).front() > 0 * Days,
+                       "zero inflation tenors must not include t=0");
 
-        for (auto& tenor : parameters->zeroInflationTenors(zic)) {
-            Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
-            zeroCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
-            quoteDates.push_back(asof_ + tenor);
-        }
-
-        for (Size i = 1; i < zeroCurveTimes.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i - 1])));
-            Handle<Quote> qh(q);
-            if (i == 1) {
-                // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
-                // for time t T0 < t < T1
-                quotes.push_back(qh);
+            for (auto& tenor : parameters->zeroInflationTenors(zic)) {
+                Date inflDate = inflationPeriod(date0 + tenor, inflationTs->frequency()).first;
+                zeroCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
+                quoteDates.push_back(asof_ + tenor);
             }
-            quotes.push_back(qh);
-            simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i - 1),
-                             std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
+
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            for (Size i = 1; i < zeroCurveTimes.size(); i++) {
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(inflationTs->zeroRate(quoteDates[i - 1])));
+                Handle<Quote> qh(q);
+                if (i == 1) {
+                    // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
+                    // for time t T0 < t < T1
+                    quotes.push_back(qh);
+                }
+                quotes.push_back(qh);
+                simDataTmp.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i - 1),
+                                 std::forward_as_tuple(q));
+                DLOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
+            }
+
+            // FIXME: Settlement days set to zero - needed for floating term structure implementation
+            boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
+            dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
+            zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(
+                new ZeroInflationCurveObserverMoving<Linear>(
+                    0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(), inflationTs->frequency(),
+                    inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes, inflationTs->seasonality()));
+
+            Handle<ZeroInflationTermStructure> its(zeroCurve);
+            its->enableExtrapolation();
+            boost::shared_ptr<ZeroInflationIndex> i =
+                ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
+            Handle<ZeroInflationIndex> zh(i);
+            zeroInflationIndices_.insert(pair<pair<string, string>, Handle<ZeroInflationIndex>>(
+                make_pair(Market::defaultConfiguration, zic), zh));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+
+            LOG("building " << zic << " zero inflation curve done");
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        // FIXME: Settlement days set to zero - needed for floating term structure implementation
-        boost::shared_ptr<ZeroInflationTermStructure> zeroCurve;
-        dc = ore::data::parseDayCounter(parameters->zeroInflationDayCounter(zic));
-        zeroCurve =
-            boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(new ZeroInflationCurveObserverMoving<Linear>(
-                0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(), inflationTs->frequency(),
-                inflationTs->indexIsInterpolated(), yts, zeroCurveTimes, quotes, inflationTs->seasonality()));
-
-        Handle<ZeroInflationTermStructure> its(zeroCurve);
-        its->enableExtrapolation();
-        boost::shared_ptr<ZeroInflationIndex> i =
-            ore::data::parseZeroInflationIndex(zic, false, Handle<ZeroInflationTermStructure>(its));
-        Handle<ZeroInflationIndex> zh(i);
-        zeroInflationIndices_.insert(
-            pair<pair<string, string>, Handle<ZeroInflationIndex>>(make_pair(Market::defaultConfiguration, zic), zh));
-
-        LOG("building " << zic << " zero inflation curve done");
     }
     LOG("zero inflation curves done");
 
     LOG("building yoy inflation curves...");
     for (const auto& yic : parameters->yoyInflationIndices()) {
+        try {
 
-        Handle<YoYInflationIndex> yoyInflationIndex = initMarket->yoyInflationIndex(yic, configuration);
-        Handle<YoYInflationTermStructure> yoyInflationTs = yoyInflationIndex->yoyInflationTermStructure();
-        vector<string> keys(parameters->yoyInflationTenors(yic).size());
+            Handle<YoYInflationIndex> yoyInflationIndex = initMarket->yoyInflationIndex(yic, configuration);
+            Handle<YoYInflationTermStructure> yoyInflationTs = yoyInflationIndex->yoyInflationTermStructure();
+            vector<string> keys(parameters->yoyInflationTenors(yic).size());
 
-        string ccy = yoyInflationIndex->currency().code();
-        Handle<YieldTermStructure> yts = discountCurve(ccy, configuration);
+            string ccy = yoyInflationIndex->currency().code();
+            Handle<YieldTermStructure> yts = initMarket->discountCurve(ccy, configuration);
 
-        Date date0 = asof_ - yoyInflationTs->observationLag();
-        DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));
-        vector<Date> quoteDates;
-        vector<Time> yoyCurveTimes(1,
-                                   -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
-        vector<Handle<Quote>> quotes;
-        QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days,
-                   "zero inflation tenors must not include t=0");
+            Date date0 = asof_ - yoyInflationTs->observationLag();
+            DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationDayCounter(yic));
+            vector<Date> quoteDates;
+            vector<Time> yoyCurveTimes(
+                1, -dc.yearFraction(inflationPeriod(date0, yoyInflationTs->frequency()).first, asof_));
+            vector<Handle<Quote>> quotes;
+            QL_REQUIRE(parameters->yoyInflationTenors(yic).front() > 0 * Days,
+                       "zero inflation tenors must not include t=0");
 
-        for (auto& tenor : parameters->yoyInflationTenors(yic)) {
-            Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
-            yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
-            quoteDates.push_back(asof_ + tenor);
-        }
-
-        for (Size i = 1; i < yoyCurveTimes.size(); i++) {
-            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i - 1])));
-            Handle<Quote> qh(q);
-            if (i == 1) {
-                // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
-                // for time t T0 < t < T1
-                quotes.push_back(qh);
+            for (auto& tenor : parameters->yoyInflationTenors(yic)) {
+                Date inflDate = inflationPeriod(date0 + tenor, yoyInflationTs->frequency()).first;
+                yoyCurveTimes.push_back(dc.yearFraction(asof_, inflDate));
+                quoteDates.push_back(asof_ + tenor);
             }
-            quotes.push_back(qh);
-            simData_.emplace(std::piecewise_construct,
-                             std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
-                             std::forward_as_tuple(q));
-            DLOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
+
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            for (Size i = 1; i < yoyCurveTimes.size(); i++) {
+                boost::shared_ptr<SimpleQuote> q(new SimpleQuote(yoyInflationTs->yoyRate(quoteDates[i - 1])));
+                Handle<Quote> qh(q);
+                if (i == 1) {
+                    // add the zero rate at first tenor to the T0 time, to ensure flat interpolation of T1 rate
+                    // for time t T0 < t < T1
+                    quotes.push_back(qh);
+                }
+                quotes.push_back(qh);
+                simDataTmp.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
+                                 std::forward_as_tuple(q));
+                DLOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
+            }
+
+            boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
+            // Note this is *not* a floating term structure, it is only suitable for sensi runs
+            // TODO: floating
+            yoyCurve =
+                boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
+                    0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
+                    yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
+                    yoyInflationTs->seasonality()));
+
+            Handle<YoYInflationTermStructure> its(yoyCurve);
+            its->enableExtrapolation();
+            boost::shared_ptr<YoYInflationIndex> i(yoyInflationIndex->clone(its));
+            Handle<YoYInflationIndex> zh(i);
+            yoyInflationIndices_.insert(pair<pair<string, string>, Handle<YoYInflationIndex>>(
+                make_pair(Market::defaultConfiguration, yic), zh));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        boost::shared_ptr<YoYInflationTermStructure> yoyCurve;
-        // Note this is *not* a floating term structure, it is only suitable for sensi runs
-        // TODO: floating
-        yoyCurve =
-            boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(new YoYInflationCurveObserverMoving<Linear>(
-                0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), yts, yoyCurveTimes, quotes,
-                yoyInflationTs->seasonality()));
-
-        Handle<YoYInflationTermStructure> its(yoyCurve);
-        its->enableExtrapolation();
-        boost::shared_ptr<YoYInflationIndex> i(yoyInflationIndex->clone(its));
-        Handle<YoYInflationIndex> zh(i);
-        yoyInflationIndices_.insert(
-            pair<pair<string, string>, Handle<YoYInflationIndex>>(make_pair(Market::defaultConfiguration, yic), zh));
     }
     LOG("yoy inflation curves done");
-    
+
     LOG("building commodity spots");
     for (const auto& name : parameters->commodityNames()) {
-        Real spot = initMarket->commoditySpot(name, configuration)->value();
-        DLOG("adding " << name << " commodity spot price");
-        boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
-        commoditySpots_.emplace(piecewise_construct, 
-            forward_as_tuple(Market::defaultConfiguration, name), forward_as_tuple(q));
-        simData_.emplace(piecewise_construct, 
-            forward_as_tuple(RiskFactorKey::KeyType::CommoditySpot, name), forward_as_tuple(q));
+        try {
+            Real spot = initMarket->commoditySpot(name, configuration)->value();
+            DLOG("adding " << name << " commodity spot price");
+            boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(spot);
+            commoditySpots_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
+                                    forward_as_tuple(q));
+            simData_.emplace(piecewise_construct, forward_as_tuple(RiskFactorKey::KeyType::CommoditySpot, name),
+                             forward_as_tuple(q));
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
+        }
     }
     LOG("commodity spots done");
 
     LOG("building commodity curves");
     for (const string& name : parameters->commodityNames()) {
-        
-        LOG("building commodity curve for " << name);
-        
-        // Time zero initial market commodity curve
-        Handle<PriceTermStructure> initialCommodityCurve = 
-            initMarket->commodityPriceCurve(name, configuration);
-        bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
+        try {
 
-        // Get prices at specified simulation tenors from time 0 market curve and place in quotes
-        vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
-        DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
-        vector<Time> times(simulationTenors.size());
-        vector<Handle<Quote>> quotes(simulationTenors.size());
+            LOG("building commodity curve for " << name);
 
-        for (Size i = 0; i < simulationTenors.size(); i++) {
-            times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
-            Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
-            boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
-            quotes[i] = Handle<Quote>(quote);
-            
-            // If we are simulating commodities, add the quote to simData_
-            if (parameters->commodityCurveSimulate()) {
-                simData_.emplace(piecewise_construct,
-                    forward_as_tuple(RiskFactorKey::KeyType::CommodityCurve, name, i),
-                    forward_as_tuple(quote));
+            // Time zero initial market commodity curve
+            Handle<PriceTermStructure> initialCommodityCurve = initMarket->commodityPriceCurve(name, configuration);
+            bool allowsExtrapolation = initialCommodityCurve->allowsExtrapolation();
+
+            // Get prices at specified simulation tenors from time 0 market curve and place in quotes
+            vector<Period> simulationTenors = parameters->commodityCurveTenors(name);
+            DayCounter commodityCurveDayCounter = parseDayCounter(parameters->commodityCurveDayCounter(name));
+            vector<Time> times(simulationTenors.size());
+            vector<Handle<Quote>> quotes(simulationTenors.size());
+
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            for (Size i = 0; i < simulationTenors.size(); i++) {
+                times[i] = commodityCurveDayCounter.yearFraction(asof_, asof_ + simulationTenors[i]);
+                Real price = initialCommodityCurve->price(times[i], allowsExtrapolation);
+                boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(price);
+                quotes[i] = Handle<Quote>(quote);
+
+                // If we are simulating commodities, add the quote to simData_
+                if (parameters->commodityCurveSimulate()) {
+                    simDataTmp.emplace(piecewise_construct,
+                                     forward_as_tuple(RiskFactorKey::KeyType::CommodityCurve, name, i),
+                                     forward_as_tuple(quote));
+                }
+            }
+
+            // Create a commodity price curve with simulation tenors as pillars and store
+            // Hard-coded linear interpolation here - may need to make this more dynamic
+            Handle<PriceTermStructure> simCommodityCurve(
+                boost::make_shared<InterpolatedPriceCurve<Linear>>(times, quotes, commodityCurveDayCounter));
+            simCommodityCurve->enableExtrapolation(allowsExtrapolation);
+
+            commodityCurves_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
+                                     forward_as_tuple(simCommodityCurve));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
             }
         }
-
-        // Create a commodity price curve with simulation tenors as pillars and store
-        // Hard-coded linear interpolation here - may need to make this more dynamic
-        Handle<PriceTermStructure> simCommodityCurve(boost::make_shared<InterpolatedPriceCurve<Linear>>(
-            times, quotes, commodityCurveDayCounter));
-        simCommodityCurve->enableExtrapolation(allowsExtrapolation);
-
-        commodityCurves_.emplace(piecewise_construct,
-            forward_as_tuple(Market::defaultConfiguration, name),
-            forward_as_tuple(simCommodityCurve));
     }
     LOG("commodity curves done");
 
     LOG("building commodity volatilities");
     for (const auto& name : parameters->commodityVolNames()) {
-        // Get initial base volatility structure
-        Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
+        try {
+            // Get initial base volatility structure
+            Handle<BlackVolTermStructure> baseVol = initMarket->commodityVolatility(name, configuration);
 
-        Handle<BlackVolTermStructure> newVol;
-        if (parameters->commodityVolSimulate()) {
-            Handle<Quote> spot = commoditySpot(name, configuration);
-            const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
-            QL_REQUIRE(!moneyness.empty(), "Commodity volatility moneyness for " << name << " should have at least one element");
-            const vector<Period>& expiries = parameters->commodityVolExpiries(name);
-            QL_REQUIRE(!expiries.empty(), "Commodity volatility expiries for " << name << " should have at least one element");
+            Handle<BlackVolTermStructure> newVol;
+            std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
+            if (parameters->commodityVolSimulate()) {
+                Handle<Quote> spot = commoditySpot(name, configuration);
+                const vector<Real>& moneyness = parameters->commodityVolMoneyness(name);
+                QL_REQUIRE(!moneyness.empty(),
+                           "Commodity volatility moneyness for " << name << " should have at least one element");
+                const vector<Period>& expiries = parameters->commodityVolExpiries(name);
+                QL_REQUIRE(!expiries.empty(),
+                           "Commodity volatility expiries for " << name << " should have at least one element");
 
-            // Create surface of quotes
-            vector<vector<Handle<Quote>>> quotes(moneyness.size(), vector<Handle<Quote>>(expiries.size()));
-            vector<Time> expiryTimes(expiries.size());
-            Size index = 0;
-            DayCounter dayCounter = baseVol->dayCounter();
+                // Create surface of quotes
+                vector<vector<Handle<Quote>>> quotes(moneyness.size(), vector<Handle<Quote>>(expiries.size()));
+                vector<Time> expiryTimes(expiries.size());
+                Size index = 0;
+                DayCounter dayCounter = baseVol->dayCounter();
 
-            for (Size i = 0; i < quotes.size(); i++) {
-                Real strike = moneyness[i] * spot->value();
-                for (Size j = 0; j < quotes[0].size(); j++) {
-                    if (i == 0) expiryTimes[j] = dayCounter.yearFraction(asof_, asof_ + expiries[j]);
-                    boost::shared_ptr<SimpleQuote> quote = boost::make_shared<SimpleQuote>(
-                        baseVol->blackVol(asof_ + expiries[j], strike));
-                    simData_.emplace(piecewise_construct, 
-                        forward_as_tuple(RiskFactorKey::KeyType::CommodityVolatility, name, index++),
-                        forward_as_tuple(quote));
-                    quotes[i][j] = Handle<Quote>(quote);
+                for (Size i = 0; i < quotes.size(); i++) {
+                    Real strike = moneyness[i] * spot->value();
+                    for (Size j = 0; j < quotes[0].size(); j++) {
+                        if (i == 0)
+                            expiryTimes[j] = dayCounter.yearFraction(asof_, asof_ + expiries[j]);
+                        boost::shared_ptr<SimpleQuote> quote =
+                            boost::make_shared<SimpleQuote>(baseVol->blackVol(asof_ + expiries[j], strike));
+                        simDataTmp.emplace(piecewise_construct,
+                                         forward_as_tuple(RiskFactorKey::KeyType::CommodityVolatility, name, index++),
+                                         forward_as_tuple(quote));
+                        quotes[i][j] = Handle<Quote>(quote);
+                    }
                 }
-            }
 
-            // Create volatility structure
-            if (moneyness.size() == 1) {
-                // We have a term structure of volatilities with no strike dependence
-                LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
-                newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
-                    0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes, quotes[0]));
+                // Create volatility structure
+                if (moneyness.size() == 1) {
+                    // We have a term structure of volatilities with no strike dependence
+                    LOG("Simulating commodity volatilites for " << name << " using BlackVarianceCurve3.");
+                    newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceCurve3>(
+                        0, NullCalendar(), baseVol->businessDayConvention(), dayCounter, expiryTimes, quotes[0]));
+                } else {
+                    // We have a volatility surface
+                    LOG("Simulating commodity volatilites for " << name << " using BlackVarianceSurfaceMoneynessSpot.");
+                    bool stickyStrike = true;
+                    newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
+                        baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, stickyStrike));
+                }
+
             } else {
-                // We have a volatility surface
-                LOG("Simulating commodity volatilites for " << name << " using BlackVarianceSurfaceMoneynessSpot.");
-                bool stickyStrike = true;
-                newVol = Handle<BlackVolTermStructure>(boost::make_shared<BlackVarianceSurfaceMoneynessSpot>(
-                    baseVol->calendar(), spot, expiryTimes, moneyness, quotes, dayCounter, stickyStrike));
+                string decayModeString = parameters->equityVolDecayMode();
+                DLOG("Deterministic commodity volatilities with decay mode " << decayModeString << " for " << name);
+                ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+                // Copy what was done for equity here
+                // May need to revisit when looking at commodity RFE
+                newVol = Handle<BlackVolTermStructure>(
+                    boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(baseVol, 0, NullCalendar(),
+                                                                                           decayMode, StickyStrike));
             }
 
-        } else {
-            string decayModeString = parameters->equityVolDecayMode();
-            DLOG("Deterministic commodity volatilities with decay mode " << decayModeString << " for " << name);
-            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
-            // Copy what was done for equity here
-            // May need to revisit when looking at commodity RFE
-            newVol = Handle<BlackVolTermStructure>(boost::make_shared<QuantExt::DynamicBlackVolTermStructure<tag::curve>>(
-                baseVol, 0, NullCalendar(), decayMode, StickyStrike));
+            newVol->enableExtrapolation(baseVol->allowsExtrapolation());
+
+            commodityVols_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
+                                   forward_as_tuple(newVol));
+            simData_.insert(simDataTmp.begin(), simDataTmp.end());
+
+            DLOG("Commodity volatility curve built for " << name);
+        } catch (const std::exception& e) {
+            if (continueOnError) {
+                ALOG("skipping this object: " << e.what());
+            } else {
+                QL_FAIL(e.what());
+            }
         }
-
-        newVol->enableExtrapolation(baseVol->allowsExtrapolation());
-
-        commodityVols_.emplace(piecewise_construct, forward_as_tuple(Market::defaultConfiguration, name),
-            forward_as_tuple(newVol));
-        
-        DLOG("Commodity volatility curve built for " << name);
     }
     LOG("commodity volatilities done");
 

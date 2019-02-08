@@ -60,7 +60,8 @@ namespace ore {
 namespace data {
 
 TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& params, const Loader& loader,
-                           const CurveConfigurations& curveConfigs, const Conventions& conventions, bool loadFixings)
+                           const CurveConfigurations& curveConfigs, const Conventions& conventions,
+                           const bool continueOnError, bool loadFixings)
     : MarketImpl(conventions) {
 
     // Fixings
@@ -117,7 +118,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
         }
 
         // order them
-        order(specs, curveConfigs, buildErrors);
+        order(specs, curveConfigs, buildErrors, continueOnError);
         bool swapIndicesBuilt = false;
 
         // Loop over each spec, build the curve and add it to the MarketImpl container.
@@ -823,11 +824,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     for (const auto& it : params.mapping(MarketObject::SwapIndexCurve, configuration.first)) {
                         const string& swapIndexName = it.first;
                         const string& discountIndex = it.second;
-
-                        addSwapIndex(swapIndexName, discountIndex, configuration.first);
-                        LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
-                        requiredSwapIndices[swapIndexName] =
-                            swapIndex(swapIndexName, configuration.first).currentLink();
+                        try {
+                            addSwapIndex(swapIndexName, discountIndex, configuration.first);
+                            LOG("Added SwapIndex " << swapIndexName << " with DiscountingIndex " << discountIndex);
+                            requiredSwapIndices[swapIndexName] =
+                                swapIndex(swapIndexName, configuration.first).currentLink();
+                        } catch (const std::exception& e) {
+                            WLOG("Failed to build swap index " << it.first << ": " << e.what());
+                        }
                     }
                     swapIndicesBuilt = true;
                 }
@@ -849,8 +853,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
             ALOG("Failed to build curve " << error.first << " due to error: " << error.second);
             errStr += "(" + error.first + ": " + error.second + "); " ;
         }
-
-        QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
+        if (!continueOnError) {
+            QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
+        }
     }
 
 } // CTOR

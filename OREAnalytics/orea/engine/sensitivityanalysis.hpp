@@ -67,7 +67,7 @@ public:
                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                         const Conventions& conventions, const bool recalibrateModels,
-                        const bool nonShiftedBaseCurrencyConversion = false);
+                        const bool nonShiftedBaseCurrencyConversion = false, const bool continueOnError = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -136,6 +136,8 @@ protected:
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    // if true, the processing is continued even on build errors
+    bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)

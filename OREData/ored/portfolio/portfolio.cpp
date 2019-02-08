@@ -127,6 +127,8 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
+    
+    QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
 
 Date Portfolio::maturity() const {
