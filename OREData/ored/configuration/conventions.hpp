@@ -27,9 +27,8 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
-#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp> // SubPeriodsCouponType
-
+#include <qle/indexes/bmaindexwrapper.hpp>
 
 namespace ore {
 namespace data {
@@ -690,7 +689,8 @@ public:
     //! Detailed constructor
     CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
-                                const string& strEom = "", const string& strIsResettable = "", const string& strFlatIndexIsResettable = "");
+                                const string& strEom = "", const string& strIsResettable = "",
+                                const string& strFlatIndexIsResettable = "");
     //@}
 
     //! \name Inspectors
@@ -744,19 +744,13 @@ public:
     //@{
     //! Default constructor
     CrossCcyFixFloatSwapConvention() {}
-    
+
     //! Detailed constructor
-    CrossCcyFixFloatSwapConvention(
-        const std::string& id, 
-        const std::string& settlementDays,
-        const std::string& settlementCalendar,
-        const std::string& settlementConvention,
-        const std::string& fixedCurrency,
-        const std::string& fixedFrequency,
-        const std::string& fixedConvention,
-        const std::string& fixedDayCounter,
-        const std::string& index,
-        const std::string& eom = "");
+    CrossCcyFixFloatSwapConvention(const std::string& id, const std::string& settlementDays,
+                                   const std::string& settlementCalendar, const std::string& settlementConvention,
+                                   const std::string& fixedCurrency, const std::string& fixedFrequency,
+                                   const std::string& fixedConvention, const std::string& fixedDayCounter,
+                                   const std::string& index, const std::string& eom = "");
     //@}
 
     //! \name Inspectors
@@ -921,7 +915,7 @@ public:
 
     //! Checks if we have a convention with the given \p id
     bool has(const std::string& id) const;
-    
+
     /*! Clear all conventions */
     void clear();
 
@@ -1020,8 +1014,8 @@ public:
     CmsSpreadOptionConvention() {}
     //! Detailed constructor
     CmsSpreadOptionConvention(const string& id, const string& strForwardStart, const string& strSpotDays,
-                                const string& strSwapTenor, const string& strFixingDays, const string& strCalendar,
-                                const string& strDayCounter, const string& strConvention);
+                              const string& strSwapTenor, const string& strFixingDays, const string& strCalendar,
+                              const string& strDayCounter, const string& strConvention);
     //@}
 
     //! \name Inspectors

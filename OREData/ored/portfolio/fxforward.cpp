@@ -37,7 +37,6 @@ void FxForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Currency soldCcy = parseCurrency(soldCurrency_);
     Date maturityDate = parseDate(maturityDate_);
 
-
     QL_REQUIRE(tradeActions().empty(), "TradeActions not supported for FxForward");
 
     try {

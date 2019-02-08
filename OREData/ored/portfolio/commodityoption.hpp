@@ -31,19 +31,15 @@ namespace data {
 
 //! Commodity option trade representation
 /*! \ingroup tradedata
-*/
+ */
 class CommodityOption : public Trade {
 public:
     //! Default constructor
     CommodityOption() : Trade("CommodityOption"), strike_(0.0), quantity_(0.0) {}
 
     //! Constructor
-    CommodityOption(const Envelope& env,
-        const OptionData& optionData,
-        const std::string& commodityName,
-        const std::string& currency,
-        QuantLib::Real strike,
-        QuantLib::Real quantity);
+    CommodityOption(const Envelope& env, const OptionData& optionData, const std::string& commodityName,
+                    const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity);
 
     //! Build underlying instrument and link pricing engine
     void build(const boost::shared_ptr<EngineFactory>& engineFactory);
@@ -71,5 +67,5 @@ private:
     QuantLib::Real quantity_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

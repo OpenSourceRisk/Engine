@@ -30,7 +30,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

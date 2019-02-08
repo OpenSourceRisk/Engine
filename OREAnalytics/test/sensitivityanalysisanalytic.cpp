@@ -20,7 +20,6 @@
 #include "testportfolio.hpp"
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -41,6 +40,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -116,8 +116,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketData->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-                               "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
+    simMarketData->setIndices(
+        {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
@@ -247,7 +247,7 @@ bool check(const Real reference, const Real value) {
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisAnalyticTest)
-		
+
 BOOST_AUTO_TEST_CASE(testSensitivities) {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
@@ -1417,8 +1417,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
                     ++foundCrossGammas;
                 } else {
                     if (!check(crossGamma, 0.0))
-                        BOOST_ERROR("Sensitivity analysis result " << key << " ("
-                                                                   << crossGamma
+                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << crossGamma
                                                                    << ") expected to be zero");
                     ++zeroCrossGammas;
                 }

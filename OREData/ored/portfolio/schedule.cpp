@@ -177,7 +177,8 @@ Schedule makeSchedule(const ScheduleData& data) {
 
         // 2) check if meta data is present, and if yes if it is consistent across schedules;
         //    the only exception is the term date convention, this is taken from the last schedule always
-        BusinessDayConvention convention = Null<BusinessDayConvention>(), termConvention = Unadjusted; // initialization prevents gcc warning
+        BusinessDayConvention convention = Null<BusinessDayConvention>(),
+                              termConvention = Unadjusted; // initialization prevents gcc warning
         Calendar calendar;
         Period tenor;
         DateGeneration::Rule rule = DateGeneration::Zero; // initialization prevents gcc warning
@@ -235,13 +236,13 @@ Schedule makeSchedule(const ScheduleData& data) {
         }
 
         // 4) Build schedule
-        return Schedule(
-            dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
-            hasConvention && hasConsistentConvention ? convention : Unadjusted,
-            hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
-            hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
-            hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
-            hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none, isRegular);
+        return Schedule(dates, hasCalendar && hasConsistentCalendar ? calendar : NullCalendar(),
+                        hasConvention && hasConsistentConvention ? convention : Unadjusted,
+                        hasTermConvention ? boost::optional<BusinessDayConvention>(termConvention) : boost::none,
+                        hasTenor && hasConsistentTenor ? boost::optional<Period>(tenor) : boost::none,
+                        hasRule && hasConsistentRule ? boost::optional<DateGeneration::Rule>(rule) : boost::none,
+                        hasEndOfMonth && hasConsistentEndOfMonth ? boost::optional<bool>(endOfMonth) : boost::none,
+                        isRegular);
     }
 }
 } // namespace data

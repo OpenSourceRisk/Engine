@@ -83,8 +83,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Handle<Quote> spot = market->fxSpot(source + target);
             Calendar cal = parseCalendar(legData_[i].fixingCalendar());
             fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
-                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
-                                                  cal, spot, sorTS, tarTS);
+                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), cal,
+                                                  spot, sorTS, tarTS);
             QL_REQUIRE(fxIndex, "Resetting XCCY - fxIndex failed to build");
 
             // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
@@ -108,22 +108,22 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         // handle fx resetting Ibor leg
 
         if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
-                // this is the reseting leg...
-                QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
-                // First coupon is the same (no reset or FX link)
-                // The reset are FX Linked
-                for (Size j = 1; j < legs_[i].size(); ++j) {
-                    boost::shared_ptr<FloatingRateCoupon> coupon =
-                        boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
-                    Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
-                                                                  -static_cast<Integer>(fxIndex->fixingDays()), Days);
-                    boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
-                        boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
-                                                                               fxIndex, invertFxIndex, coupon);
-                    // set the same pricer
-                    fxLinkedCoupon->setPricer(coupon->pricer());
-                    legs_[i][j] = fxLinkedCoupon;
-                }
+            // this is the reseting leg...
+            QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
+            // First coupon is the same (no reset or FX link)
+            // The reset are FX Linked
+            for (Size j = 1; j < legs_[i].size(); ++j) {
+                boost::shared_ptr<FloatingRateCoupon> coupon =
+                    boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
+                Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
+                                                                    -static_cast<Integer>(fxIndex->fixingDays()), Days);
+                boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
+                    boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
+                                                                           fxIndex, invertFxIndex, coupon);
+                // set the same pricer
+                fxLinkedCoupon->setPricer(coupon->pricer());
+                legs_[i][j] = fxLinkedCoupon;
+            }
         }
 
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
@@ -219,7 +219,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // set maturity
     maturity_ = legs_[0].back()->date();
     for (Size i = 1; i < legs_.size(); i++) {
-        QL_REQUIRE(legs_[i].size() > 0, "Leg " << i+1 << " of " << legs_.size() << " is empty.");
+        QL_REQUIRE(legs_[i].size() > 0, "Leg " << i + 1 << " of " << legs_.size() << " is empty.");
         Date d = legs_[i].back()->date();
         if (d > maturity_)
             maturity_ = d;

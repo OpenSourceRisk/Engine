@@ -88,8 +88,8 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
         initializeCube(cube);
     }
 
-    sensiCube_ = boost::make_shared<SensitivityCube>(cube, 
-        scenarioGenerator_->scenarioDescriptions(), scenarioGenerator_->shiftSizes());
+    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                     scenarioGenerator_->shiftSizes());
     initialized_ = true;
 }
 
@@ -122,7 +122,8 @@ void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory>
 
     LOG("Create scenario factory for sensitivity analysis");
     boost::shared_ptr<Scenario> baseScenario = simMarket_->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
+    boost::shared_ptr<ScenarioFactory> scenarioFactory =
+        scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
     LOG("Scenario factory created for sensitivity analysis");
 
     LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
@@ -154,11 +155,9 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) 
     cube = boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 }
 
-Real getShiftSize(const RiskFactorKey& key, 
-    const SensitivityScenarioData& sensiParams, 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket, 
-    const string& marketConfiguration) {
-    
+Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
+                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const string& marketConfiguration) {
+
     Date asof = simMarket->asofDate();
     RiskFactorKey::KeyType keytype = key.keytype;
     string keylabel = key.name;
@@ -203,8 +202,7 @@ Real getShiftSize(const RiskFactorKey& key,
         if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts =
-                simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
+            Handle<YieldTermStructure> yts = simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
             shiftMult = zeroRate;

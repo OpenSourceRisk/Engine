@@ -17,13 +17,13 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/log.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/capfloor/constantcapfloortermvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
@@ -230,16 +230,15 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
 }
 
 void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                            boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                            boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+                          boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                          boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->correlationPairs()) {
         vector<string> tokens;
         boost::split(tokens, spec, boost::is_any_of(":"));
         QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << spec);
         pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
         Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(pair.first, pair.second);
-        Handle<QuantExt::CorrelationTermStructure> initCurve =
-            initMarket->correlationCurve(pair.first, pair.second);
+        Handle<QuantExt::CorrelationTermStructure> initCurve = initMarket->correlationCurve(pair.first, pair.second);
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();
@@ -278,7 +277,7 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ScenarioSimMarketTest)
-		
+
 BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
@@ -314,4 +313,3 @@ BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-

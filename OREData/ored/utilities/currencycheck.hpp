@@ -25,7 +25,6 @@
 
 #include <string>
 
-
 namespace ore {
 namespace data {
 using std::string;

@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -116,8 +116,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5() 
     simMarketData->setDiscountCurveNames({"EUR", "GBP", "USD", "CHF", "JPY"});
     simMarketData->setYieldCurveTenors("", {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
                                             5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
-    simMarketData->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-                               "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
+    simMarketData->setIndices(
+        {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
@@ -166,8 +166,8 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> setupSimMarketData5Big
              7 * Years,   88 * Months, 89 * Months, 90 * Months, 91 * Months, 92 * Months, 10 * Years,  15 * Years,
              20 * Years,  25 * Years,  30 * Years,  50 * Years});
     simMarketData->setYieldCurveDayCounters("", "ACT/ACT");
-    simMarketData->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M",
-                               "GBP-LIBOR-6M",   "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
+    simMarketData->setIndices(
+        {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "USD-LIBOR-6M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     simMarketData->interpolation() = "LogLinear";
     simMarketData->extrapolate() = true;
 
@@ -606,7 +606,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     ObservationMode::instance().setMode(backupOm);
-    
+
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 } // namespace

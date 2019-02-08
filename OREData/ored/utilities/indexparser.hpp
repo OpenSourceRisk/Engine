@@ -28,10 +28,9 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <qle/indexes/bmaindexwrapper.hpp>
-
 
 namespace ore {
 namespace data {

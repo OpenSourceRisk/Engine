@@ -45,9 +45,7 @@ std::string to_string(const QuantLib::Date& date) {
     return std::string(buf);
 }
 
-string to_string(bool aBool) {
-    return aBool ? "true" : "false";
-}
+string to_string(bool aBool) { return aBool ? "true" : "false"; }
 
 } // namespace data
 } // namespace ore

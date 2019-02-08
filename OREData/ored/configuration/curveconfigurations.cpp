@@ -17,8 +17,8 @@
 */
 
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/marketdata/curvespecparser.hpp>
+#include <ored/utilities/log.hpp>
 
 #include <ql/errors.hpp>
 
@@ -28,10 +28,7 @@ namespace ore {
 namespace data {
 
 // check if map has an entry for the given id
-template <class T>
-bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) {
-    return m.count(id) == 1;
-}
+template <class T> bool has(const string& id, const map<string, boost::shared_ptr<T>>& m) { return m.count(id) == 1; }
 
 // utility function for getting a value from a map, throwing if it is not present
 template <class T> const boost::shared_ptr<T>& get(const string& id, const map<string, boost::shared_ptr<T>>& m) {
@@ -74,8 +71,8 @@ void addNodes(XMLDocument& doc, XMLNode* parent, const char* nodeName, map<strin
 // Utility function for constructing the set of quotes needed by CurveConfigs
 // Used in the quotes(...) method
 template <class T>
-void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& configs, bool insertAll, 
-    CurveSpec::CurveType curveType, const map<CurveSpec::CurveType, set<string>>& configIds) {
+void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& configs, bool insertAll,
+               CurveSpec::CurveType curveType, const map<CurveSpec::CurveType, set<string>>& configIds) {
 
     // For each config in configs, add its quotes to the set if the config's id is in the map configIds
     for (auto m : configs) {
@@ -86,13 +83,13 @@ void addQuotes(set<string>& quotes, const map<string, boost::shared_ptr<T>>& con
 }
 
 std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarketParameters> todaysMarketParams,
-    const set<string>& configurations) const {
-    
+                                             const set<string>& configurations) const {
+
     // If tmparams is not null, organise its specs in to a map [CurveType, set of CurveConfigID]
     map<CurveSpec::CurveType, set<string>> curveConfigIds;
     // This set of FXSpotSpec is used below
     set<boost::shared_ptr<FXSpotSpec>> fxSpotSpecs;
-    
+
     if (todaysMarketParams) {
         for (const auto& config : configurations) {
             for (const auto& strSpec : todaysMarketParams->curveSpecs(config)) {
@@ -100,7 +97,7 @@ std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarke
                 if (curveConfigIds.count(spec->baseType())) {
                     curveConfigIds[spec->baseType()].insert(spec->curveConfigID());
                 } else {
-                    curveConfigIds[spec->baseType()] = { spec->curveConfigID() };
+                    curveConfigIds[spec->baseType()] = {spec->curveConfigID()};
                 }
 
                 if (spec->baseType() == CurveSpec::CurveType::FX) {
@@ -123,19 +120,22 @@ std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarke
     addQuotes(quotes, cdsVolCurveConfigs_, insertAll, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
     addQuotes(quotes, baseCorrelationCurveConfigs_, insertAll, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
     addQuotes(quotes, inflationCurveConfigs_, insertAll, CurveSpec::CurveType::Inflation, curveConfigIds);
-    addQuotes(quotes, inflationCapFloorPriceSurfaceConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorPrice, curveConfigIds);
-    addQuotes(quotes, inflationCapFloorVolCurveConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
+    addQuotes(quotes, inflationCapFloorPriceSurfaceConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorPrice,
+              curveConfigIds);
+    addQuotes(quotes, inflationCapFloorVolCurveConfigs_, insertAll, CurveSpec::CurveType::InflationCapFloorVolatility,
+              curveConfigIds);
     addQuotes(quotes, equityCurveConfigs_, insertAll, CurveSpec::CurveType::Equity, curveConfigIds);
     addQuotes(quotes, equityVolCurveConfigs_, insertAll, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
     addQuotes(quotes, securityConfigs_, insertAll, CurveSpec::CurveType::Security, curveConfigIds);
     addQuotes(quotes, fxSpotConfigs_, insertAll, CurveSpec::CurveType::FX, curveConfigIds);
     addQuotes(quotes, commodityCurveConfigs_, insertAll, CurveSpec::CurveType::Commodity, curveConfigIds);
-    addQuotes(quotes, commodityVolatilityCurveConfigs_, insertAll, CurveSpec::CurveType::CommodityVolatility, curveConfigIds);
+    addQuotes(quotes, commodityVolatilityCurveConfigs_, insertAll, CurveSpec::CurveType::CommodityVolatility,
+              curveConfigIds);
     addQuotes(quotes, correlationCurveConfigs_, insertAll, CurveSpec::CurveType::Correlation, curveConfigIds);
 
-    // FX spot is special in that we generally do not enter a curve configuration for it. Above, we ran over the 
-    // curve configurations asking each for its quotes. We may end up missing FX spot quotes that are specified in a 
-    // TodaysMarketParameters but do not have a CurveConfig. If we have a TodaysMarketParameters instance we can add 
+    // FX spot is special in that we generally do not enter a curve configuration for it. Above, we ran over the
+    // curve configurations asking each for its quotes. We may end up missing FX spot quotes that are specified in a
+    // TodaysMarketParameters but do not have a CurveConfig. If we have a TodaysMarketParameters instance we can add
     // them here directly using it.
     for (const auto& fxss : fxSpotSpecs) {
         string strQuote = "FX/RATE/" + fxss->unitCcy() + "/" + fxss->ccy();
@@ -145,17 +145,13 @@ std::set<string> CurveConfigurations::quotes(boost::shared_ptr<const TodaysMarke
     return quotes;
 }
 
-bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const {
-    return has(curveID, yieldCurveConfigs_);
-}
+bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
     return get(curveID, yieldCurveConfigs_);
 }
 
-bool CurveConfigurations::hasFxVolCurveConfig(const string& curveID) const {
-    return has(curveID, fxVolCurveConfigs_);
-}
+bool CurveConfigurations::hasFxVolCurveConfig(const string& curveID) const { return has(curveID, fxVolCurveConfigs_); }
 
 const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::fxVolCurveConfig(const string& curveID) const {
     return get(curveID, fxVolCurveConfigs_);
@@ -247,17 +243,13 @@ CurveConfigurations::equityVolCurveConfig(const string& curveID) const {
     return get(curveID, equityVolCurveConfigs_);
 }
 
-bool CurveConfigurations::hasSecurityConfig(const string& curveID) const {
-    return has(curveID, securityConfigs_);
-}
+bool CurveConfigurations::hasSecurityConfig(const string& curveID) const { return has(curveID, securityConfigs_); }
 
 const boost::shared_ptr<SecurityConfig>& CurveConfigurations::securityConfig(const string& curveID) const {
     return get(curveID, securityConfigs_);
 }
 
-bool CurveConfigurations::hasFxSpotConfig(const string& curveID) const {
-    return has(curveID, fxSpotConfigs_);
-}
+bool CurveConfigurations::hasFxSpotConfig(const string& curveID) const { return has(curveID, fxSpotConfigs_); }
 
 const boost::shared_ptr<FXSpotConfig>& CurveConfigurations::fxSpotConfig(const string& curveID) const {
     return get(curveID, fxSpotConfigs_);
@@ -275,7 +267,8 @@ bool CurveConfigurations::hasCommodityVolatilityCurveConfig(const string& curveI
     return has(curveID, commodityVolatilityCurveConfigs_);
 }
 
-const boost::shared_ptr<CommodityVolatilityCurveConfig>& CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
+const boost::shared_ptr<CommodityVolatilityCurveConfig>&
+CurveConfigurations::commodityVolatilityCurveConfig(const string& curveID) const {
     return get(curveID, commodityVolatilityCurveConfigs_);
 }
 
@@ -283,7 +276,8 @@ bool CurveConfigurations::hasCorrelationCurveConfig(const string& curveID) const
     return has(curveID, correlationCurveConfigs_);
 }
 
-const boost::shared_ptr<CorrelationCurveConfig>& CurveConfigurations::correlationCurveConfig(const string& curveID) const {
+const boost::shared_ptr<CorrelationCurveConfig>&
+CurveConfigurations::correlationCurveConfig(const string& curveID) const {
     return get(curveID, correlationCurveConfigs_);
 }
 
@@ -303,8 +297,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "InflationCurves", "InflationCurve", inflationCurveConfigs_);
     parseNode(node, "InflationCapFloorPriceSurfaces", "InflationCapFloorPriceSurface",
               inflationCapFloorPriceSurfaceConfigs_);
-    parseNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility",
-              inflationCapFloorVolCurveConfigs_);
+    parseNode(node, "InflationCapFloorVolatilities", "InflationCapFloorVolatility", inflationCapFloorVolCurveConfigs_);
     parseNode(node, "Securities", "Security", securityConfigs_);
     parseNode(node, "FXSpots", "FXSpot", fxSpotConfigs_);
     parseNode(node, "CommodityCurves", "CommodityCurve", commodityCurveConfigs_);

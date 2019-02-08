@@ -17,9 +17,9 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/configuration/correlationcurveconfig.hpp>
+#include <ored/utilities/parsers.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -62,10 +62,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
-        "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"
-    };
+    vector<string> quotes = {"CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
+                             "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "EUR-CMS-10Y/EUR-CMS-1Y");
@@ -78,12 +76,11 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     BOOST_CHECK_EQUAL(config.dayCounter().name(), "Actual/365 (Fixed)");
     BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
     BOOST_CHECK_EQUAL(config.businessDayConvention(), BusinessDayConvention::Following);
-    
-    
+
     vector<Period> p;
     p.push_back(parsePeriod("1Y"));
     p.push_back(parsePeriod("2Y"));
-    
+
     BOOST_CHECK_EQUAL_COLLECTIONS(p.begin(), p.end(), config.optionTenors().begin(), config.optionTenors().end());
 }
 

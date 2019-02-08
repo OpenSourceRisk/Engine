@@ -24,10 +24,9 @@ using std::set;
 namespace ore {
 namespace analytics {
 
-SensitivityInMemoryStream::SensitivityInMemoryStream() 
-    : itCurrent_(records_.begin()) {}
+SensitivityInMemoryStream::SensitivityInMemoryStream() : itCurrent_(records_.begin()) {}
 
-SensitivityInMemoryStream::SensitivityInMemoryStream(const set<SensitivityRecord>& records) 
+SensitivityInMemoryStream::SensitivityInMemoryStream(const set<SensitivityRecord>& records)
     : records_(records), itCurrent_(records_.begin()) {}
 
 SensitivityRecord SensitivityInMemoryStream::next() {
@@ -56,5 +55,5 @@ void SensitivityInMemoryStream::add(const SensitivityRecord& sr) {
     reset();
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

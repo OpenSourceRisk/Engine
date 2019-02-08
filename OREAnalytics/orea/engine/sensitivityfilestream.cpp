@@ -34,9 +34,9 @@ using std::getline;
 namespace ore {
 namespace analytics {
 
-SensitivityFileStream::SensitivityFileStream(const string& fileName, 
-    char delim, const string& comment) : delim_(delim), comment_(comment), lineNo_(0) {
-    
+SensitivityFileStream::SensitivityFileStream(const string& fileName, char delim, const string& comment)
+    : delim_(delim), comment_(comment), lineNo_(0) {
+
     // Open the file
     file_.open(fileName);
     QL_REQUIRE(file_.is_open(), "error opening file " << fileName);
@@ -65,7 +65,8 @@ SensitivityRecord SensitivityFileStream::next() {
         boost::trim(line);
 
         // If line is empty or a comment line, skip to next
-        if (line.empty() || boost::starts_with(line, comment_)) continue;
+        if (line.empty() || boost::starts_with(line, comment_))
+            continue;
 
         // Try to parse line in to a SensitivityRecord
         DLOG("Processing line number " << lineNo_ << ": " << line);
@@ -92,17 +93,17 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     SensitivityRecord sr;
     sr.tradeId = entries[0];
     sr.isPar = parseBool(entries[1]);
-    
+
     auto p = deconstructFactor(entries[2]);
     sr.key_1 = p.first;
     sr.desc_1 = p.second;
     tryParseReal(entries[3], sr.shift_1);
-    
+
     p = deconstructFactor(entries[4]);
     sr.key_2 = p.first;
     sr.desc_2 = p.second;
     tryParseReal(entries[5], sr.shift_2);
-    
+
     sr.currency = entries[6];
     sr.baseNpv = parseReal(entries[7]);
     sr.delta = parseReal(entries[8]);
@@ -111,5 +112,5 @@ SensitivityRecord SensitivityFileStream::processRecord(const vector<string>& ent
     return sr;
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

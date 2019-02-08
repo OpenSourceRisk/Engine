@@ -64,8 +64,10 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     extrapolation_ = XMLUtils::getChildValueAsBool(node, "Extrapolation"); // defaults to true
 
     if (type_ == Type::NoDividends) {
-        QL_REQUIRE(fwdQuotes_.size() == 0, "Invalid EquityCurveConfig, no Quotes should be present when type=NoDividends");
-        QL_REQUIRE(divInterpNode == nullptr, "Invalid EquityCurveConfig, no DividendInterpolation should be present when type=NoDividends");
+        QL_REQUIRE(fwdQuotes_.size() == 0,
+                   "Invalid EquityCurveConfig, no Quotes should be present when type=NoDividends");
+        QL_REQUIRE(divInterpNode == nullptr,
+                   "Invalid EquityCurveConfig, no DividendInterpolation should be present when type=NoDividends");
     } else {
         QL_REQUIRE(fwdQuotes_.size() > 0, "Invalid EquityCurveConfig, Quotes should be present when type!=NoDividends");
     }

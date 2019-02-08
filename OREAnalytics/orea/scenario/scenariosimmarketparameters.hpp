@@ -25,9 +25,9 @@
 
 #include <boost/assign/list_of.hpp>
 
+#include <orea/scenario/scenario.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
-#include <orea/scenario/scenario.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
 namespace ore {
@@ -48,11 +48,9 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolIsCube_(false),
-          swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
-          fxVolIsSurface_(false), fxMoneyness_({0.0}), equityIsSurface_(false),
-          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), cprSimulate_(false),
-          correlationIsSurface_(false), correlationStrikes_({0.0}){
+        : extrapolate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
+          fxVolIsSurface_(false), fxMoneyness_({0.0}), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
+          equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
 
         // set defaults
         setDefaults();
@@ -93,7 +91,7 @@ public:
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads() const { return swapVolStrikeSpreads_; }
 
-    bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility);}
+    bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
     vector<string> capFloorVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
     const string& capFloorVolDayCounter(const string& key) const;
     const vector<Period>& capFloorVolExpiries(const string& key) const;
@@ -101,8 +99,8 @@ public:
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
-    bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability);}
-    bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate);}
+    bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
+    bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate); }
     vector<string> defaultNames() const { return paramsLookup(RiskFactorKey::KeyType::SurvivalProbability); }
     const string& defaultCurveDayCounter(const string& key) const;
     const string& defaultCurveCalendar(const string& key) const;
@@ -122,9 +120,9 @@ public:
     bool hasEquityForecastTenors(const string& key) const { return equityForecastTenors_.count(key) > 0; }
     vector<string> equityForecastCurves() const { return paramsLookup(RiskFactorKey::KeyType::EquityForecastCurve); }
     vector<string> equityDividendYields() const { return paramsLookup(RiskFactorKey::KeyType::DividendYield); }
-    bool simulateEquityForecastCurve() const { return paramsSimulate(RiskFactorKey::KeyType::EquityForecastCurve);}
+    bool simulateEquityForecastCurve() const { return paramsSimulate(RiskFactorKey::KeyType::EquityForecastCurve); }
     bool simulateDividendYield() const { return paramsSimulate(RiskFactorKey::KeyType::DividendYield); }
-    
+
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
     bool fxVolIsSurface() const { return fxVolIsSurface_; }
     const vector<Period>& fxVolExpiries() const { return fxVolExpiries_; }
@@ -155,7 +153,7 @@ public:
     const string& baseCorrelationDayCounter(const string& key) const;
 
     vector<string> cpiIndices() const { return paramsLookup(RiskFactorKey::KeyType::CPIIndex); }
-    vector<string> zeroInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCurve);}
+    vector<string> zeroInflationIndices() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCurve); }
     const string& zeroInflationDayCounter(const string& key) const;
     const vector<Period>& zeroInflationTenors(const string& key) const;
     bool hasZeroInflationTenors(const string& key) const { return zeroInflationTenors_.count(key) > 0; }
@@ -174,20 +172,24 @@ public:
     // Commodity volatility data getters
     bool commodityVolSimulate() const { return paramsSimulate(RiskFactorKey::KeyType::CommodityVolatility); }
     const std::string& commodityVolDecayMode() const { return commodityVolDecayMode_; }
-    std::vector<std::string> commodityVolNames() const { return paramsLookup(RiskFactorKey::KeyType::CommodityVolatility); }
+    std::vector<std::string> commodityVolNames() const {
+        return paramsLookup(RiskFactorKey::KeyType::CommodityVolatility);
+    }
     const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
     const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
     const std::string& commodityVolDayCounter(const std::string& commodityName) const;
-        
+
     bool simulateCorrelations() const { return paramsSimulate(RiskFactorKey::KeyType::Correlation); }
     bool correlationIsSurface() const { return correlationIsSurface_; }
     const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
     vector<std::string> correlationPairs() const { return paramsLookup(RiskFactorKey::KeyType::Correlation); }
     const string& correlationDayCounter(const string& index1, const string& index2) const;
-    const vector<Real>& correlationStrikes() const { return correlationStrikes_; }   
+    const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
 
     // Get the parameters
-    const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const { return params_; }
+    const std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>>& parameters() const {
+        return params_;
+    }
     //@}
 
     //! \name Setters
@@ -241,7 +243,7 @@ public:
     void setEquityForecastCurves(vector<string> names);
     void setEquityDividendCurves(vector<string> names);
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
-    void setEquityForecastTenors(const string& key, const vector<Period>& p); 
+    void setEquityForecastTenors(const string& key, const vector<Period>& p);
     void setSimulateEquityForecastCurve(bool simulate);
     void setSimulateDividendYield(bool simulate);
 
@@ -266,7 +268,7 @@ public:
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
     void setSecuritySpreadsSimulate(bool simulate);
-    void setSecurities(vector<string> names); 
+    void setSecurities(vector<string> names);
     void setRecoveryRates(vector<string> names);
     bool& cprSimulate() { return cprSimulate_; }
 
@@ -302,13 +304,13 @@ public:
         return commodityVolMoneyness_[commodityName];
     }
     void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
-    
+
     void setSimulateCorrelations(bool simulate);
     bool& correlationIsSurface() { return correlationIsSurface_; }
     vector<Period>& correlationExpiries() { return correlationExpiries_; }
     void setCorrelationPairs(vector<string> names);
     void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
-    vector<Real>& correlationStrikes(){ return correlationStrikes_; }
+    vector<Real>& correlationStrikes() { return correlationStrikes_; }
     //@}
 
     //! \name Serialisation
@@ -337,7 +339,7 @@ private:
     map<string, string> swapIndices_;
     string interpolation_;
     bool extrapolate_;
-    
+
     bool swapVolIsCube_;
     bool swapVolSimulateATMOnly_;
     vector<Period> swapVolTerms_;
@@ -404,10 +406,9 @@ private:
     vector<Period> correlationExpiries_;
     vector<Real> correlationStrikes_;
 
-    // Store sim market params as a map from RiskFactorKey::KeyType to a pair, 
+    // Store sim market params as a map from RiskFactorKey::KeyType to a pair,
     // boolean of whether to simulate and a set of curve names
     std::map<RiskFactorKey::KeyType, std::pair<bool, std::set<std::string>>> params_;
-
 };
 } // namespace analytics
 } // namespace ore

@@ -17,22 +17,22 @@
 */
 
 #include <algorithm>
-#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/utilities/log.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
-#include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <ql/cashflows/lineartsrpricer.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
+#include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 
-#include <ql/quotes/simplequote.hpp>
+#include <ql/math/optimization/levenbergmarquardt.hpp>
 #include <ql/math/optimization/problem.hpp>
 #include <ql/math/optimization/projectedconstraint.hpp>
 #include <ql/math/optimization/projection.hpp>
 #include <ql/models/calibrationhelper.hpp>
-#include <ql/math/optimization/levenbergmarquardt.hpp>
+#include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -47,14 +47,14 @@ namespace data {
 
 class CorrelationCurve::CalibrationFunction : public CostFunction {
 public:
-    CalibrationFunction(vector<Handle<Quote>>& correlations, const vector<boost::shared_ptr<QuantExt::CmsCapHelper> >& h,
+    CalibrationFunction(vector<Handle<Quote>>& correlations, const vector<boost::shared_ptr<QuantExt::CmsCapHelper>>& h,
                         const vector<Real>& weights, const Projection& projection)
         : correlations_(correlations), instruments_(h), weights_(weights), projection_(projection) {}
 
     virtual ~CalibrationFunction() {}
 
     virtual Real value(const Array& params) const {
-        
+
         for (Size i = 0; i < correlations_.size(); i++) {
             boost::shared_ptr<SimpleQuote> q = boost::dynamic_pointer_cast<SimpleQuote>(*correlations_[i]);
             q->setValue(params[i]);
@@ -84,17 +84,17 @@ public:
 
 private:
     vector<Handle<Quote>> correlations_;
-    mutable vector<boost::shared_ptr<QuantExt::CmsCapHelper> > instruments_;
+    mutable vector<boost::shared_ptr<QuantExt::CmsCapHelper>> instruments_;
     vector<Real> weights_;
     const Projection projection_;
 };
 
-void CorrelationCurve::calibrateCMSSpreadCorrelations(const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof, 
-        const vector<Handle<Quote>>& prices, vector<Handle<Quote>>& correlations,
-        boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve, const Conventions& conventions,
-        map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
-        map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-        map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
+void CorrelationCurve::calibrateCMSSpreadCorrelations(
+    const boost::shared_ptr<CorrelationCurveConfig>& config, Date asof, const vector<Handle<Quote>>& prices,
+    vector<Handle<Quote>>& correlations, boost::shared_ptr<QuantExt::CorrelationTermStructure>& curve,
+    const Conventions& conventions, map<string, boost::shared_ptr<SwapIndex>>& swapIndices,
+    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+    map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
 
     // build cms pricingengine
     string ccy = config->currency();
@@ -102,7 +102,7 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(const boost::shared_ptr<Co
     auto it = swaptionVolCurves.find(swaptionVol);
 
     if (it == swaptionVolCurves.end())
-        QL_FAIL("The swaption vol curve not found " << swaptionVol );
+        QL_FAIL("The swaption vol curve not found " << swaptionVol);
     Handle<SwaptionVolatilityStructure> vol(it->second->volTermStructure());
 
     string dc = "Yield/" + ccy + "/" + config->discountCurve();
@@ -114,59 +114,56 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(const boost::shared_ptr<Co
         QL_FAIL("The discount curve not found, " << dc);
     }
 
-    Real lower =
-        (vol->volatilityType() == ShiftedLognormal) ? 0.0001 : -2;
-    Real upper =
-        (vol->volatilityType() == ShiftedLognormal) ? 2.0000 : 2;
+    Real lower = (vol->volatilityType() == ShiftedLognormal) ? 0.0001 : -2;
+    Real upper = (vol->volatilityType() == ShiftedLognormal) ? 2.0000 : 2;
 
     LinearTsrPricer::Settings settings;
     settings.withRateBound(lower, upper);
 
     Real rev = 0;
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
-    
+
     boost::shared_ptr<QuantLib::CmsCouponPricer> cmsPricer =
         boost::make_shared<LinearTsrPricer>(vol, revQuote, yts, settings);
 
     // build cms spread pricer
     Handle<QuantExt::CorrelationTermStructure> ch(curve);
-    boost::shared_ptr<FloatingRateCouponPricer> pricer = 
-        boost::make_shared<QuantExt::LognormalCmsSpreadPricer> (cmsPricer, ch, yts, 16);
+    boost::shared_ptr<FloatingRateCouponPricer> pricer =
+        boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(cmsPricer, ch, yts, 16);
 
     // build instruments
     auto it3 = swapIndices.find(config->index1());
     if (it3 == swapIndices.end())
-        QL_FAIL("The swap index not found " << config->index1() );
+        QL_FAIL("The swap index not found " << config->index1());
 
     boost::shared_ptr<SwapIndex> index1 = it3->second;
-    
+
     auto it4 = swapIndices.find(config->index2());
     if (it4 == swapIndices.end())
-        QL_FAIL("The swap index not found " << config->index2() );
+        QL_FAIL("The swap index not found " << config->index2());
 
     boost::shared_ptr<SwapIndex> index2 = it4->second;
-   
-    vector<boost::shared_ptr<QuantExt::CmsCapHelper> > instruments;
+
+    vector<boost::shared_ptr<QuantExt::CmsCapHelper>> instruments;
 
     boost::shared_ptr<Convention> tmp = conventions.get(config->conventions());
     QL_REQUIRE(tmp, "no conventions found with id " << config->conventions());
-    
+
     boost::shared_ptr<CmsSpreadOptionConvention> conv = boost::dynamic_pointer_cast<CmsSpreadOptionConvention>(tmp);
-            QL_REQUIRE(conv != NULL, "CMS Correlation curves require CMSSpreadOption convention ");
+    QL_REQUIRE(conv != NULL, "CMS Correlation curves require CMSSpreadOption convention ");
     Period forwardStart = conv->forwardStart();
     Period spotDays = conv->spotDays();
     Period cmsTenor = conv->swapTenor();
     Natural fixingDays = conv->fixingDays();
     Calendar calendar = conv->calendar();
     DayCounter dcount = conv->dayCounter();
-    BusinessDayConvention bdc = conv->rollConvention(); 
-    
+    BusinessDayConvention bdc = conv->rollConvention();
 
     for (Size i = 0; i < prices.size(); i++) {
-        boost::shared_ptr<QuantExt::CmsCapHelper> inst = boost::make_shared<QuantExt::CmsCapHelper>(asof, index1, index2, yts, 
-                prices[i], correlations[i], config->optionTenors()[i], forwardStart, spotDays, cmsTenor, fixingDays, calendar,
-                dcount, bdc, pricer, cmsPricer);
-        instruments.push_back(inst); 
+        boost::shared_ptr<QuantExt::CmsCapHelper> inst = boost::make_shared<QuantExt::CmsCapHelper>(
+            asof, index1, index2, yts, prices[i], correlations[i], config->optionTenors()[i], forwardStart, spotDays,
+            cmsTenor, fixingDays, calendar, dcount, bdc, pricer, cmsPricer);
+        instruments.push_back(inst);
     }
 
     // set up problem
@@ -179,7 +176,7 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(const boost::shared_ptr<Co
     Projection proj(prms, all);
     ProjectedConstraint pc(constraint, proj);
 
-    boost::shared_ptr<OptimizationMethod> method = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8);  
+    boost::shared_ptr<OptimizationMethod> method = boost::make_shared<LevenbergMarquardt>(1E-8, 1E-8, 1E-8);
 
     CalibrationFunction c(correlations, instruments, weights, proj);
 
@@ -201,22 +198,22 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         const boost::shared_ptr<CorrelationCurveConfig>& config =
             curveConfigs.correlationCurveConfig(spec.curveConfigID());
 
-
         QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
                        config->dimension() == CorrelationCurveConfig::Dimension::Constant,
                    "Unsupported correlation curve building dimension");
 
-        
         vector<Period> optionTenors = config->optionTenors();
         vector<Handle<Quote>> quotes(optionTenors.size());
         bool failed = false;
-        
-        //search market data loader for quotes, logging missing ones
+
+        // search market data loader for quotes, logging missing ones
         for (auto& q : config->quotes()) {
             if (loader.has(q, asof)) {
-                boost::shared_ptr<CorrelationQuote> c = boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
-                
-                Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) - optionTenors.begin();
+                boost::shared_ptr<CorrelationQuote> c =
+                    boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
+
+                Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) -
+                         optionTenors.begin();
                 QL_REQUIRE(i < optionTenors.size(), "correlation tenor not found for " << q);
                 quotes[i] = c->quote();
             } else {
@@ -225,14 +222,12 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             }
         }
 
-        //fail if any quotes missing
+        // fail if any quotes missing
         if (failed) {
             QL_FAIL("could not build correlation curve");
         }
 
-
         vector<Handle<Quote>> corrs;
-
 
         for (Size i = 0; i < optionTenors.size(); i++) {
             if (config->quoteType() == CorrelationCurveConfig::QuoteType::Rate) {
@@ -242,41 +237,38 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                 corrs.push_back(q);
             }
         }
-        
-        //build correlation termsructure
+
+        // build correlation termsructure
         bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
         LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
-        
+
         boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
         if (flat) {
-            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(new QuantExt::FlatCorrelation(
-                0, config->calendar(), corrs[0],
-                config->dayCounter()));
+            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                new QuantExt::FlatCorrelation(0, config->calendar(), corrs[0], config->dayCounter()));
 
             corr->enableExtrapolation(config->extrapolate());
         } else {
             vector<Real> times(optionTenors.size());
-            
+
             for (Size i = 0; i < optionTenors.size(); ++i) {
-                Date d = config->calendar().advance(asof,
-                            optionTenors[i],
-                            config->businessDayConvention());
+                Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
 
                 times[i] = config->dayCounter().yearFraction(asof, d);
 
                 LOG("asof " << asof << ", tenor " << optionTenors[i] << ", date " << d << ", time " << times[i]);
             }
 
-            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(new QuantExt::InterpolatedCorrelationCurve<Linear>(
-                times, corrs, config->dayCounter(),
-                config->calendar()));
+            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
+                                                                   config->calendar()));
         }
 
-        
         if (config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
-            
+
             if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
-                calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices, yieldCurves, swaptionVolCurves);
+                calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices, yieldCurves,
+                                               swaptionVolCurves);
             } else {
                 QL_FAIL("price calibration only supported for CMSSpread correlations");
             }
@@ -284,9 +276,10 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
 
         LOG("Returning correlation surface for config " << spec);
         corr_ = corr;
-           
+
     } catch (std::exception& e) {
-        QL_FAIL("correlation curve building failed for curve " << spec.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
+        QL_FAIL("correlation curve building failed for curve " << spec.curveConfigID() << " on date "
+                                                               << io::iso_date(asof) << ": " << e.what());
     } catch (...) {
         QL_FAIL("correlation curve building failed: unknown error");
     }

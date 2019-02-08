@@ -30,15 +30,15 @@
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
-#include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
+#include <qle/termstructures/crossccybasisswaphelper.hpp>
+#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
+#include <qle/termstructures/discountratiomodifiedcurve.hpp>
 #include <qle/termstructures/immfraratehelper.hpp>
 #include <qle/termstructures/oibasisswaphelper.hpp>
 #include <qle/termstructures/oisratehelper.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/tenorbasisswaphelper.hpp>
-#include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
-#include <qle/termstructures/discountratiomodifiedcurve.hpp>
 
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/indexparser.hpp>
@@ -147,7 +147,8 @@ YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigura
             h_->enableExtrapolation();
         }
     } catch (QuantLib::Error& e) {
-        QL_FAIL("yield curve building failed for curve " << curveSpec_.curveConfigID() << " on date " << io::iso_date(asof) << ": " << e.what());
+        QL_FAIL("yield curve building failed for curve " << curveSpec_.curveConfigID() << " on date "
+                                                         << io::iso_date(asof) << ": " << e.what());
     } catch (std::exception& e) {
         QL_FAIL(e.what());
     } catch (...) {
@@ -509,8 +510,7 @@ void YieldCurve::buildZeroSpreadedCurve() {
     vector<Handle<Quote>> quoteHandles;
     for (Size i = 0; i < quoteIDs.size(); ++i) {
         if (boost::shared_ptr<MarketDatum> md = loader_.get(quoteIDs[i], asofDate_)) {
-            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZERO,
-                       "Market quote not of type zero.");
+            QL_REQUIRE(md->instrumentType() == MarketDatum::InstrumentType::ZERO, "Market quote not of type zero.");
             QL_REQUIRE(md->quoteType() == MarketDatum::QuoteType::YIELD_SPREAD,
                        "Market quote not of type yield spread.");
             boost::shared_ptr<ZeroQuote> zeroQuote = boost::dynamic_pointer_cast<ZeroQuote>(md);
@@ -520,8 +520,8 @@ void YieldCurve::buildZeroSpreadedCurve() {
         }
     }
 
-    QL_REQUIRE(!quotes.empty(), "Cannot build curve with spec " << 
-        curveSpec_.name() << " because there are no spread quotes");
+    QL_REQUIRE(!quotes.empty(),
+               "Cannot build curve with spec " << curveSpec_.name() << " because there are no spread quotes");
 
     string referenceCurveID = segment->referenceCurveID();
     boost::shared_ptr<YieldCurve> referenceCurve;
@@ -673,7 +673,8 @@ void YieldCurve::buildBootstrappedCurve() {
 
 void YieldCurve::buildDiscountRatioCurve() {
     QL_REQUIRE(curveSegments_.size() == 1, "A discount ratio curve must contain exactly one segment");
-    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::DiscountRatio, "The curve segment is not of type 'DiscountRatio'.");
+    QL_REQUIRE(curveSegments_[0]->type() == YieldCurveSegment::Type::DiscountRatio,
+               "The curve segment is not of type 'DiscountRatio'.");
 
     boost::shared_ptr<DiscountRatioYieldCurveSegment> segment =
         boost::dynamic_pointer_cast<DiscountRatioYieldCurveSegment>(curveSegments_[0]);
@@ -682,10 +683,12 @@ void YieldCurve::buildDiscountRatioCurve() {
     boost::shared_ptr<YieldCurve> baseCurve = getYieldCurve(segment->baseCurveCurrency(), segment->baseCurveId());
     QL_REQUIRE(baseCurve, "The base curve '" << segment->baseCurveId() << "' cannot be empty");
 
-    boost::shared_ptr<YieldCurve> numCurve = getYieldCurve(segment->numeratorCurveCurrency(), segment->numeratorCurveId());
+    boost::shared_ptr<YieldCurve> numCurve =
+        getYieldCurve(segment->numeratorCurveCurrency(), segment->numeratorCurveId());
     QL_REQUIRE(numCurve, "The numerator curve '" << segment->numeratorCurveId() << "' cannot be empty");
 
-    boost::shared_ptr<YieldCurve> denCurve = getYieldCurve(segment->denominatorCurveCurrency(), segment->denominatorCurveId());
+    boost::shared_ptr<YieldCurve> denCurve =
+        getYieldCurve(segment->denominatorCurveCurrency(), segment->denominatorCurveId());
     QL_REQUIRE(denCurve, "The denominator curve '" << segment->denominatorCurveId() << "' cannot be empty");
 
     p_ = boost::make_shared<DiscountRatioModifiedCurve>(baseCurve->handle(), numCurve->handle(), denCurve->handle());
@@ -695,8 +698,9 @@ boost::shared_ptr<YieldCurve> YieldCurve::getYieldCurve(const string& ccy, const
     if (id != curveConfig_->curveID() && !id.empty()) {
         string idLookup = yieldCurveKey(parseCurrency(ccy), id, asofDate_);
         map<string, boost::shared_ptr<YieldCurve>>::const_iterator it = requiredYieldCurves_.find(idLookup);
-        QL_REQUIRE(it != requiredYieldCurves_.end(), "The curve '" << idLookup <<
-            "' required in the building of the curve '" << curveSpec_.name() << "' was not found.");
+        QL_REQUIRE(it != requiredYieldCurves_.end(), "The curve '" << idLookup
+                                                                   << "' required in the building of the curve '"
+                                                                   << curveSpec_.name() << "' was not found.");
         return it->second;
     } else {
         return nullptr;
@@ -749,9 +753,9 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
                         indexName = depositConvention->index() + "-1W";
                         index = parseIborIndex(indexName);
                     }
-                    depositHelper.reset(new DepositRateHelper(hQuote, depositTerm, fwdStartDays, index->fixingCalendar(),
-                                                              index->businessDayConvention(), index->endOfMonth(),
-                                                              index->dayCounter()));
+                    depositHelper.reset(new DepositRateHelper(hQuote, depositTerm, fwdStartDays,
+                                                              index->fixingCalendar(), index->businessDayConvention(),
+                                                              index->endOfMonth(), index->dayCounter()));
                 } else {
                     stringstream ss;
                     ss << depositConvention->index() << "-" << io::short_period(depositTerm);
@@ -762,9 +766,9 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
             } else {
                 QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
                                                      "must be expressed in days.");
-                depositHelper.reset(new DepositRateHelper(hQuote, depositTerm, fwdStartDays, depositConvention->calendar(),
-                                                          depositConvention->convention(), depositConvention->eom(),
-                                                          depositConvention->dayCounter()));
+                depositHelper.reset(new DepositRateHelper(
+                    hQuote, depositTerm, fwdStartDays, depositConvention->calendar(), depositConvention->convention(),
+                    depositConvention->eom(), depositConvention->dayCounter()));
             }
             instruments.push_back(depositHelper);
         }
@@ -841,7 +845,8 @@ void YieldCurve::addFras(const boost::shared_ptr<YieldCurveSegment>& segment,
                 immFraQuote = boost::dynamic_pointer_cast<ImmFraQuote>(marketQuote);
                 Size imm1 = immFraQuote->imm1();
                 Size imm2 = immFraQuote->imm2();
-                fraHelper = boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
+                fraHelper =
+                    boost::make_shared<ImmFraRateHelper>(immFraQuote->quote(), imm1, imm2, fraConvention->index());
             } else if (marketQuote->instrumentType() == MarketDatum::InstrumentType::FRA) {
                 boost::shared_ptr<FRAQuote> fraQuote;
                 fraQuote = boost::dynamic_pointer_cast<FRAQuote>(marketQuote);
@@ -948,16 +953,17 @@ void YieldCurve::addSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
             if (swapConvention->hasSubPeriod()) {
                 swapHelper = boost::make_shared<SubPeriodsSwapHelper>(
                     swapQuote->quote(), swapTenor, Period(swapConvention->fixedFrequency()),
-                    swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(), swapConvention->fixedConvention(),
-                    Period(swapConvention->floatFrequency()), swapConvention->index(),
-                    swapConvention->index()->dayCounter(),
+                    swapConvention->fixedCalendar(), swapConvention->fixedDayCounter(),
+                    swapConvention->fixedConvention(), Period(swapConvention->floatFrequency()),
+                    swapConvention->index(), swapConvention->index()->dayCounter(),
                     discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
                     swapConvention->subPeriodsCouponType());
             } else {
                 swapHelper = boost::make_shared<SwapRateHelper>(
                     swapQuote->quote(), swapTenor, swapConvention->fixedCalendar(), swapConvention->fixedFrequency(),
                     swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), swapConvention->index(),
-                    Handle<Quote>(), 0 * Days, discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
+                    Handle<Quote>(), 0 * Days,
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>());
             }
 
             instruments.push_back(swapHelper);
@@ -1024,9 +1030,10 @@ void YieldCurve::addAverageOISs(const boost::shared_ptr<YieldCurveSegment>& segm
 
                 // Create an average OIS helper if we do.
                 Period AverageOisTenor = swapQuote->term();
-                QL_REQUIRE(AverageOisTenor == basisQuote->maturity(), "The swap "
-                                                                      "and basis swap components of the Average OIS must "
-                                                                      "have the same maturity.");
+                QL_REQUIRE(AverageOisTenor == basisQuote->maturity(),
+                           "The swap "
+                           "and basis swap components of the Average OIS must "
+                           "have the same maturity.");
                 boost::shared_ptr<RateHelper> averageOisHelper(new QuantExt::AverageOISRateHelper(
                     swapQuote->quote(), averageOisConvention->spotLag() * Days, AverageOisTenor,
                     averageOisConvention->fixedTenor(), averageOisConvention->fixedDayCounter(),
@@ -1117,11 +1124,12 @@ void YieldCurve::addTenorBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& 
                                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>()));
             } else {
                 // ...or Libor vs Libor?
-                basisSwapHelper.reset(new TenorBasisSwapHelper(
-                    basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex, basisSwapConvention->shortPayTenor(),
-                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
-                    basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
-                    basisSwapConvention->subPeriodsCouponType()));
+                basisSwapHelper.reset(
+                    new TenorBasisSwapHelper(basisSwapQuote->quote(), basisSwapTenor, longIndex, shortIndex,
+                                             basisSwapConvention->shortPayTenor(),
+                                             discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(),
+                                             basisSwapConvention->spreadOnShort(), basisSwapConvention->includeSpread(),
+                                             basisSwapConvention->subPeriodsCouponType()));
             }
             instruments.push_back(basisSwapHelper);
         }
@@ -1209,7 +1217,7 @@ void YieldCurve::addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment
 }
 
 void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-    vector<boost::shared_ptr<RateHelper>>& instruments) {
+                                  vector<boost::shared_ptr<RateHelper>>& instruments) {
 
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
@@ -1217,14 +1225,14 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
     boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
     QL_REQUIRE(convention->type() == Convention::Type::BMABasisSwap,
-        "Conventions ID does not give bma basis swap conventions.");
+               "Conventions ID does not give bma basis swap conventions.");
     boost::shared_ptr<BMABasisSwapConvention> bmaBasisSwapConvention =
         boost::dynamic_pointer_cast<BMABasisSwapConvention>(convention);
 
     boost::shared_ptr<SimpleYieldCurveSegment> bmaBasisSwapSegment =
         boost::dynamic_pointer_cast<SimpleYieldCurveSegment>(segment);
     QL_REQUIRE(bmaBasisSwapSegment, "BMA basis swap segment of " + curveSpec_.ccy() + "/" + curveSpec_.curveConfigID() +
-        " did not successfully cast to a BMA basis swap yield curve segment!");
+                                        " did not successfully cast to a BMA basis swap yield curve segment!");
 
     // TODO: should be checking here whether or not the bma index is forwarding on this curve. either way, we make sure!
     boost::shared_ptr<BMAIndexWrapper> bmaIndex = bmaBasisSwapConvention->bmaIndex();
@@ -1239,12 +1247,11 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
     it = requiredYieldCurves_.find(liborCurveID);
     if (it != requiredYieldCurves_.end()) {
         liborCurve = it->second;
-    }
-    else {
+    } else {
         QL_FAIL("The libor side projection curve, " << liborCurveID
-            << ", required in the building "
-            "of the curve, "
-            << curveSpec_.name() << ", was not found.");
+                                                    << ", required in the building "
+                                                       "of the curve, "
+                                                    << curveSpec_.name() << ", was not found.");
     }
     liborIndex = liborIndex->clone(liborCurve->handle());
 
@@ -1256,23 +1263,16 @@ void YieldCurve::addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& se
         if (marketQuote) {
             boost::shared_ptr<BMASwapQuote> bmaBasisSwapQuote;
             QL_REQUIRE(marketQuote->instrumentType() == MarketDatum::InstrumentType::BMA_SWAP,
-                "Market quote not of type bma swap.");
-            QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO,
-                "Market quote not of type ratio.");
+                       "Market quote not of type bma swap.");
+            QL_REQUIRE(marketQuote->quoteType() == MarketDatum::QuoteType::RATIO, "Market quote not of type ratio.");
             bmaBasisSwapQuote = boost::dynamic_pointer_cast<BMASwapQuote>(marketQuote);
 
             // Create bma basis swap helper if we do.
             boost::shared_ptr<RateHelper> bmaSwapHelper;
-            bmaSwapHelper.reset(new BMASwapRateHelper(
-                bmaBasisSwapQuote->quote(),
-                bmaBasisSwapQuote->maturity(),
-                bmaIndex->fixingDays(),
-                bmaIndex->fixingCalendar(),
-                bmaBasisSwapQuote->term(),
-                bmaIndex->businessDayConvention(),
-                bmaIndex->dayCounter(),
-                bmaIndex->bma(),
-                liborIndex));
+            bmaSwapHelper.reset(new BMASwapRateHelper(bmaBasisSwapQuote->quote(), bmaBasisSwapQuote->maturity(),
+                                                      bmaIndex->fixingDays(), bmaIndex->fixingCalendar(),
+                                                      bmaBasisSwapQuote->term(), bmaIndex->businessDayConvention(),
+                                                      bmaIndex->dayCounter(), bmaIndex->bma(), liborIndex));
             instruments.push_back(bmaSwapHelper);
         }
     }
@@ -1351,9 +1351,10 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
                        "Market quote not of type FX forward.");
             fxForwardQuote = boost::dynamic_pointer_cast<FXForwardQuote>(marketQuote);
 
-            QL_REQUIRE(fxSpotQuote->unitCcy() == fxForwardQuote->unitCcy() && fxSpotQuote->ccy() == fxForwardQuote->ccy(),
-                       "Currency mismatch between spot \"" << spotRateID << "\" and fwd \"" << fxForwardQuoteIDs[i].first
-                                                           << "\"");
+            QL_REQUIRE(fxSpotQuote->unitCcy() == fxForwardQuote->unitCcy() &&
+                           fxSpotQuote->ccy() == fxForwardQuote->ccy(),
+                       "Currency mismatch between spot \"" << spotRateID << "\" and fwd \""
+                                                           << fxForwardQuoteIDs[i].first << "\"");
 
             // QL expects the FX Fwd quote to be per spot, not points.
             Handle<Quote> qlFXForwardQuote(
@@ -1515,47 +1516,48 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
             if (!isResettableSwap) {
                 boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisSwapHelper(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
-                    basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(), flatIndex,
-                    spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
+                    basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
+                    flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
                     flatIndex->currency().code() != fxSpotQuote->unitCcy()));
                 instruments.push_back(basisSwapHelper);
-            }
-            else { // the quote is for a cross currency basis swap with a resetting notional
+            } else { // the quote is for a cross currency basis swap with a resetting notional
                 bool resetsOnFlatLeg = basisSwapConvention->FlatIndexIsResettable();
-                // the convention here is to call the resetting leg the "domestic leg", 
+                // the convention here is to call the resetting leg the "domestic leg",
                 // and the constant notional leg the "foreign leg"
                 bool spreadOnForeignCcy = resetsOnFlatLeg ? true : false;
                 boost::shared_ptr<IborIndex> foreignIndex = resetsOnFlatLeg ? spreadIndex : flatIndex;
                 Handle<YieldTermStructure> foreignDiscount = resetsOnFlatLeg ? spreadDiscountCurve : flatDiscountCurve;
                 boost::shared_ptr<IborIndex> domesticIndex = resetsOnFlatLeg ? flatIndex : spreadIndex;
                 Handle<YieldTermStructure> domesticDiscount = resetsOnFlatLeg ? flatDiscountCurve : spreadDiscountCurve;
-                bool invertFxQuote = (foreignIndex->currency().code() != fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
+                bool invertFxQuote = (foreignIndex->currency().code() !=
+                                      fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
                 boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
-                    foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(), Handle<YieldTermStructure>(),
-                    basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote));
+                    foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
+                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote));
                 instruments.push_back(basisSwapHelper);
             }
         }
     }
 }
-void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment, 
-    vector<boost::shared_ptr<RateHelper>>& instruments) {
+void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+                                          vector<boost::shared_ptr<RateHelper>>& instruments) {
 
     DLOG("Adding Segment " << segment->typeID() << " with conventions \"" << segment->conventionsID() << "\"");
 
     // Get the conventions associated with the segment
     boost::shared_ptr<Convention> convention = conventions_.get(segment->conventionsID());
     QL_REQUIRE(convention, "No conventions found with ID: " << segment->conventionsID());
-    QL_REQUIRE(convention->type() == Convention::Type::CrossCcyFixFloat, 
-        "Conventions ID does not give cross currency fix float swap conventions.");
+    QL_REQUIRE(convention->type() == Convention::Type::CrossCcyFixFloat,
+               "Conventions ID does not give cross currency fix float swap conventions.");
     boost::shared_ptr<CrossCcyFixFloatSwapConvention> swapConvention =
         boost::dynamic_pointer_cast<CrossCcyFixFloatSwapConvention>(convention);
 
-    QL_REQUIRE(swapConvention->fixedCurrency() == currency_, "The yield curve currency must " << 
-        "equal the cross currency fix float swap's fixed leg currency");
+    QL_REQUIRE(swapConvention->fixedCurrency() == currency_,
+               "The yield curve currency must "
+                   << "equal the cross currency fix float swap's fixed leg currency");
 
     // Cast the segment
     boost::shared_ptr<CrossCcyYieldCurveSegment> swapSegment =
@@ -1566,8 +1568,9 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     Currency floatLegCcy = floatIndex->currency();
     string floatLegDiscId = yieldCurveKey(floatLegCcy, swapSegment->foreignDiscountCurveID(), asofDate_);
     auto it = requiredYieldCurves_.find(floatLegDiscId);
-    QL_REQUIRE(it != requiredYieldCurves_.end(), "The discount curve " << floatLegDiscId << 
-        " required in the building of curve " << curveSpec_.name() << " was not found.");
+    QL_REQUIRE(it != requiredYieldCurves_.end(), "The discount curve " << floatLegDiscId
+                                                                       << " required in the building of curve "
+                                                                       << curveSpec_.name() << " was not found.");
     Handle<YieldTermStructure> floatLegDisc = it->second->handle();
 
     // Retrieve the projection curve on the float leg. If empty, use discount curve.
@@ -1577,12 +1580,13 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     } else {
         floatLegProjId = yieldCurveKey(floatLegCcy, floatLegProjId, asofDate_);
         it = requiredYieldCurves_.find(floatLegProjId);
-        QL_REQUIRE(it != requiredYieldCurves_.end(), "The projection curve " << floatLegProjId <<
-            " required in the building of curve " << curveSpec_.name() << " was not found.");
+        QL_REQUIRE(it != requiredYieldCurves_.end(), "The projection curve " << floatLegProjId
+                                                                             << " required in the building of curve "
+                                                                             << curveSpec_.name() << " was not found.");
         floatIndex = floatIndex->clone(it->second->handle());
     }
 
-    // Create the FX spot quote for the helper. The quote needs to be number of units of fixed leg 
+    // Create the FX spot quote for the helper. The quote needs to be number of units of fixed leg
     // currency for 1 unit of float leg currency. We convert the market quote here if needed.
     string fxSpotId = swapSegment->spotRateID();
     boost::shared_ptr<MarketDatum> md = loader_.get(fxSpotId, asofDate_);
@@ -1596,28 +1600,29 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     } else if (mdUnitCcy == currency_ && mdCcy == floatLegCcy) {
         fxSpotQuote = Handle<Quote>(boost::make_shared<SimpleQuote>(1.0 / fxSpotMd->quote()->value()));
     } else {
-        QL_FAIL("The FX spot market quote " << mdUnitCcy << "/" << mdCcy << " cannot be used " << 
-            "in the building of the curve " << curveSpec_.name() << ".");
+        QL_FAIL("The FX spot market quote " << mdUnitCcy << "/" << mdCcy << " cannot be used "
+                                            << "in the building of the curve " << curveSpec_.name() << ".");
     }
 
     // Create the helpers
     auto quoteIds = swapSegment->quotes();
     for (Size i = 0; i < quoteIds.size(); i++) {
-        
+
         // Throws if quote not found
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(quoteIds[i], asofDate_);
 
         // Check that we have a valid basis swap quote
         if (marketQuote) {
-            boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote = 
+            boost::shared_ptr<CrossCcyFixFloatSwapQuote> swapQuote =
                 boost::dynamic_pointer_cast<CrossCcyFixFloatSwapQuote>(marketQuote);
             QL_REQUIRE(swapQuote, "Market quote should be of type 'CrossCcyFixFloatSwapQuote'");
 
             // Create the helper
             boost::shared_ptr<RateHelper> helper = boost::make_shared<CrossCcyFixFloatSwapHelper>(
-                swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(), 
-                swapConvention->settlementConvention(), swapQuote->maturity(), currency_, swapConvention->fixedFrequency(), 
-                swapConvention->fixedConvention(), swapConvention->fixedDayCounter(), floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
+                swapQuote->quote(), fxSpotQuote, swapConvention->settlementDays(), swapConvention->settlementCalendar(),
+                swapConvention->settlementConvention(), swapQuote->maturity(), currency_,
+                swapConvention->fixedFrequency(), swapConvention->fixedConvention(), swapConvention->fixedDayCounter(),
+                floatIndex, floatLegDisc, Handle<Quote>(), swapConvention->eom());
 
             instruments.push_back(helper);
         }

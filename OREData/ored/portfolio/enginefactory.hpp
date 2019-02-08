@@ -36,7 +36,6 @@
 #include <set>
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using std::map;

@@ -254,7 +254,7 @@ void OREApp::readSetup() {
         (params_->hasGroup("baseScenario") && params_->get("baseScenario", "active") == "Y") ? true : false;
 
     continueOnError_ = false;
-    if(params_->has("setup", "continueOnError"))
+    if (params_->has("setup", "continueOnError"))
         continueOnError_ = parseBool(params_->get("setup", "continueOnError"));
 }
 

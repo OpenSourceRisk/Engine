@@ -83,7 +83,6 @@
 
 #include <map>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

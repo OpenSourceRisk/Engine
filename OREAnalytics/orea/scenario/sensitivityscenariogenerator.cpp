@@ -21,10 +21,10 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ostream>
+#include <ql/math/comparison.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
-#include <ql/math/comparison.hpp>
 
 #include <algorithm>
 
@@ -46,7 +46,7 @@ SensitivityScenarioGenerator::SensitivityScenarioGenerator(
       sensiScenarioFactory_(sensiScenarioFactory), overrideTenors_(overrideTenors), continueOnError_(continueOnError) {
 
     QL_REQUIRE(sensitivityData_, "SensitivityScenarioGenerator: sensitivityData is null");
-    
+
     generateScenarios();
 }
 
@@ -69,9 +69,7 @@ struct findPair {
     }
 };
 
-bool close(const Real& t_1, const Real& t_2) {
-    return QuantLib::close(t_1, t_2);
-}
+bool close(const Real& t_1, const Real& t_2) { return QuantLib::close(t_1, t_2); }
 
 bool vectorEqual(const vector<Real>& v_1, const vector<Real>& v_2) {
     return (v_1.size() == v_2.size() && std::equal(v_1.begin(), v_1.end(), v_2.begin(), close));
@@ -252,7 +250,7 @@ bool tryGetBaseScenarioValue(const boost::shared_ptr<Scenario> baseScenario, con
         value = baseScenario->get(key);
         return true;
     } catch (const std::exception& e) {
-        if(continueOnError) {
+        if (continueOnError) {
             ALOG("skip scenario generation for key " << key << ": " << e.what());
         } else {
             QL_FAIL(e.what());
@@ -311,7 +309,8 @@ void SensitivityScenarioGenerator::generateFxScenarios(bool up) {
         scenario->add(key, newRate);
 
         // Store absolute shift size
-        if (up) shiftSizes_[key] = newRate - rate;
+        if (up)
+            shiftSizes_[key] = newRate - rate;
 
         // Give the scenario a label
         scenario->label(to_string(scenarioDescriptions_.back()));
@@ -352,7 +351,8 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
         scenario->add(key, newRate);
 
         // Store absolute shift size
-        if (up) shiftSizes_[key] = newRate - rate;
+        if (up)
+            shiftSizes_[key] = newRate - rate;
 
         // Give the scenario a label
         scenario->label(to_string(scenarioDescriptions_.back()));
@@ -368,7 +368,8 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // Log an ALERT if some currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->ccys()) {
-        if (sensitivityData_->discountCurveShiftData().find(sim_ccy) == sensitivityData_->discountCurveShiftData().end()) {
+        if (sensitivityData_->discountCurveShiftData().find(sim_ccy) ==
+            sensitivityData_->discountCurveShiftData().end()) {
             ALOG("Currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -451,7 +452,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
-    
+
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->indices()) {
         if (sensitivityData_->indexCurveShiftData().find(sim_idx) == sensitivityData_->indexCurveShiftData().end()) {
@@ -623,7 +624,8 @@ void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(bool up)
     Date asof = baseScenario_->asof();
     // Log an ALERT if some yield curves in simmarket are excluded from the list
     for (auto sim_ec : simMarketData_->equityNames()) {
-        if (sensitivityData_->equityForecastCurveShiftData().find(sim_ec) == sensitivityData_->equityForecastCurveShiftData().end()) {
+        if (sensitivityData_->equityForecastCurveShiftData().find(sim_ec) ==
+            sensitivityData_->equityForecastCurveShiftData().end()) {
             ALOG("equityForecast Curve " << sim_ec << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -768,7 +770,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
 
                 Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
                 scenario->add(key, shiftedDiscount);
-                
+
                 // Possibly store valid shift size
                 if (validShiftSize && up && j == k) {
                     shiftSizes_[key] = shiftedZeros[k] - zeros[k];
@@ -856,7 +858,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
                     RiskFactorKey key(RFType::FXVolatility, ccyPair, idx);
 
                     scenario->add(key, shiftedValues[k][l]);
-                    
+
                     // Possibly store valid shift size
                     if (validShiftSize && up && j == l && k == 0) {
                         shiftSizes_[key] = shiftedValues[k][l] - values[k][l];
@@ -968,8 +970,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some swaption currencies in simmarket are excluded from the list
     for (auto sim_ccy : simMarketData_->swapVolCcys()) {
-        if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) ==
-             sensitivityData_->swaptionVolShiftData().end()) {
+        if (sensitivityData_->swaptionVolShiftData().find(sim_ccy) == sensitivityData_->swaptionVolShiftData().end()) {
             ALOG("Swaption currency " << sim_ccy << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -989,7 +990,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
     volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
     shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
 
-    for (auto s :  sensitivityData_->swaptionVolShiftData()) {
+    for (auto s : sensitivityData_->swaptionVolShiftData()) {
         std::string ccy = s.first;
         SensitivityScenarioData::SwaptionVolShiftData data = s.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -1057,7 +1058,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
                     Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart + 1;
 
                     DLOG("Swap vol looping over " << loopStart << " to " << loopEnd << " for strike "
-                                                 << shiftStrikes[l]);
+                                                  << shiftStrikes[l]);
                     for (Size ll = loopStart; ll < loopEnd; ++ll) {
                         applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
                                    volTermTimes, volData[ll], shiftedVolData[ll], true);
@@ -1068,7 +1069,7 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
                             for (Size ll = 0; ll < n_swvol_strike; ++ll) {
                                 Size idx = jj * n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
                                 RiskFactorKey key(RFType::SwaptionVolatility, ccy, idx);
-                                
+
                                 if (ll >= loopStart && ll < loopEnd) {
                                     scenario->add(key, shiftedVolData[ll][jj][kk]);
                                 } else {
@@ -1102,8 +1103,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
     for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
-        if (sensitivityData_->capFloorVolShiftData().find(sim_cap) ==
-            sensitivityData_->capFloorVolShiftData().end()) {
+        if (sensitivityData_->capFloorVolShiftData().find(sim_cap) == sensitivityData_->capFloorVolShiftData().end()) {
             ALOG("CapFloor currency " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -1165,7 +1165,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
-                
+
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_cfvol_exp; ++jj) {
                     for (Size kk = 0; kk < n_cfvol_strikes; ++kk) {
@@ -1221,7 +1221,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
         Calendar calendar = parseCalendar(simMarketData_->defaultCurveCalendar(name));
 
         Real prob = 0.0;
-        bool valid= true;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->defaultTenors(name)[j];
             times[j] = dc.yearFraction(asof, d);
@@ -1364,7 +1364,8 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->zeroInflationIndices()) {
-        if (sensitivityData_->zeroInflationCurveShiftData().find(sim_idx) == sensitivityData_->zeroInflationCurveShiftData().end()) {
+        if (sensitivityData_->zeroInflationCurveShiftData().find(sim_idx) ==
+            sensitivityData_->zeroInflationCurveShiftData().end()) {
             ALOG("Zero Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -1445,7 +1446,8 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
     std::vector<string> yoyInfIndexNames;
     // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->yoyInflationIndices()) {
-        if (sensitivityData_->yoyInflationCurveShiftData().find(sim_idx) == sensitivityData_->yoyInflationCurveShiftData().end()) {
+        if (sensitivityData_->yoyInflationCurveShiftData().find(sim_idx) ==
+            sensitivityData_->yoyInflationCurveShiftData().end()) {
             ALOG("YoY Inflation Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -1464,7 +1466,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         SensitivityScenarioData::CurveShiftData data = *y.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         DayCounter dc = parseDayCounter(simMarketData_->yoyInflationDayCounter(indexName));
-        bool valid=true;
+        bool valid = true;
         for (Size j = 0; j < n_ten; ++j) {
             Date d = asof + simMarketData_->yoyInflationTenors(indexName)[j];
             RiskFactorKey key(RiskFactorKey::KeyType::YoYInflationCurve, indexName, j);
@@ -1527,7 +1529,8 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
     // We can choose to shift fewer discount curves than listed in the market
     // Log an ALERT if some names in simmarket are excluded from the list
     for (auto name : simMarketData_->baseCorrelationNames()) {
-        if (sensitivityData_->baseCorrelationShiftData().find(name) == sensitivityData_->baseCorrelationShiftData().end()) {
+        if (sensitivityData_->baseCorrelationShiftData().find(name) ==
+            sensitivityData_->baseCorrelationShiftData().end()) {
             ALOG("Base Correlation " << name << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -1623,15 +1626,16 @@ void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
 }
 
 void SensitivityScenarioGenerator::generateCommodityScenarios(bool up) {
-    
+
     // Log an ALERT if some commodity curves in simulation market are not in the list
     for (const string& name : simMarketData_->commodityNames()) {
         if (sensitivityData_->commodityShiftData().find(name) == sensitivityData_->commodityShiftData().end()) {
-            ALOG("Commodity " << name << " in simulation market is not "
-                "included in commodity sensitivity analysis");
+            ALOG("Commodity " << name
+                              << " in simulation market is not "
+                                 "included in commodity sensitivity analysis");
         }
     }
-    
+
     // Create the commodity spot shift for each name
     Date asof = baseScenario_->asof();
     for (auto c : sensitivityData_->commodityShiftData()) {
@@ -1649,31 +1653,33 @@ void SensitivityScenarioGenerator::generateCommodityScenarios(bool up) {
         scenario->add(key, shiftedSpot);
 
         // Store absolute shift size
-        if (up) shiftSizes_[key] = shiftedSpot - spot;
+        if (up)
+            shiftSizes_[key] = shiftedSpot - spot;
 
         // Give the scenario a label
         scenario->label(to_string(scenarioDescriptions_.back()));
 
         scenarios_.push_back(scenario);
-        
+
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
-            << " created: " << shiftedSpot);
+                                       << " created: " << shiftedSpot);
     }
     LOG("Commodity spot scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
-    
+
     Date asof = baseScenario_->asof();
 
     // Log an ALERT if some commodity curves in simulation market are not in the list
     for (const string& name : simMarketData_->commodityNames()) {
-        if (sensitivityData_->commodityCurveShiftData().find(name) == sensitivityData_->commodityCurveShiftData().end()) {
-            ALOG("Commodity " << name << " in simulation market is not "
-                "included in commodity sensitivity analysis");
+        if (sensitivityData_->commodityCurveShiftData().find(name) ==
+            sensitivityData_->commodityCurveShiftData().end()) {
+            ALOG("Commodity " << name
+                              << " in simulation market is not "
+                                 "included in commodity sensitivity analysis");
         }
     }
-    
 
     for (auto c : sensitivityData_->commodityCurveShiftData()) {
         string name = c.first;
@@ -1685,7 +1691,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         vector<Real> shiftedPrices(times.size());
 
         // Get the base prices for this name from the base scenario
-        bool valid=true;
+        bool valid = true;
         for (Size j = 0; j < times.size(); ++j) {
             times[j] = curveDayCounter.yearFraction(asof, asof + simMarketTenors[j]);
             RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, name, j);
@@ -1700,18 +1706,19 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
         Real shiftSize = data.shiftSize;
 
         // Get the times at which we want to apply the shifts
-        vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasCommodityCurveTenors(name)
-            ? simMarketTenors : data.shiftTenors;
+        vector<Period> shiftTenors =
+            overrideTenors_ && simMarketData_->hasCommodityCurveTenors(name) ? simMarketTenors : data.shiftTenors;
 
         QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
         QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-            << shiftTenors.size() << ") and shift tenors (" << data.shiftTenors.size() << ")");
+                                                                      << shiftTenors.size() << ") and shift tenors ("
+                                                                      << data.shiftTenors.size() << ")");
 
         vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             shiftTimes[j] = curveDayCounter.yearFraction(asof, asof + shiftTenors[j]);
         }
-        
+
         // Can we store a valid shift size?
         bool validShiftSize = vectorEqual(times, shiftTimes);
 
@@ -1741,7 +1748,6 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             // add this scenario to the scenario vector
             scenarios_.push_back(scenario);
             DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
-
         }
     }
     LOG("Commodity curve scenarios done");
@@ -1752,8 +1758,9 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
     // Log an ALERT if some commodity vol names in simulation market are not in the list
     for (const string& name : simMarketData_->commodityVolNames()) {
         if (sensitivityData_->commodityVolShiftData().find(name) == sensitivityData_->commodityVolShiftData().end()) {
-            ALOG("Commodity volatility " << name << " in simulation market is not "
-                "included in commodity sensitivity analysis");
+            ALOG("Commodity volatility " << name
+                                         << " in simulation market is not "
+                                            "included in commodity sensitivity analysis");
         }
     }
 
@@ -1781,7 +1788,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
         DayCounter dayCounter = parseDayCounter(simMarketData_->commodityVolDayCounter(name));
 
         // Get the base scenario volatility values
-        bool valid=true;
+        bool valid = true;
         for (Size j = 0; j < expiries.size(); j++) {
             times[j] = dayCounter.yearFraction(asof, asof + expiries[j]);
             for (Size i = 0; i < moneyness.size(); i++) {
@@ -1808,9 +1815,9 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
                 boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
                 scenarioDescriptions_.push_back(commodityVolScenarioDescription(name, sj, si, up));
 
-                applyShift(si, sj, sd.shiftSize, up, shiftType, sd.shiftStrikes, shiftTimes,
-                    moneyness, times, baseValues, shiftedValues, true);
-                
+                applyShift(si, sj, sd.shiftSize, up, shiftType, sd.shiftStrikes, shiftTimes, moneyness, times,
+                           baseValues, shiftedValues, true);
+
                 Size counter = 0;
                 for (Size i = 0; i < moneyness.size(); i++) {
                     for (Size j = 0; j < expiries.size(); ++j) {
@@ -1840,8 +1847,7 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     for (auto sim_cap : simMarketData_->correlationPairs()) {
-        if (sensitivityData_->correlationShiftData().find(sim_cap) ==
-            sensitivityData_->correlationShiftData().end()) {
+        if (sensitivityData_->correlationShiftData().find(sim_cap) == sensitivityData_->correlationShiftData().end()) {
             ALOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
@@ -1862,9 +1868,7 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
         vector<Real> corrExpiryTimes(n_c_exp, 0.0);
         vector<vector<Real>> shiftedCorrData(n_c_exp, vector<Real>(n_c_strikes, 0.0));
 
-        std::vector<Period> expiries = overrideTenors_ 
-                                           ? simMarketData_->correlationExpiries()
-                                           : data.shiftExpiries;
+        std::vector<Period> expiries = overrideTenors_ ? simMarketData_->correlationExpiries() : data.shiftExpiries;
         QL_REQUIRE(expiries.size() == data.shiftExpiries.size(), "mismatch between effective shift expiries ("
                                                                      << expiries.size() << ") and shift tenors ("
                                                                      << data.shiftExpiries.size());
@@ -1903,13 +1907,13 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, corrExpiryTimes, corrStrikes,
                            corrData, shiftedCorrData, true);
-                
+
                 // add shifted vol data to the scenario
                 for (Size jj = 0; jj < n_c_exp; ++jj) {
                     for (Size kk = 0; kk < n_c_strikes; ++kk) {
                         Size idx = jj * n_c_strikes + kk;
                         RiskFactorKey key(RFType::Correlation, label, idx);
-                        
+
                         if (shiftedCorrData[jj][kk] > 1) {
                             shiftedCorrData[jj][kk] = 1;
                         } else if (shiftedCorrData[jj][kk] < -1) {
@@ -1966,14 +1970,15 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
         scenario->add(key, newSpread);
 
         // Store absolute shift size
-        if (up) shiftSizes_[key] = newSpread - base_spread;
+        if (up)
+            shiftSizes_[key] = newSpread - base_spread;
 
         // Give the scenario a label
         scenario->label(to_string(scenarioDescriptions_.back()));
 
         scenarios_.push_back(scenario);
         DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
-            << " created: " << newSpread);
+                                       << " created: " << newSpread);
     }
     LOG("Security scenarios done");
 }
@@ -1984,7 +1989,8 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -1995,7 +2001,8 @@ SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spot");
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2014,7 +2021,8 @@ SensitivityScenarioGenerator::dividendYieldScenarioDescription(string name, Size
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2032,7 +2040,8 @@ SensitivityScenarioGenerator::discountScenarioDescription(string ccy, Size bucke
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2050,7 +2059,8 @@ SensitivityScenarioGenerator::indexScenarioDescription(string index, Size bucket
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2068,7 +2078,8 @@ SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket,
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2087,7 +2098,8 @@ SensitivityScenarioGenerator::equityForecastCurveScenarioDescription(string name
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2111,7 +2123,8 @@ SensitivityScenarioGenerator::fxVolScenarioDescription(string ccypair, Size expi
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2136,7 +2149,8 @@ SensitivityScenarioGenerator::equityVolScenarioDescription(string equity, Size e
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2164,7 +2178,8 @@ SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size ex
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2190,7 +2205,8 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2208,7 +2224,8 @@ SensitivityScenarioGenerator::survivalProbabilityScenarioDescription(string name
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2228,7 +2245,8 @@ SensitivityScenarioGenerator::CdsVolScenarioDescription(string name, Size expiry
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2247,7 +2265,8 @@ SensitivityScenarioGenerator::zeroInflationScenarioDescription(string index, Siz
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2266,7 +2285,8 @@ SensitivityScenarioGenerator::yoyInflationScenarioDescription(string index, Size
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
@@ -2289,17 +2309,19 @@ SensitivityScenarioGenerator::baseCorrelationScenarioDescription(string indexNam
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
 
-SensitivityScenarioGenerator::ScenarioDescription 
+SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::commodityScenarioDescription(const string& commodityName, bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::CommoditySpot, commodityName);
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return ScenarioDescription(type, key, "spot");
 }
@@ -2308,26 +2330,27 @@ SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::commodityCurveScenarioDescription(const string& commodityName, Size bucket, bool up) {
 
     QL_REQUIRE(sensitivityData_->commodityCurveShiftData().count(commodityName) > 0,
-        "Name " << commodityName << " not found in commodity curve shift data");
+               "Name " << commodityName << " not found in commodity curve shift data");
     vector<Period>& shiftTenors = sensitivityData_->commodityCurveShiftData()[commodityName]->shiftTenors;
     QL_REQUIRE(bucket < shiftTenors.size(), "bucket " << bucket << " out of commodity curve bucket range");
-    
+
     RiskFactorKey key(RiskFactorKey::KeyType::CommodityCurve, commodityName, bucket);
     ostringstream oss;
     oss << shiftTenors[bucket];
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return ScenarioDescription(type, key, oss.str());
 }
 
-SensitivityScenarioGenerator::ScenarioDescription 
-SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& commodityName,
-    Size expiryBucket, Size strikeBucket, bool up) {
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& commodityName, Size expiryBucket,
+                                                              Size strikeBucket, bool up) {
 
     QL_REQUIRE(sensitivityData_->commodityVolShiftData().count(commodityName) > 0,
-        "commodity " << commodityName << " not found in commodity vol shift data");
+               "commodity " << commodityName << " not found in commodity vol shift data");
 
     SensitivityScenarioData::VolShiftData data = sensitivityData_->commodityVolShiftData()[commodityName];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
@@ -2342,7 +2365,8 @@ SensitivityScenarioGenerator::commodityVolScenarioDescription(const string& comm
     }
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return ScenarioDescription(type, key, o.str());
 }
@@ -2368,18 +2392,20 @@ SensitivityScenarioGenerator::correlationScenarioDescription(string pair, Size e
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }
 
-SensitivityScenarioGenerator::ScenarioDescription SensitivityScenarioGenerator::securitySpreadScenarioDescription(
-    string bond, bool up) {
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::securitySpreadScenarioDescription(string bond, bool up) {
     RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, "spread");
 
-    if (up) shiftSizes_[key] = 0.0;
+    if (up)
+        shiftSizes_[key] = 0.0;
 
     return desc;
 }

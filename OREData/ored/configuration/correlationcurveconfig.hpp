@@ -29,7 +29,6 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -49,9 +48,9 @@ using QuantLib::Null;
 class CorrelationCurveConfig : public CurveConfig {
 public:
     //! supported Correlation types
-    enum class  CorrelationType{ CMSSpread};
+    enum class CorrelationType { CMSSpread };
     //! supported Correlation dimensions
-    enum class Dimension { ATM , Constant};
+    enum class Dimension { ATM, Constant };
     // supported quote types
     enum class QuoteType { Rate, Price };
 
@@ -61,13 +60,11 @@ public:
     CorrelationCurveConfig() {}
     //! Detailed constructor
     CorrelationCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
-                                  const CorrelationType& corrType, const string& conventions,
-                                  const QuoteType& quoteType, const bool extrapolate,
-                                  const vector<Period>& optionTenors,
-                                  const DayCounter& dayCounter,
-                                  const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                                  const string& index1, const string& index2, const string& currency, const string& swaptionVol = "",
-                                  const string& discountCurve = "");
+                           const CorrelationType& corrType, const string& conventions, const QuoteType& quoteType,
+                           const bool extrapolate, const vector<Period>& optionTenors, const DayCounter& dayCounter,
+                           const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
+                           const string& index1, const string& index2, const string& currency,
+                           const string& swaptionVol = "", const string& discountCurve = "");
     //@}
 
     //! \name Serialisation
@@ -111,7 +108,7 @@ public:
     string& currency() { return currency_; }
     string& swaptionVolatility() { return swaptionVol_; }
     string& discountCurve() { return discountCurve_; }
-    
+
     //@}
 
 private:
@@ -128,7 +125,6 @@ private:
     string currency_;
     string swaptionVol_;
     string discountCurve_;
-    
 };
 
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t);

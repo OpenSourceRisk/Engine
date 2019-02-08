@@ -27,7 +27,6 @@
 #include <ostream>
 #include <string>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -59,7 +58,7 @@ public:
         CommodityVolatility,
         Correlation
     };
-    
+
     //! Default constructor
     CurveSpec() {}
 
@@ -77,7 +76,7 @@ public:
     //! returns the unique curve name
     string name() const { return baseName() + "/" + subName(); }
 
-    /*! Returns the id of the CurveConfig associated with the CurveSpec. If there is no CurveConfig associated 
+    /*! Returns the id of the CurveConfig associated with the CurveSpec. If there is no CurveConfig associated
         with the CurveSpec, it returns the default empty string.
     */
     const std::string& curveConfigID() const { return curveConfigID_; }
@@ -147,8 +146,7 @@ public:
     //! \name Constructors
     //@{
     //! Detailed constructor
-    YieldCurveSpec(const string& ccy, const string& curveConfigID) 
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    YieldCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
     //! Default constructor
     YieldCurveSpec() {}
     //@}
@@ -172,8 +170,7 @@ public:
     //! \name Constructors
     //@{
     //! Detailed constructor
-    DefaultCurveSpec(const string& ccy, const string& curveConfigID) 
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    DefaultCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
     //! Default constructor
     DefaultCurveSpec() {}
     //@}
@@ -242,8 +239,7 @@ public:
     //! Default constructor
     SwaptionVolatilityCurveSpec() {}
     //! Detailed constructor
-    SwaptionVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    SwaptionVolatilityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
     //@}
 
     //! \name Inspectors
@@ -260,8 +256,7 @@ private:
 class CapFloorVolatilityCurveSpec : public CurveSpec {
 public:
     CapFloorVolatilityCurveSpec() {}
-    CapFloorVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    CapFloorVolatilityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
 
     //! \name CurveSpec interface
     //@{
@@ -335,8 +330,7 @@ private:
 class InflationCurveSpec : public CurveSpec {
 public:
     InflationCurveSpec() {}
-    InflationCurveSpec(const string& index, const string& curveConfigID)
-        : CurveSpec(curveConfigID), index_(index) {}
+    InflationCurveSpec(const string& index, const string& curveConfigID) : CurveSpec(curveConfigID), index_(index) {}
 
     CurveType baseType() const { return CurveType::Inflation; }
     const string& index() const { return index_; }
@@ -367,7 +361,7 @@ private:
 
 //! Inflation cap floor volatility description
 /*! \ingroup curves
-*/
+ */
 class InflationCapFloorVolatilityCurveSpec : public CurveSpec {
 public:
     InflationCapFloorVolatilityCurveSpec() {}
@@ -392,8 +386,7 @@ public:
     //! \name Constructors
     //@{
     //! Detailed constructor
-    EquityCurveSpec(const string& ccy, const string& curveConfigID) 
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    EquityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
     //! Default constructor
     EquityCurveSpec() {}
 
@@ -420,8 +413,7 @@ public:
     //! Default constructor
     EquityVolatilityCurveSpec() {}
     //! Detailed constructor
-    EquityVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
-        : CurveSpec(curveConfigID), ccy_(ccy) {}
+    EquityVolatilityCurveSpec(const string& ccy, const string& curveConfigID) : CurveSpec(curveConfigID), ccy_(ccy) {}
     //@}
 
     //! \name Inspectors
@@ -451,7 +443,7 @@ protected:
 
 //! Commodity curve description
 /*! \ingroup curves
-*/
+ */
 class CommodityCurveSpec : public CurveSpec {
 
 public:
@@ -478,7 +470,7 @@ private:
 
 //! Commodity volatility description
 /*! \ingroup curves
-*/
+ */
 class CommodityVolatilityCurveSpec : public CurveSpec {
 public:
     //! \name Constructors
@@ -513,8 +505,7 @@ public:
     //! Default constructor
     CorrelationCurveSpec() {}
     //! Detailed constructor
-    CorrelationCurveSpec(const string& curveConfigID)
-        : CurveSpec(curveConfigID) {}
+    CorrelationCurveSpec(const string& curveConfigID) : CurveSpec(curveConfigID) {}
     //@}
 
     //! \name Inspectors

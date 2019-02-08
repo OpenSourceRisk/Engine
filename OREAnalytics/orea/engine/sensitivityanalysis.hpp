@@ -150,13 +150,11 @@ protected:
     boost::shared_ptr<SensitivityCube> sensiCube_;
 };
 
-/*! Returns the absolute shift size corresponding to a particular risk factor \p key 
-    given sensitivity parameters \p sensiParams and a simulation market \p simMarket 
+/*! Returns the absolute shift size corresponding to a particular risk factor \p key
+    given sensitivity parameters \p sensiParams and a simulation market \p simMarket
 */
-Real getShiftSize(const RiskFactorKey& key, 
-    const SensitivityScenarioData& sensiParams, 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-    const std::string& marketConfiguration = "");
+Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
+                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
 
 } // namespace analytics
 } // namespace ore
