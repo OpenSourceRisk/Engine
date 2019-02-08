@@ -641,6 +641,7 @@
     <ClCompile Include="bonds.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
+    <ClCompile Include="correlationtermstructure.cpp" />
     <ClCompile Include="cpicapfloor.cpp" />
     <ClCompile Include="crossassetmodel.cpp" />
     <ClCompile Include="crossassetmodel2.cpp" />

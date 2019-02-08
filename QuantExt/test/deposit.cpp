@@ -30,7 +30,7 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-BOOST_FIXTURE_TEST_SUITE(QleDataTestSuite, qle::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(DepositTest)
 
