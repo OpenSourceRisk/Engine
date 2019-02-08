@@ -252,8 +252,7 @@ protected:
     //! \name Additional interface
     //@{
     virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
-                                                                Real r,
-                                                                const Handle<YieldTermStructure>& d) const;
+                                                                Real r, const Handle<YieldTermStructure>& d) const;
     //@}
 };
 
