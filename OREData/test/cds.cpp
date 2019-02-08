@@ -17,8 +17,8 @@
 */
 
 #include <boost/make_shared.hpp>
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
