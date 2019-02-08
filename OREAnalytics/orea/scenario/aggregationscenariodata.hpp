@@ -35,15 +35,13 @@
 #include <map>
 #include <vector>
 
+namespace ore {
+namespace analytics {
 using QuantLib::Size;
 using QuantLib::Real;
-
 using std::map;
 using std::string;
 using std::vector;
-
-namespace ore {
-namespace analytics {
 
 enum class AggregationScenarioDataType { IndexFixing, FXSpot, Numeraire, Generic };
 

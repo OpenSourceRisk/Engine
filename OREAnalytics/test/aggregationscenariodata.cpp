@@ -16,14 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "aggregationscenariodata.hpp"
+#include <boost/test/unit_test.hpp>
+#include <orea/scenario/aggregationscenariodata.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
-void AggregationScenarioDataTest::testInMemoryAggregationScenarioData() {
+BOOST_AUTO_TEST_SUITE(AggregationScenarioDataTest)
+
+BOOST_AUTO_TEST_CASE(testInMemoryAggregationScenarioData) {
     InMemoryAggregationScenarioData data(3, 5);
 
     // write data
@@ -60,11 +64,6 @@ void AggregationScenarioDataTest::testInMemoryAggregationScenarioData() {
     }
 }
 
-test_suite* AggregationScenarioDataTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("Additional scenario data tests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&AggregationScenarioDataTest::testInMemoryAggregationScenarioData));
-
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

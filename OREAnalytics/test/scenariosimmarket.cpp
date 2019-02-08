@@ -16,19 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/log.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/capfloor/constantcapfloortermvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/scenariosimmarket.hpp>
 #include <test/testmarket.hpp>
 
 #include <ql/indexes/ibor/all.hpp>
@@ -38,6 +39,9 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
+using namespace ore::data;
+
+using testsuite::TestMarket;
 
 namespace {
 
@@ -89,11 +93,12 @@ boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
+    parameters->simulateCorrelations() = false;
+    parameters->correlationExpiries() = {1 * Years, 2 * Years};
+    parameters->correlationPairs() = {make_pair("EUR-CMS-10Y", "EUR-CMS-1Y"), make_pair("USD-CMS-10Y", "USD-CMS-1Y")};
     return parameters;
 }
 } // namespace
-
-namespace testsuite {
 
 void testFxSpot(boost::shared_ptr<ore::data::Market>& initMarket,
                 boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
@@ -224,11 +229,29 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
     }
 }
 
+void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
+                          boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                          boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+    for (const auto& spec : parameters->correlationPairs()) {
+        Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(spec.first, spec.second);
+        Handle<QuantExt::CorrelationTermStructure> initCurve = initMarket->correlationCurve(spec.first, spec.second);
+        BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
+        vector<Date> dates;
+        Date asof = initMarket->asofDate();
+        for (Size i = 0; i < parameters->correlationExpiries().size(); i++) {
+            dates.push_back(asof + parameters->correlationExpiries()[i]);
+        }
+
+        for (const auto& date : dates) {
+            BOOST_CHECK_CLOSE(simCurve->correlation(date), initCurve->correlation(date), 1e-12);
+        }
+    }
+}
+
 void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params) {
 
     BOOST_TEST_MESSAGE("Testing to XML...");
     XMLDocument outDoc;
-    XMLDocument inDoc;
     string testFile = "simtest.xml";
     XMLNode* node = params->toXML(outDoc);
 
@@ -243,9 +266,15 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 
     newParams->baseCcy() = "JPY";
     BOOST_CHECK(*params != *newParams);
+
+    remove("simtest.xml");
 }
 
-void ScenarioSimMarketTest::testScenarioSimMarket() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(ScenarioSimMarketTest)
+
+BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
     SavedSettings backup;
@@ -273,12 +302,10 @@ void ScenarioSimMarketTest::testScenarioSimMarket() {
     testFxVolCurve(initMarket, simMarket, parameters);
     testDefaultCurve(initMarket, simMarket, parameters);
     testZeroInflationCurve(initMarket, simMarket, parameters);
+    testCorrelationCurve(initMarket, simMarket, parameters);
     testToXML(parameters);
 }
 
-test_suite* ScenarioSimMarketTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ScenarioSimMarketTests");
-    suite->add(BOOST_TEST_CASE(&ScenarioSimMarketTest::testScenarioSimMarket));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

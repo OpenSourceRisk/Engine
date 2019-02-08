@@ -29,18 +29,16 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-using QuantLib::Date;
-using QuantLib::Period;
-using QuantLib::Rate;
-using std::vector;
-using std::string;
-using std::pair;
-using ore::data::XMLSerializable;
-using ore::data::XMLNode;
-using ore::data::XMLUtils;
-
 namespace ore {
 namespace analytics {
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using ore::data::XMLUtils;
+using namespace QuantLib;
+using std::map;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! ScenarioSimMarket description
 /*! \ingroup scenario
@@ -49,20 +47,17 @@ class ScenarioSimMarketParameters : public XMLSerializable {
 public:
     //! Default constructor
     ScenarioSimMarketParameters()
-        : extrapolate_(false), swapVolSimulate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true),
-          swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false), survivalProbabilitySimulate_(false),
-          recoveryRateSimulate_(false), cdsVolSimulate_(false), equityForecastCurveSimulate_(true),
-          dividendYieldSimulate_(false), fxVolSimulate_(false), fxVolIsSurface_(false), fxMoneyness_({0.0}),
-          equityVolSimulate_(false), equityIsSurface_(false), equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}),
-          baseCorrelationSimulate_(false) {
-        // set default tenors
-        capFloorVolExpiries_[""];
-        defaultTenors_[""];
-        equityDividendTenors_[""];
-        equityForecastTenors_[""];
-        zeroInflationTenors_[""];
-        yoyInflationTenors_[""];
-        // set default dayCounters
+        : extrapolate_(false), fxSpotSimulate_(true), swapVolSimulate_(false), swapVolIsCube_(false),
+          swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}), capFloorVolSimulate_(false),
+          survivalProbabilitySimulate_(false), recoveryRateSimulate_(false), cdsVolSimulate_(false),
+          equityForecastCurveSimulate_(true), dividendYieldSimulate_(false), fxVolSimulate_(false),
+          fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false),
+          equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), securitySpreadsSimulate_(false),
+          cprSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false),
+          commodityVolSimulate_(false), correlationSimulate_(false), correlationIsSurface_(false),
+          correlationStrikes_({0.0}) {
+
+        // set defaults
         setDefaults();
     }
 
@@ -80,6 +75,7 @@ public:
     const string& interpolation() const { return interpolation_; }
     bool extrapolate() const { return extrapolate_; }
 
+    bool simulateFxSpots() const { return fxSpotSimulate_; }
     const vector<string>& fxCcyPairs() const { return fxCcyPairs_; }
 
     bool simulateSwapVols() const { return swapVolSimulate_; }
@@ -140,6 +136,7 @@ public:
     const vector<string>& additionalScenarioDataIndices() const { return additionalScenarioDataIndices_; }
     const vector<string>& additionalScenarioDataCcys() const { return additionalScenarioDataCcys_; }
 
+    bool securitySpreadsSimulate() const { return securitySpreadsSimulate_; }
     const vector<string>& securities() const { return securities_; }
 
     bool simulateBaseCorrelations() const { return baseCorrelationSimulate_; }
@@ -161,6 +158,27 @@ public:
     bool simulateEquityForecastCurve() const { return equityForecastCurveSimulate_; }
     bool simulateDividendYield() const { return dividendYieldSimulate_; }
 
+    // Commodity price curve data getters
+    bool commodityCurveSimulate() const;
+    const std::vector<std::string>& commodityNames() const;
+    const std::vector<QuantLib::Period>& commodityCurveTenors(const std::string& commodityName) const;
+    bool hasCommodityCurveTenors(const std::string& commodityName) const;
+    const std::string& commodityCurveDayCounter(const std::string& commodityName) const;
+
+    // Commodity volatility data getters
+    bool commodityVolSimulate() const { return commodityVolSimulate_; }
+    const std::string& commodityVolDecayMode() const { return commodityVolDecayMode_; }
+    const std::vector<std::string>& commodityVolNames() const { return commodityVolNames_; }
+    const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
+    const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
+    const std::string& commodityVolDayCounter(const std::string& commodityName) const;
+
+    bool simulateCorrelations() const { return correlationSimulate_; }
+    bool correlationIsSurface() const { return correlationIsSurface_; }
+    const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
+    const vector<pair<string, string>>& correlationPairs() const { return correlationPairs_; }
+    const string& correlationDayCounter(const string& index1, const string& index2) const;
+    const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
     //@}
 
     //! \name Setters
@@ -176,6 +194,7 @@ public:
     string& interpolation() { return interpolation_; }
     bool& extrapolate() { return extrapolate_; }
 
+    bool& simulateFxSpots() { return fxSpotSimulate_; }
     vector<string>& fxCcyPairs() { return fxCcyPairs_; }
 
     bool& simulateSwapVols() { return swapVolSimulate_; }
@@ -232,7 +251,9 @@ public:
     vector<string>& additionalScenarioDataIndices() { return additionalScenarioDataIndices_; }
     vector<string>& additionalScenarioDataCcys() { return additionalScenarioDataCcys_; }
 
+    bool& securitySpreadsSimulate() { return securitySpreadsSimulate_; }
     vector<string>& securities() { return securities_; }
+    bool& cprSimulate() { return cprSimulate_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -251,6 +272,30 @@ public:
     bool& simulateEquityForecastCurve() { return equityForecastCurveSimulate_; }
     bool& simulateDividendYield() { return dividendYieldSimulate_; }
 
+    // Commodity price curve data setters
+    bool& commodityCurveSimulate();
+    std::vector<std::string>& commodityNames();
+    void setCommodityCurveTenors(const std::string& commodityName, const std::vector<QuantLib::Period>& p);
+    void setCommodityCurveDayCounter(const std::string& commodityName, const std::string& d);
+
+    // Commodity volatility data setters
+    bool& commodityVolSimulate() { return commodityVolSimulate_; }
+    std::string& commodityVolDecayMode() { return commodityVolDecayMode_; }
+    std::vector<std::string>& commodityVolNames() { return commodityVolNames_; }
+    std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) {
+        return commodityVolExpiries_[commodityName];
+    }
+    std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) {
+        return commodityVolMoneyness_[commodityName];
+    }
+    void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
+
+    bool& simulateCorrelations() { return correlationSimulate_; }
+    bool& correlationIsSurface() { return correlationIsSurface_; }
+    vector<Period>& correlationExpiries() { return correlationExpiries_; }
+    vector<pair<string, string>>& correlationPairs() { return correlationPairs_; }
+    void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
+    vector<Real>& correlationStrikes() { return correlationStrikes_; }
     //@}
 
     //! \name Serialisation
@@ -267,6 +312,10 @@ public:
 
 private:
     void setDefaults();
+
+    //! A method used to reset the object to its default state before fromXML is called
+    void reset();
+
     string baseCcy_;
     map<string, string> yieldCurveDayCounters_;
     vector<string> ccys_; // may or may not include baseCcy;
@@ -278,6 +327,7 @@ private:
     string interpolation_;
     bool extrapolate_;
 
+    bool fxSpotSimulate_;
     vector<string> fxCcyPairs_;
 
     bool swapVolSimulate_;
@@ -336,7 +386,9 @@ private:
     vector<string> additionalScenarioDataIndices_;
     vector<string> additionalScenarioDataCcys_;
 
+    bool securitySpreadsSimulate_;
     vector<string> securities_;
+    bool cprSimulate_;
 
     bool baseCorrelationSimulate_;
     vector<string> baseCorrelationNames_;
@@ -351,6 +403,27 @@ private:
     vector<string> yoyInflationIndices_;
     map<string, string> yoyInflationDayCounters_;
     map<string, vector<Period>> yoyInflationTenors_;
+
+    // Commodity price curve data
+    bool commodityCurveSimulate_;
+    vector<string> commodityNames_;
+    map<string, vector<QuantLib::Period>> commodityCurveTenors_;
+    map<string, string> commodityCurveDayCounters_;
+
+    // Commodity volatility data
+    bool commodityVolSimulate_;
+    string commodityVolDecayMode_;
+    vector<string> commodityVolNames_;
+    map<string, vector<QuantLib::Period>> commodityVolExpiries_;
+    map<string, vector<QuantLib::Real>> commodityVolMoneyness_;
+    map<string, string> commodityVolDayCounters_;
+
+    bool correlationSimulate_;
+    bool correlationIsSurface_;
+    vector<pair<string, string>> correlationPairs_;
+    map<pair<string, string>, string> correlationDayCounters_;
+    vector<Period> correlationExpiries_;
+    vector<Real> correlationStrikes_;
 };
 } // namespace analytics
 } // namespace ore

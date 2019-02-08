@@ -28,6 +28,8 @@
 #include <orea/aggregation/postprocess.hpp>
 #include <orea/app/parameters.hpp>
 #include <orea/cube/npvcube.hpp>
+#include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 #include <orea/simulation/dategrid.hpp>
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
@@ -43,34 +45,40 @@ namespace analytics {
  */
 class ReportWriter {
 public:
-    static void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
-                         boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
-                         boost::shared_ptr<Portfolio> portfolio);
+    virtual ~ReportWriter(){};
 
-    static void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio);
+    virtual void writeNpv(ore::data::Report& report, const std::string& baseCurrency,
+                          boost::shared_ptr<ore::data::Market> market, const std::string& configuration,
+                          boost::shared_ptr<Portfolio> portfolio);
 
-    static void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
-                            const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market);
+    virtual void writeCashflow(ore::data::Report& report, boost::shared_ptr<ore::data::Portfolio> portfolio,
+                               boost::shared_ptr<ore::data::Market> market = boost::shared_ptr<ore::data::Market>(),
+                               const std::string& configuration = ore::data::Market::defaultConfiguration);
 
-    static void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                    const std::string& tradeId);
+    virtual void writeCurves(ore::data::Report& report, const std::string& configID, const DateGrid& grid,
+                             const TodaysMarketParameters& marketConfig, const boost::shared_ptr<Market>& market,
+                             const bool continueOnError = false);
 
-    static void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                         const std::string& nettingSetId);
+    virtual void writeTradeExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                     const std::string& tradeId);
 
-    static void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
-                                     const std::string& nettingSetId);
+    virtual void writeNettingSetExposures(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                          const std::string& nettingSetId);
 
-    static void writeXVA(ore::data::Report& report, const string& allocationMethod,
-                         boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
+    virtual void writeNettingSetColva(ore::data::Report& report, boost::shared_ptr<PostProcess> postProcess,
+                                      const std::string& nettingSetId);
 
-    static void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
+    virtual void writeXVA(ore::data::Report& report, const string& allocationMethod,
+                          boost::shared_ptr<Portfolio> portfolio, boost::shared_ptr<PostProcess> postProcess);
 
-private:
-    //! ctor
-    ReportWriter(){};
-    ReportWriter(const ReportWriter&);
-    ReportWriter& operator=(const ReportWriter&);
+    virtual void writeAggregationScenarioData(ore::data::Report& report, const AggregationScenarioData& data);
+
+    virtual void writeScenarioReport(ore::data::Report& report,
+                                     const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+                                     QuantLib::Real outputThreshold = 0.0);
+
+    virtual void writeSensitivityReport(ore::data::Report& report, const boost::shared_ptr<SensitivityStream>& ss,
+                                        QuantLib::Real outputThreshold = 0.0);
 };
 } // namespace analytics
 } // namespace ore

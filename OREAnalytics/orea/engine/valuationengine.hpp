@@ -34,10 +34,9 @@
 #include <map>
 #include <set>
 
-using std::set;
-
 namespace ore {
 namespace analytics {
+using std::set;
 
 //! Valuation Engine
 /*!
@@ -74,7 +73,7 @@ public:
         //! Portfolio to be priced
         const boost::shared_ptr<data::Portfolio>& portfolio,
         //! Object for storing the resulting NPV cube
-        boost::shared_ptr<analytics::NPVCube>& outputCube,
+        boost::shared_ptr<analytics::NPVCube> outputCube,
         //! Calculators to use
         std::vector<boost::shared_ptr<ValuationCalculator>> calculators);
 
