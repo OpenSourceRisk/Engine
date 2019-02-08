@@ -918,6 +918,10 @@ public:
 
     /*! Returns the convention if found and throws if not */
     boost::shared_ptr<Convention> get(const string& id) const;
+
+    //! Checks if we have a convention with the given \p id
+    bool has(const std::string& id) const;
+    
     /*! Clear all conventions */
     void clear();
 

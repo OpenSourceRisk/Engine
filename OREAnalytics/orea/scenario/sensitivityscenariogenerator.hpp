@@ -102,7 +102,7 @@ public:
                                  const boost::shared_ptr<Scenario>& baseScenario,
                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                  const boost::shared_ptr<ScenarioFactory>& sensiScenarioFactory,
-                                 const bool overrideTenors);
+                                 const bool overrideTenors, const bool continueOnError = false);
     //! Default destructor
     ~SensitivityScenarioGenerator(){};
 
@@ -169,7 +169,7 @@ private:
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
-    const bool overrideTenors_;
+    const bool overrideTenors_, continueOnError_;
     
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;

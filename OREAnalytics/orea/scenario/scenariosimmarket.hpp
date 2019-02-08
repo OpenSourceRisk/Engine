@@ -113,7 +113,8 @@ public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
-                      const std::string& configuration = Market::defaultConfiguration);
+                      const std::string& configuration = Market::defaultConfiguration,
+                      const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
