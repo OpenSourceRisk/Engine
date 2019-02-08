@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <ored/marketdata/curvespec.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
+#include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ql/handle.hpp>
 #include <ql/quote.hpp>

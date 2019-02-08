@@ -17,9 +17,9 @@
 */
 
 #include <ored/configuration/defaultcurveconfig.hpp>
+#include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
-#include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
 using QuantLib::Date;
@@ -32,14 +32,13 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const DayCounter& dayCounter, const string& conventionID,
                                        const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
-                                       const std::vector<Period>& pillars, const Calendar& calendar, 
-                                       const Size spotLag, const Date& startDate)
+                                       const std::vector<Period>& pillars, const Calendar& calendar, const Size spotLag,
+                                       const Date& startDate)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
       conventionID_(conventionID), extrapolation_(extrapolation), benchmarkCurveID_(benchmarkCurveID),
-      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), 
-      spotLag_(spotLag), startDate_(startDate) {
-    
+      sourceCurveID_(sourceCurveID), pillars_(pillars), calendar_(calendar), spotLag_(spotLag), startDate_(startDate) {
+
     for (const auto& kv : cdsQuotes) {
         quotes_.push_back(kv.first);
     }
@@ -148,7 +147,8 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
-    if (startDate_ != Date()) XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
+    if (startDate_ != Date())
+        XMLUtils::addChild(doc, node, "StartDate", to_string(startDate_));
 
     return node;
 }

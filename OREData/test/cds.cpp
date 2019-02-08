@@ -16,10 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
-#include <boost/test/data/test_case.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
@@ -28,6 +27,7 @@
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -141,9 +141,7 @@ struct TradeInputs {
 };
 
 // Needed for BOOST_DATA_TEST_CASE below as it writes out the TradeInputs
-ostream& operator<<(ostream& os, const TradeInputs& t) {
-    return os << "[" << t.endDate << "," << t.fixedRate << "]";
-}
+ostream& operator<<(ostream& os, const TradeInputs& t) { return os << "[" << t.endDate << "," << t.fixedRate << "]"; }
 
 Real cdsNpv(const MarketInputs& m, const TradeInputs& t) {
 
@@ -173,33 +171,23 @@ Real cdsNpv(const MarketInputs& m, const TradeInputs& t) {
 // 4) Example from Hull, Ch 21 (pp. 510 - 513). Take coupon rate = 0 to show only defaultNPV.
 
 // Market inputs used in the test below
-MarketInputs marketInputs[] = {
-    { 0, 1, 0 },
-    { 1, 1, 0 },
-    { 0.02, 1, 0.05 },
-    { 0.02, 0.4, 0.05 }
-};
+MarketInputs marketInputs[] = {{0, 1, 0}, {1, 1, 0}, {0.02, 1, 0.05}, {0.02, 0.4, 0.05}};
 
 // Trade inputs used in the test below
-TradeInputs tradeInputs[] = {
-    { "20170203", 0 },
-    { "20170203", 0 },
-    { "20210203", 0.0124248849209095 },
-    { "20210203", 0.0 }
-};
+TradeInputs tradeInputs[] = {{"20170203", 0}, {"20170203", 0}, {"20210203", 0.0124248849209095}, {"20210203", 0.0}};
 
 // Expected NPVs given the market and trade inputs above
-Real expNpvs[] = { 0, 0, 0.050659, -0.05062 };
+Real expNpvs[] = {0, 0, 0.050659, -0.05062};
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CreditDefaultSwapTests)
 
-BOOST_DATA_TEST_CASE(testCreditDefaultSwap, 
-    bdata::make(marketInputs) ^ bdata::make(tradeInputs) ^ bdata::make(expNpvs), mkt, trd, exp) {
-    
+BOOST_DATA_TEST_CASE(testCreditDefaultSwap, bdata::make(marketInputs) ^ bdata::make(tradeInputs) ^ bdata::make(expNpvs),
+                     mkt, trd, exp) {
+
     BOOST_CHECK_CLOSE(cdsNpv(mkt, trd), exp, 0.01);
 }
 

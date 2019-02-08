@@ -27,8 +27,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <set>
 
-
-
 namespace ore {
 namespace data {
 using std::string;

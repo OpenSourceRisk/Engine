@@ -32,7 +32,6 @@
 #include <ored/model/irlgmdata.hpp>
 #include <ored/model/modelbuilder.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

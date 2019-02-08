@@ -27,7 +27,6 @@
 #include <ql/time/date.hpp>
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Real;

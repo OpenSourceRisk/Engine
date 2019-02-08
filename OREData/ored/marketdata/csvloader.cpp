@@ -58,11 +58,11 @@ CSVLoader::CSVLoader(const vector<string>& marketFiles, const vector<string>& fi
     for (auto marketFile : marketFiles)
         // load market data
         loadFile(marketFile, true);
-    
+
     // log
     for (auto it : data_)
         LOG("CSVLoader loaded " << it.second.size() << " market data points for " << it.first);
-    
+
     for (auto fixingFile : fixingFiles)
         // load fixings
         loadFile(fixingFile, false);

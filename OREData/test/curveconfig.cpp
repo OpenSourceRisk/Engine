@@ -18,8 +18,8 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/configuration/basecorrelationcurveconfig.hpp>
 #include <ored/configuration/capfloorvolcurveconfig.hpp>
 #include <ored/configuration/cdsvolcurveconfig.hpp>
@@ -34,8 +34,8 @@
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
-#include <ored/utilities/parsers.hpp>
 #include <ored/utilities/csvfilereader.hpp>
+#include <ored/utilities/parsers.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/fileutilities.hpp>
 #include <oret/toplevelfixture.hpp>
@@ -69,9 +69,7 @@ public:
         curveConfigs.fromFile(TEST_INPUT_FILE("curve_config.xml"));
     }
 
-    ~F() {
-        clearOutput(TEST_OUTPUT_PATH);
-    }
+    ~F() { clearOutput(TEST_OUTPUT_PATH); }
 };
 
 set<string> readQuotes(const string& filename) {
@@ -92,25 +90,21 @@ vector<pair<string, string>> files = {
     make_pair("todays_market_only_ir.xml", "expected_quotes_only_ir.csv"),
     make_pair("todays_market_with_fx_vol_smile.xml", "expected_quotes_with_fx_vol_smile.csv"),
     make_pair("todays_market_with_fx_vol_atm.xml", "expected_quotes_with_fx_vol_atm.csv"),
-    make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")
-};
+    make_pair("todays_market_single_config_gbp.xml", "expected_quotes_tmp_single_gbp.csv")};
 
-}
+} // namespace
 
 // Needed for BOOST_DATA_TEST_CASE below as it writes out the string pair
 // https://stackoverflow.com/a/33965517/1771882
 namespace boost {
 namespace test_tools {
 namespace tt_detail {
-template<>
-struct print_log_value<pair<string, string>> {
-    void operator()(std::ostream& os, const pair<string, string>& p) {
-        os << "[" << p.first << "," << p.second << "]";
-    }
+template <> struct print_log_value<pair<string, string>> {
+    void operator()(std::ostream& os, const pair<string, string>& p) { os << "[" << p.first << "," << p.second << "]"; }
 };
-}
-}
-}
+} // namespace tt_detail
+} // namespace test_tools
+} // namespace boost
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
@@ -158,7 +152,7 @@ BOOST_DATA_TEST_CASE(testCurveConfigQuotesSimpleTodaysMarket, bdata::make(files)
     tmp->fromFile(TEST_INPUT_FILE(filePair.first));
 
     // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters instance
-    set<string> quotes = curveConfigs.quotes(tmp, { Market::defaultConfiguration });
+    set<string> quotes = curveConfigs.quotes(tmp, {Market::defaultConfiguration});
 
     // Read the expected set of quotes from the file
     set<string> expectedQuotes = readQuotes(TEST_INPUT_FILE(filePair.second));
@@ -182,9 +176,9 @@ BOOST_AUTO_TEST_CASE(testCurveConfigQuotesTodaysMarketMultipleConfigs) {
 
         BOOST_TEST_MESSAGE("Checking quotes for configuration: " << kv.first);
 
-        // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters 
+        // Ask the curve configurations object for its quotes, restricted by the TodaysMarketParameters
         // instance and the configuration
-        set<string> quotes = curveConfigs.quotes(tmp, { kv.first });
+        set<string> quotes = curveConfigs.quotes(tmp, {kv.first});
 
         // Read the expected set of quotes from the file
         set<string> expectedQuotes;
@@ -237,8 +231,7 @@ BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentFromXml) {
 // Test toXML for DiscountRatioYieldCurveSegment
 BOOST_AUTO_TEST_CASE(testDiscountRatioSegmentToXml) {
     // Create a discount ratio segment
-    DiscountRatioYieldCurveSegment seg("Discount Ratio", "EUR1D", "EUR", 
-        "BRL-IN-USD", "BRL", "EUR-IN-USD", "EUR");
+    DiscountRatioYieldCurveSegment seg("Discount Ratio", "EUR1D", "EUR", "BRL-IN-USD", "BRL", "EUR-IN-USD", "EUR");
 
     // Create an XML document from the segment using toXML
     XMLDocument doc;

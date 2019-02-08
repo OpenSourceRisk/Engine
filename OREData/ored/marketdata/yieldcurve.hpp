@@ -32,7 +32,6 @@
 //#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -142,13 +141,13 @@ private:
     void addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
     void addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                            vector<boost::shared_ptr<RateHelper>>& instruments);
+                          vector<boost::shared_ptr<RateHelper>>& instruments);
     void addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segment,
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-        vector<boost::shared_ptr<RateHelper>>& instruments);
+                                  vector<boost::shared_ptr<RateHelper>>& instruments);
 };
 
 //! Helper function for parsing interpolation method

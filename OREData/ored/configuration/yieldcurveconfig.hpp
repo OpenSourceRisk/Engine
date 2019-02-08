@@ -33,7 +33,6 @@
 #include <ql/types.hpp>
 #include <set>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -110,10 +109,9 @@ protected:
     pair<string, bool> quote(const string& name, bool opt = false) { return make_pair(name, opt); }
 
     //! Utility method to read quotes from XML
-    void loadQuotesFromXML(XMLNode * node);
+    void loadQuotesFromXML(XMLNode* node);
     //! Utility method to write quotes to XML
-    XMLNode *writeQuotesToXML(XMLDocument& doc);
-
+    XMLNode* writeQuotesToXML(XMLDocument& doc);
 
 private:
     // TODO: why type and typeID?
@@ -371,7 +369,7 @@ private:
 
 //! Discount ratio yield curve segment
 /*! Used to configure a QuantExt::DiscountRatioModifiedCurve.
-    
+
     \ingroup configuration
 */
 class DiscountRatioYieldCurveSegment : public YieldCurveSegment {
@@ -381,10 +379,10 @@ public:
     //! Default constructor
     DiscountRatioYieldCurveSegment() {}
     //! Detailed constructor
-    DiscountRatioYieldCurveSegment(const std::string& typeId, const std::string& baseCurveId, 
-        const std::string& baseCurveCurrency, const std::string& numeratorCurveId, 
-        const std::string& numeratorCurveCurrency, const std::string& denominatorCurveId, 
-        const std::string& denominatorCurveCurrency);
+    DiscountRatioYieldCurveSegment(const std::string& typeId, const std::string& baseCurveId,
+                                   const std::string& baseCurveCurrency, const std::string& numeratorCurveId,
+                                   const std::string& numeratorCurveCurrency, const std::string& denominatorCurveId,
+                                   const std::string& denominatorCurveCurrency);
     //@}
 
     //! \name Serialisation
