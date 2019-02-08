@@ -426,9 +426,6 @@
     <ClInclude Include="qle\pricingengines\paymentdiscountingengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp">
-      <Filter>math</Filter>
-    </ClInclude>
     <ClInclude Include="qle\math\flatextrapolation.hpp">
       <Filter>math</Filter>
     </ClInclude>

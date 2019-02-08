@@ -577,7 +577,6 @@
     <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
-    <ClInclude Include="qle\math\cumulativenormaldistribution.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />

@@ -227,7 +227,6 @@ instruments/oiccbasisswap.hpp
 instruments/payment.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
-math/cumulativenormaldistribution.hpp
 math/deltagammavar.hpp
 math/flatextrapolation.hpp
 math/nadarayawatson.hpp
