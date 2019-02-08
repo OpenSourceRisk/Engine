@@ -25,7 +25,7 @@
 #include <ql/errors.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string.hpp>
 #include <string>
 
 using boost::filesystem::path;
