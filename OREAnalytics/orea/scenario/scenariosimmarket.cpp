@@ -47,6 +47,8 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/dynamicblackvoltermstructure.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
+#include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
@@ -56,8 +58,6 @@
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
 #include <qle/termstructures/yoyinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
-#include <qle/termstructures/interpolatedcorrelationcurve.hpp>
-#include <qle/termstructures/flatcorrelation.hpp>
 
 #include <boost/timer.hpp>
 
@@ -382,15 +382,13 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         DLOG("Adding security cpr " << name << " from configuration " << configuration);
         // security cpr are optional, so we need a try-catch block
         try {
-            boost::shared_ptr<SimpleQuote> cprQuote(
-                new SimpleQuote(initMarket->cpr(name, configuration)->value()));
+            boost::shared_ptr<SimpleQuote> cprQuote(new SimpleQuote(initMarket->cpr(name, configuration)->value()));
             if (parameters->cprSimulate()) {
-                simData_.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::CPR, name),
+                simData_.emplace(std::piecewise_construct, std::forward_as_tuple(RiskFactorKey::KeyType::CPR, name),
                                  std::forward_as_tuple(cprQuote));
             }
-            cprs_.insert(pair<pair<string, string>, Handle<Quote>>(
-                make_pair(Market::defaultConfiguration, name), Handle<Quote>(cprQuote)));
+            cprs_.insert(pair<pair<string, string>, Handle<Quote>>(make_pair(Market::defaultConfiguration, name),
+                                                                   Handle<Quote>(cprQuote)));
         } catch (...) {
         }
     }
@@ -512,8 +510,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             if (wrapper->volatilityType() != Normal) {
                 // FIXME we can not convert constant swaption vol structures yet
                 if (boost::dynamic_pointer_cast<ConstantSwaptionVolatility>(*wrapper) != nullptr) {
-                    ALOG("Constant swaption volatility found in configuration " << configuration << " for currency " << ccy
-                                                                                << " will not be converted to normal");
+                    ALOG("Constant swaption volatility found in configuration "
+                         << configuration << " for currency " << ccy << " will not be converted to normal");
                 } else {
                     // Get swap index associated with this volatility structure
                     string swapIndexName = initMarket->swapIndexBase(ccy, configuration);
@@ -525,11 +523,11 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     SwaptionVolatilityConverter converter(asof_, *wrapper, *swapIndex, *shortSwapIndex, Normal);
                     wrapper.linkTo(converter.convert());
 
-                    LOG("Converting swaption volatilities in configuration " << configuration << " with currency " << ccy
-                                                                             << " to normal swaption volatilities");
+                    LOG("Converting swaption volatilities in configuration "
+                        << configuration << " with currency " << ccy << " to normal swaption volatilities");
                 }
             }
-        
+
             Handle<SwaptionVolatilityStructure> svp;
             std::map<RiskFactorKey, boost::shared_ptr<SimpleQuote>> simDataTmp;
             if (parameters->simulateSwapVols()) {
@@ -561,7 +559,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 Size atmSlice = std::find_if(strikeSpreads.begin(), strikeSpreads.end(),
                                              [](const Real s) { return close_enough(s, 0.0); }) -
                                 strikeSpreads.begin();
-                QL_REQUIRE(atmSlice < strikeSpreads.size(), "could not find atm slice (strikeSpreads do not contain 0.0)");
+                QL_REQUIRE(atmSlice < strikeSpreads.size(),
+                           "could not find atm slice (strikeSpreads do not contain 0.0)");
                 for (Size k = 0; k < strikeSpreads.size(); ++k) {
                     for (Size i = 0; i < optionTenors.size(); ++i) {
                         for (Size j = 0; j < swapTenors.size(); ++j) {
@@ -573,7 +572,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
 
                             Size index = i * swapTenors.size() * strikeSpreads.size() + j * strikeSpreads.size() + k;
 
-                            simDataTmp.emplace(std::piecewise_construct,
+                            simDataTmp.emplace(
+                                std::piecewise_construct,
                                 std::forward_as_tuple(RiskFactorKey::KeyType::SwaptionVolatility, ccy, index),
                                 std::forward_as_tuple(q));
                             auto tmp = Handle<Quote>(q);
@@ -581,8 +581,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                             if (k == atmSlice) {
                                 atmQuotes[i][j] = tmp;
                                 shift[i][j] = wrapper->volatilityType() == ShiftedLognormal
-                                    ? wrapper->shift(optionTenors[i], swapTenors[j])
-                                    : 0.0;
+                                                  ? wrapper->shift(optionTenors[i], swapTenors[j])
+                                                  : 0.0;
                             }
                         }
                     }
@@ -623,7 +623,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     WLOG("Only ATM slice is considered from init market's cube");
                 boost::shared_ptr<QuantLib::SwaptionVolatilityStructure> svolp =
                     boost::make_shared<QuantExt::DynamicSwaptionVolatilityMatrix>(*wrapper, 0, NullCalendar(),
-                                                                                    decayMode);
+                                                                                  decayMode);
                 svp = Handle<SwaptionVolatilityStructure>(svolp);
             }
 
@@ -762,8 +762,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 new SimpleQuote(initMarket->recoveryRate(name, configuration)->value()));
             if (parameters->simulateRecoveryRates()) {
                 simDataTmp.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
-                                 std::forward_as_tuple(rrQuote));
+                                   std::forward_as_tuple(RiskFactorKey::KeyType::RecoveryRate, name),
+                                   std::forward_as_tuple(rrQuote));
             }
             defaultCurves_.insert(pair<pair<string, string>, Handle<DefaultProbabilityTermStructure>>(
                 make_pair(Market::defaultConfiguration, name), dch));
@@ -799,8 +799,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                     if (parameters->simulateCdsVols()) {
                         simDataTmp.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
-                                         std::forward_as_tuple(q));
+                                           std::forward_as_tuple(RiskFactorKey::KeyType::CDSVolatility, name, i),
+                                           std::forward_as_tuple(q));
                     }
                     quotes.emplace_back(q);
                 }
@@ -877,8 +877,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                         Volatility vol = wrapper->blackVol(date, k, true);
                         boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
                         simDataTmp.emplace(std::piecewise_construct,
-                                         std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx),
-                                         std::forward_as_tuple(q));
+                                           std::forward_as_tuple(RiskFactorKey::KeyType::FXVolatility, ccyPair, idx),
+                                           std::forward_as_tuple(q));
                         quotes[j][i] = Handle<Quote>(q);
                     }
                 }
@@ -1152,8 +1152,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 quotes.push_back(qh);
                 simDataTmp.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i - 1),
-                                 std::forward_as_tuple(q));
+                                   std::forward_as_tuple(RiskFactorKey::KeyType::ZeroInflationCurve, zic, i - 1),
+                                   std::forward_as_tuple(q));
                 DLOG("ScenarioSimMarket index curve " << zic << " zeroRate[" << i << "]=" << q->value());
             }
 
@@ -1222,8 +1222,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 }
                 quotes.push_back(qh);
                 simDataTmp.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
-                                 std::forward_as_tuple(q));
+                                   std::forward_as_tuple(RiskFactorKey::KeyType::YoYInflationCurve, yic, i - 1),
+                                   std::forward_as_tuple(q));
                 DLOG("ScenarioSimMarket index curve " << yic << " zeroRate[" << i << "]=" << q->value());
             }
 
@@ -1299,8 +1299,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 // If we are simulating commodities, add the quote to simData_
                 if (parameters->commodityCurveSimulate()) {
                     simDataTmp.emplace(piecewise_construct,
-                                     forward_as_tuple(RiskFactorKey::KeyType::CommodityCurve, name, i),
-                                     forward_as_tuple(quote));
+                                       forward_as_tuple(RiskFactorKey::KeyType::CommodityCurve, name, i),
+                                       forward_as_tuple(quote));
                 }
             }
 
@@ -1354,8 +1354,8 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                         boost::shared_ptr<SimpleQuote> quote =
                             boost::make_shared<SimpleQuote>(baseVol->blackVol(asof_ + expiries[j], strike));
                         simDataTmp.emplace(piecewise_construct,
-                                         forward_as_tuple(RiskFactorKey::KeyType::CommodityVolatility, name, index++),
-                                         forward_as_tuple(quote));
+                                           forward_as_tuple(RiskFactorKey::KeyType::CommodityVolatility, name, index++),
+                                           forward_as_tuple(quote));
                         quotes[i][j] = Handle<Quote>(quote);
                     }
                 }
@@ -1407,9 +1407,9 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
     for (const auto& pair : parameters->correlationPairs()) {
         LOG("Adding correlations for " << pair.first << ":" << pair.second << " from configuration " << configuration);
         boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
-        Handle<QuantExt::CorrelationTermStructure> baseCorr = initMarket->correlationCurve(pair.first, pair.second, configuration);
+        Handle<QuantExt::CorrelationTermStructure> baseCorr =
+            initMarket->correlationCurve(pair.first, pair.second, configuration);
 
-        
         Handle<QuantExt::CorrelationTermStructure> ch;
         if (parameters->simulateCorrelations()) {
 
@@ -1439,24 +1439,21 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
             }
 
             if (n == 1 && m == 1) {
-                ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<FlatCorrelation>
-                    (baseCorr->settlementDays(), cal, quotes[0][0], dc));
+                ch = Handle<QuantExt::CorrelationTermStructure>(
+                    boost::make_shared<FlatCorrelation>(baseCorr->settlementDays(), cal, quotes[0][0], dc));
             } else if (n == 1) {
-                ch = Handle<QuantExt::CorrelationTermStructure>(boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc, cal));
+                ch = Handle<QuantExt::CorrelationTermStructure>(
+                    boost::make_shared<InterpolatedCorrelationCurve<Linear>>(times, quotes[0], dc, cal));
             } else {
                 QL_FAIL("only atm or flat correlation termstructures currently supported");
             }
-            
+
             ch->enableExtrapolation(baseCorr->allowsExtrapolation());
         } else {
             ch = Handle<QuantExt::CorrelationTermStructure>(*baseCorr);
         }
 
-
-
-        correlationCurves_[make_tuple(Market::defaultConfiguration, pair.first, pair.second)] =
-            ch;
-
+        correlationCurves_[make_tuple(Market::defaultConfiguration, pair.first, pair.second)] = ch;
     }
     LOG("security recovery rates done...");
 
@@ -1476,7 +1473,7 @@ void ScenarioSimMarket::applyScenario(const boost::shared_ptr<Scenario>& scenari
         // Loop through the scenario keys and check which keys are present in simData_,
         // adding to the count when a match is identified
         // Then check that the count=simData_.size - this ensures that simData_ is a valid
-        // subset of the scenario - fails is a member of simData is not present in the 
+        // subset of the scenario - fails is a member of simData is not present in the
         // scenario
         auto it = simData_.find(key);
         if (it == simData_.end()) {

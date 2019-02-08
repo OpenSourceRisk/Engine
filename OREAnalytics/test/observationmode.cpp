@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include "testmarket.hpp"
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -46,12 +46,12 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include "testmarket.hpp"
 
 using namespace std;
 using namespace QuantLib;
@@ -351,7 +351,7 @@ void simulation(string dateGridString, bool checkFixings) {
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ObservationModeTest)
-		
+
 BOOST_AUTO_TEST_CASE(testDisableShort) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 

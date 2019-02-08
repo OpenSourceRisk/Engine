@@ -17,7 +17,6 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -46,6 +45,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
@@ -238,7 +238,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     return portfolio;
 }
 
-void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZeroPVRatio, vector<Real>& epe_archived, vector<Real>& ene_archived) {
+void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZeroPVRatio, vector<Real>& epe_archived,
+                      vector<Real>& ene_archived) {
     BOOST_TEST_MESSAGE("Testing Swap Exposure Performance size=" << portfolioSize << "...");
 
     SavedSettings backup;
@@ -464,17 +465,17 @@ void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZe
         eeVec.push_back(epe);
         eneVec.push_back(ene);
     }
-    
+
     ObservationMode::instance().setMode(backupOm);
     IndexManager::instance().clearHistories();
-    
-    //check results
+
+    // check results
     BOOST_CHECK_CLOSE(nonZeroPVRatio, nonZeroPerc, 0.005);
 
     for (Size i = 0; i < epe_archived.size(); ++i) {
         BOOST_CHECK_CLOSE(eeVec[i], epe_archived[i], 0.01);
     }
-    
+
     for (Size i = 0; i < ene_archived.size(); ++i) {
         BOOST_CHECK_CLOSE(eneVec[i], ene_archived[i], 0.01);
     }
@@ -503,7 +504,7 @@ BOOST_AUTO_TEST_CASE(testSwapPerformanceNoneObs) {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    
+
     test_performance(100, ObservationMode::Mode::None, 70.5875, epe_archived, ene_archived);
 }
 
@@ -525,7 +526,7 @@ BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceNoneObs) {
         27974,   30230.6, 30331.7, 25129.4, 25443.9, 27195.7, 27727.1, 22540.7, 22623.7, 24868.9, 25036.2, 19195.5,
         19036.4, 21082.1, 21592.6, 15735.2, 15809.7, 17752,   17959.2, 12408.7, 12506.8, 13937.7, 14004,   8403.87,
         8375.64, 10190.8, 10229.4, 4311.72, 4277.53, 6773.5,  6779.32, 0};
-    
+
     test_performance(1, ObservationMode::Mode::None, 98.75, epe_archived, ene_archived);
 }
 
@@ -552,7 +553,7 @@ BOOST_AUTO_TEST_CASE(testSwapPerformanceDisableObs) {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    
+
     test_performance(100, ObservationMode::Mode::Disable, 70.5875, epe_archived, ene_archived);
 }
 

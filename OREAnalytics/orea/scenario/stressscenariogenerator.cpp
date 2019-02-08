@@ -31,9 +31,9 @@ StressScenarioGenerator::StressScenarioGenerator(const boost::shared_ptr<StressT
                                                  const boost::shared_ptr<Scenario>& baseScenario,
                                                  const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                                  const boost::shared_ptr<ScenarioFactory>& stressScenarioFactory)
-    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData), 
+    : ShiftScenarioGenerator(baseScenario, simMarketData), stressData_(stressData),
       stressScenarioFactory_(stressScenarioFactory) {
-    
+
     QL_REQUIRE(stressData_, "StressScenarioGenerator: stressData is null");
 
     generateScenarios();
@@ -519,7 +519,7 @@ void StressScenarioGenerator::addCapFloorVolShifts(StressTestScenarioData::Stres
 }
 
 void StressScenarioGenerator::addSecuritySpreadShifts(StressTestScenarioData::StressTestData& std,
-    boost::shared_ptr<Scenario>& scenario) {
+                                                      boost::shared_ptr<Scenario>& scenario) {
     for (auto d : std.securitySpreadShifts) {
         string bond = d.first;
         StressTestScenarioData::SpotShiftData data = d.second;

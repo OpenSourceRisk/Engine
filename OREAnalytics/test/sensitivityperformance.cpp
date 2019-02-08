@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -606,7 +606,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     ObservationMode::instance().setMode(backupOm);
-    
+
     BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 } // namespace

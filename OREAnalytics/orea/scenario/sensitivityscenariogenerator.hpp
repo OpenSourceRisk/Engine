@@ -107,16 +107,14 @@ public:
     ~SensitivityScenarioGenerator(){};
 
     /*! Return the map of absolute shift sizes by risk factor key for this generator
-        
-        \warning Where there are tenor specific shifts the shift size is only meaningful 
-                 if the tenors in the sensitivity configuration line up with the tenors in 
-                 the simulation market configuration. If this is not the case, an absolute 
-                 shift size of <code>Null<Real>()</code> is added for the given risk factor 
+
+        \warning Where there are tenor specific shifts the shift size is only meaningful
+                 if the tenors in the sensitivity configuration line up with the tenors in
+                 the simulation market configuration. If this is not the case, an absolute
+                 shift size of <code>Null<Real>()</code> is added for the given risk factor
                  key
     */
-    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const {
-        return shiftSizes_;
-    }
+    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes() const { return shiftSizes_; }
 
 private:
     void generateScenarios();
@@ -161,16 +159,17 @@ private:
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);
     ScenarioDescription commodityScenarioDescription(const std::string& commodityName, bool up);
-    ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket, bool up);
-    ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName,
-        QuantLib::Size expiryBucket, QuantLib::Size strikeBucket, bool up);
+    ScenarioDescription commodityCurveScenarioDescription(const std::string& commodityName, QuantLib::Size bucket,
+                                                          bool up);
+    ScenarioDescription commodityVolScenarioDescription(const std::string& commodityName, QuantLib::Size expiryBucket,
+                                                        QuantLib::Size strikeBucket, bool up);
     ScenarioDescription securitySpreadScenarioDescription(string bond, bool up);
     ScenarioDescription correlationScenarioDescription(string pair, Size expiryBucket, Size strikeBucket, bool up);
 
     boost::shared_ptr<SensitivityScenarioData> sensitivityData_;
     boost::shared_ptr<ScenarioFactory> sensiScenarioFactory_;
     const bool overrideTenors_, continueOnError_;
-    
+
     //! Holds the shift sizes for each risk factor key
     std::map<RiskFactorKey, QuantLib::Real> shiftSizes_;
 };

@@ -16,9 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <orea/app/reportwriter.hpp>
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
-#include <orea/app/reportwriter.hpp>
 #include <ored/report/csvreport.hpp>
 
 using namespace std;
@@ -27,8 +27,7 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-void SensitivityRunner::runSensitivityAnalysis(
-    boost::shared_ptr<Market> market, Conventions& conventions) {
+void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions) {
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
