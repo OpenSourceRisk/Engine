@@ -1037,9 +1037,8 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
 
     // inflation indices
     DLOG("Writing inflation indices");
-    XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
     if (!cpiIndices_.empty()) {
-        XMLUtils::addChildren(doc, cpiNode, "CpiIndices", "Index", cpiIndices_);
+        XMLUtils::addChildren(doc, marketNode, "CpiIndices", "Index", cpiIndices_);
     }
 
     // zero inflation
