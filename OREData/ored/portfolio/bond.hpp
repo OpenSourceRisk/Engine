@@ -79,6 +79,9 @@ public:
     const string& maturityDate() const { return maturityDate_; }
     const string& currency() const { return currency_; }
 
+protected:
+    virtual boost::shared_ptr<LegData> createLegData() const;
+
 private:
     string issuerId_;
     string creditCurveId_;

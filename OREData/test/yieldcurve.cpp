@@ -16,11 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <test/yieldcurve.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -40,10 +41,12 @@ public:
     const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const;
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const;
     const vector<Fixing>& loadFixings() const { return fixings_; }
+    const vector<Fixing>& loadDividends() const { return dividends_; }
 
 private:
     map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
     vector<Fixing> fixings_;
+    vector<Fixing> dividends_;
 };
 
 const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
@@ -78,11 +81,11 @@ MarketDataLoader::MarketDataLoader() {
 }
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void YieldCurveTest::testBootstrapAndFixings() {
+BOOST_AUTO_TEST_SUITE(YieldCurveTests)
 
-    SavedSettings backup;
+BOOST_AUTO_TEST_CASE(testBootstrapAndFixings) {
 
     Date asof(31, August, 2015);
     Settings::instance().evaluationDate() = asof;
@@ -129,9 +132,6 @@ void YieldCurveTest::testBootstrapAndFixings() {
     BOOST_CHECK_NO_THROW(YieldCurve jpyYieldCurve(asof, spec, curveConfigs, loader, conventions));
 }
 
-test_suite* YieldCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("YieldCurveTest");
-    suite->add(BOOST_TEST_CASE(&YieldCurveTest::testBootstrapAndFixings));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

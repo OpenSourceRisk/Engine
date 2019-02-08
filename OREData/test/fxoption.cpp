@@ -17,22 +17,21 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/fxoption.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/fxoption.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore::data;
 using namespace ore::data;
-
-// FX Option test, example from Wystup, section 1.2.6, page 28
 
 namespace {
 
@@ -64,9 +63,13 @@ private:
 };
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
-void FXOptionTest::testFXOptionPrice() {
+BOOST_AUTO_TEST_SUITE(FXOptionTests)
+
+// FX Option test, example from Wystup, section 1.2.6, page 28
+BOOST_AUTO_TEST_CASE(testFXOptionPrice) {
+
     BOOST_TEST_MESSAGE("Testing FXOption Price...");
 
     Date today = Settings::instance().evaluationDate();
@@ -77,10 +80,10 @@ void FXOptionTest::testFXOptionPrice() {
 
     // build FXOption - expiry in 1 Year
     OptionData optionData("Long", "Call", "European", true, vector<string>(1, "20170203"));
-    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
-                                    "USD", "20170203");
-    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", 10000.0,
-                                    "EUR", "20170203");
+    OptionData optionDataPremiumUSD("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", "",
+                                    10000.0, "USD", "20170203");
+    OptionData optionDataPremiumEUR("Long", "Call", "European", true, vector<string>(1, "20170203"), "Cash", "",
+                                    10000.0, "EUR", "20170203");
     Envelope env("CP1");
     FxOption fxOption(env, optionData, "EUR", 1000000, // bought
                       "USD", 1250000);                 // sold
@@ -130,9 +133,6 @@ void FXOptionTest::testFXOptionPrice() {
     Settings::instance().evaluationDate() = today; // reset
 }
 
-test_suite* FXOptionTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("FXOptionTest");
-    suite->add(BOOST_TEST_CASE(&FXOptionTest::testFXOptionPrice));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -31,10 +31,9 @@
 #include <ored/model/eqbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-using namespace QuantLib;
-
 namespace ore {
 namespace data {
+using namespace QuantLib;
 
 //! Builder for a Lognormal EQ model component
 /*!
@@ -66,7 +65,7 @@ public:
     //@{
     std::string eqName() { return data_->eqName(); }
     boost::shared_ptr<QuantExt::EqBsParametrization>& parametrization() { return parametrization_; }
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket() { return optionBasket_; }
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket() { return optionBasket_; }
     //@}
 private:
     void buildOptionBasket();
@@ -77,7 +76,7 @@ private:
     QuantLib::Currency baseCcy_;
     Real error_;
     boost::shared_ptr<QuantExt::EqBsParametrization> parametrization_;
-    std::vector<boost::shared_ptr<CalibrationHelper>> optionBasket_;
+    std::vector<boost::shared_ptr<BlackCalibrationHelper>> optionBasket_;
     Array optionExpiries_;
 };
 } // namespace data

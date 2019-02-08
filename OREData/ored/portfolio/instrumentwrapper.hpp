@@ -27,10 +27,9 @@
 #include <ql/time/date.hpp>
 #include <vector>
 
-using QuantLib::Real;
-
 namespace ore {
 namespace data {
+using QuantLib::Real;
 
 //! Instrument Wrapper
 /*!
@@ -76,9 +75,10 @@ public:
 
     //! call update on enclosed instrument(s)
     virtual void updateQlInstruments() {
-        instrument_->update();
+        // the instrument might contain nested lazy objects which we also want to be updated
+        instrument_->deepUpdate();
         for (QuantLib::Size i = 0; i < additionalInstruments_.size(); ++i)
-            additionalInstruments_[i]->update();
+            additionalInstruments_[i]->deepUpdate();
     }
 
     //! is it an Option?

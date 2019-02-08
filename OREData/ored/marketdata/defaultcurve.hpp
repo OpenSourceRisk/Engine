@@ -31,12 +31,11 @@
 #include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
 #include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
 
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using ore::data::CurveConfigurations;
 using ore::data::Conventions;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building Swaption volatility structures
 /*!

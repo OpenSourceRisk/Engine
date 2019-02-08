@@ -81,6 +81,9 @@ void FxForward::fromXML(XMLNode* node) {
     soldCurrency_ = XMLUtils::getChildValue(fxNode, "SoldCurrency", true);
     boughtAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "BoughtAmount", true);
     soldAmount_ = XMLUtils::getChildValueAsDouble(fxNode, "SoldAmount", true);
+    settlement_ = XMLUtils::getChildValue(fxNode, "Settlement", false);
+    if (settlement_ == "")
+        settlement_ = "Physical";
 }
 
 XMLNode* FxForward::toXML(XMLDocument& doc) {
@@ -92,6 +95,7 @@ XMLNode* FxForward::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fxNode, "BoughtAmount", boughtAmount_);
     XMLUtils::addChild(doc, fxNode, "SoldCurrency", soldCurrency_);
     XMLUtils::addChild(doc, fxNode, "SoldAmount", soldAmount_);
+    XMLUtils::addChild(doc, fxNode, "Settlement", settlement_);
     return node;
 }
 } // namespace data

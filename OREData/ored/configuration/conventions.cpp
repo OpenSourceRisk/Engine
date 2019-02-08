@@ -224,10 +224,11 @@ XMLNode* FraConvention::toXML(XMLDocument& doc) {
 OisConvention::OisConvention(const string& id, const string& spotLag, const string& index,
                              const string& fixedDayCounter, const string& paymentLag, const string& eom,
                              const string& fixedFrequency, const string& fixedConvention,
-                             const string& fixedPaymentConvention, const string& rule)
+                             const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
     : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
       strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule) {
+      strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
+      strPaymentCal_(paymentCal) {
     build();
 }
 
@@ -245,6 +246,7 @@ void OisConvention::build() {
     fixedPaymentConvention_ =
         strFixedPaymentConvention_.empty() ? Following : parseBusinessDayConvention(strFixedPaymentConvention_);
     rule_ = strRule_.empty() ? DateGeneration::Backward : parseDateGenerationRule(strRule_);
+    paymentCal_ = strPaymentCal_.empty() ? Calendar() : parseCalendar(strPaymentCal_);
 }
 
 void OisConvention::fromXML(XMLNode* node) {
@@ -263,6 +265,7 @@ void OisConvention::fromXML(XMLNode* node) {
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", false);
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", false);
     strRule_ = XMLUtils::getChildValue(node, "Rule", false);
+    strPaymentCal_ = XMLUtils::getChildValue(node, "PaymentCalendar", false);
 
     build();
 }
@@ -280,6 +283,7 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
     XMLUtils::addChild(doc, node, "FixedPaymentConvention", strFixedPaymentConvention_);
     XMLUtils::addChild(doc, node, "Rule", strRule_);
+    XMLUtils::addChild(doc, node, "PaymentCalendar", strPaymentCal_);
 
     return node;
 }
@@ -547,6 +551,39 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
+    : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
+    build();
+}
+
+void BMABasisSwapConvention::build() {
+    liborIndex_ = parseIborIndex(strLiborIndex_);
+    bmaIndex_ = boost::dynamic_pointer_cast<QuantExt::BMAIndexWrapper>(parseIborIndex(strBmaIndex_));
+}
+
+void BMABasisSwapConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "BMABasisSwap");
+    type_ = Type::BMABasisSwap;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strLiborIndex_ = XMLUtils::getChildValue(node, "LiborIndex", true);
+    strBmaIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
+
+    build();
+}
+
+XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("BMABasisSwap");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "LiborIndex", strLiborIndex_);
+    XMLUtils::addChild(doc, node, "BMAIndex", strBmaIndex_);
+
+    return node;
+}
+
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
                            const string& spotRelative)
@@ -599,10 +636,13 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
 CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays,
                                                          const string& strSettlementCalendar,
                                                          const string& strRollConvention, const string& flatIndex,
-                                                         const string& spreadIndex, const string& strEom)
+                                                         const string& spreadIndex, const string& strEom,
+                                                         const string& strIsResettable,
+                                                         const string& strFlatIndexIsResettable)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
-      strSpreadIndex_(spreadIndex), strEom_(strEom) {
+      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
+      strFlatIndexIsResettable_(strFlatIndexIsResettable) {
     build();
 }
 
@@ -613,6 +653,8 @@ void CrossCcyBasisSwapConvention::build() {
     flatIndex_ = parseIborIndex(strFlatIndex_);
     spreadIndex_ = parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
+    isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
+    FlatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -628,6 +670,8 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strFlatIndex_ = XMLUtils::getChildValue(node, "FlatIndex", true);
     strSpreadIndex_ = XMLUtils::getChildValue(node, "SpreadIndex", true);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
+    strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
+    strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
 
     build();
 }
@@ -641,6 +685,70 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
     XMLUtils::addChild(doc, node, "FlatIndex", strFlatIndex_);
     XMLUtils::addChild(doc, node, "SpreadIndex", strSpreadIndex_);
+    XMLUtils::addChild(doc, node, "EOM", strEom_);
+    XMLUtils::addChild(doc, node, "IsResettable", false);
+    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", false);
+
+    return node;
+}
+
+CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
+    const string& id, const string& settlementDays, const string& settlementCalendar,
+    const string& settlementConvention, const string& fixedCurrency, const string& fixedFrequency,
+    const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom)
+    : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
+      strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
+      strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
+      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom) {
+
+    build();
+}
+
+void CrossCcyFixFloatSwapConvention::build() {
+    settlementDays_ = lexical_cast<Natural>(strSettlementDays_);
+    settlementCalendar_ = parseCalendar(strSettlementCalendar_);
+    settlementConvention_ = parseBusinessDayConvention(strSettlementConvention_);
+    fixedCurrency_ = parseCurrency(strFixedCurrency_);
+    fixedFrequency_ = parseFrequency(strFixedFrequency_);
+    fixedConvention_ = parseBusinessDayConvention(strFixedConvention_);
+    fixedDayCounter_ = parseDayCounter(strFixedDayCounter_);
+    index_ = parseIborIndex(strIndex_);
+    eom_ = strEom_.empty() ? false : parseBool(strEom_);
+}
+
+void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "CrossCurrencyFixFloat");
+    type_ = Type::CrossCcyFixFloat;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+
+    // Get string values from xml
+    strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
+    strSettlementCalendar_ = XMLUtils::getChildValue(node, "SettlementCalendar", true);
+    strSettlementConvention_ = XMLUtils::getChildValue(node, "SettlementConvention", true);
+    strFixedCurrency_ = XMLUtils::getChildValue(node, "FixedCurrency", true);
+    strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", true);
+    strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
+    strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
+
+    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strEom_ = XMLUtils::getChildValue(node, "EOM", false);
+
+    build();
+}
+
+XMLNode* CrossCcyFixFloatSwapConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("CrossCurrencyFixFloat");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "SettlementDays", strSettlementDays_);
+    XMLUtils::addChild(doc, node, "SettlementCalendar", strSettlementCalendar_);
+    XMLUtils::addChild(doc, node, "SettlementConvention", strSettlementConvention_);
+    XMLUtils::addChild(doc, node, "FixedCurrency", strFixedCurrency_);
+    XMLUtils::addChild(doc, node, "FixedFrequency", strFixedFrequency_);
+    XMLUtils::addChild(doc, node, "FixedConvention", strFixedConvention_);
+    XMLUtils::addChild(doc, node, "FixedDayCounter", strFixedDayCounter_);
+    XMLUtils::addChild(doc, node, "Index", strIndex_);
     XMLUtils::addChild(doc, node, "EOM", strEom_);
 
     return node;
@@ -831,6 +939,57 @@ XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
+CmsSpreadOptionConvention::CmsSpreadOptionConvention(const string& id, const string& strForwardStart,
+                                                     const string& strSpotDays, const string& strSwapTenor,
+                                                     const string& strFixingDays, const string& strCalendar,
+                                                     const string& strDayCounter, const string& strConvention)
+    : Convention(id, Type::CMSSpreadOption), strForwardStart_(strForwardStart), strSpotDays_(strSpotDays),
+      strSwapTenor_(strSwapTenor), strFixingDays_(strFixingDays), strCalendar_(strCalendar),
+      strDayCounter_(strDayCounter), strRollConvention_(strConvention) {
+    build();
+}
+
+void CmsSpreadOptionConvention::fromXML(XMLNode* node) {
+
+    XMLUtils::checkNode(node, "CmsSpreadOption");
+    type_ = Type::CMSSpreadOption;
+    id_ = XMLUtils::getChildValue(node, "Id", true);
+    strForwardStart_ = XMLUtils::getChildValue(node, "ForwardStart", true);
+    strSpotDays_ = XMLUtils::getChildValue(node, "SpotDays", true);
+    strSwapTenor_ = XMLUtils::getChildValue(node, "SwapTenor", true);
+    strFixingDays_ = XMLUtils::getChildValue(node, "FixingDays", true);
+    strCalendar_ = XMLUtils::getChildValue(node, "Calendar", true);
+    strDayCounter_ = XMLUtils::getChildValue(node, "DayCounter", true);
+    strRollConvention_ = XMLUtils::getChildValue(node, "RollConvention", true);
+
+    build();
+}
+
+void CmsSpreadOptionConvention::build() {
+
+    forwardStart_ = parsePeriod(strForwardStart_);
+    spotDays_ = parsePeriod(strSpotDays_);
+    swapTenor_ = parsePeriod(strSwapTenor_);
+    fixingDays_ = lexical_cast<Natural>(strFixingDays_);
+    calendar_ = parseCalendar(strCalendar_);
+    dayCounter_ = parseDayCounter(strDayCounter_);
+    rollConvention_ = parseBusinessDayConvention(strRollConvention_);
+}
+
+XMLNode* CmsSpreadOptionConvention::toXML(XMLDocument& doc) {
+
+    XMLNode* node = doc.allocNode("CmsSpreadOption");
+    XMLUtils::addChild(doc, node, "Id", id_);
+    XMLUtils::addChild(doc, node, "ForwardStart", strForwardStart_);
+    XMLUtils::addChild(doc, node, "SpotDays", strSpotDays_);
+    XMLUtils::addChild(doc, node, "SwapTenor", strSwapTenor_);
+    XMLUtils::addChild(doc, node, "FixingDays", strFixingDays_);
+    XMLUtils::addChild(doc, node, "Calendar", strCalendar_);
+    XMLUtils::addChild(doc, node, "DayCounter", strDayCounter_);
+    XMLUtils::addChild(doc, node, "RollConvention", strRollConvention_);
+
+    return node;
+}
 void Conventions::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Conventions");
@@ -858,16 +1017,22 @@ void Conventions::fromXML(XMLNode* node) {
             convention.reset(new TenorBasisSwapConvention());
         } else if (childName == "TenorBasisTwoSwap") {
             convention.reset(new TenorBasisTwoSwapConvention());
+        } else if (childName == "BMABasisSwap") {
+            convention.reset(new BMABasisSwapConvention());
         } else if (childName == "FX") {
             convention.reset(new FXConvention());
         } else if (childName == "CrossCurrencyBasis") {
             convention.reset(new CrossCcyBasisSwapConvention());
+        } else if (childName == "CrossCurrencyFixFloat") {
+            convention.reset(new CrossCcyFixFloatSwapConvention());
         } else if (childName == "CDS") {
             convention.reset(new CdsConvention());
         } else if (childName == "SwapIndex") {
             convention.reset(new SwapIndexConvention());
         } else if (childName == "InflationSwap") {
             convention.reset(new InflationSwapConvention());
+        } else if (childName == "CmsSpreadOption") {
+            convention.reset(new CmsSpreadOptionConvention());
         } else {
             QL_FAIL("Convention name, " << childName << ", not recognized.");
         }
@@ -904,6 +1069,8 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     QL_REQUIRE(it != data_.end(), "Cannot find conventions for id " << id);
     return it->second;
 }
+
+bool Conventions::has(const string& id) const { return data_.count(id) == 1; }
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     const string& id = convention->id();

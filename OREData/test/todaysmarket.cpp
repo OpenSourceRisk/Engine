@@ -16,13 +16,20 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
+#include <ored/portfolio/builders/cms.hpp>
+#include <ored/portfolio/builders/cmsspread.hpp>
+#include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/legbuilders.hpp>
+#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <test/todaysmarket.hpp>
-
+#include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/time/calendars/all.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 #include <ql/utilities/dataformatters.hpp>
 
 #include <boost/algorithm/string.hpp>
@@ -36,27 +43,31 @@ using namespace std;
 using namespace ore;
 using namespace ore::data;
 
+using ore::test::TopLevelFixture;
+
 namespace {
 
-class MarketDataLoader : public data::Loader {
+class MarketDataLoader : public Loader {
 public:
     MarketDataLoader();
     const std::vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const QuantLib::Date&) const;
     const boost::shared_ptr<MarketDatum>& get(const std::string& name, const QuantLib::Date&) const;
     const std::vector<Fixing>& loadFixings() const { return fixings_; }
+    const std::vector<Fixing>& loadDividends() const { return dividends_; }
 
 private:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
+    std::vector<Fixing> dividends_;
 };
 
-const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const QuantLib::Date& d) const {
+const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
     auto it = data_.find(d);
     QL_REQUIRE(it != data_.end(), "Loader has no data for date " << d);
     return it->second;
 }
 
-const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const QuantLib::Date& d) const {
+const boost::shared_ptr<MarketDatum>& MarketDataLoader::get(const string& name, const Date& d) const {
     for (auto& md : loadQuotes(d)) {
         if (md->name() == name)
             return md;
@@ -382,7 +393,20 @@ MarketDataLoader::MarketDataLoader() {
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/20170226 0.00")
         ("20160226 EQUITY_DIVIDEND/RATE/SP5/USD/2Y 0.00")
         ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/1Y/ATMF 0.25")
-        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF 0.35");
+        ("20160226 EQUITY_OPTION/RATE_LNVOL/SP5/USD/2018-02-26/ATMF 0.35")
+        // commodity quotes
+        ("20160226 COMMODITY/PRICE/GOLD/USD 1155.593")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2016-08-31 1158.8")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28 1160.9")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31 1163.4")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29 1165.3")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31 1172.9")
+        ("20160226 COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31 1223")
+        // correlation quotes
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-2Y/1Y/ATM 0.1")
+        ("20160226 CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-2Y/2Y/ATM 0.2")
+        ("20160226 CORRELATION/PRICE/USD-CMS-10Y/USD-CMS-2Y/1Y/ATM 0.0038614")
+        ("20160226 CORRELATION/PRICE/USD-CMS-10Y/USD-CMS-2Y/2Y/ATM 0.0105279");
     // clang-format on
 
     for (auto s : data) {
@@ -391,15 +415,16 @@ MarketDataLoader::MarketDataLoader() {
         boost::split(tokens, s, boost::is_any_of(" "), boost::token_compress_on);
 
         QL_REQUIRE(tokens.size() == 3, "Invalid market data line, 3 tokens expected " << s);
-        Date date = data::parseDate(tokens[0]);
+        Date date = parseDate(tokens[0]);
         const string& key = tokens[1];
-        Real value = data::parseReal(tokens[2]);
+        Real value = parseReal(tokens[2]);
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
 
-boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
-    boost::shared_ptr<data::TodaysMarketParameters> parameters(new data::TodaysMarketParameters());
+boost::shared_ptr<TodaysMarketParameters> marketParameters() {
+
+    boost::shared_ptr<TodaysMarketParameters> parameters = boost::make_shared<TodaysMarketParameters>();
 
     // define three curves
     map<string, string> mDiscounting = {{"EUR", "Yield/EUR/EUR1D"}, {"USD", "Yield/USD/USD1D"}};
@@ -416,7 +441,10 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     parameters->addMarketObject(MarketObject::SwaptionVol, "ois", {{"USD", "SwaptionVolatility/USD/USD_SW_LN"}});
     parameters->addMarketObject(MarketObject::CapFloorVol, "ois", {{"USD", "CapFloorVolatility/USD/USD_CF_LN"}});
 
-    map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"}, {"USD-CMS-30Y", "USD-LIBOR-3M"}};
+    map<string, string> swapIndexMap = {{"USD-CMS-1Y", "USD-FedFunds"},
+                                        {"USD-CMS-30Y", "USD-LIBOR-3M"},
+                                        {"USD-CMS-2Y", "USD-LIBOR-3M"},
+                                        {"USD-CMS-10Y", "USD-LIBOR-3M"}};
     parameters->addMarketObject(MarketObject::SwapIndexCurve, "ois", swapIndexMap);
 
     map<string, string> equityMap = {{"SP5", "Equity/USD/SP5"}};
@@ -424,6 +452,12 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
 
     map<string, string> equityVolMap = {{"SP5", "EquityVolatility/USD/SP5"}};
     parameters->addMarketObject(MarketObject::EquityVol, "ois", equityVolMap);
+
+    parameters->addMarketObject(MarketObject::CommodityCurve, "ois", {{"COMDTY_GOLD_USD", "Commodity/USD/GOLD_USD"}});
+
+    map<string, string> correlationMap = {{"EUR-CMS-10Y/EUR-CMS-2Y", "Correlation/EUR-CORR"},
+                                          {"USD-CMS-10Y/USD-CMS-2Y", "Correlation/USD-CORR"}};
+    parameters->addMarketObject(MarketObject::Correlation, "ois", correlationMap);
 
     // all others empty so far
     map<string, string> emptyMap;
@@ -444,25 +478,27 @@ boost::shared_ptr<data::TodaysMarketParameters> marketParameters() {
     config.setId(MarketObject::FXVol, "ois");
     config.setId(MarketObject::EquityCurve, "ois");
     config.setId(MarketObject::EquityVol, "ois");
+    config.setId(MarketObject::CommodityCurve, "ois");
+    config.setId(MarketObject::Correlation, "ois");
 
     parameters->addConfiguration("default", config);
 
     return parameters;
 }
 
-boost::shared_ptr<data::Conventions> conventions() {
-    boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
+boost::shared_ptr<Conventions> conventions() {
+    boost::shared_ptr<Conventions> conventions(new Conventions());
 
-    boost::shared_ptr<data::Convention> zeroConv(new data::ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED",
-                                                                              "A365", "TARGET", "Continuous", "Daily",
-                                                                              "2", "TARGET", "Following", "false"));
+    boost::shared_ptr<Convention> zeroConv(new ZeroRateConvention("EUR-ZERO-CONVENTIONS-TENOR-BASED", "A365", "TARGET",
+                                                                  "Continuous", "Daily", "2", "TARGET", "Following",
+                                                                  "false"));
     conventions->add(zeroConv);
 
-    boost::shared_ptr<data::Convention> depositConv(new data::DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
+    boost::shared_ptr<Convention> depositConv(new DepositConvention("EUR-EONIA-CONVENTIONS", "EUR-EONIA"));
     conventions->add(depositConv);
 
-    boost::shared_ptr<data::Convention> oisConv(new data::OisConvention(
-        "EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1", "false", "Annual", "Following", "Following", "Backward"));
+    boost::shared_ptr<Convention> oisConv(new OisConvention("EUR-OIS-CONVENTIONS", "2", "EUR-EONIA", "A360", "1",
+                                                            "false", "Annual", "Following", "Following", "Backward"));
     conventions->add(oisConv);
 
     // USD Fed Funds curve conventions
@@ -479,12 +515,19 @@ boost::shared_ptr<data::Conventions> conventions() {
     // USD swap index conventions
     conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-1Y", "USD-3M-SWAP-CONVENTIONS"));
     conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-30Y", "USD-3M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-2Y", "USD-3M-SWAP-CONVENTIONS"));
+    conventions->add(boost::make_shared<SwapIndexConvention>("USD-CMS-10Y", "USD-3M-SWAP-CONVENTIONS"));
+
+    // USD CMS spread option conventions
+
+    conventions->add(boost::make_shared<CmsSpreadOptionConvention>("USD-CMS-10Y-2Y-CONVENTION", "0M", "2D", "3M", "2",
+                                                                   "TARGET", "A360", "MF"));
 
     return conventions;
 }
 
-boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
-    boost::shared_ptr<data::CurveConfigurations> configs(new data::CurveConfigurations());
+boost::shared_ptr<CurveConfigurations> curveConfigurations() {
+    boost::shared_ptr<CurveConfigurations> configs(new CurveConfigurations());
 
     // Vectors to hold quote strings and segments
     vector<string> quotes;
@@ -673,7 +716,23 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
         "USD_CF_LN", "USD Lognormal capfloor volatilities", CapFloorVolatilityCurveConfig::VolatilityType::Lognormal,
-        extrapolate, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M", "Yield/USD/USD1D");
+        extrapolate, false, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M",
+        "Yield/USD/USD1D");
+
+    vector<Period> optionTenors2{Period(1, Years)};
+
+    vector<Period> optionTenors3{Period(1, Years), Period(2, Years)};
+    // Correlation curve
+    configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "EUR-CMS-1Y-10Y-CONVENTION",
+        CorrelationCurveConfig::QuoteType::Rate, extrapolate, optionTenors2, dayCounter, UnitedStates(), bdc,
+        "EUR-CMS-10Y", "EUR-CMS-2Y", "EUR");
+    configs->correlationCurveConfig("USD-CORR") = boost::make_shared<CorrelationCurveConfig>(
+        "USD-CORR", "USD CMS Correlations", CorrelationCurveConfig::Dimension::ATM,
+        CorrelationCurveConfig::CorrelationType::CMSSpread, "USD-CMS-10Y-2Y-CONVENTION",
+        CorrelationCurveConfig::QuoteType::Price, extrapolate, optionTenors3, Actual360(), TARGET(), ModifiedFollowing,
+        "USD-CMS-10Y", "USD-CMS-2Y", "USD", "USD_SW_LN", "USD1D");
 
     // clang-format off
     vector<string> eqFwdQuotes{
@@ -692,40 +751,54 @@ boost::shared_ptr<data::CurveConfigurations> curveConfigurations() {
     configs->equityVolCurveConfig("SP5") = boost::make_shared<EquityVolatilityCurveConfig>(
         "SP5", "", "USD", EquityVolatilityCurveConfig::Dimension::ATM, equityVolExpiries);
 
+    // clang-format off
+    vector<string> commodityQuotes{
+        "COMMODITY_FWD/PRICE/GOLD/USD/2016-08-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-08-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2017-12-29",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2018-12-31",
+        "COMMODITY_FWD/PRICE/GOLD/USD/2021-12-31"
+    };
+    // clang-format on
+
+    configs->commodityCurveConfig("GOLD_USD") =
+        boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", commodityQuotes);
+
     return configs;
 }
 
-boost::shared_ptr<TodaysMarket> market;
+// Fixture to use for this test suite
+class F : public TopLevelFixture {
+public:
+    boost::shared_ptr<TodaysMarket> market;
 
-void setup() {
-    Date asof(26, February, 2016);
-    Settings::instance().evaluationDate() = asof;
+    F() {
+        Date asof(26, February, 2016);
+        Settings::instance().evaluationDate() = asof;
 
-    MarketDataLoader loader;
-    data::TodaysMarketParameters params = *marketParameters();
-    data::CurveConfigurations configs = *curveConfigurations();
-    data::Conventions convs = *conventions();
+        MarketDataLoader loader;
+        TodaysMarketParameters params = *marketParameters();
+        CurveConfigurations configs = *curveConfigurations();
+        Conventions convs = *conventions();
 
-    BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
-    market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);
-}
+        BOOST_TEST_MESSAGE("Creating TodaysMarket Instance");
+        market = boost::make_shared<TodaysMarket>(asof, params, loader, configs, convs);
+    }
 
-void teardown() {
-    BOOST_TEST_MESSAGE("Destroying TodaysMarket instance");
-    market.reset();
-}
-
-// More of a guard class, as older boost versions don't have fixtures
-struct CommonVars {
-    CommonVars() { setup(); }
-    ~CommonVars() { teardown(); }
+    ~F() {
+        BOOST_TEST_MESSAGE("Destroying TodaysMarket instance");
+        market.reset();
+    }
 };
+
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
-void TodaysMarketTest::testZeroSpreadedYieldCurve() {
-    CommonVars vars;
+BOOST_FIXTURE_TEST_SUITE(TodaysMarketTests, F)
+
+BOOST_AUTO_TEST_CASE(testZeroSpreadedYieldCurve) {
 
     BOOST_TEST_MESSAGE("Testing zero spreaded yield curve rates...");
 
@@ -752,8 +825,7 @@ void TodaysMarketTest::testZeroSpreadedYieldCurve() {
     }
 }
 
-void TodaysMarketTest::testNormalOptionletVolatility() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testNormalOptionletVolatility) {
 
     BOOST_TEST_MESSAGE("Testing normal optionlet volatilities...");
 
@@ -779,12 +851,14 @@ void TodaysMarketTest::testNormalOptionletVolatility() {
 
     for (Size i = 0; i < tenors.size(); ++i) {
         for (Size j = 0; j < strikes.size(); ++j) {
-            Real error = fabs(ovs->volatility(tenors[i], strikes[j]) - cachedValues[i][j]);
+            Volatility v = ovs->volatility(tenors[i], strikes[j]);
+            Real error = fabs(v - cachedValues[i][j]);
             // clang-format off
             BOOST_CHECK_MESSAGE(error < tolerance,
                 "\ncap tenor:         " << tenors[i] <<
                 "\nstrike:            " << io::rate(strikes[j]) <<
                 "\ncached volatility: " << io::volatility(cachedValues[i][j]) <<
+                "\nvolatility:        " << io::volatility(v) <<
                 "\nerror:             " << io::rate(error) <<
                 "\ntolerance:         " << io::rate(tolerance));
             // clang-format on
@@ -792,10 +866,10 @@ void TodaysMarketTest::testNormalOptionletVolatility() {
     }
 }
 
-void TodaysMarketTest::testEquityCurve() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testEquityCurve) {
 
     BOOST_TEST_MESSAGE("Testing equity curve...");
+
     Handle<YieldTermStructure> divTs = market->equityDividendCurve("SP5");
     BOOST_CHECK(divTs.currentLink());
     Handle<YieldTermStructure> equityIrTs = market->discountCurve("USD");
@@ -829,10 +903,10 @@ void TodaysMarketTest::testEquityCurve() {
     BOOST_CHECK_EQUAL(spotVal, fwd_0);
 }
 
-void TodaysMarketTest::testEquityVolCurve() {
-    CommonVars vars;
+BOOST_AUTO_TEST_CASE(testEquityVolCurve) {
 
     BOOST_TEST_MESSAGE("Testing equity vol curve...");
+
     Handle<BlackVolTermStructure> eqVol = market->equityVol("SP5");
     BOOST_CHECK(eqVol.currentLink());
 
@@ -853,13 +927,116 @@ void TodaysMarketTest::testEquityVolCurve() {
     BOOST_CHECK_CLOSE(v_5y_atm, v_50y_atm, 1.e-10);
 }
 
-test_suite* TodaysMarketTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("TodaysMarketTest");
+BOOST_AUTO_TEST_CASE(testCommodityCurve) {
 
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testZeroSpreadedYieldCurve));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testNormalOptionletVolatility));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityCurve));
-    suite->add(BOOST_TEST_CASE(&TodaysMarketTest::testEquityVolCurve));
-    return suite;
+    BOOST_TEST_MESSAGE("Testing commodity price curve");
+
+    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    Handle<PriceTermStructure> commodityCurve = market->commodityPriceCurve("COMDTY_GOLD_USD");
+    BOOST_CHECK(*commodityCurve);
 }
-} // namespace testsuite
+
+BOOST_AUTO_TEST_CASE(testCorrelationCurve) {
+
+    BOOST_TEST_MESSAGE("Testing correlation curve");
+
+    // Just test that the building suceeded - the curve itself has been tested elsewhere
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve1 =
+        market->correlationCurve("EUR-CMS-10Y", "EUR-CMS-2Y");
+    Handle<QuantExt::CorrelationTermStructure> correlationCurve2 =
+        market->correlationCurve("USD-CMS-10Y", "USD-CMS-2Y");
+    BOOST_CHECK(*correlationCurve1);
+    BOOST_CHECK(*correlationCurve2);
+
+    Calendar calendar = TARGET();
+    Date qlStartDate = calendar.advance(calendar.advance(market->asofDate(), 2 * Days), 0 * Months);
+    Date qlEndDate1Y = calendar.advance(qlStartDate, 1 * Years, ModifiedFollowing);
+    Date qlEndDate2Y = calendar.advance(qlStartDate, 2 * Years, ModifiedFollowing);
+    string startDate = ore::data::to_string(qlStartDate);
+    string endDate1Y = ore::data::to_string(qlEndDate1Y);
+    string endDate2Y = ore::data::to_string(qlEndDate2Y);
+
+    BOOST_TEST_MESSAGE(startDate);
+    BOOST_TEST_MESSAGE(endDate1Y);
+    BOOST_TEST_MESSAGE(endDate2Y);
+
+    ScheduleData cms1YSchedule(ScheduleRules(startDate, endDate1Y, "3M", "TARGET", "MF", "MF", "Forward", "N"));
+    ScheduleData cms2YSchedule(ScheduleRules(startDate, endDate2Y, "3M", "TARGET", "MF", "MF", "Forward", "N"));
+
+    Real fairSpread1Y = 0.00752401;
+    Real fairSpread2Y = 0.00755509;
+
+    LegData cms1YLeg(boost::make_shared<CMSSpreadLegData>(
+                         "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
+                         std::vector<Real>(1, fairSpread1Y), vector<string>(), vector<double>(), vector<string>(),
+                         vector<double>(), vector<string>(), true),
+                     false, "USD", cms1YSchedule, "A360", std::vector<Real>(1, 1));
+    vector<LegData> legs1Y;
+    legs1Y.push_back(cms1YLeg);
+
+    LegData cms2YLeg(boost::make_shared<CMSSpreadLegData>(
+                         "USD-CMS-10Y", "USD-CMS-2Y", 2, true, std::vector<Real>(1, 0.0), vector<string>(),
+                         std::vector<Real>(1, fairSpread2Y), vector<string>(), vector<double>(), vector<string>(),
+                         vector<double>(), vector<string>(), true),
+                     false, "USD", cms2YSchedule, "A360", std::vector<Real>(1, 1));
+    vector<LegData> legs2Y;
+    legs2Y.push_back(cms2YLeg);
+
+    Envelope env("CP1");
+
+    ore::data::Swap cmsSpread1YCap(env, legs1Y);
+    ore::data::Swap cmsSpread2YCap(env, legs2Y);
+
+    Real expectedNpv1Y = 0.0038614;
+    Real expectedNpv2Y = 0.0105279;
+
+    // Build and price
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->model("CMS") = "LinearTSR";
+    engineData->engine("CMS") = "LinearTSRPricer";
+
+    map<string, string> engineparams1;
+    engineparams1["MeanReversion"] = "0.0";
+    engineparams1["Policy"] = "RateBound";
+    engineparams1["LowerRateBoundLogNormal"] = "0.0001";
+    engineparams1["UpperRateBoundLogNormal"] = "2";
+    engineparams1["LowerRateBoundNormal"] = "-2";
+    engineparams1["UpperRateBoundNormal"] = "2";
+    engineparams1["VegaRatio"] = "0.01";
+    engineparams1["PriceThreshold"] = "0.0000001";
+    engineparams1["BsStdDev"] = "3";
+    engineData->engineParameters("CMS") = engineparams1;
+
+    engineData->model("CMSSpread") = "BrigoMercurio";
+    engineData->engine("CMSSpread") = "Analytic";
+    map<string, string> engineparams2;
+    engineparams2["IntegrationPoints"] = "16";
+    engineData->engineParameters("CMSSpread") = engineparams2;
+
+    engineData->model("Swap") = "DiscountedCashflows";
+    engineData->engine("Swap") = "DiscountingSwapEngine";
+
+    boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
+    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<LinearTSRCmsCouponPricerBuilder>());
+    engineFactory->registerLegBuilder(boost::make_shared<CMSSpreadLegBuilder>());
+    engineFactory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
+
+    cmsSpread1YCap.build(engineFactory);
+    cmsSpread2YCap.build(engineFactory);
+
+    Real npvCash = cmsSpread1YCap.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("NPV Cash 1Y             = " << npvCash);
+    BOOST_CHECK_SMALL(npvCash - expectedNpv1Y, 0.000001);
+
+    npvCash = cmsSpread2YCap.instrument()->NPV();
+
+    BOOST_TEST_MESSAGE("NPV Cash 2Y             = " << npvCash);
+
+    BOOST_CHECK_SMALL(npvCash - expectedNpv2Y, 0.000001);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

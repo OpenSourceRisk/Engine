@@ -50,10 +50,9 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     QL_REQUIRE(length > 0, "File " << fileName << " is empty.");
     t.seekg(0, std::ios::beg);      // go back to the beginning
     _buffer = new char[length + 1]; // allocate memory for a buffer of appropriate dimension
-    memset(_buffer, 0, length + 1); // Wipe the buffer (caused problems on windows release build)
     t.read(_buffer, length);        // read the whole file into the buffer
-    t.close();                      // close file handle
-    _buffer[length] = '\0';
+    _buffer[static_cast<int>(t.gcount())] = '\0';
+    t.close(); // close file handle
     try {
         _doc->parse<0>(_buffer);
     } catch (rapidxml::parse_error& pe) {
@@ -93,6 +92,12 @@ void XMLDocument::toFile(const string& fileName) {
     ofs.close();
 }
 
+string XMLDocument::toString() {
+    ostringstream oss;
+    oss << *_doc;
+    return oss.str();
+}
+
 XMLNode* XMLDocument::allocNode(const string& nodeName) {
     XMLNode* n = _doc->allocate_node(node_element, allocString(nodeName));
     QL_REQUIRE(n, "Failed to allocate XMLNode for " << nodeName);
@@ -118,8 +123,22 @@ void XMLSerializable::fromFile(const string& filename) {
 
 void XMLSerializable::toFile(const string& filename) {
     XMLDocument doc;
-    toXML(doc);
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
     doc.toFile(filename);
+}
+
+void XMLSerializable::fromXMLString(const string& xml) {
+    ore::data::XMLDocument doc;
+    doc.fromXMLString(xml);
+    fromXML(doc.getFirstNode(""));
+}
+
+string XMLSerializable::toXMLString() {
+    XMLDocument doc;
+    XMLNode* node = toXML(doc);
+    doc.appendNode(node);
+    return doc.toString();
 }
 
 void XMLUtils::checkNode(XMLNode* node, const string& expectedName) {
@@ -158,6 +177,15 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int va
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
     string s = value ? "true" : "false";
     addChild(doc, n, name, s);
+}
+
+void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
+                                                 const vector<Real>& values, const string& attrName,
+                                                 const vector<string>& attrs) {
+    if (attrs.empty())
+        XMLUtils::addChildren(doc, n, names, name, values);
+    else
+        XMLUtils::addChildrenWithAttributes(doc, n, names, name, values, attrName, attrs);
 }
 
 void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& names, const string& name,
@@ -332,7 +360,7 @@ XMLNode* XMLUtils::getChildNode(XMLNode* n, const string& name) {
 
 // return first node in the hierarchy of n that matches name, maybe n itself
 XMLNode* XMLUtils::locateNode(XMLNode* n, const string& name) {
-    QL_REQUIRE(n, "XML Node is NULL");
+    QL_REQUIRE(n, "XMLUtils::locateNode(" << name << "): XML Node is NULL");
     if (n->name() == name)
         return n;
     else {
@@ -351,15 +379,14 @@ void XMLUtils::appendNode(XMLNode* parent, XMLNode* child) {
 }
 
 void XMLUtils::addAttribute(XMLDocument& doc, XMLNode* node, const string& attrName, const string& attrValue) {
-    QL_REQUIRE(node, "XMLUtils::appendAttribute() node is NULL");
-
+    QL_REQUIRE(node, "XMLUtils::appendAttribute(" << attrName << "," << attrName << ") node is NULL");
     char* name = doc.allocString(attrName.c_str());
     char* value = doc.allocString(attrValue.c_str());
     node->append_attribute(doc.doc()->allocate_attribute(name, value));
 }
 
 string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
-    QL_REQUIRE(node, "XMLUtils::getAttribute() node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getAttribute(" << attrName << ") node is NULL");
     xml_attribute<>* attr = node->first_attribute(attrName.c_str());
     if (attr && attr->value())
         return string(attr->value());
@@ -368,7 +395,7 @@ string XMLUtils::getAttribute(XMLNode* node, const string& attrName) {
 }
 
 vector<XMLNode*> XMLUtils::getChildrenNodes(XMLNode* node, const string& name) {
-    QL_REQUIRE(node, "XMLUtils::getAttribute() node is NULL");
+    QL_REQUIRE(node, "XMLUtils::getChildredNodes(" << name << ") node is NULL");
     vector<XMLNode*> res;
     const char* p = name.size() == 0 ? nullptr : name.c_str();
     for (xml_node<>* c = node->first_node(p); c; c = c->next_sibling(p))
