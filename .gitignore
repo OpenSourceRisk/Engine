@@ -232,6 +232,7 @@ Test/test
 Test/simulation
 Test/Output/
 */test/*.txt
+!*/test/CMakeLists.txt
 *.dSYM/
 *.dat
 *_region_*
