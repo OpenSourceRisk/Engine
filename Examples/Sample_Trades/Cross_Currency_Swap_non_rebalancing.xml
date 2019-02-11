@@ -1,46 +1,79 @@
-<Trade id="CDS">
-    <TradeType>CreditDefaultSwap</TradeType>
+<Trade id="XCCY_Swap_EUR_USD">
+    <TradeType>Swap</TradeType>
     <Envelope>
-        <CounterParty>CPTY_B</CounterParty>
-        <NettingSetId>CPTY_B</NettingSetId>
+        <CounterParty>CPTY_A</CounterParty>
+        <NettingSetId>CPTY_A</NettingSetId>
         <AdditionalFields/>
     </Envelope>
-    <CreditDefaultSwapData>
-        <IssuerId>Tesla</IssuerId>
-        <CreditCurveId>CORP</CreditCurveId>
-        <SettlesAccrual>Y</SettlesAccrual>
-        <PaysAtDefaultTime>Y</PaysAtDefaultTime>
-        <ProtectionStart>20160206</ProtectionStart>
-        <UpfrontDate>20160208</UpfrontDate>
-        <UpfrontFee>0.0</UpfrontFee><!-- expressed as a rate, to be multiplied by notional amount -->
+    <SwapData>
         <LegData>
-            <LegType>Fixed</LegType>
+            <LegType>Floating</LegType>
             <Payer>true</Payer>
-            <Currency>USD</Currency>
+            <Currency>EUR</Currency>
             <Notionals>
-                <Notional>10000000.000000</Notional>
+                <Notional>30000000</Notional>
+                <Exchanges>
+                    <NotionalInitialExchange>true</NotionalInitialExchange>
+                    <NotionalFinalExchange>true</NotionalFinalExchange>
+                </Exchanges>
             </Notionals>
             <DayCounter>A360</DayCounter>
-            <PaymentConvention>F</PaymentConvention>
-            <FixedLegData>
-                <Rates>
-                    <Rate>0.01</Rate><!-- running premium, in addition to the upfront fee -->
-                </Rates>
-            </FixedLegData>
+            <PaymentConvention>ModifiedFollowing</PaymentConvention>
+            <FloatingLegData>
+                <Index>EUR-EURIBOR-6M</Index>
+                <Spreads>
+                    <Spread>0.0</Spread>
+                </Spreads>
+            </FloatingLegData>
             <ScheduleData>
                 <Rules>
-                    <StartDate>20160205</StartDate>
-                    <EndDate>20260205</EndDate>
-                    <Tenor>3M</Tenor>
-                    <Calendar>US</Calendar>
-                    <Convention>F</Convention>
-                    <TermConvention>F</TermConvention>
-                    <Rule>CDS2015</Rule>
+                    <StartDate>2012-09-05</StartDate>
+                    <EndDate>2025-09-05</EndDate>
+                    <Tenor>6M</Tenor>
+                    <Calendar>TARGET</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                    <TermConvention>ModifiedFollowing</TermConvention>
+                    <Rule>Forward</Rule>
                     <EndOfMonth/>
                     <FirstDate/>
                     <LastDate/>
                 </Rules>
             </ScheduleData>
         </LegData>
-    </CreditDefaultSwapData>
+        <LegData>
+            <LegType>Floating</LegType>
+            <Payer>false</Payer>
+            <Currency>USD</Currency>
+            <Notionals>
+                <Notional>33900000</Notional>
+                <Exchanges>
+                    <NotionalInitialExchange>true</NotionalInitialExchange>
+                    <NotionalFinalExchange>true</NotionalFinalExchange>
+                </Exchanges>
+            </Notionals>
+            <DayCounter>A360</DayCounter>
+            <PaymentConvention>ModifiedFollowing</PaymentConvention>
+            <FloatingLegData>
+                <Index>USD-LIBOR-3M</Index>
+                <Spreads>
+                    <Spread>0.0</Spread>
+                </Spreads>
+            </FloatingLegData>
+            <ScheduleData>
+                <Rules>
+                    <StartDate>2012-09-05</StartDate>
+                    <EndDate>2025-09-05</EndDate>
+                    <Tenor>3M</Tenor>
+                    <Calendar>UK</Calendar>
+                    <Convention>ModifiedFollowing</Convention>
+                    <TermConvention>ModifiedFollowing</TermConvention>
+                    <Rule>Forward</Rule>
+                    <EndOfMonth/>
+                    <FirstDate/>
+                    <LastDate/>
+                </Rules>
+            </ScheduleData>
+        </LegData>
+    </SwapData>
 </Trade>
+

@@ -241,6 +241,12 @@
     </YYInflationIndexCurve>
   </YYInflationIndexCurves>
   <BaseCorrelations/>
+  <SecuritySpreads>
+    <SecuritySpread security="SECURITY_1">
+      <ShiftType>Absolute</ShiftType>
+      <ShiftSize>0.0001</ShiftSize>
+    </SecuritySpread>
+  </SecuritySpreads>
   <!-- Cross Gamma filter: Pairs of factor sub-strings -->
   <CrossGammaFilter>
     <Pair>DiscountCurve/EUR,DiscountCurve/EUR</Pair>

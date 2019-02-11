@@ -2,8 +2,11 @@
 
    ore.xml: CPI Swap
 			YOY Swap
+			
+   ore_capfloor.xml: YOY Cap
+                     YOY Floor
 	
-   ore_exposure.cml CPI Zero Swap
+   ore_exposure.xml CPI Zero Swap
 
 2) Market
 

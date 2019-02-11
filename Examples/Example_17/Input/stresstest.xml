@@ -128,14 +128,14 @@
 	  <Shift expiry="1Y" term="5Y">0.0010</Shift>
 	  <Shift expiry="1Y" term="10Y">0.0010</Shift>
 	  <Shift expiry="5Y" term="1Y">0.0010</Shift>
-	  <Shift expiry="5Y" term="5Y">0.0010</Shift>
+	  <Shift expiry="5Y" term="15Y">0.0010</Shift>
 	  <Shift expiry="5Y" term="10Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="1Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="10Y">0.0010</Shift>
 	</Shifts>
 	<ShiftExpiries>1Y,5Y,10Y</ShiftExpiries>
-	<ShiftTerms>1Y,5Y,10Y</ShiftTerms>
+	<ShiftTerms>5Y</ShiftTerms>
       </SwaptionVolatility>
     </SwaptionVolatilities>
     
@@ -179,6 +179,7 @@
     <ShiftExpiries>6M,1Y,2Y,3Y,5Y</ShiftExpiries>
       </EquityVolatility>
     </EquityVolatilities>
+    <SecuritySpreads />
     
   </StressTest><!-- end of stress test definition -->
 
@@ -218,6 +219,7 @@
 	</EquitySpots>
 	<EquityVolatilities>
 	</EquityVolatilities>
+    <SecuritySpreads />
   </StressTest>
 
 </StressTesting>

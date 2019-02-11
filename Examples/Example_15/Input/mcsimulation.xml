@@ -282,7 +282,10 @@
     </BenchmarkCurves>
 
     <Securities>
-      <Security>SECURITY_1</Security>
+      <Simulate>false</Simulate>
+      <Names>
+        <Name>SECURITY_1</Name>
+      </Names>
     </Securities>
     
     <!-- Additional data that is recorded during simulation for later

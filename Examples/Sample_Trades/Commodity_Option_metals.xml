@@ -1,4 +1,4 @@
-<Trade id="CommodityOption_WTI_Oct_21">
+<Trade id="CommodityOption">
     <TradeType>CommodityOption</TradeType>
     <Envelope>
         <CounterParty>CPTY_A</CounterParty>
@@ -7,19 +7,18 @@
     </Envelope>
     <CommodityOptionData>
         <OptionData>
-            <LongShort>Long</LongShort>
-            <OptionType>Call</OptionType>
+            <LongShort>Short</LongShort>
+            <OptionType>Put</OptionType>
             <Style>European</Style>
             <Settlement>Cash</Settlement>
             <PayOffAtExpiry>false</PayOffAtExpiry>
             <ExerciseDates>
-                <ExerciseDate>2021-10-31</ExerciseDate>
+                <ExerciseDate>2019-04-28</ExerciseDate>
             </ExerciseDates>
         </OptionData>
-        <Name>COMDTY_WTI_USD</Name>
+        <Name>Gold</Name>
         <Currency>USD</Currency>
-        <Strike>49.75</Strike>
-        <Quantity>500000</Quantity>
+        <Strike>1161.8</Strike>
+        <Quantity>500</Quantity>
     </CommodityOptionData>
 </Trade>
-
