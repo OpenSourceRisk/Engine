@@ -619,6 +619,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 it.first, parseCalendar(equityConfig->currency()), eqSpot,
                                 itr->second->forecastingYieldTermStructure(), div_h);
                             Handle<EquityIndex> eq_h(eqCurve);
+                            yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] =
+                                div_h;
+                            equitySpots_[make_pair(configuration.first, it.first)] = eqSpot;
                             equityCurves_[make_pair(configuration.first, it.first)] = eq_h;
                         }
                     }

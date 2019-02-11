@@ -62,40 +62,40 @@ boost::shared_ptr<data::Conventions> convs() {
 boost::shared_ptr<analytics::ScenarioSimMarketParameters> scenarioParameters() {
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
-    parameters->ccys() = {"EUR", "USD"};
+    parameters->setDiscountCurveNames({"EUR", "USD"});
     parameters->setYieldCurveTenors("", {6 * Months, 1 * Years, 2 * Years});
-    parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-6M"};
+    parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
     parameters->setYieldCurveDayCounters("", "ACT/ACT");
 
     parameters->swapVolTerms() = {6 * Months, 1 * Years};
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
-    parameters->swapVolCcys() = {"EUR", "USD"};
+    parameters->setSwapVolCcys({"EUR", "USD"});
     parameters->swapVolDecayMode() = "ForwardVariance";
     parameters->setSwapVolDayCounters("", "ACT/ACT");
 
-    parameters->defaultNames() = {"dc2"};
+    parameters->setDefaultNames({"dc2"});
     parameters->setDefaultTenors("", {6 * Months, 8 * Months, 1 * Years, 2 * Years});
     parameters->setDefaultCurveDayCounters("", "ACT/ACT");
 
-    parameters->simulateFXVols() = false;
+    parameters->setSimulateFXVols(false);
     parameters->fxVolExpiries() = {2 * Years, 3 * Years, 4 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
-    parameters->simulateEquityVols() = false;
+    parameters->setSimulateEquityVols(false);
     parameters->setFxVolDayCounters("", "ACT/ACT");
 
-    parameters->fxVolCcyPairs() = {"USDEUR"};
+    parameters->setFxVolCcyPairs({"USDEUR"});
 
-    parameters->fxCcyPairs() = {"USDEUR"};
+    parameters->setFxCcyPairs({"USDEUR"});
 
-    parameters->zeroInflationIndices() = {"EUHICPXT"};
+    parameters->setZeroInflationIndices({"EUHICPXT"});
     parameters->setZeroInflationTenors("", {6 * Months, 1 * Years, 2 * Years});
     parameters->setZeroInflationDayCounters("", "ACT/ACT");
 
-    parameters->simulateCorrelations() = false;
+    parameters->setSimulateCorrelations(false);
     parameters->correlationExpiries() = {1 * Years, 2 * Years};
-    parameters->correlationPairs() = {make_pair("EUR-CMS-10Y", "EUR-CMS-1Y"), make_pair("USD-CMS-10Y", "USD-CMS-1Y")};
+    parameters->setCorrelationPairs({"EUR-CMS-10Y:EUR-CMS-1Y", "USD-CMS-10Y:USD-CMS-1Y"});
     return parameters;
 }
 } // namespace
@@ -233,8 +233,12 @@ void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
                           boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
                           boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->correlationPairs()) {
-        Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(spec.first, spec.second);
-        Handle<QuantExt::CorrelationTermStructure> initCurve = initMarket->correlationCurve(spec.first, spec.second);
+        vector<string> tokens;
+        boost::split(tokens, spec, boost::is_any_of(":"));
+        QL_REQUIRE(tokens.size() == 2, "not a valid correlation pair: " << spec);
+        pair<string, string> pair = std::make_pair(tokens[0], tokens[1]);
+        Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(pair.first, pair.second);
+        Handle<QuantExt::CorrelationTermStructure> initCurve = initMarket->correlationCurve(pair.first, pair.second);
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();
