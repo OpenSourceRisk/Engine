@@ -198,7 +198,7 @@ Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface
 }
 
 Handle<Quote> MarketImpl::equitySpot(const string& key, const string& configuration) const {
-    return lookup<Handle<Quote>>(equitySpots_, key, configuration, "equity spot");
+    return equityCurve(key, configuration)->equitySpot();
 }
 
 Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const string& configuration) const {
@@ -206,8 +206,7 @@ Handle<QuantExt::EquityIndex> MarketImpl::equityCurve(const string& key, const s
 };
 
 Handle<YieldTermStructure> MarketImpl::equityDividendCurve(const string& key, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, key, YieldCurveType::EquityDividend, configuration,
-                                              "dividend yield curve");
+    return equityCurve(key, configuration)->equityDividendCurve();
 }
 
 Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const string& configuration) const {
@@ -215,8 +214,7 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
 }
 
 Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration,
-                                              "equity forecast yield curve");
+    return equityCurve(eqName, configuration)->equityForecastCurve();
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {

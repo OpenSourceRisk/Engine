@@ -313,7 +313,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         try {
             LOG("building " << eqName << " equity index curve..");
             Handle<EquityIndex> curve = initMarket->equityCurve(eqName, configuration);
-            boost::shared_ptr<EquityIndex> ei(curve->clone(
+             boost::shared_ptr<EquityIndex> ei(curve->clone(
                 equitySpot(eqName, configuration), yieldCurve(YieldCurveType::EquityForecast, eqName, configuration),
                 yieldCurve(YieldCurveType::EquityDividend, eqName, configuration)));
             Handle<EquityIndex> eh(ei);

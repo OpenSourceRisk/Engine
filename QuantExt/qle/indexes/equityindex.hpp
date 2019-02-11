@@ -68,6 +68,7 @@ public:
     //! \name Inspectors
     //@{
     std::string familyName() const { return familyName_; }
+    const Handle<Quote>& equitySpot() const { return spotQuote_; }
     const Handle<YieldTermStructure>& equityForecastCurve() const { return rate_; }
     const Handle<YieldTermStructure>& equityDividendCurve() const { return dividend_; }
     //@}

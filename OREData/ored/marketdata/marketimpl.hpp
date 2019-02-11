@@ -204,7 +204,6 @@ protected:
     map<pair<string, string>, Handle<CPICapFloorTermPriceSurface>> cpiInflationCapFloorPriceSurfaces_;
     map<pair<string, string>, Handle<CPIVolatilitySurface>> cpiInflationCapFloorVolatilitySurfaces_;
     map<pair<string, string>, Handle<YoYCapFloorTermPriceSurface>> yoyInflationCapFloorPriceSurfaces_;
-    map<pair<string, string>, Handle<Quote>> equitySpots_;
     map<pair<string, string>, Handle<BlackVolTermStructure>> equityVols_;
     map<pair<string, string>, Handle<Quote>> securitySpreads_;
     map<pair<string, string>, Handle<QuantExt::InflationIndexObserver>> baseCpis_;
