@@ -56,12 +56,6 @@ get_filename_component(OREANALYTICS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORE
 get_filename_component(ORETEST_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ORETest" ABSOLUTE)
 get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPartyLibs/rapidxml-1.13" ABSOLUTE)
 
-get_filename_component(QUANTEXTPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../QuantExtPlus" ABSOLUTE)
-get_filename_component(OREDATAPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREDataPlus" ABSOLUTE)
-get_filename_component(OREANALYTICSPLUS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREAnalyticsPlus" ABSOLUTE)
-get_filename_component(OREPLUSBASE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Base" ABSOLUTE)
-get_filename_component(OREPLUSSENSITIVITY_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../OREPlus/Sensitivity" ABSOLUTE)
-
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
   if(EXISTS dir)
