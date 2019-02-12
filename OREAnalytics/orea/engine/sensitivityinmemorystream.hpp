@@ -38,11 +38,11 @@ public:
     SensitivityInMemoryStream(const std::set<SensitivityRecord>& records);
     //! Returns the next SensitivityRecord in the stream
     SensitivityRecord next() override;
-    //! Resets the stream so that SensitivityRecords can be streamed again 
+    //! Resets the stream so that SensitivityRecords can be streamed again
     void reset() override;
     /*! Add a record to the in-memory collection.
-        
-        \warning this causes reset() to be called. In other words, after any call 
+
+        \warning this causes reset() to be called. In other words, after any call
                  to add, a call to next() will start at the beginnning again.
     */
     void add(const SensitivityRecord& sr);
@@ -54,5 +54,5 @@ private:
     std::set<SensitivityRecord>::iterator itCurrent_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

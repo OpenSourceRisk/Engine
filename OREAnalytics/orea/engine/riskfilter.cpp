@@ -81,8 +81,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         std::set<RiskFactorKey::KeyType> allowed_class;
         switch (riskClassIndex_) {
         case 1:
-            allowed_class = {RiskFactorKey::KeyType::DiscountCurve, RiskFactorKey::KeyType::YieldCurve,
-                             RiskFactorKey::KeyType::IndexCurve, RiskFactorKey::KeyType::SwaptionVolatility,
+            allowed_class = {RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
+                             RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
                              RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread};
             break;
         case 2:

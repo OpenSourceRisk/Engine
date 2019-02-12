@@ -31,7 +31,6 @@
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/timegrid.hpp>
 
-
 namespace ore {
 namespace analytics {
 using std::vector;

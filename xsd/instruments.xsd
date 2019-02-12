@@ -418,7 +418,7 @@
   </xs:complexType>
 
   <xs:complexType name="scheduleData">
-    <xs:choice>
+    <xs:choice maxOccurs="unbounded">
       <xs:element name="Rules">
         <xs:complexType>
           <xs:all>
@@ -438,13 +438,12 @@
       <xs:element name="Dates">
         <xs:complexType>
           <xs:all>
-            <xs:element type="calendar" name="Calendar"/>
+            <xs:element type="calendar" name="Calendar" minOccurs="0"/>
+            <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
+            <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
             <xs:element name="Dates">
               <xs:complexType>
                 <xs:sequence>
-                  <xs:element type="calendar" name="Calendar" minOccurs="0"/>
-                  <xs:element type="businessDayConvention" name="Convention" minOccurs="0"/>
-                  <xs:element type="xs:string" name="Tenor" minOccurs="0"/>
                   <xs:element type="date" name="Date" maxOccurs="unbounded"/>
                 </xs:sequence>
               </xs:complexType>
@@ -694,22 +693,31 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:complexType name="caps">
+<xs:complexType name="caps">
     <xs:sequence>
-      <xs:element type="xs:double" name="Cap" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Cap" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="floors">
     <xs:sequence>
-      <xs:element type="xs:double" name="Floor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Floor" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="gearings">
     <xs:sequence>
-      <xs:element type="xs:double" name="Gearing" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Gearing" minOccurs="1" maxOccurs="unbounded"/>
     </xs:sequence>
+  </xs:complexType>
+
+ <xs:complexType name="withAttribute">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="startDate" type="xs:string">
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
   </xs:complexType>
 
   <xs:complexType name="exchanges">

@@ -55,19 +55,27 @@ private:
 MockLoader::MockLoader() {
     Date asof(5, Feb, 2016);
     data_ = {
-        boost::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "ATMF"),
-        boost::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "ATMF"),
-        boost::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "ATMF"),
-        boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1150", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1150"),
-        boost::make_shared<CommodityOptionQuote>(0.115, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1190", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1190"),
-        boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1150", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1150"),
-        boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1190", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1190"),
-        boost::make_shared<CommodityOptionQuote>(0.085, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1150", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1150"),
-        boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1190", MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1190")
-    };
+        boost::make_shared<CommodityOptionQuote>(0.11, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "ATMF"),
+        boost::make_shared<CommodityOptionQuote>(0.10, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "ATMF"),
+        boost::make_shared<CommodityOptionQuote>(0.09, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "ATMF"),
+        boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1150",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1150"),
+        boost::make_shared<CommodityOptionQuote>(0.115, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/1Y/1190",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "1Y", "1190"),
+        boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1150",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1150"),
+        boost::make_shared<CommodityOptionQuote>(0.105, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/2Y/1190",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "2Y", "1190"),
+        boost::make_shared<CommodityOptionQuote>(0.085, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1150",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1150"),
+        boost::make_shared<CommodityOptionQuote>(0.095, asof, "COMMODITY_OPTION/RATE_LNVOL/GOLD_USD_VOLS/USD/5Y/1190",
+                                                 MarketDatum::QuoteType::RATE_LNVOL, "GOLD", "USD", "5Y", "1190")};
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -120,11 +128,9 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
 
     // Volatility configuration with time dependent volatilities
     bool extrapolate = true;
-    vector<string> quotes {
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF"
-    };
+    vector<string> quotes{"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
+                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/2Y/ATMF",
+                          "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF"};
     boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
         "GOLD_USD_VOLS", "", "USD", quotes, "A365", "NullCalendar", extrapolate);
 
@@ -161,8 +167,10 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeCurve) {
     BOOST_CHECK_CLOSE(volatility->blackVol(asof + 5 * Years, 1200.0), configuredVolatility, testTolerance);
 
     // Check briefly the default linear interpolation and extrapolation
-    Time t_s = volatility->dayCounter().yearFraction(asof, asof + 2 * Years); Real v_s = 0.10;
-    Time t_e = volatility->dayCounter().yearFraction(asof, asof + 5 * Years); Real v_e = 0.09;
+    Time t_s = volatility->dayCounter().yearFraction(asof, asof + 2 * Years);
+    Real v_s = 0.10;
+    Time t_e = volatility->dayCounter().yearFraction(asof, asof + 5 * Years);
+    Real v_e = 0.09;
     // at 3 years
     Time t = volatility->dayCounter().yearFraction(asof, asof + 3 * Years);
     Real v = sqrt((v_s * v_s * t_s + (v_e * v_e * t_e - v_s * v_s * t_s) * (t - t_s) / (t_e - t_s)) / t);
@@ -182,8 +190,8 @@ BOOST_AUTO_TEST_CASE(testCommodityVolCurveTypeSurface) {
 
     // Volatility configuration with time dependent volatilities
     bool extrapolate = true;
-    vector<string> expiries { "1Y", "2Y", "5Y" };
-    vector<string> strikes { "1150", "1190" };
+    vector<string> expiries{"1Y", "2Y", "5Y"};
+    vector<string> strikes{"1150", "1190"};
     boost::shared_ptr<CommodityVolatilityCurveConfig> curveConfig = boost::make_shared<CommodityVolatilityCurveConfig>(
         "GOLD_USD_VOLS", "", "USD", expiries, strikes, "A365", "NullCalendar", extrapolate);
 

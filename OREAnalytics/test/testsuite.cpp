@@ -54,12 +54,9 @@ public:
 
         // Set up test logging
         setupTestLogging(argc, argv);
-
     }
 
-    ~OreaGlobalFixture() {
-        stopTimer();
-    }
+    ~OreaGlobalFixture() { stopTimer(); }
 
     // Method called in destructor to log time taken
     void stopTimer() {
@@ -84,9 +81,8 @@ private:
 // Breaking change in 1.65.0
 // https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
 // Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
-#if BOOST_VERSION<106500
+#if BOOST_VERSION < 106500
 BOOST_GLOBAL_FIXTURE(OreaGlobalFixture);
 #else
 BOOST_TEST_GLOBAL_FIXTURE(OreaGlobalFixture);
 #endif
-

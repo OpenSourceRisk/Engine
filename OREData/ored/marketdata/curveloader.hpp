@@ -27,7 +27,6 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using ore::data::CurveConfigurations;
@@ -42,8 +41,7 @@ using ore::data::CurveConfigurations;
 
   \ingroup marketdata
  */
-void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, 
-    const CurveConfigurations& curveConfigs, 
-    std::map<std::string, std::string>& errors);
+void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs,
+           std::map<std::string, std::string>& errors, bool continueOnError = false);
 } // namespace data
 } // namespace ore

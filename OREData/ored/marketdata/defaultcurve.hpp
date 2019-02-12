@@ -31,7 +31,6 @@
 #include <ql/termstructures/credit/interpolatedhazardratecurve.hpp>
 #include <ql/termstructures/credit/piecewisedefaultcurve.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

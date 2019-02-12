@@ -33,8 +33,9 @@ EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCa
       fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
-    if (!spotQuote_.empty())
-        registerWith(spotQuote_);
+    registerWith(spotQuote_);
+    registerWith(rate_);
+    registerWith(dividend_);
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
 }

@@ -31,7 +31,6 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

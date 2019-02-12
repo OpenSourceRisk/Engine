@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/configuration/inflationcapfloorvolcurveconfig.hpp 
+/*! \file ored/configuration/inflationcapfloorvolcurveconfig.hpp
     \brief Inflation CapFloor volatility curve configuration class
     \ingroup configuration
 */
@@ -28,7 +28,6 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
-
 
 namespace ore {
 namespace data {
@@ -43,19 +42,19 @@ using QuantLib::BusinessDayConvention;
 
 //! Inflation CapFloor volatility curve configuration class
 /*! \ingroup configuration
-*/
+ */
 class InflationCapFloorVolatilityCurveConfig : public CurveConfig {
 public:
     enum class Type { ZC, YY };
     enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
 
     InflationCapFloorVolatilityCurveConfig() {}
-    InflationCapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription,
-        const Type type, const VolatilityType& volatilityType, const bool extrapolate,
-        const vector<Period>& tenors, const vector<double>& strikes,
-        const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
-        const BusinessDayConvention& businessDayConvention, const string& index, 
-        const string& indexCurve, const string& yieldTermStructure);
+    InflationCapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Type type,
+                                           const VolatilityType& volatilityType, const bool extrapolate,
+                                           const vector<Period>& tenors, const vector<double>& strikes,
+                                           const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
+                                           const BusinessDayConvention& businessDayConvention, const string& index,
+                                           const string& indexCurve, const string& yieldTermStructure);
 
     //! \name XMLSerializable interface
     //@{

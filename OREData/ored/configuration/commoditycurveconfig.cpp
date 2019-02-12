@@ -24,12 +24,13 @@ using std::vector;
 namespace ore {
 namespace data {
 
-CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription, const string& currency,
-    const string& commoditySpotQuote, const vector<string>& quotes, const string& dayCountId,
-    const string& interpolationMethod, bool extrapolation) 
-    : CurveConfig(curveId, curveDescription), currency_(currency), commoditySpotQuoteId_(commoditySpotQuote), 
+CommodityCurveConfig::CommodityCurveConfig(const string& curveId, const string& curveDescription,
+                                           const string& currency, const string& commoditySpotQuote,
+                                           const vector<string>& quotes, const string& dayCountId,
+                                           const string& interpolationMethod, bool extrapolation)
+    : CurveConfig(curveId, curveDescription), currency_(currency), commoditySpotQuoteId_(commoditySpotQuote),
       dayCountId_(dayCountId), interpolationMethod_(interpolationMethod), extrapolation_(extrapolation) {
-    
+
     quotes_ = quotes;
     quotes_.insert(quotes_.begin(), commoditySpotQuote);
 }
@@ -39,7 +40,7 @@ void CommodityCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    
+
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     dayCountId_ = XMLUtils::getChildValue(node, "DayCounter", false);
     commoditySpotQuoteId_ = XMLUtils::getChildValue(node, "SpotQuote", true);
@@ -65,5 +66,5 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
-}
-}
+} // namespace data
+} // namespace ore

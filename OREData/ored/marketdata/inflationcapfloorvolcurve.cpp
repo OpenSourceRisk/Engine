@@ -17,10 +17,10 @@
 */
 
 #include <ored/marketdata/inflationcapfloorvolcurve.hpp>
-#include <ored/utilities/log.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
+#include <ored/utilities/log.hpp>
 #include <qle/indexes/inflationindexwrapper.hpp>
+#include <qle/termstructures/yoyinflationoptionletvolstripper.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -33,25 +33,24 @@ using namespace std;
 namespace ore {
 namespace data {
 
-InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, 
-    const Loader& loader, const CurveConfigurations& curveConfigs,
-    map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-    map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
+InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec,
+                                                     const Loader& loader, const CurveConfigurations& curveConfigs,
+                                                     map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                                                     map<string, boost::shared_ptr<InflationCurve>>& inflationCurves) {
     try {
 
         const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& config =
             curveConfigs.inflationCapFloorVolCurveConfig(spec.curveConfigID());
-        
+
         Handle<YieldTermStructure> yts;
         auto it = yieldCurves.find(config->yieldTermStructure());
         if (it != yieldCurves.end()) {
             yts = it->second->handle();
-        }
-        else {
+        } else {
             QL_FAIL("The nominal term structure, " << config->yieldTermStructure()
-                << ", required in the building "
-                "of the curve, "
-                << spec.name() << ", was not found.");
+                                                   << ", required in the building "
+                                                      "of the curve, "
+                                                   << spec.name() << ", was not found.");
         }
         // Volatility type
         MarketDatum::QuoteType volatilityType;
@@ -86,16 +85,14 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
         // We take the first capfloor shift quote that we find in the file matching the
         // currency and index tenor
         for (auto& md : loader.loadQuotes(asof)) {
-            if (md->asofDate() == asof &&
-                (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
-                    md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
+            if (md->asofDate() == asof && (md->instrumentType() == MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR ||
+                                           md->instrumentType() == MarketDatum::InstrumentType::YY_INFLATIONCAPFLOOR)) {
 
                 boost::shared_ptr<InflationCapFloorQuote> q = boost::dynamic_pointer_cast<InflationCapFloorQuote>(md);
 
                 if (config->type() == InflationCapFloorVolatilityCurveConfig::Type::ZC) {
                     q = boost::dynamic_pointer_cast<ZcInflationCapFloorQuote>(md);
-                }
-                else {
+                } else {
                     q = boost::dynamic_pointer_cast<YyInflationCapFloorQuote>(md);
                 }
 
@@ -106,8 +103,8 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
                     Real strike = parseReal(q->strike());
                     Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
                     Size j = std::find_if(strikes.begin(), strikes.end(),
-                        [&strike](const double& s) { return close_enough(s, strike); }) -
-                        strikes.begin();
+                                          [&strike](const double& s) { return close_enough(s, strike); }) -
+                             strikes.begin();
 
                     if (i < tenors.size() && j < strikes.size()) {
                         vols[i][j] = q->quote()->value();
@@ -117,7 +114,6 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
                             --remainingQuotes;
                         }
                     }
-
                 }
             }
         }
@@ -141,7 +137,7 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
             DLOGGERSTREAM << m.str() << endl;
             QL_FAIL("could not build cap/floor vol curve");
         }
-        
+
         // Non-ATM cap/floor volatility surface
         boost::shared_ptr<CapFloorTermVolSurface> capVol = boost::make_shared<CapFloorTermVolSurface>(
             0, config->calendar(), config->businessDayConvention(), tenors, strikes, vols, config->dayCounter());
@@ -164,13 +160,10 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
             boost::shared_ptr<YoYInflationOptionletVolStripper> volStripper =
                 boost::make_shared<YoYInflationOptionletVolStripper>(capVol, index, yts, quoteVolatilityType);
             yoyVolSurface_ = volStripper->yoyInflationCapFloorVolSurface();
-
         }
-    }
-    catch (std::exception& e) {
+    } catch (std::exception& e) {
         QL_FAIL("inflation cap/floor vol curve building failed :" << e.what());
-    }
-    catch (...) {
+    } catch (...) {
         QL_FAIL("inflation cap/floor vol curve building failed: unknown error");
     }
 }

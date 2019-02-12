@@ -39,8 +39,8 @@ public:
     //! Constructor
     OptionData(string longShort, string callPut, string style, bool payoffAtExpiry, vector<string> exerciseDates,
                // notice days ?
-               string settlement = "Cash", string settlementMethod = "", double premium = 0,
-               string premiumCcy = "", string premiumPayDate = "", vector<double> exerciseFees = vector<Real>(),
+               string settlement = "Cash", string settlementMethod = "", double premium = 0, string premiumCcy = "",
+               string premiumPayDate = "", vector<double> exerciseFees = vector<Real>(),
                vector<double> exercisePrices = vector<Real>())
         : longShort_(longShort), callPut_(callPut), style_(style), payoffAtExpiry_(payoffAtExpiry),
           exerciseDates_(exerciseDates), noticePeriod_("0D"), // FIXME ?
@@ -77,7 +77,7 @@ private:
     bool payoffAtExpiry_; // Y or N
     vector<string> exerciseDates_;
     string noticePeriod_;
-    string settlement_; // Cash or Physical, default Cash.
+    string settlement_;       // Cash or Physical, default Cash.
     string settlementMethod_; // QuantLib::Settlement::Method, default empty
     double premium_;
     string premiumCcy_;

@@ -17,16 +17,17 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <orea/scenario/aggregationscenariodata.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace ore::analytics;
 using namespace boost::unit_test_framework;
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(AggregationScenarioDataTest)
-		
+
 BOOST_AUTO_TEST_CASE(testInMemoryAggregationScenarioData) {
     InMemoryAggregationScenarioData data(3, 5);
 

@@ -21,12 +21,13 @@
 namespace ore {
 namespace data {
 
-EquitySwap::EquitySwap(const Envelope& env, const vector<LegData>& legData) :Swap(env, legData, "EquitySwap") {
+EquitySwap::EquitySwap(const Envelope& env, const vector<LegData>& legData) : Swap(env, legData, "EquitySwap") {
     checkEquitySwap(legData);
 }
 
-EquitySwap::EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1) : Swap(env, leg0, leg1, "EquitySwap") {
-    vector<LegData> legData = { leg0, leg1 };
+EquitySwap::EquitySwap(const Envelope& env, const LegData& leg0, const LegData& leg1)
+    : Swap(env, leg0, leg1, "EquitySwap") {
+    vector<LegData> legData = {leg0, leg1};
     checkEquitySwap(legData);
 }
 
@@ -37,13 +38,12 @@ void EquitySwap::checkEquitySwap(const vector<LegData>& legData) {
     for (auto ld : legData) {
         if (ld.legType() == "Equity") {
             hasEquityLeg = true;
-        }
-        else if (ld.legType() == "Fixed" || ld.legType() == "Floating") {
+        } else if (ld.legType() == "Fixed" || ld.legType() == "Floating") {
             hasIRLeg = true;
         }
     }
     QL_REQUIRE((legData.size() == 2) && hasEquityLeg && hasIRLeg,
-        "An Equity Swap must have 2 legs, an Equity Leg and an IR Leg - Trade: " + id());
+               "An Equity Swap must have 2 legs, an Equity Leg and an IR Leg - Trade: " + id());
 }
 
 } // namespace data
