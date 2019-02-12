@@ -14,7 +14,7 @@ libOREDataPortfolio_la_SOURCES = \
 	envelope.cpp \
 	equityforward.cpp \
 	equityoption.cpp \
-    equityswap.cpp \
+	equityswap.cpp \
 	fxforward.cpp \
 	fxoption.cpp \
 	fxswap.cpp \
@@ -47,7 +47,7 @@ this_include_HEADERS = \
 	envelope.hpp \
 	equityforward.hpp \
 	equityoption.hpp \
-    equityswap.hpp \
+	equityswap.hpp \
 	fxforward.hpp \
 	fxoption.hpp \
 	fxswap.hpp \
