@@ -156,17 +156,13 @@ TestMarket::TestMarket(Date asof) {
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = flatRateDiv(0.01);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] =
         flatRateDiv(0.0);
-
-    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "SP5")] = flatRateYts(0.03);
-    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "Lufthansa")] =
-        flatRateYts(0.02);
-
+    
     equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>(
-        "SP5", UnitedStates(), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Yield, "SP5"),
+        "SP5", UnitedStates(), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
         Handle<EquityIndex>(boost::make_shared<EquityIndex>("Lufthansa", TARGET(), parseCurrency("EUR"), equitySpot("Lufthansa"),
-                                                            yieldCurve(YieldCurveType::Yield, "Lufthansa"),
+                                                            yieldCurve(YieldCurveType::Discount, "EUR"),
                                                             yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
 
     // build swaption vols
@@ -784,10 +780,6 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
-    sensiData->yieldCurveShiftData()["SP5"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->yieldCurveShiftData()["Lufthansa"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->zeroInflationCurveShiftData()["UKRPI"] =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 
