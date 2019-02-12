@@ -192,7 +192,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 \item LegType:  Determines which of the available sub-nodes must be
   used. 
 
-Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, Equity, YY, CPI}
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, DigitalCMSSpread, Equity, YY, CPI}
 
 \item Payer:  The flows of the leg are paid to the counterparty if
   \emph{true}, and received if \emph{false}.  
@@ -285,10 +285,29 @@ and an amortising exchange can be specified using an \lstinline!Exchanges! child
 \label{lst:notional_exchange}
 \end{listing}
 
-FX Resets can be specified using an \lstinline!FXReset! child element with subelements \break
-\lstinline!ForeignCurrency! (currencyCode), \lstinline!ForeignAmount! (double), \lstinline!FXIndex! and \break
-\lstinline!FixingDays! (integer) subelements, see Listing
-\ref{lst:notional_fxreset} for an example
+FX Resets,  used for Rebalancing Cross-currency swaps, can be specified using an \lstinline!FXReset! child element with the following subelements:  See Listing \ref{lst:notional_fxreset} for an example. \break
+
+\item ForeignCurrency: The foreign currency the notional of the leg resets to.  
+
+Allowable values:  See \lstinline!Currency!  in Table \ref{tab:allow_stand_data}.
+
+\item ForeignAmount: The notional amount in the foreign currency that the notional of the leg resets to.  
+
+Allowable values:  Any positive real number.
+
+\item FXIndex: A reference to an FX Index source for the FX reset fixing. 
+
+Allowable values:  A string on the form FX-SOURCE-CCY1-CCY2.
+
+\item FixingDays: The FX fixing lag in business days
+
+Allowable values:  Any integer.
+
+\item FixingCalendar[Optional]: The calendar associated with the FX Index. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to the null calendar if left blank or omitted.
+
+
 
  \begin{listing}[H]
 %\hrule\medskip
@@ -299,15 +318,18 @@ FX Resets can be specified using an \lstinline!FXReset! child element with subel
                     <FXReset>
                       <ForeignCurrency> EUR </ForeignCurrency>
                       <ForeignAmount> 60000000 </ForeignAmount>
-                      <FXIndex> FX-SOURCE-USD-EUR </FXIndex>
+                      <FXIndex> FX-ECB-USD-EUR </FXIndex>
                       <FixingDays> 2 </FixingDays>
+                      <FixingCalendar>TARGET</FixingCalendar>
                     </FXReset>
                 </Notionals>
 \end{minted}
-\caption{Notional list with exchange}
+\caption{Notional list with fx reset}
 \label{lst:notional_fxreset}
 \end{listing}
 
+
+After the \lstinline!Notional! sub-node the \lstinline!LegData! node includes a \lstinline!ScheduleData! sub-node, and a sub-node based on the choice of \lstinline!LegType! as per below:
 
 \item ScheduleData: This is a trade component sub-node outlined in section \ref{ss:schedule_data} Schedule Data and
 Dates.
@@ -319,21 +341,22 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:cmslegdata}.
 \item CMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CMSSpread}. It is
   outlined in section \ref{ss:cmsspreadlegdata}.
+\item DigitalCMSSpreadLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{DigitalCMSSpread}. It is
+  outlined in section \ref{ss:digitalcmsspreadlegdata}.
 \item CPILegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{CPI}. It is
   outlined in section \ref{ss:cpilegdata}.
 \item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
   outlined in section \ref{ss:yylegdata}.
 \end{itemize}
 
-\subsubsection{Schedule Data and Dates}\label{ss:schedule_data}
+\subsubsection{Schedule Data (Rules and Dates)}\label{ss:schedule_data}
 
-The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. 
-%When \lstinline!IsRulesBased! is set to \emph{false}, 
-The \lstinline!ScheduleData! node can include a \lstinline!Dates! sub-node
-where the schedule is determined directly by \lstinline!Date! child elements. The schedule can also be generated from a
-set of rules based on the entries of the StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule
-elements.  Example structures of \lstinline!ScheduleData! nodes based on rules respectively dates are shown in Listing
-\ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
+The \lstinline!ScheduleData! trade component node is used within the \lstinline!LegData! trade component. The Schedule can both be
+rules based (at least one sub-node Rules exists) and dates based (at least one \lstinline!Dates! sub-node exists,
+where the schedule is determined directly by \lstinline!Date! child elements). In rules based schedules, the schedule dates are generated from a
+set of rules based on the entries of the sub-node Rules, having the elements StartDate, EndDate, Tenor, Calendar, Convention, TermConvention, and Rule.
+Example structures of \lstinline!ScheduleData! nodes based on rules
+respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing \ref{lst:schedule_data_false}, respectively.
 
 \begin{listing}[H]
 %\hrule\medskip
@@ -384,6 +407,10 @@ The meanings and allowable values of the elements in the \lstinline!ScheduleData
   %   generate the schedule. If \emph{true}, the following entries are required: StartDate, EndDate, Tenor, Calendar,
   %   Convention, TermConvention, and Rule.  If false the Dates sub-node is required. \\ Allowable values: \emph{true,
   %   false}
+\item Rules: a sub-node that determines whether the schedule is set by specifying rules that
+generate the schedule. If existing, the following entries are required: StartDate, EndDate, Tenor, Calendar, 
+Convention, TermConvention, and Rule. If not existing, the Dates
+sub-node is required.
 \item StartDate:  The schedule start date.  
 
 Allowable values:  See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
@@ -413,7 +440,7 @@ Allowable values: See \lstinline!Roll Convention! in Table
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
-\item Rule [Optional]: Rules for the generation of the schedule using given
+\item Rule [Optional]: Rule for the generation of the schedule using given
   start and end dates, tenor, calendar and business day conventions. 
 
 Allowable values and descriptions: See Table \ref{tab:rule} Rule. Defaults to \emph{Forward} if left blank or omitted.
@@ -551,8 +578,8 @@ An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:fl
                     <Floors>
                         <Floor>0.01</Floor>
                     </Floors>
+                    <NakedOption>N</NakedOption>    
                 </FloatingLegData>
-                <NakedOption>N</NakedOption>
 \end{minted}
 \caption{Floating leg data}
 \label{lst:floatingleg_data}
@@ -820,6 +847,77 @@ Listing \ref{lst:cmsspreadlegdata} shows an example for a leg of type CMSSpread.
 
 The elements of the CMSSpreadLegData block are identical to those of the CMSLegData (see \ref{ss:cmslegdata}), except
 for the index which is defined by two CMS indices as the difference between \verb+Index1+ and \verb+Index2+.
+
+\subsubsection{Digital CMS Spread Leg Data}
+\label{ss:cmsspreadlegdata}
+
+Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type DigitalCMSSpread.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>DigitalCMSSpread</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          ...
+        </ScheduleData>
+        <DigitalCMSSpreadLegData>
+            <CMSSpreadLegData>
+              <Index1>EUR-CMS-10Y</Index1>
+              <Index2>EUR-CMS-2Y</Index2>
+              <Spreads>
+                <Spread>0.0010</Spread>
+              </Spreads>
+              <Gearings>
+                <Gearing>8.0</Gearing>
+              </Gearings>
+              <NakedOption>N</NakedOption>
+            </CMSSpreadLegData>
+            <CallPosition>Long</CallPosition>
+            <IsCallATMIncluded>false</IsCallATMIncluded>
+            <CallStrikes>
+                <Strike>0.0001</Strike>
+            </CallStrikes>
+            <CallPayoffs>
+                <Payoff>0.0001</Payoff>
+            </CallPayoffs>
+            <PutPosition>Long</PutPosition>
+            <IsPutATMIncluded>false</IsPutATMIncluded>
+            <PutStrikes>
+                <Strike>0.001</Strike>
+            </PutStrikes>
+            <PutPayoffs>
+                <Payoff>0.001</Payoff>
+            </PutPayoffs>
+        </DigitalCMSSpreadLegData>
+      </LegData>
+\end{minted}
+\caption{Digital CMS Spread leg data}
+\label{lst:cmsspreadlegdata}
+\end{listing}
+
+The DigitalCMSLegData block contains the following elements:
+
+\begin{itemize}
+\item CMSLegData: a CMSSpreadLegData block describing the underlying cms spread leg (see \ref{ss:cmsspreadlegdata}.
+\item CallPosition: Specifies whether the call option position is long  or
+  short.
+\item IsCallATMIncluded: inclusion flag on the call payoff if the call option ends at-the-money
+\item CallStrikes: strike rate for the the call option
+\item CallPayoffs: digital call option payoff rate. If included the option is cash-or-nothing, if excluded the option is asset-or-nothing
+\item PutPosition: Specifies whether the put option position is long  or short.
+\item IsPutATMIncluded: inclusion flag on the put payoff if the put option ends at-the-money
+\item PutStrikes: strike rate for the the put option
+\item PutPayoffs: digital put option payoff rate. If included the option is cash-or-nothing, if excluded the option is asset-or-nothing
+\end{itemize}
+
 
 \subsubsection{Equity Leg Data}
 \label{ss:equitylegdata}

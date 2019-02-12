@@ -25,22 +25,27 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal,
-    const Date& startDate, const Date& endDate,
-    const boost::shared_ptr<EquityIndex>& equityCurve,
-    const DayCounter& dayCounter, bool isTotalReturn,
-    const Date& refPeriodStart,
-    const Date& refPeriodEnd, const Date& exCouponDate)
-    : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart,
-    refPeriodEnd, exCouponDate), equityCurve_(equityCurve),  dayCounter_(dayCounter),
-    isTotalReturn_(isTotalReturn) {
+EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
+                           Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
+                           const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor,
+                           const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate)
+    : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
+      equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), isTotalReturn_(isTotalReturn),
+      dividendFactor_(dividendFactor) {
+    QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
+    QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
+
+    fixingStartDate_ =
+        equityCurve_->fixingCalendar().advance(startDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
+    fixingEndDate_ =
+        equityCurve_->fixingCalendar().advance(endDate, -static_cast<Integer>(fixingDays_), Days, Preceding);
 
     registerWith(equityCurve_);
     registerWith(Settings::instance().evaluationDate());
 }
 
 void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer) {
-    //QL_REQUIRE(checkPricerImpl(pricer), "pricer given is wrong type");
+    // QL_REQUIRE(checkPricerImpl(pricer), "pricer given is wrong type");
     if (pricer_)
         unregisterWith(pricer_);
     pricer_ = pricer;
@@ -52,12 +57,10 @@ void EquityCoupon::setPricer(const boost::shared_ptr<EquityCouponPricer>& pricer
 Real EquityCoupon::accruedAmount(const Date& d) const {
     if (d <= accrualStartDate_ || d > paymentDate_) {
         return 0.0;
-    }
-    else {
-        Time fullPeriod = dayCounter().yearFraction(accrualStartDate_,
-            accrualEndDate_, refPeriodStart_, refPeriodEnd_);
-        Time thisPeriod = dayCounter().yearFraction(accrualStartDate_,
-            std::min(d, accrualEndDate_), refPeriodStart_, refPeriodEnd_);
+    } else {
+        Time fullPeriod = dayCounter().yearFraction(accrualStartDate_, accrualEndDate_, refPeriodStart_, refPeriodEnd_);
+        Time thisPeriod =
+            dayCounter().yearFraction(accrualStartDate_, std::min(d, accrualEndDate_), refPeriodStart_, refPeriodEnd_);
         return nominal() * rate() * thisPeriod / fullPeriod;
     }
 }
@@ -70,10 +73,18 @@ Rate EquityCoupon::rate() const {
     return pricer_->swapletRate();
 }
 
-EquityLeg::EquityLeg(const Schedule& schedule,
-                     const boost::shared_ptr<EquityIndex>& equityCurve)
-    : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), 
-    paymentCalendar_(Calendar()) {}
+std::vector<Date> EquityCoupon::fixingDates() const {
+    std::vector<Date> fixingDates;
+
+    fixingDates.push_back(fixingStartDate_);
+    fixingDates.push_back(fixingEndDate_);
+
+    return fixingDates;
+};
+
+EquityLeg::EquityLeg(const Schedule& schedule, const boost::shared_ptr<EquityIndex>& equityCurve)
+    : schedule_(schedule), equityCurve_(equityCurve), paymentAdjustment_(Following), paymentCalendar_(Calendar()),
+      dividendFactor_(1.0), fixingDays_(0) {}
 
 EquityLeg& EquityLeg::withNotional(Real notional) {
     notionals_ = std::vector<Real>(1, notional);
@@ -105,6 +116,16 @@ EquityLeg& EquityLeg::withTotalReturn(bool totalReturn) {
     return *this;
 }
 
+EquityLeg& EquityLeg::withDividendFactor(Real dividendFactor) {
+    dividendFactor_ = dividendFactor;
+    return *this;
+}
+
+EquityLeg& EquityLeg::withFixingDays(Natural fixingDays) {
+    fixingDays_ = fixingDays;
+    return *this;
+}
+
 EquityLeg::operator Leg() const {
 
     QL_REQUIRE(!notionals_.empty(), "No notional given for equity leg.");
@@ -117,8 +138,7 @@ EquityLeg::operator Leg() const {
     Calendar calendar;
     if (!paymentCalendar_.empty()) {
         calendar = paymentCalendar_;
-    }
-    else {
+    } else {
         calendar = schedule_.calendar();
     }
 
@@ -128,13 +148,13 @@ EquityLeg::operator Leg() const {
         endDate = schedule_.date(i + 1);
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
-        boost::shared_ptr<EquityCoupon> cashflow(new EquityCoupon(
-            paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate, 
-            equityCurve_, paymentDayCounter_, isTotalReturn_));
+        boost::shared_ptr<EquityCoupon> cashflow(
+            new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
+                             fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);
-        
+
         cashflows.push_back(cashflow);
     }
     return cashflows;

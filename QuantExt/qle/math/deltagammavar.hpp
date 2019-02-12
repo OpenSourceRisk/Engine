@@ -35,10 +35,9 @@
 #include <boost/serialization/array_wrapper.hpp>
 #endif
 #include <boost/accumulators/accumulators.hpp>
-#include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/tail_quantile.hpp>
 #include <boost/foreach.hpp>
-
 
 namespace QuantExt {
 using namespace QuantLib;

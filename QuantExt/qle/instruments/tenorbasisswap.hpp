@@ -30,7 +30,6 @@
 
 #include <qle/cashflows/subperiodscoupon.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 //! Single currency tenor basis swap
@@ -105,6 +104,8 @@ private:
 
     mutable Spread fairLongSpread_;
     mutable Spread fairShortSpread_;
+
+    Calendar shortIndexCalendar_, longIndexCalendar_;
 };
 
 //! %Results from tenor basis swap calculation

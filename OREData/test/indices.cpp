@@ -17,14 +17,14 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace ore;
-using namespace std; 
+using namespace std;
 
 namespace {
 
@@ -106,6 +106,7 @@ static struct test_data index_data[] = {
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
     {"NOK-NOWA", "NowaON Actual/Actual (ISMA)", 1 * Days},
     {"NZD-OCR", "NzocrON Actual/365 (Fixed)", 1 * Days},
+    {"BRL-CDI", "BRL-CDITN Business/252(Brazil)", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
@@ -322,7 +323,7 @@ static struct test_data swap_index_data[] = {
     {"JPY-CMS-30Y", "JPYLiborSwapIsdaFix30Y Actual/365 (Fixed)", 30 * Years},
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 

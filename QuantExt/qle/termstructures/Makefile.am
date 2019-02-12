@@ -42,6 +42,8 @@ libTermStructures_la_SOURCES = \
     yoyinflationoptionletvolstripper.cpp \
 	discountratiomodifiedcurve.cpp \
 	crossccyfixfloatswaphelper.cpp \
+    correlationtermstructure.cpp \
+    flatcorrelation.cpp \
 	capfloortermvolsurface.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -101,6 +103,10 @@ this_include_HEADERS = \
     yoyinflationoptionletvolstripper.hpp \
 	discountratiomodifiedcurve.hpp \
 	crossccyfixfloatswaphelper.hpp \
+    correlationtermstructure.hpp \
+    flatcorrelation.hpp \
+    interpolatedcorrelationcurve.hpp \
+	strippedcpivolatilitystructure.hpp \
 	capfloortermvolsurface.hpp \
 	probabilitytraits.hpp
 

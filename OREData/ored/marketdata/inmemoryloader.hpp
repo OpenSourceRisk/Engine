@@ -48,13 +48,15 @@ public:
     //! Load fixings
     const std::vector<Fixing>& loadFixings() const override { return fixings_; }
 
+    //! Load Dividends
+    const std::vector<Fixing>& loadDividends() const override { return dividends_; }
+
     // add a market datum
     virtual void add(QuantLib::Date date, const string& name, QuantLib::Real value) {
         try {
             data_[date].push_back(parseMarketDatum(date, name, value));
             TLOG("Added MarketDatum " << data_[date].back()->name());
-        }
-        catch (std::exception& e) {
+        } catch (std::exception& e) {
             WLOG("Failed to parse MarketDatum " << name << ": " << e.what());
         }
     }
@@ -68,6 +70,7 @@ public:
 protected:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;
+    std::vector<Fixing> dividends_;
 };
 
 //! Utility function for loading market quotes and fixings from an in memory csv buffer
@@ -75,12 +78,12 @@ protected:
 void loadDataFromBuffers(
     //! The loader that will be populated
     InMemoryLoader& loader,
-    //! QuantLib::Date Key Value in a single std::string, separated by blanks, tabs, colons or commas 
-    const std::vector<std::string>& marketData, 
-    //! QuantLib::Date Index Fixing in a single std::string, separated by blanks, tabs, colons or commas 
-    const std::vector<std::string>& fixingData, 
-    //! Enable/disable implying today's fixings 
-    bool implyTodaysFixings = false); 
+    //! QuantLib::Date Key Value in a single std::string, separated by blanks, tabs, colons or commas
+    const std::vector<std::string>& marketData,
+    //! QuantLib::Date Index Fixing in a single std::string, separated by blanks, tabs, colons or commas
+    const std::vector<std::string>& fixingData,
+    //! Enable/disable implying today's fixings
+    bool implyTodaysFixings = false);
 
-}
-}
+} // namespace data
+} // namespace ore

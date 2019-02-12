@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "sensitivityanalysisanalytic.hpp"
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 
+#include <boost/test/unit_test.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -40,6 +40,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -69,7 +70,10 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildFxOption;
+using testsuite::buildEuropeanSwaption;
 
 namespace {
 boost::shared_ptr<data::Conventions> conv() {
@@ -240,7 +244,11 @@ bool check(const Real reference, const Real value) {
 
 } // anonymous namespace
 
-void SensitivityAnalysisAnalyticTest::testSensitivities() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SensitivityAnalysisAnalyticTest)
+
+BOOST_AUTO_TEST_CASE(testSensitivities) {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
 
@@ -1409,8 +1417,7 @@ void SensitivityAnalysisAnalyticTest::testSensitivities() {
                     ++foundCrossGammas;
                 } else {
                     if (!check(crossGamma, 0.0))
-                        BOOST_ERROR("Sensitivity analysis result " << key << " ("
-                                                                   << crossGamma
+                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << crossGamma
                                                                    << ") expected to be zero");
                     ++zeroCrossGammas;
                 }
@@ -1434,10 +1441,6 @@ void SensitivityAnalysisAnalyticTest::testSensitivities() {
     BOOST_CHECK(true);
 }
 
-test_suite* SensitivityAnalysisAnalyticTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisAnalyticTest");
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisAnalyticTest::testSensitivities));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()

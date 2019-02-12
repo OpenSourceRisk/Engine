@@ -27,7 +27,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-
 namespace ore {
 namespace data {
 using std::vector;

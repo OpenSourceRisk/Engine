@@ -16,9 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
@@ -26,6 +25,7 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>

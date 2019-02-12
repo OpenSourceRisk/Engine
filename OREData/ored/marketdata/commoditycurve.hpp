@@ -43,7 +43,7 @@ public:
 
     //! Detailed constructor
     CommodityCurve(const QuantLib::Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
-        const CurveConfigurations& curveConfigs, const Conventions& conventions);
+                   const CurveConfigurations& curveConfigs, const Conventions& conventions);
     //@}
 
     //! \name Inspectors
@@ -58,5 +58,5 @@ private:
     boost::shared_ptr<QuantExt::PriceTermStructure> commodityPriceCurve_;
     QuantLib::Real commoditySpot_;
 };
-}
-}
+} // namespace data
+} // namespace ore

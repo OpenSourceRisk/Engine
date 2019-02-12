@@ -25,18 +25,16 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-CommodityForward::CommodityForward(const string& name, const Currency& currency, Position::Type position, 
-    Real quantity, const Date& maturityDate, Real strike)
-    : name_(name), currency_(currency), position_(position), quantity_(quantity), 
-      maturityDate_(maturityDate), strike_(strike) {
+CommodityForward::CommodityForward(const string& name, const Currency& currency, Position::Type position, Real quantity,
+                                   const Date& maturityDate, Real strike)
+    : name_(name), currency_(currency), position_(position), quantity_(quantity), maturityDate_(maturityDate),
+      strike_(strike) {
 
     QL_REQUIRE(quantity_ > 0, "Commodity forward quantity should be positive: " << quantity);
     QL_REQUIRE(strike_ > 0, "Commodity forward strike should be positive: " << strike);
 }
 
-bool CommodityForward::isExpired() const {
-    return detail::simple_event(maturityDate_).hasOccurred();
-}
+bool CommodityForward::isExpired() const { return detail::simple_event(maturityDate_).hasOccurred(); }
 
 void CommodityForward::setupArguments(PricingEngine::arguments* args) const {
     CommodityForward::arguments* arguments = dynamic_cast<CommodityForward::arguments*>(args);
@@ -55,4 +53,4 @@ void CommodityForward::arguments::validate() const {
     QL_REQUIRE(strike > 0, "strike should be positive: " << strike);
 }
 
-}
+} // namespace QuantExt

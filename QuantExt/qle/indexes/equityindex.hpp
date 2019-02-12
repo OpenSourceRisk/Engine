@@ -44,12 +44,22 @@ public:
     //! \name Index interface
     //@{
     std::string name() const;
+    void resetName() { name_ = familyName(); }
+    std::string dividendName() const { return name() + "_div"; }
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
-    // Equity fixing price - can be either fixed hstorical or forecasted. 
+    // Equity fixing price - can be either fixed hstorical or forecasted.
     // Forecasted price can include dividend returns by setting incDividend = true
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing = false) const;
     Real fixing(const Date& fixingDate, bool forecastTodaysFixing, bool incDividend) const;
+    // Dividend Fixings
+    //! stores the historical dividend fixing at the given date
+    /*! the date passed as arguments must be the actual calendar
+        date of the fixing; no settlement days must be used.
+    */
+    virtual void addDividend(const Date& fixingDate, Real fixing, bool forceOverwrite = false);
+    const TimeSeries<Real>& dividendFixings() const { return IndexManager::instance().getHistory(dividendName()); }
+    Real dividendsBetweenDates(const Date& startDate, const Date& endDate) const;
     //@}
     //! \name Observer interface
     //@{
@@ -71,10 +81,8 @@ public:
     // @}
     //! \name Additional methods
     //@{
-    virtual boost::shared_ptr<EquityIndex> clone(
-        const Handle<Quote> spotQuote, 
-        const Handle<YieldTermStructure>& rate,
-        const Handle<YieldTermStructure>& dividend) const;
+    virtual boost::shared_ptr<EquityIndex> clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
+                                                 const Handle<YieldTermStructure>& dividend) const;
     // @}
 protected:
     std::string familyName_;
@@ -100,6 +108,6 @@ inline Real EquityIndex::pastFixing(const Date& fixingDate) const {
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
     return timeSeries()[fixingDate];
 }
-}
+} // namespace QuantExt
 
 #endif

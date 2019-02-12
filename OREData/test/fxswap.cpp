@@ -16,14 +16,14 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/fxforward.hpp>
 #include <ored/portfolio/fxoption.hpp>
 #include <ored/portfolio/fxswap.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_SUITE(FXSwapTests)
 BOOST_AUTO_TEST_CASE(testFXSwap) {
 
     BOOST_TEST_MESSAGE("Testing FXSwap...");
-    
+
     string nearDate = "2015-10-27";
     string farDate = "2015-11-03";
     string nearBoughtCurrency = "EUR";

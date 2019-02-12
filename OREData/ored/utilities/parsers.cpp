@@ -34,13 +34,16 @@
 #include <ql/version.hpp>
 #include <qle/calendars/chile.hpp>
 #include <qle/calendars/colombia.hpp>
+#include <qle/calendars/france.hpp>
 #include <qle/calendars/malaysia.hpp>
+#include <qle/calendars/netherlands.hpp>
 #include <qle/calendars/peru.hpp>
 #include <qle/calendars/philippines.hpp>
 #include <qle/calendars/thailand.hpp>
 #include <qle/currencies/africa.hpp>
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
+#include <qle/currencies/metals.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -154,6 +157,12 @@ Calendar parseCalendar(const string& s) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
+                                      {"FR", France()},
+                                      {"FRF", France()},
+                                      {"IT", Italy()},
+                                      {"ITL", Italy()},
+                                      {"NL", Netherlands()},
+                                      {"NGL", Netherlands()},
                                       {"ZUB", Switzerland()},
                                       {"CHF", Switzerland()},
                                       {"CHZU", Switzerland()},
@@ -381,21 +390,22 @@ DayCounter parseDayCounter(const string& s) {
 Currency parseCurrency(const string& s) {
     static map<string, Currency> m = {
         {"ATS", ATSCurrency()}, {"AUD", AUDCurrency()}, {"BEF", BEFCurrency()}, {"BRL", BRLCurrency()},
-        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()}, 
-        {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()}, 
-        {"ESP", ESPCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()}, 
-        {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()}, 
-        {"ITL", ITLCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()}, 
-        {"KRW", KRWCurrency()}, {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()}, 
-        {"NZD", NZDCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()}, 
-        {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()}, 
-        {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()}, 
-        {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()}, 
-        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()}, 
-        {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()}, 
-        {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()}, 
-        {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()}, 
-        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()}};
+        {"CAD", CADCurrency()}, {"CHF", CHFCurrency()}, {"CNH", CNHCurrency()}, {"CNY", CNYCurrency()},
+        {"CZK", CZKCurrency()}, {"DEM", DEMCurrency()}, {"DKK", DKKCurrency()}, {"EUR", EURCurrency()},
+        {"ESP", ESPCurrency()}, {"FIM", FIMCurrency()}, {"FRF", FRFCurrency()}, {"GBP", GBPCurrency()},
+        {"GRD", GRDCurrency()}, {"HKD", HKDCurrency()}, {"HUF", HUFCurrency()}, {"IEP", IEPCurrency()},
+        {"ITL", ITLCurrency()}, {"INR", INRCurrency()}, {"ISK", ISKCurrency()}, {"JPY", JPYCurrency()},
+        {"KRW", KRWCurrency()}, {"LUF", LUFCurrency()}, {"NLG", NLGCurrency()}, {"NOK", NOKCurrency()},
+        {"NZD", NZDCurrency()}, {"PLN", PLNCurrency()}, {"PTE", PTECurrency()}, {"RON", RONCurrency()},
+        {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()},
+        {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()},
+        {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()},
+        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()},
+        {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()},
+        {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()},
+        {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()},
+        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()},
+        {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

@@ -27,21 +27,21 @@
 
 namespace QuantLib {
 
-
-
-    class Colombia : public Calendar {
-      private:
-        class CseImpl : public Calendar::WesternImpl {
-          public:
-            std::string name() const { return "Colombia Stock Exchange"; }
-            bool isBusinessDay(const Date&) const;
-        };
-      public:
-        enum Market { CSE    // Colombia Stock Exchange
-        };
-        Colombia(Market m = CSE);
+class Colombia : public Calendar {
+private:
+    class CseImpl : public Calendar::WesternImpl {
+    public:
+        std::string name() const { return "Colombia Stock Exchange"; }
+        bool isBusinessDay(const Date&) const;
     };
 
-}
+public:
+    enum Market {
+        CSE // Colombia Stock Exchange
+    };
+    Colombia(Market m = CSE);
+};
+
+} // namespace QuantLib
 
 #endif

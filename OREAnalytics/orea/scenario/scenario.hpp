@@ -31,7 +31,6 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace analytics {
 using QuantLib::Real;
@@ -70,7 +69,9 @@ public:
         CommoditySpot,
         CommodityCurve,
         CommodityVolatility,
-        SecuritySpread
+        SecuritySpread,
+        Correlation,
+        CPR
     };
 
     //! Constructor

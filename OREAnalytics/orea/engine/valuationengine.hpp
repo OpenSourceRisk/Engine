@@ -34,7 +34,6 @@
 #include <map>
 #include <set>
 
-
 namespace ore {
 namespace analytics {
 using std::set;

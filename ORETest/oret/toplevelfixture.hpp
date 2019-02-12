@@ -45,7 +45,7 @@ public:
     /*! Destructor
         Add things here that you want to happen after _every_ test case
     */
-    ~TopLevelFixture() {
+    virtual ~TopLevelFixture() {
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
     }

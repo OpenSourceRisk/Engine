@@ -16,16 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "pricetermstructureadapter.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
-
+#include <boost/test/unit_test.hpp>
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
@@ -56,18 +55,24 @@ public:
         dayCounter = Actual365Fixed();
 
         spotPrice = boost::make_shared<SimpleQuote>(14.5);
-        priceTenors[0] = 6 * Months;  priceQuotes[0] = boost::make_shared<SimpleQuote>(16.7);
-        priceTenors[1] = 1 * Years;   priceQuotes[1] = boost::make_shared<SimpleQuote>(19.9);
-        priceTenors[2] = 2 * Years;   priceQuotes[2] = boost::make_shared<SimpleQuote>(28.5);
-        priceTenors[3] = 5 * Years;   priceQuotes[3] = boost::make_shared<SimpleQuote>(38.8);
+        priceTenors[0] = 6 * Months;
+        priceQuotes[0] = boost::make_shared<SimpleQuote>(16.7);
+        priceTenors[1] = 1 * Years;
+        priceQuotes[1] = boost::make_shared<SimpleQuote>(19.9);
+        priceTenors[2] = 2 * Years;
+        priceQuotes[2] = boost::make_shared<SimpleQuote>(28.5);
+        priceTenors[3] = 5 * Years;
+        priceQuotes[3] = boost::make_shared<SimpleQuote>(38.8);
     }
 };
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void PriceTermStructureAdapterTest::testImpliedZeroRates() {
+BOOST_AUTO_TEST_SUITE(PriceTermStructureAdapterTest)
+
+BOOST_AUTO_TEST_CASE(testImpliedZeroRates) {
 
     BOOST_TEST_MESSAGE("Testing implied zero rates from PriceTermStructureAdapter");
 
@@ -78,8 +83,8 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve
-    boost::shared_ptr<YieldTermStructure> discount = boost::make_shared<FlatForward>(
-        0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
+    boost::shared_ptr<YieldTermStructure> discount =
+        boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve
     vector<Time> times(td.priceTenors.size());
@@ -88,7 +93,7 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
         times[i] = td.dayCounter.yearFraction(asof, asof + td.priceTenors[i]);
         prices[i] = Handle<Quote>(td.priceQuotes[i]);
     }
-    boost::shared_ptr<PriceTermStructure> priceCurve = 
+    boost::shared_ptr<PriceTermStructure> priceCurve =
         boost::make_shared<InterpolatedPriceCurve<Linear> >(times, prices, td.dayCounter);
 
     // Adapted price curve i.e. implied yield termstructure
@@ -97,7 +102,8 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
     // Check the implied zero rates
     for (Size i = 0; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
-        Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
+        Real expectedZero =
+            td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
     }
 
@@ -109,7 +115,8 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
     // Check the implied zero rates
     for (Size i = 0; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
-        Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
+        Real expectedZero =
+            td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
     }
 
@@ -117,7 +124,8 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
     td.spotPrice->setValue(td.spotPrice->value() * 1.05);
     for (Size i = 0; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
-        Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
+        Real expectedZero =
+            td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
     }
 
@@ -125,15 +133,16 @@ void PriceTermStructureAdapterTest::testImpliedZeroRates() {
     td.flatZero->setValue(td.flatZero->value() * 0.9);
     for (Size i = 0; i < times.size(); i++) {
         Real impliedZero = priceAdapter.zeroRate(times[i], Continuous);
-        Real expectedZero = td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
+        Real expectedZero =
+            td.flatZero->value() - std::log(td.priceQuotes[i]->value() / td.spotPrice->value()) / times[i];
         BOOST_CHECK_CLOSE(impliedZero, expectedZero, td.tolerance);
     }
-
 }
 
-void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
+BOOST_AUTO_TEST_CASE(testFloatingDiscountFixedPrice) {
 
-    BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with floating reference discount curve and fixed reference price curve");
+    BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with floating reference discount curve and "
+                       "fixed reference price curve");
 
     CommonData td;
 
@@ -142,13 +151,14 @@ void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve (floating reference)
-    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve = boost::make_shared<FlatForward>(
-        0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
+    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
+        boost::make_shared<FlatForward>(0, NullCalendar(), Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve (fixed reference)
     vector<Date> dates(td.priceTenors.size() + 1);
     vector<Handle<Quote> > prices(td.priceTenors.size() + 1);
-    dates[0] = asof; prices[0] = Handle<Quote>(td.spotPrice);
+    dates[0] = asof;
+    prices[0] = Handle<Quote>(td.spotPrice);
     for (Size i = 0; i < td.priceTenors.size(); i++) {
         dates[i + 1] = asof + td.priceTenors[i];
         prices[i + 1] = Handle<Quote>(td.priceQuotes[i]);
@@ -157,7 +167,8 @@ void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
         boost::make_shared<InterpolatedPriceCurve<Linear> >(dates, prices, td.dayCounter);
 
     // Check construction of adapted price curve passes => reference dates same on construction
-    BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve));
+    BOOST_REQUIRE_NO_THROW(
+        PriceTermStructureAdapter(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve));
 
     // Construct adapted price curve
     PriceTermStructureAdapter adaptedPriceCurve(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve);
@@ -168,9 +179,10 @@ void PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice() {
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(0.5, Continuous), Error);
 }
 
-void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
+BOOST_AUTO_TEST_CASE(testFixedDiscountFloatingPrice) {
 
-    BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with fixed reference discount curve and floating reference price curve");
+    BOOST_TEST_MESSAGE("Testing behaviour of PriceTermStructureAdapter with fixed reference discount curve and "
+                       "floating reference price curve");
 
     CommonData td;
 
@@ -179,8 +191,8 @@ void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
     Settings::instance().evaluationDate() = asof;
 
     // Discount curve (fixed reference)
-    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve = boost::make_shared<FlatForward>(
-        asof, Handle<Quote>(td.flatZero), td.dayCounter);
+    boost::shared_ptr<YieldTermStructure> floatReferenceDiscountCurve =
+        boost::make_shared<FlatForward>(asof, Handle<Quote>(td.flatZero), td.dayCounter);
 
     // Price curve (floating reference)
     vector<Time> times(td.priceTenors.size());
@@ -193,7 +205,8 @@ void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
         boost::make_shared<InterpolatedPriceCurve<Linear> >(times, prices, td.dayCounter);
 
     // Check construction of adapted price curve passes => reference dates same on construction
-    BOOST_REQUIRE_NO_THROW(PriceTermStructureAdapter(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve));
+    BOOST_REQUIRE_NO_THROW(
+        PriceTermStructureAdapter(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve));
 
     // Construct adapted price curve
     PriceTermStructureAdapter adaptedPriceCurve(td.spotPrice, fixedReferencePriceCurve, floatReferenceDiscountCurve);
@@ -204,7 +217,7 @@ void PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice() {
     BOOST_CHECK_THROW(adaptedPriceCurve.zeroRate(0.5, Continuous), Error);
 }
 
-void PriceTermStructureAdapterTest::testExtrapolation() {
+BOOST_AUTO_TEST_CASE(testExtrapolation) {
 
     BOOST_TEST_MESSAGE("Testing extrapolation behaviour of PriceTermStructureAdapter");
 
@@ -217,10 +230,12 @@ void PriceTermStructureAdapterTest::testExtrapolation() {
     // Zero curve: times in ~ [0, 3], turn off extrapolation
     vector<Date> zeroDates(2);
     vector<Real> zeroRates(2);
-    zeroDates[0] = asof;             zeroRates[0] = td.flatZero->value();
-    zeroDates[1] = asof + 3 * Years; zeroRates[1] = td.flatZero->value();
-    boost::shared_ptr<YieldTermStructure> zeroCurve = boost::make_shared<ZeroCurve>(
-        zeroDates, zeroRates, td.dayCounter);
+    zeroDates[0] = asof;
+    zeroRates[0] = td.flatZero->value();
+    zeroDates[1] = asof + 3 * Years;
+    zeroRates[1] = td.flatZero->value();
+    boost::shared_ptr<YieldTermStructure> zeroCurve =
+        boost::make_shared<ZeroCurve>(zeroDates, zeroRates, td.dayCounter);
 
     // Price curve: times in ~ [0.5, 5], turn off extrapolation
     vector<Time> times(td.priceTenors.size());
@@ -265,15 +280,6 @@ void PriceTermStructureAdapterTest::testExtrapolation() {
     BOOST_CHECK_NO_THROW(adaptedPriceCurve.zeroRate(asof + 3 * Months, td.dayCounter, Continuous));
 }
 
-test_suite* PriceTermStructureAdapterTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("PriceTermStructureAdapterTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testImpliedZeroRates));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testFloatingDiscountFixedPrice));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testFixedDiscountFloatingPrice));
-    suite->add(BOOST_TEST_CASE(&PriceTermStructureAdapterTest::testExtrapolation));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

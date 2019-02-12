@@ -37,12 +37,10 @@ public:
     //! Default constructor
     FxForward() : Trade("FxForward"), boughtAmount_(0.0), soldAmount_(0.0) {}
     //! Constructor
-    FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency,
-              double boughtAmount, const string& soldCurrency,
-              double soldAmount, const string& settlement = "Physical")
+    FxForward(Envelope& env, const string& maturityDate, const string& boughtCurrency, double boughtAmount,
+              const string& soldCurrency, double soldAmount, const string& settlement = "Physical")
         : Trade("FxForward", env), maturityDate_(maturityDate), boughtCurrency_(boughtCurrency),
-          boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount),
-          settlement_(settlement) {}
+          boughtAmount_(boughtAmount), soldCurrency_(soldCurrency), soldAmount_(soldAmount), settlement_(settlement) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&);

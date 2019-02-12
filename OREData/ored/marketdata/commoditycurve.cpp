@@ -20,9 +20,9 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <ql/time/date.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/time/date.hpp>
 
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/log.hpp>
@@ -33,7 +33,8 @@ namespace ore {
 namespace data {
 
 CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec, const Loader& loader,
-    const CurveConfigurations& curveConfigs, const Conventions& conventions) : spec_(spec) {
+                               const CurveConfigurations& curveConfigs, const Conventions& conventions)
+    : spec_(spec) {
 
     try {
 
@@ -52,7 +53,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
                     boost::shared_ptr<CommoditySpotQuote> q = boost::dynamic_pointer_cast<CommoditySpotQuote>(md);
 
                     if (q->name() == config->commoditySpotQuoteId()) {
-                        QL_REQUIRE(curveData.find(asof) == curveData.end(), "duplicate commodity spot quote " << q->name() << " found.");
+                        QL_REQUIRE(curveData.find(asof) == curveData.end(),
+                                   "duplicate commodity spot quote " << q->name() << " found.");
                         commoditySpot_ = q->quote()->value();
                         curveData[asof] = commoditySpot_;
                     }
@@ -63,9 +65,11 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
                     boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
 
-                    vector<string>::const_iterator it = find(config->quotes().begin(), config->quotes().end(), q->name());
+                    vector<string>::const_iterator it =
+                        find(config->quotes().begin(), config->quotes().end(), q->name());
                     if (it != config->quotes().end()) {
-                        QL_REQUIRE(curveData.find(q->expiryDate()) == curveData.end(), "duplicate market datum found for " << *it);
+                        QL_REQUIRE(curveData.find(q->expiryDate()) == curveData.end(),
+                                   "duplicate market datum found for " << *it);
                         curveData[q->expiryDate()] = q->quote()->value();
                     }
                 }
@@ -74,8 +78,9 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
         LOG("CommodityCurve: read " << curveData.size() << " quotes.");
 
-        QL_REQUIRE(curveData.size() == config->quotes().size(),
-            "Found " << curveData.size() << " quotes, but " << config->quotes().size() << " quotes given in config.");
+        QL_REQUIRE(curveData.size() == config->quotes().size(), "Found " << curveData.size() << " quotes, but "
+                                                                         << config->quotes().size()
+                                                                         << " quotes given in config.");
 
         // curveData is already ordered by date. Make sure asof is first entry.
         QL_REQUIRE(curveData.begin()->first == asof, "All quotes must be after the asof date, " << asof << ".");
@@ -100,7 +105,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         } else if (interpolationMethod == "LOGLINEAR") {
             commodityPriceCurve_ = boost::make_shared<InterpolatedPriceCurve<LogLinear>>(curveDates, curvePrices, dc);
         } else {
-            QL_FAIL("The interpolation method, " << interpolationMethod << ", is not supported. Needs to be Linear or LogLinear");
+            QL_FAIL("The interpolation method, " << interpolationMethod
+                                                 << ", is not supported. Needs to be Linear or LogLinear");
         }
 
         // Apply extrapolation from the curve configuration
@@ -113,5 +119,5 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
     }
 }
 
-}
-}
+} // namespace data
+} // namespace ore

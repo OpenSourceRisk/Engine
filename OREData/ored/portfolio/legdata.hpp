@@ -36,7 +36,6 @@
 
 #include <vector>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -408,6 +407,71 @@ private:
     bool nakedOption_;
 };
 
+//! Serializable CMS Spread Leg Data
+/*!
+\ingroup tradedata
+*/
+class DigitalCMSSpreadLegData : public LegAdditionalData {
+public:
+    //! Default constructor
+    DigitalCMSSpreadLegData() : LegAdditionalData("DigitalCMSSpread") {}
+    //! Constructor
+    DigitalCMSSpreadLegData(
+        const boost::shared_ptr<CMSSpreadLegData>& underlying, Position::Type callPosition = Position::Long,
+        bool isCallATMIncluded = false, const vector<double> callStrikes = vector<double>(),
+        const vector<string> callStrikeDates = vector<string>(), const vector<double> callPayoffs = vector<double>(),
+        const vector<string> callPayoffDates = vector<string>(), Position::Type putPosition = Position::Long,
+        bool isPutATMIncluded = false, const vector<double> putStrikes = vector<double>(),
+        const vector<string> putStrikeDates = vector<string>(), const vector<double> putPayoffs = vector<double>(),
+        const vector<string> putPayoffDates = vector<string>())
+        : LegAdditionalData("DigitalCMSSpread"), underlying_(underlying), callPosition_(callPosition),
+          isCallATMIncluded_(isCallATMIncluded), callStrikes_(callStrikes), callStrikeDates_(callStrikeDates),
+          callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), putPosition_(putPosition),
+          isPutATMIncluded_(isPutATMIncluded), putStrikes_(putStrikes), putStrikeDates_(putStrikeDates),
+          putPayoffs_(putPayoffs), putPayoffDates_(putPayoffDates) {}
+
+    //! \name Inspectors
+    //@{
+    const boost::shared_ptr<CMSSpreadLegData>& underlying() const { return underlying_; }
+
+    const Position::Type callPosition() const { return callPosition_; }
+    const bool isCallATMIncluded() const { return isCallATMIncluded_; }
+    const vector<double> callStrikes() const { return callStrikes_; }
+    const vector<double> callPayoffs() const { return callPayoffs_; }
+    const vector<string> callStrikeDates() const { return callStrikeDates_; }
+    const vector<string> callPayoffDates() const { return callPayoffDates_; }
+
+    const Position::Type putPosition() const { return putPosition_; }
+    const bool isPutATMIncluded() const { return isPutATMIncluded_; }
+    const vector<double> putStrikes() const { return putStrikes_; }
+    const vector<double> putPayoffs() const { return putPayoffs_; }
+    const vector<string> putStrikeDates() const { return putStrikeDates_; }
+    const vector<string> putPayoffDates() const { return putPayoffDates_; }
+    //@}
+
+    //! \name Serialisation
+    //@{
+    virtual void fromXML(XMLNode* node);
+    virtual XMLNode* toXML(XMLDocument& doc);
+    //@}
+private:
+    boost::shared_ptr<CMSSpreadLegData> underlying_;
+
+    Position::Type callPosition_;
+    bool isCallATMIncluded_;
+    vector<double> callStrikes_;
+    vector<string> callStrikeDates_;
+    vector<double> callPayoffs_;
+    vector<string> callPayoffDates_;
+
+    Position::Type putPosition_;
+    bool isPutATMIncluded_;
+    vector<double> putStrikes_;
+    vector<string> putStrikeDates_;
+    vector<double> putPayoffs_;
+    vector<string> putPayoffDates_;
+};
+
 //! Serializable Fixed Leg Data
 /*!
 \ingroup tradedata
@@ -417,13 +481,16 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, string eqName) : LegAdditionalData("Equity"), 
-        returnType_(returnType), eqName_(eqName) {}
+    EquityLegData(string returnType, Real dividendFactor, string eqName, Natural fixingDays)
+        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
+          fixingDays_(fixingDays) {}
 
     //! \name Inspectors
     //@{
     const string& returnType() const { return returnType_; }
     const string& eqName() const { return eqName_; }
+    Real dividendFactor() const { return dividendFactor_; }
+    Natural fixingDays() const { return fixingDays_; }
     //@}
 
     //! \name Serialisation
@@ -433,7 +500,9 @@ public:
     //@}
 private:
     string returnType_;
+    Real dividendFactor_ = 1.0;
     string eqName_;
+    Natural fixingDays_ = 0;
 };
 
 //! Serializable object holding amortization rules
@@ -489,7 +558,7 @@ public:
             const bool notionalAmortizingExchange = false, const bool isNotResetXCCY = true,
             const string& foreignCurrency = "", const double foreignAmount = 0, const string& fxIndex = "",
             int fixingDays = 0, const string& fixingCalendar = "",
-            const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(), 
+            const std::vector<AmortizationData>& amortizationData = std::vector<AmortizationData>(),
             const int paymentLag = 0);
 
     //! \name Serialisation
@@ -566,6 +635,8 @@ Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);
 Leg makeCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
                      const boost::shared_ptr<EngineFactory>& engineFactory, const bool attachPricer = true);
+Leg makeDigitalCMSSpreadLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapSpreadIndex>& swapSpreadIndex,
+                            const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<QuantExt::EquityIndex>& equityCurve);
 Real currentNotional(const Leg& leg);
 

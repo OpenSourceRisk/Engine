@@ -4,7 +4,7 @@
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
@@ -30,7 +30,6 @@
 
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;
@@ -43,16 +42,18 @@ using ore::data::CurveConfigurations;
 class InflationCapFloorVolCurve {
 public:
     InflationCapFloorVolCurve() {}
-    InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, 
-        const Loader& loader, const CurveConfigurations& curveConfigs,
-        map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
-        map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
+    InflationCapFloorVolCurve(Date asof, InflationCapFloorVolatilityCurveSpec spec, const Loader& loader,
+                              const CurveConfigurations& curveConfigs,
+                              map<string, boost::shared_ptr<YieldCurve>>& yieldCurves,
+                              map<string, boost::shared_ptr<InflationCurve>>& inflationCurves);
 
     //! \name Inspectors
     //@{
     const InflationCapFloorVolatilityCurveSpec& spec() const { return spec_; }
     //! Caplet/Floorlet curve or surface i.e. result of stripping
-    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const { return yoyVolSurface_; }
+    const boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyInflationCapFloorVolSurface() const {
+        return yoyVolSurface_;
+    }
     //@}
 private:
     InflationCapFloorVolatilityCurveSpec spec_;

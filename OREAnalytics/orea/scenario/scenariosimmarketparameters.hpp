@@ -53,7 +53,9 @@ public:
           equityForecastCurveSimulate_(true), dividendYieldSimulate_(false), fxVolSimulate_(false),
           fxVolIsSurface_(false), fxMoneyness_({0.0}), equityVolSimulate_(false), equityIsSurface_(false),
           equityVolSimulateATMOnly_(true), equityMoneyness_({1.0}), securitySpreadsSimulate_(false),
-          baseCorrelationSimulate_(false), commodityCurveSimulate_(false), commodityVolSimulate_(false) {
+          cprSimulate_(false), baseCorrelationSimulate_(false), commodityCurveSimulate_(false),
+          commodityVolSimulate_(false), correlationSimulate_(false), correlationIsSurface_(false),
+          correlationStrikes_({0.0}) {
 
         // set defaults
         setDefaults();
@@ -170,6 +172,13 @@ public:
     const std::vector<QuantLib::Period>& commodityVolExpiries(const std::string& commodityName) const;
     const std::vector<QuantLib::Real>& commodityVolMoneyness(const std::string& commodityName) const;
     const std::string& commodityVolDayCounter(const std::string& commodityName) const;
+
+    bool simulateCorrelations() const { return correlationSimulate_; }
+    bool correlationIsSurface() const { return correlationIsSurface_; }
+    const vector<Period>& correlationExpiries() const { return correlationExpiries_; }
+    const vector<pair<string, string>>& correlationPairs() const { return correlationPairs_; }
+    const string& correlationDayCounter(const string& index1, const string& index2) const;
+    const vector<Real>& correlationStrikes() const { return correlationStrikes_; }
     //@}
 
     //! \name Setters
@@ -244,6 +253,7 @@ public:
 
     bool& securitySpreadsSimulate() { return securitySpreadsSimulate_; }
     vector<string>& securities() { return securities_; }
+    bool& cprSimulate() { return cprSimulate_; }
 
     bool& simulateBaseCorrelations() { return baseCorrelationSimulate_; }
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -279,6 +289,13 @@ public:
         return commodityVolMoneyness_[commodityName];
     }
     void setCommodityVolDayCounter(const std::string& commodityName, const std::string& d);
+
+    bool& simulateCorrelations() { return correlationSimulate_; }
+    bool& correlationIsSurface() { return correlationIsSurface_; }
+    vector<Period>& correlationExpiries() { return correlationExpiries_; }
+    vector<pair<string, string>>& correlationPairs() { return correlationPairs_; }
+    void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
+    vector<Real>& correlationStrikes() { return correlationStrikes_; }
     //@}
 
     //! \name Serialisation
@@ -371,6 +388,7 @@ private:
 
     bool securitySpreadsSimulate_;
     vector<string> securities_;
+    bool cprSimulate_;
 
     bool baseCorrelationSimulate_;
     vector<string> baseCorrelationNames_;
@@ -388,17 +406,24 @@ private:
 
     // Commodity price curve data
     bool commodityCurveSimulate_;
-    std::vector<std::string> commodityNames_;
-    std::map<std::string, std::vector<QuantLib::Period>> commodityCurveTenors_;
-    std::map<std::string, std::string> commodityCurveDayCounters_;
+    vector<string> commodityNames_;
+    map<string, vector<QuantLib::Period>> commodityCurveTenors_;
+    map<string, string> commodityCurveDayCounters_;
 
     // Commodity volatility data
     bool commodityVolSimulate_;
-    std::string commodityVolDecayMode_;
-    std::vector<std::string> commodityVolNames_;
-    std::map<std::string, std::vector<QuantLib::Period>> commodityVolExpiries_;
-    std::map<std::string, std::vector<QuantLib::Real>> commodityVolMoneyness_;
-    std::map<std::string, std::string> commodityVolDayCounters_;
+    string commodityVolDecayMode_;
+    vector<string> commodityVolNames_;
+    map<string, vector<QuantLib::Period>> commodityVolExpiries_;
+    map<string, vector<QuantLib::Real>> commodityVolMoneyness_;
+    map<string, string> commodityVolDayCounters_;
+
+    bool correlationSimulate_;
+    bool correlationIsSurface_;
+    vector<pair<string, string>> correlationPairs_;
+    map<pair<string, string>, string> correlationDayCounters_;
+    vector<Period> correlationExpiries_;
+    vector<Real> correlationStrikes_;
 };
 } // namespace analytics
 } // namespace ore

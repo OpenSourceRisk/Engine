@@ -16,6 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -44,12 +45,12 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include <test/swapperformance.hpp>
 #include <test/testmarket.hpp>
 
 using namespace std;
@@ -60,7 +61,11 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SwapPerformaceTest, *boost::unit_test::disabled())
 
 // Returns an int in the interval [min, max]. Inclusive.
 inline unsigned long randInt(MersenneTwisterUniformRng& rng, Size min, Size max) {
@@ -233,15 +238,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
     return portfolio;
 }
 
-struct SwapResults {
-    vector<Real> epe;
-    vector<Real> ene;
-    Time completionTime;
-    string processMemory;
-    Real nonZeroPVRatio;
-};
-
-SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
+void test_performance(Size portfolioSize, ObservationMode::Mode om, double nonZeroPVRatio, vector<Real>& epe_archived,
+                      vector<Real>& ene_archived) {
     BOOST_TEST_MESSAGE("Testing Swap Exposure Performance size=" << portfolioSize << "...");
 
     SavedSettings backup;
@@ -467,23 +465,24 @@ SwapResults test_performance(Size portfolioSize, ObservationMode::Mode om) {
         eeVec.push_back(epe);
         eneVec.push_back(ene);
     }
-    SwapResults res;
-    res.epe = eeVec;
-    res.ene = eneVec;
-    res.completionTime = elapsed;
-    res.processMemory = os::getMemoryUsage();
-    res.nonZeroPVRatio = nonZeroPerc;
+
     ObservationMode::instance().setMode(backupOm);
     IndexManager::instance().clearHistories();
-    return res;
+
+    // check results
+    BOOST_CHECK_CLOSE(nonZeroPVRatio, nonZeroPerc, 0.005);
+
+    for (Size i = 0; i < epe_archived.size(); ++i) {
+        BOOST_CHECK_CLOSE(eeVec[i], epe_archived[i], 0.01);
+    }
+
+    for (Size i = 0; i < ene_archived.size(); ++i) {
+        BOOST_CHECK_CLOSE(eneVec[i], ene_archived[i], 0.01);
+    }
 }
 
-void SwapPerformanceTest::testSwapPerformanceNoneObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceNoneObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (None observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    SwapResults res = test_performance(100, om);
-    BOOST_CHECK_CLOSE(70.5875, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
@@ -494,9 +493,6 @@ void SwapPerformanceTest::testSwapPerformanceNoneObs() {
         54494.30,  68155.30,  68489.40,   83575.70,   118253.00,  123282.00,  118928.00,  149838.00, 218266.00,
         276536.00, 245307.00, 278034.00,  368274.00,  447787.00,  407436.00,  449380.00,  683155.00, 760313.00,
         764175.00, 832288.00, 1313320.00, 1383550.00, 1413170.00, 1500990.00, 2134060.00, 2323430.00};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         368484000.00, 366973000.00, 359704000.00, 367637000.00, 360213000.00, 360121000.00, 333664000.00, 333002000.00,
         326143000.00, 325711000.00, 300047000.00, 299732000.00, 292758000.00, 293598000.00, 268908000.00, 270144000.00,
@@ -508,17 +504,12 @@ void SwapPerformanceTest::testSwapPerformanceNoneObs() {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+
+    test_performance(100, ObservationMode::Mode::None, 70.5875, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceNoneObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceNoneObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (None observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    SwapResults res = test_performance(1, om);
-    BOOST_CHECK_CLOSE(98.75, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         8422.46, 11198.2, 15556.5, 22180.9, 24515.3, 22731,   24475.8, 30631.9, 32462.8, 28579.6, 29796.7, 34820.7,
         35792,   31444.1, 31421.2, 35378.4, 36713.7, 32176.1, 33109.1, 36913.6, 38421.2, 33315.4, 33985.7, 37880,
@@ -527,9 +518,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceNoneObs() {
         30704.2, 24996.1, 25219.7, 27475.7, 27991.9, 22261.5, 22503.8, 24273.2, 24606.1, 19183.9, 19377.6, 21039.9,
         21286.3, 15787,   15905.7, 17288.3, 17438.7, 11921.7, 12042,   13379.8, 13566.1, 8142.94, 8244.72, 9312.21,
         9336.38, 4025.76, 4011.88, 4742.72, 4713.73, 387.128, 386.435, 0};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         15210.5, 23791.6, 25713.8, 21832.1, 24448.6, 30275.1, 31685,   28403.2, 30147.2, 35385.4, 36347.8, 31485.9,
         32451.9, 37585.8, 39032.5, 34615.3, 35484.1, 40387.2, 40795.7, 35499.5, 37112.2, 40725.5, 41757.1, 36557.2,
@@ -538,17 +526,12 @@ void SwapPerformanceTest::testSingleSwapPerformanceNoneObs() {
         27974,   30230.6, 30331.7, 25129.4, 25443.9, 27195.7, 27727.1, 22540.7, 22623.7, 24868.9, 25036.2, 19195.5,
         19036.4, 21082.1, 21592.6, 15735.2, 15809.7, 17752,   17959.2, 12408.7, 12506.8, 13937.7, 14004,   8403.87,
         8375.64, 10190.8, 10229.4, 4311.72, 4277.53, 6773.5,  6779.32, 0};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+
+    test_performance(1, ObservationMode::Mode::None, 98.75, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSwapPerformanceDisableObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceDisableObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Disable observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Disable;
-    SwapResults res = test_performance(100, om);
-    BOOST_CHECK_CLOSE(70.5875, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
@@ -559,9 +542,6 @@ void SwapPerformanceTest::testSwapPerformanceDisableObs() {
         54494.30,  68155.30,  68489.40,   83575.70,   118253.00,  123282.00,  118928.00,  149838.00, 218266.00,
         276536.00, 245307.00, 278034.00,  368274.00,  447787.00,  407436.00,  449380.00,  683155.00, 760313.00,
         764175.00, 832288.00, 1313320.00, 1383550.00, 1413170.00, 1500990.00, 2134060.00, 2323430.00};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         368484000.00, 366973000.00, 359704000.00, 367637000.00, 360213000.00, 360121000.00, 333664000.00, 333002000.00,
         326143000.00, 325711000.00, 300047000.00, 299732000.00, 292758000.00, 293598000.00, 268908000.00, 270144000.00,
@@ -573,17 +553,12 @@ void SwapPerformanceTest::testSwapPerformanceDisableObs() {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+
+    test_performance(100, ObservationMode::Mode::Disable, 70.5875, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceDisableObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceDisableObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Disable observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Disable;
-    SwapResults res = test_performance(1, om);
-    BOOST_CHECK_CLOSE(98.75, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         8422.46, 11198.2, 15556.5, 22180.9, 24515.3, 22731,   24475.8, 30631.9, 32462.8, 28579.6, 29796.7, 34820.7,
         35792,   31444.1, 31421.2, 35378.4, 36713.7, 32176.1, 33109.1, 36913.6, 38421.2, 33315.4, 33985.7, 37880,
@@ -592,9 +567,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceDisableObs() {
         30704.2, 24996.1, 25219.7, 27475.7, 27991.9, 22261.5, 22503.8, 24273.2, 24606.1, 19183.9, 19377.6, 21039.9,
         21286.3, 15787,   15905.7, 17288.3, 17438.7, 11921.7, 12042,   13379.8, 13566.1, 8142.94, 8244.72, 9312.21,
         9336.38, 4025.76, 4011.88, 4742.72, 4713.73, 387.128, 386.435, 0};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         15210.5, 23791.6, 25713.8, 21832.1, 24448.6, 30275.1, 31685,   28403.2, 30147.2, 35385.4, 36347.8, 31485.9,
         32451.9, 37585.8, 39032.5, 34615.3, 35484.1, 40387.2, 40795.7, 35499.5, 37112.2, 40725.5, 41757.1, 36557.2,
@@ -603,17 +575,11 @@ void SwapPerformanceTest::testSingleSwapPerformanceDisableObs() {
         27974,   30230.6, 30331.7, 25129.4, 25443.9, 27195.7, 27727.1, 22540.7, 22623.7, 24868.9, 25036.2, 19195.5,
         19036.4, 21082.1, 21592.6, 15735.2, 15809.7, 17752,   17959.2, 12408.7, 12506.8, 13937.7, 14004,   8403.87,
         8375.64, 10190.8, 10229.4, 4311.72, 4277.53, 6773.5,  6779.32, 0};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+    test_performance(1, ObservationMode::Mode::Disable, 98.75, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSwapPerformanceDeferObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceDeferObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Defer observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Defer;
-    SwapResults res = test_performance(100, om);
-    BOOST_CHECK_CLOSE(70.5875, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
@@ -624,9 +590,6 @@ void SwapPerformanceTest::testSwapPerformanceDeferObs() {
         54494.30,  68155.30,  68489.40,   83575.70,   118253.00,  123282.00,  118928.00,  149838.00, 218266.00,
         276536.00, 245307.00, 278034.00,  368274.00,  447787.00,  407436.00,  449380.00,  683155.00, 760313.00,
         764175.00, 832288.00, 1313320.00, 1383550.00, 1413170.00, 1500990.00, 2134060.00, 2323430.00};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         368484000.00, 366973000.00, 359704000.00, 367637000.00, 360213000.00, 360121000.00, 333664000.00, 333002000.00,
         326143000.00, 325711000.00, 300047000.00, 299732000.00, 292758000.00, 293598000.00, 268908000.00, 270144000.00,
@@ -638,17 +601,11 @@ void SwapPerformanceTest::testSwapPerformanceDeferObs() {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+    test_performance(100, ObservationMode::Mode::Defer, 70.5875, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceDeferObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceDeferObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Defer observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Defer;
-    SwapResults res = test_performance(1, om);
-    BOOST_CHECK_CLOSE(98.75, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         8422.46, 11198.2, 15556.5, 22180.9, 24515.3, 22731,   24475.8, 30631.9, 32462.8, 28579.6, 29796.7, 34820.7,
         35792,   31444.1, 31421.2, 35378.4, 36713.7, 32176.1, 33109.1, 36913.6, 38421.2, 33315.4, 33985.7, 37880,
@@ -657,9 +614,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceDeferObs() {
         30704.2, 24996.1, 25219.7, 27475.7, 27991.9, 22261.5, 22503.8, 24273.2, 24606.1, 19183.9, 19377.6, 21039.9,
         21286.3, 15787,   15905.7, 17288.3, 17438.7, 11921.7, 12042,   13379.8, 13566.1, 8142.94, 8244.72, 9312.21,
         9336.38, 4025.76, 4011.88, 4742.72, 4713.73, 387.128, 386.435, 0};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         15210.5, 23791.6, 25713.8, 21832.1, 24448.6, 30275.1, 31685,   28403.2, 30147.2, 35385.4, 36347.8, 31485.9,
         32451.9, 37585.8, 39032.5, 34615.3, 35484.1, 40387.2, 40795.7, 35499.5, 37112.2, 40725.5, 41757.1, 36557.2,
@@ -668,17 +622,11 @@ void SwapPerformanceTest::testSingleSwapPerformanceDeferObs() {
         27974,   30230.6, 30331.7, 25129.4, 25443.9, 27195.7, 27727.1, 22540.7, 22623.7, 24868.9, 25036.2, 19195.5,
         19036.4, 21082.1, 21592.6, 15735.2, 15809.7, 17752,   17959.2, 12408.7, 12506.8, 13937.7, 14004,   8403.87,
         8375.64, 10190.8, 10229.4, 4311.72, 4277.53, 6773.5,  6779.32, 0};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+    test_performance(1, ObservationMode::Mode::Defer, 98.75, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSwapPerformanceUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testSwapPerformanceUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Swap Performance (Unregister observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Unregister;
-    SwapResults res = test_performance(100, om);
-    BOOST_CHECK_CLOSE(70.5875, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
         0.00,      0.00,      0.00,       0.00,       0.00,       0.00,       0.00,       0.00,      0.00,
@@ -689,9 +637,6 @@ void SwapPerformanceTest::testSwapPerformanceUnregisterObs() {
         54494.30,  68155.30,  68489.40,   83575.70,   118253.00,  123282.00,  118928.00,  149838.00, 218266.00,
         276536.00, 245307.00, 278034.00,  368274.00,  447787.00,  407436.00,  449380.00,  683155.00, 760313.00,
         764175.00, 832288.00, 1313320.00, 1383550.00, 1413170.00, 1500990.00, 2134060.00, 2323430.00};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         368484000.00, 366973000.00, 359704000.00, 367637000.00, 360213000.00, 360121000.00, 333664000.00, 333002000.00,
         326143000.00, 325711000.00, 300047000.00, 299732000.00, 292758000.00, 293598000.00, 268908000.00, 270144000.00,
@@ -703,17 +648,11 @@ void SwapPerformanceTest::testSwapPerformanceUnregisterObs() {
         73433300.00,  76594300.00,  68622100.00,  73311100.00,  64758500.00,  68073500.00,  60952400.00,  63464700.00,
         55889700.00,  59212900.00,  52316800.00,  55641700.00,  47762400.00,  51099800.00,  44301900.00,  47286400.00,
         39632700.00,  42983300.00,  36719900.00,  39755700.00,  32314400.00,  36128700.00,  30183700.00,  33114200.00};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+    test_performance(100, ObservationMode::Mode::Unregister, 70.5875, epe_archived, ene_archived);
 }
 
-void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testSingleSwapPerformanceUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Single Swap Performance (Unregister observation mode)");
-    // Set the Observation mode here
-    ObservationMode::Mode om = ObservationMode::Mode::Unregister;
-    SwapResults res = test_performance(1, om);
-    BOOST_CHECK_CLOSE(98.75, res.nonZeroPVRatio, 0.005);
     vector<Real> epe_archived = {
         8422.46, 11198.2, 15556.5, 22180.9, 24515.3, 22731,   24475.8, 30631.9, 32462.8, 28579.6, 29796.7, 34820.7,
         35792,   31444.1, 31421.2, 35378.4, 36713.7, 32176.1, 33109.1, 36913.6, 38421.2, 33315.4, 33985.7, 37880,
@@ -722,9 +661,6 @@ void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
         30704.2, 24996.1, 25219.7, 27475.7, 27991.9, 22261.5, 22503.8, 24273.2, 24606.1, 19183.9, 19377.6, 21039.9,
         21286.3, 15787,   15905.7, 17288.3, 17438.7, 11921.7, 12042,   13379.8, 13566.1, 8142.94, 8244.72, 9312.21,
         9336.38, 4025.76, 4011.88, 4742.72, 4713.73, 387.128, 386.435, 0};
-    for (Size i = 0; i < epe_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.epe[i], epe_archived[i], 0.01);
-    }
     vector<Real> ene_archived = {
         15210.5, 23791.6, 25713.8, 21832.1, 24448.6, 30275.1, 31685,   28403.2, 30147.2, 35385.4, 36347.8, 31485.9,
         32451.9, 37585.8, 39032.5, 34615.3, 35484.1, 40387.2, 40795.7, 35499.5, 37112.2, 40725.5, 41757.1, 36557.2,
@@ -733,26 +669,10 @@ void SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs() {
         27974,   30230.6, 30331.7, 25129.4, 25443.9, 27195.7, 27727.1, 22540.7, 22623.7, 24868.9, 25036.2, 19195.5,
         19036.4, 21082.1, 21592.6, 15735.2, 15809.7, 17752,   17959.2, 12408.7, 12506.8, 13937.7, 14004,   8403.87,
         8375.64, 10190.8, 10229.4, 4311.72, 4277.53, 6773.5,  6779.32, 0};
-    for (Size i = 0; i < ene_archived.size(); ++i) {
-        BOOST_CHECK_CLOSE(res.ene[i], ene_archived[i], 0.01);
-    }
+
+    test_performance(1, ObservationMode::Mode::Unregister, 98.75, epe_archived, ene_archived);
 }
 
-test_suite* SwapPerformanceTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SwapPerformanceTest");
-    // (2017-03-28) The single swap performance tests should each complete within 20-25 seconds
-    // The portfolio swap performance tests should completed within 400-700 seconds
-    // Unregister and Disable should be faster than None and Defer
-    // The actual run-times are not checked with any unit test assertions
-    // This is because the actual run-times may vary depending upon the machine specs and other competing processes
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceNoneObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceDisableObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceDeferObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSingleSwapPerformanceUnregisterObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceNoneObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceDisableObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceDeferObs));
-    suite->add(BOOST_TEST_CASE(&SwapPerformanceTest::testSwapPerformanceUnregisterObs));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

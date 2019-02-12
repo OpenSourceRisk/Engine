@@ -45,7 +45,6 @@
 #include <boost/optional.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

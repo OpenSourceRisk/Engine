@@ -52,12 +52,12 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     discountCurve_ = RelinkableHandle<YieldTermStructure>(*market_->discountCurve(ccy.code(), configuration_));
 
-    svts_ = market_->swaptionVol(data_->ccy(), configuration_);
-    swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->ccy(), configuration_), configuration_);
-    shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->ccy(), configuration_), configuration_);
-
-    if (data_->calibrateA() || data_->calibrateH())
+    if (data_->calibrateA() || data_->calibrateH()) {
+        svts_ = market_->swaptionVol(data_->ccy(), configuration_);
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->ccy(), configuration_), configuration_);
+        shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->ccy(), configuration_), configuration_);
         buildSwaptionBasket();
+    }
 
     // convert vector<Real> to Array
     Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
@@ -126,11 +126,13 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
     params_ = model_->params();
     swaptionEngine_ = boost::make_shared<QuantExt::AnalyticLgmSwaptionEngine>(model_);
 
-    registerWith(svts_);
-    registerWith(swapIndex_->forwardingTermStructure());
-    registerWith(swapIndex_->discountingTermStructure());
-    registerWith(shortSwapIndex_->forwardingTermStructure());
-    registerWith(shortSwapIndex_->discountingTermStructure());
+    if (data_->calibrateA() || data_->calibrateH()) {
+        registerWith(svts_);
+        registerWith(swapIndex_->forwardingTermStructure());
+        registerWith(swapIndex_->discountingTermStructure());
+        registerWith(shortSwapIndex_->forwardingTermStructure());
+        registerWith(shortSwapIndex_->discountingTermStructure());
+    }
     registerWith(discountCurve_);
 
     for (Size j = 0; j < swaptionBasket_.size(); j++)
@@ -144,7 +146,9 @@ void LgmBuilder::performCalculations() const {
     parametrization_->shift() = 0.0;
     parametrization_->scaling() = 1.0;
 
-    buildSwaptionBasket();
+    if (data_->calibrateA() || data_->calibrateH())
+        buildSwaptionBasket();
+
     for (Size j = 0; j < swaptionBasket_.size(); j++)
         swaptionBasket_[j]->setPricingEngine(swaptionEngine_);
 

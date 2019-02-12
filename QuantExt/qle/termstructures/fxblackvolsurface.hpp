@@ -30,7 +30,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -106,7 +105,8 @@ public:
                                        const std::vector<Volatility>& bf25d, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
                                        const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true)
-        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore, requireMonotoneVariance) {}
+        : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore,
+                                   requireMonotoneVariance) {}
 
 protected:
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,

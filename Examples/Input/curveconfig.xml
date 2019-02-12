@@ -4,7 +4,7 @@
     <FXVolatility>
       <CurveId>EURUSD</CurveId>
       <CurveDescription/>
-      <Dimension>Smile</Dimension>
+      <Dimension>ATM</Dimension>
       <Expiries>
         1M,3M,6M,1Y,2Y,3Y,10Y
       </Expiries>
@@ -2622,7 +2622,7 @@
           <Conventions>USCPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>US</Calendar>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
@@ -2672,7 +2672,7 @@
           <Conventions>EUHICP_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
@@ -2704,7 +2704,7 @@
           <Conventions>EUHICPXT_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
@@ -2804,7 +2804,7 @@
           <Conventions>FRHICP_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>TARGET</Calendar>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
@@ -2837,8 +2837,8 @@
           <Conventions>UKRPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>UK</Calendar>
-          <DayCounter>A365</DayCounter>
-          <Lag>3M</Lag>
+          <DayCounter>ACT</DayCounter>
+          <Lag>2M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
           <Tolerance>0.000000000001</Tolerance>
@@ -2888,7 +2888,7 @@
           <Conventions>ZACPI_INFLATIONSWAP</Conventions>
           <Extrapolation>true</Extrapolation>
           <Calendar>ZAR</Calendar>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Lag>3M</Lag>
           <Frequency>Monthly</Frequency>
           <BaseRate>0.01</BaseRate>
@@ -2907,7 +2907,7 @@
           <ObservationLag>3M</ObservationLag>
           <Calendar>TARGET</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Index>EUHICPXT</Index>
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
@@ -2916,6 +2916,7 @@
 		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
       </InflationCapFloorPriceSurface>
 	  	  
       <!-- EUHICPXT YY CapFloor-->
@@ -2927,7 +2928,7 @@
           <ObservationLag>3M</ObservationLag>
           <Calendar>TARGET</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Index>EUHICPXT</Index>
 		  <!-- IndexCurve can be of type Yoy or Zero -->
           <IndexCurve>Inflation/EUHICPXT/EUHICPXT_YY_Swaps</IndexCurve>
@@ -2936,6 +2937,7 @@
           <CapStrikes>0.01,0.015,0.02,0.025,0.03,0.035,0.04,0.05,0.06</CapStrikes>
           <FloorStrikes>-0.02,-0.01,0.00,0.005,0.01,0.015,0.02</FloorStrikes>
           <Maturities>2Y,5Y,7Y,10Y,15Y,20Y</Maturities>
+	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
       </InflationCapFloorPriceSurface>
       
       <!-- USCPI ZC CapFloor-->
@@ -2947,7 +2949,7 @@
           <ObservationLag>3M</ObservationLag>
           <Calendar>US</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Index>USCPI</Index>
           <IndexCurve>Inflation/USCPI/USCPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
@@ -2956,6 +2958,7 @@
 		  <CapStrikes/> 
           <FloorStrikes>-0.02,-0.015,-0.01,-0.005,0.00,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y,30Y</Maturities>
+	  <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
       </InflationCapFloorPriceSurface>
 	  
       <!-- UKRPI ZC CapFloor-->
@@ -2964,10 +2967,10 @@
           <CurveDescription>Price Surface ZC CapFloor UKRPI</CurveDescription>
           <Type>ZC</Type>
           <StartRate>0.00</StartRate>
-          <ObservationLag>3M</ObservationLag>
+          <ObservationLag>2M</ObservationLag>
           <Calendar>GBP</Calendar>
           <BusinessDayConvention>MF</BusinessDayConvention>
-          <DayCounter>A365</DayCounter>
+          <DayCounter>ACT</DayCounter>
           <Index>UKRPI</Index>
           <IndexCurve>Inflation/UKRPI/UKRPI_ZC_Swaps</IndexCurve>
           <IndexInterpolated>false</IndexInterpolated>
@@ -2976,6 +2979,7 @@
 		  <CapStrikes/> 
           <FloorStrikes>-0.03,-0.02,-0.015,-0.01,-0.005,0.00,0.005,0.01,0.015,0.02,0.025,0.03</FloorStrikes>
           <Maturities>1Y,2Y,3Y,4Y,5Y,6Y,7Y,8Y,9Y,10Y,12Y,15Y,20Y</Maturities>
+          <ImplySeparateCapFloorVolSurfaces>N</ImplySeparateCapFloorVolSurfaces>
       </InflationCapFloorPriceSurface>
       
   </InflationCapFloorPriceSurfaces>
@@ -3215,5 +3219,45 @@
       <UpperStrikeConstantExtrapolation>false</UpperStrikeConstantExtrapolation>
     </CommodityVolatility>
   </CommodityVolatilities>
+  <Correlations>
+    <Correlation>
+      <CurveId>EUR-CORR</CurveId>
+      <CurveDescription>EUR CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
+      <Currency>EUR</Currency>
+      <!-- ATM, Constant -->
+      <Dimension>ATM</Dimension>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Ccalendar and Business day convention for option tenor to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y,2Y</OptionTenors>
+    </Correlation>
+    <Correlation>
+      <CurveId>USD-CORR</CurveId>
+      <CurveDescription>USD CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>USD-CMS-10Y</Index1>
+      <Index2>USD-CMS-1Y</Index2>
+      <Currency>USD</Currency>
+      <!-- ATM, Constant -->
+      <Dimension>Constant</Dimension>
+      <!-- Rate, Price -->
+      <QuoteType>Rate</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <!-- Day counter for date to time conversion -->
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <!--Ccalendar and Business day convention for option tenor to date conversion -->
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y</OptionTenors>
+    </Correlation>
+  </Correlations>
 </CurveConfiguration>
 

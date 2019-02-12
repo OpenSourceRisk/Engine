@@ -30,7 +30,6 @@
 #include <ql/cashflows/lineartsrpricer.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace ore::data;
@@ -40,16 +39,20 @@ using namespace ore::data;
  \ingroup builders
  */
 class CmsSpreadCouponPricerBuilder
-    : public CachingCouponPricerBuilder<string, const Currency&, const boost::shared_ptr<QuantLib::CmsCouponPricer>&> {
+    : public CachingCouponPricerBuilder<string, const Currency&, const string&, const string&,
+                                        const boost::shared_ptr<QuantLib::CmsCouponPricer>&> {
 public:
     CmsSpreadCouponPricerBuilder() : CachingEngineBuilder("BrigoMercurio", "Analytic", {"CMSSpread"}) {}
 
 protected:
-    string keyImpl(const Currency& ccy, const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override {
-        return ccy.code();
+    string keyImpl(const Currency& ccy, const string& index1, const string& index2,
+                   const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override {
+
+        return index1 + ":" + index2;
     }
     boost::shared_ptr<FloatingRateCouponPricer>
-    engineImpl(const Currency& ccy, const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override;
+    engineImpl(const Currency& ccy, const string& index1, const string& index2,
+               const boost::shared_ptr<QuantLib::CmsCouponPricer>& cmsPricer) override;
 };
 
 } // namespace data

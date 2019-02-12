@@ -52,7 +52,7 @@ XMLDocument::XMLDocument(const string& fileName) : _doc(new rapidxml::xml_docume
     _buffer = new char[length + 1]; // allocate memory for a buffer of appropriate dimension
     t.read(_buffer, length);        // read the whole file into the buffer
     _buffer[static_cast<int>(t.gcount())] = '\0';
-    t.close();                      // close file handle
+    t.close(); // close file handle
     try {
         _doc->parse<0>(_buffer);
     } catch (rapidxml::parse_error& pe) {
@@ -180,8 +180,8 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool v
 }
 
 void XMLUtils::addChildrenWithOptionalAttributes(XMLDocument& doc, XMLNode* n, const string& names, const string& name,
-                                       const vector<Real>& values, const string& attrName,
-                                       const vector<string>& attrs) {
+                                                 const vector<Real>& values, const string& attrName,
+                                                 const vector<string>& attrs) {
     if (attrs.empty())
         XMLUtils::addChildren(doc, n, names, name, values);
     else

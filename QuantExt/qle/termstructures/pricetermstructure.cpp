@@ -22,15 +22,12 @@ using namespace QuantLib;
 
 namespace QuantExt {
 
-PriceTermStructure::PriceTermStructure(const DayCounter& dc)
-    : TermStructure(dc) {}
+PriceTermStructure::PriceTermStructure(const DayCounter& dc) : TermStructure(dc) {}
 
-PriceTermStructure::PriceTermStructure(const Date& referenceDate,
-    const Calendar& cal, const DayCounter& dc)
+PriceTermStructure::PriceTermStructure(const Date& referenceDate, const Calendar& cal, const DayCounter& dc)
     : TermStructure(referenceDate, cal, dc) {}
 
-PriceTermStructure::PriceTermStructure(Natural settlementDays,
-    const Calendar& cal, const DayCounter& dc)
+PriceTermStructure::PriceTermStructure(Natural settlementDays, const Calendar& cal, const DayCounter& dc)
     : TermStructure(settlementDays, cal, dc) {}
 
 Real PriceTermStructure::price(Time t, bool extrapolate) const {
@@ -47,9 +44,7 @@ Real PriceTermStructure::price(const Date& d, bool extrapolate) const {
     return price(timeFromReference(d), extrapolate);
 }
 
-void PriceTermStructure::update() {
-    TermStructure::update();
-}
+void PriceTermStructure::update() { TermStructure::update(); }
 
 Time PriceTermStructure::minTime() const {
     // Default implementation
@@ -57,12 +52,11 @@ Time PriceTermStructure::minTime() const {
 }
 
 void PriceTermStructure::checkRange(Time t, bool extrapolate) const {
-    QL_REQUIRE(extrapolate || allowsExtrapolation()
-        || t >= minTime() || close_enough(t, minTime()),
-        "time (" << t << ") is before min curve time (" << minTime() << ")");
+    QL_REQUIRE(extrapolate || allowsExtrapolation() || t >= minTime() || close_enough(t, minTime()),
+               "time (" << t << ") is before min curve time (" << minTime() << ")");
 
     // Now, do the usual TermStructure checks
     TermStructure::checkRange(t, extrapolate);
 }
 
-}
+} // namespace QuantExt

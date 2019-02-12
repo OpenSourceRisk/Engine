@@ -26,9 +26,8 @@
 
 #include <ql/currencies/asia.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <qle/calendars/malaysia.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-
+#include <qle/calendars/malaysia.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;

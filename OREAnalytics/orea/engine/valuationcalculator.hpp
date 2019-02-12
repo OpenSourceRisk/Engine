@@ -28,7 +28,6 @@
 #include <orea/simulation/simmarket.hpp>
 #include <ored/portfolio/trade.hpp>
 
-
 namespace ore {
 namespace analytics {
 using ore::data::Trade;

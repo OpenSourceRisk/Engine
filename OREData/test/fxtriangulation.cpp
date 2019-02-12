@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/fxtriangulation.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/quotes/simplequote.hpp>
 
 using namespace ore::data;
@@ -50,7 +50,7 @@ vector<pair<string, Real>> data() {
         { "AUDNZD", 1.0616327848 } // Should be enough for USDNZD (value = 1.645 / 1.5495)
     };
     // clang-format on
-    
+
     return testData;
 }
 
@@ -58,7 +58,7 @@ vector<pair<string, Real>> data() {
 class FxTriFixture : public TopLevelFixture {
 public:
     FXTriangulation fx;
-    
+
     FxTriFixture() {
         // Initialise FX data
         for (const auto& p : data()) {
@@ -70,7 +70,7 @@ public:
     ~FxTriFixture() {}
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(testValues) {
 }
 
 BOOST_AUTO_TEST_CASE(testMoreThanOneStep) {
-    
+
     // Larger tolerance for multiple steps
     Real tol = 1e-8;
-    
+
     // Check that we don't handle more than one step
     // EURUSD + EURAUD + AUDNZD => USDNZD
     BOOST_CHECK_THROW(fx.getQuote("USDNZD"), QuantLib::Error);

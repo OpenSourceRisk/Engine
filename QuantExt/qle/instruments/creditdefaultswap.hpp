@@ -49,7 +49,6 @@
 #include <ql/termstructures/defaulttermstructure.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantLib {
 class YieldTermStructure;
 class Claim;
@@ -250,6 +249,11 @@ protected:
     mutable Real couponLegBPS_, couponLegNPV_;
     mutable Real upfrontBPS_, upfrontNPV_;
     mutable Real defaultLegNPV_, accrualRebateNPV_;
+    //! \name Additional interface
+    //@{
+    virtual boost::shared_ptr<PricingEngine> buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
+                                                                Real r, const Handle<YieldTermStructure>& d) const;
+    //@}
 };
 
 //! \ingroup instruments

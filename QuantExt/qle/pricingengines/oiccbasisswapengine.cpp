@@ -21,7 +21,6 @@
     \ingroup
 */
 
-#include <iostream>
 #include <ql/cashflows/cashflows.hpp>
 #include <ql/utilities/dataformatters.hpp>
 #include <qle/pricingengines/oiccbasisswapengine.hpp>

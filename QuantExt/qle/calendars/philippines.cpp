@@ -18,55 +18,50 @@
 
 #include <qle/calendars/philippines.hpp>
 
-
 namespace QuantExt {
 
-    Philippines::Philippines(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new Philippines::PheImpl);
-        impl_ = impl;
-    }
-
-    // Missing Eidul Fitr and Eidul Adha (Lunar)
-    bool Philippines::PheImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth(), dd = date.dayOfYear();
-        Month m = date.month();
-        Year y = date.year();
-        Day em = easterMonday(y);
-        if (isWeekend(w)
-            // New Years Day
-            || ((d == 1 || (d == 2 && w == Monday))
-                    && m == January)
-            // Day of Valor
-            || (d == 9 && m == April) 
-            // Maundy Thursday
-            || (dd == em - 4)
-            // Good Friday
-            || (dd == em - 3)
-            // Labor Day
-            || (d == 1 && m == May)
-            // Independence Day
-            || (d == 12 && m == June)
-            // Ninoy Aquino Day
-            || (d == 21 && m == August)
-            // National Heroes (last Mon of August)
-            || (d >= 25 && w == Monday && m == August)
-            // All Saints Day
-            || (d == 1 && m == November)
-            // Bonifacio Day
-            || (d == 30 && m == November)
-            // Christmas
-            || ((d == 25 || (d == 27 && (w == Monday || w == Tuesday)))
-                    && m == December)
-            // Rizal Day
-            || ((d == 30 && m == December) || ( d == 2 && m == January
-                    && w == Tuesday))
-            // New Years Eve
-            || (d == 31 && m == December))
-            return false;
-        return true;
-    }
-
+Philippines::Philippines(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new Philippines::PheImpl);
+    impl_ = impl;
 }
 
+// Missing Eidul Fitr and Eidul Adha (Lunar)
+bool Philippines::PheImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth(), dd = date.dayOfYear();
+    Month m = date.month();
+    Year y = date.year();
+    Day em = easterMonday(y);
+    if (isWeekend(w)
+        // New Years Day
+        || ((d == 1 || (d == 2 && w == Monday)) && m == January)
+        // Day of Valor
+        || (d == 9 && m == April)
+        // Maundy Thursday
+        || (dd == em - 4)
+        // Good Friday
+        || (dd == em - 3)
+        // Labor Day
+        || (d == 1 && m == May)
+        // Independence Day
+        || (d == 12 && m == June)
+        // Ninoy Aquino Day
+        || (d == 21 && m == August)
+        // National Heroes (last Mon of August)
+        || (d >= 25 && w == Monday && m == August)
+        // All Saints Day
+        || (d == 1 && m == November)
+        // Bonifacio Day
+        || (d == 30 && m == November)
+        // Christmas
+        || ((d == 25 || (d == 27 && (w == Monday || w == Tuesday))) && m == December)
+        // Rizal Day
+        || ((d == 30 && m == December) || (d == 2 && m == January && w == Tuesday))
+        // New Years Eve
+        || (d == 31 && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantExt

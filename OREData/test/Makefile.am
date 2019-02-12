@@ -24,6 +24,7 @@ OREDATA_TESTS = \
 	curveconfig.cpp \
 	ored_commodityforward.cpp \
 	commoditycurveconfig.cpp \
+	correlationcurveconfig.cpp \
 	commoditycurve.cpp \
 	commodityoption.cpp \
 	commodityvolcurveconfig.cpp \
@@ -31,11 +32,11 @@ OREDATA_TESTS = \
 	cds.cpp \
 	inflationcapfloor.cpp \
 	equityswap.cpp \
-	conventions.cpp
+	conventions.cpp \
+    digitalcms.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
-	rm -f $(distdir)/main.cpp
 
 if BOOST_UNIT_TEST_FOUND
 

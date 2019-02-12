@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "shiftscenariogenerator.hpp"
-
-#include <ored/utilities/to_string.hpp>
+#include <boost/test/unit_test.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;
@@ -42,19 +42,21 @@ vector<SSDes> generateDescriptions() {
     result.push_back(SSDes(SSType::Up, RFKey(RFType::IndexCurve, "EUR-EURIBOR-6M", 11), "30Y"));
     result.push_back(SSDes(SSType::Down, RFKey(RFType::FXSpot, "JPYUSD", 0), "spot"));
     result.push_back(SSDes(SSType::Up, RFKey(RFType::SwaptionVolatility, "USD", 22), "3M/3Y/ATM"));
-    result.push_back(SSDes(SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "EUR", 0), "2W"), 
-        SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "EUR", 1), "1M")));
+    result.push_back(SSDes(SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "EUR", 0), "2W"),
+                           SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "EUR", 1), "1M")));
     result.push_back(SSDes(SSDes(SSType::Up, RFKey(RFType::FXSpot, "JPYUSD", 0), "spot"),
-        SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "USD", 1), "1M")));
+                           SSDes(SSType::Up, RFKey(RFType::DiscountCurve, "USD", 1), "1M")));
 
     return result;
 }
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
-void ShiftScenarioGeneratorTest::testShiftScenarioStringConstruction() {
+BOOST_AUTO_TEST_SUITE(ShiftScenarioGeneratorTest)
+
+BOOST_AUTO_TEST_CASE(testShiftScenarioStringConstruction) {
     string strDes;
     for (const auto& des : generateDescriptions()) {
         strDes = to_string(des);
@@ -63,12 +65,6 @@ void ShiftScenarioGeneratorTest::testShiftScenarioStringConstruction() {
     }
 }
 
-test_suite* ShiftScenarioGeneratorTest::suite() {
+BOOST_AUTO_TEST_SUITE_END()
 
-    test_suite* suite = BOOST_TEST_SUITE("ShiftScenarioGeneratorTest");
-    suite->add(BOOST_TEST_CASE(&ShiftScenarioGeneratorTest::testShiftScenarioStringConstruction));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

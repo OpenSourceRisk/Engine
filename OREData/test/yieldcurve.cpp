@@ -17,11 +17,11 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -41,10 +41,12 @@ public:
     const vector<boost::shared_ptr<MarketDatum>>& loadQuotes(const Date&) const;
     const boost::shared_ptr<MarketDatum>& get(const string& name, const Date&) const;
     const vector<Fixing>& loadFixings() const { return fixings_; }
+    const vector<Fixing>& loadDividends() const { return dividends_; }
 
 private:
     map<Date, vector<boost::shared_ptr<MarketDatum>>> data_;
     vector<Fixing> fixings_;
+    vector<Fixing> dividends_;
 };
 
 const vector<boost::shared_ptr<MarketDatum>>& MarketDataLoader::loadQuotes(const Date& d) const {
@@ -77,7 +79,7 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 

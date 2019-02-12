@@ -15,11 +15,10 @@
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
-
-#include "pricecurve.hpp"
-
+#include "toplevelfixture.hpp"
 #include <boost/assign/list_of.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 
 #include <ql/math/interpolations/all.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -52,14 +51,14 @@ public:
     vector<Time> interpolationTimes;
     // Expected (linear) interpolation results on first test date
     vector<Real> baseExpInterpResults;
-    // Expected (linear) interpolation results for floating reference date 
+    // Expected (linear) interpolation results for floating reference date
     // curve after moving to second test date and requesting price by date
     vector<Real> afterExpInterpResults;
-    // Expected (linear) interpolation results on first test date after 
+    // Expected (linear) interpolation results on first test date after
     // shifting quotes
     vector<Real> baseNewInterpResults;
-    // Expected (linear) interpolation results for floating reference date 
-    // curve after shifting quotes and moving to second test date and 
+    // Expected (linear) interpolation results for floating reference date
+    // curve after shifting quotes and moving to second test date and
     // requesting price by date
     vector<Real> afterNewInterpResults;
 
@@ -74,23 +73,35 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData() : testDates(2), curveTenors(6), prices(6), shiftedPrices(6), pQuotes(6), quotes(6),
-        interpolationDates(3), interpolationTimes(3), baseExpInterpResults(3),
-        afterExpInterpResults(3), baseNewInterpResults(3), afterNewInterpResults(3), 
-        expLogInterpResults(3), curveDayCounter(Actual365Fixed()),
-        tolerance(1e-10), extrapolate(true) {
-        
+    CommonData()
+        : testDates(2), curveTenors(6), prices(6), shiftedPrices(6), pQuotes(6), quotes(6), interpolationDates(3),
+          interpolationTimes(3), baseExpInterpResults(3), afterExpInterpResults(3), baseNewInterpResults(3),
+          afterNewInterpResults(3), expLogInterpResults(3), curveDayCounter(Actual365Fixed()), tolerance(1e-10),
+          extrapolate(true) {
+
         // Evaluation dates on which tests will be performed
         testDates[0] = Date(15, Feb, 2018);
         testDates[1] = Date(15, Mar, 2018);
 
         // Curve tenors and prices
-        curveTenors[0] = 0 * Days;    prices[0] = 14.5; shiftedPrices[0] = 16.6;
-        curveTenors[1] = 6 * Months;  prices[1] = 16.7; shiftedPrices[1] = 19.9;
-        curveTenors[2] = 1 * Years;   prices[2] = 19.9; shiftedPrices[2] = 24.4;
-        curveTenors[3] = 18 * Months; prices[3] = 24.5; shiftedPrices[3] = 31.3;
-        curveTenors[4] = 2 * Years;   prices[4] = 28.5; shiftedPrices[4] = 38.1;
-        curveTenors[5] = 5 * Years;   prices[5] = 38.8; shiftedPrices[5] = 54.5;
+        curveTenors[0] = 0 * Days;
+        prices[0] = 14.5;
+        shiftedPrices[0] = 16.6;
+        curveTenors[1] = 6 * Months;
+        prices[1] = 16.7;
+        shiftedPrices[1] = 19.9;
+        curveTenors[2] = 1 * Years;
+        prices[2] = 19.9;
+        shiftedPrices[2] = 24.4;
+        curveTenors[3] = 18 * Months;
+        prices[3] = 24.5;
+        shiftedPrices[3] = 31.3;
+        curveTenors[4] = 2 * Years;
+        prices[4] = 28.5;
+        shiftedPrices[4] = 38.1;
+        curveTenors[5] = 5 * Years;
+        prices[5] = 38.8;
+        shiftedPrices[5] = 54.5;
 
         // Create quotes
         for (Size i = 0; i < quotes.size(); i++) {
@@ -156,8 +167,7 @@ public:
 };
 
 // Perform some common curve checks on the first test date
-template <class I>
-void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool isLogLinear = false) {
+template <class I> void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool isLogLinear = false) {
     BOOST_TEST_MESSAGE("Performing common curve checks");
 
     // Check the prices at the pillar times
@@ -179,11 +189,13 @@ void commonChecks(CommonData& td, InterpolatedPriceCurve<I>& priceCurve, bool is
     }
 }
 
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void PriceCurveTest::testTimesAndPricesCurve() {
+BOOST_AUTO_TEST_SUITE(PriceCurveTest)
+
+BOOST_AUTO_TEST_CASE(testTimesAndPricesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and prices");
 
@@ -214,14 +226,14 @@ void PriceCurveTest::testTimesAndPricesCurve() {
     // Requesting price by time should give the same results as previously
     // Requesting by date should give new results (floating reference date curve)
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.afterExpInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.afterExpInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 }
 
-void PriceCurveTest::testTimesAndQuotesCurve() {
+BOOST_AUTO_TEST_CASE(testTimesAndQuotesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from times and quotes");
 
@@ -252,19 +264,19 @@ void PriceCurveTest::testTimesAndQuotesCurve() {
     // Requesting price by time should give the same results as previously
     // Requesting by date should give new results (floating reference date curve)
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.afterExpInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.afterExpInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 
     // Update quotes and check interpolations again (on this second test date)
     td.updateQuotes();
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.afterNewInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.afterNewInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 
     // Move date back to first test date
@@ -272,14 +284,14 @@ void PriceCurveTest::testTimesAndQuotesCurve() {
 
     // Check interpolations again with the new quotes
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 }
 
-void PriceCurveTest::testDatesAndPricesCurve() {
+BOOST_AUTO_TEST_CASE(testDatesAndPricesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from dates and prices");
 
@@ -307,17 +319,17 @@ void PriceCurveTest::testDatesAndPricesCurve() {
     // Check curve reference date is still first test date
     BOOST_CHECK_EQUAL(priceCurve.referenceDate(), td.testDates[0]);
 
-    // Requesting price by time or date should give the same results as previously 
+    // Requesting price by time or date should give the same results as previously
     // because this is a fixed reference date curve
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 }
 
-void PriceCurveTest::testDatesAndQuotesCurve() {
+BOOST_AUTO_TEST_CASE(testDatesAndQuotesCurve) {
 
     BOOST_TEST_MESSAGE("Testing interpolated price curve built from dates and quotes");
 
@@ -345,26 +357,26 @@ void PriceCurveTest::testDatesAndQuotesCurve() {
     // Check curve reference date is still first test date
     BOOST_CHECK_EQUAL(priceCurve.referenceDate(), td.testDates[0]);
 
-    // Requesting price by time or date should give the same results as previously 
+    // Requesting price by time or date should give the same results as previously
     // because this is a fixed reference date curve
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseExpInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 
     // Update quotes and check the new interpolated values
     td.updateQuotes();
     for (Size i = 0; i < td.interpolationTimes.size(); i++) {
-        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i],
-            priceCurve.price(td.interpolationTimes[i], td.extrapolate), td.tolerance);
-        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i],
-            priceCurve.price(td.interpolationDates[i], td.extrapolate), td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i], priceCurve.price(td.interpolationTimes[i], td.extrapolate),
+                          td.tolerance);
+        BOOST_CHECK_CLOSE(td.baseNewInterpResults[i], priceCurve.price(td.interpolationDates[i], td.extrapolate),
+                          td.tolerance);
     }
 }
 
-void PriceCurveTest::testNoTimeZeroWorks() {
+BOOST_AUTO_TEST_CASE(testNoTimeZeroWorks) {
 
     BOOST_TEST_MESSAGE("Test building with times without a time 0 works with extrapolation on");
 
@@ -392,7 +404,7 @@ void PriceCurveTest::testNoTimeZeroWorks() {
     BOOST_CHECK_THROW(priceCurve.price(0.25, false), QuantLib::Error);
 }
 
-void PriceCurveTest::testNegativeTimeRequestThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeTimeRequestThrows) {
 
     BOOST_TEST_MESSAGE("Test that requesting a price at a time before zero throws");
 
@@ -417,7 +429,7 @@ void PriceCurveTest::testNegativeTimeRequestThrows() {
     BOOST_CHECK_THROW(priceCurve.price(today, td.extrapolate), QuantLib::Error);
 }
 
-void PriceCurveTest::testNegativePriceThrows() {
+BOOST_AUTO_TEST_CASE(testNegativePriceThrows) {
 
     BOOST_TEST_MESSAGE("Test that attempting to return a negative price gives an error");
 
@@ -441,18 +453,6 @@ void PriceCurveTest::testNegativePriceThrows() {
     BOOST_CHECK_THROW(priceCurve.price(d, td.extrapolate), QuantLib::Error);
 }
 
-test_suite* PriceCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("PriceCurveTests");
+BOOST_AUTO_TEST_SUITE_END()
 
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testTimesAndPricesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testTimesAndQuotesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testDatesAndPricesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testDatesAndQuotesCurve));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNoTimeZeroWorks));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNegativeTimeRequestThrows));
-    suite->add(BOOST_TEST_CASE(&PriceCurveTest::testNegativePriceThrows));
-
-    return suite;
-}
-
-}
+BOOST_AUTO_TEST_SUITE_END()

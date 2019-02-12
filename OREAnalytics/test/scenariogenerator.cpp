@@ -16,10 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <test/scenariogenerator.hpp>
-#include <test/testmarket.hpp>
-#include <test/testportfolio.hpp>
-
+#include <boost/test/unit_test.hpp>
 #include <orea/scenario/crossassetmodelscenariogenerator.hpp>
 #include <orea/scenario/lgmscenariogenerator.hpp>
 #include <orea/scenario/scenariogeneratorbuilder.hpp>
@@ -33,6 +30,7 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <qle/instruments/fxforward.hpp>
 #include <qle/models/crossassetmodel.hpp>
@@ -63,6 +61,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
+#include <test/testmarket.hpp>
 
 #include <boost/timer.hpp>
 
@@ -71,8 +70,8 @@ using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace ore::analytics;
 using namespace ore::data;
-using namespace testsuite;
 using namespace ore;
+using testsuite::TestMarket;
 
 namespace {
 
@@ -195,7 +194,7 @@ struct TestData {
 
 } // anonymous namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
 
 void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
 
@@ -278,22 +277,24 @@ void test_lgm(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_TEST_MESSAGE("EUR 10Y Discount:        " << eur2 << " vs " << eurExpected2);
 }
 
-void ScenarioGeneratorTest::testLgmMersenneTwister() {
+BOOST_AUTO_TEST_SUITE(ScenarioGeneratorTest)
+
+BOOST_AUTO_TEST_CASE(testLgmMersenneTwister) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with MersenneTwister...");
     test_lgm(false, false, false);
 }
 
-void ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic() {
+BOOST_AUTO_TEST_CASE(testLgmMersenneTwisterAntithetic) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with MersenneTwister/Antithetic...");
     test_lgm(false, true, false);
 }
 
-void ScenarioGeneratorTest::testLgmLowDiscrepancy() {
+BOOST_AUTO_TEST_CASE(testLgmLowDiscrepancy) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with LowDiscrepancy...");
     test_lgm(true, false, false);
 }
 
-void ScenarioGeneratorTest::testLgmLowDiscrepancyBrownianBridge() {
+BOOST_AUTO_TEST_CASE(testLgmLowDiscrepancyBrownianBridge) {
     BOOST_TEST_MESSAGE("Testing LgmScenarioGenerator with LowDiscrepancy/BrownianBridge...");
     test_lgm(true, false, true);
 }
@@ -436,27 +437,27 @@ void test_crossasset(bool sobol, bool antithetic, bool brownianBridge) {
     BOOST_TEST_MESSAGE("Simulation time " << elapsed);
 }
 
-void ScenarioGeneratorTest::testCrossAssetMersenneTwister() {
+BOOST_AUTO_TEST_CASE(testCrossAssetMersenneTwister) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with MersenneTwister...");
     test_crossasset(false, false, false);
 }
 
-void ScenarioGeneratorTest::testCrossAssetMersenneTwisterAntithetic() {
+BOOST_AUTO_TEST_CASE(testCrossAssetMersenneTwisterAntithetic) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with MersenneTwister/Antithetic...");
     test_crossasset(false, true, false);
 }
 
-void ScenarioGeneratorTest::testCrossAssetLowDiscrepancy() {
+BOOST_AUTO_TEST_CASE(testCrossAssetLowDiscrepancy) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with LowDiscrepancy...");
     test_crossasset(true, false, false);
 }
 
-void ScenarioGeneratorTest::testCrossAssetLowDiscrepancyBrownianBridge() {
+BOOST_AUTO_TEST_CASE(testCrossAssetLowDiscrepancyBrownianBridge) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator with LowDiscrepancy/BrownianBridge...");
     test_crossasset(true, false, true);
 }
 
-void ScenarioGeneratorTest::testCrossAssetSimMarket() {
+BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (Martingale tests)...");
 
     TestData d;
@@ -604,7 +605,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket() {
     BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
 }
 
-void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
+BOOST_AUTO_TEST_CASE(testCrossAssetSimMarket2) {
     BOOST_TEST_MESSAGE("Testing CrossAssetScenarioGenerator via SimMarket (direct test against model)...");
     TestData d;
 
@@ -743,7 +744,7 @@ void ScenarioGeneratorTest::testCrossAssetSimMarket2() {
     BOOST_TEST_MESSAGE("Simulation time " << elapsed << ", update time " << updateTime);
 }
 
-void ScenarioGeneratorTest::testVanillaSwapExposure() {
+BOOST_AUTO_TEST_CASE(testVanillaSwapExposure) {
     BOOST_TEST_MESSAGE("Testing EUR and USD vanilla swap exposure profiles generated with CrossAssetScenarioGenerator");
 
     TestData d;
@@ -891,7 +892,7 @@ void ScenarioGeneratorTest::testVanillaSwapExposure() {
     }
 }
 
-void ScenarioGeneratorTest::testFxForwardExposure() {
+BOOST_AUTO_TEST_CASE(testFxForwardExposure) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward and FX Vanilla Option exposure");
 
     TestData d;
@@ -1016,7 +1017,7 @@ void ScenarioGeneratorTest::testFxForwardExposure() {
                                                     << refNpv << "), tolerance is " << tol);
 }
 
-void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
+BOOST_AUTO_TEST_CASE(testFxForwardExposureZeroIrVol) {
     BOOST_TEST_MESSAGE("Testing EUR-USD FX Forward exposure (zero IR vol)");
 
     TestData d;
@@ -1142,7 +1143,7 @@ void ScenarioGeneratorTest::testFxForwardExposureZeroIrVol() {
     }
 }
 
-void ScenarioGeneratorTest::testCpiSwapExposure() {
+BOOST_AUTO_TEST_CASE(testCpiSwapExposure) {
     BOOST_TEST_MESSAGE("Testing CPI Swap exposure");
 
     TestData d;
@@ -1274,22 +1275,6 @@ void ScenarioGeneratorTest::testCpiSwapExposure() {
                                                     << capNpv << "), tolerance is " << tol);
 }
 
-test_suite* ScenarioGeneratorTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("ScenarioGeneratorTest");
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwister));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmMersenneTwisterAntithetic));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmLowDiscrepancy));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testLgmLowDiscrepancyBrownianBridge));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetMersenneTwister));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetMersenneTwisterAntithetic));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetLowDiscrepancy));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetLowDiscrepancyBrownianBridge));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCrossAssetSimMarket2));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testVanillaSwapExposure));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposure));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testFxForwardExposureZeroIrVol));
-    suite->add(BOOST_TEST_CASE(&ScenarioGeneratorTest::testCpiSwapExposure));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

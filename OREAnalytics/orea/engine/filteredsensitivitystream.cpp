@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <orea/engine/filteredsensitivitystream.hpp>
 #include <math.h>
+#include <orea/engine/filteredsensitivitystream.hpp>
 
 using QuantLib::Real;
 using std::fabs;
@@ -26,8 +26,8 @@ namespace ore {
 namespace analytics {
 
 FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
-    Real deltaThreshold, Real gammaThreshold) : ss_(ss), 
-    deltaThreshold_(deltaThreshold), gammaThreshold_(gammaThreshold) {
+                                                     Real deltaThreshold, Real gammaThreshold)
+    : ss_(ss), deltaThreshold_(deltaThreshold), gammaThreshold_(gammaThreshold) {
     // Reset the underlying stream in case
     ss_->reset();
     while (SensitivityRecord sr = ss_->next()) {
@@ -40,13 +40,14 @@ FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<Sen
 }
 
 FilteredSensitivityStream::FilteredSensitivityStream(const boost::shared_ptr<SensitivityStream>& ss,
-    QuantLib::Real threshold) : FilteredSensitivityStream(ss, threshold, threshold) {}
+                                                     QuantLib::Real threshold)
+    : FilteredSensitivityStream(ss, threshold, threshold) {}
 
 SensitivityRecord FilteredSensitivityStream::next() {
-    // Return the next sensitivity record in the underlying stream that satisfies 
+    // Return the next sensitivity record in the underlying stream that satisfies
     // the threshold conditions
     while (SensitivityRecord sr = ss_->next()) {
-        if(fabs(sr.delta) > deltaThreshold_ || fabs(sr.gamma) > gammaThreshold_ || 
+        if (fabs(sr.delta) > deltaThreshold_ || fabs(sr.gamma) > gammaThreshold_ ||
             (!sr.isCrossGamma() && deltaKeys_.find(sr.key_1) != deltaKeys_.end())) {
             return sr;
         }
@@ -61,5 +62,5 @@ void FilteredSensitivityStream::reset() {
     ss_->reset();
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

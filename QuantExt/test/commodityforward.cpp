@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "commodityforward.hpp"
-
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/settings.hpp>
 
@@ -43,25 +43,23 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData() : name("GOLD_USD"),
-        currency(USDCurrency()),
-        position(Position::Long),
-        quantity(100),
-        maturity(19, Feb, 2019),
-        strike(50.0) {}
+    CommonData()
+        : name("GOLD_USD"), currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019),
+          strike(50.0) {}
 };
-}
+} // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void CommodityForwardTest::testConstructor() {
-    
+BOOST_AUTO_TEST_SUITE(CommodityForwardTests)
+
+BOOST_AUTO_TEST_CASE(testConstructor) {
+
     BOOST_TEST_MESSAGE("Testing commodity forward constructor");
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position, 
-        td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
     BOOST_CHECK_EQUAL(forward.name(), td.name);
     BOOST_CHECK_EQUAL(forward.currency(), td.currency);
@@ -71,14 +69,13 @@ void CommodityForwardTest::testConstructor() {
     BOOST_CHECK_EQUAL(forward.strike(), td.strike);
 }
 
-void CommodityForwardTest::testIsExpired() {
+BOOST_AUTO_TEST_CASE(testIsExpired) {
 
     BOOST_TEST_MESSAGE("Testing commodity forward expiry logic");
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position,
-        td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
     Settings::instance().evaluationDate() = td.maturity - 1 * Days;
     Settings::instance().includeReferenceDateEvents() = true;
@@ -91,35 +88,26 @@ void CommodityForwardTest::testIsExpired() {
     BOOST_CHECK_EQUAL(forward.isExpired(), true);
 }
 
-void CommodityForwardTest::testNegativeQuantityThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a negative quantity in the constructor causes an exception");
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, 
-        td.position, -10.0, td.maturity, td.strike), QuantLib::Error);
+    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, -10.0, td.maturity, td.strike),
+                      QuantLib::Error);
 }
 
-void CommodityForwardTest::testNegativeStrikeThrows() {
+BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
 
     BOOST_TEST_MESSAGE("Test that using a negative strike in the constructor causes an exception");
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency,
-        td.position, td.quantity, td.maturity, -50.0), QuantLib::Error);
+    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, td.quantity, td.maturity, -50.0),
+                      QuantLib::Error);
 }
 
-test_suite* CommodityForwardTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CommodityForwardTests");
-    
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testConstructor));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testIsExpired));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testNegativeQuantityThrows));
-    suite->add(BOOST_TEST_CASE(&CommodityForwardTest::testNegativeStrikeThrows));
-    
-    return suite;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-}
+BOOST_AUTO_TEST_SUITE_END()

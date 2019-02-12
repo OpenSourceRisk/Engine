@@ -11,6 +11,7 @@
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
@@ -29,6 +30,7 @@
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
+#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>

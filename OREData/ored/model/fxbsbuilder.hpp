@@ -31,7 +31,6 @@
 #include <ored/model/fxbsdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

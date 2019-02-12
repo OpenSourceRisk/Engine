@@ -27,7 +27,6 @@
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/models/calibrationhelper.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -39,12 +38,12 @@ using namespace QuantLib;
 */
 class CpiCapFloorHelper : public BlackCalibrationHelper {
 public:
-    CpiCapFloorHelper(Option::Type type, Real baseCPI, const Date& maturity, const Calendar& fixCalendar,
-                      BusinessDayConvention fixConvention, const Calendar& payCalendar,
-                      BusinessDayConvention payConvention, Real strike, const Handle<ZeroInflationIndex>& infIndex,
-                      const Period& observationLag, Real marketPremium,
-                      CPI::InterpolationType observationInterpolation = CPI::AsIndex,
-                      BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
+    CpiCapFloorHelper(
+        Option::Type type, Real baseCPI, const Date& maturity, const Calendar& fixCalendar,
+        BusinessDayConvention fixConvention, const Calendar& payCalendar, BusinessDayConvention payConvention,
+        Real strike, const Handle<ZeroInflationIndex>& infIndex, const Period& observationLag, Real marketPremium,
+        CPI::InterpolationType observationInterpolation = CPI::AsIndex,
+        BlackCalibrationHelper::CalibrationErrorType errorType = BlackCalibrationHelper::RelativePriceError);
 
     Real modelValue() const;
     Real blackPrice(Volatility volatility) const;

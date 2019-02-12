@@ -31,7 +31,6 @@
 #include <ql/option.hpp>
 #include <ql/patterns/observable.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
