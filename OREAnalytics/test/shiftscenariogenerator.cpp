@@ -18,7 +18,7 @@
 
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 
@@ -53,7 +53,7 @@ vector<SSDes> generateDescriptions() {
 
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ShiftScenarioGeneratorTest)
 		
