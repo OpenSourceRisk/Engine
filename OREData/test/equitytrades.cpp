@@ -62,7 +62,7 @@ public:
             flatRateYts(0.05);
 
         // add forecast curve
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "zzzCorp")] =
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "zzzCorp")] =
             flatRateYts(0.1);
 
         // build equity vols

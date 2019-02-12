@@ -116,11 +116,7 @@ public:
     vector<string> equityNames() const { return paramsLookup(RiskFactorKey::KeyType::EquitySpot); }
     const vector<Period>& equityDividendTenors(const string& key) const;
     bool hasEquityDividendTenors(const string& key) const { return equityDividendTenors_.count(key) > 0; }
-    const vector<Period>& equityForecastTenors(const string& key) const;
-    bool hasEquityForecastTenors(const string& key) const { return equityForecastTenors_.count(key) > 0; }
-    vector<string> equityForecastCurves() const { return paramsLookup(RiskFactorKey::KeyType::EquityForecastCurve); }
     vector<string> equityDividendYields() const { return paramsLookup(RiskFactorKey::KeyType::DividendYield); }
-    bool simulateEquityForecastCurve() const { return paramsSimulate(RiskFactorKey::KeyType::EquityForecastCurve); }
     bool simulateDividendYield() const { return paramsSimulate(RiskFactorKey::KeyType::DividendYield); }
 
     bool simulateFXVols() const { return paramsSimulate(RiskFactorKey::KeyType::FXVolatility); }
@@ -240,11 +236,8 @@ public:
     void setCdsVolDayCounters(const string& key, const string& p);
 
     void setEquityNames(vector<string> names);
-    void setEquityForecastCurves(vector<string> names);
     void setEquityDividendCurves(vector<string> names);
     void setEquityDividendTenors(const string& key, const vector<Period>& p);
-    void setEquityForecastTenors(const string& key, const vector<Period>& p);
-    void setSimulateEquityForecastCurve(bool simulate);
     void setSimulateDividendYield(bool simulate);
 
     void setSimulateFXVols(bool simulate);
@@ -362,7 +355,6 @@ private:
     string cdsVolDecayMode_;
 
     map<string, vector<Period>> equityDividendTenors_;
-    map<string, vector<Period>> equityForecastTenors_;
 
     bool fxVolIsSurface_;
     vector<Period> fxVolExpiries_;

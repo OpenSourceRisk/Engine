@@ -28,6 +28,7 @@
 #include <ql/index.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <ql/time/calendar.hpp>
+#include <ql/currency.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -38,6 +39,7 @@ class EquityIndex : public Index, public Observer {
 public:
     /*! spot quote is interpreted as of today */
     EquityIndex(const std::string& familyName, const Calendar& fixingCalendar,
+                const Currency& currency,
                 const Handle<Quote> spotQuote = Handle<Quote>(),
                 const Handle<YieldTermStructure>& rate = Handle<YieldTermStructure>(),
                 const Handle<YieldTermStructure>& dividend = Handle<YieldTermStructure>());
@@ -46,6 +48,7 @@ public:
     std::string name() const;
     void resetName() { name_ = familyName(); }
     std::string dividendName() const { return name() + "_div"; }
+    Currency currency() const { return currency_; }
     Calendar fixingCalendar() const;
     bool isValidFixingDate(const Date& fixingDate) const;
     // Equity fixing price - can be either fixed hstorical or forecasted.
@@ -87,6 +90,7 @@ public:
     // @}
 protected:
     std::string familyName_;
+    Currency currency_;
     const Handle<YieldTermStructure> rate_, dividend_;
     std::string name_;
     const Handle<Quote> spotQuote_;

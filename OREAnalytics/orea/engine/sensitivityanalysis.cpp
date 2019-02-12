@@ -222,21 +222,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = zeroRate;
         }
     } break;
-    case RiskFactorKey::KeyType::EquityForecastCurve: {
-        string ec = keylabel;
-        auto itr = sensiParams.equityForecastCurveShiftData().find(ec);
-        QL_REQUIRE(itr != sensiParams.equityForecastCurveShiftData().end(), "shiftData not found for " << ec);
-        shiftSize = itr->second->shiftSize;
-
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts = simMarket->equityForecastCurve(ec, marketConfiguration);
-            Time t = yts->dayCounter().yearFraction(asof, asof + p);
-            Real zeroRate = yts->zeroRate(t, Continuous);
-            shiftMult = zeroRate;
-        }
-    } break;
     case RiskFactorKey::KeyType::DividendYield: {
         string eq = keylabel;
         auto itr = sensiParams.dividendYieldShiftData().find(eq);
