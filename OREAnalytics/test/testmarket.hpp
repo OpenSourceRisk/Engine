@@ -29,9 +29,9 @@
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/voltermstructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <qle/termstructures/flatcorrelation.hpp>
 #include <ql/time/calendars/nullcalendar.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/termstructures/flatcorrelation.hpp>
 
 using namespace QuantLib;
 using namespace ore::data;

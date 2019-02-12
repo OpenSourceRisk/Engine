@@ -28,8 +28,6 @@
 
 #include <vector>
 
-
-
 namespace ore {
 namespace data {
 using std::string;

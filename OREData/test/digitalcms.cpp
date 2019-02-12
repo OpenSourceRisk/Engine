@@ -16,9 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/capfloor.hpp>
@@ -28,12 +27,13 @@
 #include <ored/portfolio/schedule.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <ql/cashflows/digitalcoupon.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
-#include <ql/cashflows/digitalcoupon.hpp>
 
 #include <iostream>
 
@@ -89,7 +89,8 @@ private:
         return Handle<SwaptionVolatilityStructure>(Svs);
     }
     Handle<QuantExt::CorrelationTermStructure> flatCorr(Real corr) {
-        boost::shared_ptr<QuantExt::CorrelationTermStructure> cs(new QuantExt::FlatCorrelation(0, NullCalendar(), corr, ActualActual()));
+        boost::shared_ptr<QuantExt::CorrelationTermStructure> cs(
+            new QuantExt::FlatCorrelation(0, NullCalendar(), corr, ActualActual()));
 
         return Handle<QuantExt::CorrelationTermStructure>(cs);
     }
@@ -118,27 +119,26 @@ struct CommonVars {
     string longShort;
     vector<double> notionals;
 
-
     boost::shared_ptr<ore::data::Swap> makeDigitalCmsSpreadOption(bool call, vector<double> strikes,
-                                                            vector<double> payoffs) {
+                                                                  vector<double> payoffs) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
         boost::shared_ptr<DigitalCMSSpreadLegData> cmsLegData;
         if (call) {
             cmsLegData = boost::make_shared<DigitalCMSSpreadLegData>(
-            boost::make_shared<CMSSpreadLegData>(index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
-                vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
-            Position::Long, false, strikes, vector<string>(), payoffs, vector<string>());
+                boost::make_shared<CMSSpreadLegData>(
+                    index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(),
+                    vector<string>(), vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
+                Position::Long, false, strikes, vector<string>(), payoffs, vector<string>());
         } else {
             cmsLegData = boost::make_shared<DigitalCMSSpreadLegData>(
-            boost::make_shared<CMSSpreadLegData>(index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
-                vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
-            Position::Long, false, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
-            Position::Long, false, strikes, vector<string>(), payoffs);
-            
+                boost::make_shared<CMSSpreadLegData>(
+                    index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(),
+                    vector<string>(), vector<double>(), vector<string>(), vector<double>(), vector<string>(), false),
+                Position::Long, false, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
+                Position::Long, false, strikes, vector<string>(), payoffs);
         }
-            
 
         LegData leg(cmsLegData, isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
@@ -147,14 +147,14 @@ struct CommonVars {
         boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, legData));
         return swap;
     }
-    
+
     boost::shared_ptr<ore::data::Swap> makeCmsSpreadOption(vector<double> spreads) {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSSpreadLegData cmsLegData( index1, index2, fixingdays, isinarrears, spreads, vector<string>(), vector<double>(), vector<string>(),
-                vector<double>(), vector<string>(), vector<double>(), vector<string>(), false);
-
+        CMSSpreadLegData cmsLegData(index1, index2, fixingdays, isinarrears, spreads, vector<string>(),
+                                    vector<double>(), vector<string>(), vector<double>(), vector<string>(),
+                                    vector<double>(), vector<string>(), false);
 
         LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
@@ -168,9 +168,9 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSSpreadLegData cmsLegData( index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), vector<double>(), vector<string>(),
-                floors, vector<string>(), vector<double>(), vector<string>(), false);
-
+        CMSSpreadLegData cmsLegData(index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(),
+                                    vector<double>(), vector<string>(), floors, vector<string>(), vector<double>(),
+                                    vector<string>(), false);
 
         LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
@@ -184,9 +184,9 @@ struct CommonVars {
         ScheduleData cmsSchedule(ScheduleRules(start, end, cmstenor, calStr, conv, conv, rule));
 
         vector<LegData> legData;
-        CMSSpreadLegData cmsLegData( index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), caps, vector<string>(),
-                vector<double>(), vector<string>(), vector<double>(), vector<string>(), false);
-
+        CMSSpreadLegData cmsLegData(index1, index2, fixingdays, isinarrears, vector<double>(), vector<string>(), caps,
+                                    vector<string>(), vector<double>(), vector<string>(), vector<double>(),
+                                    vector<string>(), false);
 
         LegData leg(boost::make_shared<CMSSpreadLegData>(cmsLegData), isPayer, ccy, cmsSchedule, fixDC, notionals);
         legData.push_back(leg);
@@ -229,8 +229,8 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(DigitalCmsTests)
 
 // TODO FIXME
-BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon, *boost::unit_test::disabled()) {
-    BOOST_TEST_MESSAGE("Testing CMS Analytic Hagan price...");
+BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon) {
+    BOOST_TEST_MESSAGE("Testing CMS Digital CMS Spread coupon...");
 
     // build market
     boost::shared_ptr<Market> market = boost::make_shared<TestMarket>();
@@ -265,174 +265,171 @@ BOOST_AUTO_TEST_CASE(testDigitalCMSSpreadCoupon, *boost::unit_test::disabled()) 
     boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
     engineFactory->registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
 
-
-    //test edge cases
-    //If strike >> rate then NPV(digital call option) == NPV(option with spread = 0)
-    //and NPV(digital put option == NPV(option with spread = payoff)
+    // test edge cases
+    // If strike >> rate then NPV(digital call option) == NPV(option with spread = 0)
+    // and NPV(digital put option == NPV(option with spread = payoff)
 
     {
-    double strike = 1;
-    double pay = 0.0001;
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall = vars.makeDigitalCmsSpreadOption(true, vector<double>(1,strike), vector<double>(1,pay));
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut = vars.makeDigitalCmsSpreadOption(false, vector<double>(1,strike), vector<double>(1,pay));
-    boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadOption(vector<double>(1,pay));
-    boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1,0));
-    cmsDigitalSwapCall->build(engineFactory);
-    cmsDigitalSwapPut->build(engineFactory);
-    cmsSwap1->build(engineFactory);
-    cmsSwap2->build(engineFactory);
+        double strike = 1;
+        double pay = 0.0001;
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+            vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>(1, pay));
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+            vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>(1, pay));
+        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadOption(vector<double>(1, pay));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadOption(vector<double>(1, 0));
+        cmsDigitalSwapCall->build(engineFactory);
+        cmsDigitalSwapPut->build(engineFactory);
+        cmsSwap1->build(engineFactory);
+        cmsSwap2->build(engineFactory);
 
-    BOOST_TEST_MESSAGE("digital call coupons");
-    outputCoupons(cmsDigitalSwapCall);
-    BOOST_TEST_MESSAGE("digital put coupons");
-    outputCoupons(cmsDigitalSwapPut);
-    BOOST_TEST_MESSAGE("coupon 1");
-    outputCoupons(cmsSwap1);
-    BOOST_TEST_MESSAGE("coupon 2");
-    outputCoupons(cmsSwap2);
+        BOOST_TEST_MESSAGE("digital call coupons");
+        outputCoupons(cmsDigitalSwapCall);
+        BOOST_TEST_MESSAGE("digital put coupons");
+        outputCoupons(cmsDigitalSwapPut);
+        BOOST_TEST_MESSAGE("coupon 1");
+        outputCoupons(cmsSwap1);
+        BOOST_TEST_MESSAGE("coupon 2");
+        outputCoupons(cmsSwap2);
 
-    BOOST_TEST_MESSAGE("NPV Call = " << cmsDigitalSwapCall->instrument()->NPV()); 
-    BOOST_TEST_MESSAGE("NPV Put = " << cmsDigitalSwapPut->instrument()->NPV()); 
-    BOOST_TEST_MESSAGE("NPV1 = " << cmsSwap1->instrument()->NPV()); 
-    BOOST_TEST_MESSAGE("NPV2 = " << cmsSwap2->instrument()->NPV()); 
+        BOOST_TEST_MESSAGE("NPV Call = " << cmsDigitalSwapCall->instrument()->NPV());
+        BOOST_TEST_MESSAGE("NPV Put = " << cmsDigitalSwapPut->instrument()->NPV());
+        BOOST_TEST_MESSAGE("NPV1 = " << cmsSwap1->instrument()->NPV());
+        BOOST_TEST_MESSAGE("NPV2 = " << cmsSwap2->instrument()->NPV());
 
-
-    BOOST_CHECK_CLOSE(cmsDigitalSwapCall->instrument()->NPV(), cmsSwap2->instrument()->NPV(), 0.1);
-    BOOST_CHECK_CLOSE(cmsDigitalSwapPut->instrument()->NPV(), cmsSwap1->instrument()->NPV(), 0.1);
+        BOOST_CHECK_CLOSE(cmsDigitalSwapCall->instrument()->NPV(), cmsSwap2->instrument()->NPV(), 0.1);
+        BOOST_CHECK_CLOSE(cmsDigitalSwapPut->instrument()->NPV(), cmsSwap1->instrument()->NPV(), 0.1);
     }
 
-    //check put cash-or-nothing payoffs
+    // check put cash-or-nothing payoffs
     {
-    double strike = 0.0001;
-    double pay = 0.0001;
-    double eps = 1e-4;
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut = vars.makeDigitalCmsSpreadOption(false, vector<double>(1,strike), vector<double>(1, pay));
-    boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1,strike + eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1,strike - eps/2));
-    cmsDigitalSwapPut->build(engineFactory);
-    cmsSwap1->build(engineFactory);
-    cmsSwap2->build(engineFactory);
+        double strike = 0.0001;
+        double pay = 0.0001;
+        double eps = 1e-4;
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+            vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>(1, pay));
+        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
+        cmsDigitalSwapPut->build(engineFactory);
+        cmsSwap1->build(engineFactory);
+        cmsSwap2->build(engineFactory);
 
-    Leg leg = cmsDigitalSwapPut->legs().at(0);
-    Leg leg1 = cmsSwap1->legs().at(0);
-    Leg leg2 = cmsSwap2->legs().at(0);
+        Leg leg = cmsDigitalSwapPut->legs().at(0);
+        Leg leg1 = cmsSwap1->legs().at(0);
+        Leg leg2 = cmsSwap2->legs().at(0);
 
-    for (Size i = 0; i < leg.size(); i++) {
-        boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-        
-        double r = pay * (frc1->rate() - frc2->rate())/ eps;
+        for (Size i = 0; i < leg.size(); i++) {
+            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
 
-        BOOST_CHECK_CLOSE(r, dc->putOptionRate(), 0.1);
+            double r = pay * (frc1->rate() - frc2->rate()) / eps;
+
+            BOOST_CHECK_CLOSE(r, dc->putOptionRate(), 0.1);
+        }
     }
 
-    }
-    
-    //check call cash-or-nothing payoffs
+    // check call cash-or-nothing payoffs
     {
-    double strike = 0.0001;
-    double pay = 0.0001;
-    double eps = 1e-4;
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall = vars.makeDigitalCmsSpreadOption(true, vector<double>(1,strike), vector<double>(1, pay));
-    boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1,strike + eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1,strike - eps/2));
-    cmsDigitalSwapCall->build(engineFactory);
-    cmsSwap1->build(engineFactory);
-    cmsSwap2->build(engineFactory);
+        double strike = 0.0001;
+        double pay = 0.0001;
+        double eps = 1e-4;
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+            vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>(1, pay));
+        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
+        cmsDigitalSwapCall->build(engineFactory);
+        cmsSwap1->build(engineFactory);
+        cmsSwap2->build(engineFactory);
 
-    Leg leg = cmsDigitalSwapCall->legs().at(0);
-    Leg leg1 = cmsSwap1->legs().at(0);
-    Leg leg2 = cmsSwap2->legs().at(0);
+        Leg leg = cmsDigitalSwapCall->legs().at(0);
+        Leg leg1 = cmsSwap1->legs().at(0);
+        Leg leg2 = cmsSwap2->legs().at(0);
 
-    for (Size i = 0; i < leg.size(); i++) {
-        boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-        
-        double r = pay * (frc1->rate() - frc2->rate())/ eps;
+        for (Size i = 0; i < leg.size(); i++) {
+            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
 
-        BOOST_CHECK_CLOSE(r, dc->callOptionRate(), 0.1);
+            double r = pay * (frc1->rate() - frc2->rate()) / eps;
+
+            BOOST_CHECK_CLOSE(r, dc->callOptionRate(), 0.1);
+        }
     }
-
-    }
-    //check put asset-or-nothing payoffs
+    // check put asset-or-nothing payoffs
     {
-    double strike = 0.0001;
-    double eps = 1e-4;
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut = vars.makeDigitalCmsSpreadOption(false, vector<double>(1,strike), vector<double>());
-    boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1,strike + eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1,strike - eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadFloor(vector<double>(1,strike));
-    boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadFloor(vector<double>());
-    cmsDigitalSwapPut->build(engineFactory);
-    cmsSwap1->build(engineFactory);
-    cmsSwap2->build(engineFactory);
-    cmsSwap3->build(engineFactory);
-    cmsSwap4->build(engineFactory);
+        double strike = 0.0001;
+        double eps = 1e-4;
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapPut =
+            vars.makeDigitalCmsSpreadOption(false, vector<double>(1, strike), vector<double>());
+        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadFloor(vector<double>(1, strike + eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadFloor(vector<double>(1, strike - eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadFloor(vector<double>(1, strike));
+        boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadFloor(vector<double>());
+        cmsDigitalSwapPut->build(engineFactory);
+        cmsSwap1->build(engineFactory);
+        cmsSwap2->build(engineFactory);
+        cmsSwap3->build(engineFactory);
+        cmsSwap4->build(engineFactory);
 
-    Leg leg = cmsDigitalSwapPut->legs().at(0);
-    Leg leg1 = cmsSwap1->legs().at(0);
-    Leg leg2 = cmsSwap2->legs().at(0);
-    Leg leg3 = cmsSwap3->legs().at(0);
-    Leg leg4 = cmsSwap4->legs().at(0);
+        Leg leg = cmsDigitalSwapPut->legs().at(0);
+        Leg leg1 = cmsSwap1->legs().at(0);
+        Leg leg2 = cmsSwap2->legs().at(0);
+        Leg leg3 = cmsSwap3->legs().at(0);
+        Leg leg4 = cmsSwap4->legs().at(0);
 
-    for (Size i = 0; i < leg.size(); i++) {
-        boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
-        
-        double r = strike * (frc1->rate() - frc2->rate())/ eps;
-        double put =  - frc4->rate() + frc3->rate();
-        BOOST_TEST_MESSAGE(frc4->rate() << " " << frc3->rate() << " " << r << " " << put);
+        for (Size i = 0; i < leg.size(); i++) {
+            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
 
-        BOOST_CHECK_CLOSE(r - put, dc->putOptionRate(), 0.1);
+            double r = strike * (frc1->rate() - frc2->rate()) / eps;
+            double put = -frc4->rate() + frc3->rate();
+            BOOST_TEST_MESSAGE(frc4->rate() << " " << frc3->rate() << " " << r << " " << put);
+
+            BOOST_CHECK_CLOSE(r - put, dc->putOptionRate(), 0.1);
+        }
     }
 
-    }
-    
-    //check call asset-or-nothing payoffs
+    // check call asset-or-nothing payoffs
     {
-    double strike = 0.0001;
-    double eps = 1e-4;
-    boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall = vars.makeDigitalCmsSpreadOption(true, vector<double>(1,strike), vector<double>());
-    boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1,strike + eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1,strike - eps/2));
-    boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadCap(vector<double>(1,strike));
-    boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadCap(vector<double>());
-    cmsDigitalSwapCall->build(engineFactory);
-    cmsSwap1->build(engineFactory);
-    cmsSwap2->build(engineFactory);
-    cmsSwap3->build(engineFactory);
-    cmsSwap4->build(engineFactory);
+        double strike = 0.0001;
+        double eps = 1e-4;
+        boost::shared_ptr<ore::data::Swap> cmsDigitalSwapCall =
+            vars.makeDigitalCmsSpreadOption(true, vector<double>(1, strike), vector<double>());
+        boost::shared_ptr<ore::data::Swap> cmsSwap1 = vars.makeCmsSpreadCap(vector<double>(1, strike + eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap2 = vars.makeCmsSpreadCap(vector<double>(1, strike - eps / 2));
+        boost::shared_ptr<ore::data::Swap> cmsSwap3 = vars.makeCmsSpreadCap(vector<double>(1, strike));
+        boost::shared_ptr<ore::data::Swap> cmsSwap4 = vars.makeCmsSpreadCap(vector<double>());
+        cmsDigitalSwapCall->build(engineFactory);
+        cmsSwap1->build(engineFactory);
+        cmsSwap2->build(engineFactory);
+        cmsSwap3->build(engineFactory);
+        cmsSwap4->build(engineFactory);
 
-    Leg leg = cmsDigitalSwapCall->legs().at(0);
-    Leg leg1 = cmsSwap1->legs().at(0);
-    Leg leg2 = cmsSwap2->legs().at(0);
-    Leg leg3 = cmsSwap3->legs().at(0);
-    Leg leg4 = cmsSwap4->legs().at(0);
+        Leg leg = cmsDigitalSwapCall->legs().at(0);
+        Leg leg1 = cmsSwap1->legs().at(0);
+        Leg leg2 = cmsSwap2->legs().at(0);
+        Leg leg3 = cmsSwap3->legs().at(0);
+        Leg leg4 = cmsSwap4->legs().at(0);
 
-    for (Size i = 0; i < leg.size(); i++) {
-        boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
-        boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
-        
-        double r = strike * (frc1->rate() - frc2->rate())/ eps;
-        double call = frc4->rate() - frc3->rate();
+        for (Size i = 0; i < leg.size(); i++) {
+            boost::shared_ptr<DigitalCoupon> dc = boost::dynamic_pointer_cast<DigitalCoupon>(leg[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc1 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg1[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc2 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg2[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc3 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg3[i]);
+            boost::shared_ptr<FloatingRateCoupon> frc4 = boost::dynamic_pointer_cast<FloatingRateCoupon>(leg4[i]);
 
-        BOOST_CHECK_CLOSE(r + call, dc->callOptionRate(), 0.1);
+            double r = strike * (frc1->rate() - frc2->rate()) / eps;
+            double call = frc4->rate() - frc3->rate();
+
+            BOOST_CHECK_CLOSE(r + call, dc->callOptionRate(), 0.1);
+        }
     }
-
-    }
-
 }
 
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-

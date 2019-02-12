@@ -22,33 +22,32 @@
 
 #pragma once
 
-#include <orea/engine/sensitivitystream.hpp>
 #include <orea/cube/sensitivitycube.hpp>
+#include <orea/engine/sensitivitystream.hpp>
 
-#include <string>
 #include <map>
 #include <set>
+#include <string>
 
 namespace ore {
 namespace analytics {
 
 /*! Class for streaming SensitivityRecords from a SensitivityCube
-*/
+ */
 class SensitivityCubeStream : public SensitivityStream {
 public:
-    /*! Constructor providing the sensitivity \p cube and currency of the 
+    /*! Constructor providing the sensitivity \p cube and currency of the
         sensitivities
     */
-    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, 
-        const std::string& currency);
-    
+    SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const std::string& currency);
+
     /*! Returns the next SensitivityRecord in the stream
 
         \warning the cube must not change during successive calls to next()!
     */
     SensitivityRecord next() override;
-    
-    //! Resets the stream so that SensitivityRecord objects can be streamed again 
+
+    //! Resets the stream so that SensitivityRecord objects can be streamed again
     void reset() override;
 
 private:
@@ -65,5 +64,5 @@ private:
     QuantLib::Size tradeIdx_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

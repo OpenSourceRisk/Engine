@@ -51,7 +51,6 @@
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
 
-
 namespace ore {
 namespace data {
 using std::string;

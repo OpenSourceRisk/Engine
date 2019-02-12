@@ -24,6 +24,7 @@
 #include <ored/marketdata/market.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/utilities/log.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/termstructures/credit/flathazardrate.hpp>
 #include <ql/termstructures/volatility/capfloor/constantcapfloortermvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
@@ -230,12 +231,11 @@ void testZeroInflationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
 }
 
 void testCorrelationCurve(boost::shared_ptr<ore::data::Market>& initMarket,
-                            boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
-                            boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
+                          boost::shared_ptr<ore::analytics::ScenarioSimMarket>& simMarket,
+                          boost::shared_ptr<analytics::ScenarioSimMarketParameters>& parameters) {
     for (const auto& spec : parameters->correlationPairs()) {
         Handle<QuantExt::CorrelationTermStructure> simCurve = simMarket->correlationCurve(spec.first, spec.second);
-        Handle<QuantExt::CorrelationTermStructure> initCurve =
-            initMarket->correlationCurve(spec.first, spec.second);
+        Handle<QuantExt::CorrelationTermStructure> initCurve = initMarket->correlationCurve(spec.first, spec.second);
         BOOST_CHECK_EQUAL(initCurve->referenceDate(), simCurve->referenceDate());
         vector<Date> dates;
         Date asof = initMarket->asofDate();
@@ -274,7 +274,7 @@ void testToXML(boost::shared_ptr<analytics::ScenarioSimMarketParameters> params)
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ScenarioSimMarketTest)
-		
+
 BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
     BOOST_TEST_MESSAGE("Testing OREAnalytics ScenarioSimMarket...");
 
@@ -310,4 +310,3 @@ BOOST_AUTO_TEST_CASE(testScenarioSimMarket) {
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
-

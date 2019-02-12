@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ql/handle.hpp>
@@ -38,7 +39,7 @@ namespace data {
 class Security {
 public:
     //! Constructor
-    Security(const Date& asof, SecuritySpec spec, const Loader& loader);
+    Security(const Date& asof, SecuritySpec spec, const Loader& loader, const CurveConfigurations& curveConfigs);
 
     //! Inspector
     Handle<Quote> spread() const { return spread_; }

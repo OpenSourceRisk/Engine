@@ -42,7 +42,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/tokenizer.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -64,9 +63,9 @@ QuantLib::Real parseReal(const string& s);
     \param[in]  s      The string we wish to convert to a Real
     \param[out] result The result of the conversion if it is valid.
                        Null<Real>() if conversion fails
-    
+
     \return True if the conversion was successful, False if not
-    
+
     \ingroup utilities
 */
 bool tryParseReal(const string& s, QuantLib::Real& result);

@@ -29,7 +29,6 @@
 
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

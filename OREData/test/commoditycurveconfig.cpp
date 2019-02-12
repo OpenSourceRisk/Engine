@@ -31,19 +31,16 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(CommodityCurveConfigTests)
 
 BOOST_AUTO_TEST_CASE(testConstructionQuotes) {
-    
+
     BOOST_TEST_MESSAGE("Testing commodity curve configuration quote vector construction");
 
-    // Main thing to check here is that the spot quote gets 
+    // Main thing to check here is that the spot quote gets
     // inserted at the beginning of the vector of quotes
     string curveId = "GOLD_USD";
     string curveDescription = "Value of troy ounce of gold in USD";
     string currency = "USD";
     string commoditySpotQuote = "COMMODITY/PRICE/GOLD/USD";
-    vector<string> quotes = {
-        "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29",
-        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28"
-    };
+    vector<string> quotes = {"COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28"};
 
     // Create configuration
     CommodityCurveConfig config(curveId, curveDescription, currency, commoditySpotQuote, quotes);
@@ -83,11 +80,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "COMMODITY/PRICE/GOLD/USD", 
-        "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29",
-        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28"
-    };
+    vector<string> quotes = {"COMMODITY/PRICE/GOLD/USD", "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29",
+                             "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD");

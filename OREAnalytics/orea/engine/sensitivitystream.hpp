@@ -34,9 +34,9 @@ public:
     virtual ~SensitivityStream() {}
     //! Returns the next SensitivityRecord in the stream
     virtual SensitivityRecord next() = 0;
-    //! Resets the stream so that SensitivityRecord objects can be streamed again 
+    //! Resets the stream so that SensitivityRecord objects can be streamed again
     virtual void reset() = 0;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

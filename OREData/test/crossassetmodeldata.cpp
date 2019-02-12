@@ -17,9 +17,9 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
 #include <oret/fileutilities.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
@@ -260,9 +260,7 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 class F : public TopLevelFixture {
 public:
     F() {}
-    ~F() {
-        clearOutput(TEST_OUTPUT_PATH);
-    }
+    ~F() { clearOutput(TEST_OUTPUT_PATH); }
 };
 } // namespace
 
@@ -271,7 +269,7 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 BOOST_FIXTURE_TEST_SUITE(CrossAssetModelDataTests, F)
 
 BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
-    
+
     BOOST_TEST_MESSAGE("Testing toXML/fromXML...");
 
     data::CrossAssetModelData data = *crossAssetData();

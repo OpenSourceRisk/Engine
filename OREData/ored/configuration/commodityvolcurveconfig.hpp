@@ -30,15 +30,15 @@ namespace data {
 
 //! Commodity volatility configuration
 /*! \ingroup configuration
-*/
+ */
 class CommodityVolatilityCurveConfig : public CurveConfig {
 public:
     //! Supported types of commodity volatility
     enum class Type {
         //! Single volatility number applicable for all strikes and tenors
-        Constant, 
+        Constant,
         //! Time depending volatilities with one volatility for all strikes at a given tenor
-        Curve, 
+        Curve,
         //! Time and strike dependent surface of volatilities
         Surface
     };
@@ -49,21 +49,16 @@ public:
     CommodityVolatilityCurveConfig() {}
 
     //! Constructor for single constant volatility i.e. Type is Constant
-    CommodityVolatilityCurveConfig(const std::string& curveId,
-        const std::string& curveDescription,
-        const std::string& currency,
-        const std::string& quote,
-        const std::string& dayCounter = "A365",
-        const std::string& calendar = "NullCalendar");
+    CommodityVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,
+                                   const std::string& currency, const std::string& quote,
+                                   const std::string& dayCounter = "A365",
+                                   const std::string& calendar = "NullCalendar");
 
     //! Constructor for time depending volatilities i.e. Type is Curve
-    CommodityVolatilityCurveConfig(const std::string& curveId,
-        const std::string& curveDescription,
-        const std::string& currency,
-        const std::vector<std::string>& quotes,
-        const std::string& dayCounter = "A365",
-        const std::string& calendar = "NullCalendar",
-        bool extrapolate = true);
+    CommodityVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,
+                                   const std::string& currency, const std::vector<std::string>& quotes,
+                                   const std::string& dayCounter = "A365", const std::string& calendar = "NullCalendar",
+                                   bool extrapolate = true);
 
     //! Constructor for volatility surface i.e. Type is Surface
     /*! Quotes are built up from the expiries and strikes strings
@@ -78,16 +73,12 @@ public:
         \param lowerStrikeConstantExtrapolation Constant extrapolation below lower strike or not
         \param upperStrikeConstantExtrapolation Constant extrapolation above upper strike or not
     */
-    CommodityVolatilityCurveConfig(const std::string& curveId, 
-        const std::string& curveDescription,
-        const std::string& currency, 
-        const std::vector<std::string>& expiries, 
-        const std::vector<std::string>& strikes,
-        const std::string& dayCounter = "A365",
-        const std::string& calendar = "NullCalendar",
-        bool extrapolate = true,
-        bool lowerStrikeConstantExtrapolation = false,
-        bool upperStrikeConstantExtrapolation = false);
+    CommodityVolatilityCurveConfig(const std::string& curveId, const std::string& curveDescription,
+                                   const std::string& currency, const std::vector<std::string>& expiries,
+                                   const std::vector<std::string>& strikes, const std::string& dayCounter = "A365",
+                                   const std::string& calendar = "NullCalendar", bool extrapolate = true,
+                                   bool lowerStrikeConstantExtrapolation = false,
+                                   bool upperStrikeConstantExtrapolation = false);
     //@}
 
     //! \name Serialisation
@@ -138,5 +129,5 @@ private:
     bool upperStrikeConstantExtrapolation_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

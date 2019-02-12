@@ -28,7 +28,6 @@
 #include <ql/quote.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Quote;

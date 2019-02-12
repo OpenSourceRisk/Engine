@@ -179,7 +179,6 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-
 FutureConvention::FutureConvention(const string& id, const string& index)
     : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(index)) {}
 
@@ -288,7 +287,6 @@ XMLNode* OisConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
-
 
 SwapIndexConvention::SwapIndexConvention(const string& id, const string& conventions)
     : Convention(id, Type::SwapIndex), strConventions_(conventions) {}
@@ -439,14 +437,13 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
 }
 
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
-    const string& shortPayTenor, const string& spreadOnShort,
-    const string& includeSpread, const string& subPeriodsCouponType)
+                                                   const string& shortPayTenor, const string& spreadOnShort,
+                                                   const string& includeSpread, const string& subPeriodsCouponType)
     : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
-    strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
-    strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
+      strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
-
 
 void TenorBasisSwapConvention::build() {
     longIndex_ = parseIborIndex(strLongIndex_);
@@ -455,7 +452,7 @@ void TenorBasisSwapConvention::build() {
     spreadOnShort_ = strSpreadOnShort_.empty() ? true : parseBool(strSpreadOnShort_);
     includeSpread_ = strIncludeSpread_.empty() ? false : parseBool(strIncludeSpread_);
     subPeriodsCouponType_ = strSubPeriodsCouponType_.empty() ? SubPeriodsCoupon::Compounding
-        : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
+                                                             : parseSubPeriodsCouponType(strSubPeriodsCouponType_);
 }
 
 void TenorBasisSwapConvention::fromXML(XMLNode* node) {
@@ -488,7 +485,6 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
-
 
 TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& id, const string& calendar, const string& longFixedFrequency, const string& longFixedConvention,
@@ -555,7 +551,6 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-
 BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
     : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
     build();
@@ -588,7 +583,6 @@ XMLNode* BMABasisSwapConvention::toXML(XMLDocument& doc) {
 
     return node;
 }
-
 
 FXConvention::FXConvention(const string& id, const string& spotDays, const string& sourceCurrency,
                            const string& targetCurrency, const string& pointsFactor, const string& advanceCalendar,
@@ -639,15 +633,16 @@ XMLNode* FXConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-
 CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays,
                                                          const string& strSettlementCalendar,
                                                          const string& strRollConvention, const string& flatIndex,
                                                          const string& spreadIndex, const string& strEom,
-                                                         const string& strIsResettable, const string& strFlatIndexIsResettable)
+                                                         const string& strIsResettable,
+                                                         const string& strFlatIndexIsResettable)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
-      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable), strFlatIndexIsResettable_(strFlatIndexIsResettable) {
+      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
+      strFlatIndexIsResettable_(strFlatIndexIsResettable) {
     build();
 }
 
@@ -698,27 +693,14 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
 }
 
 CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
-    const string& id,
-    const string& settlementDays,
-    const string& settlementCalendar,
-    const string& settlementConvention,
-    const string& fixedCurrency,
-    const string& fixedFrequency,
-    const string& fixedConvention,
-    const string& fixedDayCounter,
-    const string& index,
-    const string& eom)
-    : Convention(id, Type::CrossCcyFixFloat),
-      strSettlementDays_(settlementDays),
-      strSettlementCalendar_(settlementCalendar),
-      strSettlementConvention_(settlementConvention),
-      strFixedCurrency_(fixedCurrency),
-      strFixedFrequency_(fixedFrequency),
-      strFixedConvention_(fixedConvention),
-      strFixedDayCounter_(fixedDayCounter),
-      strIndex_(index),
-      strEom_(eom) {
-    
+    const string& id, const string& settlementDays, const string& settlementCalendar,
+    const string& settlementConvention, const string& fixedCurrency, const string& fixedFrequency,
+    const string& fixedConvention, const string& fixedDayCounter, const string& index, const string& eom)
+    : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
+      strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
+      strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
+      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom) {
+
     build();
 }
 
@@ -957,11 +939,13 @@ XMLNode* SecuritySpreadConvention::toXML(XMLDocument& doc) {
     return node;
 }
 
-CmsSpreadOptionConvention::CmsSpreadOptionConvention(const string& id, const string& strForwardStart, const string& strSpotDays,
-                                const string& strSwapTenor, const string& strFixingDays, const string& strCalendar,
-                                const string& strDayCounter, const string& strConvention)
-    : Convention(id, Type::CMSSpreadOption), strForwardStart_(strForwardStart), strSpotDays_(strSpotDays), strSwapTenor_(strSwapTenor),
-    strFixingDays_(strFixingDays), strCalendar_(strCalendar), strDayCounter_(strDayCounter), strRollConvention_(strConvention) {
+CmsSpreadOptionConvention::CmsSpreadOptionConvention(const string& id, const string& strForwardStart,
+                                                     const string& strSpotDays, const string& strSwapTenor,
+                                                     const string& strFixingDays, const string& strCalendar,
+                                                     const string& strDayCounter, const string& strConvention)
+    : Convention(id, Type::CMSSpreadOption), strForwardStart_(strForwardStart), strSpotDays_(strSpotDays),
+      strSwapTenor_(strSwapTenor), strFixingDays_(strFixingDays), strCalendar_(strCalendar),
+      strDayCounter_(strDayCounter), strRollConvention_(strConvention) {
     build();
 }
 
@@ -1085,6 +1069,8 @@ boost::shared_ptr<Convention> Conventions::get(const string& id) const {
     QL_REQUIRE(it != data_.end(), "Cannot find conventions for id " << id);
     return it->second;
 }
+
+bool Conventions::has(const string& id) const { return data_.count(id) == 1; }
 
 void Conventions::add(const boost::shared_ptr<Convention>& convention) {
     const string& id = convention->id();

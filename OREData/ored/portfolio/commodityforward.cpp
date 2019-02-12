@@ -22,8 +22,8 @@
 #include <qle/instruments/commodityforward.hpp>
 
 #include <ored/portfolio/builders/commodityforward.hpp>
-#include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/commodityforward.hpp>
+#include <ored/portfolio/enginefactory.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -34,12 +34,12 @@ namespace data {
 CommodityForward::CommodityForward() : Trade("CommodityForward") {}
 
 CommodityForward::CommodityForward(const Envelope& envelope, const string& position, const string& commodityName,
-    const string& currency, Real quantity, const string& maturityDate, Real strike) 
-    : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency), 
+                                   const string& currency, Real quantity, const string& maturityDate, Real strike)
+    : Trade("CommodityForward", envelope), position_(position), commodityName_(commodityName), currency_(currency),
       quantity_(quantity), maturityDate_(maturityDate), strike_(strike) {}
 
 void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    
+
     // Create the commodity forward instrument
     Currency currency = parseCurrency(currency_);
     Position::Type position = parsePositionType(position_);
@@ -58,14 +58,14 @@ void CommodityForward::build(const boost::shared_ptr<EngineFactory>& engineFacto
     instrument_ = boost::make_shared<VanillaInstrument>(commodityForward);
     npvCurrency_ = currency_;
     maturity_ = maturity;
-    
+
     // We really need today's spot to get the correct notional.
     // But rather than having it move around we use strike * quantity
     notional_ = strike_ * quantity_;
 }
 
 void CommodityForward::fromXML(XMLNode* node) {
-    
+
     Trade::fromXML(node);
     XMLNode* commodityDataNode = XMLUtils::getChildNode(node, "CommodityForwardData");
 
@@ -78,7 +78,7 @@ void CommodityForward::fromXML(XMLNode* node) {
 }
 
 XMLNode* CommodityForward::toXML(XMLDocument& doc) {
-    
+
     XMLNode* node = Trade::toXML(doc);
     XMLNode* commodityDataNode = doc.allocNode("CommodityForwardData");
     XMLUtils::appendNode(node, commodityDataNode);
@@ -93,5 +93,5 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
     return node;
 }
 
-}
-}
+} // namespace data
+} // namespace ore

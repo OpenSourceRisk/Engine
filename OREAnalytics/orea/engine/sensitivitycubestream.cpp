@@ -30,13 +30,12 @@ namespace analytics {
 
 using crossPair = SensitivityCube::crossPair;
 
-SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, 
-    const string& currency) 
-    : cube_(cube), currency_(currency), itRiskFactor_(cube_->factors().begin()), 
+SensitivityCubeStream::SensitivityCubeStream(const boost::shared_ptr<SensitivityCube>& cube, const string& currency)
+    : cube_(cube), currency_(currency), itRiskFactor_(cube_->factors().begin()),
       itCrossPair_(cube_->crossFactors().begin()), tradeIdx_(0) {}
 
 SensitivityRecord SensitivityCubeStream::next() {
-    
+
     SensitivityRecord sr;
 
     // If exhausted deltas, gammas AND cross gammas, update to next trade and reset iterators
@@ -52,7 +51,7 @@ SensitivityRecord SensitivityCubeStream::next() {
         sr.isPar = false;
         sr.currency = currency_;
         sr.baseNpv = cube_->npv(sr.tradeId);
-        
+
         // Are there more deltas and gammas for current trade ID
         if (itRiskFactor_ != cube_->factors().end()) {
             sr.key_1 = *itRiskFactor_;
@@ -60,19 +59,19 @@ SensitivityRecord SensitivityCubeStream::next() {
             sr.shift_1 = cube_->shiftSize(sr.key_1);
             sr.delta = cube_->delta(sr.tradeId, sr.key_1);
             sr.gamma = cube_->gamma(sr.tradeId, sr.key_1);
-            
+
             itRiskFactor_++;
 
             TLOG("Next record is: " << sr);
             return sr;
         }
-        
+
         // Are there more cross pairs for current trade ID
         if (itCrossPair_ != cube_->crossFactors().end()) {
             sr.key_1 = itCrossPair_->first;
             sr.desc_1 = deconstructFactor(cube_->factorDescription(sr.key_1)).second;
             sr.shift_1 = cube_->shiftSize(sr.key_1);
-            
+
             sr.key_2 = itCrossPair_->second;
             sr.desc_2 = deconstructFactor(cube_->factorDescription(sr.key_2)).second;
             sr.shift_2 = cube_->shiftSize(sr.key_2);
@@ -98,5 +97,5 @@ void SensitivityCubeStream::reset() {
     itCrossPair_ = cube_->crossFactors().begin();
 }
 
-}
-}
+} // namespace analytics
+} // namespace ore

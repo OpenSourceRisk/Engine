@@ -17,8 +17,8 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/portfolio/legdata.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/make_shared.hpp>
 

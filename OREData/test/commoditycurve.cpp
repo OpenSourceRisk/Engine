@@ -16,13 +16,13 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
-#include <boost/make_shared.hpp>
 
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
+#include <ql/time/daycounters/actualactual.hpp>
 
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
@@ -58,14 +58,17 @@ private:
 MockLoader::MockLoader() {
     Date asof(5, Feb, 2016);
     data_ = {
-        boost::make_shared<CommoditySpotQuote>(1155.593, asof, "COMMODITY/PRICE/GOLD/USD", MarketDatum::QuoteType::PRICE, "GOLD", "USD"), 
-        boost::make_shared<CommodityForwardQuote>(1157.8, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(29, Feb, 2016)),
-        boost::make_shared<CommodityForwardQuote>(1160.9, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(28, Feb, 2017)),
-        boost::make_shared<CommodityForwardQuote>(1189.5, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30", MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(30, Jun, 2020))
-    };
+        boost::make_shared<CommoditySpotQuote>(1155.593, asof, "COMMODITY/PRICE/GOLD/USD",
+                                               MarketDatum::QuoteType::PRICE, "GOLD", "USD"),
+        boost::make_shared<CommodityForwardQuote>(1157.8, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29",
+                                                  MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(29, Feb, 2016)),
+        boost::make_shared<CommodityForwardQuote>(1160.9, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28",
+                                                  MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(28, Feb, 2017)),
+        boost::make_shared<CommodityForwardQuote>(1189.5, asof, "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30",
+                                                  MarketDatum::QuoteType::PRICE, "GOLD", "USD", Date(30, Jun, 2020))};
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -79,11 +82,8 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
     Date asof(5, Feb, 2016);
 
     // Commodity curve configuration
-    vector<string> quotes = {
-        "COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", 
-        "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28", 
-        "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30"
-    };
+    vector<string> quotes = {"COMMODITY_FWD/PRICE/GOLD/USD/2016-02-29", "COMMODITY_FWD/PRICE/GOLD/USD/2017-02-28",
+                             "COMMODITY_FWD/PRICE/GOLD/USD/2020-06-30"};
     boost::shared_ptr<CommodityCurveConfig> curveConfig = boost::make_shared<CommodityCurveConfig>(
         "GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", quotes, "A365", "Linear", true);
 
@@ -99,7 +99,8 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
 
     // Check commodity curve construction works
     boost::shared_ptr<CommodityCurve> curve;
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
+    BOOST_CHECK_NO_THROW(curve =
+                             boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
 
     // Check a few prices
     boost::shared_ptr<PriceTermStructure> priceCurve = curve->commodityPriceCurve();
@@ -120,11 +121,12 @@ BOOST_AUTO_TEST_CASE(testCommodityCurveConstruction) {
     BOOST_CHECK(checkCurveInterpolation);
 
     // Change the config and check that the variables again
-    curveConfig = boost::make_shared<CommodityCurveConfig>(
-        "GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", quotes, "ACT/ACT", "LogLinear", false);
+    curveConfig = boost::make_shared<CommodityCurveConfig>("GOLD_USD", "", "USD", "COMMODITY/PRICE/GOLD/USD", quotes,
+                                                           "ACT/ACT", "LogLinear", false);
     curveConfigs.commodityCurveConfig("GOLD_USD") = curveConfig;
 
-    BOOST_CHECK_NO_THROW(curve = boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
+    BOOST_CHECK_NO_THROW(curve =
+                             boost::make_shared<CommodityCurve>(asof, curveSpec, loader, curveConfigs, Conventions()));
     priceCurve = curve->commodityPriceCurve();
     BOOST_CHECK_EQUAL(priceCurve->dayCounter(), ActualActual());
     BOOST_CHECK_EQUAL(priceCurve->allowsExtrapolation(), false);

@@ -27,7 +27,6 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;

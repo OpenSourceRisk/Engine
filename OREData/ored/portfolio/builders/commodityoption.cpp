@@ -31,23 +31,26 @@ using namespace QuantExt;
 namespace ore {
 namespace data {
 
-boost::shared_ptr<QuantLib::PricingEngine> CommodityOptionEngineBuilder::engineImpl(
-    const string& commodityName, const Currency& ccy) {
+boost::shared_ptr<QuantLib::PricingEngine> CommodityOptionEngineBuilder::engineImpl(const string& commodityName,
+                                                                                    const Currency& ccy) {
 
     // Create the commodity yield curve for the process
     Handle<Quote> commoditySpot = market_->commoditySpot(commodityName, configuration(MarketContext::pricing));
-    Handle<PriceTermStructure> priceCurve = market_->commodityPriceCurve(commodityName, configuration(MarketContext::pricing));
-    Handle<YieldTermStructure> discountCurve = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    Handle<PriceTermStructure> priceCurve =
+        market_->commodityPriceCurve(commodityName, configuration(MarketContext::pricing));
+    Handle<YieldTermStructure> discountCurve =
+        market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
 
-    Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(boost::make_shared<PriceTermStructureAdapter>(
-        *commoditySpot, *priceCurve, *discountCurve));
+    Handle<YieldTermStructure> yield = Handle<YieldTermStructure>(
+        boost::make_shared<PriceTermStructureAdapter>(*commoditySpot, *priceCurve, *discountCurve));
 
     // Create the option engine
     boost::shared_ptr<GeneralizedBlackScholesProcess> process = boost::make_shared<GeneralizedBlackScholesProcess>(
-        commoditySpot, yield, discountCurve, market_->commodityVolatility(commodityName, configuration(MarketContext::pricing)));
+        commoditySpot, yield, discountCurve,
+        market_->commodityVolatility(commodityName, configuration(MarketContext::pricing)));
 
     return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(process, discountCurve);
 }
 
-}
-}
+} // namespace data
+} // namespace ore

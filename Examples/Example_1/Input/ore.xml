@@ -15,6 +15,7 @@
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio_swap.xml</Parameter>
     <Parameter name="observationModel">Disable</Parameter>
+    <Parameter name="continueOnError">false</Parameter>
   </Setup>
   <Markets>
     <Parameter name="lgmcalibration">libor</Parameter>

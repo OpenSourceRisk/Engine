@@ -29,7 +29,6 @@
 #include <ql/types.hpp>
 #include <string>
 
-
 namespace ore {
 namespace data {
 using std::string;

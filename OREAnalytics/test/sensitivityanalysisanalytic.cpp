@@ -41,6 +41,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <ored/model/lgmdata.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
@@ -247,7 +248,7 @@ bool check(const Real reference, const Real value) {
 BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisAnalyticTest)
-		
+
 BOOST_AUTO_TEST_CASE(testSensitivities) {
 
     BOOST_TEST_MESSAGE("Checking sensitivity analysis results vs analytic sensi engine results...");
@@ -1417,8 +1418,7 @@ BOOST_AUTO_TEST_CASE(testSensitivities) {
                     ++foundCrossGammas;
                 } else {
                     if (!check(crossGamma, 0.0))
-                        BOOST_ERROR("Sensitivity analysis result " << key << " ("
-                                                                   << crossGamma
+                        BOOST_ERROR("Sensitivity analysis result " << key << " (" << crossGamma
                                                                    << ") expected to be zero");
                     ++zeroCrossGammas;
                 }

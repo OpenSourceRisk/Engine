@@ -17,11 +17,11 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
@@ -79,7 +79,7 @@ MarketDataLoader::MarketDataLoader() {
         data_[date].push_back(parseMarketDatum(date, key, value));
     }
 }
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 

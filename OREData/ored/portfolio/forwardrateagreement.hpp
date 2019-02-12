@@ -53,7 +53,6 @@ private:
     string endDate_;
     string index_;
     double strike_;
-
 };
 } // namespace data
 } // namespace ore

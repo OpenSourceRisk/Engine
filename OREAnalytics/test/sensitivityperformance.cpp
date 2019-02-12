@@ -20,6 +20,8 @@
 #include <test/oreatoplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
+#include <boost/test/unit_test.hpp>
+#include <oret/toplevelfixture.hpp>
 
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
@@ -533,6 +535,8 @@ boost::shared_ptr<Portfolio> buildPortfolio(Size portfolioSize, boost::shared_pt
 
 void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bool crossGammas,
                       ObservationMode::Mode om) {
+    boost::timer t_base;
+    t_base.restart();
     Size portfolioSize = bigPortfolio ? 100 : 1;
     string om_str = (om == ObservationMode::Mode::None)
                         ? "None"
@@ -604,6 +608,8 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
     BOOST_TEST_MESSAGE("Memory usage - " << os::getMemoryUsage());
 
     ObservationMode::instance().setMode(backupOm);
+
+    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
 }
 } // namespace
 
@@ -612,91 +618,47 @@ BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::OreaTopLev
 BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest, *boost::unit_test::disabled())
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(false, false, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, false, false, false, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceDisableObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::Disable;
-    test_performance(false, false, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, false, false, false, ObservationMode::Mode::Disable);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceDeferObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::Defer;
-    test_performance(false, false, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, false, false, false, ObservationMode::Mode::Defer);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceUnregisterObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::Unregister;
-    test_performance(false, false, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, false, false, false, ObservationMode::Mode::Unregister);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceCrossGammaNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(false, false, false, true, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, false, false, true, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigScenarioNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(false, true, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, true, false, false, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(true, false, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(true, false, false, false, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioBigScenarioNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(true, true, false, false, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(true, true, false, false, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioCrossGammaNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(true, false, false, true, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(true, false, false, true, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigScenarioCrossGammaNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(false, true, false, true, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(false, true, false, true, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_CASE(testSensiPerformanceBigPortfolioBigScenarioCrossGammaNoneObs) {
-    boost::timer t_base;
-    t_base.restart();
-    ObservationMode::Mode om = ObservationMode::Mode::None;
-    test_performance(true, true, false, true, om);
-    BOOST_TEST_MESSAGE("total time = " << t_base.elapsed() << " seconds");
+    test_performance(true, true, false, true, ObservationMode::Mode::None);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
