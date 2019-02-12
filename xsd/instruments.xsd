@@ -487,7 +487,8 @@
       <xs:enumeration value="CMSSpread"/>
       <xs:enumeration value="DigitalCMSSpread"/>
       <xs:enumeration value="Cashflow"/>
-      <xs:enumeration value="Equity"/>
+      <xs:enumeration value="Equity"/>     
+      <xs:enumeration value="FormulaBased"/>
     </xs:restriction>
   </xs:simpleType>
 
