@@ -1629,5 +1629,49 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     }
 }
 
+
+// Get Pillar Dates
+// we have to try to cast and then call dates() on the subclasses, a bit messy
+template<class T>
+inline void getPillarDates(const boost::shared_ptr<YieldTermStructure>& p, vector<Date>& d) {
+    if (d.size() == 0) {
+        boost::shared_ptr<T> ptr = boost::dynamic_pointer_cast<T>(p);
+        if (ptr)
+            d = ptr->dates();
+     }
+}
+
+vector<Date> pillarDates(const Handle<YieldTermStructure>& h) {
+    const boost::shared_ptr<YieldTermStructure>& p = h.currentLink();
+    vector<Date> d;
+
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone>>(p, d);
+
+    return d;
+}
+
 } // namespace data
 } // namespace ore
