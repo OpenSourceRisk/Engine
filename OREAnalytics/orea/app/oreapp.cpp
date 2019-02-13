@@ -319,6 +319,12 @@ boost::shared_ptr<TradeFactory> OREApp::buildTradeFactory() const {
 }
 
 boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<EngineFactory>& factory) {
+    boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
+    portfolio->build(factory);
+    return portfolio;
+}
+
+boost::shared_ptr<Portfolio> OREApp::loadPortfolio() {
     string portfoliosString = params_->get("setup", "portfolioFile");
     boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
     if (params_->get("setup", "portfolioFile") == "")
@@ -327,7 +333,6 @@ boost::shared_ptr<Portfolio> OREApp::buildPortfolio(const boost::shared_ptr<Engi
     for (auto portfolioFile : portfolioFiles) {
         portfolio->load(portfolioFile, buildTradeFactory());
     }
-    portfolio->build(factory);
     return portfolio;
 }
 
@@ -344,10 +349,8 @@ boost::shared_ptr<ScenarioGeneratorData> OREApp::getScenarioGeneratorData() {
     sgd->fromFile(simulationConfigFile);
     return sgd;
 }
-boost::shared_ptr<ScenarioGenerator>
-OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
-                               boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
-                               boost::shared_ptr<ScenarioGeneratorData> sgd) {
+
+boost::shared_ptr<QuantExt::CrossAssetModel> OREApp::buildCam(boost::shared_ptr<Market> market) {
     LOG("Build Simulation Model");
     string simulationConfigFile = inputPath_ + "/" + params_->get("simulation", "simulationConfigFile");
     LOG("Load simulation model data from file: " << simulationConfigFile);
@@ -371,8 +374,14 @@ OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
 
     CrossAssetModelBuilder modelBuilder(market, lgmCalibrationMarketStr, fxCalibrationMarketStr, eqCalibrationMarketStr,
                                         infCalibrationMarketStr, simulationMarketStr);
-    boost::shared_ptr<QuantExt::CrossAssetModel> model = modelBuilder.build(modelData);
+    return modelBuilder.build(modelData);
+}
 
+boost::shared_ptr<ScenarioGenerator>
+OREApp::buildScenarioGenerator(boost::shared_ptr<Market> market,
+                               boost::shared_ptr<ScenarioSimMarketParameters> simMarketData,
+                               boost::shared_ptr<ScenarioGeneratorData> sgd) {
+    boost::shared_ptr<QuantExt::CrossAssetModel> model = buildCam(market);
     LOG("Load Simulation Parameters");
     ScenarioGeneratorBuilder sgb(sgd);
     boost::shared_ptr<ScenarioFactory> sf = boost::make_shared<SimpleScenarioFactory>();
@@ -571,11 +580,11 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
 
-void OREApp::initCube() {
+void OREApp::initCube(boost::shared_ptr<NPVCube> cube) {
     if (cubeDepth_ == 1)
-        cube_ = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, simPortfolio_->ids(), grid_->dates(), samples_);
+        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, simPortfolio_->ids(), grid_->dates(), samples_);
     else if (cubeDepth_ == 2)
-        cube_ = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, simPortfolio_->ids(), grid_->dates(), samples_,
+        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, simPortfolio_->ids(), grid_->dates(), samples_,
                                                                  cubeDepth_);
     else {
         QL_FAIL("cube depth 1 or 2 expected");
@@ -604,15 +613,15 @@ void OREApp::buildNPVCube() {
     out_ << "OK" << endl;
 }
 
-void OREApp::generateNPVCube() {
+void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio) {
     out_ << setw(tab_) << left << "Simulation Setup... ";
     LOG("Load Simulation Market Parameters");
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData = getSimMarketData();
     boost::shared_ptr<ScenarioGeneratorData> sgd = getScenarioGeneratorData();
     grid_ = sgd->grid();
     samples_ = sgd->samples();
-    boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
 
+    boost::shared_ptr<ScenarioGenerator> sg = buildScenarioGenerator(market_, simMarketData, sgd);
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
         simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
@@ -623,7 +632,8 @@ void OREApp::generateNPVCube() {
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");
-        simPortfolio_ = buildPortfolio(simFactory);
+        portfolio->build(simFactory);
+        simPortfolio_ = portfolio;
         QL_REQUIRE(simPortfolio_->size() == portfolio_->size(),
                    "portfolio size mismatch, check simulation market setup");
         out_ << "OK" << endl;
@@ -643,7 +653,12 @@ void OREApp::generateNPVCube() {
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
 
-    initCube();
+    initCube(cube_);
+}
+
+void OREApp::generateNPVCube() {
+    boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
+    initialiseNPVCubeGeneration(portfolio);
     buildNPVCube();
     writeCube();
     writeScenarioData();

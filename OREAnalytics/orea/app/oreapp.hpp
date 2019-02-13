@@ -89,19 +89,25 @@ protected:
     boost::shared_ptr<TradeFactory> buildTradeFactory() const;
     //! build portfolio for a given market
     boost::shared_ptr<Portfolio> buildPortfolio(const boost::shared_ptr<EngineFactory>& factory);
+    //! load portfolio from file(s)
+    boost::shared_ptr<Portfolio> loadPortfolio();
 
     //! generate NPV cube
-    void generateNPVCube();
+    virtual void generateNPVCube();
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube();
+    virtual void initCube(boost::shared_ptr<NPVCube> cube);
     //! build an NPV cube
     virtual void buildNPVCube();
+    //! initialise NPV cube generation
+    void initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio);
     //! load simMarketData
     boost::shared_ptr<ScenarioSimMarketParameters> getSimMarketData();
     //! load scenarioGeneratorData
     boost::shared_ptr<ScenarioGeneratorData> getScenarioGeneratorData();
+    //! build CAM
+    boost::shared_ptr<QuantExt::CrossAssetModel> buildCam(boost::shared_ptr<Market> market);
     //! build scenarioGenerator
     virtual boost::shared_ptr<ScenarioGenerator>
     buildScenarioGenerator(boost::shared_ptr<Market> market,
