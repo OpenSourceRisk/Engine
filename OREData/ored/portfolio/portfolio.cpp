@@ -181,5 +181,19 @@ std::set<std::string> Portfolio::portfolioIds() const {
     return portfolioIds;
 }
 
+map<string, set<Date>> Portfolio::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+
+    map<string, set<Date>> result;
+
+    for (const auto& t : trades_) {
+        auto fixings = t->fixings(includeSettlementDateFlows, settlementDate);
+        for (const auto& kv : fixings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+
+    return result;
+}
+
 } // namespace data
 } // namespace ore

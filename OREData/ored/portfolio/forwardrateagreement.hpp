@@ -43,6 +43,12 @@ public:
     }
     void build(const boost::shared_ptr<EngineFactory>& engineFactory);
 
+    //! Return no fixings for a ForwardRateAgreement
+    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
     virtual void fromXML(XMLNode* node);
     virtual XMLNode* toXML(XMLDocument& doc);
 

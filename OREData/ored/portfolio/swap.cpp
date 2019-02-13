@@ -17,10 +17,12 @@
 */
 
 #include <ored/portfolio/builders/swap.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 #include <ql/cashflows/simplecashflow.hpp>
 
 #include <ql/time/calendars/target.hpp>
@@ -33,6 +35,7 @@
 
 using namespace QuantLib;
 using namespace QuantExt;
+using std::make_pair;
 
 namespace ore {
 namespace data {
@@ -57,6 +60,11 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         currencies[i] = parseCurrency(legData_[i].currency());
         if (legData_[i].currency() != ccy_str)
             isXCCY = true;
+
+        // Initialise the set of index name, leg index pairs
+        for (const auto& index : legData_[i].indices()) {
+            nameIndexPairs_.insert(make_pair(index, i));
+        }
     }
 
     boost::shared_ptr<EngineBuilder> builder =
@@ -124,6 +132,21 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
                 }
+
+                // Special case where we need to add to cfModifiers_
+                QL_REQUIRE(nameIndexPairs_.size() == 2, "Expected the floating xccy resetting leg to have two indices but got '" 
+                    << to_string(nameIndexPairs_.size()) << "'");
+
+                // Already know that the leg type is floating so the following should work
+                string floatIndex = boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData())->index();
+                auto nameIndex = make_pair(floatIndex, i);
+                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected floating index '" << floatIndex <<
+                    "' on swap's " << io::ordinal(i) << " leg.");
+
+                // Create the function that will be used on each cashflow after being fed to the fixingDates function
+                std::function<boost::shared_ptr<CashFlow>(boost::shared_ptr<CashFlow>)> f = 
+                    [](boost::shared_ptr<CashFlow> cf) { return boost::dynamic_pointer_cast<FloatingRateCoupon>(cf); };
+                cfModifiers_[nameIndex] = f;
         }
 
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
@@ -168,6 +191,9 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             legs_.push_back(resettingLeg);
             legPayers_.push_back(legPayers_[i]);
             currencies.push_back(currencies[i]);
+
+            // Add this leg to nameIndexPairs_ also
+            nameIndexPairs_.insert(make_pair(legData_[i].fxIndex(), legs_.size() - 1));
 
             if (legData_[i].notionalAmortizingExchange()) {
                 QL_FAIL("Cannot have an amoritizing notional with FX reset");
@@ -224,6 +250,32 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (d > maturity_)
             maturity_ = d;
     }
+}
+
+map<string, set<Date>> Swap::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+    
+    map<string, set<Date>> result;
+    
+    for (const auto& nameIndexPair : nameIndexPairs_) {
+        // For clarity
+        string indexName = nameIndexPair.first;
+        Size legNumber = nameIndexPair.second;
+        
+        // Look up the modifier function of the [index name, leg index] pair. This will 
+        // in general be null.
+        std::function<boost::shared_ptr<CashFlow>(boost::shared_ptr<CashFlow>)> f;
+        if (cfModifiers_.count(nameIndexPair) == 1) {
+            f = cfModifiers_.at(nameIndexPair);
+        }
+
+        // Get the set of fixing dates for the  [index name, leg index] pair
+        set<Date> dates = fixingDates(legs_[legNumber], includeSettlementDateFlows, settlementDate, f);
+
+        // Update the results with the fixing dates.
+        if (!dates.empty()) result[indexName].insert(dates.begin(), dates.end());
+    }
+
+    return result;
 }
 
 void Swap::fromXML(XMLNode* node) {

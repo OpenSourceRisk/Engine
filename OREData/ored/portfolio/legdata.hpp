@@ -56,6 +56,13 @@ public:
 
     const string& legType() const { return legType_; }
     const string& legNodeName() const { return legNodeName_; }
+    const std::set<std::string>& indices() const { return indices_; }
+
+protected:
+    /*! Store the set of ORE index names that appear on this leg.
+        Should be populated by dervied classes.
+    */
+    std::set<std::string> indices_;
 
 private:
     string legType_;
@@ -166,7 +173,9 @@ public:
         : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears),
           isAveraged_(isAveraged), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
           floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {}
+          nakedOption_(nakedOption) {
+        indices_.insert(index_);
+    }
 
     //! \name Inspectors
     //@{
@@ -220,7 +229,9 @@ public:
                const vector<string>& rateDates = std::vector<string>(), bool subtractInflationNominal = true)
         : LegAdditionalData("CPI"), index_(index), baseCPI_(baseCPI), observationLag_(observationLag),
           interpolated_(interpolated), rates_(rates), rateDates_(rateDates),
-          subtractInflationNominal_(subtractInflationNominal) {}
+          subtractInflationNominal_(subtractInflationNominal) {
+        indices_.insert(index_);
+    }
 
     //! \name Inspectors
     //@{
@@ -264,7 +275,9 @@ public:
                const vector<string>& spreadDates = std::vector<string>())
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag), interpolated_(interpolated),
           fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads),
-          spreadDates_(spreadDates) {}
+          spreadDates_(spreadDates) {
+        indices_.insert(index_);
+    }
 
     //! \name Inspectors
     //@{
@@ -311,7 +324,9 @@ public:
                const vector<string>& gearingDates = vector<string>(), bool nakedOption = false)
         : LegAdditionalData("CMS"), swapIndex_(swapIndex), fixingDays_(fixingDays), isInArrears_(isInArrears),
           spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors),
-          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {}
+          floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
+        indices_.insert(swapIndex_);
+    }
 
     //! \name Inspectors
     //@{
@@ -368,7 +383,10 @@ public:
         : LegAdditionalData("CMSSpread"), swapIndex1_(swapIndex1), swapIndex2_(swapIndex2), fixingDays_(fixingDays),
           isInArrears_(isInArrears), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
           floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {}
+          nakedOption_(nakedOption) {
+        indices_.insert(swapIndex1_);
+        indices_.insert(swapIndex2_);
+    }
 
     //! \name Inspectors
     //@{
@@ -425,7 +443,9 @@ public:
         : LegAdditionalData("DigitalCMSSpread"), underlying_(underlying), callPosition_(callPosition), isCallATMIncluded_(isCallATMIncluded),
             callStrikes_(callStrikes), callStrikeDates_(callStrikeDates), callPayoffs_(callPayoffs), callPayoffDates_(callPayoffDates), 
             putPosition_(putPosition), isPutATMIncluded_(isPutATMIncluded), 
-            putStrikes_(putStrikes), putStrikeDates_(putStrikeDates), putPayoffs_(putPayoffs), putPayoffDates_(putPayoffDates) {}
+            putStrikes_(putStrikes), putStrikeDates_(putStrikeDates), putPayoffs_(putPayoffs), putPayoffDates_(putPayoffDates) {
+        indices_ = underlying_->indices();
+    }
 
     //! \name Inspectors
     //@{
@@ -483,7 +503,9 @@ public:
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
     EquityLegData(string returnType, Real dividendFactor, string eqName, Natural fixingDays)
-        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName), fixingDays_(fixingDays) {}
+        : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName), fixingDays_(fixingDays) {
+        indices_.insert(eqName_);
+    }
 
     //! \name Inspectors
     //@{
@@ -587,13 +609,20 @@ public:
     const string& fixingCalendar() const { return fixingCalendar_; }
     const int paymentLag() const { return paymentLag_; }
     const std::vector<AmortizationData>& amortizationData() const { return amortizationData_; }
-    //
     const string& legType() const { return concreteLegData_->legType(); }
     boost::shared_ptr<LegAdditionalData> concreteLegData() const { return concreteLegData_; }
+    const std::set<std::string>& indices() const { return indices_; }
     //@}
 
 protected:
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
+
+    /*! Store the set of ORE index names that appear on this leg.
+        
+        Take the set appearing in LegAdditionalData::indices() and add on any appearing here. Currently, the only 
+        possible extra index appearing at LegData level is \c fxIndex.
+    */
+    std::set<std::string> indices_;
 
 private:
     boost::shared_ptr<LegAdditionalData> concreteLegData_;

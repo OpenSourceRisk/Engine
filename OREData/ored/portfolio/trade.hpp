@@ -63,6 +63,17 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&) = 0;
 
+    /*! Return the fixings that will be requested in order to price this Trade given the \p settlementDate. 
+        
+        If the \p settlementDate is not provided, the current evaluation date is taken as the settlement date. 
+        If a Trade does not have any fixings, this method will return an empty map.
+        The map key is the ORE name of the index and the map value is the set of fixing dates.
+
+        \warning This method will return an empty map if the Trade has not been built.
+    */
+    virtual std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);

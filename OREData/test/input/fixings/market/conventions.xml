@@ -1,0 +1,14 @@
+<Conventions>
+  <Zero>
+    <Id>ZERO-CONVENTIONS-TENOR-BASED</Id>
+    <TenorBased>true</TenorBased>
+    <DayCounter>A365</DayCounter>
+    <Compounding>Continuous</Compounding>
+    <CompoundingFrequency>Daily</CompoundingFrequency>
+    <TenorCalendar>WeekendsOnly</TenorCalendar>
+    <SpotLag>2</SpotLag>
+    <SpotCalendar>WeekendsOnly</SpotCalendar>
+    <RollConvention>Following</RollConvention>
+    <EOM>false</EOM>
+  </Zero>
+</Conventions>

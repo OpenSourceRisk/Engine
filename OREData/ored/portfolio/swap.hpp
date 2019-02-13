@@ -49,6 +49,10 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     virtual void build(const boost::shared_ptr<EngineFactory>&);
 
+    //! Return the fixings that will be requested to price the Swap given the \p settlementDate.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
+
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
@@ -65,6 +69,20 @@ protected:
     vector<LegData> legData_;
 
 private:
+    /*! Set of pairs where first element of pair is the ORE index name and the second 
+        element of the pair is the index of the leg that contains that ORE index.
+
+        Avoid using map here because could have multiple legs with the same ORE index and 
+        don't need a mutlimap.
+    */
+    std::set<std::pair<std::string, QuantLib::Size>> nameIndexPairs_;
+
+    /*! In some rare cases, e.g. FX resetting leg, want to set up a function that can be used 
+        in the generic \c fixingDates function to amend the leg's cashflows. This map will in 
+        most cases be empty.
+    */
+    std::map<std::pair<std::string, QuantLib::Size>,
+        std::function<boost::shared_ptr<QuantLib::CashFlow>(boost::shared_ptr<QuantLib::CashFlow>)>> cfModifiers_;
 };
 } // namespace data
 } // namespace ore

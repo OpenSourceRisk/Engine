@@ -1,0 +1,13 @@
+trade_type,trade_case,isdf,ethf,index_name,dates
+fixed_float_swap,simple_case,FALSE,FALSE,USD-LIBOR-3M,2019-02-07
+fixed_float_swap,simple_case,TRUE,FALSE,USD-LIBOR-3M,2019-02-07
+fixed_float_swap,simple_case,FALSE,TRUE,USD-LIBOR-3M,2019-02-07
+fixed_float_swap,simple_case,TRUE,TRUE,USD-LIBOR-3M,2019-02-07
+fixed_float_swap,payment_today,FALSE,FALSE,USD-LIBOR-3M,2019-02-08
+fixed_float_swap,payment_today,TRUE,FALSE,USD-LIBOR-3M,2018-11-09|2019-02-08
+fixed_float_swap,payment_today,FALSE,TRUE,USD-LIBOR-3M,2019-02-08
+fixed_float_swap,payment_today,TRUE,TRUE,USD-LIBOR-3M,2018-11-09|2019-02-08
+fixed_float_swap,fixing_today,FALSE,FALSE,USD-LIBOR-3M,2018-11-12
+fixed_float_swap,fixing_today,TRUE,FALSE,USD-LIBOR-3M,2018-11-12
+fixed_float_swap,fixing_today,FALSE,TRUE,USD-LIBOR-3M,2018-11-12|2019-02-12
+fixed_float_swap,fixing_today,TRUE,TRUE,USD-LIBOR-3M,2018-11-12|2019-02-12

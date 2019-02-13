@@ -60,6 +60,12 @@ public:
     //! \name Trade interface
     //@{
     void build(const boost::shared_ptr<EngineFactory>&);
+
+    //! Return no fixings for a CommodityForward
+    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
     //@}
 
     //! \name Serialisation

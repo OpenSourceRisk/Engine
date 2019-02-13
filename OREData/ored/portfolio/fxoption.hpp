@@ -48,6 +48,12 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&);
 
+    //! Return no fixings for an FxOption.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
     //! \name Inspectors
     //@{
     const OptionData& option() const { return option_; }
