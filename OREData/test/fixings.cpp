@@ -162,7 +162,8 @@ public:
 // - payment today where a coupon that relies on an index has payment date == today
 // - fixing today where a coupon that relies on an index has fixing date == today
 vector<string> tradeTypes = {
-    "fixed_float_swap"
+    "fixed_float_swap",
+    "in_ccy_basis_swap"
 };
 
 vector<string> tradeCases = { "simple_case", "payment_today", "fixing_today" };

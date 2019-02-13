@@ -8,23 +8,25 @@
     </Envelope>
     <SwapData>
       <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>true</Payer>
+        <LegType>Floating</LegType>
+        <Payer>false</Payer>
         <Currency>USD</Currency>
         <Notionals>
           <Notional>200000000.00</Notional>
         </Notionals>
-        <DayCounter>30/360</DayCounter>
+        <DayCounter>A360</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.03955</Rate>
-          </Rates>
-        </FixedLegData>
+        <FloatingLegData>
+          <Index>USD-LIBOR-6M</Index>
+          <Spreads>
+            <Spread>0.000000</Spread>
+          </Spreads>
+          <FixingDays>2</FixingDays>
+        </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2018-02-14</StartDate>
-            <EndDate>2023-02-14</EndDate>
+            <StartDate>2018-02-12</StartDate>
+            <EndDate>2023-02-12</EndDate>
             <Tenor>6M</Tenor>
             <Calendar>USD,GBP</Calendar>
             <Convention>MF</Convention>
@@ -48,14 +50,14 @@
         <FloatingLegData>
           <Index>USD-LIBOR-3M</Index>
           <Spreads>
-            <Spread>0.000000</Spread>
+            <Spread>0.001000</Spread>
           </Spreads>
           <FixingDays>2</FixingDays>
         </FloatingLegData>
         <ScheduleData>
           <Rules>
-            <StartDate>2018-02-14</StartDate>
-            <EndDate>2023-02-14</EndDate>
+            <StartDate>2018-02-12</StartDate>
+            <EndDate>2023-02-12</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>USD,GBP</Calendar>
             <Convention>MF</Convention>

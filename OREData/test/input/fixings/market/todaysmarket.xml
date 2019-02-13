@@ -5,5 +5,6 @@
   <IndexForwardingCurves id="default">
     <Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
     <Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
+    <Index name="USD-LIBOR-6M">Yield/USD/USD-LIBOR-6M</Index>
     </IndexForwardingCurves>
 </TodaysMarket>

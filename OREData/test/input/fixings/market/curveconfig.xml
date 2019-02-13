@@ -38,6 +38,21 @@
         </Direct>
       </Segments>
     </YieldCurve>
+    <YieldCurve>
+      <CurveId>USD-LIBOR-6M</CurveId>
+      <CurveDescription/>
+      <Currency>USD</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/USD/USD-LIBOR-6M/A365/5Y</Quote>
+          </Quotes>
+          <Conventions>ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
   </YieldCurves>
   <InflationCurves>
   </InflationCurves>

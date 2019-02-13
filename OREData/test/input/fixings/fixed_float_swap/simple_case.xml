@@ -1,5 +1,5 @@
 <Portfolio>
-  <Trade id="fixed_float_swap">
+  <Trade id="id">
     <TradeType>Swap</TradeType>
     <Envelope>
       <CounterParty>CP</CounterParty>
