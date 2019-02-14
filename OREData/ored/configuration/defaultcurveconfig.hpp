@@ -30,7 +30,6 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -54,10 +53,10 @@ public:
     //! Detailed constructor
     DefaultCurveConfig(const string& curveID, const string& curveDescription, const string& currency, const Type& type,
                        const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
-                       const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation = true,
-                       const string& benchmarkCurveID = "", const string& sourceCurveID = "",
+                       const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes,
+                       bool extrapolation = true, const string& benchmarkCurveID = "", const string& sourceCurveID = "",
                        const std::vector<Period>& pillars = std::vector<Period>(),
-                       const Calendar& calendar = Calendar(), const Size spotLag = 0, 
+                       const Calendar& calendar = Calendar(), const Size spotLag = 0,
                        const QuantLib::Date& startDate = QuantLib::Date());
     //! Default constructor
     DefaultCurveConfig() {}
@@ -106,7 +105,7 @@ public:
     //@}
 
 private:
-    //! Quote and optional flag pair 
+    //! Quote and optional flag pair
     std::vector<std::pair<std::string, bool>> cdsQuotes_;
     string currency_;
     Type type_;

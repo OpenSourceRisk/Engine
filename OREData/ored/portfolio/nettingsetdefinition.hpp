@@ -26,7 +26,6 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/time/period.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

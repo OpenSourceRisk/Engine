@@ -29,7 +29,6 @@
 #include <ql/time/calendars/germany.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

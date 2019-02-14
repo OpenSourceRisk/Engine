@@ -33,8 +33,9 @@ EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCa
       fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
-    if (!spotQuote_.empty())
-        registerWith(spotQuote_);
+    registerWith(spotQuote_);
+    registerWith(rate_);
+    registerWith(dividend_);
     registerWith(Settings::instance().evaluationDate());
     registerWith(IndexManager::instance().notifier(name()));
 }
@@ -73,18 +74,14 @@ Real EquityIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing, bool
     return result;
 }
 
-Real EquityIndex::forecastFixing(const Date& fixingDate) const {
-    return forecastFixing(fixingDate, false);
-}
+Real EquityIndex::forecastFixing(const Date& fixingDate) const { return forecastFixing(fixingDate, false); }
 
 Real EquityIndex::forecastFixing(const Date& fixingDate, bool incDividend) const {
     QL_REQUIRE(!rate_.empty(), "null term structure set to this instance of " << name());
     return forecastFixing(rate_->timeFromReference(fixingDate), incDividend);
 }
 
-Real EquityIndex::forecastFixing(const Time& fixingTime) const {
-    return forecastFixing(fixingTime, false);
-}
+Real EquityIndex::forecastFixing(const Time& fixingTime) const { return forecastFixing(fixingTime, false); }
 
 Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const {
     QL_REQUIRE(!spotQuote_.empty(), "null spot quote set to this instance of " << name());
@@ -97,8 +94,7 @@ Real EquityIndex::forecastFixing(const Time& fixingTime, bool incDividend) const
     Real forward;
     if (incDividend) {
         forward = price / rate_->discount(fixingTime);
-    }
-    else {
+    } else {
         forward = price * dividend_->discount(fixingTime) / rate_->discount(fixingTime);
     }
     return forward;

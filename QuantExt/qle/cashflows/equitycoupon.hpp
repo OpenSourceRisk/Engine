@@ -32,7 +32,6 @@
 #include <ql/time/schedule.hpp>
 #include <qle/indexes/equityindex.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
@@ -78,7 +77,7 @@ public:
     Date fixingStartDate() const { return fixingStartDate_; }
     //! The date at which performance is measured
     Date fixingEndDate() const { return fixingEndDate_; }
-	//! return both fixing dates
+    //! return both fixing dates
     std::vector<Date> fixingDates() const;
     //! This function is called for other coupon types
     Date fixingDate() const {

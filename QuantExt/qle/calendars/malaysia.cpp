@@ -20,40 +20,33 @@
 
 namespace QuantLib {
 
-    Malaysia::Malaysia(Market market) {
-        // all calendar instances share the same implementation instance
-        static boost::shared_ptr<Calendar::Impl> impl(new Malaysia::MyxImpl);
-        impl_ = impl;
-    }
-
-    // Missing about 8 lunar calendar holidays
-    bool Malaysia::MyxImpl::isBusinessDay(const Date& date) const {
-        Weekday w = date.weekday();
-        Day d = date.dayOfMonth();
-        Month m = date.month();
-        if (isWeekend(w)
-            // New Years
-            || (( d == 1 && m == January) || (d == 31 &&
-                m == December && w == Friday) || (d == 2 &&
-                m == January && w == Monday))
-            // Federal Territory Day
-            || ((d == 1 || ((d == 2 || d == 3) && w == Monday))
-                && m == February)
-            // Labour Day
-            || ((d == 1 || (d == 2 && w == Monday))
-                && m == May)
-            // National Day
-            || ((d == 31 && m == August) || (d == 1 && w == 
-                Monday && m == September))
-            // Malaysia Day
-            || ((d == 16 || (d == 17 && w == Monday))
-                && m == September)
-            // Christmas
-            || ((d == 25 || (d == 26 && w == Monday))
-                && m == December))
-            return false;
-        return true;
-    }
-
+Malaysia::Malaysia(Market market) {
+    // all calendar instances share the same implementation instance
+    static boost::shared_ptr<Calendar::Impl> impl(new Malaysia::MyxImpl);
+    impl_ = impl;
 }
 
+// Missing about 8 lunar calendar holidays
+bool Malaysia::MyxImpl::isBusinessDay(const Date& date) const {
+    Weekday w = date.weekday();
+    Day d = date.dayOfMonth();
+    Month m = date.month();
+    if (isWeekend(w)
+        // New Years
+        || ((d == 1 && m == January) || (d == 31 && m == December && w == Friday) ||
+            (d == 2 && m == January && w == Monday))
+        // Federal Territory Day
+        || ((d == 1 || ((d == 2 || d == 3) && w == Monday)) && m == February)
+        // Labour Day
+        || ((d == 1 || (d == 2 && w == Monday)) && m == May)
+        // National Day
+        || ((d == 31 && m == August) || (d == 1 && w == Monday && m == September))
+        // Malaysia Day
+        || ((d == 16 || (d == 17 && w == Monday)) && m == September)
+        // Christmas
+        || ((d == 25 || (d == 26 && w == Monday)) && m == December))
+        return false;
+    return true;
+}
+
+} // namespace QuantLib

@@ -70,8 +70,8 @@ void OISRateHelper::initializeDates() {
                 .withPaymentLag(paymentLag_)
                 .withDiscountingTermStructure(discountRelinkableHandle_)
                 .withTelescopicValueDates(telescopicValueDates_);
-                // TODO: patch QL?
-                //.withFixedAccrualConvention(fixedConvention_)
+    // TODO: patch QL?
+    //.withFixedAccrualConvention(fixedConvention_)
 
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
@@ -79,7 +79,7 @@ void OISRateHelper::initializeDates() {
     // Latest Date may need to be updated due to payment lag.
     Date date;
     if (paymentLag_ != 0) {
-        date = paymentCalendar_.advance(latestDate_, paymentLag_, Days, paymentAdjustment_, false); 
+        date = paymentCalendar_.advance(latestDate_, paymentLag_, Days, paymentAdjustment_, false);
         latestDate_ = std::max(date, latestDate_);
     }
 }

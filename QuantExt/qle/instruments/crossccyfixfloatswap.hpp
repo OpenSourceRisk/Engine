@@ -24,9 +24,9 @@
 #ifndef quantext_cross_ccy_fix_float_swap_hpp
 #define quantext_cross_ccy_fix_float_swap_hpp
 
-#include <qle/instruments/crossccyswap.hpp>
 #include <ql/indexes/iborindex.hpp>
 #include <ql/time/schedule.hpp>
+#include <qle/instruments/crossccyswap.hpp>
 
 namespace QuantExt {
 
@@ -38,27 +38,19 @@ public:
     enum Type { Receiver = -1, Payer = 1 };
     class arguments;
     class results;
-    
+
     //! \name Constructors
     //@{
     //! Detailed constructor
-    CrossCcyFixFloatSwap(Type type, 
-        QuantLib::Real fixedNominal,
-        const QuantLib::Currency& fixedCurrency,
-        const QuantLib::Schedule& fixedSchedule,
-        QuantLib::Rate fixedRate,
-        const QuantLib::DayCounter& fixedDayCount,
-        QuantLib::BusinessDayConvention fixedPaymentBdc,
-        QuantLib::Natural fixedPaymentLag,
-        const QuantLib::Calendar& fixedPaymentCalendar,
-        QuantLib::Real floatNominal,
-        const QuantLib::Currency& floatCurrency,
-        const QuantLib::Schedule& floatSchedule,
-        const boost::shared_ptr<QuantLib::IborIndex>& floatIndex,
-        QuantLib::Spread floatSpread,
-        QuantLib::BusinessDayConvention floatPaymentBdc,
-        QuantLib::Natural floatPaymentLag,
-        const QuantLib::Calendar& floatPaymentCalendar);
+    CrossCcyFixFloatSwap(Type type, QuantLib::Real fixedNominal, const QuantLib::Currency& fixedCurrency,
+                         const QuantLib::Schedule& fixedSchedule, QuantLib::Rate fixedRate,
+                         const QuantLib::DayCounter& fixedDayCount, QuantLib::BusinessDayConvention fixedPaymentBdc,
+                         QuantLib::Natural fixedPaymentLag, const QuantLib::Calendar& fixedPaymentCalendar,
+                         QuantLib::Real floatNominal, const QuantLib::Currency& floatCurrency,
+                         const QuantLib::Schedule& floatSchedule,
+                         const boost::shared_ptr<QuantLib::IborIndex>& floatIndex, QuantLib::Spread floatSpread,
+                         QuantLib::BusinessDayConvention floatPaymentBdc, QuantLib::Natural floatPaymentLag,
+                         const QuantLib::Calendar& floatPaymentCalendar);
     //@}
 
     //! \name Instrument interface
@@ -70,7 +62,7 @@ public:
     //! \name Inspectors
     //@{
     Type type() const { return type_; }
-    
+
     QuantLib::Real fixedNominal() const { return fixedNominal_; }
     const QuantLib::Currency& fixedCurrency() const { return fixedCurrency_; }
     const QuantLib::Schedule& fixedSchedule() const { return fixedSchedule_; }
@@ -113,7 +105,7 @@ protected:
 
 private:
     Type type_;
-    
+
     QuantLib::Real fixedNominal_;
     QuantLib::Currency fixedCurrency_;
     QuantLib::Schedule fixedSchedule_;
@@ -122,7 +114,7 @@ private:
     QuantLib::BusinessDayConvention fixedPaymentBdc_;
     QuantLib::Natural fixedPaymentLag_;
     QuantLib::Calendar fixedPaymentCalendar_;
-    
+
     QuantLib::Real floatNominal_;
     QuantLib::Currency floatCurrency_;
     QuantLib::Schedule floatSchedule_;
@@ -152,6 +144,6 @@ public:
     void reset();
 };
 
-}
+} // namespace QuantExt
 
 #endif

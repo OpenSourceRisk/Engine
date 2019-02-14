@@ -50,7 +50,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
                                                  << lagDiff);
     // Date effectiveMaturity = arguments_.payDate - lagDiff;
 
-     Date maturity = arguments_.payDate;
+    Date maturity = arguments_.payDate;
     Date effectiveMaturity = arguments_.payDate - arguments_.observationLag;
     if (!arguments_.infIndex->interpolated()) {
         std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
@@ -65,7 +65,7 @@ void CPIBachelierCapFloorEngine::calculate() const {
     Date effectiveStart = arguments_.startDate - arguments_.observationLag;
     if (!arguments_.infIndex->interpolated()) {
         std::pair<Date, Date> ips = inflationPeriod(effectiveStart, arguments_.infIndex->frequency());
-        effectiveStart = ips.first; 
+        effectiveStart = ips.first;
     }
 
     Real timeFromStart =
@@ -76,7 +76,8 @@ void CPIBachelierCapFloorEngine::calculate() const {
     Real F = arguments_.infIndex->fixing(effectiveMaturity) / arguments_.baseCPI;
 
     // For reading volatility in the current market volatiltiy structure
-    // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve for strikeRate(t):
+    // baseFixing(T0) * pow(1 + strikeRate(T0), T-T0) = StrikeIndex = baseFixing(t) * pow(1 + strikeRate(t), T-t), solve
+    // for strikeRate(t):
     Real strikeZeroRate =
         pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) - 1.0;
     Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above

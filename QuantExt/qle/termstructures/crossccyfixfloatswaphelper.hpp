@@ -18,7 +18,7 @@
 
 /*! \file qle/termstructures/crossccyfixfloatswaphelper.hpp
     \brief Cross currency fixed vs. float swap helper
-    
+
     \ingroup termstructures
 */
 
@@ -33,27 +33,22 @@ namespace QuantExt {
 
 //! Cross currency fix vs. float swap helper
 /*! Rate helper for bootstrapping with fixed vs. float cross currency swaps
-    
+
     \ingroup termstructures
 */
 class CrossCcyFixFloatSwapHelper : public RelativeDateRateHelper {
 public:
-    CrossCcyFixFloatSwapHelper(
-        const QuantLib::Handle<QuantLib::Quote>& rate, 
-        const QuantLib::Handle<QuantLib::Quote>& spotFx, 
-        QuantLib::Natural settlementDays, 
-        const QuantLib::Calendar& paymentCalendar, 
-        QuantLib::BusinessDayConvention paymentConvention, 
-        const QuantLib::Period& tenor, 
-        const QuantLib::Currency& fixedCurrency,
-        QuantLib::Frequency fixedFrequency, 
-        QuantLib::BusinessDayConvention fixedConvention, 
-        const QuantLib::DayCounter& fixedDayCount, 
-        const boost::shared_ptr<QuantLib::IborIndex>& index, 
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount, 
-        const Handle<Quote>& spread = Handle<Quote>(), 
-        bool endOfMonth = false);
-    
+    CrossCcyFixFloatSwapHelper(const QuantLib::Handle<QuantLib::Quote>& rate,
+                               const QuantLib::Handle<QuantLib::Quote>& spotFx, QuantLib::Natural settlementDays,
+                               const QuantLib::Calendar& paymentCalendar,
+                               QuantLib::BusinessDayConvention paymentConvention, const QuantLib::Period& tenor,
+                               const QuantLib::Currency& fixedCurrency, QuantLib::Frequency fixedFrequency,
+                               QuantLib::BusinessDayConvention fixedConvention,
+                               const QuantLib::DayCounter& fixedDayCount,
+                               const boost::shared_ptr<QuantLib::IborIndex>& index,
+                               const QuantLib::Handle<QuantLib::YieldTermStructure>& floatDiscount,
+                               const Handle<Quote>& spread = Handle<Quote>(), bool endOfMonth = false);
+
     //! \name Observer interface
     //@{
     void update();
@@ -99,6 +94,6 @@ private:
     QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
 };
 
-}
+} // namespace QuantExt
 
 #endif

@@ -61,7 +61,7 @@ public:
                const boost::shared_ptr<StressTestScenarioData>& stressData, const Conventions& conventions,
                const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-               boost::shared_ptr<ScenarioFactory> scenarioFactory = {});
+               boost::shared_ptr<ScenarioFactory> scenarioFactory = {}, bool continueOnError = false);
 
     //! Return set of trades analysed
     const std::set<std::string>& trades() { return trades_; }

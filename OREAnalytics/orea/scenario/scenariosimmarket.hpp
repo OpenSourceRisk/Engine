@@ -84,7 +84,6 @@
 
 #include <map>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -116,7 +115,8 @@ public:
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
                       const std::string& configuration = Market::defaultConfiguration, 
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters());
+                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                      const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }

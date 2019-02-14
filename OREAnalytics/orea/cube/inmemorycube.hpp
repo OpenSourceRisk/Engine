@@ -33,7 +33,6 @@
 #include <orea/cube/npvcube.hpp>
 #include <ored/utilities/serializationdate.hpp>
 
-
 namespace ore {
 namespace analytics {
 using QuantLib::Size;

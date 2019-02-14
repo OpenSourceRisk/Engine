@@ -11,6 +11,7 @@
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/commodityvolcurveconfig.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/configuration/curveconfig.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
@@ -29,6 +30,7 @@
 #include <ored/marketdata/cdsvolcurve.hpp>
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/marketdata/commodityvolcurve.hpp>
+#include <ored/marketdata/correlationcurve.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/marketdata/curveloader.hpp>
 #include <ored/marketdata/curvespec.hpp>
@@ -76,7 +78,6 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
 #include <ored/portfolio/builders/commodityoption.hpp>
-#include <ored/portfolio/builders/cpicapfloor.hpp>
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
@@ -88,7 +89,6 @@
 #include <ored/portfolio/capfloor.hpp>
 #include <ored/portfolio/commodityforward.hpp>
 #include <ored/portfolio/commodityoption.hpp>
-#include <ored/portfolio/cpicapfloor.hpp>
 #include <ored/portfolio/creditdefaultswap.hpp>
 #include <ored/portfolio/creditdefaultswapdata.hpp>
 #include <ored/portfolio/enginedata.hpp>

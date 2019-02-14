@@ -28,7 +28,6 @@
 #include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/models/parametrization.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

@@ -29,8 +29,9 @@ using QuantLib::DiscountFactor;
 
 namespace QuantExt {
 
-DiscountRatioModifiedCurve::DiscountRatioModifiedCurve(const Handle<YieldTermStructure>& baseCurve, 
-    const Handle<YieldTermStructure>& numCurve, const Handle<YieldTermStructure>& denCurve) 
+DiscountRatioModifiedCurve::DiscountRatioModifiedCurve(const Handle<YieldTermStructure>& baseCurve,
+                                                       const Handle<YieldTermStructure>& numCurve,
+                                                       const Handle<YieldTermStructure>& denCurve)
     : baseCurve_(baseCurve), numCurve_(numCurve), denCurve_(denCurve) {
 
     // Cannot construct with empty curves
@@ -45,21 +46,13 @@ DiscountRatioModifiedCurve::DiscountRatioModifiedCurve(const Handle<YieldTermStr
     registerWith(denCurve_);
 }
 
-DayCounter DiscountRatioModifiedCurve::dayCounter() const {
-    return baseCurve_->dayCounter();
-}
+DayCounter DiscountRatioModifiedCurve::dayCounter() const { return baseCurve_->dayCounter(); }
 
-Calendar DiscountRatioModifiedCurve::calendar() const {
-    return baseCurve_->calendar();
-}
+Calendar DiscountRatioModifiedCurve::calendar() const { return baseCurve_->calendar(); }
 
-Natural DiscountRatioModifiedCurve::settlementDays() const {
-    return baseCurve_->settlementDays();
-}
+Natural DiscountRatioModifiedCurve::settlementDays() const { return baseCurve_->settlementDays(); }
 
-const Date& DiscountRatioModifiedCurve::referenceDate() const {
-    return baseCurve_->referenceDate();
-}
+const Date& DiscountRatioModifiedCurve::referenceDate() const { return baseCurve_->referenceDate(); }
 
 void DiscountRatioModifiedCurve::update() {
     // Make sure that any change to underlying curves leaves them valid
@@ -78,4 +71,4 @@ void DiscountRatioModifiedCurve::check() const {
     QL_REQUIRE(!denCurve_.empty(), "DiscountRatioModifiedCurve: denominator curve should not be empty");
 }
 
-}
+} // namespace QuantExt

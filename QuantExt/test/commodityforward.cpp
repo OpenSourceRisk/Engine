@@ -16,8 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/america.hpp>
 #include <ql/settings.hpp>
 
@@ -43,27 +43,23 @@ public:
     SavedSettings backup;
 
     // Default constructor
-    CommonData() : name("GOLD_USD"),
-        currency(USDCurrency()),
-        position(Position::Long),
-        quantity(100),
-        maturity(19, Feb, 2019),
-        strike(50.0) {}
+    CommonData()
+        : name("GOLD_USD"), currency(USDCurrency()), position(Position::Long), quantity(100), maturity(19, Feb, 2019),
+          strike(50.0) {}
 };
-}
+} // namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CommodityForwardTests)
 
 BOOST_AUTO_TEST_CASE(testConstructor) {
-    
+
     BOOST_TEST_MESSAGE("Testing commodity forward constructor");
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position, 
-        td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
     BOOST_CHECK_EQUAL(forward.name(), td.name);
     BOOST_CHECK_EQUAL(forward.currency(), td.currency);
@@ -79,8 +75,7 @@ BOOST_AUTO_TEST_CASE(testIsExpired) {
 
     CommonData td;
 
-    CommodityForward forward(td.name, td.currency, td.position,
-        td.quantity, td.maturity, td.strike);
+    CommodityForward forward(td.name, td.currency, td.position, td.quantity, td.maturity, td.strike);
 
     Settings::instance().evaluationDate() = td.maturity - 1 * Days;
     Settings::instance().includeReferenceDateEvents() = true;
@@ -99,8 +94,8 @@ BOOST_AUTO_TEST_CASE(testNegativeQuantityThrows) {
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, 
-        td.position, -10.0, td.maturity, td.strike), QuantLib::Error);
+    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, -10.0, td.maturity, td.strike),
+                      QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
@@ -109,8 +104,8 @@ BOOST_AUTO_TEST_CASE(testNegativeStrikeThrows) {
 
     CommonData td;
 
-    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency,
-        td.position, td.quantity, td.maturity, -50.0), QuantLib::Error);
+    BOOST_CHECK_THROW(CommodityForward(td.name, td.currency, td.position, td.quantity, td.maturity, -50.0),
+                      QuantLib::Error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

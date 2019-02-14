@@ -34,13 +34,12 @@ namespace analytics {
 class SensitivityFileStream : public SensitivityStream {
 public:
     //! Constructor providing path to csv file \p fileName
-    SensitivityFileStream(const std::string& fileName, 
-        char delim = ',', const std::string& comment = "#");
+    SensitivityFileStream(const std::string& fileName, char delim = ',', const std::string& comment = "#");
     //! Destructor
     ~SensitivityFileStream() override;
     //! Returns the next SensitivityRecord in the stream
     SensitivityRecord next() override;
-    //! Resets the stream so that SensitivityRecord objects can be streamed again 
+    //! Resets the stream so that SensitivityRecord objects can be streamed again
     void reset() override;
 
 private:
@@ -57,5 +56,5 @@ private:
     SensitivityRecord processRecord(const std::vector<std::string>& entries) const;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

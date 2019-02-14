@@ -405,11 +405,11 @@
     <ClInclude Include="ored\marketdata\inmemoryloader.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\cpicapfloor.hpp">
-      <Filter>portfolio</Filter>
+    <ClInclude Include="ored\configuration\correlationcurveconfig.hpp">
+      <Filter>configuration</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\cpicapfloor.hpp">
-      <Filter>portfolio\builders</Filter>
+    <ClInclude Include="ored\marketdata\correlationcurve.hpp">
+      <Filter>marketdata</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -731,11 +731,11 @@
     <ClCompile Include="ored\marketdata\inmemoryloader.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\cpicapfloor.cpp">
-      <Filter>portfolio</Filter>
+    <ClCompile Include="ored\configuration\correlationcurveconfig.cpp">
+      <Filter>configuration</Filter>
     </ClCompile>
-    <ClCompile Include="ored\portfolio\builders\cpicapfloor.cpp">
-      <Filter>portfolio\builders</Filter>
+    <ClCompile Include="ored\marketdata\correlationcurve.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

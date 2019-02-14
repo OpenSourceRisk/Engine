@@ -29,7 +29,6 @@
 
 #include <ql/currency.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

@@ -43,11 +43,12 @@ static CurveSpec::CurveType parseCurveSpecType(const string& s) {
         {"BaseCorrelation", CurveSpec::CurveType::BaseCorrelation},
         {"Inflation", CurveSpec::CurveType::Inflation},
         {"InflationCapFloorPrice", CurveSpec::CurveType::InflationCapFloorPrice},
-        {"InflationCapFloorVolatility", CurveSpec::CurveType::InflationCapFloorVolatility },
+        {"InflationCapFloorVolatility", CurveSpec::CurveType::InflationCapFloorVolatility},
         {"Equity", CurveSpec::CurveType::Equity},
         {"EquityVolatility", CurveSpec::CurveType::EquityVolatility},
         {"Security", CurveSpec::CurveType::Security},
         {"Commodity", CurveSpec::CurveType::Commodity},
+        {"Correlation", CurveSpec::CurveType::Correlation},
         {"CommodityVolatility", CurveSpec::CurveType::CommodityVolatility}};
 
     auto it = b.find(s);
@@ -174,7 +175,7 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         // e.g. InflationCapFloorVolatility/EUHICPXT/CurveConfigID
         QL_REQUIRE(tokens.size() == 3, "Unexpected number"
                                        " of tokens in InflationCapFloor volatility curve spec "
-                                      << s);
+                                           << s);
         const string& index = tokens[1];
         const string& curveConfigID = tokens[2];
         return boost::make_shared<InflationCapFloorVolatilityCurveSpec>(index, curveConfigID);
@@ -219,6 +220,13 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
         // CommodityVolatility/CCY/CommodityVolatilityCurveConfigId
         QL_REQUIRE(tokens.size() == 3, "Unexpected number of tokens in commodity volatility spec " << s);
         return boost::make_shared<CommodityVolatilityCurveSpec>(tokens[1], tokens[2]);
+    }
+
+    case CurveSpec::CurveType::Correlation: {
+        // Correlation/CorrelationCurveConfigId
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number of tokens in correlatin spec " << s);
+        string id = tokens[1];
+        return boost::make_shared<CorrelationCurveSpec>(id);
     }
 
         // TODO: the rest...

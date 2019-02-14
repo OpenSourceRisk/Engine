@@ -19,12 +19,12 @@
 #include <boost/test/unit_test.hpp>
 #include <oret/toplevelfixture.hpp>
 
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/make_shared.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ql/currencies/all.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ql/currencies/all.hpp>
-#include <boost/make_shared.hpp>
-#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -42,8 +42,9 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
 
     // Check construction raises no errors
     boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
-        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
+    BOOST_CHECK_NO_THROW(
+        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
+                                                                        "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
 
     // Check object
     BOOST_CHECK_EQUAL(convention->id(), "USD-TRY-XCCY-FIX-FLOAT");
@@ -58,12 +59,14 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionConstruction) {
     BOOST_CHECK(!convention->eom());
 
     // Check end of month when not default
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
-        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "false"));
+    BOOST_CHECK_NO_THROW(
+        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+            "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "false"));
     BOOST_CHECK(!convention->eom());
 
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
-        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "true"));
+    BOOST_CHECK_NO_THROW(
+        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
+            "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M", "true"));
     BOOST_CHECK(convention->eom());
 }
 
@@ -118,14 +121,16 @@ BOOST_AUTO_TEST_CASE(testCrossCcyFixFloatSwapConventionToXml) {
 
     // Construct the convention
     boost::shared_ptr<CrossCcyFixFloatSwapConvention> convention;
-    BOOST_CHECK_NO_THROW(convention = boost::make_shared<CrossCcyFixFloatSwapConvention>(
-        "USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F", "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
+    BOOST_CHECK_NO_THROW(
+        convention = boost::make_shared<CrossCcyFixFloatSwapConvention>("USD-TRY-XCCY-FIX-FLOAT", "2", "US,UK,TRY", "F",
+                                                                        "TRY", "Annual", "F", "A360", "USD-LIBOR-3M"));
 
     // Write the convention to a string
     string xml = convention->toXMLString();
 
     // Read the convention back from the string using fromXMLString
-    boost::shared_ptr<CrossCcyFixFloatSwapConvention> readConvention = boost::make_shared<CrossCcyFixFloatSwapConvention>();
+    boost::shared_ptr<CrossCcyFixFloatSwapConvention> readConvention =
+        boost::make_shared<CrossCcyFixFloatSwapConvention>();
     BOOST_CHECK_NO_THROW(readConvention->fromXMLString(xml));
 
     // The read convention should equal the original convention

@@ -16,12 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
 #include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/all.hpp>
-#include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/indexes/ibor/gbplibor.hpp>
+#include <ql/indexes/ibor/usdlibor.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
@@ -31,8 +31,6 @@
 #include <ql/types.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
-
-#include <iostream>
 
 using namespace std;
 using namespace boost::unit_test_framework;
@@ -69,7 +67,7 @@ struct CommonVars {
         payCalendar = JointCalendar(domesticCalendar, foreignCalendar);
         payConvention = Following;
         payLag = 0;
-        tenor = 5*Years;
+        tenor = 5 * Years;
         domesticCurrency = USDCurrency();
         foreignCurrency = GBPCurrency();
         dayCount = Actual360();
@@ -77,18 +75,17 @@ struct CommonVars {
         spotFxQuote = boost::make_shared<SimpleQuote>(1.2);
         spreadQuote = boost::make_shared<SimpleQuote>(-0.0015);
 
-
         // curves
-        domesticProjCurve = Handle<YieldTermStructure>
-            (boost::make_shared<FlatForward>(0, domesticCalendar, 0.02, Actual365Fixed()));
-        foreignProjCurve = Handle<YieldTermStructure>
-            (boost::make_shared<FlatForward>(0, foreignCalendar, 0.03, Actual365Fixed()));
-        domesticDiscCurve = Handle<YieldTermStructure>
-            (boost::make_shared<FlatForward>(0, domesticCalendar, 0.01, Actual365Fixed()));
-        
+        domesticProjCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, domesticCalendar, 0.02, Actual365Fixed()));
+        foreignProjCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, foreignCalendar, 0.03, Actual365Fixed()));
+        domesticDiscCurve =
+            Handle<YieldTermStructure>(boost::make_shared<FlatForward>(0, domesticCalendar, 0.01, Actual365Fixed()));
+
         // indices
-        foreignIndex = boost::make_shared<GBPLibor>(3*Months, foreignProjCurve);
-        domesticIndex = boost::make_shared<USDLibor>(3*Months, domesticProjCurve);
+        foreignIndex = boost::make_shared<GBPLibor>(3 * Months, foreignProjCurve);
+        domesticIndex = boost::make_shared<USDLibor>(3 * Months, domesticProjCurve);
     }
 };
 
@@ -97,23 +94,21 @@ boost::shared_ptr<CrossCcyBasisMtMResetSwap> makeTestSwap(const CommonVars& vars
     // Swap schedule
     Date referenceDate = Settings::instance().evaluationDate();
     referenceDate = vars.payCalendar.adjust(referenceDate);
-    Date start = vars.payCalendar.advance(referenceDate, vars.settlementDays*Days);
+    Date start = vars.payCalendar.advance(referenceDate, vars.settlementDays * Days);
     Date end = start + vars.tenor;
-    Schedule schedule(start, end, 3*Months, vars.payCalendar, vars.payConvention, 
-                      vars.payConvention, DateGeneration::Backward, false);
+    Schedule schedule(start, end, 3 * Months, vars.payCalendar, vars.payConvention, vars.payConvention,
+                      DateGeneration::Backward, false);
     // Create swap
-    boost::shared_ptr<FxIndex> fxIndex
-        = boost::make_shared<FxIndex>("dummy", vars.settlementDays, vars.foreignCurrency, vars.domesticCurrency, 
-                                      vars.payCalendar, Handle<Quote>(vars.spotFxQuote), 
-                                      foreignDiscCurve, vars.domesticDiscCurve);
-    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap(new CrossCcyBasisMtMResetSwap(vars.foreignNominal, vars.foreignCurrency, schedule, 
-                                                        vars.foreignIndex, vars.spreadQuote->value(), vars.domesticCurrency, schedule,
-                                                        vars.domesticIndex, 0.0, fxIndex, false));
+    boost::shared_ptr<FxIndex> fxIndex = boost::make_shared<FxIndex>(
+        "dummy", vars.settlementDays, vars.foreignCurrency, vars.domesticCurrency, vars.payCalendar,
+        Handle<Quote>(vars.spotFxQuote), foreignDiscCurve, vars.domesticDiscCurve);
+    boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap(new CrossCcyBasisMtMResetSwap(
+        vars.foreignNominal, vars.foreignCurrency, schedule, vars.foreignIndex, vars.spreadQuote->value(),
+        vars.domesticCurrency, schedule, vars.domesticIndex, 0.0, fxIndex, false));
     // Attach pricing engine
-    boost::shared_ptr<PricingEngine> engine 
-        = boost::make_shared<CrossCcySwapEngine>(vars.domesticCurrency, vars.domesticDiscCurve, 
-                                                 vars.foreignCurrency, foreignDiscCurve, 
-                                                 Handle<Quote>(vars.spotFxQuote));
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<CrossCcySwapEngine>(vars.domesticCurrency, vars.domesticDiscCurve, vars.foreignCurrency,
+                                               foreignDiscCurve, Handle<Quote>(vars.spotFxQuote));
     swap->setPricingEngine(engine);
     return swap;
 }
@@ -123,9 +118,10 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 
     // Create a helper
     vector<boost::shared_ptr<RateHelper> > helpers(1);
-    vars.helper.reset(new CrossCcyBasisMtMResetSwapHelper(Handle<Quote>(vars.spreadQuote), Handle<Quote>(vars.spotFxQuote), 
-                                                          vars.settlementDays, vars.payCalendar, vars.tenor, vars.payConvention, 
-                                                          vars.foreignIndex, vars.domesticIndex, Handle<YieldTermStructure>(), vars.domesticDiscCurve));
+    vars.helper.reset(new CrossCcyBasisMtMResetSwapHelper(
+        Handle<Quote>(vars.spreadQuote), Handle<Quote>(vars.spotFxQuote), vars.settlementDays, vars.payCalendar,
+        vars.tenor, vars.payConvention, vars.foreignIndex, vars.domesticIndex, Handle<YieldTermStructure>(),
+        vars.domesticDiscCurve));
     helpers[0] = vars.helper;
 
     // Build yield curve referencing the helper
@@ -134,7 +130,7 @@ Handle<YieldTermStructure> bootstrappedCurve(CommonVars& vars) {
 }
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CrossCcyBasisMtMResetSwapHelperTest)
 
@@ -152,7 +148,7 @@ BOOST_AUTO_TEST_CASE(testBootstrap) {
     // Create the helper swap manually and price it using curve bootstrapped from helper
     boost::shared_ptr<CrossCcyBasisMtMResetSwap> swap = makeTestSwap(vars, discCurve);
 
-    // Swap should have NPV = 0.0. 
+    // Swap should have NPV = 0.0.
     Real tol = 1e-5;
     BOOST_CHECK_SMALL(swap->NPV(), tol);
 
@@ -194,8 +190,7 @@ BOOST_AUTO_TEST_CASE(testSpotFxChange) {
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the nominal of the helper swap
-    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), 
-        std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
+    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
 
     // Bump the spot rate by 10%
     vars.spotFxQuote->setValue(vars.spotFxQuote->value() * 1.1);
@@ -210,8 +205,7 @@ BOOST_AUTO_TEST_CASE(testSpotFxChange) {
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
     // Check the nominal of the helper swap. Should now be the bumped amount
-    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), 
-        std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
+    BOOST_CHECK_CLOSE(vars.spotFxQuote->value(), std::fabs(vars.helper->swap()->leg(2).front()->amount()), relTol);
 }
 
 BOOST_AUTO_TEST_CASE(testSpreadChange) {
@@ -304,7 +298,7 @@ BOOST_AUTO_TEST_CASE(testMovingEvaluationDate) {
     expDisc = 0.91155524848230363;
     BOOST_CHECK_CLOSE(expDisc, discCurve->discount(vars.asof + 5 * Years), relTol);
 
-    // Check the start date of the helper swap. Should be 1 day greater. 
+    // Check the start date of the helper swap. Should be 1 day greater.
     BOOST_CHECK_EQUAL(swap->startDate(), vars.helper->swap()->startDate());
 }
 

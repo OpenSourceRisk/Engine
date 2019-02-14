@@ -24,13 +24,12 @@
 #pragma once
 
 #include <boost/make_shared.hpp>
+#include <ql/currency.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
-#include <ql/currency.hpp>
 #include <string>
-
 
 namespace ore {
 namespace data {
@@ -98,6 +97,7 @@ public:
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
+        CORRELATION,
         COMMODITY_OPTION,
         CPR
     };
@@ -414,10 +414,10 @@ and receives the bma index.
 class BMASwapQuote : public MarketDatum {
 public:
     //! Constructor
-    BMASwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, Period term,
-        string ccy = "USD", Period maturity = 3 * Months)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term),
-        ccy_(ccy), maturity_(maturity) {}
+    BMASwapQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, Period term, string ccy = "USD",
+                 Period maturity = 3 * Months)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BMA_SWAP), term_(term), ccy_(ccy),
+          maturity_(maturity) {}
 
     //! \name Inspectors
     //@{
@@ -473,7 +473,7 @@ private:
 };
 
 //! Cross Currency Fix Float Swap quote holder
-/*! Holds the quote for the fair fixed rate on a fixed against float 
+/*! Holds the quote for the fair fixed rate on a fixed against float
     cross currency swap.
 
     \ingroup marketdata
@@ -481,22 +481,12 @@ private:
 class CrossCcyFixFloatSwapQuote : public MarketDatum {
 public:
     //! Constructor
-    CrossCcyFixFloatSwapQuote(
-        QuantLib::Real value, 
-        const QuantLib::Date& asof,
-        const std::string& name, 
-        QuoteType quoteType, 
-        const QuantLib::Currency& floatCurrency, 
-        const QuantLib::Period& floatTenor, 
-        const QuantLib::Currency& fixedCurrency, 
-        const QuantLib::Period& fixedTenor,
-        const QuantLib::Period& maturity)
-        : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), 
-          floatCurrency_(floatCurrency), 
-          floatTenor_(floatTenor), 
-          fixedCurrency_(fixedCurrency), 
-          fixedTenor_(fixedTenor), 
-          maturity_(maturity) {}
+    CrossCcyFixFloatSwapQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name,
+                              QuoteType quoteType, const QuantLib::Currency& floatCurrency,
+                              const QuantLib::Period& floatTenor, const QuantLib::Currency& fixedCurrency,
+                              const QuantLib::Period& fixedTenor, const QuantLib::Period& maturity)
+        : MarketDatum(value, asof, name, quoteType, InstrumentType::CC_FIX_FLOAT_SWAP), floatCurrency_(floatCurrency),
+          floatTenor_(floatTenor), fixedCurrency_(fixedCurrency), fixedTenor_(fixedTenor), maturity_(maturity) {}
 
     //! \name Inspectors
     //@{
@@ -864,9 +854,9 @@ index, term, cap/floor, strike
 class InflationCapFloorQuote : public MarketDatum {
 public:
     InflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
-        Period term, bool isCap, const string& strike, InstrumentType instrumentType)
-        : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index),
-        term_(term), isCap_(isCap), strike_(strike) {}
+                           Period term, bool isCap, const string& strike, InstrumentType instrumentType)
+        : MarketDatum(value, asofDate, name, quoteType, instrumentType), index_(index), term_(term), isCap_(isCap),
+          strike_(strike) {}
     string index() { return index_; }
     Period term() { return term_; }
     bool isCap() { return isCap_; }
@@ -892,7 +882,7 @@ class ZcInflationCapFloorQuote : public InflationCapFloorQuote {
 public:
     ZcInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
                              Period term, bool isCap, const string& strike)
-        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike, 
+        : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
                                  InstrumentType::ZC_INFLATIONCAPFLOOR) {}
 };
 
@@ -929,9 +919,9 @@ index, term, cap/floor, strike
 class YyInflationCapFloorQuote : public InflationCapFloorQuote {
 public:
     YyInflationCapFloorQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, const string& index,
-        Period term, bool isCap, const string& strike)
+                             Period term, bool isCap, const string& strike)
         : InflationCapFloorQuote(value, asofDate, name, quoteType, index, term, isCap, strike,
-            InstrumentType::YY_INFLATIONCAPFLOOR) {}
+                                 InstrumentType::YY_INFLATIONCAPFLOOR) {}
 };
 
 //! Inflation seasonality data class
@@ -1164,9 +1154,9 @@ class CommoditySpotQuote : public MarketDatum {
 public:
     //! Constructor
     CommoditySpotQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
-        QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_SPOT), 
-          commodityName_(commodityName), quoteCurrency_(quoteCurrency) {
+                       QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_SPOT), commodityName_(commodityName),
+          quoteCurrency_(quoteCurrency) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity spot quote must be of type 'PRICE'");
     }
 
@@ -1188,10 +1178,11 @@ private:
 class CommodityForwardQuote : public MarketDatum {
 public:
     //! Constructor
-    CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name, QuoteType quoteType,
-        const std::string& commodityName, const std::string& quoteCurrency, const QuantLib::Date& expiryDate)
-        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), 
-          commodityName_(commodityName), quoteCurrency_(quoteCurrency), expiryDate_(expiryDate) {
+    CommodityForwardQuote(QuantLib::Real value, const QuantLib::Date& asofDate, const std::string& name,
+                          QuoteType quoteType, const std::string& commodityName, const std::string& quoteCurrency,
+                          const QuantLib::Date& expiryDate)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::COMMODITY_FWD), commodityName_(commodityName),
+          quoteCurrency_(quoteCurrency), expiryDate_(expiryDate) {
         QL_REQUIRE(quoteType == QuoteType::PRICE, "Commodity forward quote must be of type 'PRICE'");
     }
 
@@ -1222,16 +1213,11 @@ public:
         \param commodityName The name of the underlying commodity
         \param quoteCurrency The quote currency
         \param expiry        Expiry can be a period or a date
-        \param strike        Can be underlying commodity price or ATMF 
+        \param strike        Can be underlying commodity price or ATMF
     */
-    CommodityOptionQuote(QuantLib::Real value, 
-        const QuantLib::Date& asof, 
-        const std::string& name, 
-        QuoteType quoteType, 
-        const std::string& commodityName,
-        const std::string& quoteCurrency,
-        const std::string& expiry,
-        const std::string& strike);
+    CommodityOptionQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                         const std::string& commodityName, const std::string& quoteCurrency, const std::string& expiry,
+                         const std::string& strike);
 
     //! \name Inspectors
     //@{
@@ -1244,6 +1230,41 @@ public:
 private:
     std::string commodityName_;
     std::string quoteCurrency_;
+    std::string expiry_;
+    std::string strike_;
+};
+
+//! Spread data class
+/*! This class holds single market points of type SPREAD
+    \ingroup marketdata
+*/
+class CorrelationQuote : public MarketDatum {
+public:
+    //! Constructor
+    /*! \param value         The correlation value
+        \param asof          The quote date
+        \param name          The quote name
+        \param quoteType     The quote type, should be RATE or PRICE
+        \param index1        The name of the first index
+        \param index2        The name of the second index
+        \param expiry        Expiry can be a period or a date
+        \param strike        Can be underlying commodity price or ATM
+    */
+    CorrelationQuote(QuantLib::Real value, const QuantLib::Date& asof, const std::string& name, QuoteType quoteType,
+                     const std::string& index1, const std::string& index2, const std::string& expiry,
+                     const std::string& strike);
+
+    //! \name Inspectors
+    //@{
+    const std::string& index1() const { return index1_; }
+    const std::string& index2() const { return index2_; }
+    const std::string& expiry() const { return expiry_; }
+    const std::string& strike() const { return strike_; }
+    //@}
+
+private:
+    std::string index1_;
+    std::string index2_;
     std::string expiry_;
     std::string strike_;
 };

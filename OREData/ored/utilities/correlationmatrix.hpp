@@ -26,7 +26,6 @@
 #include <map>
 #include <ql/math/matrix.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

@@ -29,7 +29,6 @@
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/time/schedule.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 //! floating annuity coupon

@@ -27,7 +27,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/indexes/bmaindex.hpp>
 #include <ql/indexes/iborindex.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 

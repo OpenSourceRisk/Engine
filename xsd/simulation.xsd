@@ -393,6 +393,7 @@
             </xs:element>
             <xs:element type="xs:string" name="Tenors"/>
             <xs:element type="xs:boolean" name="SimulateSurvivalProbabilities" minOccurs="0"/>
+            <xs:element type="xs:boolean" name="SimulateRecoveryRates" minOccurs="0"/>
             <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
               <xs:complexType>
                 <xs:sequence>
@@ -548,6 +549,21 @@
               <xs:complexType>
                 <xs:sequence>
                   <xs:element type="xs:string" name="Moneyness" maxOccurs="1" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element name="DayCounters" maxOccurs="1" minOccurs="0">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="DayCounter" maxOccurs="unbounded" minOccurs="1">
+                    <xs:complexType>
+                      <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                          <xs:attribute name="ccyPair" type="xs:string" use="optional"/>
+                        </xs:extension>
+                      </xs:simpleContent>
+                    </xs:complexType>
+                  </xs:element>
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
@@ -788,6 +804,21 @@
                 </xs:sequence>
               </xs:complexType>
             </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="Correlations" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element type="bool" name="Simulate"  maxOccurs="1" minOccurs="0"/>
+            <xs:element name="Pairs">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element type="xs:string" name="Pair" maxOccurs="unbounded" minOccurs="0"/>
+                </xs:sequence>
+              </xs:complexType>
+            </xs:element>
+            <xs:element type="xs:string" name="Expiries"/>
           </xs:sequence>
         </xs:complexType>
       </xs:element>

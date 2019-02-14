@@ -32,7 +32,6 @@
 //#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;
@@ -142,19 +141,24 @@ private:
     void addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
     void addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-                            vector<boost::shared_ptr<RateHelper>>& instruments);
+                          vector<boost::shared_ptr<RateHelper>>& instruments);
     void addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segment,
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
-        vector<boost::shared_ptr<RateHelper>>& instruments);
+                                  vector<boost::shared_ptr<RateHelper>>& instruments);
 };
 
 //! Helper function for parsing interpolation method
 YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string& s);
 //! Helper function for parsing interpolation variable
 YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const string& s);
+
+//! function to return the pillar dates for a YieldTermStructure, will return an
+// empty vector if it does not have pillar dates.
+// Implemented here as it checks the subclass that was built by the above class
+vector<Date> pillarDates(const Handle<YieldTermStructure>& h);
 
 } // namespace data
 } // namespace ore

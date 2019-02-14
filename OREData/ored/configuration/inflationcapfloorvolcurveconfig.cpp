@@ -41,14 +41,14 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
 }
 
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
-    const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType, 
+    const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType,
     const bool extrapolate, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
     const string& index, const string& indexCurve, const string& yieldTermStructure)
     : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
-    tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays),
-    calendar_(calendar), businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
-    yieldTermStructure_(yieldTermStructure) {}
+      tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
+      businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
+      yieldTermStructure_(yieldTermStructure) {}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -91,11 +91,9 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     string type = XMLUtils::getChildValue(node, "Type", true);
     if (type == "ZC") {
         type_ = Type::ZC;
-    }
-    else if (type == "YY") {
+    } else if (type == "YY") {
         type_ = Type::YY;
-    }
-    else
+    } else
         QL_FAIL("Type " << type << " not recognized");
 
     // We are requiring explicit strikes so there should be at least one strike
@@ -106,14 +104,11 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     string volType = XMLUtils::getChildValue(node, "VolatilityType", true);
     if (volType == "Normal") {
         volatilityType_ = VolatilityType::Normal;
-    }
-    else if (volType == "Lognormal") {
+    } else if (volType == "Lognormal") {
         volatilityType_ = VolatilityType::Lognormal;
-    }
-    else if (volType == "ShiftedLognormal") {
+    } else if (volType == "ShiftedLognormal") {
         volatilityType_ = VolatilityType::ShiftedLognormal;
-    }
-    else {
+    } else {
         QL_FAIL("Volatility type, " << volType << ", not recognized");
     }
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", true);
@@ -135,23 +130,18 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     if (type_ == Type::ZC) {
         XMLUtils::addChild(doc, node, "Type", "ZC");
-    }
-    else if (type_ == Type::YY) {
+    } else if (type_ == Type::YY) {
         XMLUtils::addChild(doc, node, "Type", "YY");
-    }
-    else
+    } else
         QL_FAIL("Unknown Type in InflationCapFloorPriceSurfaceConfig::toXML()");
 
     if (volatilityType_ == VolatilityType::Normal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Normal");
-    }
-    else if (volatilityType_ == VolatilityType::Lognormal) {
+    } else if (volatilityType_ == VolatilityType::Lognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "Lognormal");
-    }
-    else if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+    } else if (volatilityType_ == VolatilityType::ShiftedLognormal) {
         XMLUtils::addChild(doc, node, "VolatilityType", "ShiftedLognormal");
-    }
-    else {
+    } else {
         QL_FAIL("Unknown VolatilityType in InflationCapFloorVolatilityCurveConfig::toXML()");
     }
 

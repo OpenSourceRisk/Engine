@@ -33,7 +33,7 @@ namespace data {
 
 //! Wrapper class for building commodity volatility structures
 /*! \ingroup curves
-*/
+ */
 class CommodityVolCurve {
 public:
     //! \name Constructors
@@ -42,10 +42,8 @@ public:
     CommodityVolCurve() {}
 
     //! Detailed constructor
-    CommodityVolCurve(const QuantLib::Date& asof, 
-        const CommodityVolatilityCurveSpec& spec, 
-        const Loader& loader,
-        const CurveConfigurations& curveConfigs);
+    CommodityVolCurve(const QuantLib::Date& asof, const CommodityVolatilityCurveSpec& spec, const Loader& loader,
+                      const CurveConfigurations& curveConfigs);
     //@}
 
     //! \name Inspectors
@@ -55,16 +53,15 @@ public:
     //@}
 
 private:
-    void buildConstantVolatility(const QuantLib::Date& asof, 
-        CommodityVolatilityCurveConfig& config, const Loader& loader);
-    void buildVolatilityCurve(const QuantLib::Date& asof,
-        CommodityVolatilityCurveConfig& config, const Loader& loader);
-    void buildVolatilitySurface(const QuantLib::Date& asof,
-        CommodityVolatilityCurveConfig& config, const Loader& loader);
+    void buildConstantVolatility(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config,
+                                 const Loader& loader);
+    void buildVolatilityCurve(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config, const Loader& loader);
+    void buildVolatilitySurface(const QuantLib::Date& asof, CommodityVolatilityCurveConfig& config,
+                                const Loader& loader);
 
     CommodityVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
 };
 
-}
-}
+} // namespace data
+} // namespace ore

@@ -110,6 +110,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const
         return commodityVolShiftData().at(name);
     case RFType::SecuritySpread:
         return securityShiftData().at(name);
+    case RFType::Correlation:
+        return correlationShiftData().at(name);
     default:
         QL_FAIL("Cannot return shift data for key type: " << keyType);
     }
@@ -320,7 +322,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
     if (csNode) {
         for (XMLNode* child = XMLUtils::getChildNode(csNode, "CommoditySpot"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             SpotShiftData data;
             shiftDataFromXML(child, data);
@@ -332,7 +334,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* ccNode = XMLUtils::getChildNode(node, "CommodityCurves");
     if (ccNode) {
         for (XMLNode* child = XMLUtils::getChildNode(ccNode, "CommodityCurve"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             commodityCurrencies_[name] = XMLUtils::getChildValue(child, "Currency", true);
             CurveShiftData data;
@@ -345,13 +347,13 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* cvNode = XMLUtils::getChildNode(node, "CommodityVolatilities");
     if (cvNode) {
         for (XMLNode* child = XMLUtils::getChildNode(cvNode, "CommodityVolatility"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string name = XMLUtils::getAttribute(child, "name");
             VolShiftData data;
             volShiftDataFromXML(child, data);
             // If data has one strike and it is 0.0, it needs to be overwritten for commodity volatilities
             // Commodity volatility surface in simulation market is defined in terms of spot moneyness e.g.
-            // strike sets like {0.99 * S(0), 1.00 * S(0), 1.01 * S(0)} => we need to define sensitivity 
+            // strike sets like {0.99 * S(0), 1.00 * S(0), 1.01 * S(0)} => we need to define sensitivity
             // data in the same way
             if (data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0)) {
                 data.shiftStrikes[0] = 1.0;
@@ -364,11 +366,25 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
     XMLNode* securitySpreads = XMLUtils::getChildNode(node, "SecuritySpreads");
     if (securitySpreads) {
         for (XMLNode* child = XMLUtils::getChildNode(securitySpreads, "SecuritySpread"); child;
-            child = XMLUtils::getNextSibling(child)) {
+             child = XMLUtils::getNextSibling(child)) {
             string bond = XMLUtils::getAttribute(child, "security");
             SpotShiftData data;
             shiftDataFromXML(child, data);
             securityShiftData_[bond] = data;
+        }
+    }
+
+    LOG("Get correlation sensitivity parameters");
+    XMLNode* correlations = XMLUtils::getChildNode(node, "Correlations");
+    if (correlations) {
+        for (XMLNode* child = XMLUtils::getChildNode(correlations, "Correlation"); child;
+             child = XMLUtils::getNextSibling(child)) {
+            string index1 = XMLUtils::getAttribute(child, "index1");
+            string index2 = XMLUtils::getAttribute(child, "index2");
+            string label = index1 + ":" + index2;
+            VolShiftData data;
+            volShiftDataFromXML(child, data);
+            correlationShiftData_[label] = data;
         }
     }
 
@@ -383,9 +399,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
-    
+
     XMLNode* root = doc.allocNode("SensitivityAnalysis");
-    
+
     if (!discountCurveShiftData_.empty()) {
         LOG("toXML for DiscountCurves");
         XMLNode* parent = XMLUtils::addChild(doc, root, "DiscountCurves");
@@ -588,6 +604,20 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : securityShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "SecuritySpread");
             XMLUtils::addAttribute(doc, node, "security", kv.first);
+            shiftDataToXML(doc, node, kv.second);
+        }
+    }
+
+    if (!correlationShiftData_.empty()) {
+        LOG("toXML for Correlations");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "Correlations");
+        for (const auto& kv : correlationShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "Correlation");
+            vector<string> tokens;
+            string label = kv.first;
+            boost::split(tokens, label, boost::is_any_of(":"));
+            XMLUtils::addAttribute(doc, node, "index1", tokens[0]);
+            XMLUtils::addAttribute(doc, node, "index2", tokens[1]);
             shiftDataToXML(doc, node, kv.second);
         }
     }

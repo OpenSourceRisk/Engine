@@ -110,6 +110,9 @@
     <ClCompile Include="cpicapfloor.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="correlationtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

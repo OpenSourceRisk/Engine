@@ -19,6 +19,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <qle/termstructures/correlationtermstructure.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -28,21 +29,19 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<FloatingRateCouponPricer>
-CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
+CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2,
+                                         const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
+
+    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve =
+        market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
+    if (corrCurve.empty())
+        corrCurve = market_->correlationCurve(index2, index1, configuration(MarketContext::pricing));
+
+    QL_REQUIRE(!corrCurve.empty(), "no correlation curve found for " << index1 << ":" << index2);
 
     const string& ccyCode = ccy.code();
-    Real correlation;
-    if (modelParameters_.find("Correlation_" + ccyCode) != modelParameters_.end()) {
-        correlation = parseReal(modelParameters_.at("Correlation_" + ccyCode));
-    } else if (modelParameters_.find("Correlation") != modelParameters_.end()) {
-        correlation = parseReal(modelParameters_.at("Correlation"));
-    } else {
-        QL_FAIL("CmsSpreadCouponPricerBuilder(" << ccy << "): correlation parameter required");
-    }
-
     return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(
-        cmsPricer, Handle<Quote>(boost::make_shared<SimpleQuote>(correlation)),
-        market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
+        cmsPricer, corrCurve, market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
         parseInteger(engineParameters_.at("IntegrationPoints")));
 }
 

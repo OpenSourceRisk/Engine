@@ -69,7 +69,8 @@ public:
                         const Conventions& conventions, const bool recalibrateModels,
                         const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
                         const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                        const bool nonShiftedBaseCurrencyConversion = false);
+                        const bool nonShiftedBaseCurrencyConversion = false,
+                        const bool continueOnError = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -143,6 +144,8 @@ protected:
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    // if true, the processing is continued even on build errors
+    bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
     boost::shared_ptr<EngineData> engineData_;
     //! the portfolio (provided as input)
@@ -155,13 +158,11 @@ protected:
     boost::shared_ptr<SensitivityCube> sensiCube_;
 };
 
-/*! Returns the absolute shift size corresponding to a particular risk factor \p key 
-    given sensitivity parameters \p sensiParams and a simulation market \p simMarket 
+/*! Returns the absolute shift size corresponding to a particular risk factor \p key
+    given sensitivity parameters \p sensiParams and a simulation market \p simMarket
 */
-Real getShiftSize(const RiskFactorKey& key, 
-    const SensitivityScenarioData& sensiParams, 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket,
-    const std::string& marketConfiguration = "");
+Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
+                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const std::string& marketConfiguration = "");
 
 } // namespace analytics
 } // namespace ore

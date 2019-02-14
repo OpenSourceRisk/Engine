@@ -16,10 +16,10 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/errors.hpp>
 #include <ql/types.hpp>
 
@@ -65,7 +65,7 @@ public:
     ~F() {}
 };
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 

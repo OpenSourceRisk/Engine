@@ -35,8 +35,6 @@
 #include <map>
 #include <vector>
 
-
-
 namespace ore {
 namespace analytics {
 using QuantLib::Size;

@@ -29,7 +29,6 @@
 #include <boost/serialization/map.hpp>
 #include <boost/serialization/vector.hpp>
 
-
 namespace ore {
 namespace analytics {
 using std::string;

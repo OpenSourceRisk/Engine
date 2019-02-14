@@ -4,7 +4,7 @@
 
  This file is part of ORE, a free-software/open-source library
  for transparent pricing and risk analysis - http://opensourcerisk.org
- 
+
  ORE is free software: you can redistribute it and/or modify it
  under the terms of the Modified BSD License.  You should have received a
  copy of the license along with this program.
@@ -29,12 +29,11 @@
 #include <ql/time/calendars/denmark.hpp>
 #include <ql/time/daycounters/actual360.hpp>
 
-
 namespace QuantExt {
 using namespace QuantLib;
 
 //! %DKK OIS
-/*! %DKK T/N rate 
+/*! %DKK T/N rate
 
 \remark Using Denmark calendar.
 

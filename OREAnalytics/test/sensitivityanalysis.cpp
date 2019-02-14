@@ -17,7 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -57,6 +57,7 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -115,7 +116,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -201,8 +203,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
     portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
     portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
-    portfolio->add(buildCommodityOption("19_CommodityOption_GOLD", "Long", "Call", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
-    portfolio->add(buildCommodityOption("20_CommodityOption_OIL", "Short", "Put", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
+    portfolio->add(
+        buildCommodityOption("19_CommodityOption_GOLD", "Long", "Call", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+    portfolio->add(
+        buildCommodityOption("20_CommodityOption_OIL", "Short", "Put", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -679,36 +683,48 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"18_CommodityForward_OIL", "Down:FXSpot/EURUSD/0/spot", -118575.997564574063, -1197.737349137125},
         {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063, -10938.550513848924},
         {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063, -24245.826202620548},
-        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063, 10938.550513849448},
-        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063, 24245.826202621072},
-        { "19_CommodityOption_GOLD", "Up:DiscountCurve/USD/1/1Y", 5266.437412224631, -0.516232985022 },
-        { "19_CommodityOption_GOLD", "Up:DiscountCurve/USD/2/2Y", 5266.437412224631, -0.018723533876 },
-        { "19_CommodityOption_GOLD", "Down:DiscountCurve/USD/1/1Y", 5266.437412224631, 0.516283587557 },
-        { "19_CommodityOption_GOLD", "Down:DiscountCurve/USD/2/2Y", 5266.437412224631, 0.018723579571 },
-        { "19_CommodityOption_GOLD", "Up:FXSpot/EURUSD/0/spot", 5266.437412224631, -52.142944675492 },
-        { "19_CommodityOption_GOLD", "Down:FXSpot/EURUSD/0/spot", 5266.437412224631, 53.196337497218 },
-        { "19_CommodityOption_GOLD", "Up:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, 490.253537097216 },
-        { "19_CommodityOption_GOLD", "Down:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, -465.274919275530 },
-        { "19_CommodityOption_GOLD", "Up:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631, 56.110511491685 },
-        { "19_CommodityOption_GOLD", "Down:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631, -56.112114940141 },
-        { "20_CommodityOption_OIL", "Up:DiscountCurve/USD/3/3Y", -491152.228798501019, 98.775116046891 },
-        { "20_CommodityOption_OIL", "Up:DiscountCurve/USD/4/5Y", -491152.228798501019, 97.292577287881 },
-        { "20_CommodityOption_OIL", "Down:DiscountCurve/USD/3/3Y", -491152.228798501019, -98.794984069362 },
-        { "20_CommodityOption_OIL", "Down:DiscountCurve/USD/4/5Y", -491152.228798501019, -97.311852635990 },
-        { "20_CommodityOption_OIL", "Up:FXSpot/EURUSD/0/spot", -491152.228798501019, 4862.893354440632 },
-        { "20_CommodityOption_OIL", "Down:FXSpot/EURUSD/0/spot", -491152.228798501019, -4961.133624227310 },
-        { "20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, 4223.515679404372 },
-        { "20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800 },
-        { "20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075 },
-        { "20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144 },
-        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019, 2631.321446832444 },
-        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019, -2953.560262204672 },
-        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019, 41151.505618994124 },
-        { "20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019, -42848.872082053742 },
-        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019, -2592.135488447500 },
-        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019, 2940.729887370544 },
-        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019, -37770.406281976204 },
-        { "20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019, 46207.778528712981 }};
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063,
+         10938.550513849448},
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063,
+         24245.826202621072},
+        {"19_CommodityOption_GOLD", "Up:DiscountCurve/USD/1/1Y", 5266.437412224631, -0.516232985022},
+        {"19_CommodityOption_GOLD", "Up:DiscountCurve/USD/2/2Y", 5266.437412224631, -0.018723533876},
+        {"19_CommodityOption_GOLD", "Down:DiscountCurve/USD/1/1Y", 5266.437412224631, 0.516283587557},
+        {"19_CommodityOption_GOLD", "Down:DiscountCurve/USD/2/2Y", 5266.437412224631, 0.018723579571},
+        {"19_CommodityOption_GOLD", "Up:FXSpot/EURUSD/0/spot", 5266.437412224631, -52.142944675492},
+        {"19_CommodityOption_GOLD", "Down:FXSpot/EURUSD/0/spot", 5266.437412224631, 53.196337497218},
+        {"19_CommodityOption_GOLD", "Up:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, 490.253537097216},
+        {"19_CommodityOption_GOLD", "Down:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, -465.274919275530},
+        {"19_CommodityOption_GOLD", "Up:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631,
+         56.110511491685},
+        {"19_CommodityOption_GOLD", "Down:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631,
+         -56.112114940141},
+        {"20_CommodityOption_OIL", "Up:DiscountCurve/USD/3/3Y", -491152.228798501019, 98.775116046891},
+        {"20_CommodityOption_OIL", "Up:DiscountCurve/USD/4/5Y", -491152.228798501019, 97.292577287881},
+        {"20_CommodityOption_OIL", "Down:DiscountCurve/USD/3/3Y", -491152.228798501019, -98.794984069362},
+        {"20_CommodityOption_OIL", "Down:DiscountCurve/USD/4/5Y", -491152.228798501019, -97.311852635990},
+        {"20_CommodityOption_OIL", "Up:FXSpot/EURUSD/0/spot", -491152.228798501019, 4862.893354440632},
+        {"20_CommodityOption_OIL", "Down:FXSpot/EURUSD/0/spot", -491152.228798501019, -4961.133624227310},
+        {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, 4223.515679404372},
+        {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800},
+        {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075},
+        {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
+         2631.321446832444},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
+         -2953.560262204672},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
+         41151.505618994124},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
+         -42848.872082053742},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
+         -2592.135488447500},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
+         2940.729887370544},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
+         -37770.406281976204},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
+         46207.778528712981}};
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -805,10 +821,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     IndexManager::instance().clearHistories();
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
-		
+
 BOOST_AUTO_TEST_CASE(testPortfolioSensitivityNoneObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (None observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::None);
@@ -872,7 +888,8 @@ void test1dShifts(bool granular) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
 
     // cache initial zero rates
     vector<Period> tenors = simMarketData->yieldCurveTenors("");
@@ -968,7 +985,8 @@ BOOST_AUTO_TEST_CASE(test2dShifts) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries();
@@ -1080,7 +1098,8 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1288,7 +1307,8 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1639,7 +1659,8 @@ BOOST_AUTO_TEST_CASE(testCrossGamma) {
 
     // build scenario generator
     boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
-        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory, false);
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
