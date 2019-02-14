@@ -22,6 +22,7 @@
 */
 
 #include <boost/algorithm/string/join.hpp>
+#include <boost/lexical_cast.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
@@ -169,11 +170,11 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
-    addChild(doc, n, name, std::to_string(value));
+    addChild(doc, n, name, boost::lexical_cast<std::string>(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
-    addChild(doc, n, name, std::to_string(value));
+    addChild(doc, n, name, boost::lexical_cast<std::string>(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
