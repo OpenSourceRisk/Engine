@@ -220,8 +220,8 @@ void XMLUtils::addChildrenWithAttributes(XMLDocument& doc, XMLNode* parent, cons
         XMLNode* node = addChild(doc, parent, names);
         for (Size i = 0; i < values.size(); i++) {
             XMLNode* c = doc.allocNode(name, std::to_string(values[i]));
-	    QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
-	    QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
+            QL_REQUIRE(c, "XML AllocNode failure (" << name << ")");
+            QL_REQUIRE(node, "XML Node is NULL (" << name << ")");
             node->insert_node(0, c);
             if (attrs[i] != "")
                 addAttribute(doc, c, attrName, attrs[i]);
@@ -236,7 +236,7 @@ void XMLUtils::addChildren(XMLDocument& doc, XMLNode* parent, const string& name
     map<string, string>::const_iterator it;
     for (it = values.begin(); it != values.end(); ++it) {
         XMLNode* n = addChild(doc, node, name);
-	QL_REQUIRE(n, "XML AllocNode failure (" << name << ")");
+        QL_REQUIRE(n, "XML AllocNode failure (" << name << ")");
         addChild(doc, n, firstName, it->first);
         addChild(doc, n, secondName, it->second);
     }
