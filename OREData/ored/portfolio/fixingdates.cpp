@@ -26,6 +26,7 @@ using QuantLib::InflationCoupon;
 using QuantLib::IndexedCashFlow;
 using QuantLib::CPICashFlow;
 using QuantLib::CPICoupon;
+using QuantLib::YoYInflationCoupon;
 using QuantLib::CPI;
 using QuantLib::OvernightIndexedCoupon;
 using QuantLib::AverageBMACoupon;
@@ -36,8 +37,10 @@ using QuantExt::FXLinkedCashFlow;
 using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
+using QuantLib::YoYInflationIndex;
 using QuantLib::Period;
 using QuantLib::Frequency;
+using QuantLib::Years;
 
 using std::function;
 using std::set;
@@ -71,21 +74,21 @@ void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today, bo
     }
 }
 
-// A copy of the logic from ZeroInflationIndex::needsForecast(const Date& fixingDate) as it is private
 // Return the set of dates on which a fixing will be required, if any.
-set<Date> needsForecast(const Date& fixingDate, const Date& today, boost::shared_ptr<ZeroInflationIndex> index) {
+set<Date> needsForecast(const Date& fixingDate, const Date& today, bool interpolated, 
+    Frequency frequency, const Period& availabilityLag) {
     
     set<Date> result;
 
-    Date todayMinusLag = today - index->availabilityLag();
-    Date historicalFixingKnown = inflationPeriod(todayMinusLag, index->frequency()).first - 1;
+    Date todayMinusLag = today - availabilityLag;
+    Date historicalFixingKnown = inflationPeriod(todayMinusLag, frequency).first - 1;
     
-    pair<Date, Date> lim = inflationPeriod(fixingDate, index->frequency());
+    pair<Date, Date> lim = inflationPeriod(fixingDate, frequency);
     result.insert(lim.first);
     Date latestNeededDate = fixingDate;
-    if (index->interpolated()) {
+    if (interpolated) {
         if (fixingDate > lim.first) {
-            latestNeededDate += Period(index->frequency());
+            latestNeededDate += Period(frequency);
             result.insert(lim.second + 1);
         }
     }
@@ -109,12 +112,15 @@ void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date&
     set<Date> fixingDates;
     
     if (interpolation == CPI::AsIndex) {
-        fixingDates = needsForecast(fixingDate, today, index);
+        fixingDates = needsForecast(fixingDate, today, index->interpolated(), 
+            index->frequency(), index->availabilityLag());
     } else {
         pair<Date, Date> lim = inflationPeriod(fixingDate, f);
-        fixingDates = needsForecast(lim.first, today, index);
+        fixingDates = needsForecast(lim.first, today, index->interpolated(),
+            index->frequency(), index->availabilityLag());
         if (interpolation == CPI::Linear) {
-            auto moreDates = needsForecast(lim.second + 1, today, index);
+            auto moreDates = needsForecast(lim.second + 1, today, index->interpolated(),
+                index->frequency(), index->availabilityLag());
             fixingDates.insert(moreDates.begin(), moreDates.end());
         }
     }
@@ -195,6 +201,26 @@ void FixingDateGetter::visit(CPICoupon& c) {
 
         // Mimic the logic in QuantLib::CPICoupon::indexFixing() to arrive at the fixing date(s) needed
         addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
+    }
+}
+
+void FixingDateGetter::visit(YoYInflationCoupon& c) {
+    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+
+        Date fixingDate = c.fixingDate();
+
+        auto yoyInflationIndex = boost::dynamic_pointer_cast<YoYInflationIndex>(c.yoyIndex());
+        QL_REQUIRE(yoyInflationIndex, "Expected YoYInflationCoupon to have an index of type YoYInflationIndex");
+
+        // Get necessary fixing date(s). May be empty
+        auto fixingDates = needsForecast(fixingDate, today_, yoyInflationIndex->interpolated(), 
+            yoyInflationIndex->frequency(), yoyInflationIndex->availabilityLag());
+        fixingDates_.insert(fixingDates.begin(), fixingDates.end());
+
+        // Add the previous year's date(s) also if any.
+        for (const auto d : fixingDates) {
+            fixingDates_.insert(d - 1 * Years);
+        }
     }
 }
 

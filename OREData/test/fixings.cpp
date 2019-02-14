@@ -165,7 +165,8 @@ vector<string> tradeTypes = {
     "fixed_float_swap",
     "in_ccy_basis_swap",
     "zciis_with_interp",
-    "cpi_swap_with_interp"
+    "cpi_swap_with_interp",
+    "yoy_swap_without_interp"
 };
 
 vector<string> tradeCases = { "simple_case", "payment_today", "fixing_today" };

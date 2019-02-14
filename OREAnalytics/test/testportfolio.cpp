@@ -347,8 +347,7 @@ boost::shared_ptr<Trade> buildCPIInflationSwap(string id, string ccy, bool isPay
 
 boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPayer, Real notional, int start, Size term,
                                               Real spread, string floatFreq, string floatDC, string index,
-                                              string yyFreq, string yyDC, string yyIndex, string observationLag,
-                                              bool interpolated, Size fixDays) {
+                                              string yyFreq, string yyDC, string yyIndex, string observationLag, Size fixDays) {
 
     Date today = Settings::instance().evaluationDate();
     Calendar calendar = TARGET();
@@ -374,7 +373,7 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
     LegData floatingLeg(boost::make_shared<FloatingLegData>(index, days, false, spreads), !isPayer, ccy, floatSchedule,
                         floatDC, notionals);
     // fixed leg
-    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, interpolated, fixDays), isPayer, ccy,
+    LegData yyLeg(boost::make_shared<YoYLegData>(yyIndex, observationLag, fixDays), isPayer, ccy,
                   yySchedule, yyDC, notionals);
 
     // trade

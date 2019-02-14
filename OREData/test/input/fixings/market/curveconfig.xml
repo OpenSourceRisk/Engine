@@ -69,7 +69,22 @@
       <DayCounter>A365</DayCounter>
       <Lag>3M</Lag>
       <Frequency>Monthly</Frequency>
-      <!-- BaseRate>0.01</BaseRate -->
+      <Tolerance>0.000000000001</Tolerance>
+    </InflationCurve>
+    <InflationCurve>
+      <CurveId>USCPI_YY_Swaps</CurveId>
+      <CurveDescription>Estimation Curve for YoY USCPI</CurveDescription>
+      <NominalTermStructure>Yield/USD/USD-FedFunds</NominalTermStructure>
+      <Type>YY</Type>
+      <Quotes>
+        <Quote>YY_INFLATIONSWAP/RATE/USCPI/5Y</Quote>
+      </Quotes>
+      <Conventions>USCPI_INFLATIONSWAP</Conventions>
+      <Extrapolation>true</Extrapolation>
+      <Calendar>US</Calendar>
+      <DayCounter>A365</DayCounter>
+      <Lag>3M</Lag>
+      <Frequency>Monthly</Frequency>
       <Tolerance>0.000000000001</Tolerance>
     </InflationCurve>
   </InflationCurves>

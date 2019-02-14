@@ -10,4 +10,7 @@
   <ZeroInflationIndexCurves>
     <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
   </ZeroInflationIndexCurves>
+  <YYInflationIndexCurves>
+    <YYInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_YY_Swaps</YYInflationIndexCurve>
+  </YYInflationIndexCurves>
 </TodaysMarket>

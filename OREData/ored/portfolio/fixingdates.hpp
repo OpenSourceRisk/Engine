@@ -29,6 +29,7 @@
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/overnightindexedcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
+#include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/patterns/visitor.hpp>
 #include <qle/cashflows/floatingratefxlinkednotionalcoupon.hpp>
 #include <qle/cashflows/fxlinkedcashflow.hpp>
@@ -58,6 +59,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
     public QuantLib::Visitor<QuantLib::CPICashFlow>,
     public QuantLib::Visitor<QuantLib::CPICoupon>,
+    public QuantLib::Visitor<QuantLib::YoYInflationCoupon>,
     public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
     public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
     public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
@@ -79,6 +81,7 @@ public:
     */
     void visit(QuantLib::CPICashFlow& c);
     void visit(QuantLib::CPICoupon& c);
+    void visit(QuantLib::YoYInflationCoupon& c);
     void visit(QuantLib::OvernightIndexedCoupon& c);
     void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);
