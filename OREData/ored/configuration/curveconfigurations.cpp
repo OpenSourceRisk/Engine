@@ -114,9 +114,6 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
         }
     }
 
-    XMLDocument doc;
-    XMLNode* parent = doc.allocNode("CurveConfiguration");
-    
     addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
     addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility, curveConfigIds);
     addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
