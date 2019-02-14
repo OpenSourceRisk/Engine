@@ -97,7 +97,7 @@ protected:
     //! get an instance of an aggregationScenarioData class
     virtual void initAggregationScenarioData();
     //! get an instance of a cube class
-    virtual void initCube(boost::shared_ptr<NPVCube> cube);
+    virtual void initCube(boost::shared_ptr<NPVCube> cube, const std::vector<std::string>& ids);
     //! build an NPV cube
     virtual void buildNPVCube();
     //! initialise NPV cube generation
@@ -133,7 +133,7 @@ protected:
     //! write out DIM reports
     void writeDIMReport();
     //! write out cube
-    void writeCube();
+    void writeCube(boost::shared_ptr<NPVCube> cube);
     //! write out scenarioData
     void writeScenarioData();
     //! write out base scenario

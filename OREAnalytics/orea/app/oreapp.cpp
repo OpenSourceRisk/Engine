@@ -580,12 +580,11 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube> cube) {
+void OREApp::initCube(boost::shared_ptr<NPVCube> cube, const std::vector<std::string>& ids) {
     if (cubeDepth_ == 1)
-        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, simPortfolio_->ids(), grid_->dates(), samples_);
+        cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->dates(), samples_);
     else if (cubeDepth_ == 2)
-        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, simPortfolio_->ids(), grid_->dates(), samples_,
-                                                                 cubeDepth_);
+        cube = boost::make_shared<SinglePrecisionInMemoryCubeN>(asof_, ids, grid_->dates(), samples_, cubeDepth_);
     else {
         QL_FAIL("cube depth 1 or 2 expected");
     }
@@ -653,23 +652,23 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
     simMarket_->aggregationScenarioData() = scenarioData_;
     out_ << "OK" << endl;
 
-    initCube(cube_);
+    initCube(cube_, simPortfolio_->ids());
 }
 
 void OREApp::generateNPVCube() {
     boost::shared_ptr<Portfolio> portfolio = loadPortfolio();
     initialiseNPVCubeGeneration(portfolio);
     buildNPVCube();
-    writeCube();
+    writeCube(cube_);
     writeScenarioData();
 }
 
-void OREApp::writeCube() {
+void OREApp::writeCube(boost::shared_ptr<NPVCube> cube) {
     out_ << endl << setw(tab_) << left << "Write Cube... " << flush;
     LOG("Write cube");
     if (params_->has("simulation", "cubeFile")) {
         string cubeFileName = outputPath_ + "/" + params_->get("simulation", "cubeFile");
-        cube_->save(cubeFileName);
+        cube->save(cubeFileName);
         out_ << "OK" << endl;
     } else
         out_ << "SKIP" << endl;
