@@ -35,7 +35,7 @@
           </Rates>
           <BaseCPI>234.781</BaseCPI>
           <ObservationLag>3M</ObservationLag>
-          <Interpolated>false</Interpolated>
+          <Interpolated>true</Interpolated>
           <SubtractInflationNotional>false</SubtractInflationNotional>
         </CPILegData>
       </LegData>
