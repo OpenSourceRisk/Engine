@@ -174,7 +174,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real v
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
-    addChild(doc, n, name, boost::lexical_cast<std::string>(value));
+    addChild(doc, n, name, std::to_string(value));
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, bool value) {
