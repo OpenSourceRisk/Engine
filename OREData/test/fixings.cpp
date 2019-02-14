@@ -139,7 +139,7 @@ public:
         curveConfigs.fromFile(TEST_INPUT_FILE("market/curveconfig.xml"));
 
         string marketFile = TEST_INPUT_FILE("market/market.txt");
-        string fixingsFile = TEST_INPUT_FILE("market/fixings.txt");
+        string fixingsFile = TEST_INPUT_FILE("market/fixings_for_bootstrap.txt");
         CSVLoader loader(marketFile, fixingsFile, false);
 
         bool continueOnError = false;
@@ -163,7 +163,8 @@ public:
 // - fixing today where a coupon that relies on an index has fixing date == today
 vector<string> tradeTypes = {
     "fixed_float_swap",
-    "in_ccy_basis_swap"
+    "in_ccy_basis_swap",
+    "zciis_with_interp"
 };
 
 vector<string> tradeCases = { "simple_case", "payment_today", "fixing_today" };

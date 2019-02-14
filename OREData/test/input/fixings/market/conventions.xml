@@ -11,4 +11,16 @@
     <RollConvention>Following</RollConvention>
     <EOM>false</EOM>
   </Zero>
+  <InflationSwap>
+    <Id>USCPI_INFLATIONSWAP</Id>
+    <FixCalendar>US</FixCalendar>
+    <FixConvention>MF</FixConvention>
+    <DayCounter>ACT/ACT</DayCounter>
+    <Index>USCPI</Index>
+    <Interpolated>true</Interpolated>
+    <ObservationLag>3M</ObservationLag>
+    <AdjustInflationObservationDates>false</AdjustInflationObservationDates>
+    <InflationCalendar>US</InflationCalendar>
+    <InflationConvention>MF</InflationConvention>
+  </InflationSwap>
 </Conventions>

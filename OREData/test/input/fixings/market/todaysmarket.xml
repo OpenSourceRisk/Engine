@@ -2,9 +2,12 @@
   <DiscountingCurves>
     <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
   </DiscountingCurves>
-  <IndexForwardingCurves id="default">
+  <IndexForwardingCurves>
     <Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
     <Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
     <Index name="USD-LIBOR-6M">Yield/USD/USD-LIBOR-6M</Index>
-    </IndexForwardingCurves>
+  </IndexForwardingCurves>
+  <ZeroInflationIndexCurves>
+    <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
+  </ZeroInflationIndexCurves>
 </TodaysMarket>
