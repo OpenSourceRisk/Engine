@@ -86,9 +86,9 @@
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
-using std::vector;
 using std::map;
 using std::string;
+using std::vector;
 
 //! Map a yield curve type to a risk factor key type
 RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y);
@@ -112,6 +112,12 @@ public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
+                      const std::string& configuration = Market::defaultConfiguration,
+                      const bool continueOnError = false);
+
+    ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
+                      const boost::shared_ptr<FixingManager>& fixingManager,
                       const std::string& configuration = Market::defaultConfiguration,
                       const bool continueOnError = false);
 

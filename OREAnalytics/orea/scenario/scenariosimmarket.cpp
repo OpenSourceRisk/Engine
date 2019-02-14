@@ -161,7 +161,16 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
                                      const bool continueOnError)
-    : SimMarket(conventions), parameters_(parameters), filter_(boost::make_shared<ScenarioFilter>()) {
+    : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
+                        configuration, continueOnError) {}
+
+ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
+                                     const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+                                     const Conventions& conventions,
+                                     const boost::shared_ptr<FixingManager>& fixingManager,
+                                     const std::string& configuration, const bool continueOnError)
+    : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
+      filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
@@ -198,7 +207,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
         nonSimulatedFactors_.insert(RiskFactorKey::KeyType::Correlation);
 
     // Build fixing manager
-    fixingManager_ = boost::make_shared<FixingManager>(asof_);
+    // fixingManager_ = boost::make_shared<FixingManager>(asof_);
 
     // constructing fxSpots_
     LOG("building FX triangulation..");
