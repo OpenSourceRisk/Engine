@@ -164,7 +164,8 @@ public:
 vector<string> tradeTypes = {
     "fixed_float_swap",
     "in_ccy_basis_swap",
-    "zciis_with_interp"
+    "zciis_with_interp",
+    "cpi_swap_with_interp"
 };
 
 vector<string> tradeCases = { "simple_case", "payment_today", "fixing_today" };
@@ -225,7 +226,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
 
         // Trade should throw if we ask for NPV and have not added the fixings
         // If it is the zciis trade, it won't throw because the fixings were added for the bootstrap
-        if (tradeType != "zciis_with_interp") {
+        if (tradeType != "zciis_with_interp" && tradeType != "cpi_swap_with_interp") {
             BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
         }
 

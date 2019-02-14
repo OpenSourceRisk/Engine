@@ -55,9 +55,9 @@ std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg,
 class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantLib::CashFlow>,
     public QuantLib::Visitor<QuantLib::FloatingRateCoupon>,
-    public QuantLib::Visitor<QuantLib::InflationCoupon>,
     public QuantLib::Visitor<QuantLib::IndexedCashFlow>,
     public QuantLib::Visitor<QuantLib::CPICashFlow>,
+    public QuantLib::Visitor<QuantLib::CPICoupon>,
     public QuantLib::Visitor<QuantLib::OvernightIndexedCoupon>,
     public QuantLib::Visitor<QuantLib::AverageBMACoupon>,
     public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
@@ -73,12 +73,12 @@ public:
     //@{
     void visit(QuantLib::CashFlow& c);
     void visit(QuantLib::FloatingRateCoupon& c);
-    void visit(QuantLib::InflationCoupon& c);
     void visit(QuantLib::IndexedCashFlow& c);
     /*! Not added in QuantLib so will never be hit automatically!
         Managed by passing off from IndexedCashFlow.
     */
     void visit(QuantLib::CPICashFlow& c);
+    void visit(QuantLib::CPICoupon& c);
     void visit(QuantLib::OvernightIndexedCoupon& c);
     void visit(QuantLib::AverageBMACoupon& c);
     void visit(QuantExt::AverageONIndexedCoupon& c);

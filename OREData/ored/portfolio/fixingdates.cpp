@@ -25,6 +25,7 @@ using QuantLib::FloatingRateCoupon;
 using QuantLib::InflationCoupon;
 using QuantLib::IndexedCashFlow;
 using QuantLib::CPICashFlow;
+using QuantLib::CPICoupon;
 using QuantLib::CPI;
 using QuantLib::OvernightIndexedCoupon;
 using QuantLib::AverageBMACoupon;
@@ -36,6 +37,7 @@ using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
 using QuantLib::Period;
+using QuantLib::Frequency;
 
 using std::function;
 using std::set;
@@ -100,6 +102,26 @@ set<Date> needsForecast(const Date& fixingDate, const Date& today, boost::shared
     }
 }
 
+// Common code for CPICoupon and CPICashFlow
+void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date& today, 
+    boost::shared_ptr<ZeroInflationIndex> index, CPI::InterpolationType interpolation, Frequency f) {
+    
+    set<Date> fixingDates;
+    
+    if (interpolation == CPI::AsIndex) {
+        fixingDates = needsForecast(fixingDate, today, index);
+    } else {
+        pair<Date, Date> lim = inflationPeriod(fixingDate, f);
+        fixingDates = needsForecast(lim.first, today, index);
+        if (interpolation == CPI::Linear) {
+            auto moreDates = needsForecast(lim.second + 1, today, index);
+            fixingDates.insert(moreDates.begin(), moreDates.end());
+        }
+    }
+
+    dates.insert(fixingDates.begin(), fixingDates.end());
+}
+
 }
 
 namespace ore {
@@ -142,18 +164,6 @@ void FixingDateGetter::visit(FloatingRateCoupon& c) {
     }
 }
 
-// TODO: Leave for now but will need to change this later
-//       More logic than just FloatingRateCoupon needed
-void FixingDateGetter::visit(InflationCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
-        Date fixingDate = c.fixingDate();
-        if (fixingDate < today_ || (fixingDate == today_ &&
-            Settings::instance().enforcesTodaysHistoricFixings())) {
-            fixingDates_.insert(fixingDate);
-        }
-    }
-}
-
 void FixingDateGetter::visit(IndexedCashFlow& c) {
     if (CPICashFlow* cc = dynamic_cast<CPICashFlow*>(&c)) {
         visit(*cc);
@@ -170,17 +180,21 @@ void FixingDateGetter::visit(CPICashFlow& c) {
         QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
         
         // Mimic the logic in QuantLib::CPICashFlow::amount() to arrive at the fixing date(s) needed
-        if (c.interpolation() == CPI::AsIndex) {
-            fixingDates_ = needsForecast(fixingDate, today_, zeroInflationIndex);
-        } else {
-            pair<Date, Date> lim = inflationPeriod(c.fixingDate(), c.frequency());
-            fixingDates_ = needsForecast(lim.first, today_, zeroInflationIndex);
-            if (c.interpolation() == CPI::Linear) {
-                auto fixings = needsForecast(lim.second + 1, today_, zeroInflationIndex);
-                fixingDates_.insert(fixings.begin(), fixings.end());
-            }
-        }
+        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.interpolation(), c.frequency());
+    }
+}
 
+void FixingDateGetter::visit(CPICoupon& c) {
+    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+
+        Date fixingDate = c.fixingDate();
+
+        // CPICashFlow must have a ZeroInflationIndex
+        auto zeroInflationIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(c.cpiIndex());
+        QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
+
+        // Mimic the logic in QuantLib::CPICoupon::indexFixing() to arrive at the fixing date(s) needed
+        addZeroInflationDates(fixingDates_, fixingDate, today_, zeroInflationIndex, c.observationInterpolation(), zeroInflationIndex->frequency());
     }
 }
 
