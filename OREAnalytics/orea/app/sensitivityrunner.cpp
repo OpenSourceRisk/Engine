@@ -27,12 +27,9 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-<<<<<<< HEAD
+
 void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions,
     const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams) {
-=======
-void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions) {
->>>>>>> master
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
@@ -47,11 +44,7 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
 
     boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
         boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
-<<<<<<< HEAD
-            sensiData, conventions, recalibrateModels, curveConfigs, todaysMarketParams);
-=======
-                                                sensiData, conventions, recalibrateModels, false, continueOnError_);
->>>>>>> master
+            sensiData, conventions, recalibrateModels, curveConfigs, todaysMarketParams, false, continueOnError_);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
