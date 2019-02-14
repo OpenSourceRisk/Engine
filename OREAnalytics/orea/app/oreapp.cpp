@@ -580,7 +580,7 @@ void OREApp::initAggregationScenarioData() {
     scenarioData_ = boost::make_shared<InMemoryAggregationScenarioData>(grid_->size(), samples_);
 }
 
-void OREApp::initCube(boost::shared_ptr<NPVCube> cube, const std::vector<std::string>& ids) {
+void OREApp::initCube(boost::shared_ptr<NPVCube>& cube, const std::vector<std::string>& ids) {
     if (cubeDepth_ == 1)
         cube = boost::make_shared<SinglePrecisionInMemoryCube>(asof_, ids, grid_->dates(), samples_);
     else if (cubeDepth_ == 2)
