@@ -24,7 +24,7 @@
           <Dates>
             <Calendar>USD</Calendar>
             <Dates>
-              <Date>2024-02-12</Date>
+              <Date>2019-02-15</Date>
             </Dates>
           </Dates>
         </ScheduleData>
@@ -33,7 +33,7 @@
           <Rates>
             <Rate>1.0</Rate>
           </Rates>
-          <BaseCPI>251.72175</BaseCPI>
+          <BaseCPI>234.781</BaseCPI>
           <ObservationLag>3M</ObservationLag>
           <Interpolated>true</Interpolated>
           <SubtractInflationNotional>false</SubtractInflationNotional>
@@ -46,7 +46,7 @@
         <PaymentConvention>ModifiedFollowing</PaymentConvention>
         <CashflowData>
           <Cashflow>
-            <Amount Date="2024-02-12">11010533</Amount>
+            <Amount Date="2019-02-15">11010533</Amount>
           </Cashflow>
         </CashflowData>
       </LegData>

@@ -185,6 +185,9 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
     // Set the flag determining what happens if fixings are required today
     Settings::instance().enforcesTodaysHistoricFixings() = enforcesTodaysHistoricFixings;
 
+    // Set the flag determining what happens when cashflows happen today
+    Settings::instance().includeTodaysCashFlows() = includeSettlementDateFlows;
+
     // Read in the trade
     Portfolio p;
     string portfolioFile = tradeType + "/" + tradeCase + ".xml";
@@ -221,7 +224,10 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
         }
 
         // Trade should throw if we ask for NPV and have not added the fixings
-        BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+        // If it is the zciis trade, it won't throw because the fixings were added for the bootstrap
+        if (tradeType != "zciis_with_interp") {
+            BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+        }
 
         // Add the fixings
         loadFixings(m, conventions);

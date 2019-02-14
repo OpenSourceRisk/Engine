@@ -23,6 +23,9 @@ using QuantLib::CashFlow;
 using QuantLib::Date;
 using QuantLib::FloatingRateCoupon;
 using QuantLib::InflationCoupon;
+using QuantLib::IndexedCashFlow;
+using QuantLib::CPICashFlow;
+using QuantLib::CPI;
 using QuantLib::OvernightIndexedCoupon;
 using QuantLib::AverageBMACoupon;
 using QuantExt::AverageONIndexedCoupon;
@@ -31,10 +34,13 @@ using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
 using QuantLib::Leg;
 using QuantLib::Settings;
+using QuantLib::ZeroInflationIndex;
+using QuantLib::Period;
 
 using std::function;
 using std::set;
 using std::vector;
+using std::pair;
 
 namespace {
 
@@ -60,6 +66,37 @@ void addMultipleFixings(const Coupon& c, set<Date>& dates, const Date& today, bo
                 dates.insert(fixingDate);
             }
         }
+    }
+}
+
+// A copy of the logic from ZeroInflationIndex::needsForecast(const Date& fixingDate) as it is private
+// Return the set of dates on which a fixing will be required, if any.
+set<Date> needsForecast(const Date& fixingDate, const Date& today, boost::shared_ptr<ZeroInflationIndex> index) {
+    
+    set<Date> result;
+
+    Date todayMinusLag = today - index->availabilityLag();
+    Date historicalFixingKnown = inflationPeriod(todayMinusLag, index->frequency()).first - 1;
+    
+    pair<Date, Date> lim = inflationPeriod(fixingDate, index->frequency());
+    result.insert(lim.first);
+    Date latestNeededDate = fixingDate;
+    if (index->interpolated()) {
+        if (fixingDate > lim.first) {
+            latestNeededDate += Period(index->frequency());
+            result.insert(lim.second + 1);
+        }
+    }
+    
+    if (latestNeededDate <= historicalFixingKnown) {
+        // Know that fixings are available
+        return result;
+    } else if (latestNeededDate > today) {
+        // Know that fixings are not available
+        return {};
+    } else {
+        // Grey area here but for now return nothing
+        return {};
     }
 }
 
@@ -114,6 +151,36 @@ void FixingDateGetter::visit(InflationCoupon& c) {
             Settings::instance().enforcesTodaysHistoricFixings())) {
             fixingDates_.insert(fixingDate);
         }
+    }
+}
+
+void FixingDateGetter::visit(IndexedCashFlow& c) {
+    if (CPICashFlow* cc = dynamic_cast<CPICashFlow*>(&c)) {
+        visit(*cc);
+    }
+}
+
+void FixingDateGetter::visit(CPICashFlow& c) {
+    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+        
+        Date fixingDate = c.fixingDate();
+        
+        // CPICashFlow must have a ZeroInflationIndex
+        auto zeroInflationIndex = boost::dynamic_pointer_cast<ZeroInflationIndex>(c.index());
+        QL_REQUIRE(zeroInflationIndex, "Expected CPICashFlow to have an index of type ZeroInflationIndex");
+        
+        // Mimic the logic in QuantLib::CPICashFlow::amount() to arrive at the fixing date(s) needed
+        if (c.interpolation() == CPI::AsIndex) {
+            fixingDates_ = needsForecast(fixingDate, today_, zeroInflationIndex);
+        } else {
+            pair<Date, Date> lim = inflationPeriod(c.fixingDate(), c.frequency());
+            fixingDates_ = needsForecast(lim.first, today_, zeroInflationIndex);
+            if (c.interpolation() == CPI::Linear) {
+                auto fixings = needsForecast(lim.second + 1, today_, zeroInflationIndex);
+                fixingDates_.insert(fixings.begin(), fixings.end());
+            }
+        }
+
     }
 }
 
