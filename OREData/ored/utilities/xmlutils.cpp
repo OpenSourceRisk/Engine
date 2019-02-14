@@ -170,7 +170,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
-    addChild(doc, n, name, boost::lexical_cast<std::string>(value));
+    addChild(doc, n, name, boost::lexical_cast<std::string>(value)); //lexical_cast used to prevent loss of precision
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
