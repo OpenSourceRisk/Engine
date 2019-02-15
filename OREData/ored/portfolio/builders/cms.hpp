@@ -30,7 +30,6 @@
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/lineartsrpricer.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace ore::data;

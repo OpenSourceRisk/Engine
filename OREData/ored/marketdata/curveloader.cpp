@@ -30,7 +30,7 @@ namespace data {
 static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::shared_ptr<YieldCurveSpec>>& specs,
                      const CurveConfigurations& curveConfigs, map<string, string>& missingDependents,
                      map<string, string>& errors, bool continueOnError) {
-    
+
     string yieldCurveID = ycs->curveConfigID();
     if (!curveConfigs.hasYieldCurveConfig(yieldCurveID)) {
         string errMsg = "Can't get yield curve configuration for " + yieldCurveID;
@@ -64,8 +64,8 @@ static bool canBuild(boost::shared_ptr<YieldCurveSpec>& ycs, vector<boost::share
     return true;
 }
 
-void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs, 
-    std::map<std::string, std::string>& errors, bool continueOnError) {
+void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigurations& curveConfigs,
+           std::map<std::string, std::string>& errors, bool continueOnError) {
 
     /* Order the curve specs and remove duplicates (i.e. those with same name).
      * The sort() call relies on CurveSpec::operator< which ensures a few properties:

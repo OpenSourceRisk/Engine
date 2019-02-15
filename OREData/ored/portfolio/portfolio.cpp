@@ -56,33 +56,33 @@ void Portfolio::loadFromXMLString(const string& xmlString, const boost::shared_p
     XMLNode* node = doc.getFirstNode("Portfolio");
     fromXML(node, factory);
 }
-    
+
 void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& factory) {
     XMLUtils::checkNode(node, "Portfolio");
     vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(node, "Trade");
     for (Size i = 0; i < nodes.size(); i++) {
         string tradeType = XMLUtils::getChildValue(nodes[i], "TradeType", true);
-            
+
         // Get the id attribute
         string id = XMLUtils::getAttribute(nodes[i], "id");
         QL_REQUIRE(id != "", "No id attribute in Trade Node");
         DLOG("Parsing trade id:" << id);
-            
+
         boost::shared_ptr<Trade> trade = factory->build(tradeType);
-            
+
         if (trade) {
             try {
                 trade->fromXML(nodes[i]);
                 trade->id() = id;
                 add(trade);
-                    
+
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                        << " class:" << tradeType);
+                                    << " class:" << tradeType);
             } catch (std::exception& ex) {
                 ALOG("Exception parsing Trade XML Node (id=" << id
-                        << ") "
-                        "(class="
-                        << tradeType << ") : " << ex.what());
+                                                             << ") "
+                                                                "(class="
+                                                             << tradeType << ") : " << ex.what());
             }
         } else {
             WLOG("Unable to build Trade for tradeType=" << tradeType);
@@ -90,7 +90,6 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
     }
     LOG("Finished Parsing XML doc");
 }
-
 
 void Portfolio::save(const string& fileName) const {
     LOG("Saving Portfolio to " << fileName);
@@ -127,7 +126,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     }
     LOG("Built Portfolio. Size now " << trades_.size());
-    
+
     QL_REQUIRE(trades_.size() > 0, "Portfolio does not contain any built trades");
 }
 
@@ -165,7 +164,7 @@ bool Portfolio::has(const string& id) {
 
 boost::shared_ptr<Trade> Portfolio::get(const string& id) const {
     auto it = find_if(trades_.begin(), trades_.end(),
-        [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
+                      [id](const boost::shared_ptr<Trade>& trade) { return trade->id() == id; });
 
     if (it == trades_.end()) {
         return nullptr;

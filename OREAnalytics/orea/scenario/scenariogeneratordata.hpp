@@ -33,7 +33,6 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -62,8 +61,8 @@ public:
                           boost::shared_ptr<ore::analytics::DateGrid> dateGrid, SequenceType sequenceType, long seed,
                           Size samples, SobolBrownianGenerator::Ordering ordering = SobolBrownianGenerator::Steps,
                           SobolRsg::DirectionIntegers directionIntegers = SobolRsg::JoeKuoD7)
-        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed),
-          samples_(samples), ordering_(ordering), directionIntegers_(directionIntegers) {}
+        : discretization_(discretization), grid_(dateGrid), sequenceType_(sequenceType), seed_(seed), samples_(samples),
+          ordering_(ordering), directionIntegers_(directionIntegers) {}
 
     void clear();
 

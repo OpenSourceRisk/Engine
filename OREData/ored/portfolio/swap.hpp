@@ -39,11 +39,11 @@ public:
     Swap(const string swapType = "Swap") : Trade(swapType) {}
 
     //! Constructor with vector of LegData
-    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap") 
+    Swap(const Envelope& env, const vector<LegData>& legData, const string swapType = "Swap")
         : Trade(swapType, env), legData_(legData) {}
 
     //! Constructor with two legs
-    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap") 
+    Swap(const Envelope& env, const LegData& leg0, const LegData& leg1, const string swapType = "Swap")
         : Trade(swapType, env), legData_({leg0, leg1}) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine

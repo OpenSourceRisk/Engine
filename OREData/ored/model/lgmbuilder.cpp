@@ -54,11 +54,11 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     if (data_->calibrateA() || data_->calibrateH()) {
         svts_ = market_->swaptionVol(data_->ccy(), configuration_);
-	swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->ccy(), configuration_), configuration_);
-	shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->ccy(), configuration_), configuration_);
+        swapIndex_ = market_->swapIndex(market_->swapIndexBase(data_->ccy(), configuration_), configuration_);
+        shortSwapIndex_ = market_->swapIndex(market_->shortSwapIndexBase(data_->ccy(), configuration_), configuration_);
         buildSwaptionBasket();
     }
-    
+
     // convert vector<Real> to Array
     Array aTimes(data_->aTimes().begin(), data_->aTimes().end());
     Array hTimes(data_->hTimes().begin(), data_->hTimes().end());
@@ -128,10 +128,10 @@ LgmBuilder::LgmBuilder(const boost::shared_ptr<ore::data::Market>& market, const
 
     if (data_->calibrateA() || data_->calibrateH()) {
         registerWith(svts_);
-	registerWith(swapIndex_->forwardingTermStructure());
-	registerWith(swapIndex_->discountingTermStructure());
-	registerWith(shortSwapIndex_->forwardingTermStructure());
-	registerWith(shortSwapIndex_->discountingTermStructure());
+        registerWith(swapIndex_->forwardingTermStructure());
+        registerWith(swapIndex_->discountingTermStructure());
+        registerWith(shortSwapIndex_->forwardingTermStructure());
+        registerWith(shortSwapIndex_->discountingTermStructure());
     }
     registerWith(discountCurve_);
 
@@ -146,7 +146,7 @@ void LgmBuilder::performCalculations() const {
     parametrization_->shift() = 0.0;
     parametrization_->scaling() = 1.0;
 
-    if (data_->calibrateA() || data_->calibrateH()) 
+    if (data_->calibrateA() || data_->calibrateH())
         buildSwaptionBasket();
 
     for (Size j = 0; j < swaptionBasket_.size(); j++)

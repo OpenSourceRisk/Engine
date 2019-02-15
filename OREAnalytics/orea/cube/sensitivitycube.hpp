@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include <boost/bimap.hpp>
+#include <boost/shared_ptr.hpp>
 #include <orea/cube/npvsensicube.hpp>
 #include <orea/scenario/shiftscenariogenerator.hpp>
 #include <ql/errors.hpp>
@@ -44,48 +44,41 @@ public:
 
     //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
-        const std::vector<ShiftScenarioDescription>& scenarioDescriptions, 
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
+                    const std::vector<ShiftScenarioDescription>& scenarioDescriptions,
+                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
 
     //! Constructor using a vector of scenario description strings
-    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
-        const std::vector<std::string>& scenarioDescriptions, 
-        const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
+    SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube, const std::vector<std::string>& scenarioDescriptions,
+                    const std::map<RiskFactorKey, QuantLib::Real>& shiftSizes);
 
     //! \name Inspectors
     //@{
-    const boost::shared_ptr<NPVSensiCube>& npvCube() const { 
-        return cube_;
-    }
-    const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const {
-        return scenarioDescriptions_;
-    }
-    const std::vector<string>& tradeIds() const {
-        return cube_->ids();
-    }
+    const boost::shared_ptr<NPVSensiCube>& npvCube() const { return cube_; }
+    const std::vector<ShiftScenarioDescription>& scenarioDescriptions() const { return scenarioDescriptions_; }
+    const std::vector<string>& tradeIds() const { return cube_->ids(); }
     //@}
 
     //! Check if the cube has scenario NPVs for trade with ID \p tradeId
     bool hasTrade(const std::string& tradeId) const;
-    
+
     /*! Return factor for given up/down scenario index or None if given index
       is not an up/down scenario (to be reviewed) */
     RiskFactorKey upDownFactor(const Size upDownIndex) const;
 
     //! Check if the cube has scenario NPVs for scenario with description \p scenarioDescription
     bool hasScenario(const ShiftScenarioDescription& scenarioDescription) const;
-    
+
     //! Get the description for the risk factor key \p riskFactorKey
     //! Returns the result of ShiftScenarioGenerator::ScenarioDescription::factor1()
     std::string factorDescription(const RiskFactorKey& riskFactorKey) const;
 
-    //! Returns the set of risk factor keys for which a delta and gamma can be calculated 
+    //! Returns the set of risk factor keys for which a delta and gamma can be calculated
     const std::set<RiskFactorKey>& factors() const;
-    
-    //! Returns the set of pairs of risk factor keys for which a cross gamma is available 
+
+    //! Returns the set of pairs of risk factor keys for which a cross gamma is available
     const std::set<crossPair>& crossFactors() const;
 
-    //! Returns the absolute shift size for given risk factor \p key 
+    //! Returns the absolute shift size for given risk factor \p key
     QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
 
     //! Get the base NPV for trade with ID \p tradeId
@@ -100,7 +93,8 @@ public:
     //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
-    //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p riskFactorKeyPair
+    //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p
+    //! riskFactorKeyPair
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
 private:
@@ -125,5 +119,5 @@ private:
     std::map<crossPair, QuantLib::Size> crossFactors_;
 };
 
-}
-}
+} // namespace analytics
+} // namespace ore

@@ -47,8 +47,7 @@ public:
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! Build a date grid from the given vector of tenors.
-    DateGrid(const std::vector<QuantLib::Period>& tenors,
-             const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
+    DateGrid(const std::vector<QuantLib::Period>& tenors, const QuantLib::Calendar& gridCalendar = QuantLib::TARGET(),
              const QuantLib::DayCounter& dayCounter = QuantLib::ActualActual());
 
     //! Build a date grid from an explicit set of dates, sorted in ascending order.

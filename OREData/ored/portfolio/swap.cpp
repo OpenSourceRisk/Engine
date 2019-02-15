@@ -91,8 +91,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             Handle<Quote> spot = market->fxSpot(source + target);
             Calendar cal = parseCalendar(legData_[i].fixingCalendar());
             fxIndex = boost::make_shared<FxIndex>(fxIndexBase->familyName(), legData_[i].fixingDays(),
-                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(),
-                                                  cal, spot, sorTS, tarTS);
+                                                  fxIndexBase->sourceCurrency(), fxIndexBase->targetCurrency(), cal,
+                                                  spot, sorTS, tarTS);
             QL_REQUIRE(fxIndex, "Resetting XCCY - fxIndex failed to build");
 
             // Now check the ccy and foreignCcy from the legdata, work out if we need to invert or not
@@ -135,7 +135,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     additionalLegs_[floatIndex].push_back(coupon);
 
                     Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
-                                                                  -static_cast<Integer>(fxIndex->fixingDays()), Days);
+                                                                        -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
                         boost::make_shared<FloatingRateFXLinkedNotionalCoupon>(fixingDate, legData_[i].foreignAmount(),
                                                                                fxIndex, invertFxIndex, coupon);
@@ -241,7 +241,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // set maturity
     maturity_ = legs_[0].back()->date();
     for (Size i = 1; i < legs_.size(); i++) {
-        QL_REQUIRE(legs_[i].size() > 0, "Leg " << i+1 << " of " << legs_.size() << " is empty.");
+        QL_REQUIRE(legs_[i].size() > 0, "Leg " << i + 1 << " of " << legs_.size() << " is empty.");
         Date d = legs_[i].back()->date();
         if (d > maturity_)
             maturity_ = d;

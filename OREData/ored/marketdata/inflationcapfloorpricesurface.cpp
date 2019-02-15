@@ -232,8 +232,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                 for (Size i = 0; i < cpiCapFloorVolSurface->strikes().size(); ++i) {
                     for (Size j = 0; j < cpiCapFloorVolSurface->maturities().size(); ++j) {
                         DLOG("Implied CPI CapFloor BlackVol,strike,"
-                             << cpiCapFloorVolSurface->strikes()[i] << ",maturity," << cpiCapFloorVolSurface->maturities()[j]
-                             << ",index," << index->name() << ",Vol," << cpiCapFloorVolSurface->volData()[i][j]);
+                             << cpiCapFloorVolSurface->strikes()[i] << ",maturity,"
+                             << cpiCapFloorVolSurface->maturities()[j] << ",index," << index->name() << ",Vol,"
+                             << cpiCapFloorVolSurface->volData()[i][j]);
                     }
                 }
 

@@ -46,27 +46,25 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t)
     }
 }
 
-CorrelationCurveConfig::CorrelationCurveConfig(
-    const string& curveID, const string& curveDescription, const Dimension& dimension,
-    const CorrelationType& corrType, const string& convention,
-    const QuoteType& quoteType, const bool extrapolate,
-    const vector<Period>& optionTenors, const DayCounter& dayCounter,
-    const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& index1,
-    const string& index2, const string& currency, const string& swaptionVol, const string& discountCurve)
+CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const string& curveDescription,
+                                               const Dimension& dimension, const CorrelationType& corrType,
+                                               const string& convention, const QuoteType& quoteType,
+                                               const bool extrapolate, const vector<Period>& optionTenors,
+                                               const DayCounter& dayCounter, const Calendar& calendar,
+                                               const BusinessDayConvention& businessDayConvention, const string& index1,
+                                               const string& index2, const string& currency, const string& swaptionVol,
+                                               const string& discountCurve)
     : CurveConfig(curveID, curveDescription), dimension_(dimension), correlationType_(corrType),
-      conventions_(convention), quoteType_(quoteType),
-      extrapolate_(extrapolate), optionTenors_(optionTenors),
-      dayCounter_(dayCounter), calendar_(calendar),
-      businessDayConvention_(businessDayConvention), index1_(index1),
+      conventions_(convention), quoteType_(quoteType), extrapolate_(extrapolate), optionTenors_(optionTenors),
+      dayCounter_(dayCounter), calendar_(calendar), businessDayConvention_(businessDayConvention), index1_(index1),
       index2_(index2), currency_(currency), swaptionVol_(swaptionVol), discountCurve_(discountCurve) {
 
     QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Constant, "Invalid dimension");
 
     if (dimension == Dimension::Constant) {
-        QL_REQUIRE(optionTenors.size() == 1 ,
+        QL_REQUIRE(optionTenors.size() == 1,
                    "Only one tenor should be supplied for a constant correlation termstructure");
     }
-
 }
 
 const vector<string>& CorrelationCurveConfig::quotes() {
@@ -82,7 +80,6 @@ const vector<string>& CorrelationCurveConfig::quotes() {
             ss << base << "/" << to_string(o) << "/ATM";
             quotes_.push_back(ss.str());
         }
-
     }
     return quotes_;
 }
@@ -99,21 +96,20 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
     optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
     QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
-    
+
     if (optionTenors_.size() == 1) {
         dimension_ = Dimension::Constant;
     } else {
         QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
         dimension_ = Dimension::ATM;
     }
-    
+
     string corrType = XMLUtils::getChildValue(node, "CorrelationType", true);
     if (corrType == "CMSSpread") {
         correlationType_ = CorrelationType::CMSSpread;
     } else {
         QL_FAIL("Correlation type " << corrType << " not recognized");
     }
-    
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
     if (quoteType == "Rate") {
@@ -127,7 +123,6 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
     extrapolate_ = parseBool(extr);
 
-
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
 
@@ -139,7 +134,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
     index1_ = XMLUtils::getChildValue(node, "Index1", true);
     index2_ = XMLUtils::getChildValue(node, "Index2", true);
-    
+
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
 
     swaptionVol_ = "";
@@ -166,13 +161,13 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     }
 
     XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-    
+
     if (correlationType_ == CorrelationType::CMSSpread) {
         XMLUtils::addChild(doc, node, "CorrelationType", "CMSSpread");
     } else {
         QL_FAIL("Unknown CorrelationType in CorrelationCurveConfig::toXML()");
     }
-    
+
     if (quoteType_ == QuoteType::Rate) {
         XMLUtils::addChild(doc, node, "QuoteType", "Rate");
     } else if (quoteType_ == QuoteType::Price) {

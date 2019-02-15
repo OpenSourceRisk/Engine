@@ -18,7 +18,7 @@
 
 /*! \file ored/portfolio/commodityforward.hpp
     \brief Commodity forward representation
-    
+
     \ingroup tradedata
 */
 
@@ -38,13 +38,9 @@ public:
     //! Default constructor
     CommodityForward();
     //! Detailed constructor
-    CommodityForward(const Envelope& envelope, 
-        const std::string& position, 
-        const std::string& commodityName,
-        const std::string& currency, 
-        QuantLib::Real quantity, 
-        const std::string& maturityDate, 
-        QuantLib::Real strike);
+    CommodityForward(const Envelope& envelope, const std::string& position, const std::string& commodityName,
+                     const std::string& currency, QuantLib::Real quantity, const std::string& maturityDate,
+                     QuantLib::Real strike);
     //@}
 
     //! \name Inspectors
@@ -82,5 +78,5 @@ private:
     std::string maturityDate_;
     QuantLib::Real strike_;
 };
-}
-}
+} // namespace data
+} // namespace ore

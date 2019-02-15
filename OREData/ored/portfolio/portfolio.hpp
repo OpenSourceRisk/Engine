@@ -50,7 +50,7 @@ public:
     bool has(const string& id);
 
     /*! Get a Trade with the given \p id from the portfolio
-        
+
         \remark returns a `nullptr` if no trade found with the given \p id
     */
     boost::shared_ptr<Trade> get(const std::string& id) const;
@@ -74,7 +74,7 @@ public:
 
     //! Load from XML Node
     void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
-    
+
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
 

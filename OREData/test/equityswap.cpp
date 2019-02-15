@@ -16,23 +16,23 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ored/marketdata/marketimpl.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/enginedata.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
-#include <qle/indexes/equityindex.hpp>
-#include <qle/cashflows/equitycoupon.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/cashflows/iborcoupon.hpp>
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/cashflows/equitycoupon.hpp>
+#include <qle/indexes/equityindex.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -57,11 +57,9 @@ public:
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = forecastSP5;
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = dividendSP5;
 
-
         // build USD Libor index
         hUSD = Handle<IborIndex>(parseIborIndex("USD-LIBOR-3M", flatRateYts(0.035)));
         iborIndices_[make_pair(Market::defaultConfiguration, "USD-LIBOR-3M")] = hUSD;
-
 
         // build SP5 Equity Curve
         hSP5 = Handle<EquityIndex>(
@@ -70,7 +68,6 @@ public:
 
         // add fixings
         hUSD->addFixing(Date(14, July, 2016), 0.035);
-
     }
 
     Handle<IborIndex> hUSD;
@@ -111,12 +108,12 @@ struct CommonVars {
     boost::shared_ptr<ore::data::Swap> makeEquitySwap(string returnType) {
         ScheduleData floatSchedule(ScheduleRules(start, end, floattenor, calStr, conv, conv, rule));
         ScheduleData eqSchedule(ScheduleRules(start, end, eqtenor, calStr, conv, conv, rule));
-        
+
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
-            floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, settlementDays), isPayer, ccy,
-            eqSchedule, fixDC, notionals);
+                             floatSchedule, fixDC, notionals);
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, settlementDays),
+                          isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
         boost::shared_ptr<ore::data::Swap> swap(new ore::data::Swap(env, floatLegData, eqLegData));
@@ -124,24 +121,26 @@ struct CommonVars {
     }
 
     boost::shared_ptr<QuantLib::Swap> qlEquitySwap(string returnType) {
-        
-        boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();        
+
+        boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
         // check Equity swap NPV against pure QL pricing
-        Schedule floatSchedule(parseDate(start), parseDate(end), parsePeriod(floattenor), parseCalendar(calStr), 
-            parseBusinessDayConvention(conv), parseBusinessDayConvention(conv), parseDateGenerationRule(rule), false);
+        Schedule floatSchedule(parseDate(start), parseDate(end), parsePeriod(floattenor), parseCalendar(calStr),
+                               parseBusinessDayConvention(conv), parseBusinessDayConvention(conv),
+                               parseDateGenerationRule(rule), false);
         Schedule eqSchedule(parseDate(start), parseDate(end), parsePeriod(eqtenor), parseCalendar(calStr),
-            parseBusinessDayConvention(conv), parseBusinessDayConvention(conv), parseDateGenerationRule(rule), false);
+                            parseBusinessDayConvention(conv), parseBusinessDayConvention(conv),
+                            parseDateGenerationRule(rule), false);
         Leg floatLeg = IborLeg(floatSchedule, *market->hUSD)
-            .withNotionals(notionals)
-            .withFixingDays(days)
-            .withSpreads(spread)
-            .withPaymentDayCounter(parseDayCounter(fixDC))
-            .withPaymentAdjustment(parseBusinessDayConvention(conv));
+                           .withNotionals(notionals)
+                           .withFixingDays(days)
+                           .withSpreads(spread)
+                           .withPaymentDayCounter(parseDayCounter(fixDC))
+                           .withPaymentAdjustment(parseBusinessDayConvention(conv));
         Leg eqLeg = EquityLeg(eqSchedule, *market->equityCurve("SP5"))
-            .withNotionals(notionals)
-            .withPaymentDayCounter(parseDayCounter(fixDC))
-            .withPaymentAdjustment(parseBusinessDayConvention(conv))
-            .withTotalReturn(returnType=="Total");
+                        .withNotionals(notionals)
+                        .withPaymentDayCounter(parseDayCounter(fixDC))
+                        .withPaymentAdjustment(parseBusinessDayConvention(conv))
+                        .withTotalReturn(returnType == "Total");
 
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
@@ -178,7 +177,7 @@ BOOST_AUTO_TEST_SUITE(EquitySwapTests)
 BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
 
     BOOST_TEST_MESSAGE("Testing Equity Swap Price Return...");
-    
+
     // build market
     boost::shared_ptr<TestMarket> market = boost::make_shared<TestMarket>();
     Date today = market->asofDate();
@@ -186,7 +185,7 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
 
     CommonVars vars;
     boost::shared_ptr<ore::data::Swap> eqSwap = vars.makeEquitySwap("Price");
-    
+
     // engine data and factory
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
     engineData->model("Swap") = "DiscountedCashflows";
@@ -200,17 +199,17 @@ BOOST_AUTO_TEST_CASE(testEquitySwapPriceReturn) {
 
     portfolio->add(eqSwap);
     portfolio->build(engineFactory);
-    
+
     boost::shared_ptr<QuantLib::Swap> qlSwap = vars.qlEquitySwap("Price");
 
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
-        << " QL = " << qlSwap->legNPV(0));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
-        << " QL = " << qlSwap->legNPV(1));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8); // this is 1E-10 rel diff
 }
 
@@ -245,11 +244,11 @@ BOOST_AUTO_TEST_CASE(testEquitySwapTotalReturn) {
     auto dscEngine = boost::make_shared<DiscountingSwapEngine>(market->discountCurve("USD"));
     qlSwap->setPricingEngine(dscEngine);
     BOOST_TEST_MESSAGE("Leg 1 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
-        << " QL = " << qlSwap->legNPV(0));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(0)
+                       << " QL = " << qlSwap->legNPV(0));
     BOOST_TEST_MESSAGE("Leg 2 NPV: ORE = "
-        << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
-        << " QL = " << qlSwap->legNPV(1));
+                       << boost::static_pointer_cast<QuantLib::Swap>(eqSwap->instrument()->qlInstrument())->legNPV(1)
+                       << " QL = " << qlSwap->legNPV(1));
     BOOST_CHECK_CLOSE(eqSwap->instrument()->NPV(), qlSwap->NPV(), 1E-8);
 }
 

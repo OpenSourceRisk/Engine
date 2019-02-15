@@ -29,7 +29,6 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;

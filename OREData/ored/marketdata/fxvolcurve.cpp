@@ -148,7 +148,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
             if (isATM) {
                 // ATM
                 // Set forceMonotoneVariance to false - allowing decreasing variance
-                vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
+                vol_ =
+                    boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
             } else {
                 // Smile
                 auto fxSpot = getHandle<Quote>(config->fxSpotID(), fxSpots);

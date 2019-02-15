@@ -99,9 +99,7 @@ XMLNode* EngineData::toXML(XMLDocument& doc) {
 }
 
 // we assume all the maps have the same keys
-bool EngineData::hasProduct(const std::string& productName) {
-    return (model_.find(productName) != model_.end());
-}
+bool EngineData::hasProduct(const std::string& productName) { return (model_.find(productName) != model_.end()); }
 
 vector<string> EngineData::products() const {
     vector<string> res;
@@ -117,8 +115,7 @@ bool operator==(const EngineData& lhs, const EngineData& rhs) {
         return false;
     // now loop over the products and check everything
     for (auto product : products) {
-        if (lhs.model(product) != rhs.model(product) ||
-            lhs.modelParameters(product) != rhs.modelParameters(product) ||
+        if (lhs.model(product) != rhs.model(product) || lhs.modelParameters(product) != rhs.modelParameters(product) ||
             lhs.engine(product) != rhs.engine(product) ||
             lhs.engineParameters(product) != rhs.engineParameters(product))
             return false;
@@ -126,9 +123,7 @@ bool operator==(const EngineData& lhs, const EngineData& rhs) {
     return true;
 }
 
-bool operator!=(const EngineData& lhs, const EngineData& rhs) {
-    return !(lhs==rhs);
-}
+bool operator!=(const EngineData& lhs, const EngineData& rhs) { return !(lhs == rhs); }
 
 } // namespace data
 } // namespace ore

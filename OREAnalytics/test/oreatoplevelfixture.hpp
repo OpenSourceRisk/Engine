@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2017 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,27 +16,29 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/marketdatumparser.hpp
-    \brief Market Datum parser
-    \ingroup marketdata
+/*! \file test/toplevelfixture.hpp
+    \brief Fixture that can be used at top level of OREAnalytics test suites
 */
 
 #pragma once
 
-#include <ored/marketdata/marketdatum.hpp>
-#include <ql/time/date.hpp>
-#include <ql/types.hpp>
-#include <string>
+#include <oret/toplevelfixture.hpp>
+
+#include <orea/engine/observationmode.hpp>
 
 namespace ore {
-namespace data {
-using std::string;
-using QuantLib::Real;
-using QuantLib::Date;
+namespace test {
 
-//! Function to parse a market datum
-/*! \ingroup marketdata
- */
-boost::shared_ptr<MarketDatum> parseMarketDatum(const Date&, const string&, const Real&);
-} // namespace data
+using ore::analytics::ObservationMode;
+
+//! OREAnalytics Top level fixture
+class OreaTopLevelFixture : public TopLevelFixture {
+public:
+    ObservationMode::Mode savedObservationMode;
+
+    OreaTopLevelFixture() : TopLevelFixture() { savedObservationMode = ObservationMode::instance().mode(); }
+
+    ~OreaTopLevelFixture() { ObservationMode::instance().setMode(savedObservationMode); }
+};
+} // namespace test
 } // namespace ore

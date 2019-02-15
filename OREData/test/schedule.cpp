@@ -17,8 +17,8 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <ored/portfolio/schedule.hpp>
+#include <oret/toplevelfixture.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace ore::data;

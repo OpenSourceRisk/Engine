@@ -261,7 +261,7 @@ private:
 boost::shared_ptr<PricingEngine> CreditDefaultSwap::buildPricingEngine(const Handle<DefaultProbabilityTermStructure>& p,
                                                                        Real r,
                                                                        const Handle<YieldTermStructure>& d) const {
-    return boost::make_shared<MidPointCdsEngine>(p,r,d,true);
+    return boost::make_shared<MidPointCdsEngine>(p, r, d, true);
 }
 
 Rate CreditDefaultSwap::impliedHazardRate(Real targetNPV, const Handle<YieldTermStructure>& discountCurve,

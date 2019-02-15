@@ -34,7 +34,6 @@
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

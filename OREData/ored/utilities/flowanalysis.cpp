@@ -20,10 +20,10 @@
 #include <ored/utilities/flowanalysis.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ostream>
+#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/coupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/floatingratecoupon.hpp>
-#include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/yoyinflationcoupon.hpp>
 #include <ql/indexes/interestrateindex.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>

@@ -31,7 +31,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/model/infdkdata.hpp>
 #include <qle/models/crossassetmodel.hpp>
 
-
 namespace ore {
 namespace data {
 using namespace QuantLib;

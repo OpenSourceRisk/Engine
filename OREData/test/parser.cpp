@@ -17,13 +17,13 @@
 */
 
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
 #include <iostream>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/strike.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/comparison.hpp>
 #include <ql/time/daycounters/all.hpp>
-#include <ored/marketdata/marketdatumparser.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -114,7 +114,7 @@ void checkStrikeParser(const std::string& s, const ore::data::Strike::Type expec
     return;
 }
 
-}
+} // namespace
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
@@ -150,20 +150,18 @@ BOOST_AUTO_TEST_CASE(testFrequencyParsing) {
     Size len = sizeof(freq_data) / sizeof(freq_data[0]);
     for (Size i = 0; i < len; ++i) {
         string str(freq_data[i].str);
-        
+
         try {
             QuantLib::Frequency f = ore::data::parseFrequency(str);
             if (f) {
                 if (f != freq_data[i].freq)
                     BOOST_FAIL("Frequency Parser(" << str << ") returned frequency " << f << " expected "
-                        << freq_data[i].freq);
+                                                   << freq_data[i].freq);
                 BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << f);
             }
-        }
-        catch (...) {
+        } catch (...) {
             BOOST_FAIL("Frequency Parser failed to parse " << str);
         }
-
     }
 }
 
@@ -180,14 +178,12 @@ BOOST_AUTO_TEST_CASE(testCompoundingParsing) {
             if (c) {
                 if (c != comp_data[i].comp)
                     BOOST_FAIL("Compounding Parser(" << str << ") returned Compounding " << c << " expected "
-                        << comp_data[i].comp);
+                                                     << comp_data[i].comp);
                 BOOST_TEST_MESSAGE("Parsed \"" << str << "\" and got " << c);
             }
-        }
-        catch (...) {
+        } catch (...) {
             BOOST_FAIL("Compounding Parser failed to parse " << str);
         }
-
     }
 }
 
@@ -303,65 +299,62 @@ BOOST_AUTO_TEST_CASE(testMarketDatumParsing) {
 
     BOOST_TEST_MESSAGE("Testing market datum parsing...");
 
-
     BOOST_TEST_MESSAGE("Testing correlation market datum parsing...");
 
-    { //test rate quote
-    Date d(1,Jan,1990);
-    Real value = 1;
+    { // test rate quote
+        Date d(1, Jan, 1990);
+        Real value = 1;
 
-    string input = "CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM";
+        string input = "CORRELATION/RATE/INDEX1/INDEX2/1Y/ATM";
 
-    boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
-    BOOST_CHECK(datum->asofDate() == d);
-    BOOST_CHECK(datum->quote()->value() == value);
-    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
-    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE);
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::RATE);
 
-    boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+        boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum =
+            boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
 
-
-    BOOST_CHECK(spreadDatum->index1() == "INDEX1");
-    BOOST_CHECK(spreadDatum->index2() == "INDEX2");
-    BOOST_CHECK(spreadDatum->expiry() == "1Y");
-    BOOST_CHECK(spreadDatum->strike() == "ATM");
-    
+        BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+        BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+        BOOST_CHECK(spreadDatum->expiry() == "1Y");
+        BOOST_CHECK(spreadDatum->strike() == "ATM");
     }
-    
-    { //test price quote
-    Date d(3,Mar,2018);
-    Real value = 10;
 
-    string input = "CORRELATION/PRICE/INDEX1/INDEX2/1Y/0.1";
+    { // test price quote
+        Date d(3, Mar, 2018);
+        Real value = 10;
 
-    boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
+        string input = "CORRELATION/PRICE/INDEX1/INDEX2/1Y/0.1";
 
-    BOOST_CHECK(datum->asofDate() == d);
-    BOOST_CHECK(datum->quote()->value() == value);
-    BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
-    BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
+        boost::shared_ptr<ore::data::MarketDatum> datum = ore::data::parseMarketDatum(d, input, value);
 
-    boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum = boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
+        BOOST_CHECK(datum->asofDate() == d);
+        BOOST_CHECK(datum->quote()->value() == value);
+        BOOST_CHECK(datum->instrumentType() == ore::data::MarketDatum::InstrumentType::CORRELATION);
+        BOOST_CHECK(datum->quoteType() == ore::data::MarketDatum::QuoteType::PRICE);
 
+        boost::shared_ptr<ore::data::CorrelationQuote> spreadDatum =
+            boost::dynamic_pointer_cast<ore::data::CorrelationQuote>(datum);
 
-    BOOST_CHECK(spreadDatum->index1() == "INDEX1");
-    BOOST_CHECK(spreadDatum->index2() == "INDEX2");
-    BOOST_CHECK(spreadDatum->expiry() == "1Y");
-    BOOST_CHECK(spreadDatum->strike() == "0.1");
-    
+        BOOST_CHECK(spreadDatum->index1() == "INDEX1");
+        BOOST_CHECK(spreadDatum->index2() == "INDEX2");
+        BOOST_CHECK(spreadDatum->expiry() == "1Y");
+        BOOST_CHECK(spreadDatum->strike() == "0.1");
     }
-    
-    { //test parsing throws
-    Date d(3,Mar,2018);
-    Real value = 10;
 
-    BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/1Y/SS", value), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value), QuantLib::Error);
+    { // test parsing throws
+        Date d(3, Mar, 2018);
+        Real value = 10;
 
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/1Y/SS", value),
+                          QuantLib::Error);
+        BOOST_CHECK_THROW(ore::data::parseMarketDatum(d, "CORRELATION/PRICE/INDEX1/INDEX2/6X/0.1", value),
+                          QuantLib::Error);
     }
 }
-
 
 BOOST_AUTO_TEST_SUITE_END()
 

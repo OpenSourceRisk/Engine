@@ -54,30 +54,30 @@ ShiftScenarioGenerator::ScenarioDescription::ScenarioDescription(const string& d
 
     if (tokens.size() == 1 && tokens[0] == "Base") {
         type_ = ScenarioDescription::Type::Base;
-        
+
         key1_ = RiskFactorKey();
         indexDesc1_ = "";
-        
+
         key2_ = RiskFactorKey();
         indexDesc2_ = "";
 
     } else if (tokens.size() == 2 && (tokens[0] == "Up" || tokens[0] == "Down")) {
         type_ = tokens[0] == "Up" ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
-        
+
         auto temp = deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
-        
+
         key2_ = RiskFactorKey();
         indexDesc2_ = "";
 
     } else if (tokens.size() == 3 && tokens[0] == "Cross") {
         type_ = ScenarioDescription::Type::Cross;
-        
+
         auto temp = deconstructFactor(tokens[1]);
         key1_ = temp.first;
         indexDesc1_ = temp.second;
-        
+
         temp = deconstructFactor(tokens[2]);
         key2_ = temp.first;
         indexDesc2_ = temp.second;
@@ -192,7 +192,7 @@ boost::shared_ptr<RiskFactorKey> parseRiskFactorKey(const string& str, vector<st
 
     // The additional tokens
     boost::split(addTokens, p.second, boost::is_any_of("/"), boost::token_compress_off);
-    
+
     // Return the key value
     return boost::make_shared<RiskFactorKey>(p.first.keytype, p.first.name, p.first.index);
 }
