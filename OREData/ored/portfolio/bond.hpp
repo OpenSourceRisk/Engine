@@ -65,7 +65,7 @@ public:
     virtual void build(const boost::shared_ptr<EngineFactory>&);
 
     //! Return the fixings that will be requested to price the Bond given the \p settlementDate.
-    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
     virtual void fromXML(XMLNode* node);

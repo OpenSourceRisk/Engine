@@ -78,7 +78,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         QL_FAIL("Exercise type " << option_.style() << " not implemented for Swaptions");
 }
 
-map<string, set<Date>> Swaption::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+map<string, set<Date>> Swaption::fixings(const Date& settlementDate) const {
     
     map<string, set<Date>> result;
 

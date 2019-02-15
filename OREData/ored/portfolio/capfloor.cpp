@@ -219,7 +219,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     notional_ = currentNotional(legs_[0]);
 }
 
-map<string, set<Date>> CapFloor::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+map<string, set<Date>> CapFloor::fixings(const Date& settlementDate) const {
 
     map<string, set<Date>> result;
 
@@ -228,7 +228,7 @@ map<string, set<Date>> CapFloor::fixings(bool includeSettlementDateFlows, const 
         return result;
     }
 
-    result[underlyingIndex_] = fixingDates(legs_[0], includeSettlementDateFlows, settlementDate);
+    result[underlyingIndex_] = fixingDates(legs_[0], settlementDate);
 
     return result;
 }

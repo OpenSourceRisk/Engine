@@ -248,20 +248,20 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 }
 
-map<string, set<Date>> Swap::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+map<string, set<Date>> Swap::fixings(const Date& settlementDate) const {
     
     map<string, set<Date>> result;
     
     for (const auto& p : nameIndexPairs_) {
         // Get the set of fixing dates on the leg and update the results
-        set<Date> dates = fixingDates(legs_[p.second], includeSettlementDateFlows, settlementDate);
+        set<Date> dates = fixingDates(legs_[p.second], settlementDate);
         if (!dates.empty()) result[p.first].insert(dates.begin(), dates.end());
     }
 
     // Deal with any additional legs
     for (const auto& kv : additionalLegs_) {
         // Get the set of fixing dates on the leg and update the results
-        set<Date> dates = fixingDates(kv.second, includeSettlementDateFlows, settlementDate);
+        set<Date> dates = fixingDates(kv.second, settlementDate);
         if (!dates.empty()) result[kv.first].insert(dates.begin(), dates.end());
     }
 

@@ -104,7 +104,7 @@ public:
 
         \warning This method will return an empty map if the Portfolio has not been built.
     */
-    std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const;
 
 private:

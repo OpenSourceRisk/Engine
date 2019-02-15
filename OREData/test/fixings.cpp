@@ -200,12 +200,12 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
     // Ask for fixings before trades are built should return empty set
-    auto m = p.fixings(includeSettlementDateFlows, today);
+    auto m = p.fixings(today);
     BOOST_CHECK_MESSAGE(m.empty(), "Expected fixings to be empty when trades not built");
 
     // Build the portfolio and retrieve the fixings
     p.build(engineFactory);
-    m = p.fixings(includeSettlementDateFlows, today);
+    m = p.fixings(today);
 
     // Check the retrieved fixings against the expected results
     auto exp = tradeTypeExpected();

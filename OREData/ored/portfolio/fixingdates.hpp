@@ -45,7 +45,7 @@ namespace data {
     \p leg.
 */
 std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, 
-    bool includeSettlementDateFlows, QuantLib::Date settlementDate = QuantLib::Date());
+    QuantLib::Date settlementDate = QuantLib::Date());
 
 /*! Class that gets relevant fixing dates from coupons
     
@@ -67,8 +67,7 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantExt::FXLinkedCashFlow> {
 public:
     //! Constructor
-    FixingDateGetter(bool includeSettlementDateFlows, 
-        const QuantLib::Date& settlementDate = QuantLib::Date());
+    FixingDateGetter(const QuantLib::Date& settlementDate = QuantLib::Date());
 
     //! \name Visitor interface
     //@{
@@ -93,8 +92,6 @@ public:
     std::set<QuantLib::Date> fixingDates() const { return fixingDates_; }
 
 private:
-    //! Flag to determine if flows happening on the settlement date are relevant
-    bool includeSettlementDateFlows_;
     //! If \p settlementDate provided in the ctor, takes its value. If not, set to current evaluation date
     QuantLib::Date today_;
     //! Stores the retrieved fixing dates

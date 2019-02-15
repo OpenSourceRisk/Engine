@@ -126,7 +126,7 @@ void Bond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     legPayers_ = {firstLegIsPayer};
 }
 
-map<string, set<Date>> Bond::fixings(bool includeSettlementDateFlows, const Date& settlementDate) const {
+map<string, set<Date>> Bond::fixings(const Date& settlementDate) const {
 
     map<string, set<Date>> result;
 
@@ -136,7 +136,7 @@ map<string, set<Date>> Bond::fixings(bool includeSettlementDateFlows, const Date
         Size legNumber = nameIndexPair.second;
 
         // Get the set of fixing dates for the  [index name, leg index] pair
-        set<Date> dates = fixingDates(separateLegs_[legNumber], includeSettlementDateFlows, settlementDate);
+        set<Date> dates = fixingDates(separateLegs_[legNumber], settlementDate);
 
         // Update the results with the fixing dates.
         if (!dates.empty()) result[indexName].insert(dates.begin(), dates.end());

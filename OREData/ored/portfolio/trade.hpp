@@ -71,7 +71,7 @@ public:
 
         \warning This method will return an empty map if the Trade has not been built.
     */
-    virtual std::map<std::string, std::set<QuantLib::Date>> fixings(bool includeSettlementDateFlows,
+    virtual std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const = 0;
 
     //! \name Serialisation

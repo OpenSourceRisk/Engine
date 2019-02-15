@@ -132,9 +132,9 @@ void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date&
 namespace ore {
 namespace data {
 
-set<Date> fixingDates(const Leg& leg, bool includeSettlementDateFlows, Date settlementDate) {
+set<Date> fixingDates(const Leg& leg, Date settlementDate) {
     
-    FixingDateGetter fdg(includeSettlementDateFlows, settlementDate);
+    FixingDateGetter fdg(settlementDate);
     
     for (const auto& cf: leg) {
         cf->accept(fdg);
@@ -143,8 +143,7 @@ set<Date> fixingDates(const Leg& leg, bool includeSettlementDateFlows, Date sett
     return fdg.fixingDates();
 }
 
-FixingDateGetter::FixingDateGetter(bool includeSettlementDateFlows,
-    const Date& settlementDate) : includeSettlementDateFlows_(includeSettlementDateFlows) {
+FixingDateGetter::FixingDateGetter(const Date& settlementDate) {
 
     today_ = settlementDate;
     if (today_ == Date())
@@ -156,7 +155,7 @@ void FixingDateGetter::visit(CashFlow& c) {
 }
 
 void FixingDateGetter::visit(FloatingRateCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         Date fixingDate = c.fixingDate();
         if (fixingDate < today_ || (fixingDate == today_ &&
             Settings::instance().enforcesTodaysHistoricFixings())) {
@@ -172,7 +171,7 @@ void FixingDateGetter::visit(IndexedCashFlow& c) {
 }
 
 void FixingDateGetter::visit(CPICashFlow& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         
         Date fixingDate = c.fixingDate();
         
@@ -186,7 +185,7 @@ void FixingDateGetter::visit(CPICashFlow& c) {
 }
 
 void FixingDateGetter::visit(CPICoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
 
         Date fixingDate = c.fixingDate();
 
@@ -200,7 +199,7 @@ void FixingDateGetter::visit(CPICoupon& c) {
 }
 
 void FixingDateGetter::visit(YoYInflationCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
 
         Date fixingDate = c.fixingDate();
 
@@ -220,37 +219,37 @@ void FixingDateGetter::visit(YoYInflationCoupon& c) {
 }
 
 void FixingDateGetter::visit(OvernightIndexedCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
 
 void FixingDateGetter::visit(AverageBMACoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
 
 void FixingDateGetter::visit(AverageONIndexedCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
 
 void FixingDateGetter::visit(EquityCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addMultipleFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
 
 void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
 
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
-    if (!c.hasOccurred(today_, includeSettlementDateFlows_)) {
+    if (!c.hasOccurred(today_)) {
         addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
     }
 }
