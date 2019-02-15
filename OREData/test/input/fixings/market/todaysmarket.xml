@@ -19,4 +19,7 @@
   <YYInflationIndexCurves>
     <YYInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_YY_Swaps</YYInflationIndexCurve>
   </YYInflationIndexCurves>
+  <EquityCurves>
+    <EquityCurve name="RIC:DMIWO00000GUS">Equity/USD/RIC:DMIWO00000GUS</EquityCurve>
+  </EquityCurves>
 </TodaysMarket>

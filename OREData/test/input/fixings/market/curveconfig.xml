@@ -138,6 +138,15 @@
   <InflationCapFloorVolatilities>
   </InflationCapFloorVolatilities>
   <EquityCurves>
+    <EquityCurve>
+      <CurveId>RIC:DMIWO00000GUS</CurveId>
+      <CurveDescription>RIC:DMIWO00000GUS</CurveDescription>
+      <Currency>USD</Currency>
+      <ForecastingCurve>USD-FedFunds</ForecastingCurve>
+      <Type>NoDividends</Type>
+      <SpotQuote>EQUITY/PRICE/RIC:DMIWO00000GUS/USD</SpotQuote>
+      <DayCounter>A365</DayCounter>
+    </EquityCurve>
   </EquityCurves>
   <EquityVolatilities>
   </EquityVolatilities>
