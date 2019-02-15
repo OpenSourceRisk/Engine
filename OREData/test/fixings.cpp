@@ -195,7 +195,7 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
 
     // Read in the trade
     Portfolio p;
-    string portfolioFile = tradeType + "/" + tradeCase + ".xml";
+    string portfolioFile = "trades/" + tradeType + "/" + tradeCase + ".xml";
     p.load(TEST_INPUT_FILE(portfolioFile));
     BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
 
