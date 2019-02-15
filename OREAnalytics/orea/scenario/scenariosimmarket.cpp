@@ -63,7 +63,7 @@
 
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <ored/marketdata/curvespecparser.cpp>  
+#include <ored/marketdata/curvespecparser.hpp>  
 
 using namespace QuantLib;
 using namespace QuantExt;
