@@ -2,6 +2,20 @@
   <FXVolatilities>
   </FXVolatilities>
   <SwaptionVolatilities>
+    <SwaptionVolatility>
+      <CurveId>EUR_SW_N</CurveId>
+      <CurveDescription/>
+      <Dimension>ATM</Dimension>
+      <VolatilityType>Normal</VolatilityType>
+      <Extrapolation>Flat</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>3M,30Y</OptionTenors>
+      <SwapTenors>1Y,30Y</SwapTenors>
+      <ShortSwapIndexBase>EUR-CMS-1Y</ShortSwapIndexBase>
+      <SwapIndexBase>EUR-CMS-30Y</SwapIndexBase>
+    </SwaptionVolatility>
   </SwaptionVolatilities>
   <CapFloorVolatilities>
   </CapFloorVolatilities>
@@ -98,6 +112,21 @@
         </Direct>
       </Segments>
     </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR-EURIBOR-6M</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR-EURIBOR-6M/A365/5Y</Quote>
+          </Quotes>
+          <Conventions>ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
   </YieldCurves>
   <InflationCurves>
     <InflationCurve>
@@ -157,6 +186,21 @@
   <CommodityVolatilities>
   </CommodityVolatilities>
   <Correlations>
+    <Correlation>
+      <CurveId>EUR-CORR</CurveId>
+      <CurveDescription>EUR CMS correlations</CurveDescription>
+      <CorrelationType>CMSSpread</CorrelationType>
+      <Index1>EUR-CMS-10Y</Index1>
+      <Index2>EUR-CMS-2Y</Index2>
+      <Currency>EUR</Currency>
+      <Dimension>ATM</Dimension>
+      <QuoteType>Rate</QuoteType>
+      <Extrapolation>true</Extrapolation>
+      <DayCounter>Actual/365 (Fixed)</DayCounter>
+      <Calendar>TARGET</Calendar>
+      <BusinessDayConvention>Following</BusinessDayConvention>
+      <OptionTenors>1Y,2Y</OptionTenors>
+    </Correlation>
   </Correlations>
 </CurveConfiguration>
 
