@@ -631,10 +631,10 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         boost::shared_ptr<EngineFactory> simFactory = buildEngineFactory(simMarket_, groupName);
 
         LOG("Build portfolio linked to sim market");
+        Size n = portfolio->size();
         portfolio->build(simFactory);
         simPortfolio_ = portfolio;
-        QL_REQUIRE(simPortfolio_->size() == portfolio_->size(),
-                   "portfolio size mismatch, check simulation market setup");
+        QL_REQUIRE(simPortfolio_->size() == n, "portfolio size mismatch, check simulation market setup");
         out_ << "OK" << endl;
     }
 
