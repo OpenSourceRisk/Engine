@@ -1,12 +1,18 @@
 <TodaysMarket>
   <DiscountingCurves>
     <DiscountingCurve currency="USD">Yield/USD/USD-FedFunds</DiscountingCurve>
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
   </DiscountingCurves>
   <IndexForwardingCurves>
     <Index name="USD-FedFunds">Yield/USD/USD-FedFunds</Index>
     <Index name="USD-LIBOR-3M">Yield/USD/USD-LIBOR-3M</Index>
     <Index name="USD-LIBOR-6M">Yield/USD/USD-LIBOR-6M</Index>
+    <Index name="EUR-EONIA">Yield/EUR/EUR-EONIA</Index>
+    <Index name="EUR-EURIBOR-3M">Yield/EUR/EUR-EURIBOR-3M</Index>
   </IndexForwardingCurves>
+  <FxSpots id="default">
+    <FxSpot pair="USDEUR">FX/USD/EUR</FxSpot>
+  </FxSpots>
   <ZeroInflationIndexCurves>
     <ZeroInflationIndexCurve name="USCPI">Inflation/USCPI/USCPI_ZC_Swaps</ZeroInflationIndexCurve>
   </ZeroInflationIndexCurves>

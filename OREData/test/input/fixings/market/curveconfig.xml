@@ -53,6 +53,51 @@
         </Direct>
       </Segments>
     </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR-IN-USD</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR-IN-USD/A365/5Y</Quote>
+          </Quotes>
+          <Conventions>ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR-EONIA</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR-EONIA/A365/5Y</Quote>
+          </Quotes>
+          <Conventions>ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
+    <YieldCurve>
+      <CurveId>EUR-EURIBOR-3M</CurveId>
+      <CurveDescription/>
+      <Currency>EUR</Currency>
+      <DiscountCurve/>
+      <Segments>
+        <Direct>
+          <Type>Zero</Type>
+          <Quotes>
+            <Quote>ZERO/RATE/EUR/EUR-EURIBOR-3M/A365/5Y</Quote>
+          </Quotes>
+          <Conventions>ZERO-CONVENTIONS-TENOR-BASED</Conventions>
+        </Direct>
+      </Segments>
+    </YieldCurve>
   </YieldCurves>
   <InflationCurves>
     <InflationCurve>

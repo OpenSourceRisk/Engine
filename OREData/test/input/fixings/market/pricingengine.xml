@@ -5,4 +5,10 @@
     <Engine>DiscountingSwapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CrossCurrencySwap">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingCrossCurrencySwapEngine</Engine>
+    <EngineParameters/>
+  </Product>
 </PricingEngines>
