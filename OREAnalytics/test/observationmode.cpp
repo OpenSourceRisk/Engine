@@ -18,6 +18,7 @@
 
 #include "testmarket.hpp"
 #include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -94,7 +95,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     string calStr = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    Size days = 2;
+    Natural days = 2;
     string fixDC = "30/360";
     string floatDC = "ACT/360";
 
@@ -274,7 +275,7 @@ void simulation(string dateGridString, bool checkFixings) {
     modelBuilder = NULL;
 
     // Path generator
-    Size seed = 5;
+    BigNatural seed = 5;
     bool antithetic = false;
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
@@ -348,7 +349,7 @@ void simulation(string dateGridString, bool checkFixings) {
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ObservationModeTest)
 

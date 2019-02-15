@@ -16,6 +16,8 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include "testmarket.hpp"
 #include "testportfolio.hpp"
 #include <boost/test/unit_test.hpp>
@@ -611,7 +613,7 @@ void test_performance(bool bigPortfolio, bool bigScenario, bool lotsOfSensis, bo
 }
 } // namespace
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsPerformanceTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityPerformanceTest, *boost::unit_test::disabled())
 

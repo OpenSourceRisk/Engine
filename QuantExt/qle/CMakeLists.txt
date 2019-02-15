@@ -355,3 +355,13 @@ version.hpp)
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
+
+
+install(DIRECTORY . DESTINATION include/qle
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${QLE_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )

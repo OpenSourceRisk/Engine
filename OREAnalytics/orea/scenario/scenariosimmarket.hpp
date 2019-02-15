@@ -28,7 +28,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/configuration/conventions.hpp>
-#include <ored/configuration/curveconfigurations.hpp> 
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ql/quotes/all.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
@@ -113,10 +113,10 @@ public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
-                      const std::string& configuration = Market::defaultConfiguration,
-                      const bool continueOnError = false,
+                      const std::string& configuration = Market::defaultConfiguration, 
                       const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters());
+                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                      const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
