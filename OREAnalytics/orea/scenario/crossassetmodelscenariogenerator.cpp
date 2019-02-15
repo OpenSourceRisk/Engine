@@ -218,7 +218,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
 
     for (Size j = 0; j < n_curves; ++j) {
         std::string curveName = simMarketConfig_->yieldCurveNames()[j];
-        Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies()[j]);
+        Currency ccy = ore::data::parseCurrency(simMarketConfig_->yieldCurveCurrencies().at(curveName));
         Handle<YieldTermStructure> yts = initMarket_->yieldCurve(curveName, configuration_);
         auto impliedYieldCurve =
             boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
