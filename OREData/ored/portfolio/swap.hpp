@@ -77,12 +77,10 @@ private:
     */
     std::set<std::pair<std::string, QuantLib::Size>> nameIndexPairs_;
 
-    /*! In some rare cases, e.g. FX resetting leg, want to set up a function that can be used 
-        in the generic \c fixingDates function to amend the leg's cashflows. This map will in 
-        most cases be empty.
+    /*! In some rare cases, e.g. FX resetting leg, we want to store extra(s) leg and pass it
+        off to the fixings function to get additional fixing dates for an index.
     */
-    std::map<std::pair<std::string, QuantLib::Size>,
-        std::function<boost::shared_ptr<QuantLib::CashFlow>(boost::shared_ptr<QuantLib::CashFlow>)>> cfModifiers_;
+    std::map<std::string, QuantLib::Leg> additionalLegs_;
 };
 } // namespace data
 } // namespace ore

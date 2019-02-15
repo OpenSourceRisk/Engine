@@ -45,8 +45,7 @@ namespace data {
     \p leg.
 */
 std::set<QuantLib::Date> fixingDates(const QuantLib::Leg& leg, 
-    bool includeSettlementDateFlows, QuantLib::Date settlementDate = QuantLib::Date(),
-    std::function<boost::shared_ptr<QuantLib::CashFlow>(boost::shared_ptr<QuantLib::CashFlow>)> f = {});
+    bool includeSettlementDateFlows, QuantLib::Date settlementDate = QuantLib::Date());
 
 /*! Class that gets relevant fixing dates from coupons
     

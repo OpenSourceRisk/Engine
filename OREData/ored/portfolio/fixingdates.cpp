@@ -42,7 +42,6 @@ using QuantLib::Period;
 using QuantLib::Frequency;
 using QuantLib::Years;
 
-using std::function;
 using std::set;
 using std::vector;
 using std::pair;
@@ -133,16 +132,12 @@ void addZeroInflationDates(set<Date>& dates, const Date& fixingDate, const Date&
 namespace ore {
 namespace data {
 
-set<Date> fixingDates(const Leg& leg, bool includeSettlementDateFlows, Date settlementDate,
-    function<boost::shared_ptr<CashFlow>(boost::shared_ptr<CashFlow>)> f) {
+set<Date> fixingDates(const Leg& leg, bool includeSettlementDateFlows, Date settlementDate) {
     
     FixingDateGetter fdg(includeSettlementDateFlows, settlementDate);
     
     for (const auto& cf: leg) {
-        if (f)
-            f(cf)->accept(fdg);
-        else
-            cf->accept(fdg);
+        cf->accept(fdg);
     }
     
     return fdg.fixingDates();

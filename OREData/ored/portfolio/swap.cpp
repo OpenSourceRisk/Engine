@@ -118,11 +118,22 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         if (legData_[i].legType() == "Floating" && !legData_[i].isNotResetXCCY()) {
                 // this is the reseting leg...
                 QL_REQUIRE(fxIndex != nullptr, "fx resetting leg requires fx index");
+
+                // We will add the Libor component of the leg to additionalLegs_ so that we can 
+                // capture its fixing dates later. Remove it from nameIndexPairs_ for efficiency.
+                string floatIndex = boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData())->index();
+                auto nameIndex = make_pair(floatIndex, i);
+                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected floating index '" << floatIndex <<
+                    "' on swap's " << io::ordinal(i) << " leg.");
+                nameIndexPairs_.erase(nameIndex);
+
                 // First coupon is the same (no reset or FX link)
                 // The reset are FX Linked
                 for (Size j = 1; j < legs_[i].size(); ++j) {
                     boost::shared_ptr<FloatingRateCoupon> coupon =
                         boost::dynamic_pointer_cast<FloatingRateCoupon>(legs_[i][j]);
+                    additionalLegs_[floatIndex].push_back(coupon);
+
                     Date fixingDate = fxIndex->fixingCalendar().advance(coupon->accrualStartDate(),
                                                                   -static_cast<Integer>(fxIndex->fixingDays()), Days);
                     boost::shared_ptr<FloatingRateFXLinkedNotionalCoupon> fxLinkedCoupon =
@@ -132,21 +143,6 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                     fxLinkedCoupon->setPricer(coupon->pricer());
                     legs_[i][j] = fxLinkedCoupon;
                 }
-
-                // Special case where we need to add to cfModifiers_
-                QL_REQUIRE(nameIndexPairs_.size() == 2, "Expected the floating xccy resetting leg to have two indices but got '" 
-                    << to_string(nameIndexPairs_.size()) << "'");
-
-                // Already know that the leg type is floating so the following should work
-                string floatIndex = boost::dynamic_pointer_cast<FloatingLegData>(legData_[i].concreteLegData())->index();
-                auto nameIndex = make_pair(floatIndex, i);
-                QL_REQUIRE(nameIndexPairs_.count(nameIndex) == 1, "Expected floating index '" << floatIndex <<
-                    "' on swap's " << io::ordinal(i) << " leg.");
-
-                // Create the function that will be used on each cashflow after being fed to the fixingDates function
-                std::function<boost::shared_ptr<CashFlow>(boost::shared_ptr<CashFlow>)> f = 
-                    [](boost::shared_ptr<CashFlow> cf) { return boost::dynamic_pointer_cast<FloatingRateCoupon>(cf); };
-                cfModifiers_[nameIndex] = f;
         }
 
         DLOG("Swap::build(): currency[" << i << "] = " << currencies[i]);
@@ -256,23 +252,17 @@ map<string, set<Date>> Swap::fixings(bool includeSettlementDateFlows, const Date
     
     map<string, set<Date>> result;
     
-    for (const auto& nameIndexPair : nameIndexPairs_) {
-        // For clarity
-        string indexName = nameIndexPair.first;
-        Size legNumber = nameIndexPair.second;
-        
-        // Look up the modifier function of the [index name, leg index] pair. This will 
-        // in general be null.
-        std::function<boost::shared_ptr<CashFlow>(boost::shared_ptr<CashFlow>)> f;
-        if (cfModifiers_.count(nameIndexPair) == 1) {
-            f = cfModifiers_.at(nameIndexPair);
-        }
+    for (const auto& p : nameIndexPairs_) {
+        // Get the set of fixing dates on the leg and update the results
+        set<Date> dates = fixingDates(legs_[p.second], includeSettlementDateFlows, settlementDate);
+        if (!dates.empty()) result[p.first].insert(dates.begin(), dates.end());
+    }
 
-        // Get the set of fixing dates for the  [index name, leg index] pair
-        set<Date> dates = fixingDates(legs_[legNumber], includeSettlementDateFlows, settlementDate, f);
-
-        // Update the results with the fixing dates.
-        if (!dates.empty()) result[indexName].insert(dates.begin(), dates.end());
+    // Deal with any additional legs
+    for (const auto& kv : additionalLegs_) {
+        // Get the set of fixing dates on the leg and update the results
+        set<Date> dates = fixingDates(kv.second, includeSettlementDateFlows, settlementDate);
+        if (!dates.empty()) result[kv.first].insert(dates.begin(), dates.end());
     }
 
     return result;
