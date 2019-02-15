@@ -214,6 +214,8 @@ protected:
     boost::shared_ptr<AggregationScenarioData> scenarioData_;
     boost::shared_ptr<PostProcess> postProcess_;
 
+    ore::data::CurveConfigurations curveConfigs_;
+
 private:
     virtual ReportWriter* getReportWriterImpl() const { return new ReportWriter(); }
 };
