@@ -299,7 +299,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     else
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
-    indices_.insert(eqName_);
+    indices_.insert("EQ-" + eqName_);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
 }
 

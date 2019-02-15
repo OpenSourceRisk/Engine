@@ -502,7 +502,7 @@ public:
     //! Constructor
     EquityLegData(string returnType, Real dividendFactor, string eqName, Natural fixingDays)
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName), fixingDays_(fixingDays) {
-        indices_.insert(eqName_);
+        indices_.insert("EQ-" + eqName_);
     }
 
     //! \name Inspectors
