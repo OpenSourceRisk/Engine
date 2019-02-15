@@ -171,8 +171,9 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
-                                     const bool continueOnError, const CurveConfigurations& curveConfigs, 
-                                     const TodaysMarketParameters& todaysMarketParams)
+                                     const CurveConfigurations& curveConfigs, 
+                                     const TodaysMarketParameters& todaysMarketParams,
+                                     const bool continueOnError)
     : SimMarket(conventions), parameters_(parameters), filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
@@ -1554,8 +1555,6 @@ Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldS
     // If yield spec ID still has not been found, return empty Handle
     return Handle<YieldTermStructure>();
 }
-
-
 
 } // namespace analytics
 } // namespace ore
