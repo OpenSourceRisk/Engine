@@ -83,6 +83,8 @@ RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y) {
         return RiskFactorKey::KeyType::YieldCurve;
     } else if (y == ore::data::YieldCurveType::EquityDividend) {
         return RiskFactorKey::KeyType::DividendYield;
+    } else if (y == ore::data::YieldCurveType::EquityForecast) {
+        return RiskFactorKey::KeyType::EquityForecastCurve;
     } else {
         QL_FAIL("yieldCurveType not supported");
     }
@@ -96,6 +98,8 @@ ore::data::YieldCurveType riskFactorYieldCurve(const RiskFactorKey::KeyType rf) 
         return ore::data::YieldCurveType::Yield;
     } else if (rf == RiskFactorKey::KeyType::DividendYield) {
         return ore::data::YieldCurveType::EquityDividend;
+    } else if (rf == RiskFactorKey::KeyType::EquityForecastCurve) {
+        return ore::data::YieldCurveType::EquityForecast;
     } else {
         QL_FAIL("RiskFactorKey::KeyType not supported");
     }
