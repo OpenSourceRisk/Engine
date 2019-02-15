@@ -48,9 +48,12 @@ class FixingManager {
 public:
     FixingManager(Date today) : today_(today), fixingsEnd_(today), modifiedFixingHistory_(false) {}
     virtual ~FixingManager() {}
-    //! Initialise the manager with these flows and indices from the given portfolio
-    virtual void initialise(const boost::shared_ptr<Portfolio>& portfolio);
 
+    //! Initialise the manager with these flows and indices from the given portfolio
+    void initialise(const boost::shared_ptr<Portfolio>& portfolio);
+  
+    virtual void processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf);
+  //virtual void processLegs(const std::vector<QuantLib::Leg> leg);
     //! Update fixings to date d
     void update(Date d);
 
