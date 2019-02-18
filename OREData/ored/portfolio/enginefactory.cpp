@@ -40,6 +40,28 @@
 namespace ore {
 namespace data {
 
+namespace {
+std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p, const std::string& q) {
+    if (!q.empty()) {
+        auto r = m.find(p + "_" + q);
+        if (r != m.end())
+            return r->second;
+    } else {
+        auto r = m.find(p);
+        QL_REQUIRE(r != m.end(), "parameter " << p << " not found.");
+        return r->second;
+    }
+}
+} // namespace
+
+std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier) {
+    return getParameter(engineParameters_, p, qualifier);
+}
+
+std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier) {
+    return getParameter(modelParameters_, p, qualifier);
+}
+
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,

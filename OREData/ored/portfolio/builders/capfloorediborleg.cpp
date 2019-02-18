@@ -36,7 +36,7 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
         boost::shared_ptr<SimpleQuote> correlation = boost::make_shared<SimpleQuote>(1.0);
         // for backwards compatibility we do not require the additional timing adjustment fields
         if (engineParameters_.find("TimingAdjustment") != engineParameters_.end()) {
-            string adjStr = engineParameters_.at("TimingAdjustment");
+            string adjStr = engineParameter("TimingAdjustment");
             if (adjStr == "Black76")
                 timingAdjustment = BlackIborCouponPricer::Black76;
             else if (adjStr == "BivariateLognormal")
@@ -44,7 +44,7 @@ boost::shared_ptr<FloatingRateCouponPricer> CapFlooredIborLegEngineBuilder::engi
             else {
                 QL_FAIL("timing adjustment parameter (" << adjStr << ") not recognised.");
             }
-            correlation->setValue(parseReal(engineParameters_.at("Correlation")));
+            correlation->setValue(parseReal(engineParameter("Correlation")));
         }
         boost::shared_ptr<FloatingRateCouponPricer> pricer =
             boost::make_shared<BlackIborCouponPricer>(ovs, timingAdjustment, Handle<Quote>(correlation));

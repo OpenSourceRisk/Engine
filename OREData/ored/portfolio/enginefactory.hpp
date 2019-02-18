@@ -135,6 +135,10 @@ public:
     const set<std::pair<string, boost::shared_ptr<ModelBuilder>>>& modelBuilders() const { return modelBuilders_; }
 
 protected:
+    /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
+    std::string engineParameter(const std::string& p, const std::string qualifier = "");
+    /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
+    std::string modelParameter(const std::string& p, const std::string qualifier = "");
     string model_;
     string engine_;
     set<string> tradeTypes_;

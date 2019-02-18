@@ -53,24 +53,19 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
                                                                          const std::vector<Real>& strikes) {
 
     DLOG("Get model data");
-    auto calibration = parseCalibrationType(modelParameters_.at("Calibration"));
-    auto calibrationStrategy = parseCalibrationStrategy(modelParameters_.at("CalibrationStrategy"));
-    Real lambda;
-    // either we have a ccy specific reversion or require a ccy independent reversion parameter
-    if (modelParameters_.find("Reversion_" + ccy) != modelParameters_.end())
-        lambda = parseReal(modelParameters_.at("Reversion_" + ccy));
-    else
-        lambda = parseReal(modelParameters_.at("Reversion"));
-    vector<Real> sigma = parseListOfValues<Real>(modelParameters_.at("Volatility"), &parseReal);
+    auto calibration = parseCalibrationType(modelParameter("Calibration"));
+    auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
+    Real lambda = parseReal(modelParameter("Reversion", ccy));
+    vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
     vector<Real> sigmaTimes(0);
     if (modelParameters_.count("VolatilityTimes") > 0)
-        sigmaTimes = parseListOfValues<Real>(modelParameters_.at("VolatilityTimes"), &parseReal);
+        sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes"), &parseReal);
     QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
                                                                                          << ") for n volatility times ("
                                                                                          << sigmaTimes.size() << ")");
-    Real tolerance = parseReal(modelParameters_.at("Tolerance"));
-    auto reversionType = parseReversionType(modelParameters_.at("ReversionType"));
-    auto volatilityType = parseVolatilityType(modelParameters_.at("VolatilityType"));
+    Real tolerance = parseReal(modelParameter("Tolerance"));
+    auto reversionType = parseReversionType(modelParameter("ReversionType"));
+    auto volatilityType = parseVolatilityType(modelParameter("VolatilityType"));
 
     auto data = boost::make_shared<IrLgmData>();
 
@@ -90,7 +85,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     // compute horizon shift
     Real shiftHorizon = 0.5; // default value
     if (modelParameters_.find("ShiftHorizon") != modelParameters_.end()) {
-        shiftHorizon = parseReal(modelParameters_.at("ShiftHorizon"));
+        shiftHorizon = parseReal(modelParameter("ShiftHorizon"));
     }
     Date today = Settings::instance().evaluationDate();
     shiftHorizon = ActualActual().yearFraction(today, maturity) * shiftHorizon;
@@ -169,10 +164,10 @@ boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImp
     boost::shared_ptr<QuantExt::LGM> lgm = model(id, isNonStandard, ccy, expiries, maturity, strikes);
 
     DLOG("Get engine data");
-    Real sy = parseReal(engineParameters_.at("sy"));
-    Size ny = parseInteger(engineParameters_.at("ny"));
-    Real sx = parseReal(engineParameters_.at("sx"));
-    Size nx = parseInteger(engineParameters_.at("nx"));
+    Real sy = parseReal(engineParameter("sy"));
+    Size ny = parseInteger(engineParameter("ny"));
+    Real sx = parseReal(engineParameter("sx"));
+    Size nx = parseInteger(engineParameter("nx"));
 
     // Build engine
     DLOG("Build engine (configuration " << configuration(MarketContext::pricing) << ")");

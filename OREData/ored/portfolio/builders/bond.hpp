@@ -67,7 +67,7 @@ protected:
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
 
-        string tsperiodStr = engineParameters_.at("TimestepPeriod");
+        string tsperiodStr = engineParameter("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts;
