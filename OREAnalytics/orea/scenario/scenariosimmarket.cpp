@@ -228,8 +228,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                         // If we have a generic curve build the index using the index currency's discount curve
                         index = Handle<IborIndex>(
                             parseIborIndex(name, initMarket->discountCurve(indexTokens[0], configuration)));
-                    }
-                    else {
+                    } else {
                         index = initMarket->iborIndex(name, configuration);
                     }
                     QL_REQUIRE(!index.empty(), "index object for " << name << " not provided");
@@ -269,8 +268,7 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                     if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
                         indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
                             yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
-                    }
-                    else {
+                    } else {
                         indexCurve = boost::shared_ptr<YieldTermStructure>(
                             new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
                     }
@@ -333,8 +331,6 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                                         
                     // Get the nominal term structure from this scenario simulation market
                     Handle<YieldTermStructure> forecastTs = getYieldCurve(forecastCurve, todaysMarketParams, Market::defaultConfiguration);
-                    //TLOG("Forecast term structure '" << forecastTs << "' from sim market is " << (forecastTs.empty() ? "empty" : "not empty"));
-
                     Handle<EquityIndex> curve = initMarket->equityCurve(name, configuration);
                     
                     // If forecast term structure is empty, fall back on this scenario simulation market's discount curve  
