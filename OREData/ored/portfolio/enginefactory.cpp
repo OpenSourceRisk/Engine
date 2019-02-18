@@ -41,24 +41,32 @@ namespace ore {
 namespace data {
 
 namespace {
-std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p, const std::string& q) {
+std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p, const std::string& q,
+                         const bool mandatory, const std::string& defaultValue) {
     if (!q.empty()) {
         auto r = m.find(p + "_" + q);
         if (r != m.end())
             return r->second;
     } else {
         auto r = m.find(p);
-        QL_REQUIRE(r != m.end(), "parameter " << p << " not found.");
-        return r->second;
+        if (r != m.end())
+            return r->second;
+        if (mandatory) {
+            QL_FAIL(r != m.end(), "parameter " << p << " not found (qualifier was \"" << q << "\")");
+        } else {
+            return defaultValue;
+        }
     }
 }
 } // namespace
 
-std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier) {
-    return getParameter(engineParameters_, p, qualifier);
+std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier, const bool mandatory,
+                                           const std::string& defaultValue) {
+    return getParameter(engineParameters_, p, qualifier, mandatory);
 }
 
-std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier) {
+std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier, const bool mandatory,
+                                          const std::string& defaultValue) {
     return getParameter(modelParameters_, p, qualifier);
 }
 

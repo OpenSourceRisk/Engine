@@ -136,9 +136,11 @@ public:
 
 protected:
     /*! retrieve engine parameter p, first look for p_qualifier, if this does not exist fall back to p */
-    std::string engineParameter(const std::string& p, const std::string qualifier = "");
+    std::string engineParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
+                                const std::string& defaultValue = "");
     /*! retrieve model parameter p, first look for p_qualifier, if this does not exist fall back to p */
-    std::string modelParameter(const std::string& p, const std::string qualifier = "");
+    std::string modelParameter(const std::string& p, const std::string qualifier = "", const bool mandatory = true,
+                               const std::string& defaultValue = "");
     string model_;
     string engine_;
     set<string> tradeTypes_;
