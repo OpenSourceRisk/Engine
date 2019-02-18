@@ -57,9 +57,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     auto calibrationStrategy = parseCalibrationStrategy(modelParameter("CalibrationStrategy"));
     Real lambda = parseReal(modelParameter("Reversion", ccy));
     vector<Real> sigma = parseListOfValues<Real>(modelParameter("Volatility"), &parseReal);
-    vector<Real> sigmaTimes(0);
-    if (modelParameters_.count("VolatilityTimes") > 0)
-        sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes"), &parseReal);
+    vector<Real> sigmaTimes = parseListOfValues<Real>(modelParameter("VolatilityTimes", "", false), &parseReal);
     QL_REQUIRE(sigma.size() == sigmaTimes.size() + 1, "there must be n+1 volatilities (" << sigma.size()
                                                                                          << ") for n volatility times ("
                                                                                          << sigmaTimes.size() << ")");
@@ -83,10 +81,7 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
                                << ") are not allowed in this combination");
 
     // compute horizon shift
-    Real shiftHorizon = 0.5; // default value
-    if (modelParameters_.find("ShiftHorizon") != modelParameters_.end()) {
-        shiftHorizon = parseReal(modelParameter("ShiftHorizon"));
-    }
+    Real shiftHorizon = parseReal(modelParameter("ShiftHorizon", "", false, "0.5"));
     Date today = Settings::instance().evaluationDate();
     shiftHorizon = ActualActual().yearFraction(today, maturity) * shiftHorizon;
 
