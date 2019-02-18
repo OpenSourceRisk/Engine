@@ -431,6 +431,13 @@
     </xs:restriction>
   </xs:simpleType>
 
+   <xs:simpleType name="momentType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Variance"/>
+      <xs:enumeration value="Volatiltiy"/>
+    </xs:restriction>
+  </xs:simpleType>
+
   <xs:simpleType name="settlementMethod">
     <xs:restriction base="xs:string">
       <xs:enumeration value="PhysicalOTC"/>
