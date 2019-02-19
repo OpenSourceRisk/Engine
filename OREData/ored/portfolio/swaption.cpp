@@ -178,12 +178,6 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     }
 
     DLOG("Swaption::Build(): Underlying Start = " << QuantLib::io::iso_date(swap->startDate()));
-    try {
-        DLOG("Swaption::Build(): Underlying NPV = " << swap->NPV());
-        // DLOG("Swaption::Build(): Fair Swap Rate = " << swap->fairRate());
-    } catch (const std::exception& e) {
-        WLOG("Could not price underlying: " << e.what());
-    }
 
     // build exercise
     std::vector<QuantLib::Date> exDates;
