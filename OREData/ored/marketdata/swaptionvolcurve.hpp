@@ -29,7 +29,6 @@
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

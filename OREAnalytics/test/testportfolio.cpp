@@ -385,7 +385,8 @@ boost::shared_ptr<Trade> buildYYInflationSwap(string id, string ccy, bool isPaye
 }
 
 boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std::string& position, Size term,
-    const std::string& commodityName, const std::string& currency, Real strike, Real quantity) {
+                                               const std::string& commodityName, const std::string& currency,
+                                               Real strike, Real quantity) {
 
     Date today = Settings::instance().evaluationDate();
     string maturity = ore::data::to_string(today + term * Years);
@@ -398,17 +399,18 @@ boost::shared_ptr<Trade> buildCommodityForward(const std::string& id, const std:
     return trade;
 }
 
-boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, 
-    const string& putCall, Size term, const string& commodityName, const string& currency, 
-    Real strike, Real quantity, Real premium, const string& premiumCcy, const string& premiumDate) {
+boost::shared_ptr<Trade> buildCommodityOption(const string& id, const string& longShort, const string& putCall,
+                                              Size term, const string& commodityName, const string& currency,
+                                              Real strike, Real quantity, Real premium, const string& premiumCcy,
+                                              const string& premiumDate) {
 
     Date today = Settings::instance().evaluationDate();
-    vector<string> expiryDate{ ore::data::to_string(today + term * Years) };
+    vector<string> expiryDate{ore::data::to_string(today + term * Years)};
 
     Envelope env("CP");
     OptionData option(longShort, putCall, "European", false, expiryDate, "Cash", "", premium, premiumCcy, premiumDate);
-    boost::shared_ptr<Trade> trade = boost::make_shared<ore::data::CommodityOption>(
-        env, option, commodityName, currency, strike, quantity);
+    boost::shared_ptr<Trade> trade =
+        boost::make_shared<ore::data::CommodityOption>(env, option, commodityName, currency, strike, quantity);
     trade->id() = id;
 
     return trade;

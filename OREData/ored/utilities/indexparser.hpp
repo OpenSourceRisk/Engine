@@ -28,10 +28,9 @@
 #include <ql/indexes/iborindex.hpp>
 #include <ql/indexes/inflationindex.hpp>
 #include <ql/indexes/swapindex.hpp>
+#include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
-#include <qle/indexes/bmaindexwrapper.hpp>
-
 
 namespace ore {
 namespace data {
@@ -63,6 +62,12 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
     \ingroup utilities
 */
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
+
+//! Return true if the \p indexName is that of a generic index, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isGenericIndex(const string& indexName);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!

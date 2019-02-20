@@ -68,8 +68,9 @@ A lookup(const B& map, const C& key1, const C& key2, const string& configuration
     if (it == map.end()) {
         // fall back to default configuration
         it = map.find(make_tuple(Market::defaultConfiguration, key1, key2));
-        QL_REQUIRE(it != map.end(), "did not find object " << key1 << "/" << key2 << " of type " << type << " under configuration "
-                                                           << configuration << " in CorrelationCurves");
+        QL_REQUIRE(it != map.end(), "did not find object " << key1 << "/" << key2 << " of type " << type
+                                                           << " under configuration " << configuration
+                                                           << " in CorrelationCurves");
     }
     return it->second;
 }
@@ -164,8 +165,10 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
     return lookup<Handle<OptionletVolatilityStructure>>(capFloorCurves_, key, configuration, "capfloor curve");
 }
 
-Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key, const string& configuration) const {
-    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration, "capfloor curve");
+Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
+                                                                           const string& configuration) const {
+    return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
+                                                                   "capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
@@ -182,17 +185,11 @@ Handle<CPICapFloorTermPriceSurface> MarketImpl::cpiInflationCapFloorPriceSurface
                                                        "inflation cap floor price surface");
 }
 
-Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapVolatilitySurface(const string& indexName, 
-                                                                          const string& configuration) const { 
-    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapVolatilitySurfaces_, indexName, configuration, 
-                                                "cpi cap volatility surface"); 
-} 
- 
-Handle<CPIVolatilitySurface> MarketImpl::cpiInflationFloorVolatilitySurface(const string& indexName, 
-                                                                            const string& configuration) const { 
-    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationFloorVolatilitySurfaces_, indexName, configuration, 
-                                                "cpi floor volatility surface"); 
-} 
+Handle<CPIVolatilitySurface> MarketImpl::cpiInflationCapFloorVolatilitySurface(const string& indexName,
+                                                                               const string& configuration) const {
+    return lookup<Handle<CPIVolatilitySurface>>(cpiInflationCapFloorVolatilitySurfaces_, indexName, configuration,
+                                                "cpi cap floor volatility surface");
+}
 
 Handle<YoYCapFloorTermPriceSurface> MarketImpl::yoyInflationCapFloorPriceSurface(const string& indexName,
                                                                                  const string& configuration) const {
@@ -234,16 +231,20 @@ Handle<Quote> MarketImpl::commoditySpot(const string& commodityName, const strin
     return lookup<Handle<Quote>>(commoditySpots_, commodityName, configuration, "commodity spot");
 }
 
-Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName, const string& configuration) const {
+Handle<PriceTermStructure> MarketImpl::commodityPriceCurve(const string& commodityName,
+                                                           const string& configuration) const {
     return lookup<Handle<PriceTermStructure>>(commodityCurves_, commodityName, configuration, "commodity price curve");
 }
 
-Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName, const string& configuration) const {
+Handle<BlackVolTermStructure> MarketImpl::commodityVolatility(const string& commodityName,
+                                                              const string& configuration) const {
     return lookup<Handle<BlackVolTermStructure>>(commodityVols_, commodityName, configuration, "commodity volatility");
 }
 
-Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2, const string& configuration) const {
-        return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, index1, index2, configuration, "correlation curve");
+Handle<QuantExt::CorrelationTermStructure> MarketImpl::correlationCurve(const string& index1, const string& index2,
+                                                                        const string& configuration) const {
+    return lookup<Handle<QuantExt::CorrelationTermStructure>>(correlationCurves_, index1, index2, configuration,
+                                                              "correlation curve");
 }
 
 Handle<Quote> MarketImpl::cpr(const string& securityID, const string& configuration) const {

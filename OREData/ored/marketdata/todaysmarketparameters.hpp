@@ -28,7 +28,6 @@
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace data {
 using std::vector;

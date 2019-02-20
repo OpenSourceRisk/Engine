@@ -29,7 +29,6 @@
 #include <ored/marketdata/loader.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

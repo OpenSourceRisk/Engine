@@ -28,6 +28,7 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <orea/simulation/simmarket.hpp>
 #include <ored/configuration/conventions.hpp>
+#include <ored/configuration/curveconfigurations.hpp>
 #include <ql/quotes/all.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
@@ -83,7 +84,6 @@
 
 #include <map>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
@@ -113,7 +113,10 @@ public:
     //! Constructor
     ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                       const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
-                      const std::string& configuration = Market::defaultConfiguration);
+                      const std::string& configuration = Market::defaultConfiguration, 
+                      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                      const bool continueOnError = false);
 
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
@@ -148,8 +151,17 @@ public:
 private:
     void applyScenario(const boost::shared_ptr<Scenario>& scenario);
     void addYieldCurve(const boost::shared_ptr<Market>& initMarket, const std::string& configuration,
-                       const ore::data::YieldCurveType y, const string& key, const vector<Period>& tenors,
-                       const std::string& dc);
+                       const RiskFactorKey::KeyType rf, const string& key, const vector<Period>& tenors,
+                       const std::string& dc, bool simulate = true);
+    
+    /*! Given a yield curve spec ID, \p yieldSpecId, return the corresponding yield term structure
+    from the \p market. If \p market is `nullptr`, then the yield term structure is taken from
+    this ScenarioSimMarket instance.
+    */
+    QuantLib::Handle<QuantLib::YieldTermStructure> getYieldCurve(const std::string& yieldSpecId,
+        const ore::data::TodaysMarketParameters& todaysMarketParams, const std::string& configuration,
+        const boost::shared_ptr<ore::data::Market>& market = nullptr) const;
+
     const boost::shared_ptr<ScenarioSimMarketParameters> parameters_;
     boost::shared_ptr<ScenarioGenerator> scenarioGenerator_;
     boost::shared_ptr<AggregationScenarioData> asd_;

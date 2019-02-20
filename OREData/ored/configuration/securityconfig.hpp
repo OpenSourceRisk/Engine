@@ -26,7 +26,6 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -58,14 +57,8 @@ public:
         QL_REQUIRE(spreadQuote_ != "", "Spread Quote not defined in security config");
         return spreadQuote_;
     }
-    const string& recoveryRatesQuote() {
-        QL_REQUIRE(recoveryQuote_ != "", "Recovery Rates Quote not defined in security config");
-        return recoveryQuote_;
-    }
-    const string& cprQuote() {
-        QL_REQUIRE(cprQuote_ != "", "CPR Quote not defined in security config");
-        return cprQuote_;
-    }
+    const string& recoveryRatesQuote() { return recoveryQuote_; }
+    const string& cprQuote() { return cprQuote_; }
     //@}
 
     void fromXML(XMLNode* node) override {

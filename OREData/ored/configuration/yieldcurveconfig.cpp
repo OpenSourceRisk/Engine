@@ -74,7 +74,7 @@ class SegmentIDGetter : public AcyclicVisitor,
                         public Visitor<AverageOISYieldCurveSegment>,
                         public Visitor<TenorBasisYieldCurveSegment>,
                         public Visitor<CrossCcyYieldCurveSegment>,
-                        public Visitor<ZeroSpreadedYieldCurveSegment>, 
+                        public Visitor<ZeroSpreadedYieldCurveSegment>,
                         public Visitor<DiscountRatioYieldCurveSegment> {
 
 public:
@@ -174,13 +174,14 @@ const vector<string>& YieldCurveConfig::quotes() {
     if (quotes_.size() == 0) {
         bool addedFxSpot = false;
         for (auto c : curveSegments_) {
-            for (auto segmentQuote : c->quotes()) 
+            for (auto segmentQuote : c->quotes())
                 quotes_.push_back(segmentQuote.first);
 
-            // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the 
+            // Check if the segment is a CrossCcyYieldCurveSegment and add the FX spot rate to the
             // set of quotes needed for the YieldCurveConfig if it has not already been added.
             if (auto xccySegment = boost::dynamic_pointer_cast<CrossCcyYieldCurveSegment>(c)) {
-                if (!addedFxSpot) quotes_.push_back(xccySegment->spotRateID());
+                if (!addedFxSpot)
+                    quotes_.push_back(xccySegment->spotRateID());
             }
         }
     }
@@ -315,8 +316,9 @@ void YieldCurveConfig::populateRequiredYieldCurveIDs() {
     }
 }
 
-YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID, const vector<string>& quoteNames)
-: type_(parseYieldCurveSegment(typeID)), typeID_(typeID), conventionsID_(conventionsID) {
+YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& conventionsID,
+                                     const vector<string>& quoteNames)
+    : type_(parseYieldCurveSegment(typeID)), typeID_(typeID), conventionsID_(conventionsID) {
     for (auto q : quoteNames)
         quotes_.emplace_back(quote(q));
 }
@@ -334,7 +336,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     return node;
 }
 
-void YieldCurveSegment::loadQuotesFromXML(XMLNode *parent) {
+void YieldCurveSegment::loadQuotesFromXML(XMLNode* parent) {
     // Was:
     //  quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
     // Now we also look for the attribute optional and populate quotes_ directly
@@ -349,8 +351,7 @@ void YieldCurveSegment::loadQuotesFromXML(XMLNode *parent) {
     }
 }
 
-
-XMLNode *YieldCurveSegment::writeQuotesToXML(XMLDocument& doc) {
+XMLNode* YieldCurveSegment::writeQuotesToXML(XMLDocument& doc) {
     // Was:
     //  XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
     // Now add optional="true" when this is present
@@ -363,7 +364,6 @@ XMLNode *YieldCurveSegment::writeQuotesToXML(XMLDocument& doc) {
     }
     return node;
 }
-
 
 void YieldCurveSegment::accept(AcyclicVisitor& v) {
     Visitor<YieldCurveSegment>* v1 = dynamic_cast<Visitor<YieldCurveSegment>*>(&v);
@@ -510,7 +510,6 @@ void TenorBasisYieldCurveSegment::accept(AcyclicVisitor& v) {
         YieldCurveSegment::accept(v);
 }
 
-
 CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const string& conventionsID,
                                                      const vector<string>& quotes, const string& spotRateID,
                                                      const string& foreignDiscountCurveID,
@@ -579,12 +578,11 @@ void ZeroSpreadedYieldCurveSegment::accept(AcyclicVisitor& v) {
         YieldCurveSegment::accept(v);
 }
 
-DiscountRatioYieldCurveSegment::DiscountRatioYieldCurveSegment(const string& typeId, 
-    const string& baseCurveId, const string& baseCurveCurrency, const string& numeratorCurveId,
-    const string& numeratorCurveCurrency, const string& denominatorCurveId,
-    const string& denominatorCurveCurrency)
-    : YieldCurveSegment(typeId, "", vector<string>()), baseCurveId_(baseCurveId), baseCurveCurrency_(baseCurveCurrency), 
-      numeratorCurveId_(numeratorCurveId), numeratorCurveCurrency_(numeratorCurveCurrency), 
+DiscountRatioYieldCurveSegment::DiscountRatioYieldCurveSegment(
+    const string& typeId, const string& baseCurveId, const string& baseCurveCurrency, const string& numeratorCurveId,
+    const string& numeratorCurveCurrency, const string& denominatorCurveId, const string& denominatorCurveCurrency)
+    : YieldCurveSegment(typeId, "", vector<string>()), baseCurveId_(baseCurveId), baseCurveCurrency_(baseCurveCurrency),
+      numeratorCurveId_(numeratorCurveId), numeratorCurveCurrency_(numeratorCurveCurrency),
       denominatorCurveId_(denominatorCurveId), denominatorCurveCurrency_(denominatorCurveCurrency) {}
 
 void DiscountRatioYieldCurveSegment::fromXML(XMLNode* node) {

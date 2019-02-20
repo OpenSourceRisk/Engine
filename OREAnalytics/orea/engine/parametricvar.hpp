@@ -33,7 +33,6 @@
 #include <map>
 #include <set>
 
-
 namespace ore {
 namespace analytics {
 using QuantLib::Matrix;
@@ -46,7 +45,8 @@ class ParametricVarCalculator {
 public:
     virtual ~ParametricVarCalculator() {}
     ParametricVarCalculator(const std::map<std::string, std::set<std::string>>& tradePortfolio,
-                            const std::string& portfolioFilter, const boost::shared_ptr<SensitivityStream>& sensitivities,
+                            const std::string& portfolioFilter,
+                            const boost::shared_ptr<SensitivityStream>& sensitivities,
                             const std::map<std::pair<RiskFactorKey, RiskFactorKey>, Real> covariance,
                             const std::vector<Real>& p, const std::string& method, const Size mcSamples,
                             const Size mcSeed, const bool breakdown, const bool salvageCovarianceMatrix);

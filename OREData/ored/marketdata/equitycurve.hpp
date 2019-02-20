@@ -29,7 +29,6 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
-
 namespace ore {
 namespace data {
 using QuantLib::Date;

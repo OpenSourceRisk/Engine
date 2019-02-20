@@ -24,7 +24,6 @@
 
 #include <ored/portfolio/portfolio.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(testParseConstantVolFromXml) {
     BOOST_CHECK(config.type() == CommodityVolatilityCurveConfig::Type::Constant);
     BOOST_CHECK_EQUAL(config.quotes().size(), 1);
     BOOST_CHECK_EQUAL(config.quotes()[0], "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF");
-    
+
     // Check defaults (don't matter for constant config in any case)
     BOOST_CHECK_EQUAL(config.dayCounter(), "A365");
     BOOST_CHECK_EQUAL(config.calendar(), "NullCalendar");
@@ -96,11 +96,9 @@ BOOST_AUTO_TEST_CASE(testParseVolCurveFromXml) {
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF",
-        "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF"
-    };
+    vector<string> quotes = {"COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/1Y/ATMF",
+                             "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/5Y/ATMF",
+                             "COMMODITY_OPTION/RATE_LNVOL/GOLD/USD/10Y/ATMF"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "GOLD_USD_VOLS");
@@ -161,17 +159,15 @@ BOOST_AUTO_TEST_CASE(testParseVolSurfaceFromXml) {
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/60.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/60.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/30.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/40.0",
-        "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/60.0"
-    };
+    vector<string> quotes = {"COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/1Y/60.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/5Y/60.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/30.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/40.0",
+                             "COMMODITY_OPTION/RATE_LNVOL/WTI_USD_VOLS/USD/10Y/60.0"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "WTI_USD_VOLS");

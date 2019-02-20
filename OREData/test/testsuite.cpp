@@ -31,9 +31,9 @@ using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
-#include <oret/oret.hpp>
 #include <oret/basedatapath.hpp>
 #include <oret/datapaths.hpp>
+#include <oret/oret.hpp>
 using ore::test::setupTestLogging;
 using ore::test::getBaseDataPath;
 
@@ -65,9 +65,7 @@ public:
         basePath = getBaseDataPath(argc, argv);
     }
 
-    ~OredGlobalFixture() {
-        stopTimer();
-    }
+    ~OredGlobalFixture() { stopTimer(); }
 
     // Method called in destructor to log time taken
     void stopTimer() {
@@ -92,9 +90,8 @@ private:
 // Breaking change in 1.65.0
 // https://www.boost.org/doc/libs/1_65_0/libs/test/doc/html/boost_test/change_log.html
 // Deprecating BOOST_GLOBAL_FIXTURE in favor of BOOST_TEST_GLOBAL_FIXTURE
-#if BOOST_VERSION<106500
+#if BOOST_VERSION < 106500
 BOOST_GLOBAL_FIXTURE(OredGlobalFixture);
 #else
 BOOST_TEST_GLOBAL_FIXTURE(OredGlobalFixture);
 #endif
-

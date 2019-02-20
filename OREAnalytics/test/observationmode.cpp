@@ -16,8 +16,9 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include "testmarket.hpp"
 #include <boost/test/unit_test.hpp>
-#include <oret/toplevelfixture.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
@@ -46,12 +47,12 @@
 #include <ored/portfolio/swap.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <qle/methods/multipathgeneratorbase.hpp>
-#include "testmarket.hpp"
 
 using namespace std;
 using namespace QuantLib;
@@ -94,7 +95,7 @@ boost::shared_ptr<Portfolio> buildPortfolio(boost::shared_ptr<EngineFactory>& fa
     string calStr = "TARGET";
     string conv = "MF";
     string rule = "Forward";
-    Size days = 2;
+    Natural days = 2;
     string fixDC = "30/360";
     string floatDC = "ACT/360";
 
@@ -170,26 +171,26 @@ void simulation(string dateGridString, bool checkFixings) {
     // build scenario sim market parameters
     boost::shared_ptr<analytics::ScenarioSimMarketParameters> parameters(new analytics::ScenarioSimMarketParameters());
     parameters->baseCcy() = "EUR";
-    parameters->ccys() = {"EUR", "GBP", "USD", "CHF", "JPY"};
+    parameters->setDiscountCurveNames({"EUR", "GBP", "USD", "CHF", "JPY"});
     parameters->setYieldCurveTenors("",
                                     {1 * Months, 6 * Months, 1 * Years, 2 * Years, 5 * Years, 10 * Years, 20 * Years});
-    parameters->indices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"};
+    parameters->setIndices({"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M", "JPY-LIBOR-6M"});
     parameters->interpolation() = "LogLinear";
     parameters->extrapolate() = true;
 
     parameters->swapVolTerms() = {6 * Months, 1 * Years};
     parameters->swapVolExpiries() = {1 * Years, 2 * Years};
-    parameters->swapVolCcys() = ccys;
+    parameters->setSwapVolCcys(ccys);
     parameters->swapVolDecayMode() = "ForwardVariance";
-    parameters->simulateSwapVols() = false;
+    parameters->setSimulateSwapVols(false);
 
     parameters->fxVolExpiries() = {1 * Months, 3 * Months, 6 * Months, 2 * Years, 3 * Years, 4 * Years, 5 * Years};
     parameters->fxVolDecayMode() = "ConstantVariance";
-    parameters->simulateFXVols() = false;
+    parameters->setSimulateFXVols(false);
 
-    parameters->fxVolCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+    parameters->setFxVolCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
-    parameters->fxCcyPairs() = {"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"};
+    parameters->setFxCcyPairs({"USDEUR", "GBPEUR", "CHFEUR", "JPYEUR"});
 
     parameters->additionalScenarioDataIndices() = {"EUR-EURIBOR-6M", "USD-LIBOR-3M", "GBP-LIBOR-6M", "CHF-LIBOR-6M",
                                                    "JPY-LIBOR-6M"};
@@ -274,7 +275,7 @@ void simulation(string dateGridString, bool checkFixings) {
     modelBuilder = NULL;
 
     // Path generator
-    Size seed = 5;
+    BigNatural seed = 5;
     bool antithetic = false;
     boost::shared_ptr<QuantExt::MultiPathGeneratorBase> pathGen =
         boost::make_shared<MultiPathGeneratorMersenneTwister>(model->stateProcess(), dg->timeGrid(), seed, antithetic);
@@ -348,10 +349,10 @@ void simulation(string dateGridString, bool checkFixings) {
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(ObservationModeTest)
-		
+
 BOOST_AUTO_TEST_CASE(testDisableShort) {
     ObservationMode::instance().setMode(ObservationMode::Mode::Disable);
 

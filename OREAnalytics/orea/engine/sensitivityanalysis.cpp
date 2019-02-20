@@ -55,12 +55,16 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                          const Conventions& conventions, const bool recalibrateModels,
-                                         const bool nonShiftedBaseCurrencyConversion)
+                                         const CurveConfigurations& curveConfigs,
+                                         const TodaysMarketParameters& todaysMarketParams,
+                                         const bool nonShiftedBaseCurrencyConversion, 
+                                         const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), engineData_(engineData),
-      portfolio_(portfolio), initialized_(false), computed_(false) {}
+      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), 
+      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
+      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), continueOnError_(continueOnError),
+      engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
     vector<boost::shared_ptr<ValuationCalculator>> calculators;
@@ -88,8 +92,8 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
         initializeCube(cube);
     }
 
-    sensiCube_ = boost::make_shared<SensitivityCube>(cube, 
-        scenarioGenerator_->scenarioDescriptions(), scenarioGenerator_->shiftSizes());
+    sensiCube_ = boost::make_shared<SensitivityCube>(cube, scenarioGenerator_->scenarioDescriptions(),
+                                                     scenarioGenerator_->shiftSizes());
     initialized_ = true;
 }
 
@@ -113,19 +117,23 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 }
 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
-    
-    LOG("Initialise sim market for sensitivity analysis");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_);
+
+    LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
+        << ")");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, continueOnError_);
+
     LOG("Sim market initialised for sensitivity analysis");
 
     LOG("Create scenario factory for sensitivity analysis");
     boost::shared_ptr<Scenario> baseScenario = simMarket_->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory = scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
+    boost::shared_ptr<ScenarioFactory> scenarioFactory =
+        scenFact ? scenFact : boost::make_shared<CloneScenarioFactory>(baseScenario);
     LOG("Scenario factory created for sensitivity analysis");
 
-    LOG("Create scenario generator for sensitivity analysis");
+    LOG("Create scenario generator for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
+                                                                               << ")");
     scenarioGenerator_ = boost::make_shared<SensitivityScenarioGenerator>(
-        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_);
+        sensitivityData_, baseScenario, simMarketData_, scenarioFactory, overrideTenors_, continueOnError_);
     LOG("Scenario generator created for sensitivity analysis");
 
     // Set simulation market's scenario generator
@@ -151,11 +159,9 @@ void SensitivityAnalysis::initializeCube(boost::shared_ptr<NPVSensiCube>& cube) 
     cube = boost::make_shared<DoublePrecisionSensiCube>(portfolio_->ids(), asof_, scenarioGenerator_->samples());
 }
 
-Real getShiftSize(const RiskFactorKey& key, 
-    const SensitivityScenarioData& sensiParams, 
-    const boost::shared_ptr<ScenarioSimMarket>& simMarket, 
-    const string& marketConfiguration) {
-    
+Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensiParams,
+                  const boost::shared_ptr<ScenarioSimMarket>& simMarket, const string& marketConfiguration) {
+
     Date asof = simMarket->asofDate();
     RiskFactorKey::KeyType keytype = key.keytype;
     string keylabel = key.name;
@@ -200,8 +206,7 @@ Real getShiftSize(const RiskFactorKey& key,
         if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts =
-                simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
+            Handle<YieldTermStructure> yts = simMarket->iborIndex(idx, marketConfiguration)->forwardingTermStructure();
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
             shiftMult = zeroRate;

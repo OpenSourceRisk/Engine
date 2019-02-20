@@ -29,19 +29,19 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<FloatingRateCouponPricer>
-CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2, const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
+CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& index1, const string& index2,
+                                         const boost::shared_ptr<CmsCouponPricer>& cmsPricer) {
 
-    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve = 
+    QuantLib::Handle<QuantExt::CorrelationTermStructure> corrCurve =
         market_->correlationCurve(index1, index2, configuration(MarketContext::pricing));
     if (corrCurve.empty())
         corrCurve = market_->correlationCurve(index2, index1, configuration(MarketContext::pricing));
 
-    QL_REQUIRE(!corrCurve.empty(), "no correlation curve found for " << index1 << ":" << index2 );
+    QL_REQUIRE(!corrCurve.empty(), "no correlation curve found for " << index1 << ":" << index2);
 
     const string& ccyCode = ccy.code();
     return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(
-        cmsPricer, corrCurve,
-        market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
+        cmsPricer, corrCurve, market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
         parseInteger(engineParameters_.at("IntegrationPoints")));
 }
 

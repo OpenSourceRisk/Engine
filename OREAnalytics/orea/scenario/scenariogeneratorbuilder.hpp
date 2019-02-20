@@ -35,7 +35,6 @@
 #include <orea/scenario/scenariosimmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
 
-
 namespace ore {
 namespace analytics {
 using namespace QuantLib;

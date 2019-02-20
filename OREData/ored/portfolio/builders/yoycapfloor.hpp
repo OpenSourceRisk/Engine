@@ -36,7 +36,7 @@ namespace data {
 
 class YoYCapFloorEngineBuilder : public CachingPricingEngineBuilder<string, const string&> {
 public:
-    YoYCapFloorEngineBuilder() : CachingEngineBuilder("YYCapModel", "YYCapEngine", { "YYCapFloor" }) {}
+    YoYCapFloorEngineBuilder() : CachingEngineBuilder("YYCapModel", "YYCapEngine", {"YYCapFloor"}) {}
 
 protected:
     virtual string keyImpl(const string& indexName) override { return indexName; }

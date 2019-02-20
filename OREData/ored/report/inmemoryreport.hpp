@@ -23,10 +23,9 @@
 
 #pragma once
 
-#include <vector>
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
-
+#include <vector>
 
 namespace ore {
 namespace data {

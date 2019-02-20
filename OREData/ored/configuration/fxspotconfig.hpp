@@ -28,7 +28,6 @@
 #include <ql/currency.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;

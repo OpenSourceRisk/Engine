@@ -27,9 +27,11 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const string& indexName) {
-    boost::shared_ptr<YoYInflationIndex> yoyTs = market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing)).currentLink();
+    boost::shared_ptr<YoYInflationIndex> yoyTs =
+        market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing)).currentLink();
     QL_REQUIRE(yoyTs, "engineFactory error: yield term structure not found for currency " << indexName);
-    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> ovs = market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
+    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> ovs =
+        market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
     QL_REQUIRE(ovs, "engineFactory error: caplet volatility structure not found for currency " << indexName);
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs->yoyVolSurface());
 

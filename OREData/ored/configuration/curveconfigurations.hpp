@@ -28,6 +28,7 @@
 #include <ored/configuration/cdsvolcurveconfig.hpp>
 #include <ored/configuration/commoditycurveconfig.hpp>
 #include <ored/configuration/commodityvolcurveconfig.hpp>
+#include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/configuration/defaultcurveconfig.hpp>
 #include <ored/configuration/equitycurveconfig.hpp>
 #include <ored/configuration/equityvolcurveconfig.hpp>
@@ -39,11 +40,9 @@
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
-#include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 #include <ored/utilities/xmlutils.hpp>
-
 
 namespace ore {
 namespace data {
@@ -57,99 +56,119 @@ using ore::data::XMLNode;
 class CurveConfigurations : public XMLSerializable {
 public:
     //! Default constructor
-    CurveConfigurations() { }
+    CurveConfigurations() {}
 
     //! \name Setters and Getters
     //@{
+    bool hasYieldCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) { return yieldCurveConfigs_[curveID]; }
     const boost::shared_ptr<YieldCurveConfig>& yieldCurveConfig(const string& curveID) const;
 
+    bool hasFxVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) {
         return fxVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) const;
 
+    bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) {
         return swaptionVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) const;
 
+    bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) {
         return capFloorVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) const;
 
+    bool hasDefaultCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) {
         return defaultCurveConfigs_[curveID];
     }
     const boost::shared_ptr<DefaultCurveConfig>& defaultCurveConfig(const string& curveID) const;
 
+    bool hasCdsVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) {
         return cdsVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<CDSVolatilityCurveConfig>& cdsVolCurveConfig(const string& curveID) const;
 
+    bool hasBaseCorrelationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) {
         return baseCorrelationCurveConfigs_[curveID];
     }
     const boost::shared_ptr<BaseCorrelationCurveConfig>& baseCorrelationCurveConfig(const string& curveID) const;
 
+    bool hasInflationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) {
         return inflationCurveConfigs_[curveID];
     };
     const boost::shared_ptr<InflationCurveConfig>& inflationCurveConfig(const string& curveID) const;
 
+    bool hasInflationCapFloorPriceSurfaceConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>& inflationCapFloorPriceSurfaceConfig(const string& curveID) {
         return inflationCapFloorPriceSurfaceConfigs_[curveID];
     };
     const boost::shared_ptr<InflationCapFloorPriceSurfaceConfig>&
-        inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
+    inflationCapFloorPriceSurfaceConfig(const string& curveID) const;
 
+    bool hasInflationCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>& inflationCapFloorVolCurveConfig(const string& curveID) {
         return inflationCapFloorVolCurveConfigs_[curveID];
     };
     const boost::shared_ptr<InflationCapFloorVolatilityCurveConfig>&
-        inflationCapFloorVolCurveConfig(const string& curveID) const;
+    inflationCapFloorVolCurveConfig(const string& curveID) const;
 
+    bool hasEquityCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) {
         return equityCurveConfigs_[curveID];
     };
     const boost::shared_ptr<EquityCurveConfig>& equityCurveConfig(const string& curveID) const;
 
+    bool hasEquityVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) {
         return equityVolCurveConfigs_[curveID];
     };
     const boost::shared_ptr<EquityVolatilityCurveConfig>& equityVolCurveConfig(const string& curveID) const;
 
+    bool hasSecurityConfig(const std::string& curveID) const;
     boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) { return securityConfigs_[curveID]; };
     const boost::shared_ptr<SecurityConfig>& securityConfig(const string& curveID) const;
 
+    bool hasFxSpotConfig(const std::string& curveID) const;
     boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) { return fxSpotConfigs_[curveID]; };
     const boost::shared_ptr<FXSpotConfig>& fxSpotConfig(const string& curveID) const;
 
+    bool hasCommodityCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) {
         return commodityCurveConfigs_[curveID];
     };
     const boost::shared_ptr<CommodityCurveConfig>& commodityCurveConfig(const std::string& curveID) const;
 
+    bool hasCommodityVolatilityCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) {
         return commodityVolatilityCurveConfigs_[curveID];
     };
-    const boost::shared_ptr<CommodityVolatilityCurveConfig>& commodityVolatilityCurveConfig(const std::string& curveID) const;
-    
+    const boost::shared_ptr<CommodityVolatilityCurveConfig>&
+    commodityVolatilityCurveConfig(const std::string& curveID) const;
+
+    bool hasCorrelationCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) {
         return correlationCurveConfigs_[curveID];
     };
     const boost::shared_ptr<CorrelationCurveConfig>& correlationCurveConfig(const std::string& curveID) const;
-    
+
+    boost::shared_ptr<CurveConfigurations> minimalCurveConfig(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+
     /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
-        
+
         If \p todaysMarketParams is a `nullptr`, the set of quotes required by all CurveConfig elements is returned.
-        If \p todaysMarketParams is provided, the set of quotes required by only those CurveConfig elements appearing 
-        in \p todaysMarketParams for the given configuration(s) is returned. 
+        If \p todaysMarketParams is provided, the set of quotes required by only those CurveConfig elements appearing
+        in \p todaysMarketParams for the given configuration(s) is returned.
     */
-    std::set<string> quotes(boost::shared_ptr<const TodaysMarketParameters> todaysMarketParams = nullptr, 
-        const std::set<std::string>& configurations = { "" }) const;
+    std::set<string> quotes(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+    std::set<string> quotes() const;
     //@}
 
     //! \name Serialisation

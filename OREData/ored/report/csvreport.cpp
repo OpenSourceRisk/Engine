@@ -20,8 +20,8 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-#include <ql/math/rounding.hpp>
 #include <ql/math/comparison.hpp>
+#include <ql/math/rounding.hpp>
 
 namespace ore {
 namespace data {

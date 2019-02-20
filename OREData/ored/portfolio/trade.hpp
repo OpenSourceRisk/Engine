@@ -32,8 +32,6 @@
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
 
-
-
 namespace ore {
 namespace data {
 using std::string;
