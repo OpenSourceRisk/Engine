@@ -56,9 +56,15 @@ namespace ore {
 
                 Handle<YieldTermStructure> discountCurve =
                     market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-                Handle<QuantLib::SwaptionVolatilityStructure> yieldVola = 
-                    market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
+                Handle<QuantLib::SwaptionVolatilityStructure> yieldVola;
 
+                try {
+                    yieldVola = market_->yieldVol(securityId, configuration(MarketContext::pricing));
+                }
+                catch (std::exception) {
+                    yieldVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
+                }
+                    
                 return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve, isCallableBond);
             };
         };

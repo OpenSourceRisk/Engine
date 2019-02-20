@@ -21,7 +21,9 @@
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
+#include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
+#include <rapidxml.hpp>
 
 namespace ore {
 namespace data {
@@ -98,7 +100,8 @@ const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
 }
 
 void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
-    XMLUtils::checkNode(node, "SwaptionVolatility");
+    //XMLUtils::checkNode(node, "SwaptionVolatility");
+    QL_REQUIRE(node, "XML Node is NULL (expected SwaptionVolatility or YieldVolatility)");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
@@ -137,7 +140,8 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
     }
 
     optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
-    swapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwapTenors", true);
+
+    swapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SwapTenors", false);
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
@@ -147,9 +151,10 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
     businessDayConvention_ = parseBusinessDayConvention(bdc);
+    
+    shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", false);
+    swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", false);
 
-    shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", true);
-    swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", true);
 
     // optional smile stuff
     smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
