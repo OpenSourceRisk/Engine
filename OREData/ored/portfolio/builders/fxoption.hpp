@@ -32,14 +32,26 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder for European FX Options
+//! Engine Builder base class for European FX Options
 /*! Pricing engines are cached by currency pair
 
     \ingroup builders
  */
-class FxOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
+class FxOptionEngineBuilderBase : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
 public:
-    FxOptionEngineBuilder() : CachingEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxOption"}) {}
+    FxOptionEngineBuilderBase(const std::string& model, const std::string& engine)
+        : CachingEngineBuilder(model, engine, {"FxOption"}) {}
+
+protected:
+    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
+        return forCcy.code() + domCcy.code();
+    }
+};
+
+//! Garman-Kohlhagen Engine Builder for European FX Options
+class FxOptionEngineBuilder : public FxOptionEngineBuilderBase {
+public:
+    FxOptionEngineBuilder() : FxOptionEngineBuilderBase("GarmanKohlhagen", "AnalyticEuropeanEngine") {}
 
 protected:
     virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {

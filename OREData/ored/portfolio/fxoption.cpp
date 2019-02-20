@@ -62,7 +62,8 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     // we buy foriegn with domestic(=sold ccy).
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxOptionEngineBuilder> fxOptBuilder = boost::dynamic_pointer_cast<FxOptionEngineBuilder>(builder);
+    boost::shared_ptr<FxOptionEngineBuilderBase> fxOptBuilder = boost::dynamic_pointer_cast<FxOptionEngineBuilderBase>(builder);
+    QL_REQUIRE(fxOptBuilder, "Expected FxOptionEngineBuidlerBase for " << tradeType_);
 
     vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
 
