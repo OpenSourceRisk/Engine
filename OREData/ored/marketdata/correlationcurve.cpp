@@ -37,7 +37,6 @@
 
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actual360.hpp>
-
 #include <qle/models/cmscaphelper.hpp>
 using namespace QuantLib;
 using namespace std;
@@ -194,13 +193,20 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                                    map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
 
     try {
-
+        boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
+	
         const boost::shared_ptr<CorrelationCurveConfig>& config =
             curveConfigs.correlationCurveConfig(spec.curveConfigID());
 
         QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
                        config->dimension() == CorrelationCurveConfig::Dimension::Constant,
                    "Unsupported correlation curve building dimension");
+	
+        // build default correlation termsructure
+        if (config->correlationType() == CorrelationCurveConfig::CorrelationType::Default) {
+            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                new QuantExt::FlatCorrelation(0, config->calendar(), 0.0, config->dayCounter()));
+        }
 
         vector<Period> optionTenors = config->optionTenors();
         vector<Handle<Quote>> quotes(optionTenors.size());
@@ -223,7 +229,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         }
 
         // fail if any quotes missing
-        if (failed) {
+        if (failed && config->correlationType() != CorrelationCurveConfig::CorrelationType::Default) {
             QL_FAIL("could not build correlation curve");
         }
 
@@ -242,26 +248,27 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
         bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
         LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
 
-        boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
-        if (flat) {
-            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
-                new QuantExt::FlatCorrelation(0, config->calendar(), corrs[0], config->dayCounter()));
+        if (config->correlationType() != CorrelationCurveConfig::CorrelationType::Default) {
+            if (flat) {
+                corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                    new QuantExt::FlatCorrelation(0, config->calendar(), corrs[0], config->dayCounter()));
 
-            corr->enableExtrapolation(config->extrapolate());
-        } else {
-            vector<Real> times(optionTenors.size());
+                corr->enableExtrapolation(config->extrapolate());
+            } else {
+                vector<Real> times(optionTenors.size());
 
-            for (Size i = 0; i < optionTenors.size(); ++i) {
-                Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
+                for (Size i = 0; i < optionTenors.size(); ++i) {
+                    Date d = config->calendar().advance(asof, optionTenors[i], config->businessDayConvention());
 
-                times[i] = config->dayCounter().yearFraction(asof, d);
+                    times[i] = config->dayCounter().yearFraction(asof, d);
 
-                LOG("asof " << asof << ", tenor " << optionTenors[i] << ", date " << d << ", time " << times[i]);
+                    LOG("asof " << asof << ", tenor " << optionTenors[i] << ", date " << d << ", time " << times[i]);
+                }
+
+                corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
+                    new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
+                                                                       config->calendar()));
             }
-
-            corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
-                new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
-                                                                   config->calendar()));
         }
 
         if (config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {

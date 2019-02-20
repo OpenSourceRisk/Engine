@@ -48,11 +48,11 @@ using QuantLib::Null;
 class CorrelationCurveConfig : public CurveConfig {
 public:
     //! supported Correlation types
-    enum class CorrelationType { CMSSpread };
+  enum class CorrelationType { CMSSpread, Generic, Default };
     //! supported Correlation dimensions
     enum class Dimension { ATM, Constant };
     // supported quote types
-    enum class QuoteType { Rate, Price };
+  enum class QuoteType { Rate, Price };
 
     //! \name Constructors/Destructors
     //@{

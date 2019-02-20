@@ -17,12 +17,12 @@
 */
 
 #include <boost/algorithm/string.hpp>
+#include <iostream>
 #include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ored/utilities/to_string.hpp>
 #include <ql/errors.hpp>
-
 namespace ore {
 namespace data {
 
@@ -90,38 +90,49 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
-    string dim = XMLUtils::getChildValue(node, "Dimension", true);
-
-    QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
-
-    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
-    QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
-
-    if (optionTenors_.size() == 1) {
-        dimension_ = Dimension::Constant;
-    } else {
-        QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
-        dimension_ = Dimension::ATM;
-    }
-
     string corrType = XMLUtils::getChildValue(node, "CorrelationType", true);
     if (corrType == "CMSSpread") {
         correlationType_ = CorrelationType::CMSSpread;
+    } else if (corrType == "Generic") {
+        correlationType_ = CorrelationType::Generic;
+    } else if (corrType == "Default") {
+        correlationType_ = CorrelationType::Default;
     } else {
         QL_FAIL("Correlation type " << corrType << " not recognized");
     }
 
-    string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "Rate") {
-        quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "Price") {
-        quoteType_ = QuoteType::Price;
-    } else {
-        QL_FAIL("Quote type " << quoteType << " not recognized");
+    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", false);
+    string dim = XMLUtils::getChildValue(node, "Dimension", false);
+
+    if (correlationType_ == CorrelationType::CMSSpread || correlationType_ == CorrelationType::Generic) {
+        index1_ = XMLUtils::getChildValue(node, "Index1", true);
+        index2_ = XMLUtils::getChildValue(node, "Index2", true);
+        QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
+
+        QL_REQUIRE(dim == "ATM" || dim == "Constant", "Dimension " << dim << " not recognised");
+
+        if (optionTenors_.size() == 1) {
+            dimension_ = Dimension::Constant;
+        } else {
+            QL_REQUIRE(dim != "Constant", "Only one tenor should be supplied for a constant correlation termstructure");
+            dimension_ = Dimension::ATM;
+        }
+
+        string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
+        if (quoteType == "Rate") {
+            quoteType_ = QuoteType::Rate;
+        } else if (quoteType == "Price") {
+            quoteType_ = QuoteType::Price;
+        } else {
+            QL_FAIL("Quote type " << quoteType << " not recognized");
+        }
+        string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
+        extrapolate_ = parseBool(extr);
     }
 
-    string extr = XMLUtils::getChildValue(node, "Extrapolation", true);
-    extrapolate_ = parseBool(extr);
+    if (correlationType_ == CorrelationType::Generic) {
+        QL_REQUIRE(quoteType_ == QuoteType::Rate, "For generic type calibration is not supported!");
+    }
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
@@ -132,14 +143,10 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
     businessDayConvention_ = parseBusinessDayConvention(bdc);
 
-    index1_ = XMLUtils::getChildValue(node, "Index1", true);
-    index2_ = XMLUtils::getChildValue(node, "Index2", true);
-
-    currency_ = XMLUtils::getChildValue(node, "Currency", true);
-
     swaptionVol_ = "";
 
-    if (quoteType_ == QuoteType::Price) {
+    if (correlationType_ == CorrelationType::CMSSpread && quoteType_ == QuoteType::Price) {
+        currency_ = XMLUtils::getChildValue(node, "Currency", true);
         conventions_ = XMLUtils::getChildValue(node, "Conventions");
         swaptionVol_ = XMLUtils::getChildValue(node, "SwaptionVolatility", true);
         discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
