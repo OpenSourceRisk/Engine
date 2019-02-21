@@ -98,10 +98,11 @@ void InflationCurveConfig::fromXML(XMLNode* node) {
 }
 
 XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("SwaptionVolatility");
+    XMLNode* node = doc.allocNode("InflationCurve");
 
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+    XMLUtils::addChild(doc, node, "NominalTermStructure", nominalTermStructure_);
 
     if (type_ == Type::ZC) {
         XMLUtils::addChild(doc, node, "Type", "ZC");
@@ -133,10 +134,11 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
     if (seasonalityBaseDate_ != QuantLib::Null<Date>()) {
-        std::ostringstream dateStr;
+        std::ostringstream dateStr, sFreq;
         dateStr << QuantLib::io::iso_date(seasonalityBaseDate_);
+        sFreq <<  seasonalityFrequency_;
         XMLUtils::addChild(doc, seasonalityNode, "BaseDate", dateStr.str());
-        XMLUtils::addChild(doc, seasonalityNode, "Frequency", seasonalityFrequency_);
+        XMLUtils::addChild(doc, seasonalityNode, "Frequency", sFreq.str());
         XMLUtils::addChildren(doc, seasonalityNode, "Factors", "Factor", seasonalityFactors_);
     }
 
