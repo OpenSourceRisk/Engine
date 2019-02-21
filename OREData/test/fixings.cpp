@@ -270,6 +270,66 @@ BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
+    
+    // Set the evaluation date
+    Settings::instance().evaluationDate() = Date(21, Feb, 2019);
+
+    // Set up a simple TodaysMarketParameters
+    TodaysMarketParameters mktParams;
+    mktParams.addConfiguration(Market::defaultConfiguration, MarketConfiguration());
+
+    // Add discount curves. Will not influence the result bu should not cause a problem
+    map<string, string> m = { { "EUR", "Yield/EUR/EUR-EONIA" }, { "USD", "Yield/USD/USD-IN-EUR" } };
+    mktParams.addMarketObject(MarketObject::DiscountCurve, Market::defaultConfiguration, m);
+
+    // Add ibor index curves
+    m = {
+        { "EUR-EURIBOR-3M", "Yield/EUR/EUR-EURIBOR-3M" },
+        { "USD-FedFunds", "Yield/USD/USD-FedFunds" },
+        { "USD-LIBOR-3M", "Yield/USD/USD-LIBOR-3M" }
+    };
+    mktParams.addMarketObject(MarketObject::IndexCurve, Market::defaultConfiguration, m);
+
+    // Add zero inflation curves
+    m = { { "EUHICPXT", "Inflation/EUHICPXT/EUHICPXT_ZC_Swaps" }, { "USCPI", "Inflation/USCPI/USCPI_ZC_Swaps" } };
+    mktParams.addMarketObject(MarketObject::ZeroInflationCurve, Market::defaultConfiguration, m);
+
+    // Add yoy inflation curves
+    m = { { "EUHICPXT", "Inflation/EUHICPXT/EUHICPXT_YOY_Swaps" }, { "UKRPI", "Inflation/UKRPI/UKRPI_YOY_Swaps" } };
+    mktParams.addMarketObject(MarketObject::YoYInflationCurve, Market::defaultConfiguration, m);
+
+    // Expected additional market fixings
+    set<Date> inflationDates = {
+        Date(1, Feb, 2019), Date(1, Jan, 2019), Date(1, Dec, 2018), Date(1, Nov, 2018), Date(1, Oct, 2018), 
+        Date(1, Sep, 2018), Date(1, Aug, 2018), Date(1, Jul, 2018), Date(1, Jun, 2018), Date(1, May, 2018), 
+        Date(1, Apr, 2018), Date(1, Mar, 2018), Date(1, Feb, 2018)
+    };
+    set<Date> iborDates = {
+        Date(21, Feb, 2019), Date(20, Feb, 2019), Date(19, Feb, 2019), Date(18, Feb, 2019), Date(15, Feb, 2019),
+        Date(14, Feb, 2019)
+    };
+    map<string, set<Date>> expectedFixings = {
+        { "EUHICPXT", inflationDates },
+        { "USCPI", inflationDates },
+        { "UKRPI", inflationDates },
+        { "EUR-EURIBOR-3M", iborDates },
+        { "USD-FedFunds", iborDates },
+        { "USD-LIBOR-3M", iborDates }
+    };
+
+    // Populate empty fixings map using the function to be tested
+    map<string, set<Date>> fixings;
+    addMarketFixingDates(fixings, mktParams);
+
+    // Check the results
+    BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
+    for (const auto& kv : expectedFixings) {
+        BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
+        BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(), fixings.at(kv.first).end());
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

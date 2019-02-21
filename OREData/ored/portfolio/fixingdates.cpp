@@ -19,6 +19,7 @@
 #include <ored/portfolio/fixingdates.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ql/settings.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 
 using QuantLib::CashFlow;
 using QuantLib::Date;
@@ -276,6 +277,69 @@ void amendInflationFixingDates(map<string, set<Date>>& fixings) {
             // Update the fixings map that was passed in with the new set of dates
             kv.second = newDates;
         }
+    }
+}
+
+void addMarketFixingDates(map<std::string, set<Date>>& fixings, const TodaysMarketParameters& mktParams,
+    const Period& iborLookback, const Period& inflationLookback, const string& configuration) {
+
+    if (mktParams.hasConfiguration(configuration)) {
+        
+        // If there are ibor indices in the market parameters, add the lookback fixings
+        if (mktParams.hasMarketObject(MarketObject::IndexCurve)) {
+            
+            QL_REQUIRE(iborLookback >= 0 * Days, "Ibor lookback period must be non-negative");
+
+            // Dates that will be used for each of the ibor indices
+            Date today = Settings::instance().evaluationDate();
+            Date lookback = WeekendsOnly().advance(today, -iborLookback);
+            set<Date> dates;
+            do {
+                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for ibor indices");
+                dates.insert(lookback);
+                lookback = WeekendsOnly().advance(lookback, 1 * Days);
+            } while (lookback <= today);
+            
+            // For each of the ibor indices in market parameters, insert the dates
+            for (const auto& kv : mktParams.mapping(MarketObject::IndexCurve, configuration)) {
+                TLOG("Adding extra fixing dates for ibor index " << kv.first);
+                fixings[kv.first].insert(dates.begin(), dates.end());
+            }
+        }
+
+        // If there are inflation indices in the market parameters, add the lookback fixings
+        if (mktParams.hasMarketObject(MarketObject::ZeroInflationCurve) ||
+            mktParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
+            
+            QL_REQUIRE(inflationLookback >= 0 * Days, "Inflation lookback period must be non-negative");
+
+            // Dates that will be used for each of the inflation indices
+            Date today = Settings::instance().evaluationDate();
+            Date lookback = NullCalendar().advance(today, -inflationLookback);
+            lookback = Date(1, lookback.month(), lookback.year());
+            set<Date> dates;
+            do {
+                TLOG("Adding date " << io::iso_date(lookback) << " to fixings for inflation indices");
+                dates.insert(lookback);
+                lookback = NullCalendar().advance(lookback, 1 * Months);
+            } while (lookback <= today);
+
+            // For each of the inflation indices in market parameters, insert the dates
+            if (mktParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
+                for (const auto& kv : mktParams.mapping(MarketObject::ZeroInflationCurve, configuration)) {
+                    TLOG("Adding extra fixing dates for (zero) inflation index " << kv.first);
+                    fixings[kv.first].insert(dates.begin(), dates.end());
+                }
+            }
+
+            if (mktParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
+                for (const auto& kv : mktParams.mapping(MarketObject::YoYInflationCurve, configuration)) {
+                    TLOG("Adding extra fixing dates for (yoy) inflation index " << kv.first);
+                    fixings[kv.first].insert(dates.begin(), dates.end());
+                }
+            }
+        }
+
     }
 }
 

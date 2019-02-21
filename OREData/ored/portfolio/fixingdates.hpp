@@ -35,6 +35,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <ored/marketdata/todaysmarketparameters.hpp>
 
 #include <set>
 
@@ -107,5 +108,23 @@ private:
 */
 void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
 
+/*! Add index and fixing date pairs to \p fixings that will be potentially needed to build a TodaysMarket.
+    
+    These additional index and fixing date pairs are found by scanning the \p mktParams and:
+    - for MarketObject::IndexCurve, take the ibor index name and add the dates for each weekday between settlement 
+      date minus \p iborLookback period and settlement date
+    - for MarketObject::ZeroInflationCurve, take the inflation index and add the first of each month between 
+      settlement date minus \p inflationLookback period and settlement date
+    - for MarketObject::YoYInflationCurve, take the inflation index and add the first of each month between
+      settlement date minus \p inflationLookback period and settlement date
+
+    The original \p fixings map may be empty.
+*/
+void addMarketFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings, 
+    const TodaysMarketParameters& mktParams, const QuantLib::Period& iborLookback = 5 * QuantLib::Days,
+    const QuantLib::Period& inflationLookback = 1 * QuantLib::Years, 
+    const std::string& configuration = Market::defaultConfiguration);
+
 }
+
 }
