@@ -194,8 +194,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
-        boost::shared_ptr<CrossCurrencySwapEngineBuilder> swapBuilder =
-            boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(builder);
+        boost::shared_ptr<CrossCurrencySwapEngineBuilderBase> swapBuilder =
+            boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
         swap->setPricingEngine(swapBuilder->engine(currencies, currency));
         // take the first legs currency as the npv currency (arbitrary choice)
