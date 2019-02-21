@@ -37,22 +37,6 @@ using namespace std;
 namespace ore {
 namespace data {
 
-struct findEqFwdPt {
-    findEqFwdPt(const string& fwdpt) : fwdpt_(fwdpt) {}
-
-    string fwdpt_;
-
-
-    const bool operator()(const std::string& p) {
-        auto regexstr = p;
-        regex re("(\\*)");
-        regexstr = regex_replace(regexstr, re, ".*");
-        regex reg1(regexstr);
-
-        return (regex_match(fwdpt_,reg1));
-    }
-};
-
 EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
                          const Conventions& conventions,
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
@@ -72,10 +56,29 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         // until we found the whole set of quotes or do not have more quotes in the
         // market data
 
-        vector<Real> quotes_; // can be either dividend yields, or forward prices (depending upon the CurveConfig type)
-        vector<Date> terms_;
+        vector<boost::shared_ptr<EquityForwardQuote>> qt;   // for sorting quotes_/terms_ pairs
         equitySpot_ = Null<Real>();
         Size quotesRead = 0;
+
+        // in case of wild-card in config
+        bool wc_flag = false;       
+        regex reg1;
+        string star("*");
+        size_t found = config->fwdQuotes()[0].find(star);
+        if (config->type() == EquityCurveConfig::Type::ForwardPrice && config->fwdQuotes().size() == 1 && found != string::npos) {
+            wc_flag = true;
+            regex re("(\\*)");
+            string regexstr = config->fwdQuotes()[0];
+            regexstr = regex_replace(regexstr, re, ".*");
+            reg1 = regex(regexstr);
+        }
+        else {
+            for (int i=0; i < config->fwdQuotes().size(); i++) {
+                quotes_.push_back(Null<Real>());
+                terms_.push_back(Null<Date>());
+            }
+        }
+
 
         for (auto& md : loader.loadQuotes(asof)) {
 
@@ -96,23 +99,32 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
 
-                vector<string>::const_iterator it1 = 
-                    std::find_if(config->fwdQuotes().begin(), config->fwdQuotes().end(), findEqFwdPt(q->name())); // takes wild card
-
-                //vector<string>::const_iterator it1 =
-                //    std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it1 != config->fwdQuotes().end()) {
-                    Size pos = it1 - config->fwdQuotes().begin();
-                    //QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for " << config->fwdQuotes()[pos]); // todo update this to check for duplicates (unknown length now)
-                    QL_REQUIRE(find(terms_.begin(), terms_.end(), q->expiryDate()) == terms_.end(), 
-                        "duplicate market datum found for " << config->fwdQuotes()[pos]);
-                    DLOG("EquityCurve Forward Price found for quote: " << q->name());
-                    terms_.push_back(q->expiryDate());
-                    quotes_.push_back(q->quote()->value());
-                    quotesRead++;
+                if (wc_flag) {
+                    // is the quote 'in' the config?
+                    if (regex_match(q->name(), reg1)) {
+                        QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(), "duplicate market datum found for " << q->name());
+                        DLOG("EquityCurve Forward Price found for quote: " << q->name());
+                        qt.push_back(q); // terms_ and quotes_
+                        quotesRead++;
+                    }
                 }
+                else {
+                    vector<string>::const_iterator it1 =
+                        std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
+
+                    // is the quote one of the list in the config ?
+                    if (it1 != config->fwdQuotes().end()) {
+                        Size pos = it1 - config->fwdQuotes().begin();
+                        QL_REQUIRE(terms_[pos] == Null<Date>(),
+                            "duplicate market datum found for " << config->fwdQuotes()[pos]);
+                        terms_[pos] = q->expiryDate();
+                        quotes_[pos] = q->quote()->value();
+                        quotesRead++;
+                    }
+
+                }
+
+
             }
 
             if (config->type() == EquityCurveConfig::Type::DividendYield && md->asofDate() == asof &&
@@ -123,23 +135,45 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     boost::dynamic_pointer_cast<EquityDividendYieldQuote>(md);
 
                 vector<string>::const_iterator it1 =
-                    std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());   // does not accept wild card
+                    std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());   
 
                 // is the quote one of the list in the config ?
                 if (it1 != config->fwdQuotes().end()) {
                     Size pos = it1 - config->fwdQuotes().begin();
-                    //QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for " << config->fwdQuotes()[pos]);
-                    QL_REQUIRE(find(terms_.begin(), terms_.end(), q->tenorDate()) == terms_.end(),
-                        "duplicate market datum found for " << config->fwdQuotes()[pos]);
+                    QL_REQUIRE(terms_[pos] == Null<Date>(), "duplicate market datum found for " << config->fwdQuotes()[pos]);
                     DLOG("EquityCurve Dividend Yield found for quote: " << q->name());
-                    terms_.push_back(q->tenorDate());
-                    quotes_.push_back(q->quote()->value());
+                    terms_[pos]=q->tenorDate();
+                    quotes_[pos]=q->quote()->value();
                     quotesRead++;
                 }
             }
         }
+
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
+
+        // sort quotes and terms in case of wild-card
+        if (wc_flag){
+            QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
+
+            // sort
+            std::sort(qt.begin(), qt.end(),
+                [](const boost::shared_ptr<EquityForwardQuote>& a, const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
+                return a->expiryDate() < b->expiryDate();
+            });
+
+            // populate individual quote, term vectors
+            for (int i = 0; i < qt.size(); i++) {
+                terms_.push_back(qt[i]->expiryDate());
+                quotes_.push_back(qt[i]->quote()->value());
+            }
+
+        }
+        else {
+            QL_REQUIRE(quotesRead == config->fwdQuotes().size(), 
+                "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
+        }
+              
 
         for (Size i = 0; i < terms_.size(); i++) {
             QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
