@@ -283,9 +283,8 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
             }
 
             LOG("Returning correlation surface for config " << spec);
-            corr_ = corr;
         }
-
+        corr_ = corr;
     } catch (std::exception& e) {
         QL_FAIL("correlation curve building failed for curve " << spec.curveConfigID() << " on date "
                                                                << io::iso_date(asof) << ": " << e.what());
