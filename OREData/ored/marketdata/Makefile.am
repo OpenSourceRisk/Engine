@@ -29,6 +29,7 @@ libOREDataMarketData_la_SOURCES = \
 	marketimpl.cpp \
 	inmemoryloader.cpp \
 	swaptionvolcurve.cpp \
+	yieldvolcurve.cpp \
 	security.cpp \
 	todaysmarket.cpp \
 	todaysmarketparameters.cpp \
@@ -64,6 +65,7 @@ this_include_HEADERS = \
 	marketimpl.hpp \
 	inmemoryloader.hpp \
 	swaptionvolcurve.hpp \
+	yieldvolcurve.hpp \
 	security.hpp \
 	todaysmarket.hpp \
 	todaysmarketparameters.hpp \

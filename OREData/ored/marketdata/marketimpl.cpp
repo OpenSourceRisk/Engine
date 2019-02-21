@@ -111,6 +111,13 @@ const string MarketImpl::swapIndexBase(const string& key, const string& configur
     return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "swap index base").second;
 }
 
+Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(
+    const string& key,
+    const string& configuration) const {
+    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>
+        (yieldVolCurves_, key, configuration, "yield volatility curve");
+}
+
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())

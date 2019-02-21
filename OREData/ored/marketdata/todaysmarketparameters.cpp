@@ -25,7 +25,7 @@ namespace ore {
 namespace data {
 
 namespace {
-static const Size numberOfMarketObjects = 23;
+static const Size numberOfMarketObjects = 24;
 // clang-format off
 static const string marketObjectStrings[] = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
                                              "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
@@ -33,7 +33,8 @@ static const string marketObjectStrings[] = {"DiscountCurve", "YieldCurve", "Ind
                                              "YoYInflationCurve", "InflationCapFloorPriceSurface",
                                              "YoYInflationCapFloorPriceSurface", "ZeroInflationCapFloorVol",
                                              "YoYInflationCapFloorVol", "EquityCurves", "EquityVols",
-                                             "Securities", "CommodityCurves", "CommodityVolatilities", "Correlation"};
+                                             "Securities", "CommodityCurves", "CommodityVolatilities", "Correlation",
+                                             "YieldVol"};
 static const string marketObjectXMLNames[] = {"DiscountingCurves", "YieldCurves", "IndexForwardingCurves",
                                               "SwapIndexCurves",
                                               "FxSpots", "FxVolatilities", "SwaptionVolatilities",
@@ -43,7 +44,8 @@ static const string marketObjectXMLNames[] = {"DiscountingCurves", "YieldCurves"
                                               "InflationCapFloorPriceSurfaces", "YYInflationCapFloorPriceSurfaces",
                                               "ZeroInflationCapFloorVolatilities", "YYInflationCapFloorVolatilities",
                                               "EquityCurves", "EquityVolatilities",
-                                              "Securities", "CommodityCurves", "CommodityVolatilities", "Correlations"};
+                                              "Securities", "CommodityCurves", "CommodityVolatilities", "Correlations",
+                                              "YieldVolatilities"};
 static const pair<string, string> marketObjectXMLNamesSingle[] = {
     {"DiscountingCurve", "currency"}, {"YieldCurve", "name"}, {"Index", "name"}, {"SwapIndex", "name"},
     {"FxSpot", "pair"}, {"FxVolatility", "pair"}, {"SwaptionVolatility", "currency"},
@@ -54,7 +56,8 @@ static const pair<string, string> marketObjectXMLNamesSingle[] = {
     {"ZeroInflationCapFloorVolatility", "name" },
     {"YYInflationCapFloorVolatility", "name" },
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
-    {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"}};
+    {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"},
+    {"YieldVolatility", "name" }};
 // clang-format on
 
 // check that the lists above have all the correct length

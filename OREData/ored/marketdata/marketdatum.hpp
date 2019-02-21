@@ -94,6 +94,7 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
+        BOND_OPTION,
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
@@ -652,6 +653,80 @@ public:
     //@}
 private:
     string ccy_;
+    Period expiry_;
+    Period term_;
+};
+
+//! Bond option data class
+/*!
+This class holds single market points of type
+- BOND_OPTION
+Specific data comprise
+- currency
+- curveID
+- expiry
+- term
+- at-the-money flag (is an at-the-money swaption quote?)
+- strike
+
+\ingroup marketdata
+*/
+
+class BondOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string ccy, string curveID, Period expiry,
+        Period term, string dimension, Real strike = 0.0)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), ccy_(ccy), curveID_(curveID), expiry_(expiry),
+        term_(term), dimension_(dimension), strike_(strike) {}
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const string& curveID() const { return curveID_; }
+    const Period& expiry() const { return expiry_; }
+    const Period& term() const { return term_; }
+    const string& dimension() const { return dimension_; }
+    Real strike() { return strike_; }
+    //@}
+private:
+    string ccy_;
+    string curveID_;
+    Period expiry_;
+    Period term_;
+    string dimension_;
+    Real strike_;
+};
+
+//! Shift data class (for SLN bond option volatilities)
+/*!
+This class holds single market points of type
+- SHIFT
+Specific data comprise
+- currency
+- curveID
+- term
+
+\ingroup marketdata
+*/
+
+class BondOptionShiftQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondOptionShiftQuote(Real value, Date asofDate, const string& name,
+        QuoteType quoteType, string ccy, string curveID, Period term)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), ccy_(ccy), curveID_(curveID), term_(term) {
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
+    }
+    //! \name Inspectors
+    //@{
+    const string& ccy() const { return ccy_; }
+    const string& curveID() const { return curveID_; }
+    const Period& expiry() const { return expiry_; }
+    const Period& term() const { return term_; }
+    //@}
+private:
+    string ccy_;
+    string curveID_;
     Period expiry_;
     Period term_;
 };

@@ -117,6 +117,7 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
     addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
     addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility, curveConfigIds);
     addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
+    addMinimalCurves("YieldVolatilities", yieldVolCurveConfigs_, minimum->yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility, curveConfigIds);
     addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
     addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
     addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
@@ -168,6 +169,7 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, yieldCurveConfigs_, CurveSpec::CurveType::Yield);
     addQuotes(quotes, fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility);
     addQuotes(quotes, swaptionVolCurveConfigs_, CurveSpec::CurveType::SwaptionVolatility);
+    addQuotes(quotes, yieldVolCurveConfigs_, CurveSpec::CurveType::YieldVolatility);
     addQuotes(quotes, capFloorVolCurveConfigs_, CurveSpec::CurveType::CapFloorVolatility);
     addQuotes(quotes, defaultCurveConfigs_, CurveSpec::CurveType::Default);
     addQuotes(quotes, cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility);
@@ -205,6 +207,15 @@ bool CurveConfigurations::hasSwaptionVolCurveConfig(const string& curveID) const
 const boost::shared_ptr<SwaptionVolatilityCurveConfig>&
 CurveConfigurations::swaptionVolCurveConfig(const string& curveID) const {
     return get(curveID, swaptionVolCurveConfigs_);
+}
+
+bool CurveConfigurations::hasYieldVolCurveConfig(const string& curveID) const {
+    return has(curveID, yieldVolCurveConfigs_);
+}
+
+const boost::shared_ptr<YieldVolatilityCurveConfig>&
+CurveConfigurations::yieldVolCurveConfig(const string& curveID) const {
+    return get(curveID, yieldVolCurveConfigs_);
 }
 
 bool CurveConfigurations::hasCapFloorVolCurveConfig(const string& curveID) const {
@@ -329,6 +340,7 @@ void CurveConfigurations::fromXML(XMLNode* node) {
     parseNode(node, "YieldCurves", "YieldCurve", yieldCurveConfigs_);
     parseNode(node, "FXVolatilities", "FXVolatility", fxVolCurveConfigs_);
     parseNode(node, "SwaptionVolatilities", "SwaptionVolatility", swaptionVolCurveConfigs_);
+    parseNode(node, "YieldVolatilities", "YieldVolatility", yieldVolCurveConfigs_);
     parseNode(node, "CapFloorVolatilities", "CapFloorVolatility", capFloorVolCurveConfigs_);
     parseNode(node, "DefaultCurves", "DefaultCurve", defaultCurveConfigs_);
     parseNode(node, "CDSVolatilities", "CDSVolatility", cdsVolCurveConfigs_);
@@ -352,6 +364,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
     addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
     addNodes(doc, parent, "SwaptionVolatilities", swaptionVolCurveConfigs_);
+    addNodes(doc, parent, "YieldVolatilities", yieldVolCurveConfigs_);
     addNodes(doc, parent, "CapFloorVolatilities", capFloorVolCurveConfigs_);
     addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);

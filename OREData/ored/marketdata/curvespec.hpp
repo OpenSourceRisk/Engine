@@ -43,6 +43,7 @@ public:
         Yield,
         CapFloorVolatility,
         SwaptionVolatility,
+        YieldVolatility,
         FX,
         FXVolatility,
         Default,
@@ -89,6 +90,8 @@ public:
             return "CapFloorVolatility";
         case CurveType::SwaptionVolatility:
             return "SwaptionVolatility";
+        case CurveType::YieldVolatility:
+            return "YieldVolatility";
         case CurveType::FX:
             return "FX";
         case CurveType::FXVolatility:
@@ -250,6 +253,31 @@ public:
     //@}
 private:
     string ccy_;
+};
+
+//! Yield volatility curve description
+/*! \ingroup curves
+*/
+class YieldVolatilityCurveSpec : public CurveSpec {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    YieldVolatilityCurveSpec() {}
+    //! Detailed constructor
+    YieldVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
+        : CurveSpec(curveConfigID), ccy_(ccy), curveConfigId_(curveConfigID) {}
+    //@}
+    //! \name Inspectors
+    //@{
+    CurveType baseType() const { return CurveType::YieldVolatility; }
+    const string& ccy() const { return ccy_; }
+    const string& curveConfigId() const { return curveConfigId_; }
+    string subName() const { return ccy() + "/" + curveConfigID(); }
+    //@}
+private:
+    string ccy_;
+    std::string curveConfigId_;
 };
 
 //! Cap/Floor Volatility curve description

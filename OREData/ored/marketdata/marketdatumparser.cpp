@@ -62,6 +62,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
         {"BOND", MarketDatum::InstrumentType::BOND},
+        {"BOND_OPTION", MarketDatum::InstrumentType::BOND_OPTION},
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
@@ -319,6 +320,32 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
                                                      strike);
         } else { // SLN volatility shift
             return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy, term);
+        }
+    }
+
+    case MarketDatum::InstrumentType::BOND_OPTION: {
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 7 || tokens.size() == 8,
+            "4, 6 or 7 tokens expected in " << datumName);
+        const string& ccy = tokens[2];
+        const string& curveID = tokens[3];
+        Period expiry = tokens.size() >= 6 ? parsePeriod(tokens[4]) : Period(0 * QuantLib::Days);
+        Period term = tokens.size() >= 6 ? parsePeriod(tokens[5]) : parsePeriod(tokens[3]);
+        if (tokens.size() >= 6) { // volatility
+            const string& dimension = tokens[6];
+            Real strike = 0.0;
+            if (dimension == "ATM")
+                QL_REQUIRE(tokens.size() == 7, "7 tokens expected in ATM quote " << datumName);
+            else if (dimension == "Smile") {
+                QL_REQUIRE(tokens.size() == 8, "8 tokens expected in Smile quote " << datumName);
+                strike = parseReal(tokens[7]);
+            }
+            else
+                QL_FAIL("Yield volatility quote dimension " << dimension << " not recognised");
+            return boost::make_shared<BondOptionQuote>(value, asof, datumName, quoteType,
+                ccy, curveID, expiry, term, dimension, strike);
+        }
+        else { // SLN volatility shift
+            return boost::make_shared<BondOptionShiftQuote>(value, asof, datumName, quoteType, ccy, curveID, term);
         }
     }
 

@@ -50,6 +50,7 @@ public:
         YieldCurve,
         IndexCurve,
         SwaptionVolatility,
+        YieldVolatility,
         OptionletVolatility,
         FXSpot,
         FXVolatility,
