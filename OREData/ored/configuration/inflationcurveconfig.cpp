@@ -132,8 +132,8 @@ XMLNode* InflationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "BaseRate", baseZr.str());
     XMLUtils::addChild(doc, node, "Tolerance", tol.str());
 
-    XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
     if (seasonalityBaseDate_ != QuantLib::Null<Date>()) {
+        XMLNode* seasonalityNode = XMLUtils::addChild(doc, node, "Seasonality");
         std::ostringstream dateStr, sFreq;
         dateStr << QuantLib::io::iso_date(seasonalityBaseDate_);
         sFreq <<  seasonalityFrequency_;
