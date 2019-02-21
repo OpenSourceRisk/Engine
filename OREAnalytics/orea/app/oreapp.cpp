@@ -634,7 +634,10 @@ void OREApp::initialiseNPVCubeGeneration(boost::shared_ptr<Portfolio> portfolio)
         Size n = portfolio->size();
         portfolio->build(simFactory);
         simPortfolio_ = portfolio;
-        QL_REQUIRE(simPortfolio_->size() == n, "portfolio size mismatch, check simulation market setup");
+        if(simPortfolio_->size() != n) {
+            ALOG("There were errors during the sim portfolio building - check the sim market setup? Could build "
+                 << simPortfolio_->size() << " trades out of " << n);
+        }
         out_ << "OK" << endl;
     }
 
