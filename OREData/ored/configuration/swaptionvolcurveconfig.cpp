@@ -100,8 +100,7 @@ const vector<string>& SwaptionVolatilityCurveConfig::quotes() {
 }
 
 void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
-    //XMLUtils::checkNode(node, "SwaptionVolatility");
-    QL_REQUIRE(node, "XML Node is NULL (expected SwaptionVolatility or YieldVolatility)");
+    XMLUtils::checkNode(node, "SwaptionVolatility");
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);

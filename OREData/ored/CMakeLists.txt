@@ -16,6 +16,7 @@ configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
 configuration/swaptionvolcurveconfig.cpp
+configuration/yieldvolcurveconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -44,6 +45,7 @@ marketdata/marketdatumparser.cpp
 marketdata/marketimpl.cpp
 marketdata/security.cpp
 marketdata/swaptionvolcurve.cpp
+marketdata/yieldvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
@@ -132,6 +134,7 @@ configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
+configuration/yieldvolcurveconfig.hpp
 configuration/yieldcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
@@ -161,6 +164,7 @@ marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
 marketdata/swaptionvolcurve.hpp
+marketdata/yieldvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp

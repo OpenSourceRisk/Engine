@@ -59,8 +59,7 @@ namespace ore {
                 Handle<QuantLib::SwaptionVolatilityStructure> yieldVola;
 
                 try {
-                    //yieldVola = market_->yieldVol(securityId, configuration(MarketContext::pricing));
-                    yieldVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
+                    yieldVola = market_->yieldVol(securityId, configuration(MarketContext::pricing));
                 }
                 catch (std::exception) {
                     yieldVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
