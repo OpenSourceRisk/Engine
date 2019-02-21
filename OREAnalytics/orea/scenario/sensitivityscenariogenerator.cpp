@@ -1847,9 +1847,8 @@ void SensitivityScenarioGenerator::generateCommodityVolScenarios(bool up) {
 void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
     Date asof = baseScenario_->asof();
     for (auto sim_cap : simMarketData_->correlationPairs()) {
-        std::string label = sim_cap.first + ":" + sim_cap.second;
-        if (sensitivityData_->correlationShiftData().find(label) == sensitivityData_->correlationShiftData().end()) {
-            ALOG("Correlation " << label << " in simmarket is not included in sensitivities analysis");
+        if (sensitivityData_->correlationShiftData().find(sim_cap) == sensitivityData_->correlationShiftData().end()) {
+            ALOG("Correlation " << sim_cap << " in simmarket is not included in sensitivities analysis");
         }
     }
 

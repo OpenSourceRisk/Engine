@@ -193,62 +193,64 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                                    map<string, boost::shared_ptr<SwaptionVolCurve>>& swaptionVolCurves) {
 
     try {
-        boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
-	
+
         const boost::shared_ptr<CorrelationCurveConfig>& config =
             curveConfigs.correlationCurveConfig(spec.curveConfigID());
 
-        QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
-                       config->dimension() == CorrelationCurveConfig::Dimension::Constant,
-                   "Unsupported correlation curve building dimension");
-	
         // build default correlation termsructure
-        if (config->correlationType() == CorrelationCurveConfig::CorrelationType::Default) {
+        boost::shared_ptr<QuantExt::CorrelationTermStructure> corr;
+
+        if (config->quoteType() == CorrelationCurveConfig::QuoteType::Null) {
+
             corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                 new QuantExt::FlatCorrelation(0, config->calendar(), 0.0, config->dayCounter()));
-        }
 
-        vector<Period> optionTenors = config->optionTenors();
-        vector<Handle<Quote>> quotes(optionTenors.size());
-        bool failed = false;
+        } else {
 
-        // search market data loader for quotes, logging missing ones
-        for (auto& q : config->quotes()) {
-            if (loader.has(q, asof)) {
-                boost::shared_ptr<CorrelationQuote> c =
-                    boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
+            QL_REQUIRE(config->dimension() == CorrelationCurveConfig::Dimension::ATM ||
+                           config->dimension() == CorrelationCurveConfig::Dimension::Constant,
+                       "Unsupported correlation curve building dimension");
 
-                Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) -
-                         optionTenors.begin();
-                QL_REQUIRE(i < optionTenors.size(), "correlation tenor not found for " << q);
-                quotes[i] = c->quote();
-            } else {
-                DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
-                failed = true;
+            vector<Period> optionTenors = config->optionTenors();
+            vector<Handle<Quote>> quotes(optionTenors.size());
+            bool failed = false;
+
+            // search market data loader for quotes, logging missing ones
+            for (auto& q : config->quotes()) {
+                if (loader.has(q, asof)) {
+                    boost::shared_ptr<CorrelationQuote> c =
+                        boost::dynamic_pointer_cast<CorrelationQuote>(loader.get(q, asof));
+
+                    Size i = std::find(optionTenors.begin(), optionTenors.end(), parsePeriod(c->expiry())) -
+                             optionTenors.begin();
+                    QL_REQUIRE(i < optionTenors.size(), "correlation tenor not found for " << q);
+                    quotes[i] = c->quote();
+                } else {
+                    DLOGGERSTREAM << "could not find correlation quote " << q << std::endl;
+                    failed = true;
+                }
             }
-        }
 
-        // fail if any quotes missing
-        if (failed && config->correlationType() != CorrelationCurveConfig::CorrelationType::Default) {
-            QL_FAIL("could not build correlation curve");
-        }
-
-        vector<Handle<Quote>> corrs;
-
-        for (Size i = 0; i < optionTenors.size(); i++) {
-            if (config->quoteType() == CorrelationCurveConfig::QuoteType::Rate) {
-                corrs.push_back(quotes[i]);
-            } else {
-                Handle<Quote> q(boost::make_shared<SimpleQuote>(0));
-                corrs.push_back(q);
+            // fail if any quotes missing
+            if (failed) {
+                QL_FAIL("could not build correlation curve");
             }
-        }
 
-        // build correlation termsructure
-        bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
-        LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
+            vector<Handle<Quote>> corrs;
 
-        if (config->correlationType() != CorrelationCurveConfig::CorrelationType::Default) {
+            for (Size i = 0; i < optionTenors.size(); i++) {
+                if (config->quoteType() == CorrelationCurveConfig::QuoteType::Rate) {
+                    corrs.push_back(quotes[i]);
+                } else {
+                    Handle<Quote> q(boost::make_shared<SimpleQuote>(0));
+                    corrs.push_back(q);
+                }
+            }
+
+            // build correlation termsructure
+            bool flat = (config->dimension() == CorrelationCurveConfig::Dimension::Constant);
+            LOG("building " << (flat ? "flat" : "interpolated curve") << " correlation termstructure");
+
             if (flat) {
                 corr = boost::shared_ptr<QuantExt::CorrelationTermStructure>(
                     new QuantExt::FlatCorrelation(0, config->calendar(), corrs[0], config->dayCounter()));
@@ -269,20 +271,20 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                     new QuantExt::InterpolatedCorrelationCurve<Linear>(times, corrs, config->dayCounter(),
                                                                        config->calendar()));
             }
-        }
 
-        if (config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
+            if (config->quoteType() == CorrelationCurveConfig::QuoteType::Price) {
 
-            if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
-                calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices, yieldCurves,
-                                               swaptionVolCurves);
-            } else {
-                QL_FAIL("price calibration only supported for CMSSpread correlations");
+                if (config->correlationType() == CorrelationCurveConfig::CorrelationType::CMSSpread) {
+                    calibrateCMSSpreadCorrelations(config, asof, quotes, corrs, corr, conventions, swapIndices,
+                                                   yieldCurves, swaptionVolCurves);
+                } else {
+                    QL_FAIL("price calibration only supported for CMSSpread correlations");
+                }
             }
-        }
 
-        LOG("Returning correlation surface for config " << spec);
-        corr_ = corr;
+            LOG("Returning correlation surface for config " << spec);
+            corr_ = corr;
+        }
 
     } catch (std::exception& e) {
         QL_FAIL("correlation curve building failed for curve " << spec.curveConfigID() << " on date "

@@ -224,6 +224,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     }
 }
 
+bool isGenericIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
+
 // Swap Index Parser base
 class SwapIndexParser {
 public:
