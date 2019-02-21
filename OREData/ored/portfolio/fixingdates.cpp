@@ -17,6 +17,7 @@
 */
 
 #include <ored/portfolio/fixingdates.hpp>
+#include <ored/utilities/indexparser.hpp>
 #include <ql/settings.hpp>
 
 using QuantLib::CashFlow;
@@ -45,6 +46,8 @@ using QuantLib::Years;
 using std::set;
 using std::vector;
 using std::pair;
+using std::map;
+using std::string;
 
 namespace {
 
@@ -251,6 +254,28 @@ void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     if (!c.hasOccurred(today_)) {
         addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+    }
+}
+
+void amendInflationFixingDates(map<string, set<Date>>& fixings) {
+    // Loop over indices and amend any that are of type InflationIndex
+    for (auto& kv : fixings) {
+        if (isInflationIndex(kv.first)) {
+            // We have an inflation index
+            set<Date> newDates;
+            for (const Date& d : kv.second) {
+                if (d.dayOfMonth() == 1) {
+                    // If the fixing date is 1st, push it to last day of month
+                    Date newDate = Date::endOfMonth(d);
+                    newDates.insert(newDate);
+                } else {
+                    // If the fixing date is not 1st, leave it as it is
+                    newDates.insert(d);
+                }
+            }
+            // Update the fixings map that was passed in with the new set of dates
+            kv.second = newDates;
+        }
     }
 }
 

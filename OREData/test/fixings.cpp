@@ -21,6 +21,7 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/enginefactory.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
@@ -239,6 +240,33 @@ BOOST_DATA_TEST_CASE_F(F, testTradeTypes, bdata::make(tradeTypes) * bdata::make(
 
         // Trade should now not throw when we try to price it
         BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testModifyInflationFixings) {
+
+    // Original fixings
+    map<string, set<Date>> fixings = {
+        { "EUHICP", { Date(1, Jan, 2019), Date(1, Dec, 2018), Date(1, Nov, 2018) } },
+        { "USCPI", { Date(1, Dec, 2018), Date(1, Nov, 2018), Date(22, Oct, 2018), Date(1, Feb, 2018), Date(1, Feb, 2016) } },
+        { "EUR-EURIBOR-3M", { Date(18, Dec, 2018), Date(13, Feb, 2019) } }
+    };
+
+    // Expected fixings after inflation modification
+    map<string, set<Date>> expectedFixings = {
+        { "EUHICP", { Date(31, Jan, 2019), Date(31, Dec, 2018), Date(30, Nov, 2018) } },
+        { "USCPI", { Date(31, Dec, 2018), Date(30, Nov, 2018), Date(22, Oct, 2018), Date(28, Feb, 2018), Date(29, Feb, 2016) } },
+        { "EUR-EURIBOR-3M", { Date(18, Dec, 2018), Date(13, Feb, 2019) } }
+    };
+
+    // Amend the inflation portion of the fixings
+    amendInflationFixingDates(fixings);
+
+    // Compare contents of the output files
+    BOOST_CHECK_EQUAL(expectedFixings.size(), fixings.size());
+    for (const auto& kv : expectedFixings) {
+        BOOST_CHECK_MESSAGE(fixings.count(kv.first), "Could not find index " << kv.first << " in retrieved fixings");
+        BOOST_CHECK_EQUAL_COLLECTIONS(kv.second.begin(), kv.second.end(), fixings.at(kv.first).begin(), fixings.at(kv.first).end());
     }
 }
 

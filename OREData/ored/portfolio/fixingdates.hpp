@@ -98,5 +98,14 @@ private:
     std::set<QuantLib::Date> fixingDates_;
 };
 
+/*! Inflation fixings are generally available on a monthly, or coarser, frequency. When a portfolio is asked for its 
+    fixings, and it contains inflation fixings, ORE will by convention put the fixing date as the 1st of the 
+    applicable month. Some market data providers by convention supply the inflation fixings with the date as the last 
+    date of the month. This function scans the \p fixings map, and moves any inflation fixing dates from the 1st of 
+    the month to the last day of the month. The key in the \p fixings map is the index name and the value is the set 
+    of dates for which we require the fixings. 
+*/
+void amendInflationFixingDates(std::map<std::string, std::set<QuantLib::Date>>& fixings);
+
 }
 }
