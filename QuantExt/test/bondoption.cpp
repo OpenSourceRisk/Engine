@@ -41,7 +41,7 @@ using namespace QuantExt;
 
 using boost::unit_test_framework::test_suite;
 
-BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(BondOptionTest)
 
