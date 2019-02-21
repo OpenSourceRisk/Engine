@@ -8,7 +8,7 @@ libOREDataMarketData_la_LIBADD =
 
 libOREDataMarketData_la_SOURCES = \
 	capfloorvolcurve.cpp \
-    cdsvolcurve.cpp \
+	cdsvolcurve.cpp \
 	csvloader.cpp \
 	curveloader.cpp \
 	curvespec.cpp \
@@ -21,8 +21,8 @@ libOREDataMarketData_la_SOURCES = \
 	fxspot.cpp \
 	fxtriangulation.cpp \
 	fxvolcurve.cpp \
-    inflationcapfloorpricesurface.cpp \
-    inflationcurve.cpp \
+	inflationcapfloorpricesurface.cpp \
+	inflationcurve.cpp \
 	market.cpp \
 	marketdatum.cpp \
 	marketdatumparser.cpp \
@@ -43,7 +43,7 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	capfloorvolcurve.hpp \
-    cdsvolcurve.hpp \
+	cdsvolcurve.hpp \
 	csvloader.hpp \
 	curveloader.hpp \
 	curvespec.hpp \
@@ -56,8 +56,8 @@ this_include_HEADERS = \
 	fxspot.hpp \
 	fxtriangulation.hpp \
 	fxvolcurve.hpp \
-    inflationcapfloorpricesurface.hpp \
-    inflationcurve.hpp \
+	inflationcapfloorpricesurface.hpp \
+	inflationcurve.hpp \
 	loader.hpp \
 	market.hpp \
 	marketdatum.hpp \
