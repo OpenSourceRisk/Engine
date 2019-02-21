@@ -23,7 +23,6 @@
 #include <ored/utilities/to_string.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
-#include <rapidxml.hpp>
 
 namespace ore {
 namespace data {
