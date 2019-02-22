@@ -52,6 +52,12 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&);
 
+    //! Return no fixings for an FxSwap.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
     //! \name Inspectors
     //@{
     string nearDate() { return nearDate_; }
