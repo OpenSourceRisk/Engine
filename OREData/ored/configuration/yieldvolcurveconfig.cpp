@@ -43,21 +43,20 @@ namespace ore {
         YieldVolatilityCurveConfig::YieldVolatilityCurveConfig(
             const string& curveID, const string& curveDescription, const Dimension& dimension,
             const VolatilityType& volatilityType, const bool extrapolate, const bool flatExtrapolation,
-            const vector<Period>& optionTenors, const vector<Period>& swapTenors, const DayCounter& dayCounter,
-            const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase,
-            const string& swapIndexBase, const vector<Period>& smileOptionTenors, const vector<Period>& smileSwapTenors,
+            const vector<Period>& optionTenors, const vector<Period>& bondTenors, const DayCounter& dayCounter,
+            const Calendar& calendar, const BusinessDayConvention& businessDayConvention, 
+            const vector<Period>& smileOptionTenors, const vector<Period>& smileBondTenors,
             const vector<Real>& smileSpreads)
             : CurveConfig(curveID, curveDescription), dimension_(dimension), volatilityType_(volatilityType),
             extrapolate_(extrapolate), flatExtrapolation_(flatExtrapolation), optionTenors_(optionTenors),
-            swapTenors_(swapTenors), dayCounter_(dayCounter), calendar_(calendar),
-            businessDayConvention_(businessDayConvention), shortSwapIndexBase_(shortSwapIndexBase),
-            swapIndexBase_(swapIndexBase), smileOptionTenors_(smileOptionTenors), smileSwapTenors_(smileSwapTenors),
-            smileSpreads_(smileSpreads) {
+            bondTenors_(bondTenors), dayCounter_(dayCounter), calendar_(calendar),
+            businessDayConvention_(businessDayConvention), smileOptionTenors_(smileOptionTenors), 
+            smileBondTenors_(smileBondTenors), smileSpreads_(smileSpreads) {
 
             QL_REQUIRE(dimension == Dimension::ATM || dimension == Dimension::Smile, "Invalid dimension");
 
             if (dimension != Dimension::Smile) {
-                QL_REQUIRE(smileOptionTenors.size() == 0 && smileSwapTenors.size() == 0 && smileSpreads.size() == 0,
+                QL_REQUIRE(smileOptionTenors.size() == 0 && smileBondTenors.size() == 0 && smileSpreads.size() == 0,
                     "Smile tenors/strikes/spreads should only be set when dim=Smile");
             }
         }
@@ -66,7 +65,7 @@ namespace ore {
 
             if (quotes_.size() == 0) {
                 std::vector<string> tokens;
-                split(tokens, swapIndexBase_, boost::is_any_of("-"));
+                split(tokens, curveID_, boost::is_any_of("-"));
 
                 Currency ccy = parseCurrency(tokens[0]);
 
@@ -76,7 +75,7 @@ namespace ore {
 
                 if (dimension_ == Dimension::ATM) {
                     for (auto o : optionTenors_) {
-                        for (auto s : swapTenors_) {
+                        for (auto s : bondTenors_) {
                             std::stringstream ss;
                             ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
                             quotes_.push_back(ss.str());
@@ -86,7 +85,7 @@ namespace ore {
                 }
                 else {
                     for (auto o : smileOptionTenors_) {
-                        for (auto s : smileSwapTenors_) {
+                        for (auto s : smileBondTenors_) {
                             for (auto sp : smileSpreads_) {
                                 std::stringstream ss;
                                 ss << base << to_string(o) << "/" << to_string(s) << "/Smile/" << to_string(sp);
@@ -148,7 +147,7 @@ namespace ore {
 
             optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
 
-            swapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "BondTenors", false);
+            bondTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "BondTenors", false);
 
             string cal = XMLUtils::getChildValue(node, "Calendar", true);
             calendar_ = parseCalendar(cal);
@@ -159,12 +158,9 @@ namespace ore {
             string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
             businessDayConvention_ = parseBusinessDayConvention(bdc);
 
-            shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", false);
-            swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", false);
-
             // optional smile stuff
             smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors");
-            smileSwapTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileSwapTenors");
+            smileBondTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileBondTenors");
             smileSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SmileSpreads");
         }
 
@@ -203,16 +199,14 @@ namespace ore {
             XMLUtils::addChild(doc, node, "Extrapolation", extr_str);
 
             XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-            XMLUtils::addGenericChildAsList(doc, node, "BondTenors", swapTenors_);
+            XMLUtils::addGenericChildAsList(doc, node, "BondTenors", bondTenors_);
             XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
             XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
             XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
-            XMLUtils::addChild(doc, node, "ShortSwapIndexBase", shortSwapIndexBase_);
-            XMLUtils::addChild(doc, node, "SwapIndexBase", swapIndexBase_);
 
             if (dimension_ == Dimension::Smile) {
                 XMLUtils::addGenericChildAsList(doc, node, "SmileOptionTenors", smileOptionTenors_);
-                XMLUtils::addGenericChildAsList(doc, node, "SmileSwapTenors", smileSwapTenors_);
+                XMLUtils::addGenericChildAsList(doc, node, "SmileBondTenors", smileBondTenors_);
                 XMLUtils::addGenericChildAsList(doc, node, "SmileSpreads", smileSpreads_);
             }
 

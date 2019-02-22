@@ -277,7 +277,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building Yield Volatility for asof " << asof);
                         boost::shared_ptr<YieldVolCurve> yieldVolCurve = boost::make_shared<YieldVolCurve>(
-                            asof, *ydvolspec, loader, curveConfigs, requiredSwapIndices);
+                            asof, *ydvolspec, loader, curveConfigs);
                         itr = requiredYieldVolCurves.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
                     }
                     boost::shared_ptr<YieldVolatilityCurveConfig> cfg =
@@ -289,8 +289,6 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 << " to configuration " << configuration.first);
                             yieldVolCurves_[make_pair(configuration.first, it.first)] =
                                 Handle<SwaptionVolatilityStructure>(itr->second->volTermStructure());
-                            swaptionIndexBases_[make_pair(configuration.first, it.first)] =
-                                make_pair(cfg->shortSwapIndexBase(), cfg->swapIndexBase());
                         }
                     }
                     break;

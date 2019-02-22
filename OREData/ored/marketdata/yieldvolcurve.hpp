@@ -48,9 +48,7 @@ namespace ore {
             YieldVolCurve() {}
             //! Detailed constructor
             YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
-                const CurveConfigurations& curveConfigs,
-                const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices =
-                map<string, boost::shared_ptr<SwapIndex>>());
+                const CurveConfigurations& curveConfigs);
             //@}
 
             //! \name Inspectors

@@ -33,8 +33,7 @@ namespace ore {
     namespace data {
 
         YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
-            const CurveConfigurations& curveConfigs,
-            const map<string, boost::shared_ptr<SwapIndex>>& requiredSwapIndices) {
+            const CurveConfigurations& curveConfigs) {
 
             try {
                 const boost::shared_ptr<YieldVolatilityCurveConfig>& config =
@@ -63,13 +62,13 @@ namespace ore {
                 }
                 bool isSln = volatilityType == MarketDatum::QuoteType::RATE_SLNVOL;
                 vector<Period> optionTenors = config->optionTenors();
-                vector<Period> swapTenors = config->swapTenors();
-                Matrix vols(optionTenors.size(), swapTenors.size());
+                vector<Period> bondTenors = config->bondTenors();
+                Matrix vols(optionTenors.size(), bondTenors.size());
                 Matrix shifts(isSln ? vols.rows() : 0, isSln ? vols.columns() : 0);
-                vector<vector<bool>> found(optionTenors.size(), vector<bool>(swapTenors.size(), false));
-                vector<bool> shiftFound(swapTenors.size());
-                Size remainingQuotes = optionTenors.size() * swapTenors.size();
-                Size remainingShiftQuotes = isSln ? swapTenors.size() : 0;
+                vector<vector<bool>> found(optionTenors.size(), vector<bool>(bondTenors.size(), false));
+                vector<bool> shiftFound(bondTenors.size());
+                Size remainingQuotes = optionTenors.size() * bondTenors.size();
+                Size remainingShiftQuotes = isSln ? bondTenors.size() : 0;
                 Size quotesRead = 0, shiftQuotesRead = 0;
 
                 for (auto& md : loader.loadQuotes(asof)) {
@@ -85,9 +84,9 @@ namespace ore {
                             quotesRead++;
 
                             Size i = std::find(optionTenors.begin(), optionTenors.end(), q->expiry()) - optionTenors.begin();
-                            Size j = std::find(swapTenors.begin(), swapTenors.end(), q->term()) - swapTenors.begin();
+                            Size j = std::find(bondTenors.begin(), bondTenors.end(), q->term()) - bondTenors.begin();
 
-                            if (i < optionTenors.size() && j < swapTenors.size()) {
+                            if (i < optionTenors.size() && j < bondTenors.size()) {
                                 vols[i][j] = q->quote()->value();
 
                                 if (!found[i][j]) {
@@ -103,9 +102,9 @@ namespace ore {
 
                             shiftQuotesRead++;
 
-                            Size j = std::find(swapTenors.begin(), swapTenors.end(), qs->term()) - swapTenors.begin();
+                            Size j = std::find(bondTenors.begin(), bondTenors.end(), qs->term()) - bondTenors.begin();
 
-                            if (j < swapTenors.size()) {
+                            if (j < bondTenors.size()) {
                                 for (Size i = 0; i < shifts.rows(); ++i)
                                     shifts[i][j] = qs->quote()->value();
 
@@ -128,13 +127,13 @@ namespace ore {
                     if (remainingQuotes != 0) {
                         m << "Found vol data (*) and missing data (.):" << std::endl;
                         for (Size i = 0; i < optionTenors.size(); ++i) {
-                            for (Size j = 0; j < swapTenors.size(); ++j) {
+                            for (Size j = 0; j < bondTenors.size(); ++j) {
                                 if (found[i][j]) {
                                     m << "*";
                                 }
                                 else {
                                     m << ".";
-                                    missingQuotes << "Missing vol: (" << optionTenors[i] << ", " << swapTenors[j] << ")"
+                                    missingQuotes << "Missing vol: (" << optionTenors[i] << ", " << bondTenors[j] << ")"
                                         << endl;
                                 }
                             }
@@ -146,13 +145,13 @@ namespace ore {
                         if (remainingQuotes != 0)
                             m << endl;
                         m << "Found shift data (*) and missing data (.):" << std::endl;
-                        for (Size j = 0; j < swapTenors.size(); ++j) {
+                        for (Size j = 0; j < bondTenors.size(); ++j) {
                             if (shiftFound[j]) {
                                 m << "*";
                             }
                             else {
                                 m << ".";
-                                missingQuotes << "Missing shifted vol: (" << swapTenors[j] << ")" << endl;
+                                missingQuotes << "Missing shifted vol: (" << bondTenors[j] << ")" << endl;
                             }
                         }
                         m << endl;
@@ -165,7 +164,7 @@ namespace ore {
 
                 if (quotesRead != 1) {
                     atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
-                        asof, config->calendar(), config->businessDayConvention(), optionTenors, swapTenors, vols,
+                        asof, config->calendar(), config->businessDayConvention(), optionTenors, bondTenors, vols,
                         config->dayCounter(), config->flatExtrapolation(),
                         config->volatilityType() == YieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
@@ -192,7 +191,7 @@ namespace ore {
                 else {
                     LOG("Building Cube for config " << spec);
                     vector<Period> smileOptionTenors = config->smileOptionTenors();
-                    vector<Period> smileSwapTenors = config->smileSwapTenors();
+                    vector<Period> smileBondTenors = config->smileBondTenors();
                     vector<Spread> spreads = config->smileSpreads();
 
                     // add smile spread 0, if not already existent
@@ -203,23 +202,23 @@ namespace ore {
 
                     if (smileOptionTenors.size() == 0)
                         smileOptionTenors = optionTenors;
-                    if (smileSwapTenors.size() == 0)
-                        smileSwapTenors = swapTenors;
+                    if (smileBondTenors.size() == 0)
+                        smileBondTenors = bondTenors;
                     QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a YieldVolCube");
 
-                    Size n = smileOptionTenors.size() * smileSwapTenors.size();
+                    Size n = smileOptionTenors.size() * smileBondTenors.size();
                     vector<vector<Handle<Quote>>> volSpreadHandles(
                         n, vector<Handle<Quote>>(spreads.size(), Handle<Quote>(boost::make_shared<SimpleQuote>(0.0))));
 
                     LOG("vol cube smile option tenors " << smileOptionTenors.size());
-                    LOG("vol cube smile bond tenors " << smileSwapTenors.size());
+                    LOG("vol cube smile bond tenors " << smileBondTenors.size());
                     LOG("vol cube strike spreads " << spreads.size());
 
                     Size spreadQuotesRead = 0;
                     Size expectedSpreadQuotes = n * (spreads.size() - 1); // no quote for zero strike spread
-                    vector<vector<bool>> found(smileOptionTenors.size() * smileSwapTenors.size(),
+                    vector<vector<bool>> found(smileOptionTenors.size() * smileBondTenors.size(),
                         std::vector<bool>(spreads.size(), false)),
-                        zero(smileOptionTenors.size() * smileSwapTenors.size(), std::vector<bool>(spreads.size(), false));
+                        zero(smileOptionTenors.size() * smileBondTenors.size(), std::vector<bool>(spreads.size(), false));
                     for (auto& md : loader.loadQuotes(asof)) {
                         if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::BOND_OPTION) {
 
@@ -229,22 +228,22 @@ namespace ore {
 
                                 Size i = std::find(smileOptionTenors.begin(), smileOptionTenors.end(), q->expiry()) -
                                     smileOptionTenors.begin();
-                                Size j = std::find(smileSwapTenors.begin(), smileSwapTenors.end(), q->term()) -
-                                    smileSwapTenors.begin();
+                                Size j = std::find(smileBondTenors.begin(), smileBondTenors.end(), q->term()) -
+                                    smileBondTenors.begin();
                                 // In the MarketDatum we call it a strike, but it's really a spread
                                 Size k = std::find(spreads.begin(), spreads.end(), q->strike()) - spreads.begin();
 
-                                if (i < smileOptionTenors.size() && j < smileSwapTenors.size() && k < spreads.size()) {
-                                    QL_REQUIRE(!found[i * smileSwapTenors.size() + j][k],
+                                if (i < smileOptionTenors.size() && j < smileBondTenors.size() && k < spreads.size()) {
+                                    QL_REQUIRE(!found[i * smileBondTenors.size() + j][k],
                                         "VolSpreadQuote already found for " << smileOptionTenors[i] << ", "
-                                        << smileSwapTenors[j] << ", " << spreads[k]);
+                                        << smileBondTenors[j] << ", " << spreads[k]);
                                     spreadQuotesRead++;
                                     // Assume quotes are absolute vols by strike so construct the vol spreads here
-                                    Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
-                                    volSpreadHandles[i * smileSwapTenors.size() + j][k] =
+                                    Volatility atmVol = atm->volatility(smileOptionTenors[i], smileBondTenors[j], 0.0);
+                                    volSpreadHandles[i * smileBondTenors.size() + j][k] =
                                         Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value() - atmVol));
-                                    found[i * smileSwapTenors.size() + j][k] = true;
-                                    zero[i * smileSwapTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
+                                    found[i * smileBondTenors.size() + j][k] = true;
+                                    zero[i * smileBondTenors.size() + j][k] = close_enough(q->quote()->value(), 0.0);
                                 }
                             }
                         }
@@ -252,12 +251,12 @@ namespace ore {
                     LOG("Read " << spreadQuotesRead << " quotes for VolCube. Expected " << expectedSpreadQuotes);
                     if (spreadQuotesRead < expectedSpreadQuotes) {
                         for (Size i = 0; i < smileOptionTenors.size(); ++i) {
-                            for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                            for (Size j = 0; j < smileBondTenors.size(); ++j) {
                                 for (Size k = 0; k < spreads.size(); ++k) {
-                                    if (!close_enough(spreads[k], 0.0) && !found[i * smileSwapTenors.size() + j][k]) {
+                                    if (!close_enough(spreads[k], 0.0) && !found[i * smileBondTenors.size() + j][k]) {
                                         WLOG("Missing market quote for " << spec.curveConfigID() << "/"
                                             << smileOptionTenors[i] << "/"
-                                            << smileSwapTenors[j] << "/"
+                                            << smileBondTenors[j] << "/"
                                             << spreads[k]);
                                     }
                                 }
@@ -269,15 +268,15 @@ namespace ore {
                     // post processing: extrapolate leftmost non-zero value flat to the left and overwrite
                     // zero values
                     for (Size i = 0; i < smileOptionTenors.size(); ++i) {
-                        for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                        for (Size j = 0; j < smileBondTenors.size(); ++j) {
                             Real lastNonZeroValue = 0.0;
                             for (Size k = 0; k < spreads.size(); ++k) {
                                 boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
-                                    *volSpreadHandles[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]);
-                                if (zero[i * smileSwapTenors.size() + j][spreads.size() - 1 - k]) {
+                                    *volSpreadHandles[i * smileBondTenors.size() + j][spreads.size() - 1 - k]);
+                                if (zero[i * smileBondTenors.size() + j][spreads.size() - 1 - k]) {
                                     q->setValue(lastNonZeroValue);
                                     WLOG("Overwrite vol spread for " << spec.curveConfigID() << "/"
-                                        << smileOptionTenors[i] << "/" << smileSwapTenors[j] << "/"
+                                        << smileOptionTenors[i] << "/" << smileBondTenors[j] << "/"
                                         << spreads[spreads.size() - 1 - k] << " with "
                                         << lastNonZeroValue << " since market quote is zero");
                                 }
@@ -290,18 +289,19 @@ namespace ore {
 
                     // log vols
                     for (Size i = 0; i < smileOptionTenors.size(); ++i) {
-                        for (Size j = 0; j < smileSwapTenors.size(); ++j) {
+                        for (Size j = 0; j < smileBondTenors.size(); ++j) {
                             ostringstream o;
                             for (Size k = 0; k < spreads.size(); ++k) {
-                                o << volSpreadHandles[i * smileSwapTenors.size() + j][k]->value() +
-                                    atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0)
+                                o << volSpreadHandles[i * smileBondTenors.size() + j][k]->value() +
+                                    atm->volatility(smileOptionTenors[i], smileBondTenors[j], 0.0)
                                     << " ";
                             }
-                            DLOG("Vols for " << smileOptionTenors[i] << "/" << smileSwapTenors[j] << ": " << o.str());
+                            DLOG("Vols for " << smileOptionTenors[i] << "/" << smileBondTenors[j] << ": " << o.str());
                         }
                     }
 
                     // build swap indices
+                    /*
                     auto it = requiredSwapIndices.find(config->swapIndexBase());
                     QL_REQUIRE(it != requiredSwapIndices.end(), "Unable to find SwapIndex " << config->swapIndexBase());
                     boost::shared_ptr<SwapIndex> swapIndexBase = it->second;
@@ -309,6 +309,7 @@ namespace ore {
                     it = requiredSwapIndices.find(config->shortSwapIndexBase());
                     QL_REQUIRE(it != requiredSwapIndices.end(), "Unable to find SwapIndex " << config->shortSwapIndexBase());
                     boost::shared_ptr<SwapIndex> shortSwapIndexBase = it->second;
+                    
 
                     bool vegaWeighedSmileFit = false; // TODO
 
@@ -319,7 +320,7 @@ namespace ore {
                     cube->enableExtrapolation();
 
                     // Wrap it in a SwaptionVolCubeWithATM
-                    vol_ = boost::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);
+                    vol_ = boost::make_shared<QuantExt::SwaptionVolCubeWithATM>(cube);*/
                 }
 
             }

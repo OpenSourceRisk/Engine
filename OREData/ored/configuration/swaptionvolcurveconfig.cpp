@@ -150,8 +150,8 @@ void SwaptionVolatilityCurveConfig::fromXML(XMLNode* node) {
     string bdc = XMLUtils::getChildValue(node, "BusinessDayConvention", true);
     businessDayConvention_ = parseBusinessDayConvention(bdc);
     
-    shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", false);
-    swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", false);
+    shortSwapIndexBase_ = XMLUtils::getChildValue(node, "ShortSwapIndexBase", true);
+    swapIndexBase_ = XMLUtils::getChildValue(node, "SwapIndexBase", true);
 
 
     // optional smile stuff

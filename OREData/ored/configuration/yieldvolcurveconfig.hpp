@@ -60,12 +60,11 @@ namespace ore {
             YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                 const VolatilityType& volatilityType, const bool extrapolate,
                 const bool flatExtrapolation, const vector<Period>& optionTenors,
-                const vector<Period>& swapTenors, const DayCounter& dayCounter,
+                const vector<Period>& bondTenors, const DayCounter& dayCounter,
                 const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                const string& shortSwapIndexBase, const string& swapIndexBase,
                 // Only required for smile
                 const vector<Period>& smileOptionTenors = vector<Period>(),
-                const vector<Period>& smileSwapTenors = vector<Period>(),
+                const vector<Period>& smileBondTenors = vector<Period>(),
                 const vector<Spread>& smileSpreads = vector<Spread>());
             //@}
 
@@ -82,14 +81,12 @@ namespace ore {
             const bool& extrapolate() const { return extrapolate_; }
             const bool& flatExtrapolation() const { return flatExtrapolation_; }
             const vector<Period>& optionTenors() const { return optionTenors_; }
-            const vector<Period>& swapTenors() const { return swapTenors_; }
+            const vector<Period>& bondTenors() const { return bondTenors_; }
             const DayCounter& dayCounter() const { return dayCounter_; }
             const Calendar& calendar() const { return calendar_; }
             const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
-            const string& shortSwapIndexBase() const { return shortSwapIndexBase_; }
-            const string& swapIndexBase() const { return swapIndexBase_; }
             const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
-            const vector<Period>& smileSwapTenors() const { return smileSwapTenors_; }
+            const vector<Period>& smileBondTenors() const { return smileBondTenors_; }
             const vector<Spread>& smileSpreads() const { return smileSpreads_; }
             const vector<string>& quotes() override;
             //@}
@@ -100,13 +97,11 @@ namespace ore {
             VolatilityType& volatilityType() { return volatilityType_; }
             bool& flatExtrapolation() { return flatExtrapolation_; }
             vector<Period>& optionTenors() { return optionTenors_; }
-            vector<Period>& swapTenors() { return swapTenors_; }
+            vector<Period>& bondTenors() { return bondTenors_; }
             DayCounter& dayCounter() { return dayCounter_; }
             Calendar& calendar() { return calendar_; }
-            string& shortSwapIndexBase() { return shortSwapIndexBase_; }
-            string& swapIndexBase() { return swapIndexBase_; }
             vector<Period>& smileOptionTenors() { return smileOptionTenors_; }
-            vector<Period>& smileSwapTenors() { return smileSwapTenors_; }
+            vector<Period>& smileBondTenors() { return smileBondTenors_; }
             vector<Spread>& smileSpreads() { return smileSpreads_; }
             //@}
 
@@ -114,13 +109,12 @@ namespace ore {
             Dimension dimension_;
             VolatilityType volatilityType_;
             bool extrapolate_, flatExtrapolation_;
-            vector<Period> optionTenors_, swapTenors_;
+            vector<Period> optionTenors_, bondTenors_;
             DayCounter dayCounter_;
             Calendar calendar_;
             BusinessDayConvention businessDayConvention_;
-            string shortSwapIndexBase_, swapIndexBase_;
             vector<Period> smileOptionTenors_;
-            vector<Period> smileSwapTenors_;
+            vector<Period> smileBondTenors_;
             vector<Spread> smileSpreads_;
         };
 
