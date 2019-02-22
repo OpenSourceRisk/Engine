@@ -36,10 +36,9 @@ class ForwardRateAgreement : public Trade {
 public:
     ForwardRateAgreement() : Trade("ForwardRateAgreement") {}
     ForwardRateAgreement(Envelope& env, string longShort, string currency, string startDate, string endDate,
-                         string index, double strike, double notional)
+                         string index, double strike, double amount)
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
-          endDate_(endDate), index_(index), strike_(strike) {
-        notional_ = notional;
+          endDate_(endDate), index_(index), strike_(strike), amount_(amount) {
     }
     void build(const boost::shared_ptr<EngineFactory>& engineFactory);
 
@@ -59,6 +58,7 @@ private:
     string endDate_;
     string index_;
     double strike_;
+    double amount_;
 };
 } // namespace data
 } // namespace ore
