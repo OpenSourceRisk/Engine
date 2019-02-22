@@ -249,18 +249,26 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
 
 XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    underlying_->toXML(doc);
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
 
-    XMLUtils::addChild(doc, node, "CallPosition", callPosition_);
-    XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
-    XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
-    XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+    std::ostringstream cp, pp;
 
-    XMLUtils::addChild(doc, node, "PutPosition", putPosition_);
-    XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
-    XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
-    XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
+    if (callStrikes_.size() > 0) {
+        cp << callPosition_;
+        XMLUtils::addChild(doc, node, "CallPosition", cp.str());
+        XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+    }
 
+    if (putStrikes_.size() > 0) {
+        pp << putPosition_;
+        XMLUtils::addChild(doc, node, "PutPosition", pp.str());
+        XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
+    }
+    
     return node;
 }
 
@@ -271,25 +279,25 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     underlying_ = boost::make_shared<CMSSpreadLegData>();
     underlying_->fromXML(underlyingNode);
 
-    string cp = XMLUtils::getChildValue(node, "CallPosition", false);
-    if (cp != "")
-        callPosition_ = parsePositionType(cp);
-    isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", false);
     callStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallStrikes", "Strike", "startDate",
                                                                       callStrikeDates_, false);
-    callPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallPayoffs", "Payoff", "startDate",
+    if (callStrikes_.size() > 0) {
+        string cp = XMLUtils::getChildValue(node, "CallPosition", true);
+        callPosition_ = parsePositionType(cp);
+        isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", true);
+        callPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallPayoffs", "Payoff", "startDate",
                                                                       callPayoffDates_, false);
-    ;
-
-    string pp = XMLUtils::getChildValue(node, "PutPosition", false);
-    if (pp != "")
-        putPosition_ = parsePositionType(pp);
-    isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", false);
+    }
+    
     putStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutStrikes", "Strike", "startDate",
                                                                      putStrikeDates_, false);
-    putPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutPayoffs", "Payoff", "startDate",
+    if (putStrikes_.size() > 0) {
+        string pp = XMLUtils::getChildValue(node, "PutPosition", true);
+        putPosition_ = parsePositionType(pp);
+        isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", true);
+        putPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutPayoffs", "Payoff", "startDate",
                                                                      putPayoffDates_, false);
-    ;
+    }
 }
 
 void EquityLegData::fromXML(XMLNode* node) {
