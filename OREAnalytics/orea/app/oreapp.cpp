@@ -756,11 +756,15 @@ void OREApp::runPostProcessor() {
     Real kvaAlpha = 1.4;
     Real kvaRegAdjustment = 12.5;
     Real kvaCapitalHurdle = 0.012;
+    Real kvaOurPdFloor = 0.03;
+    Real kvaTheirPdFloor = 0.03;
     if (analytics["kva"]) {
         kvaCapitalDiscountRate = parseReal(params_->get("xva", "kvaCapitalDiscountRate"));
         kvaAlpha = parseReal(params_->get("xva", "kvaAlpha"));
         kvaRegAdjustment = parseReal(params_->get("xva", "kvaRegAdjustment"));
         kvaCapitalHurdle = parseReal(params_->get("xva", "kvaCapitalHurdle"));
+        kvaOurPdFloor = parseReal(params_->get("xva", "kvaOurPdFloor"));
+        kvaTheirPdFloor = parseReal(params_->get("xva", "kvaTheirPdFloor"));
     }
 
     if (analytics["mva"] || analytics["dim"]) {
@@ -786,7 +790,7 @@ void OREApp::runPostProcessor() {
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
-        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
+        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor);
 }
 
 void OREApp::writeXVAReports() {
