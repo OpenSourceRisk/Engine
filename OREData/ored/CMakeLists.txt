@@ -199,7 +199,6 @@ portfolio/builders/fxoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
 portfolio/builders/yoycapfloor.hpp
->>>>>>> master
 portfolio/capfloor.hpp
 portfolio/commodityforward.hpp
 portfolio/commodityoption.hpp
