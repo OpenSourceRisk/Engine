@@ -19,6 +19,7 @@ digitalcms.cpp
 equitymarketdata.cpp
 equityswap.cpp
 equitytrades.cpp
+fixings.cpp
 fxoption.cpp
 fxswap.cpp
 fxtriangulation.cpp

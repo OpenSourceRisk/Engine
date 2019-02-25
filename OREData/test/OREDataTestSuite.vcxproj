@@ -655,6 +655,7 @@
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="equitytrades.cpp" />
+    <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />

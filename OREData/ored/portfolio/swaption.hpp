@@ -47,6 +47,10 @@ public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&);
 
+    //! Return the fixings that will be requested to price the Swaption given the \p settlementDate.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
+
     //! \name Inspectors
     //@{
     const OptionData& option() { return option_; }
@@ -70,6 +74,15 @@ private:
     std::vector<boost::shared_ptr<Instrument>> buildUnderlyingSwaps(const boost::shared_ptr<PricingEngine>&,
                                                                     const boost::shared_ptr<Swap>&,
                                                                     const std::vector<Date>&);
+
+    //! Underlying Exercise object
+    boost::shared_ptr<QuantLib::Exercise> exercise_;
+
+    //! Store the name of the underlying swap's floating leg index
+    std::string underlyingIndex_;
+
+    //! Store the underlying swap's floating leg
+    QuantLib::Leg underlyingLeg_;
 };
 } // namespace data
 } // namespace ore
