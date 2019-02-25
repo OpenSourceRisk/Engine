@@ -42,7 +42,7 @@ CmsSpreadCouponPricerBuilder::engineImpl(const Currency& ccy, const string& inde
     const string& ccyCode = ccy.code();
     return boost::make_shared<QuantExt::LognormalCmsSpreadPricer>(
         cmsPricer, corrCurve, market_->discountCurve(ccyCode, configuration(MarketContext::pricing)),
-        parseInteger(engineParameters_.at("IntegrationPoints")));
+        parseInteger(engineParameter("IntegrationPoints")));
 }
 
 } // namespace data
