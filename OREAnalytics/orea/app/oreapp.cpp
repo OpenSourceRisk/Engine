@@ -277,12 +277,6 @@ void OREApp::setupLog() {
     Log::instance().registerLogger(boost::make_shared<FileLogger>(logFile));
     Log::instance().setMask(logMask);
     Log::instance().switchOn();
-
-    // Log memory usage if requested
-    if (params_->has("setup", "logMemoryUsage")) {
-        if (parseBool(params_->get("setup", "logMemoryUsage")))
-            Log::instance().switchOnMemory();
-    }
 }
 
 void OREApp::closeLog() { Log::instance().removeAllLoggers(); }

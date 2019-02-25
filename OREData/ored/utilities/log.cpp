@@ -72,7 +72,7 @@ void FileLogger::log(unsigned, const string& msg) {
 }
 
 // The Log itself
-Log::Log() : loggers_(), enabled_(false), mask_(255), ls_(), memoryEnabled_(false) {
+Log::Log() : loggers_(), enabled_(false), mask_(255), ls_() {
 
     ls_.setf(ios::fixed, ios::floatfield);
     ls_.setf(ios::showpoint);
@@ -98,44 +98,38 @@ void Log::removeLogger(const string& name) {
 void Log::removeAllLoggers() { loggers_.clear(); }
 
 void Log::header(unsigned m, const char* filename, int lineNo) {
-
-    // Determine header type
-    string logType;
-    switch (m) {
-    case ORE_ALERT:
-        logType = "ALERT    ";
-        break;
-    case ORE_CRITICAL:
-        logType = "CRITICAL ";
-        break;
-    case ORE_ERROR:
-        logType = "ERROR    ";
-        break;
-    case ORE_WARNING:
-        logType = "WARNING  ";
-        break;
-    case ORE_NOTICE:
-        logType = "NOTICE   ";
-        break;
-    case ORE_DEBUG:
-        logType = "DEBUG    ";
-        break;
-    case ORE_DATA:
-        logType = "DATA     ";
-        break;
-    }
-
-    header(logType, filename, lineNo);
-}
-
-void Log::header(const string& logType, const char* filename, int lineNo) {
     // 1. Reset stringstream
     ls_.str(string());
     ls_.clear();
 
     // Write the header to the stream
     // TYPE [Time Stamp] (file:line)
-    ls_ << logType;
+    switch (m) {
+    case ORE_ALERT:
+        ls_ << "ALERT    ";
+        break;
+    case ORE_CRITICAL:
+        ls_ << "CRITICAL ";
+        break;
+    case ORE_ERROR:
+        ls_ << "ERROR    ";
+        break;
+    case ORE_WARNING:
+        ls_ << "WARNING  ";
+        break;
+    case ORE_NOTICE:
+        ls_ << "NOTICE   ";
+        break;
+    case ORE_DEBUG:
+        ls_ << "DEBUG    ";
+        break;
+    case ORE_DATA:
+        ls_ << "DATA     ";
+        break;
+    case ORE_MEMORY:
+        ls_ << "MEMORY   ";
+        break;
+    }
 
     // Timestamp
     // Use boost::posix_time microsecond clock to get better precision (when available).
