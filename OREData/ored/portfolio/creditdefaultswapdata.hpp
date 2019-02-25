@@ -47,7 +47,7 @@ public:
           paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
           upfrontFee_(upfrontFee) {}
 
-    void fromXML(XMLNode* node);
+    void fromXML(XMLNode* node); // why does this not inherit from XMLSerialisable?
     XMLNode* toXML(XMLDocument& doc);
 
     const string& issuerId() const { return issuerId_; }

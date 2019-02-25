@@ -40,7 +40,7 @@ public:
         : Trade("ForwardRateAgreement", env), longShort_(longShort), currency_(currency), startDate_(startDate),
           endDate_(endDate), index_(index), strike_(strike), amount_(amount) {
     }
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory);
+    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     //! Return no fixings for a ForwardRateAgreement
     std::map<std::string, std::set<QuantLib::Date>> fixings(
@@ -48,8 +48,8 @@ public:
         return {};
     }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
     string longShort_;
