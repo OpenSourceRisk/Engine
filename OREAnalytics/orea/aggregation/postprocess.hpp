@@ -157,7 +157,11 @@ public:
         //! Our KVA PD floor
         Real kvaOurPdFloor = 0.03,
         //! Their KVA PD floor
-        Real kvaTheirPdFloor = 0.03);
+        Real kvaTheirPdFloor = 0.03,
+	//! Our KVA CVA Risk Weight
+	Real kvaOurCvaRiskWeight = 0.05,
+	//! Their KVA CVA Risk Weight,
+	Real kvaTheirCvaRiskWeight = 0.05);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -240,10 +244,14 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
-    //! Return netting set KVA
+    //! Return netting set KVA-CCR
     Real ourNettingSetKVACCR(const string& nettingSetId);
-    //! Return netting set KVA from counterparty persepctive
+    //! Return netting set KVA-CCR from counterparty persepctive
     Real theirNettingSetKVACCR(const string& nettingSetId);
+    //! Return netting set KVA-CVA
+    Real ourNettingSetKVACVA(const string& nettingSetId);
+    //! Return netting set KVA-CVA from counterparty persepctive
+    Real theirNettingSetKVACVA(const string& nettingSetId);
     //! Return netting set FBA excluding own survival probability
     Real nettingSetFBA_exOwnSP(const string& nettingSetId);
     //! Return netting set FCA excluding own survival probability
@@ -315,7 +323,7 @@ private:
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
     map<string, Real> effMatNumer1_, effMatNumer2_, effMatDenom1_, effMatDenom2_, ourNettingSetKVACCR_,
-        theirNettingSetKVACCR_;
+        theirNettingSetKVACCR_, ourNettingSetKVACVA_, theirNettingSetKVACVA_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
         nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     boost::shared_ptr<NPVCube> nettedCube_;
@@ -345,6 +353,8 @@ private:
     Real kvaCapitalHurdle_;
     Real kvaOurPdFloor_;
     Real kvaTheirPdFloor_;
+    Real kvaOurCvaRiskWeight_;
+    Real kvaTheirCvaRiskWeight_;
 };
 } // namespace analytics
 } // namespace ore
