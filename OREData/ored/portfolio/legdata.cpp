@@ -21,6 +21,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/cashflow.hpp>
@@ -87,6 +88,7 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
+    indices_.insert(index_);
     spreads_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
@@ -129,6 +131,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
 void CPILegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
+    indices_.insert(index_);
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
@@ -154,9 +157,9 @@ XMLNode* CPILegData::toXML(XMLDocument& doc) {
 void YoYLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     index_ = XMLUtils::getChildValue(node, "Index", true);
+    indices_.insert(index_);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
-    interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
     spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
@@ -190,6 +193,7 @@ XMLNode* CMSLegData::toXML(XMLDocument& doc) {
 void CMSLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    indices_.insert(swapIndex_);
     spreads_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
@@ -228,6 +232,8 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
     swapIndex1_ = XMLUtils::getChildValue(node, "Index1", true);
     swapIndex2_ = XMLUtils::getChildValue(node, "Index2", true);
+    indices_.insert(swapIndex1_);
+    indices_.insert(swapIndex2_);
     spreads_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
@@ -249,18 +255,22 @@ void CMSSpreadLegData::fromXML(XMLNode* node) {
 
 XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    underlying_->toXML(doc);
+    XMLUtils::appendNode(node, underlying_->toXML(doc));
 
-    XMLUtils::addChild(doc, node, "CallPosition", callPosition_);
-    XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
-    XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
-    XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+    if (callStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
+        XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+    }
 
-    XMLUtils::addChild(doc, node, "PutPosition", putPosition_);
-    XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
-    XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
-    XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
-
+    if (putStrikes_.size() > 0) {
+        XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
+        XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
+    }
+    
     return node;
 }
 
@@ -270,26 +280,27 @@ void DigitalCMSSpreadLegData::fromXML(XMLNode* node) {
     XMLNode* underlyingNode = XMLUtils::getChildNode(node, "CMSSpreadLegData");
     underlying_ = boost::make_shared<CMSSpreadLegData>();
     underlying_->fromXML(underlyingNode);
+    indices_ = underlying_->indices();
 
-    string cp = XMLUtils::getChildValue(node, "CallPosition", false);
-    if (cp != "")
-        callPosition_ = parsePositionType(cp);
-    isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", false);
     callStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallStrikes", "Strike", "startDate",
                                                                       callStrikeDates_, false);
-    callPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallPayoffs", "Payoff", "startDate",
+    if (callStrikes_.size() > 0) {
+        string cp = XMLUtils::getChildValue(node, "CallPosition", true);
+        callPosition_ = parsePositionType(cp);
+        isCallATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsCallATMIncluded", true);
+        callPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "CallPayoffs", "Payoff", "startDate",
                                                                       callPayoffDates_, false);
-    ;
-
-    string pp = XMLUtils::getChildValue(node, "PutPosition", false);
-    if (pp != "")
-        putPosition_ = parsePositionType(pp);
-    isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", false);
+    }
+    
     putStrikes_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutStrikes", "Strike", "startDate",
                                                                      putStrikeDates_, false);
-    putPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutPayoffs", "Payoff", "startDate",
+    if (putStrikes_.size() > 0) {
+        string pp = XMLUtils::getChildValue(node, "PutPosition", true);
+        putPosition_ = parsePositionType(pp);
+        isPutATMIncluded_ = XMLUtils::getChildValueAsBool(node, "IsPutATMIncluded", true);
+        putPayoffs_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "PutPayoffs", "Payoff", "startDate",
                                                                      putPayoffDates_, false);
-    ;
+    }
 }
 
 void EquityLegData::fromXML(XMLNode* node) {
@@ -300,6 +311,7 @@ void EquityLegData::fromXML(XMLNode* node) {
     else
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
+    indices_.insert("EQ-" + eqName_);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
 }
 
@@ -352,7 +364,12 @@ LegData::LegData(const boost::shared_ptr<LegAdditionalData>& concreteLegData, bo
       notionalFinalExchange_(notionalFinalExchange), notionalAmortizingExchange_(notionalAmortizingExchange),
       isNotResetXCCY_(isNotResetXCCY), foreignCurrency_(foreignCurrency), foreignAmount_(foreignAmount),
       fxIndex_(fxIndex), fixingDays_(fixingDays), fixingCalendar_(fixingCalendar), amortizationData_(amortizationData),
-      paymentLag_(paymentLag) {}
+      paymentLag_(paymentLag) {
+    
+    indices_ = concreteLegData_->indices();
+    if (!fxIndex_.empty())
+        indices_.insert(fxIndex_);
+}
 
 void LegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "LegData");
@@ -374,9 +391,10 @@ void LegData::fromXML(XMLNode* node) {
         XMLNode* fxResetNode = XMLUtils::getChildNode(tmp, "FXReset");
         if (fxResetNode) {
             isNotResetXCCY_ = false;
-            foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency");
-            foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount");
-            fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex");
+            foreignCurrency_ = XMLUtils::getChildValue(fxResetNode, "ForeignCurrency", true);
+            foreignAmount_ = XMLUtils::getChildValueAsDouble(fxResetNode, "ForeignAmount", true);
+            fxIndex_ = XMLUtils::getChildValue(fxResetNode, "FXIndex", true);
+            indices_.insert(fxIndex_);
             fixingDays_ = XMLUtils::getChildValueAsInt(fxResetNode, "FixingDays");
             fixingCalendar_ = XMLUtils::getChildValue(fxResetNode, "FixingCalendar"); // may be empty string
             // TODO add schedule
@@ -405,6 +423,8 @@ void LegData::fromXML(XMLNode* node) {
 
     concreteLegData_ = initialiseConcreteLegData(legType);
     concreteLegData_->fromXML(XMLUtils::getChildNode(node, concreteLegData_->legNodeName()));
+
+    indices_.insert(concreteLegData_->indices().begin(), concreteLegData_->indices().end());
 }
 
 boost::shared_ptr<LegAdditionalData> LegData::initialiseConcreteLegData(const string& legType) {

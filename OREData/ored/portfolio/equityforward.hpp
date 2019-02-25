@@ -44,6 +44,12 @@ public:
 
     void build(const boost::shared_ptr<EngineFactory>&);
 
+    //! Return no fixings for an EquityForward.
+    std::map<std::string, std::set<QuantLib::Date>> fixings(
+        const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
+        return {};
+    }
+
     string longShort() { return longShort_; }
     string eqName() { return eqName_; }
     string currency() { return currency_; }

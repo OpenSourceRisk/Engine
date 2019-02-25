@@ -143,9 +143,8 @@ BOOST_AUTO_TEST_CASE(testYoYCapFloor) {
     bool isPayerYY = false;
     string indexYY = "EUHICPXT";
     string lag = "3M";
-    bool interpolated = false;
-    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, interpolated, 0), isPayerYY, "EUR", scheduleYY, dc,
-                  notional, vector<string>(), paymentConvention, false, true);
+    LegData legYY(boost::make_shared<YoYLegData>(indexYY, lag, 0), isPayerYY,
+        "EUR", scheduleYY, dc, notional, vector<string>(), paymentConvention, false, true);
 
     std::vector<double> caps(1, 0.009);
     // Build capfloor trades
