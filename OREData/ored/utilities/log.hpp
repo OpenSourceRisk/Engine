@@ -32,6 +32,9 @@
 #define ORE_DEBUG 32   // 00100000  63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
 
+// Levels that do not take part in the filter but can be useful hooks
+#define ORE_MEMORY 65
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -42,6 +45,7 @@
 #include <map>
 #include <ql/qldefines.hpp>
 #include <queue>
+#include <ored/utilities/osutils.hpp>
 
 #ifndef BOOST_MSVC
 #include <unistd.h>
@@ -256,6 +260,10 @@ public:
 
     //! macro utility function - do not use directly
     void header(unsigned m, const char* filename, int lineNo);
+    /*! Write the logging header.
+        \warning The \p logType should be 9 characters, right-padded with spaces if necessary
+    */
+    void header(const std::string& logType, const char* filename, int lineNo);
     //! macro utility function - do not use directly
     std::ostream& logStream() { return ls_; }
     //! macro utility function - do not use directly
@@ -270,6 +278,13 @@ public:
     void switchOn() { enabled_ = true; }
     void switchOff() { enabled_ = false; }
 
+    //! Return \c true if memory usage logging is enabled and \c false if not
+    bool memoryEnabled() { return memoryEnabled_; }
+    //! Turn on memory usage logging
+    void switchOnMemory() { memoryEnabled_ = true; }
+    //! Turn off memory usage logging
+    void switchOffMemory() { memoryEnabled_ = false; }
+
 private:
     Log();
 
@@ -277,6 +292,8 @@ private:
     bool enabled_;
     unsigned mask_;
     std::ostringstream ls_;
+    //! True if memory usage logging is enabled
+    bool memoryEnabled_;
 };
 
 /*!
@@ -303,6 +320,15 @@ private:
 #define DLOG(text) MLOG(ORE_DEBUG, text)
 //! Logging Macro (Level = Data)
 #define TLOG(text) MLOG(ORE_DATA, text)
+
+/*! Macro for memory usage logging.
+*/
+#define MEM_LOG                                                                                                       \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().memoryEnabled()) {                         \
+        ore::data::Log::instance().header("MEMORY   ", __FILE__, __LINE__);                                           \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());               \
+        ore::data::Log::instance().log(ORE_MEMORY);                                                                   \
+    }
 
 //! LoggerStream class that is a std::ostream replacment that will log each line
 /*! LoggerStream is a simple wrapper around a string stream, it has an explicit
