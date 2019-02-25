@@ -118,13 +118,12 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
     string cal, dc;
     if (quoteType_ == QuoteType::Null) {
-        calendar_ = QuantLib::NullCalendar();
-        cal = XMLUtils::getChildValue(node, "Calendar", false);
-        calendar_ = parseCalendar(cal);
 
-        dayCounter_ = QuantLib::ActualActual();
+        cal = XMLUtils::getChildValue(node, "Calendar", false);
+        cal == "" ? calendar_ = QuantLib::NullCalendar() : calendar_ = parseCalendar(cal);
+
         dc = XMLUtils::getChildValue(node, "DayCounter", false);
-        dayCounter_ = parseDayCounter(dc);
+        dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
     } else // Compulsory information for Rate and Price QuoteTypes
     {
         cal = XMLUtils::getChildValue(node, "Calendar", true);
@@ -201,7 +200,7 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-	
+
     if (quoteType_ != QuoteType::Null) {
 
         if (dimension_ == Dimension::ATM) {
@@ -211,9 +210,8 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
         } else {
             QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
         }
-	
-        XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
 
+        XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
 
         if (dimension_ == Dimension::ATM)
             XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
