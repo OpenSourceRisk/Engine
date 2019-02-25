@@ -21,6 +21,7 @@
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/cashflow.hpp>
@@ -256,19 +257,15 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::appendNode(node, underlying_->toXML(doc));
 
-    std::ostringstream cp, pp;
-
     if (callStrikes_.size() > 0) {
-        cp << callPosition_;
-        XMLUtils::addChild(doc, node, "CallPosition", cp.str());
+        XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
         XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
         XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
         XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
     }
 
     if (putStrikes_.size() > 0) {
-        pp << putPosition_;
-        XMLUtils::addChild(doc, node, "PutPosition", pp.str());
+        XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
         XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
         XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
         XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
