@@ -53,7 +53,7 @@ public:
     void initialise(const boost::shared_ptr<Portfolio>& portfolio);
   
     virtual void processCashFlows(const boost::shared_ptr<QuantLib::CashFlow> cf);
-  //virtual void processLegs(const std::vector<QuantLib::Leg> leg);
+  
     //! Update fixings to date d
     void update(Date d);
 
