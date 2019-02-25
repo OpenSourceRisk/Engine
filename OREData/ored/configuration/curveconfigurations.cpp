@@ -404,7 +404,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
     addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);

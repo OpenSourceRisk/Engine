@@ -42,7 +42,7 @@ public:
     CreditDefaultSwap(const Envelope& env, const CreditDefaultSwapData& swap)
         : Trade("CreditDefaultSwap", env), swap_(swap) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&);
+    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Return no fixings for a CommodityOption
     std::map<std::string, std::set<QuantLib::Date>> fixings(
@@ -50,8 +50,8 @@ public:
         return {};
     }
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
     const CreditDefaultSwapData& swap() const { return swap_; }
 

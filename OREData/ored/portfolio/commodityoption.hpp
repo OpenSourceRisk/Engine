@@ -42,7 +42,7 @@ public:
                     const std::string& currency, QuantLib::Real strike, QuantLib::Real quantity);
 
     //! Build underlying instrument and link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>& engineFactory);
+    void build(const boost::shared_ptr<EngineFactory>& engineFactory) override;
 
     //! Return no fixings for a CommodityOption
     std::map<std::string, std::set<QuantLib::Date>> fixings(
@@ -61,8 +61,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 
 private:

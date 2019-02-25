@@ -45,7 +45,7 @@ public:
         : Trade("Swaption", env), option_(option), swap_(swap) {}
 
     //! Build QuantLib/QuantExt instrument, link pricing engine
-    void build(const boost::shared_ptr<EngineFactory>&);
+    void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Return the fixings that will be requested to price the Swaption given the \p settlementDate.
     std::map<std::string, std::set<QuantLib::Date>> fixings(
@@ -59,8 +59,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     OptionData option_;

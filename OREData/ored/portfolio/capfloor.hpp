@@ -39,7 +39,7 @@ public:
              const vector<double>& floors)
         : Trade("CapFloor", env), longShort_(longShort), legData_(leg), caps_(caps), floors_(floors) {}
 
-    virtual void build(const boost::shared_ptr<EngineFactory>&);
+    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
     
     //! Return the fixings that will be requested to price the CapFloor given the \p settlementDate.
     std::map<std::string, std::set<QuantLib::Date>> fixings(
@@ -53,8 +53,8 @@ public:
     const vector<double>& floors() const { return floors_; }
     //@}
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
 private:
     string longShort_;
