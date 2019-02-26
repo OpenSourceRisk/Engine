@@ -57,7 +57,9 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const Conventions& conventions, const bool recalibrateModels,
                                          const CurveConfigurations& curveConfigs,
                                          const TodaysMarketParameters& todaysMarketParams,
-                                         const bool nonShiftedBaseCurrencyConversion, 
+                                         const bool nonShiftedBaseCurrencyConversion,
+                                         std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+                                         std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders,
                                          const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
