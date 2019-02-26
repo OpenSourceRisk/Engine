@@ -359,6 +359,8 @@ PostProcess::PostProcess(
         vector<Real> eee_b(dates + 1, 0.0);
         vector<Real> eee_b_kva_1(dates + 1, 0.0);
         vector<Real> eee_b_kva_2(dates + 1, 0.0);
+        vector<Real> eepe_b_kva_1(dates + 1, 0.0);
+        vector<Real> eepe_b_kva_2(dates + 1, 0.0);
         vector<Real> eab(dates + 1, 0.0);
         vector<Real> pfe(dates + 1, 0.0);
         vector<Real> colvaInc(dates + 1, 0.0);
@@ -461,15 +463,18 @@ PostProcess::PostProcess(
             // for KVA maturity adjustment, calculate the effective maturity from effective expected exposure
             // as of that time ...
             // ... more accuracy may be achieved by using a longstaff-schwartz method / regression
-            Real eepe_kva_1a = 0, eepe_kva_2a = 0.0;
+            Real eee_kva_1 = 0, eee_kva_2 = 0.0;
             for (Size k = j; k < dates; ++k) {
-	        eepe_kva_1a = std::max(eepe_kva_1a, epe[k + 1]);
-		eepe_kva_2a = std::max(eepe_kva_2a, ene[k + 1]);
+	        eee_kva_1 = std::max(eee_kva_1, epe[k + 1]);
+		eee_kva_2 = std::max(eee_kva_2, ene[k + 1]);
 	    }
+            eee_b_kva_1[j + 1] = eee_kva_1;
+            eee_b_kva_2[j + 1] = eee_kva_2;
 	    // Compute the Basel EEPE as of time j from both, our and their perspective 
-	    Size kmax = j;
-	    while (cube_->dates()[kmax] < cube_->dates()[j] + 1 * Years + 4 * Days && kmax - 1 < dates)
+	    Size kmax = j+1;
+	    while (cube_->dates()[kmax] < cube_->dates()[j] + 1 * Years + 4 * Days && kmax < dates)
 	        kmax ++;
+	    DLOG("KVA EEPE " << j << " " << kmax << " " << dates);
 	    Real sumdt = 0.0, eee1_b = 0.0, eee2_b = 0.0;
             Real eepe_kva_1 = 0, eepe_kva_2 = 0.0;
             for (Size k = j; k < kmax; ++k) {
@@ -484,21 +489,17 @@ PostProcess::PostProcess(
 	    }
 	    eepe_kva_1 /= sumdt;
 	    eepe_kva_2 /= sumdt;
-	    DLOG("KVA EEPE " << eepe_kva_1 << " " << eepe_kva_1a);
-	    DLOG("KVA EENE " << eepe_kva_2 << " " << eepe_kva_2a);
-            eee_b_kva_1[j + 1] = eepe_kva_1;
-            eee_b_kva_2[j + 1] = eepe_kva_2;
+	    DLOG("KVA EEPE " << eepe_kva_1 << " " << eee_kva_1);
+	    DLOG("KVA EENE " << eepe_kva_2 << " " << eee_kva_2);
+            eepe_b_kva_1[j + 1] = eepe_kva_1;
+            eepe_b_kva_2[j + 1] = eepe_kva_2;
             if (dc.yearFraction(today, date) > 1.0) {
-                effMatNumer1_[nettingSetId] +=
-                    epe[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
-                effMatNumer2_[nettingSetId] +=
-                    ene[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
+                effMatNumer1_[nettingSetId] += epe[j + 1] * dc.yearFraction(prevDate, date);
+                effMatNumer2_[nettingSetId] += ene[j + 1] * dc.yearFraction(prevDate, date);
             }
             if (dc.yearFraction(today, date) <= 1.0) {
-                effMatDenom1_[nettingSetId] +=
-                    eee_b_kva_1[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
-                effMatDenom2_[nettingSetId] +=
-                    eee_b_kva_2[j + 1] * dc.yearFraction(prevDate, date) * curve->discount(cube_->dates()[j]);
+                effMatDenom1_[nettingSetId] += eee_b_kva_1[j + 1] * dc.yearFraction(prevDate, date);
+                effMatDenom2_[nettingSetId] += eee_b_kva_2[j + 1] * dc.yearFraction(prevDate, date);
             }
         }
         expectedCollateral_[nettingSetId] = eab;
@@ -508,6 +509,8 @@ PostProcess::PostProcess(
         netEEE_B_[nettingSetId] = eee_b;
         netEEE_B_kva_1_[nettingSetId] = eee_b_kva_1;
         netEEE_B_kva_2_[nettingSetId] = eee_b_kva_2;
+        netEEPE_B_kva_1_[nettingSetId] = eepe_b_kva_1;
+        netEEPE_B_kva_2_[nettingSetId] = eepe_b_kva_2;
         netPFE_[nettingSetId] = pfe;
         colvaInc_[nettingSetId] = colvaInc;
         eoniaFloorInc_[nettingSetId] = eoniaFloorInc;
@@ -749,8 +752,8 @@ void PostProcess::updateStandAloneXVA() {
         vector<Real> epe = netEPE_[nettingSetId];
         vector<Real> ene = netENE_[nettingSetId];
         // needed for KVA CCR Risk capital (EAD = alpha x eepe(t))
-        vector<Real> eepe = netEEE_B_kva_1_[nettingSetId];
-        vector<Real> eene = netEEE_B_kva_2_[nettingSetId];
+        vector<Real> eepe = netEEPE_B_kva_1_[nettingSetId];
+        vector<Real> eene = netEEPE_B_kva_2_[nettingSetId];
 
         vector<Real> edim;
         if (applyMVA)
@@ -813,7 +816,7 @@ void PostProcess::updateStandAloneXVA() {
         DLOG("Our KVA-CCR " << nettingSetId << ": LGD=" << lgd1);
         DLOG("Our KVA-CCR " << nettingSetId << ": rho=" << rho1);
         DLOG("Our KVA-CCR " << nettingSetId << ": PD99=" << PD99_1);
-        DLOG("Our KVA-CCR " << nettingSetId << ": PD Floor=" << kvaOurPdFloor_);
+        DLOG("Our KVA-CCR " << nettingSetId << ": PD Floor=" << kvaTheirPdFloor_);
         DLOG("Our KVA-CCR " << nettingSetId << ": Floored PD99=" << kva99PD1);
         DLOG("Our KVA-CCR " << nettingSetId << ": B(PD)=" << kvaMatAdjB1);
         DLOG("Our KVA-CCR " << nettingSetId << ": M=" << kvaNWMaturity1);
@@ -823,7 +826,7 @@ void PostProcess::updateStandAloneXVA() {
         DLOG("Their KVA-CCR " << nettingSetId << ": LGD=" << lgd2);
         DLOG("Their KVA-CCR " << nettingSetId << ": rho=" << rho2);
         DLOG("Their KVA-CCR " << nettingSetId << ": PD99=" << PD99_2);
-        DLOG("Their KVA-CCR " << nettingSetId << ": PD Floor=" << kvaTheirPdFloor_);
+        DLOG("Their KVA-CCR " << nettingSetId << ": PD Floor=" << kvaOurPdFloor_);
         DLOG("Their KVA-CCR " << nettingSetId << ": Floored PD99=" << kva99PD2);
         DLOG("Their KVA-CCR " << nettingSetId << ": B(PD)=" << kvaMatAdjB2);
         DLOG("Their KVA-CCR " << nettingSetId << ": M=" << kvaNWMaturity2);
