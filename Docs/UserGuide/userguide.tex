@@ -2329,6 +2329,7 @@ and {\tt </TodaysMarket>}. The file then contains configuration blocks for
 \item Equity volatility structures
 \item CDS volatility structures
 \item Base correlation structures
+\item Correlation structures
 \item Securities
 \end{itemize}
 
@@ -2726,6 +2727,22 @@ Base correlation structures are configured as follows
 
 The composition of the base correlation structure is defined in the curve configuration.
 
+\subsubsection{Correlation Structures}
+
+Correlation structures are configured as follows
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+ <Correlations id="default">
+      <Correlation name="EUR-CMS-10Y:EUR-CMS-1Y">Correlation/EUR-CORR</Correlation>  
+      <Correlation name="USD-CMS-10Y:USD-CMS-1Y">Correlation/USD-CORR</Correlation>
+ </Correlations>
+\end{minted}
+\caption{Correlations block with ID 'default'}
+\label{lst:corr_spec}
+\end{listing}
+
+The composition of the correlation structure is defined in the curve configuration.
 \subsubsection{Market Configurations}
 
 Finally, representatives of each type of block (Discount Curves, Index Curves, Volatility structures, etc, up to
@@ -4202,8 +4219,7 @@ a SpreadQuote and a RecoveryRateQuote.
 
 \subsubsection{Correlations}
 
-Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. Currently only ATM correlation curves or Flat correlation structures are supported.
-Correlation quotes may be loaded directly (by setting QuoteType to Rate) or calibrated from prices (set QuoteType to Price). Alternatively, QuoteType may be set to Null to get a flat zero correlation curve. In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
+Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to Rate) or calibrated from prices (set QuoteType to Price).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to Null). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4212,6 +4228,7 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
     <Correlation>
       <CurveId>EUR-CORR</CurveId>
       <CurveDescription>EUR CMS correlations</CurveDescription>
+      <!--CMSSpread, Generic-->
       <CorrelationType>CMSSpread</CorrelationType>
       <Index1>EUR-CMS-10Y</Index1>
       <Index2>EUR-CMS-2Y</Index2>
@@ -4222,7 +4239,7 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
       <Currency>EUR</Currency>
       <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
-      <!-- Rate, Price -->
+      <!-- Rate, Price, Null -->
       <QuoteType>Price</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
