@@ -461,11 +461,31 @@ PostProcess::PostProcess(
             // for KVA maturity adjustment, calculate the effective maturity from effective expected exposure
             // as of that time ...
             // ... more accuracy may be achieved by using a longstaff-schwartz method / regression
-            Real eepe_kva_1 = 0, eepe_kva_2 = 0.0;
+            Real eepe_kva_1a = 0, eepe_kva_2a = 0.0;
             for (Size k = j; k < dates; ++k) {
-                eepe_kva_1 = std::max(eepe_kva_1, epe[k + 1]);
-                eepe_kva_2 = std::max(eepe_kva_2, ene[k + 1]);
-            }
+	        eepe_kva_1a = std::max(eepe_kva_1a, epe[k + 1]);
+		eepe_kva_2a = std::max(eepe_kva_2a, ene[k + 1]);
+	    }
+	    // Compute the Basel EEPE as of time j from both, our and their perspective 
+	    Size kmax = j;
+	    while (cube_->dates()[kmax] < cube_->dates()[j] + 1 * Years + 4 * Days && kmax - 1 < dates)
+	        kmax ++;
+	    Real sumdt = 0.0, eee1_b = 0.0, eee2_b = 0.0;
+            Real eepe_kva_1 = 0, eepe_kva_2 = 0.0;
+            for (Size k = j; k < kmax; ++k) {
+	        Real dt =  dc.yearFraction(cube_->dates()[k], cube_->dates()[k+1]);
+		sumdt += dt;
+		Real epe_b = epe[k + 1] / curve->discount(cube_->dates()[k]);
+		Real ene_b = ene[k + 1] / curve->discount(cube_->dates()[k]);
+		eee1_b = std::max(epe_b, eee1_b);
+		eee2_b = std::max(ene_b, eee2_b);
+		eepe_kva_1 += eee1_b * dt;
+		eepe_kva_2 += eee2_b * dt;
+	    }
+	    eepe_kva_1 /= sumdt;
+	    eepe_kva_2 /= sumdt;
+	    DLOG("KVA EEPE " << eepe_kva_1 << " " << eepe_kva_1a);
+	    DLOG("KVA EENE " << eepe_kva_2 << " " << eepe_kva_2a);
             eee_b_kva_1[j + 1] = eepe_kva_1;
             eee_b_kva_2[j + 1] = eepe_kva_2;
             if (dc.yearFraction(today, date) > 1.0) {
