@@ -157,7 +157,7 @@ unsigned long long getMemoryUsageBytes() {
     PROCESS_MEMORY_COUNTERS info;
     if (!GetProcessMemoryInfo(GetCurrentProcess(), &info, sizeof(info)))
         return 0;
-    return info.PeakWorkingSetSize;
+    return info.WorkingSetSize;
 }
 
 string getUsername() {
