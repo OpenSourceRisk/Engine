@@ -146,6 +146,8 @@ protected:
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)
