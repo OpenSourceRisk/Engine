@@ -310,6 +310,7 @@ private:
 #define MEM_LOG                                                                                                        \
     if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(ORE_MEMORY)) {                       \
         ore::data::Log::instance().header(ORE_MEMORY, __FILE__, __LINE__);                                             \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";     \
         ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());                \
         ore::data::Log::instance().log(ORE_MEMORY);                                                                    \
     }
