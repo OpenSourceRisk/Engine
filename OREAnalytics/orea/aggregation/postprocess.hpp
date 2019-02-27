@@ -286,6 +286,7 @@ private:
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
+    void nettingSetKVA();   
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 
@@ -312,8 +313,7 @@ private:
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
-    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_,
-        netEEE_B_kva_1_, netEEE_B_kva_2_, netEEPE_B_kva_1_, netEEPE_B_kva_2_;
+    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
@@ -322,8 +322,7 @@ private:
     map<string, Real> allocatedTradeCVA_, allocatedTradeDVA_;
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
-    map<string, Real> effMatNumer1_, effMatNumer2_, effMatDenom1_, effMatDenom2_, ourNettingSetKVACCR_,
-        theirNettingSetKVACCR_, ourNettingSetKVACVA_, theirNettingSetKVACVA_;
+    map<string, Real> ourNettingSetKVACCR_, theirNettingSetKVACCR_, ourNettingSetKVACVA_, theirNettingSetKVACVA_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
         nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     boost::shared_ptr<NPVCube> nettedCube_;

@@ -115,7 +115,7 @@ Date & Author & Comment \\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
 %13 June 2018 & Quaternion & updates for release 4\\
-21 February 2018 & Quaternion & updates for release 4\\
+21 February 2019 & Quaternion & updates for release 4\\
 \hline
 \end{supertabular}
 \end{center}
@@ -4838,28 +4838,33 @@ $$
 \medskip where $B(\PD) = (0.11852 - 0.05478 \ln(\PD))^2$ and M is the
 effective  maturity of the portfolio (capped at 5):
 
-$$M = \min\left(5, 1 + \frac{\sum\limits_{t_k > 1yr} \EE(t_k)\Delta t_k
-  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} \EEE(t_k)\Delta t_k B(0,t_k)}\right)
+$$M = \min\left(5, 1 + \frac{\sum\limits_{t_k > 1yr} \EE_B(t_k)\Delta t_k
+  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} \EEE_B(t_k)\Delta t_k B(0,t_k)}\right)
 $$
 
 \medskip where $B(0,t_k)$ is the risk-free discount factor from the
 simulation  date $t_k$ to today, $\Delta t_k$ is the difference
 between time points, 
-$\EE(t_k)$ is the expected exposure at time $t_k$ and $\EEE(t_k)$ is the
-effective expected exposure.
+$\EE_B(t_k)$ is the expected (Basel) exposure at time $t_k$ and $\EEE_B(t_k)$ is the
+associated effective expected exposure.
 
-\medskip (Expected) risk capital at $t_i$:
-$$\RC(t_i) = EAD(t_i) \times LGD \times \PD_{99.9\%} \times \MA(\PD, M)$$
-
-$$\EAD(t_i) = \alpha \times \EEPE(t_i)$$
-
-\medskip $\EEPE_{t_i}$ being approximated by %$\EPE$ at point $t_i$ 
-the maximum of $\EPE(t)$ with $t\geq t_i$,
-and $\alpha$ the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
-
-\medskip $\KVA_{CCR}$ is the sum of the expected risk capital amount discounted at {\em capital discount rate} $r_{cd}$ and compounded at rate given by the product of {\em capital hurdle} $h$ and {\em regulatory adjustment} $a$:
+\medskip 
+Expected risk capital at $t_i$:
 $$
-\KVA_{CCR} = \sum_i \RC_{t_i} \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
+\RC(t_i) = EAD(t_i) \times LGD \times \PD_{99.9\%} \times \MA(\PD, M)
+$$
+where
+\begin{itemize}
+\item $\EAD(t_i) = \alpha \times \EEPE(t_i)$
+\item $\EEPE(t_i)$ is estimated as the time average of the running maximum of $\EPE(t)$ over the time interval $t_i\leq t\leq t_i+1$
+\item $\alpha$ is the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+\item the maturity adjustment MA is derived from the EPE profile for times $t\geq t_i$
+\end{itemize}
+
+\medskip 
+$\KVA_{CCR}$ is the sum of the expected risk capital amount discounted at {\em capital discount rate} $r_{cd}$ and compounded at rate given by the product of {\em capital hurdle} $h$ and {\em regulatory adjustment} $a$:
+$$
+\KVA_{CCR} = \sum_i \RC(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
 $$
 assuming Actual/Actual day count to compute the year factions $delta$.
 
@@ -4888,10 +4893,9 @@ $$
 $$
 with 
 $$
-\SCVA(t_i) = \RW_c \cdot M\cdot \EEPE(t_i)\cdot\DF
+\SCVA(t_i) = \RW_c \cdot M(t_i)\cdot \EEPE(t_i)\cdot\DF
 $$
-where we keep $M$ and $\DF$ constant as of today ($t=0$), and $\EEPE(t_i)$ is approximated by 
-the maximum of $\EPE(t)$ with $t\geq t_i$.
+where we derive both $M$ and EEPE from the EPE profile for times $t\geq t_i$.
 
 In ORE we compute KVA BA-CVA from both perspectives - ``our'' KVA driven by EPE and the counterparty risk weight, and similarly ``their'' KVA driven by ENE and our risk weight. \\
 
