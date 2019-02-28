@@ -569,6 +569,7 @@
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
+    <ClInclude Include="qle\instruments\bondoption.hpp" />
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
     <ClInclude Include="qle\instruments\makecds.hpp" />
@@ -621,7 +622,7 @@
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
-	<ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpicapfloorengines.hpp" />
@@ -732,6 +733,7 @@
     <ClCompile Include="qle\indexes\inflationindexwrapper.cpp" />
     <ClCompile Include="qle\indexes\region.cpp" />
     <ClCompile Include="qle\instruments\averageois.cpp" />
+    <ClCompile Include="qle\instruments\bondoption.cpp" />
     <ClCompile Include="qle\instruments\cdsoption.cpp" />
     <ClCompile Include="qle\instruments\commodityforward.cpp" />
     <ClCompile Include="qle\instruments\creditdefaultswap.cpp" />
@@ -783,7 +785,7 @@
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
-	<ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpicapfloorengines.cpp" />

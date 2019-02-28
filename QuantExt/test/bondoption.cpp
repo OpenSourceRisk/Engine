@@ -27,7 +27,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/schedule.hpp>
 #include <ql/instruments/bond.hpp>
-#include <ql/experimental/callablebonds/callablebond.hpp>
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 
@@ -104,7 +103,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         boost::shared_ptr<Callability> callability(new Callability(callabilityPrice, callabilityType, exerciseDate));
         CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability> >(1, callability);
 
-        boost::shared_ptr<QuantLib::CallableBond> bondOption(new QuantLib::CallableFixedRateBond(settlementDays, faceAmount, schedule, rates,
+        boost::shared_ptr<QuantExt::BondOption> bondOption(new QuantExt::FixedRateBondOption(settlementDays, faceAmount, schedule, rates,
             dc, bdc, redemption, issueDate, callabilitySchedule));
 
         boost::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(

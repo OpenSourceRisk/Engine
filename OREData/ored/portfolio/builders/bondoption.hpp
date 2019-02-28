@@ -28,8 +28,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/enginefactory.hpp>
 #include <qle/pricingengines/blackbondoptionengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <ql/experimental/callablebonds/blackcallablebondengine.hpp>
-#include <ql/experimental/callablebonds/callablebondvolstructure.hpp>
 #include <qle/termstructures/pricetermstructureadapter.hpp>
 
 namespace ore {

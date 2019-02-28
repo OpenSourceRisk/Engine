@@ -40,17 +40,14 @@ of upfront amount and exercise before CDS start
 #ifndef quantext_black_bond_option_engine_hpp
 #define quantext_black_bond_option_engine_hpp
 
+#include <qle/instruments/bondoption.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionvolstructure.hpp>
-#include <ql/experimental/callablebonds/callablebond.hpp>
-#include <ql/experimental/callablebonds/blackcallablebondengine.hpp>
-#include <ql/experimental/callablebonds/callablebondvolstructure.hpp>
-
 
 namespace QuantExt {
     using namespace QuantLib;
 
     //! Black-formula bond option engine
-    class BlackBondOptionEngine : public CallableFixedRateBond::engine {
+    class BlackBondOptionEngine : public BondOption::engine {
     public:
         //! volatility is the quoted fwd yield volatility, not price vol
         BlackBondOptionEngine(
