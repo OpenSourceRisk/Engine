@@ -310,6 +310,26 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = vol;
         }
     } break;
+    case RiskFactorKey::KeyType::YieldVolatility: {
+        string securityId = keylabel;
+        auto itr = sensiParams.yieldVolShiftData().find(securityId);
+        QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            vector<Period> tenors = itr->second.shiftTerms;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / (tenors.size() * strikes.size());
+            Period p_exp = expiries[expIdx];
+            Size tenIdx = keyIdx % tenors.size();
+            Period p_ten = tenors[tenIdx];
+            Real strike = Null<Real>(); // for cubes this will be ATM
+            Handle<SwaptionVolatilityStructure> vts = simMarket->yieldVol(securityId, marketConfiguration);
+            Real vol = vts->volatility(p_exp, p_ten, strike);
+            shiftMult = vol;
+        }
+    } break;
     case RiskFactorKey::KeyType::OptionletVolatility: {
         string ccy = keylabel;
         auto itr = sensiParams.capFloorVolShiftData().find(ccy);

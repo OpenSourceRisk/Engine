@@ -85,6 +85,10 @@ public:
         string indexName;
     };
 
+    struct YieldVolShiftData : VolShiftData {
+        vector<Period> shiftTerms;
+    };
+
     //! Default constructor
     SensitivityScenarioData(){};
 
@@ -98,6 +102,7 @@ public:
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
     const map<string, CapFloorVolShiftData>& capFloorVolShiftData() const { return capFloorVolShiftData_; }
     const map<string, SwaptionVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
+    const map<string, YieldVolShiftData>& yieldVolShiftData() const { return yieldVolShiftData_; }
     const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
     const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
@@ -139,6 +144,7 @@ public:
     map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
     map<string, SwaptionVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
+    map<string, YieldVolShiftData>& yieldVolShiftData() { return yieldVolShiftData_; }
     map<string, CapFloorVolShiftData>& capFloorVolShiftData() { return capFloorVolShiftData_; }
     map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
@@ -201,6 +207,7 @@ protected:
     map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
     map<string, CapFloorVolShiftData> capFloorVolShiftData_;                // key: ccy
     map<string, SwaptionVolShiftData> swaptionVolShiftData_;                // key: ccy
+    map<string, YieldVolShiftData> yieldVolShiftData_;                         // key: securityId
     map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
     map<string, CdsVolShiftData> cdsVolShiftData_;                          // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;

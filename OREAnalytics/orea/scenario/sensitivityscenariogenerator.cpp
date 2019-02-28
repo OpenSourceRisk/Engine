@@ -126,6 +126,11 @@ void SensitivityScenarioGenerator::generateScenarios() {
         generateSwaptionVolScenarios(false);
     }
 
+    if (simMarketData_->simulateYieldVols()) {
+        generateYieldVolScenarios(true);
+        generateYieldVolScenarios(false);
+    }
+
     if (simMarketData_->simulateCapFloorVols()) {
         generateCapFloorVolScenarios(true);
         generateCapFloorVolScenarios(false);
@@ -1096,6 +1101,142 @@ void SensitivityScenarioGenerator::generateSwaptionVolScenarios(bool up) {
         }
     }
     LOG("Swaption vol scenarios done");
+}
+
+void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
+    Date asof = baseScenario_->asof();
+    LOG("starting yieldVol sgen");
+    // We can choose to shift fewer discount curves than listed in the market
+    // Log an ALERT if some bond securityId in simmarket are excluded from the list
+    for (auto sim_securityId : simMarketData_->yieldVolNames()) {
+        if (sensitivityData_->yieldVolShiftData().find(sim_securityId) == sensitivityData_->yieldVolShiftData().end()) {
+            ALOG("Bond securityId " << sim_securityId << " in simmarket is not included in sensitivities analysis");
+        }
+    }
+
+    Size n_swvol_term = simMarketData_->yieldVolTerms().size();
+    Size n_swvol_exp = simMarketData_->yieldVolExpiries().size();
+    Size n_swvol_strike = simMarketData_->yieldVolStrikeSpreads().size();
+
+    bool atmOnly_swvol = simMarketData_->simulateYieldVolATMOnly();
+
+    vector<Real> volExpiryTimes(n_swvol_exp, 0.0);
+    vector<Real> volTermTimes(n_swvol_term, 0.0);
+    vector<Real> volStrikes = simMarketData_->yieldVolStrikeSpreads();
+    vector<vector<vector<Real>>> volData;
+    vector<vector<vector<Real>>> shiftedVolData;
+
+    volData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
+    shiftedVolData.resize(n_swvol_strike, vector<vector<Real>>(n_swvol_exp, vector<Real>(n_swvol_term, 0.0)));
+
+    for (auto s : sensitivityData_->yieldVolShiftData()) {
+        std::string securityId = s.first;
+        SensitivityScenarioData::YieldVolShiftData data = s.second;
+        ShiftType shiftType = parseShiftType(data.shiftType);
+        Real shiftSize = data.shiftSize;
+
+        vector<Real> shiftExpiryTimes(data.shiftExpiries.size(), 0.0);
+        vector<Real> shiftTermTimes(data.shiftTerms.size(), 0.0);
+
+        vector<Real> shiftStrikes;
+        if (!atmOnly_swvol) {
+            shiftStrikes = data.shiftStrikes;
+            QL_REQUIRE(data.shiftStrikes.size() == n_swvol_strike,
+                "number of simulated strikes must equal number of sensitivity strikes");
+        }
+        else {
+            shiftStrikes = { 0.0 };
+        }
+
+        DayCounter dc = parseDayCounter(simMarketData_->yieldVolDayCounter(securityId));
+
+        // cache original vol data
+        for (Size j = 0; j < n_swvol_exp; ++j) {
+            Date expiry = asof + simMarketData_->yieldVolExpiries()[j];
+            volExpiryTimes[j] = dc.yearFraction(asof, expiry);
+        }
+        for (Size j = 0; j < n_swvol_term; ++j) {
+            Date term = asof + simMarketData_->yieldVolTerms()[j];
+            volTermTimes[j] = dc.yearFraction(asof, term);
+        }
+
+        bool valid = true;
+        for (Size j = 0; j < n_swvol_exp; ++j) {
+            for (Size k = 0; k < n_swvol_term; ++k) {
+                for (Size l = 0; l < n_swvol_strike; ++l) {
+                    Size idx = j * n_swvol_term * n_swvol_strike + k * n_swvol_strike + l;
+                    RiskFactorKey key(RiskFactorKey::KeyType::YieldVolatility, securityId, idx);
+                    valid = valid && tryGetBaseScenarioValue(baseScenario_, key, volData[l][j][k], continueOnError_);
+                }
+            }
+        }
+        if (!valid)
+            continue;
+
+        // cache tenor times
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
+            shiftExpiryTimes[j] = dc.yearFraction(asof, asof + data.shiftExpiries[j]);
+        for (Size j = 0; j < shiftTermTimes.size(); ++j)
+            shiftTermTimes[j] = dc.yearFraction(asof, asof + data.shiftTerms[j]);
+
+        // Can we store a valid shift size?
+        bool validShiftSize = vectorEqual(volExpiryTimes, shiftExpiryTimes);
+        validShiftSize = validShiftSize && vectorEqual(volTermTimes, shiftTermTimes);
+        validShiftSize = validShiftSize && vectorEqual(volStrikes, shiftStrikes);
+
+        // loop over shift expiries, terms and strikes
+        for (Size j = 0; j < shiftExpiryTimes.size(); ++j) {
+            for (Size k = 0; k < shiftTermTimes.size(); ++k) {
+                for (Size l = 0; l < shiftStrikes.size(); ++l) {
+                    Size strikeBucket = l;
+                    boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
+
+                    scenarioDescriptions_.push_back(yieldVolScenarioDescription(securityId, j, k, strikeBucket, up));
+
+                    // if simulating atm only we shift all strikes otherwise we shift each strike individually
+                    Size loopStart = atmOnly_swvol ? 0 : l;
+                    Size loopEnd = atmOnly_swvol ? n_swvol_strike : loopStart + 1;
+
+                    DLOG("Yield vol looping over " << loopStart << " to " << loopEnd << " for strike "
+                        << shiftStrikes[l]);
+                    for (Size ll = loopStart; ll < loopEnd; ++ll) {
+                        applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftTermTimes, volExpiryTimes,
+                            volTermTimes, volData[ll], shiftedVolData[ll], true);
+                    }
+
+                    for (Size jj = 0; jj < n_swvol_exp; ++jj) {
+                        for (Size kk = 0; kk < n_swvol_term; ++kk) {
+                            for (Size ll = 0; ll < n_swvol_strike; ++ll) {
+                                Size idx = jj * n_swvol_term * n_swvol_strike + kk * n_swvol_strike + ll;
+                                RiskFactorKey key(RFType::YieldVolatility, securityId, idx);
+
+                                if (ll >= loopStart && ll < loopEnd) {
+                                    scenario->add(key, shiftedVolData[ll][jj][kk]);
+                                }
+                                else {
+                                    scenario->add(key, volData[ll][jj][kk]);
+                                }
+
+                                // Possibly store valid shift size
+                                if (validShiftSize && up && j == jj && k == kk && l == ll) {
+                                    shiftSizes_[key] = shiftedVolData[ll][jj][kk] - volData[ll][jj][kk];
+                                }
+                            }
+                        }
+                    }
+
+                    // Give the scenario a label
+                    scenario->label(to_string(scenarioDescriptions_.back()));
+
+                    // add this scenario to the scenario vector
+                    scenarios_.push_back(scenario);
+                    DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label()
+                        << " created for yield vol " << securityId);
+                }
+            }
+        }
+    }
+    LOG("Yield vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
@@ -2173,6 +2314,36 @@ SensitivityScenarioGenerator::swaptionVolScenarioDescription(string ccy, Size ex
     } else {
         o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/" << std::setprecision(4)
           << data.shiftStrikes[strikeBucket];
+    }
+    string text = o.str();
+    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
+    ScenarioDescription desc(type, key, text);
+
+    if (up)
+        shiftSizes_[key] = 0.0;
+
+    return desc;
+}
+
+SensitivityScenarioGenerator::ScenarioDescription
+SensitivityScenarioGenerator::yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket,
+    Size strikeBucket, bool up) {
+    QL_REQUIRE(sensitivityData_->yieldVolShiftData().find(securityId) != sensitivityData_->yieldVolShiftData().end(),
+        "currency " << securityId << " not found in yield vol shift data");
+    SensitivityScenarioData::YieldVolShiftData data = sensitivityData_->yieldVolShiftData()[securityId];
+    QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
+    QL_REQUIRE(termBucket < data.shiftTerms.size(), "term bucket " << termBucket << " out of range");
+    QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
+    Size index = expiryBucket * data.shiftStrikes.size() * data.shiftTerms.size() +
+        termBucket * data.shiftStrikes.size() + strikeBucket;
+    RiskFactorKey key(RiskFactorKey::KeyType::YieldVolatility, securityId, index);
+    std::ostringstream o;
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/ATM";
+    }
+    else {
+        o << data.shiftExpiries[expiryBucket] << "/" << data.shiftTerms[termBucket] << "/" << std::setprecision(4)
+            << data.shiftStrikes[strikeBucket];
     }
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;

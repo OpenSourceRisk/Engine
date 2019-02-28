@@ -62,6 +62,7 @@ using namespace data;
   - Index curve zero rates
   - Yield curve zero rates
   - Swaption ATM volatility matrices
+  - Yield volatility matrices
   - Cap/Floor volatility matrices (by expiry and strike)
 
   For Credit the generator covers shifts to the following termstructure types:
@@ -125,6 +126,7 @@ private:
     void generateEquityScenarios(bool up);
     void generateDividendYieldScenarios(bool up);
     void generateSwaptionVolScenarios(bool up);
+    void generateYieldVolScenarios(bool up);
     void generateFxVolScenarios(bool up);
     void generateEquityVolScenarios(bool up);
     void generateEquityForecastCurveScenarios(bool up);
@@ -150,6 +152,8 @@ private:
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription equityForecastCurveScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
+                                                       Size strikeBucket, bool up);
+    ScenarioDescription yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
