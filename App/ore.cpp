@@ -65,8 +65,12 @@ int main(int argc, char** argv) {
     string inputFile(argv[1]);
 
     boost::shared_ptr<Parameters> params = boost::make_shared<Parameters>();
-    params->fromFile(inputFile);
-    OREApp ore(params);
-
-    return ore.run();
+    try {
+        params->fromFile(inputFile);
+        OREApp ore(params);
+        return ore.run();
+    } catch (const exception& e) {
+        cout << endl << "an error occured: " << e.what() << endl;
+        return -1;
+    }
 }

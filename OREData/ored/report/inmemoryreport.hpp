@@ -25,12 +25,12 @@
 
 #include <ored/report/report.hpp>
 #include <ql/errors.hpp>
-
-using std::string;
-using std::vector;
+#include <vector>
 
 namespace ore {
 namespace data {
+using std::string;
+using std::vector;
 
 /*! InMemoryReport just stores report information in local vectors and provides an interface to access
  *  the values. It could be used as a backend to a GUI
@@ -73,6 +73,7 @@ public:
     Size columns() const { return headers_.size(); }
     const string& header(Size i) const { return headers_[i]; }
     ReportType columnType(Size i) const { return columnTypes_[i]; }
+    Size columnPrecision(Size i) const { return columnPrecision_[i]; }
     //! Returns the data
     const vector<ReportType>& data(Size i) const { return data_[i]; }
 

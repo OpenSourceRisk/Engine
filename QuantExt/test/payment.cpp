@@ -16,16 +16,15 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "payment.hpp"
-
-#include <qle/instruments/payment.hpp>
-#include <qle/pricingengines/paymentdiscountingengine.hpp>
-
+#include "toplevelfixture.hpp"
+#include <boost/test/unit_test.hpp>
 #include <ql/currencies/europe.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/instruments/payment.hpp>
+#include <qle/pricingengines/paymentdiscountingengine.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -33,9 +32,12 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void PaymentTest::testDomesticPayment() {
+BOOST_AUTO_TEST_SUITE(PaymentTest)
+
+BOOST_AUTO_TEST_CASE(testDomesicPayment) {
+
     BOOST_TEST_MESSAGE("Testing Domestic Payment NPV...");
 
     SavedSettings backup;
@@ -53,7 +55,8 @@ void PaymentTest::testDomesticPayment() {
     BOOST_CHECK_SMALL(payment.NPV() - expectedNpv, 0.000001);
 }
 
-void PaymentTest::testForeignPayment() {
+BOOST_AUTO_TEST_CASE(testForeignPayment) {
+
     BOOST_TEST_MESSAGE("Testing Foreign Payment NPV...");
 
     SavedSettings backup;
@@ -72,10 +75,6 @@ void PaymentTest::testForeignPayment() {
     BOOST_CHECK_SMALL(payment.NPV() - expectedNpv, 0.000001);
 }
 
-test_suite* PaymentTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("PaymentTests");
-    suite->add(BOOST_TEST_CASE(&PaymentTest::testDomesticPayment));
-    suite->add(BOOST_TEST_CASE(&PaymentTest::testForeignPayment));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

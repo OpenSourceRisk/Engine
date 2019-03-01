@@ -71,6 +71,48 @@
     <ClCompile Include="deltagammavar.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="pricecurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="commodityforward.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountingcommodityforwardengine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="pricetermstructureadapter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="bonds.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="qle_calendars.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="discountratiomodifiedcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccyfixfloatswaphelper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccybasismtmresetswaphelper.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="crossccybasismtmresetswap.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="cpicapfloor.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="correlationtermstructure.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">
@@ -81,48 +123,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="currency.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="discountcurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="index.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="logquote.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="analyticlgmswaptionengine.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodel.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodel2.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="crossassetmodelparametrizations.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamicblackvoltermstructure.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="dynamicswaptionvolmatrix.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="staticallycorrectedyieldtermstructure.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="blackvariancecurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cashflow.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="swaptionvolatilityconverter.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="swaptionmarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
@@ -132,34 +132,7 @@
     <ClInclude Include="capfloormarketdata.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="optionletstripper.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="deposit.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="ratehelpers.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="stabilisedglls.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="survivalprobabilitycurve.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="swaptionvolconstantspread.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="fxvolsmile.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="payment.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="utilities.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="deltagammavar.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>

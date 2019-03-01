@@ -29,9 +29,8 @@
 #include <ql/termstructures/credit/survivalprobabilitystructure.hpp>
 #include <ql/termstructures/interpolatedcurve.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! DefaultProbabilityTermStructure based on interpolation of survival probability quotes
 /*! \ingroup termstructures */

@@ -29,12 +29,11 @@
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
 
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using ore::data::CurveConfigurations;
 using ore::data::Conventions;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building Equity curves (spot quote, yield term structure, risk free IR term structure)
 /*!

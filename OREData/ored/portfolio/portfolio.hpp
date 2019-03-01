@@ -49,6 +49,12 @@ public:
     //! Check if a trade id is already in the porfolio
     bool has(const string& id);
 
+    /*! Get a Trade with the given \p id from the portfolio
+
+        \remark returns a `nullptr` if no trade found with the given \p id
+    */
+    boost::shared_ptr<Trade> get(const std::string& id) const;
+
     //! Clear the portfolio
     void clear() { trades_.clear(); }
 
@@ -65,6 +71,9 @@ public:
     //! Load from an XML string using a default or user supplied TradeFactory, existing trades are kept
     void loadFromXMLString(const std::string& xmlString,
                            const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
+
+    //! Load from XML Node
+    void fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& tf = boost::make_shared<TradeFactory>());
 
     //! Save portfolio to an XML file
     void save(const std::string& fileName) const;
@@ -91,9 +100,6 @@ public:
     std::set<std::string> portfolioIds() const;
 
 private:
-    //! Load from XMLDocument
-    void load(XMLDocument& doc, const boost::shared_ptr<TradeFactory>& tf);
-
     std::vector<boost::shared_ptr<Trade>> trades_;
 };
 } // namespace data

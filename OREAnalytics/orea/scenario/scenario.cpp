@@ -65,12 +65,30 @@ std::ostream& operator<<(std::ostream& out, const RiskFactorKey::KeyType& type) 
         return out << "ZeroInflationCurve";
     case RiskFactorKey::KeyType::YoYInflationCurve:
         return out << "YoYInflationCurve";
+    case RiskFactorKey::KeyType::CommoditySpot:
+        return out << "CommoditySpot";
+    case RiskFactorKey::KeyType::CommodityCurve:
+        return out << "CommodityCurve";
+    case RiskFactorKey::KeyType::CommodityVolatility:
+        return out << "CommodityVolatility";
+    case RiskFactorKey::KeyType::SecuritySpread:
+        return out << "SecuritySpread";
+    case RiskFactorKey::KeyType::Correlation:
+        return out << "Correlation";
+    case RiskFactorKey::KeyType::CPR:
+        return out << "CPR";
     default:
         return out << "?";
     }
 }
 
 std::ostream& operator<<(std::ostream& out, const RiskFactorKey& key) {
+    // If empty key just return empty string (not "?//0")
+    if (key == RiskFactorKey()) {
+        return out << "";
+    }
+
+    // If not empty key
     return out << key.keytype << "/" << key.name << "/" << key.index;
 }
 
@@ -111,6 +129,19 @@ RiskFactorKey::KeyType parseRiskFactorKeyType(const string& str) {
         return RiskFactorKey::KeyType::ZeroInflationCurve;
     else if (str == "YoYInflationCurve")
         return RiskFactorKey::KeyType::YoYInflationCurve;
+    else if (str == "CommoditySpot")
+        return RiskFactorKey::KeyType::CommoditySpot;
+    else if (str == "CommodityCurve")
+        return RiskFactorKey::KeyType::CommodityCurve;
+    else if (str == "CommodityVolatility")
+        return RiskFactorKey::KeyType::CommodityVolatility;
+    else if (str == "SecuritySpread")
+        return RiskFactorKey::KeyType::SecuritySpread;
+    else if (str == "Correlation")
+        return RiskFactorKey::KeyType::Correlation;
+    else if (str == "CPR")
+        return RiskFactorKey::KeyType::CPR;
+
     QL_FAIL("RiskFactorKey " << str << " does not exist.");
 }
 

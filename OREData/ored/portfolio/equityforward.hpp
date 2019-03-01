@@ -26,10 +26,9 @@
 #include <ored/portfolio/optiondata.hpp>
 #include <ored/portfolio/trade.hpp>
 
-using std::string;
-
 namespace ore {
 namespace data {
+using std::string;
 
 //! Serializable Equity Forward contract
 /*!

@@ -78,5 +78,46 @@ QuantLib::Size SeasonalityQuote::applyMonth() const {
     }
     return applyMonth;
 }
+
+CommodityOptionQuote::CommodityOptionQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+                                           const string& commodityName, const string& quoteCurrency,
+                                           const string& expiry, const string& strike)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::COMMODITY_OPTION), commodityName_(commodityName),
+      quoteCurrency_(quoteCurrency), expiry_(expiry), strike_(strike) {
+
+    // If strike is not ATMF, it must parse to Real
+    if (strike != "ATMF") {
+        Real result;
+        QL_REQUIRE(tryParseReal(strike_, result),
+                   "Commodity option quote strike (" << strike_ << ") must be either ATMF or an actual strike price");
+    }
+
+    // Call parser to check that the expiry_ resolves to a period or a date
+    Date outDate;
+    Period outPeriod;
+    bool outBool;
+    parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
+}
+
+CorrelationQuote::CorrelationQuote(Real value, const Date& asof, const string& name, QuoteType quoteType,
+                                   const string& index1, const string& index2, const string& expiry,
+                                   const string& strike)
+    : MarketDatum(value, asof, name, quoteType, InstrumentType::CORRELATION), index1_(index1), index2_(index2),
+      expiry_(expiry), strike_(strike) {
+
+    // If strike is not ATM, it must parse to Real
+    if (strike != "ATM") {
+        Real result;
+        QL_REQUIRE(tryParseReal(strike_, result),
+                   "Commodity option quote strike (" << strike_ << ") must be either ATM or an actual strike price");
+    }
+
+    // Call parser to check that the expiry_ resolves to a period or a date
+    Date outDate;
+    Period outPeriod;
+    bool outBool;
+    parseDateOrPeriod(expiry_, outDate, outPeriod, outBool);
+}
+
 } // namespace data
 } // namespace ore

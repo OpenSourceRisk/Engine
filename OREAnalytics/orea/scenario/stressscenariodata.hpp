@@ -27,18 +27,16 @@
 #include <ored/utilities/xmlutils.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 
-using QuantLib::Period;
-using QuantLib::Rate;
-using std::vector;
-using std::string;
-using std::pair;
-using ore::data::XMLSerializable;
-using ore::data::XMLDocument;
-using ore::data::XMLNode;
-using ore::data::XMLUtils;
-
 namespace ore {
 namespace analytics {
+using namespace QuantLib;
+using ore::data::XMLNode;
+using ore::data::XMLSerializable;
+using ore::data::XMLUtils;
+using std::map;
+using std::pair;
+using std::string;
+using std::vector;
 
 //! Description of sensitivity shift scenarios
 /*! \ingroup scenario
@@ -87,6 +85,7 @@ public:
         map<string, VolShiftData> equityVolShifts;           // by equity
         map<string, CapFloorVolShiftData> capVolShifts;      // by currency
         map<string, SwaptionVolShiftData> swaptionVolShifts; // by currency
+        map<string, SpotShiftData> securitySpreadShifts;     // by bond/security
     };
 
     //! Default constructor
@@ -106,7 +105,7 @@ public:
     //! \name Serialisation
     //@{
     virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual XMLNode* toXML(ore::data::XMLDocument& doc);
     //@}
 
     //! \name Equality Operators

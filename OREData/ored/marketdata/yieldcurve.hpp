@@ -32,15 +32,14 @@
 //#include <ql/termstructures/yield/zeroyieldstructure.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
-using QuantLib::Date;
+namespace ore {
+namespace data {
+using namespace QuantLib;
 using ore::data::YieldCurveSegment;
 using ore::data::YieldCurveConfig;
 using ore::data::YieldCurveConfigMap;
 using ore::data::Conventions;
 using ore::data::CurveConfigurations;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building yield term structures
 /*!
@@ -102,6 +101,10 @@ private:
     void buildZeroCurve();
     void buildZeroSpreadedCurve();
     void buildBootstrappedCurve();
+    //! Build a yield curve that uses QuantExt::DiscountRatioModifiedCurve
+    void buildDiscountRatioCurve();
+    //! Return the yield curve with the given \p id from the requiredYieldCurves_ map
+    boost::shared_ptr<YieldCurve> getYieldCurve(const std::string& ccy, const std::string& id) const;
 
     boost::shared_ptr<YieldCurveConfig> curveConfig_;
     vector<boost::shared_ptr<YieldCurveSegment>> curveSegments_;
@@ -137,10 +140,14 @@ private:
                             vector<boost::shared_ptr<RateHelper>>& instruments);
     void addTenorBasisTwoSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addBMABasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+                          vector<boost::shared_ptr<RateHelper>>& instruments);
     void addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segment,
                        vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                vector<boost::shared_ptr<RateHelper>>& instruments);
+    void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
+                                  vector<boost::shared_ptr<RateHelper>>& instruments);
 };
 
 //! Helper function for parsing interpolation method

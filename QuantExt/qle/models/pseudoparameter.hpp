@@ -29,9 +29,8 @@
 
 #include <boost/make_shared.hpp>
 
-using namespace QuantLib;
-
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Parameter that accesses CalibratedModel
 /*! lightweight parameter, that gives access to the

@@ -19,6 +19,7 @@
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 
+#include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
@@ -27,14 +28,10 @@
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
 #include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolsurface.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletadapter.hpp>
 
 using namespace QuantLib;
-using QuantExt::DatedStrippedOptionlet;
-using QuantExt::DatedStrippedOptionletAdapter;
-using QuantExt::OptionletStripper1;
-using QuantExt::OptionletStripper2;
+using namespace QuantExt;
 using namespace std;
 
 namespace ore {
@@ -67,6 +64,15 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             break;
         default:
             QL_FAIL("unexpected volatility type");
+        }
+
+        QuantExt::CapFloorTermVolSurface::InterpolationMethod interpolationMethod;
+        if (config->interpolationMethod() == "BicubicSpline")
+            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::BicubicSpline;
+        else if (config->interpolationMethod() == "Bilinear")
+            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::Bilinear;
+        else {
+            QL_FAIL("invalid InterpolationMethod " << config->interpolationMethod());
         }
 
         // Read in quotes matrix. If we hit any ATM quotes that match one of the tenors, store those also.
@@ -139,21 +145,28 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                         m << endl;
                 }
             }
-            LOG(m.str());
+            DLOGGERSTREAM << m.str() << endl;
             QL_FAIL("could not build cap/floor vol curve");
         }
 
         // Non-ATM cap/floor volatility surface
-        boost::shared_ptr<CapFloorTermVolSurface> capVol = boost::make_shared<CapFloorTermVolSurface>(
-            0, config->calendar(), config->businessDayConvention(), tenors, strikes, vols, config->dayCounter());
+        boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol =
+            boost::make_shared<QuantExt::CapFloorTermVolSurface>(0, config->calendar(), config->businessDayConvention(),
+                                                                 tenors, strikes, vols, config->dayCounter(),
+                                                                 interpolationMethod);
 
         // Build the stripped caplet/floorlet surface
         // Hardcoded target volatility type to Normal - decision made to always work with a Normal optionlet surface
-        boost::shared_ptr<OptionletStripper1> optionletStripper = boost::make_shared<OptionletStripper1>(
-            capVol, iborIndex, Null<Rate>(), 1.0e-6, 100, discountCurve, quoteVolatilityType, shift, true, Normal, 0.0);
+        // Hardcoded minVol to 1bps
+        Real minVol = 0.0001;
+        boost::shared_ptr<QuantExt::OptionletStripper1> optionletStripper =
+            boost::make_shared<QuantExt::OptionletStripper1>(capVol, iborIndex, Null<Rate>(), 1.0e-6, 100,
+                                                             discountCurve, quoteVolatilityType, shift, true, Normal,
+                                                             0.0, minVol);
         boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
             boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
-        capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);
+        capletVol_ =
+            boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
         capletVol_->enableExtrapolation(config->extrapolate());
 
         // If given, add the ATM cap/floor volatility curve
@@ -166,13 +179,16 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                 atmVols.push_back(kv.second);
             }
 
-            boost::shared_ptr<CapFloorTermVolCurve> atmCapVol = boost::make_shared<CapFloorTermVolCurve>(
-                0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
-            Handle<CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
-            boost::shared_ptr<OptionletStripper> atmOptionletStripper =
-                boost::make_shared<OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType, shift);
+            boost::shared_ptr<QuantExt::CapFloorTermVolCurve> atmCapVol =
+                boost::make_shared<QuantExt::CapFloorTermVolCurve>(
+                    0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
+            Handle<QuantExt::CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
+            boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper =
+                boost::make_shared<QuantExt::OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType,
+                                                                 shift);
             datedOptionletStripper = boost::make_shared<DatedStrippedOptionlet>(asof, atmOptionletStripper);
-            capletVol_ = boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper);
+            capletVol_ =
+                boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
             capletVol_->enableExtrapolation(config->extrapolate());
         }
     } catch (std::exception& e) {
@@ -180,6 +196,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
     } catch (...) {
         QL_FAIL("cap/floor vol curve building failed: unknown error");
     }
+    // force bootstrap so that errors are thrown during the build, not later
+    capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
 }
 } // namespace data
 } // namespace ore

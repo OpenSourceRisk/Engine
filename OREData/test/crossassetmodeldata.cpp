@@ -16,7 +16,11 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "crossassetmodeldata.hpp"
+#include <boost/test/unit_test.hpp>
+#include <oret/datapaths.hpp>
+#include <oret/fileutilities.hpp>
+#include <oret/toplevelfixture.hpp>
+
 #include <ored/model/crossassetmodeldata.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 
@@ -26,6 +30,8 @@ using namespace boost::unit_test_framework;
 using namespace std;
 using namespace ore;
 using namespace ore::data;
+
+using ore::test::TopLevelFixture;
 
 namespace {
 
@@ -68,7 +74,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData1->optionTerms() = terms;
     lgmData1->optionStrikes() = strikes;
 
-    lgmData1->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData1->scaling() = 1.0;
 
     // Second instance
@@ -94,7 +99,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData2->optionTerms() = terms;
     lgmData2->optionStrikes() = strikes;
 
-    lgmData2->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData2->scaling() = 1.0;
 
     // Third instance
@@ -120,7 +124,6 @@ boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> irConfigsData() {
     lgmData3->optionTerms() = terms;
     lgmData3->optionStrikes() = strikes;
 
-    lgmData3->calibrationStrategy() = parseCalibrationStrategy("COTERMINALATM");
     lgmData3->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<IrLgmData>>> lgmDataVector(new vector<boost::shared_ptr<IrLgmData>>);
@@ -161,7 +164,6 @@ boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infConfigsData() {
 
     infDkData1->optionExpiries() = expiries;
     infDkData1->optionStrikes() = strikes;
-    infDkData1->calibrationStrategy() = parseCalibrationStrategy("None");
     infDkData1->scaling() = 1.0;
 
     boost::shared_ptr<vector<boost::shared_ptr<InfDkData>>> infDkDataVector(new vector<boost::shared_ptr<InfDkData>>);
@@ -253,11 +255,21 @@ boost::shared_ptr<data::CrossAssetModelData> crossAssetData() {
 
     return crossAssetData;
 }
+
+// Fixture to remove output files
+class F : public TopLevelFixture {
+public:
+    F() {}
+    ~F() { clearOutput(TEST_OUTPUT_PATH); }
+};
 } // namespace
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
-void CrossAssetModelDataTest::testToXMLFromXML() {
+BOOST_FIXTURE_TEST_SUITE(CrossAssetModelDataTests, F)
+
+BOOST_AUTO_TEST_CASE(testToXMLFromXML) {
+
     BOOST_TEST_MESSAGE("Testing toXML/fromXML...");
 
     data::CrossAssetModelData data = *crossAssetData();
@@ -269,7 +281,7 @@ void CrossAssetModelDataTest::testToXMLFromXML() {
     XMLNode* crossAssetModelNode = data.toXML(OutDoc);
     XMLUtils::appendNode(simulationNode, crossAssetModelNode);
 
-    std::string filename = "simulationtest.xml";
+    std::string filename = TEST_OUTPUT_FILE("simulationtest.xml");
     OutDoc.toFile(filename);
 
     data::CrossAssetModelData newData;
@@ -279,13 +291,8 @@ void CrossAssetModelDataTest::testToXMLFromXML() {
 
     newData.irConfigs() = {};
     BOOST_CHECK(data != newData);
-
-    remove("simulationtest.xml");
 }
 
-test_suite* CrossAssetModelDataTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("CrossAssetModelDataTests");
-    suite->add(BOOST_TEST_CASE(&CrossAssetModelDataTest::testToXMLFromXML));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

@@ -1,7 +1,6 @@
-REM Batch file to validate ORE XML files. 
 @echo off
 
-
-echo Portfolio Files Examples:
-FOR /R "..\\Examples" %%I IN (*.xml) DO (xmllint --schema input.xsd --noout %%I)
-echo ------------------------------------------------------------------
+REM Batch file to validate ORE XML files. 
+echo Perform schema validation ...
+echo.
+for /r %~dp0..\Examples %%i in (*.xml) do (xmllint --schema %~dp0input.xsd --noout %%i)

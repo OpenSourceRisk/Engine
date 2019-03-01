@@ -20,6 +20,7 @@
 #include <ored/utilities/log.hpp>
 
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
+#include <qle/termstructures/probabilitytraits.hpp>
 
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -85,89 +86,72 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
             }
         }
 
-        // We loop over all market data, looking for quotes that match the configuration
-        // until we found the whole set of quotes or do not have more quotes in the
-        // market data
-
-        map<Period, Real> quotes;
+        // Get the market points listed in the curve config
+        // Get the recovery rate if needed
         recoveryRate_ = Null<Real>();
-
-        for (auto& md : loader.loadQuotes(asof)) {
-
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::RECOVERY_RATE) {
-
-                boost::shared_ptr<RecoveryRateQuote> q = boost::dynamic_pointer_cast<RecoveryRateQuote>(md);
-
-                if (q->name() == config->recoveryRateQuote()) {
-                    QL_REQUIRE(recoveryRate_ == Null<Real>(),
-                               "duplicate recovery rate quote " << q->name() << " found.");
-                    recoveryRate_ = q->quote()->value();
-                }
-            }
-
-            if (config->type() == DefaultCurveConfig::Type::SpreadCDS && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::CDS &&
-                md->quoteType() == MarketDatum::QuoteType::CREDIT_SPREAD) {
-
-                boost::shared_ptr<CdsSpreadQuote> q = boost::dynamic_pointer_cast<CdsSpreadQuote>(md);
-
-                vector<string>::const_iterator it =
-                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it != config->cdsQuotes().end()) {
-                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
-
-                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
-                                               << q->term() << ") while loading default curve " << config->curveID());
-                }
-            }
-
-            if (config->type() == DefaultCurveConfig::Type::HazardRate && md->asofDate() == asof &&
-                md->instrumentType() == MarketDatum::InstrumentType::HAZARD_RATE) {
-                boost::shared_ptr<HazardRateQuote> q = boost::dynamic_pointer_cast<HazardRateQuote>(md);
-
-                vector<string>::const_iterator it =
-                    std::find(config->cdsQuotes().begin(), config->cdsQuotes().end(), q->name());
-
-                // is the quote one of the list in the config ?
-                if (it != config->cdsQuotes().end()) {
-                    auto res = quotes.insert(pair<Period, Real>(q->term(), q->quote()->value()));
-
-                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
-                                               << q->term() << ") while loading default curve " << config->curveID());
-                }
-            }
+        if (!config->recoveryRateQuote().empty()) {
+            QL_REQUIRE(loader.has(config->recoveryRateQuote(), asof),
+                       "There is no market data for the requested recovery rate " << config->recoveryRateQuote());
+            recoveryRate_ = loader.get(config->recoveryRateQuote(), asof)->quote()->value();
         }
 
-        LOG("DefaultCurve: read " << quotes.size() << " default quotes");
+        // Get the spread/hazard rate quotes
+        map<Period, Real> quotes;
+        if (config->type() == DefaultCurveConfig::Type::SpreadCDS ||
+            config->type() == DefaultCurveConfig::Type::HazardRate) {
+            for (const auto& p : config->cdsQuotes()) {
+                if (boost::shared_ptr<MarketDatum> md = loader.get(p, asof)) {
+                    Period tenor;
+                    if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
+                        tenor = boost::dynamic_pointer_cast<CdsSpreadQuote>(md)->term();
+                    } else {
+                        tenor = boost::dynamic_pointer_cast<HazardRateQuote>(md)->term();
+                    }
 
-        QL_REQUIRE(quotes.size() == config->cdsQuotes().size(),
-                   "read " << quotes.size() << ", but " << config->cdsQuotes().size() << " required.");
+                    // Add to quotes, with a check that we have no duplicate tenors
+                    auto res = quotes.insert(make_pair(tenor, md->quote()->value()));
+                    QL_REQUIRE(res.second, "duplicate term in quotes found ("
+                                               << tenor << ") while loading default curve " << config->curveID());
+                }
+            }
+
+            QL_REQUIRE(!quotes.empty(), "No market points found for curve config " << config->curveID());
+            LOG("DefaultCurve: using " << quotes.size() << " default quotes of " << config->cdsQuotes().size()
+                                       << " requested quotes.");
+        }
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
+            // Use fixed start date if provided by config
+            Date startDate = config->startDate() != Date() ? config->startDate() : asof + cdsConv->settlementDays();
+
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
-            std::vector<boost::shared_ptr<DefaultProbabilityHelper>> helper;
+            std::vector<boost::shared_ptr<QuantExt::DefaultProbabilityHelper>> helper;
             for (auto quote : quotes) {
                 helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    asof + cdsConv->settlementDays(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    startDate, cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
-                boost::make_shared<PiecewiseDefaultCurve<SurvivalProbability, LogLinear>>(asof, helper,
-                                                                                          config->dayCounter());
+                boost::make_shared<PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear>>(
+                    asof, helper, config->dayCounter());
 
             // like for yield curves we need to copy the piecewise curve because
             // on eval date changes the relative date helpers with trigger a
             // bootstrap.
-            vector<Date> dates(helper.size() + 1, asof);
-            vector<Real> survivalProbs(helper.size() + 1, 1.0);
+            vector<Date> dates;
+            vector<Real> survivalProbs;
+            dates.push_back(asof);
+            survivalProbs.push_back(1.0);
             for (Size i = 0; i < helper.size(); ++i) {
-                dates[i + 1] = helper[i]->latestDate();
-                survivalProbs[i + 1] = tmp->survivalProbability(dates[i + 1]);
+                if (helper[i]->latestDate() > asof) {
+                    dates.push_back(helper[i]->latestDate());
+                    survivalProbs.push_back(tmp->survivalProbability(dates.back()));
+                }
             }
+            QL_REQUIRE(dates.size() >= 2, "Need at least 2 points to build the default curve");
+
             LOG("DefaultCurve: copy piecewise curve to interpolated survival probability curve");
             curve_ = boost::make_shared<InterpolatedSurvivalProbabilityCurve<LogLinear>>(dates, survivalProbs,
                                                                                          config->dayCounter());
@@ -175,6 +159,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 curve_->enableExtrapolation();
                 DLOG("DefaultCurve: Enabled Extrapolation");
             }
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 
@@ -209,6 +195,8 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                     "hazard rate curve, because none is given.");
                 recoveryRate_ = 0.0;
             }
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 
@@ -242,14 +230,16 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                                                       "for benchmark implied curve type, it is assumed to "
                                                       "be 0.0");
             recoveryRate_ = 0.0;
+            // force bootstrap so that errors are thrown during the build, not later
+            curve_->survivalProbability(QL_EPSILON);
             return;
         }
 
         QL_FAIL("unknown default curve type");
     } catch (std::exception& e) {
-        QL_FAIL("default curve building failed: " << e.what());
+        QL_FAIL("default curve building failed for " << spec.curveConfigID() << ": " << e.what());
     } catch (...) {
-        QL_FAIL("default curve building failed: unknown error");
+        QL_FAIL("default curve building failed for " << spec.curveConfigID() << ": unknown error");
     }
 }
 } // namespace data

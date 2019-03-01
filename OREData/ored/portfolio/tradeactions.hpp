@@ -28,14 +28,12 @@
 
 #include <vector>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLSerializable;
-
 using ore::data::XMLNode;
-
-namespace ore {
-namespace data {
 
 //! Serializable object holding a trade action
 /*!

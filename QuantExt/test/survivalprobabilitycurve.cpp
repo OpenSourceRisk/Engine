@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include "survivalprobabilitycurve.hpp"
+#include "toplevelfixture.hpp"
 #include <boost/test/unit_test.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -29,11 +29,14 @@
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 
 using namespace boost::unit_test_framework;
+using namespace QuantLib;
 using std::vector;
 
-namespace testsuite {
+BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-void SurvivalProbabilityCurveTest::testSurvivalProbabilityCurve() {
+BOOST_AUTO_TEST_SUITE(SurvivalProbabilityCruveTest)
+
+BOOST_AUTO_TEST_CASE(testSurvivalProbabilityCurve) {
 
     BOOST_TEST_MESSAGE("Testing QuantExt::SurvivalProbabilityCurve...");
 
@@ -95,9 +98,6 @@ void SurvivalProbabilityCurveTest::testSurvivalProbabilityCurve() {
     }
 }
 
-test_suite* SurvivalProbabilityCurveTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SurvivalProbabilityCurveTests");
-    suite->add(BOOST_TEST_CASE(&SurvivalProbabilityCurveTest::testSurvivalProbabilityCurve));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

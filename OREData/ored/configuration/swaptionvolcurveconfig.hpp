@@ -29,18 +29,16 @@
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Period;
 using QuantLib::DayCounter;
 using QuantLib::Calendar;
 using QuantLib::BusinessDayConvention;
 using QuantLib::Spread;
-
-namespace ore {
-namespace data {
 
 //! Swaption Volatility curve configuration
 /*!

@@ -115,10 +115,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
         }
-        string curveTypeStr =
-            (config->type() == EquityCurveConfig::Type::ForwardPrice) ? "EQUITY_FWD" : "EQUITY_DIVIDEND";
-
-        LOG("EquityCurve: read " << quotesRead << " quotes of type " << curveTypeStr);
+        LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
                    "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
@@ -165,6 +162,9 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const D
             }
         } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
             dividendRates = quotes_;
+        } else if (curveType_ == EquityCurveConfig::Type::NoDividends) {
+            // Return a flat curve @ 0%
+            return boost::make_shared<FlatForward>(asof, 0.0, dc_);
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 

@@ -16,19 +16,37 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
-#include <orea/engine/all.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
+#include <orea/engine/observationmode.hpp>
+#include <orea/engine/parametricvar.hpp>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
+#include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sensitivityinmemorystream.hpp>
+#include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/sensitivityscenariogenerator.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
+#include <ored/portfolio/builders/commodityforward.hpp>
+#include <ored/portfolio/builders/commodityoption.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
 #include <ored/portfolio/builders/swaption.hpp>
+#include <ored/portfolio/commodityforward.hpp>
+#include <ored/portfolio/commodityoption.hpp>
 #include <ored/portfolio/equityforward.hpp>
 #include <ored/portfolio/equityoption.hpp>
 #include <ored/portfolio/fxoption.hpp>
@@ -37,7 +55,8 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
-#include <test/sensitivityanalysis.hpp>
+#include <ored/utilities/to_string.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -49,7 +68,20 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildEuropeanSwaption;
+using testsuite::TestConfigurationObjects;
+using testsuite::buildBermudanSwaption;
+using testsuite::buildFxOption;
+using testsuite::buildCap;
+using testsuite::buildFloor;
+using testsuite::buildZeroBond;
+using testsuite::buildEquityOption;
+using testsuite::buildCPIInflationSwap;
+using testsuite::buildYYInflationSwap;
+using testsuite::buildCommodityForward;
+using testsuite::buildCommodityOption;
 
 void testPortfolioSensitivity(ObservationMode::Mode om) {
     SavedSettings backup;
@@ -77,12 +109,14 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -119,6 +153,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     data->engine("EquityForward") = "DiscountingEquityForwardEngine";
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
+    data->model("CommodityForward") = "DiscountedCashflows";
+    data->engine("CommodityForward") = "DiscountingCommodityForwardEngine";
+    data->model("CommodityOption") = "BlackScholes";
+    data->engine("CommodityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
@@ -128,6 +166,8 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
 
     // boost::shared_ptr<Portfolio> portfolio = buildSwapPortfolio(portfolioSize, factory);
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());
@@ -160,6 +200,12 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          0.005));
     portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
                                         "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
+    portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+    portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
+    portfolio->add(
+        buildCommodityOption("19_CommodityOption_GOLD", "Long", "Call", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
+    portfolio->add(
+        buildCommodityOption("20_CommodityOption_OIL", "Short", "Put", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
     portfolio->build(factory);
 
     BOOST_TEST_MESSAGE("Portfolio size after build: " << portfolio->size());
@@ -621,7 +667,63 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/2/3Y", 7005.96, 16.3788},
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/3/5Y", 7005.96, 20.4522},
         {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/4/7Y", 7005.96, 23.3381},
-        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/5/10Y", 7005.96, 17.2056}};
+        {"16_YoYInflationSwap_UKRPI", "Down:YoYInflationCurve/UKRPI/5/10Y", 7005.96, 17.2056},
+        {"17_CommodityForward_GOLD", "Up:DiscountCurve/USD/1/1Y", -735.964496751649, 0.073448445224},
+        {"17_CommodityForward_GOLD", "Down:DiscountCurve/USD/1/1Y", -735.964496751649, -0.073455776029},
+        {"17_CommodityForward_GOLD", "Up:FXSpot/EURUSD/0/spot", -735.964496751649, 7.286777195561},
+        {"17_CommodityForward_GOLD", "Down:FXSpot/EURUSD/0/spot", -735.964496751649, -7.433984815673},
+        {"17_CommodityForward_GOLD", "Up:CommodityCurve/COMDTY_GOLD_USD/1/1Y", -735.964496751649, 938.880422284606},
+        {"17_CommodityForward_GOLD", "Down:CommodityCurve/COMDTY_GOLD_USD/1/1Y", -735.964496751649, -938.880422284606},
+        {"18_CommodityForward_OIL", "Up:DiscountCurve/USD/3/3Y", -118575.997564574063, 23.666326609469},
+        {"18_CommodityForward_OIL", "Up:DiscountCurve/USD/4/5Y", -118575.997564574063, 23.759329674402},
+        {"18_CommodityForward_OIL", "Down:DiscountCurve/USD/3/3Y", -118575.997564574063, -23.671051063342},
+        {"18_CommodityForward_OIL", "Down:DiscountCurve/USD/4/5Y", -118575.997564574063, -23.764091336881},
+        {"18_CommodityForward_OIL", "Up:FXSpot/EURUSD/0/spot", -118575.997564574063, 1174.019777867070},
+        {"18_CommodityForward_OIL", "Down:FXSpot/EURUSD/0/spot", -118575.997564574063, -1197.737349137125},
+        {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063, -10938.550513848924},
+        {"18_CommodityForward_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063, -24245.826202620548},
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -118575.997564574063,
+         10938.550513849448},
+        {"18_CommodityForward_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -118575.997564574063,
+         24245.826202621072},
+        {"19_CommodityOption_GOLD", "Up:DiscountCurve/USD/1/1Y", 5266.437412224631, -0.516232985022},
+        {"19_CommodityOption_GOLD", "Up:DiscountCurve/USD/2/2Y", 5266.437412224631, -0.018723533876},
+        {"19_CommodityOption_GOLD", "Down:DiscountCurve/USD/1/1Y", 5266.437412224631, 0.516283587557},
+        {"19_CommodityOption_GOLD", "Down:DiscountCurve/USD/2/2Y", 5266.437412224631, 0.018723579571},
+        {"19_CommodityOption_GOLD", "Up:FXSpot/EURUSD/0/spot", 5266.437412224631, -52.142944675492},
+        {"19_CommodityOption_GOLD", "Down:FXSpot/EURUSD/0/spot", 5266.437412224631, 53.196337497218},
+        {"19_CommodityOption_GOLD", "Up:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, 490.253537097216},
+        {"19_CommodityOption_GOLD", "Down:CommodityCurve/COMDTY_GOLD_USD/1/1Y", 5266.437412224631, -465.274919275530},
+        {"19_CommodityOption_GOLD", "Up:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631,
+         56.110511491685},
+        {"19_CommodityOption_GOLD", "Down:CommodityVolatility/COMDTY_GOLD_USD/6/1Y/1", 5266.437412224631,
+         -56.112114940141},
+        {"20_CommodityOption_OIL", "Up:DiscountCurve/USD/3/3Y", -491152.228798501019, 98.775116046891},
+        {"20_CommodityOption_OIL", "Up:DiscountCurve/USD/4/5Y", -491152.228798501019, 97.292577287881},
+        {"20_CommodityOption_OIL", "Down:DiscountCurve/USD/3/3Y", -491152.228798501019, -98.794984069362},
+        {"20_CommodityOption_OIL", "Down:DiscountCurve/USD/4/5Y", -491152.228798501019, -97.311852635990},
+        {"20_CommodityOption_OIL", "Up:FXSpot/EURUSD/0/spot", -491152.228798501019, 4862.893354440632},
+        {"20_CommodityOption_OIL", "Down:FXSpot/EURUSD/0/spot", -491152.228798501019, -4961.133624227310},
+        {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, 4223.515679404372},
+        {"20_CommodityOption_OIL", "Up:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, 9317.978340855800},
+        {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/2/2Y", -491152.228798501019, -4256.075631047075},
+        {"20_CommodityOption_OIL", "Down:CommodityCurve/COMDTY_WTI_USD/3/5Y", -491152.228798501019, -9477.947397496144},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
+         2631.321446832444},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
+         -2953.560262204672},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
+         41151.505618994124},
+        {"20_CommodityOption_OIL", "Up:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
+         -42848.872082053742},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/9/1Y/1.05", -491152.228798501019,
+         -2592.135488447500},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/12/1Y/1.1", -491152.228798501019,
+         2940.729887370544},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/11/5Y/1.05", -491152.228798501019,
+         -37770.406281976204},
+        {"20_CommodityOption_OIL", "Down:CommodityVolatility/COMDTY_WTI_USD/14/5Y/1.1", -491152.228798501019,
+         46207.778528712981}};
 
     std::map<pair<string, string>, Real> npvMap, sensiMap;
     for (Size i = 0; i < cachedResults.size(); ++i) {
@@ -640,7 +742,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         for (Size j = 1; j < scenarioGenerator->samples(); ++j) { // skip j = 0, this is the base scenario
             Real npv = cube->get(i, 0, j, 0);
             Real sensi = npv - npv0;
-            string label = desc[j].text();
+            string label = to_string(desc[j]);
             if (fabs(sensi) > tiny) {
                 count++;
                 // BOOST_TEST_MESSAGE("{ \"" << id << "\", \"" << label << "\", " << npv0 << ", " << sensi << " },");
@@ -672,9 +774,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -717,22 +820,26 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityNoneObs() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
+
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityNoneObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (None observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::None);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityDisableObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityDisableObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Disable observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Disable);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityDeferObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityDeferObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Defer observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Defer);
 }
 
-void SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs() {
+BOOST_AUTO_TEST_CASE(testPortfolioSensitivityUnregisterObs) {
     BOOST_TEST_MESSAGE("Testing Portfolio sensitivity (Unregister observation mode)");
     testPortfolioSensitivity(ObservationMode::Mode::Unregister);
 }
@@ -774,12 +881,14 @@ void test1dShifts(bool granular) {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
 
     // cache initial zero rates
     vector<Period> tenors = simMarketData->yieldCurveTenors("");
@@ -832,11 +941,11 @@ void test1dShifts(bool granular) {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::test1dShiftsSparse() { test1dShifts(false); }
+BOOST_AUTO_TEST_CASE(test1dShiftsSparse) { test1dShifts(false); }
 
-void SensitivityAnalysisTest::test1dShiftsGranular() { test1dShifts(true); }
+BOOST_AUTO_TEST_CASE(test1dShiftsGranular) { test1dShifts(true); }
 
-void SensitivityAnalysisTest::test2dShifts() {
+BOOST_AUTO_TEST_CASE(test2dShifts) {
     BOOST_TEST_MESSAGE("Testing 2d shifts");
 
     SavedSettings backup;
@@ -869,12 +978,14 @@ void SensitivityAnalysisTest::test2dShifts() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
 
     // cache initial zero rates
     vector<Period> expiries = simMarketData->swapVolExpiries();
@@ -947,7 +1058,7 @@ void SensitivityAnalysisTest::test2dShifts() {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
+BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing Equity option sensitivities against QL analytic greeks");
 
@@ -980,12 +1091,14 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1068,9 +1181,10 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -1099,7 +1213,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = sa->baseNPV(sensiTrnId);
+            res.baseNpv = sa->sensiCube()->npv(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
@@ -1149,7 +1263,7 @@ void SensitivityAnalysisTest::testEquityOptionDeltaGamma() {
     }
 }
 
-void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
+BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
 
     BOOST_TEST_MESSAGE("Testing FX option sensitivities against QL analytic greeks");
 
@@ -1186,12 +1300,14 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     Conventions conventions = *TestConfigurationObjects::conv();
     auto simMarket = boost::make_shared<ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1283,9 +1399,10 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     std::set<string> sensiTrades;
     for (auto p : portfolio->trades()) {
         sensiTrades.insert(p->id());
-        for (auto f : sa->sensiCube()->upFactors()) {
-            deltaMap[make_pair(p->id(), f.first)] = sa->delta(p->id(), f.first);
-            gammaMap[make_pair(p->id(), f.first)] = sa->gamma(p->id(), f.first);
+        for (const auto& f : sa->sensiCube()->factors()) {
+            auto des = sa->sensiCube()->factorDescription(f);
+            deltaMap[make_pair(p->id(), des)] = sa->sensiCube()->delta(p->id(), f);
+            gammaMap[make_pair(p->id(), des)] = sa->sensiCube()->gamma(p->id(), f);
         }
     }
 
@@ -1331,7 +1448,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
             if (sensiTrnId != id)
                 continue;
             res.id = sensiTrnId;
-            res.baseNpv = sa->baseNPV(sensiTrnId);
+            res.baseNpv = sa->sensiCube()->npv(sensiTrnId);
             string sensiId = it2.first.second;
             Real sensiVal = it2.second;
             if (std::fabs(sensiVal) < epsilon) // not interested in zero sensis
@@ -1487,7 +1604,7 @@ void SensitivityAnalysisTest::testFxOptionDeltaGamma() {
     IndexManager::instance().clearHistories();
 }
 
-void SensitivityAnalysisTest::testCrossGamma() {
+BOOST_AUTO_TEST_CASE(testCrossGamma) {
 
     BOOST_TEST_MESSAGE("Testing cross-gamma sensitivities against cached results");
 
@@ -1535,12 +1652,14 @@ void SensitivityAnalysisTest::testCrossGamma() {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator(
-        new SensitivityScenarioGenerator(sensiData, simMarket->baseScenario(), simMarketData, false));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
+    boost::shared_ptr<SensitivityScenarioGenerator> scenarioGenerator =
+        boost::make_shared<SensitivityScenarioGenerator>(sensiData, baseScenario, simMarketData, scenarioFactory,
+                                                         false);
     simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
@@ -1865,7 +1984,7 @@ void SensitivityAnalysisTest::testCrossGamma() {
                 os << id << "_" << factor1 << "_" << factor2;
                 string keyStr = os.str();
                 tuple<string, string, string> key = make_tuple(id, factor1, factor2);
-                Real crossgamma = sa->crossGamma(id, factor1, factor2);
+                Real crossgamma = sa->sensiCube()->crossGamma(id, make_pair(s.key1(), s.key2()));
                 if (fabs(crossgamma) >= threshold) {
                     // BOOST_TEST_MESSAGE("{ \"" << id << std::setprecision(9) << "\", \"" << factor1 << "\", \"" <<
                     // factor2 <<
@@ -1889,19 +2008,6 @@ void SensitivityAnalysisTest::testCrossGamma() {
     IndexManager::instance().clearHistories();
 }
 
-test_suite* SensitivityAnalysisTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("SensitivityAnalysisTest");
-    // Set the Observation mode here
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsSparse));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test1dShiftsGranular));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::test2dShifts));
-    suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityNoneObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDisableObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityDeferObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testPortfolioSensitivityUnregisterObs));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testFxOptionDeltaGamma));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testEquityOptionDeltaGamma));
-    // suite->add(BOOST_TEST_CASE(&SensitivityAnalysisTest::testCrossGamma));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

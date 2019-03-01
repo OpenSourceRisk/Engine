@@ -26,13 +26,11 @@
 #include <ored/configuration/curveconfig.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
-
-namespace ore {
-namespace data {
 
 //! Security configuration
 /*!
@@ -44,9 +42,10 @@ public:
     //@{
     //! Detailed constructor
     SecurityConfig(const string& curveID, const string& curveDescription, const string& spreadQuote,
-                   const string& recoveryQuote)
-        : CurveConfig(curveID, curveDescription) {
-        quotes_ = {spreadQuote, recoveryQuote};
+                   const string& recoveryQuote = "", const string& cprQuote = "")
+        : CurveConfig(curveID, curveDescription), spreadQuote_(spreadQuote), recoveryQuote_(recoveryQuote),
+          cprQuote_(cprQuote) {
+        setQuotes();
     };
     //! Default constructor
     SecurityConfig() {}
@@ -54,8 +53,12 @@ public:
 
     //! \name Inspectors
     //@{
-    const string& spreadQuote() { return quotes_[0]; }
-    const string& recoveryRatesQuote() { return quotes_[1]; }
+    const string& spreadQuote() {
+        QL_REQUIRE(spreadQuote_ != "", "Spread Quote not defined in security config");
+        return spreadQuote_;
+    }
+    const string& recoveryRatesQuote() { return recoveryQuote_; }
+    const string& cprQuote() { return cprQuote_; }
     //@}
 
     void fromXML(XMLNode* node) override {
@@ -63,8 +66,10 @@ public:
 
         curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
         curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-        quotes_.push_back(XMLUtils::getChildValue(node, "SpreadQuote", true));
-        quotes_.push_back(XMLUtils::getChildValue(node, "RecoveryRateQuote", true));
+        spreadQuote_ = XMLUtils::getChildValue(node, "SpreadQuote", true);
+        recoveryQuote_ = XMLUtils::getChildValue(node, "RecoveryRateQuote", false);
+        cprQuote_ = XMLUtils::getChildValue(node, "CPRQuote", false);
+        setQuotes();
     }
 
     XMLNode* toXML(XMLDocument& doc) override {
@@ -72,10 +77,24 @@ public:
 
         XMLUtils::addChild(doc, node, "CurveId", curveID_);
         XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-        XMLUtils::addChild(doc, node, "SpreadQuotes", quotes_[0]);
-        XMLUtils::addChild(doc, node, "RecoveryRateQuotes", quotes_[1]);
+        XMLUtils::addChild(doc, node, "SpreadQuote", spreadQuote_);
+        if (!recoveryQuote_.empty())
+            XMLUtils::addChild(doc, node, "RecoveryRateQuote", recoveryQuote_);
+        if (!cprQuote_.empty())
+            XMLUtils::addChild(doc, node, "CPRQuote", cprQuote_);
         return node;
     }
+
+private:
+    void setQuotes() {
+        quotes_.clear();
+        quotes_.push_back(spreadQuote_);
+        if (!recoveryQuote_.empty())
+            quotes_.push_back(recoveryQuote_);
+        if (!cprQuote_.empty())
+            quotes_.push_back(cprQuote_);
+    }
+    string spreadQuote_, recoveryQuote_, cprQuote_;
 };
 } // namespace data
 } // namespace ore

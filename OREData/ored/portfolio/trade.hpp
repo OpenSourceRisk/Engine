@@ -32,14 +32,12 @@
 #include <ql/instrument.hpp>
 #include <ql/time/date.hpp>
 
-using std::string;
-using ore::data::XMLSerializable;
-
-using ore::data::XMLNode;
-using QuantLib::Date;
-
 namespace ore {
 namespace data {
+using std::string;
+using ore::data::XMLSerializable;
+using ore::data::XMLNode;
+using QuantLib::Date;
 
 //! Trade base class
 /*! Instrument interface to pricing and risk applications

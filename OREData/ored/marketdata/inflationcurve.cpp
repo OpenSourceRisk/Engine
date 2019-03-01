@@ -123,9 +123,10 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
                     boost::shared_ptr<SeasonalityQuote> sq = boost::dynamic_pointer_cast<SeasonalityQuote>(marketQuote);
                     QL_REQUIRE(sq->type() == "MULT", "Market quote (" << sq->name() << ") not of multiplicative type.");
                     Size seasBaseDateMonth = ((Size)config->seasonalityBaseDate().month());
-                    QuantLib::Size findex = (seasBaseDateMonth < sq->applyMonth())
-                                                ? 12 + seasBaseDateMonth - sq->applyMonth()
-                                                : seasBaseDateMonth - sq->applyMonth();
+                    int findex = sq->applyMonth() - seasBaseDateMonth;
+                    if (findex < 0)
+                        findex += 12;
+                    QL_REQUIRE(findex >= 0 && findex < 12, "Unexpected seasonality index " << findex);
                     factors[findex] = sq->quote()->value();
                 } else {
                     QL_FAIL("Could not find quote for ID " << strFactorIDs[i] << " with as of date "
@@ -163,6 +164,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             curve_ = boost::shared_ptr<PiecewiseZeroInflationCurve<Linear>>(new PiecewiseZeroInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
                 baseRate, nominalTs, instruments, config->tolerance()));
+            // force bootstrap so that errors are thrown during the build, not later
+            boost::static_pointer_cast<PiecewiseZeroInflationCurve<Linear>>(curve_)->zeroRate(QL_EPSILON);
             if (derive_yoy_from_zc) {
                 // set up yoy wrapper with empty ts, so that zero index is used to forecast fixings
                 // for this link the appropriate curve to the zero index
@@ -221,6 +224,8 @@ InflationCurve::InflationCurve(Date asof, InflationCurveSpec spec, const Loader&
             curve_ = boost::shared_ptr<PiecewiseYoYInflationCurve<Linear>>(new PiecewiseYoYInflationCurve<Linear>(
                 asof, config->calendar(), config->dayCounter(), config->lag(), config->frequency(), interpolatedIndex_,
                 baseRate, nominalTs, instruments, config->tolerance()));
+            // force bootstrap so that errors are thrown during the build, not later
+            boost::static_pointer_cast<PiecewiseYoYInflationCurve<Linear>>(curve_)->yoyRate(QL_EPSILON);
         }
         if (seasonality != nullptr) {
             curve_->setSeasonality(seasonality);

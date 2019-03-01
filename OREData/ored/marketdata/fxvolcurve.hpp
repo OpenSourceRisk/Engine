@@ -31,12 +31,11 @@
 #include <ored/marketdata/yieldcurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 
+namespace ore {
+namespace data {
 using QuantLib::Date;
 using QuantLib::BlackVolTermStructure;
 using ore::data::CurveConfigurations;
-
-namespace ore {
-namespace data {
 
 //! Wrapper class for building FX volatility structures
 /*!

@@ -8,9 +8,13 @@
     <DiscountingCurvesId>ois</DiscountingCurvesId>
     <YieldCurvesId>ois</YieldCurvesId>
   </Configuration>
-  <Configuration id="collateral_eur">
+  <Configuration id="xois_eur">
     <DiscountingCurvesId>xois_eur</DiscountingCurvesId>
   </Configuration>
+  <Configuration id="xois_usd">
+    <DiscountingCurvesId>xois_usd</DiscountingCurvesId>
+  </Configuration>
+  
   <Configuration id="libor">
     <DiscountingCurvesId>inccy_swap</DiscountingCurvesId>
     <YieldCurvesId>inccy_swap</YieldCurvesId>
@@ -57,17 +61,25 @@
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP1D</DiscountingCurve>
-    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
-    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF1D</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY1D</DiscountingCurve>
   </DiscountingCurves>
   <!-- discounting curve definition (xois discounting w.r.t. EUR collateral) -->
   <DiscountingCurves id="xois_eur">
     <DiscountingCurve currency="EUR">Yield/EUR/EUR1D</DiscountingCurve>
     <DiscountingCurve currency="USD">Yield/USD/USD-IN-EUR</DiscountingCurve>
     <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-EUR</DiscountingCurve>
-    <DiscountingCurve currency="CHF">Yield/CHF/CHF6M</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF-IN-EUR</DiscountingCurve>
     <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
   </DiscountingCurves>
+  <DiscountingCurves id="xois_usd">
+    <DiscountingCurve currency="EUR">Yield/EUR/EUR-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="USD">Yield/USD/USD1D</DiscountingCurve>
+    <DiscountingCurve currency="GBP">Yield/GBP/GBP-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="CHF">Yield/CHF/CHF-IN-USD</DiscountingCurve>
+    <DiscountingCurve currency="JPY">Yield/JPY/JPY6M</DiscountingCurve>
+  </DiscountingCurves>
+  
   <!-- index forwarding curve definition -->
   <IndexForwardingCurves id="default">
     <Index name="EUR-EURIBOR-1M">Yield/EUR/EUR1M</Index>
@@ -86,9 +98,16 @@
     <Index name="CHF-LIBOR-6M">Yield/CHF/CHF6M</Index>
     <Index name="JPY-LIBOR-6M">Yield/JPY/JPY6M</Index>
     <Index name="JPY-TONAR">Yield/JPY/JPY1D</Index>
-  </IndexForwardingCurves>
+    <Index name="USD-SIFMA-1W">Yield/USD/USDBMA</Index>
+    </IndexForwardingCurves>
   <SwapIndexCurves id="default">
     <SwapIndex name="EUR-CMS-1Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-2Y">
+      <Discounting>EUR-EONIA</Discounting>
+    </SwapIndex>
+    <SwapIndex name="EUR-CMS-10Y">
       <Discounting>EUR-EONIA</Discounting>
     </SwapIndex>
     <SwapIndex name="EUR-CMS-30Y">
@@ -175,6 +194,13 @@
       <InflationCapFloorPriceSurface name="USCPI">InflationCapFloorPrice/USCPI/USCPI_ZC_CF</InflationCapFloorPriceSurface>
       <InflationCapFloorPriceSurface name="UKRPI">InflationCapFloorPrice/UKRPI/UKRPI_ZC_CF</InflationCapFloorPriceSurface>
   </InflationCapFloorPriceSurfaces>
+  <!-- <YYInflationCapFloorPriceSurfaces id="default">
+      <YYInflationCapFloorPriceSurface name="EUHICPXT">InflationCapFloorPrice/EUHICPXT/EUHICPXT_YY_CF</YYInflationCapFloorPriceSurface>
+  </YYInflationCapFloorPriceSurfaces> -->
+  <!-- inflation volatility curves definition -->
+  <YYInflationCapFloorVolatilities id="default">
+    <YYInflationCapFloorVolatility name="EUHICPXT">InflationCapFloorVolatility/EUHICPXT/EUHICPXT_YY_CF_N</YYInflationCapFloorVolatility>
+  </YYInflationCapFloorVolatilities>
   <EquityCurves id="default">
       <EquityCurve name="SP5">Equity/USD/SP5</EquityCurve>
       <EquityCurve name="Lufthansa">Equity/EUR/Lufthansa</EquityCurve>
@@ -183,10 +209,18 @@
       <EquityVolatility name="SP5">EquityVolatility/USD/SP5</EquityVolatility>
       <EquityVolatility name="Lufthansa">EquityVolatility/EUR/Lufthansa</EquityVolatility>
   </EquityVolatilities>
-   <Securities id="collateral_eur">
+  <Securities id="collateral_eur">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
-   <Securities id="default">
+  <Securities id="default">
      <Security name="SECURITY_1">Security/SECURITY_1</Security>
    </Securities>
+  <CommodityCurves id="default">
+    <CommodityCurve name="COMDTY_GOLD_USD">Commodity/USD/GOLD_USD</CommodityCurve>
+    <CommodityCurve name="COMDTY_WTI_USD">Commodity/USD/WTI_USD</CommodityCurve>
+  </CommodityCurves>
+  <CommodityVolatilities id="default">
+      <CommodityVolatility name="COMDTY_GOLD_USD">CommodityVolatility/USD/GOLD_USD_VOLS</CommodityVolatility>
+      <CommodityVolatility name="COMDTY_WTI_USD">CommodityVolatility/USD/WTI_USD_VOLS</CommodityVolatility>
+  </CommodityVolatilities>
 </TodaysMarket>

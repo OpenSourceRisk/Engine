@@ -28,14 +28,12 @@
 #include <ql/currency.hpp>
 #include <ql/types.hpp>
 
+namespace ore {
+namespace data {
 using std::string;
 using std::vector;
 using ore::data::XMLNode;
-using ore::data::XMLDocument;
 using QuantLib::Currency;
-
-namespace ore {
-namespace data {
 
 //! FXSpot configuration
 /*!

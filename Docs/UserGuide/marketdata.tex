@@ -31,13 +31,13 @@ Allowable values: Any real number.
     \bfseries{Market Data Parameter} & \bfseries{Allowable Values} \\
     \hline
  Instrument Type & \emph{ZERO, DISCOUNT, MM, MM\_FUTURE, FRA, IMM\_FRA,
-  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX\_SPOT, FX\_FWD,
+  IR\_SWAP,  BASIS\_SWAP, CC\_BASIS\_SWAP, CDS, CDS\_INDEX, FX, FX\_SPOT, FXFWD, FX\_FWD,
   SWAPTION, CAPFLOOR, FX\_OPTION, HAZARD\_RATE, RECOVERY\_RATE,
   ZC\_INFLATIONSWAP, YY\_INFLATIONSWAP, ZC\_INFLATIONCAPFLOOR,
   SEASONALITY, EQUITY\_SPOT, EQUITY\_FWD, EQUITY\_DIVIDEND, 
   EQUITY\_OPTION, BOND, INDEX\_CDS\_OPTION} \\
 \hline
-  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD, HAZARD\_RATE,
+  Quote Type & \emph{BASIS\_SPREAD, CREDIT\_SPREAD, YIELD\_SPREAD,
   RATE, RATIO, PRICE, RATE\_LNVOL, RATE\_NVOL, RATE\_SLNVOL,
   BASE\_CORRELATION, SHIFT} \\
 \hline
@@ -733,11 +733,10 @@ Example:
 %\end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Probability of Default}\label{ss:prob_default_quote}
+\subsection{Hazard Rate (Instantaneous Probability of Default)}\label{ss:prob_default_quote}
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-This quote can represent a cumulative PD for the given rating and maturity, or a Loss Given Default for the given
-rating.
+This allows to directly pass hazard rates as instantaneous probabilities of default.
 
 \begin{table}[H]
 \centering
@@ -745,19 +744,21 @@ rating.
   \hline
   {\bf Property} & {\bf Allowable values} & {\bf Description} \\
   \hline
-  Instrument Type & \emph{NAME} & \\ \hline
-  Quote Type & \emph{PD, LGD} & \\ \hline
-  Rating & String & Internal or external rating code \\ \hline
-  Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
+    Instrument Type & \emph{HAZARD\_RATE} & \\ \hline
+    Quote Type & \emph{RATE} & \\ \hline
+    Issuer & String &  Issuer name \\ \hline
+    Seniority & String &  Seniority status \\ \hline
+    Currency & See \lstinline!Currency! in Table \ref{tab:allow_stand_data} & Hazard rate currency\\ \hline
+    Term & An integer followed by D, W, M or Y & Generic period from start to maturity\\ \hline
 \end{tabular}
-  \caption{Probability of Default}
+  \caption{Hazard Rate}
   \label{tab:pd_quote}
 \end{table}
 
 Example:
 \begin{itemize}
-\item {NAME/PD/15/3Y}
-\item{NAME/LGD/Baa3}
+\item {HAZARD\_RATE/RATE/CPTY\_A/SR/USD/30Y}
+\item{HAZARD\_RATE/RATE/CPTY\_C/SR/EUR/0Y}
 \end{itemize}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

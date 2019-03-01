@@ -16,12 +16,24 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <boost/test/unit_test.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/cube/npvcube.hpp>
-#include <orea/engine/all.hpp>
+#include <orea/engine/filteredsensitivitystream.hpp>
 #include <orea/engine/observationmode.hpp>
+#include <orea/engine/parametricvar.hpp>
+#include <orea/engine/riskfilter.hpp>
+#include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityanalysis.hpp>
+#include <orea/engine/sensitivitycubestream.hpp>
+#include <orea/engine/sensitivityfilestream.hpp>
+#include <orea/engine/sensitivityinmemorystream.hpp>
+#include <orea/engine/sensitivityrecord.hpp>
+#include <orea/engine/sensitivitystream.hpp>
+#include <orea/engine/stresstest.hpp>
+#include <orea/engine/valuationcalculator.hpp>
+#include <orea/engine/valuationengine.hpp>
 #include <orea/scenario/clonescenariofactory.hpp>
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/scenariosimmarketparameters.hpp>
@@ -37,11 +49,11 @@
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/osutils.hpp>
+#include <oret/toplevelfixture.hpp>
 #include <ql/math/randomnumbers/mt19937uniformrng.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/date.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <test/stresstest.hpp>
 #include <test/testmarket.hpp>
 #include <test/testportfolio.hpp>
 
@@ -53,7 +65,12 @@ using namespace ore;
 using namespace ore::data;
 using namespace ore::analytics;
 
-namespace testsuite {
+using testsuite::TestMarket;
+using testsuite::buildSwap;
+using testsuite::buildCap;
+using testsuite::buildFloor;
+using testsuite::buildFxOption;
+using testsuite::buildEuropeanSwaption;
 
 boost::shared_ptr<data::Conventions> stressConv() {
     boost::shared_ptr<data::Conventions> conventions(new data::Conventions());
@@ -223,7 +240,11 @@ boost::shared_ptr<StressTestScenarioData> setupStressScenarioData() {
     return stressData;
 }
 
-void StressTestingTest::regression() {
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+
+BOOST_AUTO_TEST_SUITE(StressTestingTest)
+
+BOOST_AUTO_TEST_CASE(regression) {
     BOOST_TEST_MESSAGE("Testing Sensitivity Par Conversion");
 
     SavedSettings backup;
@@ -256,14 +277,14 @@ void StressTestingTest::regression() {
     boost::shared_ptr<analytics::ScenarioSimMarket> simMarket =
         boost::make_shared<analytics::ScenarioSimMarket>(initMarket, simMarketData, conventions);
 
+    // build scenario factory
+    boost::shared_ptr<Scenario> baseScenario = simMarket->baseScenario();
+    boost::shared_ptr<ScenarioFactory> scenarioFactory = boost::make_shared<CloneScenarioFactory>(baseScenario);
+
     // build scenario generator
-    boost::shared_ptr<StressScenarioGenerator> scenarioGenerator(
-        new StressScenarioGenerator(stressData, simMarket->baseScenario(), simMarketData));
-    boost::shared_ptr<Scenario> baseScen = scenarioGenerator->baseScenario();
-    boost::shared_ptr<ScenarioFactory> scenarioFactory(new CloneScenarioFactory(baseScen));
-    scenarioGenerator->generateScenarios(scenarioFactory);
-    boost::shared_ptr<ScenarioGenerator> sgen(scenarioGenerator);
-    simMarket->scenarioGenerator() = sgen;
+    boost::shared_ptr<StressScenarioGenerator> scenarioGenerator =
+        boost::make_shared<StressScenarioGenerator>(stressData, baseScenario, simMarketData, scenarioFactory);
+    simMarket->scenarioGenerator() = scenarioGenerator;
 
     // build porfolio
     boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
@@ -365,11 +386,6 @@ void StressTestingTest::regression() {
     IndexManager::instance().clearHistories();
 }
 
-test_suite* StressTestingTest::suite() {
-    test_suite* suite = BOOST_TEST_SUITE("StressTestingTest");
-    // Set the Observation mode here
-    ObservationMode::instance().setMode(ObservationMode::Mode::None);
-    suite->add(BOOST_TEST_CASE(&StressTestingTest::regression));
-    return suite;
-}
-} // namespace testsuite
+BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_SUITE_END()

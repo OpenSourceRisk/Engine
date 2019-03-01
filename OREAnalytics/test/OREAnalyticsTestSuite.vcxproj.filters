@@ -9,40 +9,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="scenariogenerator.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="testmarket.hpp">
       <Filter>headers</Filter>
     </ClInclude>
-    <ClInclude Include="swapperformance.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="scenariosimmarket.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="cube.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="aggregationscenariodata.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="observationmode.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="sensitivityanalysis.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="stresstest.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
     <ClInclude Include="testportfolio.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="sensitivityperformance.hpp">
-      <Filter>headers</Filter>
-    </ClInclude>
-    <ClInclude Include="sensitivityanalysis2.hpp">
       <Filter>headers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -78,10 +48,16 @@
     <ClCompile Include="sensitivityperformance.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="sensitivityanalysis2.cpp">
+    <ClCompile Include="testmarket.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="testmarket.cpp">
+    <ClCompile Include="shiftscenariogenerator.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityanalysisanalytic.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="sensitivityaggregator.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
