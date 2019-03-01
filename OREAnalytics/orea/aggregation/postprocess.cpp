@@ -556,10 +556,23 @@ PostProcess::PostProcess(
     /********************************************************
      * Calculate netting set KVA-CCR and KVA-CVA
      */
-    nettingSetKVA();
+    nettingSetKVA();      
 }
 
 void PostProcess::nettingSetKVA() {
+    // Loop over all netting sets
+    for (auto n : netEPE_) {
+        string nettingSetId = n.first;
+	// Init results
+	ourNettingSetKVACCR_[nettingSetId] = 0.0;
+        theirNettingSetKVACCR_[nettingSetId] = 0.0;
+        ourNettingSetKVACVA_[nettingSetId] = 0.0;
+        theirNettingSetKVACVA_[nettingSetId] = 0.0;
+    }
+
+    if (!analytics_["kva"])
+        return;
+
     vector<Date> dateVector = cube_->dates();
     Size dates = dateVector.size();
     Date today = market_->asofDate();
@@ -571,12 +584,6 @@ void PostProcess::nettingSetKVA() {
         string nettingSetId = n.first;
         string cid = counterpartyId_[nettingSetId];
         LOG("KVA for netting set " << nettingSetId);
-
-	// Init results
-	ourNettingSetKVACCR_[nettingSetId] = 0.0;
-        theirNettingSetKVACCR_[nettingSetId] = 0.0;
-        ourNettingSetKVACVA_[nettingSetId] = 0.0;
-        theirNettingSetKVACVA_[nettingSetId] = 0.0;
 
 	// Main input are the EPE and ENE profiles, previously computed
 	vector<Real> epe = netEPE_[nettingSetId];
