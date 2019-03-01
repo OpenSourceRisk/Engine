@@ -36,6 +36,7 @@
 #elif __APPLE__
 #include <sys/sysctl.h>
 #include <unistd.h>
+#include <mach/mach.h>
 #else
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -199,9 +200,9 @@ unsigned long long getPeakMemoryUsageBytes() {
     getrusage(RUSAGE_SELF, &ru);
     return ru.ru_maxrss;
 #if defined __APPLE__
-    return (size_t)rusage.ru_maxrss;
+    return (size_t)ru.ru_maxrss;
 #else
-    return (size_t)(rusage.ru_maxrss * 1024L);
+    return (size_t)(ru.ru_maxrss * 1024L);
 #endif
 }
 
