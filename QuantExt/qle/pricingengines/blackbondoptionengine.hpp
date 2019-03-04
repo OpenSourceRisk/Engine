@@ -52,12 +52,12 @@ namespace QuantExt {
         //! volatility is the quoted fwd yield volatility, not price vol
         BlackBondOptionEngine(
             const Handle<SwaptionVolatilityStructure>& yieldVolStructure,
-            const Handle<YieldTermStructure>& discountCurve, const bool& isCallableBond);
+            const Handle<YieldTermStructure>& discountCurve, const bool& bondInPrice);
         void calculate() const;
     private:
         Handle<SwaptionVolatilityStructure> volatility_;
         Handle<YieldTermStructure> discountCurve_;
-        bool isCallableBond_;
+        bool bondInPrice_;
         // present value of all coupons paid during the life of option
         Real spotIncome() const;
         // converts the yield volatility into a forward price volatility

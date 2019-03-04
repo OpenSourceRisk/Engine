@@ -148,7 +148,7 @@ namespace ore {
             boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
             QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
             
-            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, isCallableBond_));
+            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, bondInPrice_));
             if (option().longShort() == "Short") {
                 mult = -mult;
             }        
@@ -174,7 +174,7 @@ namespace ore {
             quantity_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Quantity", true);
             redemption_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Redemption", true);
             priceType_ = XMLUtils::getChildValue(bondOptionNode, "PriceType", true);
-            isCallableBond_ = XMLUtils::getChildValueAsBool(bondOptionNode, "IsCallableBond");
+            bondInPrice_ = XMLUtils::getChildValueAsBool(bondOptionNode, "BondInPrice");
 
             XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
             QL_REQUIRE(bondNode, "No BondData Node");
@@ -205,7 +205,7 @@ namespace ore {
 
             XMLNode* bondOptionNode = doc.allocNode("BondOptionData");
             XMLUtils::appendNode(node, bondOptionNode);
-            XMLUtils::addChild(doc, bondOptionNode, "IsCallableBond", isCallableBond_);
+            XMLUtils::addChild(doc, bondOptionNode, "BondInPrice", bondInPrice_);
             XMLUtils::appendNode(bondOptionNode, option_.toXML(doc));
             XMLUtils::addChild(doc, bondOptionNode, "Strike", strike_);
             XMLUtils::addChild(doc, bondOptionNode, "Quantity", quantity_);

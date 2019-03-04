@@ -45,12 +45,12 @@ namespace ore {
 
         protected:
             virtual std::string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId, const bool& isCallableBond) {
-                return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + (isCallableBond ? "CallableBond" : "BondOption");
+                const string& referenceCurveId, const bool& bondInPrice) {
+                return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + "BondOption";
             }
 
             virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId, const bool& isCallableBond) {
+                const string& referenceCurveId, const bool& bondInPrice) {
 
                 Handle<YieldTermStructure> discountCurve =
                     market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -63,7 +63,7 @@ namespace ore {
                     yieldVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
                 }
                     
-                return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve, isCallableBond);
+                return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve, bondInPrice);
             };
         };
     }
