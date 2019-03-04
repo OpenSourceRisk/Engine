@@ -36,11 +36,12 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
 
     boost::shared_ptr<QuantLib::ForwardRateAgreement> fra(
-        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, notional_, *index, discountTS));
+        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
     instrument_.reset(new VanillaInstrument(fra));
     npvCurrency_ = currency_;
     maturity_ = endDate;
     instrument_->qlInstrument()->update();
+    notional_ = amount_;
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
@@ -52,7 +53,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
     endDate_ = XMLUtils::getChildValue(fNode, "EndDate", true);
     longShort_ = XMLUtils::getChildValue(fNode, "LongShort", true);
     strike_ = XMLUtils::getChildValueAsDouble(fNode, "Strike", true);
-    notional_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
+    amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
     index_ = XMLUtils::getChildValue(fNode, "Index", true);
 }
 
@@ -66,7 +67,7 @@ XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
     XMLUtils::addChild(doc, fNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, fNode, "Strike", strike_);
-    XMLUtils::addChild(doc, fNode, "Notional", notional_);
+    XMLUtils::addChild(doc, fNode, "Notional", amount_);
     XMLUtils::addChild(doc, fNode, "Index", index_);
     return node;
 }

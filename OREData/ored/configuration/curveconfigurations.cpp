@@ -186,6 +186,53 @@ std::set<string> CurveConfigurations::quotes() const {
     return quotes;
 }
 
+std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                                             const set<string>& configurations) const {
+                                             
+    set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
+    // Checking for any swapIndices
+
+    if (todaysMarketParams->hasMarketObject(MarketObject::SwapIndexCurve)) {
+        auto mapping = todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration);
+
+        for (auto m : mapping)
+            conventions.insert(m.first);
+    }
+    
+    return conventions;
+}
+
+
+std::set<string> CurveConfigurations::conventions() const {
+    set<string> conventions;
+
+    for (auto& y : yieldCurveConfigs_) {
+        for (auto& c : y.second->curveSegments()) {
+            if (c->conventionsID() != "")
+                conventions.insert(c->conventionsID());
+        }
+    }
+
+    for (auto& d : defaultCurveConfigs_) {
+        if (d.second->conventionID() != "")
+            conventions.insert(d.second->conventionID());
+    }
+
+    for (auto& i : inflationCurveConfigs_) {
+        if (i.second->conventions() != "")
+            conventions.insert(i.second->conventions());
+    }
+
+    for (auto& c : correlationCurveConfigs_) {
+        if (c.second->conventions() != "")
+            conventions.insert(c.second->conventions());
+    }
+
+    
+
+    return conventions;
+}
+
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
 
 const boost::shared_ptr<YieldCurveConfig>& CurveConfigurations::yieldCurveConfig(const string& curveID) const {
@@ -357,7 +404,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
     addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);

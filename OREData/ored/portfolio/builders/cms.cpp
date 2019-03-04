@@ -54,7 +54,7 @@ boost::shared_ptr<FloatingRateCouponPricer> AnalyticHaganCmsCouponPricerBuilder:
 
     const string& ccyCode = ccy.code();
     Real rev = parseCcyReversion(engineParameters_, ccyCode);
-    string ycmstr = engineParameters_.at("YieldCurveModel");
+    string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
@@ -70,11 +70,11 @@ boost::shared_ptr<FloatingRateCouponPricer> NumericalHaganCmsCouponPricerBuilder
 
     const string& ccyCode = ccy.code();
     Real rev = parseCcyReversion(engineParameters_, ccyCode);
-    string ycmstr = engineParameters_.at("YieldCurveModel");
+    string ycmstr = engineParameter("YieldCurveModel");
     GFunctionFactory::YieldCurveModel ycm = ycmFromString(ycmstr);
-    Rate llim = parseReal(engineParameters_.at("LowerLimit"));
-    Rate ulim = parseReal(engineParameters_.at("UpperLimit"));
-    Real prec = parseReal(engineParameters_.at("Precision"));
+    Rate llim = parseReal(engineParameter("LowerLimit"));
+    Rate ulim = parseReal(engineParameter("UpperLimit"));
+    Real prec = parseReal(engineParameter("Precision"));
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
@@ -90,7 +90,7 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
 
     const string& ccyCode = ccy.code();
     Real rev = parseCcyReversion(engineParameters_, ccyCode);
-    string policy = engineParameters_.at("Policy");
+    string policy = engineParameter("Policy");
 
     Handle<Quote> revQuote(boost::shared_ptr<Quote>(new SimpleQuote(rev)));
     Handle<SwaptionVolatilityStructure> vol = market_->swaptionVol(ccyCode, configuration(MarketContext::pricing));
@@ -103,23 +103,23 @@ boost::shared_ptr<FloatingRateCouponPricer> LinearTSRCmsCouponPricerBuilder::eng
 
     LinearTsrPricer::Settings settings;
     if (policy == "RateBound") {
-        Real lower = parseReal(engineParameters_.at(lowerBoundStr));
-        Real upper = parseReal(engineParameters_.at(upperBoundStr));
+        Real lower = parseReal(engineParameter(lowerBoundStr));
+        Real upper = parseReal(engineParameter(upperBoundStr));
         settings.withRateBound(lower, upper);
     } else if (policy == "VegaRatio") {
-        Real lower = parseReal(engineParameters_.at(lowerBoundStr));
-        Real upper = parseReal(engineParameters_.at(upperBoundStr));
-        Real vega = parseReal(engineParameters_.at("VegaRatio"));
+        Real lower = parseReal(engineParameter(lowerBoundStr));
+        Real upper = parseReal(engineParameter(upperBoundStr));
+        Real vega = parseReal(engineParameter("VegaRatio"));
         settings.withVegaRatio(vega, lower, upper);
     } else if (policy == "PriceThreshold") {
-        Real lower = parseReal(engineParameters_.at(lowerBoundStr));
-        Real upper = parseReal(engineParameters_.at(upperBoundStr));
-        Real threshold = parseReal(engineParameters_.at("PriceThreshold"));
+        Real lower = parseReal(engineParameter(lowerBoundStr));
+        Real upper = parseReal(engineParameter(upperBoundStr));
+        Real threshold = parseReal(engineParameter("PriceThreshold"));
         settings.withPriceThreshold(threshold, lower, upper);
     } else if (policy == "BsStdDev") {
-        Real lower = parseReal(engineParameters_.at(lowerBoundStr));
-        Real upper = parseReal(engineParameters_.at(upperBoundStr));
-        Real stddevs = parseReal(engineParameters_.at("BSStdDevs"));
+        Real lower = parseReal(engineParameter(lowerBoundStr));
+        Real upper = parseReal(engineParameter(upperBoundStr));
+        Real stddevs = parseReal(engineParameter("BSStdDevs"));
         settings.withPriceThreshold(stddevs, lower, upper);
     } else
         QL_FAIL("unknown string for policy parameter");

@@ -40,6 +40,38 @@
 namespace ore {
 namespace data {
 
+namespace {
+std::string getParameter(const std::map<std::string, std::string>& m, const std::string& p, const std::string& q,
+                         const bool mandatory, const std::string& defaultValue) {
+    // first look for p_q if a qualifier is given
+    if (!q.empty()) {
+        auto r = m.find(p + "_" + q);
+        if (r != m.end())
+            return r->second;
+    }
+    // no qualifier given, or fall back on p because p_q was not found
+    auto r = m.find(p);
+    if (r != m.end()) {
+        return r->second;
+    }
+    // if parameter is mandatory throw, otherwise return the default value
+    if (mandatory) {
+        QL_FAIL("parameter " << p << " not found (qualifier was \"" << q << "\")");
+    }
+    return defaultValue;
+}
+} // namespace
+
+std::string EngineBuilder::engineParameter(const std::string& p, const std::string qualifier, const bool mandatory,
+                                           const std::string& defaultValue) {
+    return getParameter(engineParameters_, p, qualifier, mandatory, defaultValue);
+}
+
+std::string EngineBuilder::modelParameter(const std::string& p, const std::string qualifier, const bool mandatory,
+                                          const std::string& defaultValue) {
+    return getParameter(modelParameters_, p, qualifier, mandatory, defaultValue);
+}
+
 EngineFactory::EngineFactory(const boost::shared_ptr<EngineData>& engineData, const boost::shared_ptr<Market>& market,
                              const map<MarketContext, string>& configurations,
                              const std::vector<boost::shared_ptr<EngineBuilder>> extraEngineBuilders,

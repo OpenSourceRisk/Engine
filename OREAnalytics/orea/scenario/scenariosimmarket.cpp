@@ -1365,6 +1365,14 @@ ScenarioSimMarket::ScenarioSimMarket(
                     correlationCurves_[make_tuple(Market::defaultConfiguration, pair.first, pair.second)] = ch;
                 }
                 break;
+
+            case RiskFactorKey::KeyType::CPR:
+                WLOG("RiskFactorKey CPR not yet implemented");
+                break;
+
+            case RiskFactorKey::KeyType::None:
+                WLOG("RiskFactorKey None not yet implemented");
+                break;
             }
             simData_.insert(simDataTmp.begin(), simDataTmp.end());
         } catch (const std::exception& e) {

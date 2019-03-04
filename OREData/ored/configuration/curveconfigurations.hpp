@@ -163,12 +163,14 @@ public:
 
     /*! Return the set of quotes that are required by the CurveConfig elements in CurveConfigurations.
 
-        If \p todaysMarketParams is a `nullptr`, the set of quotes required by all CurveConfig elements is returned.
-        If \p todaysMarketParams is provided, the set of quotes required by only those CurveConfig elements appearing
+        The set of quotes required by only those CurveConfig elements appearing
         in \p todaysMarketParams for the given configuration(s) is returned.
     */
     std::set<string> quotes(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
     std::set<string> quotes() const;
+
+    std::set<string> conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams, const std::set<std::string>& configurations = {""}) const;
+    std::set<string> conventions() const;
     //@}
 
     //! \name Serialisation

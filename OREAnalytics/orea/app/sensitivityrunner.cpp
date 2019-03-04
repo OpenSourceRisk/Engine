@@ -20,6 +20,7 @@
 #include <orea/app/sensitivityrunner.hpp>
 #include <orea/engine/sensitivitycubestream.hpp>
 #include <ored/report/csvreport.hpp>
+#include <ored/utilities/log.hpp>
 
 using namespace std;
 using namespace ore::data;
@@ -30,6 +31,9 @@ namespace analytics {
 
 void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market, Conventions& conventions,
     const CurveConfigurations& curveConfigs, const TodaysMarketParameters& todaysMarketParams) {
+
+    MEM_LOG;
+    LOG("Running sensitivity analysis");
 
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     boost::shared_ptr<SensitivityScenarioData> sensiData(new SensitivityScenarioData);
@@ -49,6 +53,9 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);
+
+    LOG("Sensitivity analysis completed");
+    MEM_LOG;
 }
 
 void SensitivityRunner::sensiInputInitialize(boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,

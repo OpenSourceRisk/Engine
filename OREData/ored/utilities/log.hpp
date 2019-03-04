@@ -23,14 +23,15 @@
 
 #pragma once
 
-//          accumulated 'filter' for 'external' DEBUG_MASK
-#define ORE_ALERT 1    // 00000001   1 = 2^1-1
-#define ORE_CRITICAL 2 // 00000010   3 = 2^2-1
-#define ORE_ERROR 4    // 00000100   7
-#define ORE_WARNING 8  // 00001000  15
-#define ORE_NOTICE 16  // 00010000  31
-#define ORE_DEBUG 32   // 00100000  63 = 2^6-1
+// accumulated 'filter' for 'external' DEBUG_MASK
+#define ORE_ALERT 1    // 00000001    1 = 2^1-1
+#define ORE_CRITICAL 2 // 00000010    3 = 2^2-1
+#define ORE_ERROR 4    // 00000100    7
+#define ORE_WARNING 8  // 00001000   15
+#define ORE_NOTICE 16  // 00010000   31
+#define ORE_DEBUG 32   // 00100000   63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
+#define ORE_MEMORY 128 // 10000000  255
 
 #include <fstream>
 #include <iostream>
@@ -50,6 +51,7 @@
 #include <iomanip>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
+#include <ored/utilities/osutils.hpp>
 
 namespace ore {
 namespace data {
@@ -303,6 +305,15 @@ private:
 #define DLOG(text) MLOG(ORE_DEBUG, text)
 //! Logging Macro (Level = Data)
 #define TLOG(text) MLOG(ORE_DATA, text)
+
+//! Logging macro specifically for logging memory usage
+#define MEM_LOG                                                                                                        \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(ORE_MEMORY)) {                       \
+        ore::data::Log::instance().header(ORE_MEMORY, __FILE__, __LINE__);                                             \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";     \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());                \
+        ore::data::Log::instance().log(ORE_MEMORY);                                                                    \
+    }
 
 //! LoggerStream class that is a std::ostream replacment that will log each line
 /*! LoggerStream is a simple wrapper around a string stream, it has an explicit
