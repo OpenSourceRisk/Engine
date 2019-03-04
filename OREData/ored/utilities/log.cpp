@@ -126,6 +126,9 @@ void Log::header(unsigned m, const char* filename, int lineNo) {
     case ORE_DATA:
         ls_ << "DATA     ";
         break;
+    case ORE_MEMORY:
+        ls_ << "MEMORY   ";
+        break;
     }
 
     // Timestamp
