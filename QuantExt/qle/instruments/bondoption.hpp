@@ -65,22 +65,6 @@ namespace QuantExt {
         const CallabilitySchedule& callability() const {
             return putCallSchedule_;
         }
-        //@}
-        //! \name Calculations
-        //@{
-        //! returns the Black implied forward yield volatility
-        /*! the forward yield volatility, see Hull, Fourth Edition,
-        Chapter 20, pg 536). Relevant only to European put/call
-        schedules
-        */
-        Volatility impliedVolatility(
-            Real targetValue,
-            const Handle<YieldTermStructure>& discountCurve,
-            Real accuracy,
-            Size maxEvaluations,
-            Volatility minVol,
-            Volatility maxVol) const;
-
 
     protected:
         BondOption(Natural settlementDays,
@@ -112,6 +96,7 @@ namespace QuantExt {
         //! Spread to apply to the valuation. This is a continuously
         //! componded rate added to the model. 
         Real spread;
+        bool bondInPrice;
         void validate() const;
     };
 
@@ -139,12 +124,12 @@ namespace QuantExt {
             const Schedule& schedule,
             const std::vector<Rate>& coupons,
             const DayCounter& accrualDayCounter,
-            BusinessDayConvention paymentConvention
-            = Following,
+            BusinessDayConvention paymentConvention = Following,
             Real redemption = 100.0,
             const Date& issueDate = Date(),
             const CallabilitySchedule& putCallSchedule
-            = CallabilitySchedule());
+            = CallabilitySchedule(),
+            bool bondInPrice = false);
 
         virtual void setupArguments(PricingEngine::arguments* args) const;
 
@@ -157,6 +142,7 @@ namespace QuantExt {
         coupon dates.
         */
         Real accrued(Date settlement) const;
+        bool bondInPrice_;
     };
 }
 

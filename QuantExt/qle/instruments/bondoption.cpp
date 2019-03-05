@@ -76,11 +76,13 @@ namespace QuantExt {
         BusinessDayConvention paymentConvention,
         Real redemption,
         const Date& issueDate,
-        const CallabilitySchedule& putCallSchedule)
+        const CallabilitySchedule& putCallSchedule,
+        bool bondInPrice)
         : BondOption(settlementDays, schedule, accrualDayCounter,
             issueDate, putCallSchedule) {
 
         frequency_ = schedule.tenor().frequency();
+        bondInPrice_ = bondInPrice;
 
         bool isZeroCouponBond = (coupons.size() == 1 && close(coupons[0], 0.0));
 
@@ -181,6 +183,8 @@ namespace QuantExt {
                 }
             }
         }
+
+        arguments->bondInPrice = bondInPrice_;
 
         arguments->spread = 0.0;
     }

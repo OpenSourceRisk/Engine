@@ -44,9 +44,8 @@ namespace QuantExt {
     //! no vol structures implemented yet besides constant volatility
     BlackBondOptionEngine::BlackBondOptionEngine(
         const Handle<SwaptionVolatilityStructure>& yieldVolStructure,
-        const Handle<YieldTermStructure>& discountCurve, 
-        const bool& bondInPrice)
-    :volatility_(yieldVolStructure), discountCurve_(discountCurve), bondInPrice_(bondInPrice) {
+        const Handle<YieldTermStructure>& discountCurve)
+    :volatility_(yieldVolStructure), discountCurve_(discountCurve) {
         registerWith(volatility_);
         registerWith(discountCurve_);
     }
@@ -169,7 +168,7 @@ namespace QuantExt {
                 priceVol*std::sqrt(exerciseTime),
                 discount);
 
-        if (bondInPrice_) {
+        if (arguments_.bondInPrice) {
             if (type == Option::Call) {
                 results_.value = npv - embeddedOptionValue;
                 results_.settlementValue = value - embeddedOptionValue;

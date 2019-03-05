@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
             dc, bdc, redemption, issueDate, callabilitySchedule));
 
         boost::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(
-            Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS, false));
+            Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS));
         bondOption->setPricingEngine(bondOptionEngine);
 
         BOOST_TEST_MESSAGE("Bond option price = " << bondOption->NPV());

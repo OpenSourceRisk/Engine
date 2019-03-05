@@ -137,7 +137,7 @@ namespace ore {
                 CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
 
                 bondoption.reset(new QuantExt::FixedRateBondOption(settlementDays, faceAmount, schedule, rates, 
-                    daycounter, business_dc, redemption(), issueDate, callabilitySchedule));
+                    daycounter, business_dc, redemption(), issueDate, callabilitySchedule, bondInPrice_));
                 // workaround, QL doesn't register a bond option with its leg's cashflows
                 for (auto const& c : leg)
                     bondoption->registerWith(c);
@@ -148,7 +148,8 @@ namespace ore {
             boost::shared_ptr<BondOptionEngineBuilder> bondOptionBuilder = boost::dynamic_pointer_cast<BondOptionEngineBuilder>(builder);
             QL_REQUIRE(bondOptionBuilder, "No Builder found for bondOption: " << id());
             
-            bondoption->setPricingEngine(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, bondInPrice_));
+            boost::shared_ptr<BlackBondOptionEngine> blackEngine = boost::dynamic_pointer_cast<BlackBondOptionEngine>(bondOptionBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_));
+            bondoption -> setPricingEngine(blackEngine);
             if (option().longShort() == "Short") {
                 mult = -mult;
             }        

@@ -38,19 +38,19 @@ namespace ore {
         -
         \ingroup builders
         */
-        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&, const bool&> {
+        class BondOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&, const string&, const string&> {
         public:
             BondOptionEngineBuilder()
                 : CachingEngineBuilder("Black", "BlackBondOptionEngine", { "BondOption" }) {}
 
         protected:
             virtual std::string keyImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId, const bool& bondInPrice) {
+                const string& referenceCurveId) {
                 return ccy.code() + "_" + creditCurveId + "_" + securityId + "_" + referenceCurveId + "_" + "BondOption";
             }
 
             virtual boost::shared_ptr<QuantLib::PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId, const string& securityId,
-                const string& referenceCurveId, const bool& bondInPrice) {
+                const string& referenceCurveId) {
 
                 Handle<YieldTermStructure> discountCurve =
                     market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
@@ -63,7 +63,7 @@ namespace ore {
                     yieldVola = market_->swaptionVol(ccy.code(), configuration(MarketContext::pricing));
                 }
                     
-                return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve, bondInPrice);
+                return boost::make_shared<QuantExt::BlackBondOptionEngine>(yieldVola, discountCurve);
             };
         };
     }
