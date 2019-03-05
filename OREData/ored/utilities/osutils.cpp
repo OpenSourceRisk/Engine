@@ -198,7 +198,6 @@ string getHostname() {
 unsigned long long getPeakMemoryUsageBytes() {
     rusage ru;
     getrusage(RUSAGE_SELF, &ru);
-    return ru.ru_maxrss;
 #if defined __APPLE__
     return (size_t)ru.ru_maxrss;
 #else
