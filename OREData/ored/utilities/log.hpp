@@ -367,5 +367,51 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
+
+
+//! Utility class for having structured Error messages
+// This can be used directly in log messages, e.g.
+// ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
+// And in the log file you will get
+//
+// .... StructuredErrorMessage { "id":"foo", "tradeType":"SWAP" }
+class StructuredErrorMessage {
+public:
+    static constexpr const char* name = "StructuredErrorMessage";
+    
+    //! return a string for the log file
+    std::string msg() const { return string(name) + string(" ") + json(); }
+protected:
+    // This should return a structured string, ideally in JSON
+    virtual std::string json() const = 0;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
+    return out << sem.msg();
+}
+
+//! Utility class for Structured Trade errors, contains the Trade ID and Type
+class StructuredTradeErrorMessage : public StructuredErrorMessage {
+public:
+    StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
+                                const std::string& exceptionType, const char* exceptionWhat = "")
+                                : tradeId_(tradeId), tradeType_(tradeType),
+                                  exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
+
+    const std::string& tradeId() const { return tradeId_; }
+    const std::string& tradeType() const { return tradeType_; }
+    const std::string& exceptionType() const { return exceptionType_; }
+    const std::string& exceptionWhat() const { return exceptionWhat_; }
+protected:
+    std::string json() const override {
+        return "{ \"id\":\"" + tradeId_ + "\"," +
+               " \"tradeType\":\"" + tradeType_ + "\"," +
+               " \"exceptionType\":\"" + exceptionType_ + "\"," +
+               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
+    }
+private:
+    std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;
+};
+
 } // namespace data
 } // namespace ore
