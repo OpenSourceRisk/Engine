@@ -79,7 +79,8 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
-            ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
+            ALOG("Exception during pricing trade (id=" << trade->id() << ") (type=" <<
+                 trade->tradeType() << ") : " << e.what());
             Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
