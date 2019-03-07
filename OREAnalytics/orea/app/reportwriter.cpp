@@ -20,8 +20,10 @@
 
 #include <orea/app/reportwriter.hpp>
 
+//FIXME: including all is slow and bad
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ostream>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>

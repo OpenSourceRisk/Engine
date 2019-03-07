@@ -20,6 +20,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -110,6 +111,17 @@ bool Portfolio::remove(const std::string& tradeID) {
     return false;
 }
 
+void Portfolio::removeMatured(const Date& asof) {
+    for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
+        if ((*it)->maturity() < asof) {
+            ALOG(StructuredTradeErrorMessage(*it, "Trade is Matured", ""));
+            it = trades_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building Portfolio of size " << trades_.size());
     auto trade = trades_.begin();
@@ -118,7 +130,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             ++trade;
         } catch (std::exception& e) {
-            ALOG(StructuredTradeErrorMessage((*trade)->id(), (*trade)->tradeType(), "Error building trade", e.what()));
+            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
             trade = trades_.erase(trade);
         }
     }

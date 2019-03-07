@@ -374,7 +374,7 @@ private:
 // ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
 // And in the log file you will get
 //
-// .... StructuredErrorMessage { "id":"foo", "tradeType":"SWAP" }
+// .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
 class StructuredErrorMessage {
 public:
     static constexpr const char* name = "StructuredErrorMessage";
@@ -382,36 +382,14 @@ public:
     //! return a string for the log file
     std::string msg() const { return string(name) + string(" ") + json(); }
 protected:
-    // This should return a structured string, ideally in JSON
+    // This should return a structured string, ideally in JSON, and should contain a field
+    // errorType
     virtual std::string json() const = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
     return out << sem.msg();
 }
-
-//! Utility class for Structured Trade errors, contains the Trade ID and Type
-class StructuredTradeErrorMessage : public StructuredErrorMessage {
-public:
-    StructuredTradeErrorMessage(const std::string& tradeId, const std::string& tradeType,
-                                const std::string& exceptionType, const char* exceptionWhat = "")
-                                : tradeId_(tradeId), tradeType_(tradeType),
-                                  exceptionType_(exceptionType), exceptionWhat_(exceptionWhat) {}
-
-    const std::string& tradeId() const { return tradeId_; }
-    const std::string& tradeType() const { return tradeType_; }
-    const std::string& exceptionType() const { return exceptionType_; }
-    const std::string& exceptionWhat() const { return exceptionWhat_; }
-protected:
-    std::string json() const override {
-        return "{ \"id\":\"" + tradeId_ + "\"," +
-               " \"tradeType\":\"" + tradeType_ + "\"," +
-               " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
-    }
-private:
-    std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;
-};
 
 } // namespace data
 } // namespace ore
