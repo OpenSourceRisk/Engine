@@ -17,7 +17,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file portfolio/bondoption.hpp
-\brief BondOption data model and serialization
+\brief bond option data model and serialization
 \ingroup tradedata
 */
 
