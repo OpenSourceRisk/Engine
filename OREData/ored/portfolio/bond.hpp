@@ -62,14 +62,14 @@ public:
           zeroBond_(true) {}
 
     // Build QuantLib/QuantExt instrument, link pricing engine
-    virtual void build(const boost::shared_ptr<EngineFactory>&);
+    virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
     //! Return the fixings that will be requested to price the Bond given the \p settlementDate.
     std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
