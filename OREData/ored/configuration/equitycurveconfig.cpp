@@ -85,10 +85,11 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
 
-    XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
-
+    if (type_ != Type::NoDividends) {
+        XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+    }
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;

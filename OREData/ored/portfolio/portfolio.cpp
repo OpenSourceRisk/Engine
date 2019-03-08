@@ -77,11 +77,10 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 add(trade);
 
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                                    << " class:" << tradeType);
+                                    << " type:" << tradeType);
             } catch (std::exception& ex) {
                 ALOG("Exception parsing Trade XML Node (id=" << id
-                                                             << ") "
-                                                                "(class="
+                                                             << ") (type="
                                                              << tradeType << ") : " << ex.what());
             }
         } else {
@@ -121,7 +120,8 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             ++trade;
         } catch (std::exception& e) {
-            ALOG("Error building trade (" << (*trade)->id() << ") : " << e.what());
+            ALOG("Exception building trade (id=" << (*trade)->id() << ") (type=" <<
+                 (*trade)->tradeType() << ") : " << e.what());
             trade = trades_.erase(trade);
         }
     }
@@ -178,6 +178,20 @@ std::set<std::string> Portfolio::portfolioIds() const {
     for (auto const& t : trades_)
         portfolioIds.insert(t->portfolioIds().begin(), t->portfolioIds().end());
     return portfolioIds;
+}
+
+map<string, set<Date>> Portfolio::fixings(const Date& settlementDate) const {
+
+    map<string, set<Date>> result;
+
+    for (const auto& t : trades_) {
+        auto fixings = t->fixings(settlementDate);
+        for (const auto& kv : fixings) {
+            result[kv.first].insert(kv.second.begin(), kv.second.end());
+        }
+    }
+
+    return result;
 }
 
 } // namespace data

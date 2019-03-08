@@ -246,7 +246,6 @@
         <xs:element type="xs:string" name="Index"/>
         <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
-        <xs:element type="bool" name="Interpolated" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>

@@ -37,9 +37,21 @@ class OreExample(object):
     def _locate_ore_exe(self):
         if os.name == 'nt':
             if platform.machine()[-2:] == "64":
-                self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+                if os.path.isfile("..\\..\\App\\bin\\x64\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\App\\bin\\x64\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                else:
+                    print_on_console("ORE executable not found.")
+                    quit()
             else:
-                self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+                if os.path.isfile("..\\..\\App\\bin\\Win32\\Release\\ore.exe"):
+                    self.ore_exe = "..\\..\\App\\bin\\Win32\\Release\\ore.exe"
+                elif os.path.isfile("..\\..\\build\\App\\ore.exe"):
+                    self.ore_exe = "..\\..\\build\\App\\ore.exe"
+                else:
+                    print_on_console("ORE executable not found.")
+                    quit()
         else:
             if os.path.isfile("../../App/build/ore"):
                 self.ore_exe = "../../App/build/ore"

@@ -81,6 +81,7 @@ portfolio/envelope.cpp
 portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/fixingdates.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -210,6 +211,7 @@ portfolio/envelope.hpp
 portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/fixingdates.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
