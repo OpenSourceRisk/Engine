@@ -70,6 +70,10 @@ namespace ore {
             // Build QuantLib/QuantExt instrument, link pricing engine
             virtual void build(const boost::shared_ptr<EngineFactory>&);
 
+            //! Return the fixings that will be requested to price the bond option given the \p settlementDate.
+            std::map<std::string, std::set<QuantLib::Date>> fixings(
+                const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
+
             virtual void fromXML(XMLNode* node);
             virtual XMLNode* toXML(XMLDocument& doc);
 
@@ -113,6 +117,8 @@ namespace ore {
             string maturityDate_;
             string currency_;
             bool zeroBond_;
+            //! Store the name of the underlying floating leg index
+            std::string underlyingIndex_;
         };
     } // namespace data
 } // namespace ore

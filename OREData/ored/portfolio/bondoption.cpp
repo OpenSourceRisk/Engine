@@ -21,6 +21,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/portfolio/bond.hpp>
 #include <ored/portfolio/builders/bond.hpp>
 #include <ored/portfolio/builders/bondoption.hpp>
+#include <ored/portfolio/fixingdates.hpp>
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/bondoption.hpp>
@@ -163,6 +164,19 @@ namespace ore {
             legs_ = { bondoption->cashflows() };
             legCurrencies_ = { npvCurrency_ };
             legPayers_ = { firstLegIsPayer };
+        }
+
+        map<string, set<Date>> BondOption::fixings(const Date& settlementDate) const {
+            map<string, set<Date>> result;
+
+            if (legs_.empty() || underlyingIndex_.empty()) {
+                WLOG("Need to build BondOption before asking for fixings");
+                return result;
+            }
+
+            result[underlyingIndex_] = fixingDates(legs_[0], settlementDate);
+
+            return result;
         }
 
         void BondOption::fromXML(XMLNode* node) {
