@@ -77,11 +77,10 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 add(trade);
 
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
-                                    << " class:" << tradeType);
+                                    << " type:" << tradeType);
             } catch (std::exception& ex) {
                 ALOG("Exception parsing Trade XML Node (id=" << id
-                                                             << ") "
-                                                                "(class="
+                                                             << ") (type="
                                                              << tradeType << ") : " << ex.what());
             }
         } else {
@@ -121,7 +120,8 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             ++trade;
         } catch (std::exception& e) {
-            ALOG("Error building trade (" << (*trade)->id() << ") : " << e.what());
+            ALOG("Exception building trade (id=" << (*trade)->id() << ") (type=" <<
+                 (*trade)->tradeType() << ") : " << e.what());
             trade = trades_.erase(trade);
         }
     }
