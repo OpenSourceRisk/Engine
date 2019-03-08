@@ -29,6 +29,7 @@ indexes/fxindex.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
+instruments/bondoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
@@ -208,6 +209,7 @@ indexes/inflationindexwrapper.hpp
 indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
+instruments/bondoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
