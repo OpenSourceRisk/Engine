@@ -294,8 +294,8 @@ XMLNode* YieldCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "InterpolationVariable", interpolationVariable_);
     XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
     XMLUtils::addChild(doc, node, "YieldCurveDayCounter", zeroDayCounter_);
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
     XMLUtils::addChild(doc, node, "Tolerance", tolerance_);
+    XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;
 }
