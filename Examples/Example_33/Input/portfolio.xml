@@ -5,8 +5,6 @@
     <Envelope>
       <CounterParty>CPTY_C</CounterParty>
       <NettingSetId>CPTY_C</NettingSetId>
-      <NettingSetId/>
-      <AdditionalFields/>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -29,7 +27,7 @@
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
       <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <BondInPrice>true</BondInPrice>
+      <EmbeddedOption>true</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
@@ -76,8 +74,6 @@
     <Envelope>
       <CounterParty>CPTY_C</CounterParty>
       <NettingSetId>CPTY_C</NettingSetId>
-      <NettingSetId/>
-      <AdditionalFields/>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -100,7 +96,7 @@
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
       <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <BondInPrice>true</BondInPrice>
+      <EmbeddedOption>true</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
@@ -147,8 +143,6 @@
     <Envelope>
       <CounterParty>CPTY_C</CounterParty>
       <NettingSetId>CPTY_C</NettingSetId>
-      <NettingSetId/>
-      <AdditionalFields/>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -171,7 +165,7 @@
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
       <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <BondInPrice>false</BondInPrice>
+      <EmbeddedOption>false</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
@@ -218,8 +212,6 @@
     <Envelope>
       <CounterParty>CPTY_C</CounterParty>
       <NettingSetId>CPTY_C</NettingSetId>
-      <NettingSetId/>
-      <AdditionalFields/>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -242,7 +234,7 @@
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
       <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <BondInPrice>false</BondInPrice>
+      <EmbeddedOption>false</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>

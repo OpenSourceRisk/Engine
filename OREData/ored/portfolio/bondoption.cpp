@@ -175,7 +175,7 @@ namespace ore {
             quantity_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Quantity", true);
             redemption_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Redemption", true);
             priceType_ = XMLUtils::getChildValue(bondOptionNode, "PriceType", true);
-            bondInPrice_ = XMLUtils::getChildValueAsBool(bondOptionNode, "BondInPrice");
+            bondInPrice_ = XMLUtils::getChildValueAsBool(bondOptionNode, "EmbeddedOption");
 
             XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
             QL_REQUIRE(bondNode, "No BondData Node");
@@ -206,7 +206,7 @@ namespace ore {
 
             XMLNode* bondOptionNode = doc.allocNode("BondOptionData");
             XMLUtils::appendNode(node, bondOptionNode);
-            XMLUtils::addChild(doc, bondOptionNode, "BondInPrice", bondInPrice_);
+            XMLUtils::addChild(doc, bondOptionNode, "EmbeddedOption", bondInPrice_);
             XMLUtils::appendNode(bondOptionNode, option_.toXML(doc));
             XMLUtils::addChild(doc, bondOptionNode, "Strike", strike_);
             XMLUtils::addChild(doc, bondOptionNode, "Quantity", quantity_);
