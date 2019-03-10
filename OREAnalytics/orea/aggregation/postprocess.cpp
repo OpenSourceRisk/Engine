@@ -422,7 +422,9 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                     Real dcf = dc.yearFraction(prevDate, date);
                     Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
                     Real colvaDelta = -balance * collateralSpread * dcf / samples;
-                    Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
+                    // inutuitive floorDelta including collateralSpread would be: 
+                    // -balance * (max(indexValue - collateralSpread,0) - (indexValue - collateralSpread)) * dcf / samples
+                    Real floorDelta = -balance * std::max(-(indexValue-collateralSpread), 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
                     eoniaFloorInc[j + 1] += floorDelta;
