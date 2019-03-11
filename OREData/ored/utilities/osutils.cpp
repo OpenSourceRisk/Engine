@@ -330,7 +330,7 @@ unsigned long long getMemoryUsageBytes() {
     FILE* fp = NULL;
     if ((fp = fopen("/proc/self/statm", "r")) == NULL)
         return 0ULL;  /* Can't open? */
-    if (fscanf(fp, "%*s%ld", &rss) != 1) {
+    if (fscanf(fp, "%*s%llu", &rss) != 1) {
         fclose(fp);
         return 0ULL;  /* Can't read? */
     }
