@@ -80,11 +80,10 @@ namespace ore {
             Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
             boost::shared_ptr<QuantExt::BondOption> bondoption;
 
-            // FIXME: zero bonds are always long (firstLegIsPayer = false, mult = 1.0)
             bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
             Real mult = firstLegIsPayer ? -1.0 : 1.0;
             if (zeroBond_) { // Zero coupon bond option
-                // bondoption.reset(new QuantLib::ZeroCouponBond(settlementDays, faceAmount_, calendar, parseDate(maturityDate_), ...));
+                // specila case of coupon bond option
             }
             else { // Coupon bond option
                 std::vector<Leg> legs;              
@@ -139,7 +138,7 @@ namespace ore {
 
                 bondoption.reset(new QuantExt::FixedRateBondOption(settlementDays, faceAmount, schedule, rates, 
                     daycounter, business_dc, redemption(), issueDate, callabilitySchedule, bondInPrice_));
-                // workaround, QL doesn't register a bond option with its leg's cashflows
+               
                 for (auto const& c : leg)
                     bondoption->registerWith(c);
             }
