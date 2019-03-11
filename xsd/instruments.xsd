@@ -678,19 +678,19 @@
 
 <xs:complexType name="caps">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Cap" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Cap" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="floors">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Floor" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Floor" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="gearings">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Gearing" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element type="withAttribute" name="Gearing" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
