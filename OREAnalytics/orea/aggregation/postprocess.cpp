@@ -556,10 +556,10 @@ PostProcess::PostProcess(
     /********************************************************
      * Calculate netting set KVA-CCR and KVA-CVA
      */
-    nettingSetKVA();      
+    updateNettingSetKVA();      
 }
 
-void PostProcess::nettingSetKVA() {
+void PostProcess::updateNettingSetKVA() {
     // Loop over all netting sets
     for (auto n : netEPE_) {
         string nettingSetId = n.first;
@@ -1411,25 +1411,25 @@ Real PostProcess::nettingSetFCA(const string& nettingSetId) {
     return nettingSetFCA_[nettingSetId];
 }
 
-Real PostProcess::ourNettingSetKVACCR(const string& nettingSetId) {
+Real PostProcess::nettingSetOurKVACCR(const string& nettingSetId) {
     QL_REQUIRE(ourNettingSetKVACCR_.find(nettingSetId) != ourNettingSetKVACCR_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet KVACCR map");
     return ourNettingSetKVACCR_[nettingSetId];
 }
 
-Real PostProcess::theirNettingSetKVACCR(const string& nettingSetId) {
+Real PostProcess::nettingSetTheirKVACCR(const string& nettingSetId) {
     QL_REQUIRE(theirNettingSetKVACCR_.find(nettingSetId) != theirNettingSetKVACCR_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet KVACCR map");
     return theirNettingSetKVACCR_[nettingSetId];
 }
 
-Real PostProcess::ourNettingSetKVACVA(const string& nettingSetId) {
+Real PostProcess::nettingSetOurKVACVA(const string& nettingSetId) {
     QL_REQUIRE(ourNettingSetKVACVA_.find(nettingSetId) != ourNettingSetKVACVA_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet KVACVA map");
     return ourNettingSetKVACVA_[nettingSetId];
 }
 
-Real PostProcess::theirNettingSetKVACVA(const string& nettingSetId) {
+Real PostProcess::nettingSetTheirKVACVA(const string& nettingSetId) {
     QL_REQUIRE(theirNettingSetKVACVA_.find(nettingSetId) != theirNettingSetKVACVA_.end(),
                "NettingSetId " << nettingSetId << " not found in nettingSet KVACVA map");
     return theirNettingSetKVACVA_[nettingSetId];

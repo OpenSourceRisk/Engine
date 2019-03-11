@@ -245,13 +245,13 @@ public:
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
     //! Return netting set KVA-CCR
-    Real ourNettingSetKVACCR(const string& nettingSetId);
+    Real nettingSetOurKVACCR(const string& nettingSetId);
     //! Return netting set KVA-CCR from counterparty persepctive
-    Real theirNettingSetKVACCR(const string& nettingSetId);
+    Real nettingSetTheirKVACCR(const string& nettingSetId);
     //! Return netting set KVA-CVA
-    Real ourNettingSetKVACVA(const string& nettingSetId);
+    Real nettingSetOurKVACVA(const string& nettingSetId);
     //! Return netting set KVA-CVA from counterparty persepctive
-    Real theirNettingSetKVACVA(const string& nettingSetId);
+    Real nettingSetTheirKVACVA(const string& nettingSetId);
     //! Return netting set FBA excluding own survival probability
     Real nettingSetFBA_exOwnSP(const string& nettingSetId);
     //! Return netting set FCA excluding own survival probability
@@ -286,7 +286,7 @@ private:
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
-    void nettingSetKVA();   
+    void updateNettingSetKVA();   
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 
