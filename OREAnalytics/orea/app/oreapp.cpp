@@ -799,12 +799,17 @@ void OREApp::runPostProcessor() {
 }
 
 void OREApp::writeXVAReports() {
-    for (auto t : postProcess_->tradeIds()) {
-        ostringstream o;
-        o << outputPath_ << "/exposure_trade_" << t << ".csv";
-        string tradeExposureFile = o.str();
-        CSVFileReport tradeExposureReport(tradeExposureFile);
-        getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+    bool exposureByTrade = true;
+    if (params_->has("xva", "exposureProfilesByTrade"))
+        exposureByTrade = parseBool(params_->get("xva", "exposureProfilesByTrade"));    
+    if (exposureByTrade) {
+        for (auto t : postProcess_->tradeIds()) {
+	    ostringstream o;
+	    o << outputPath_ << "/exposure_trade_" << t << ".csv";
+	    string tradeExposureFile = o.str();
+	    CSVFileReport tradeExposureReport(tradeExposureFile);
+	    getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+	}
     }
     for (auto n : postProcess_->nettingSetIds()) {
         ostringstream o1;
