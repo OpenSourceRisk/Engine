@@ -375,7 +375,7 @@
       <xs:element name="Notionals" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Notional" maxOccurs="unbounded">
+            <xs:element name="Notional" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -416,7 +416,7 @@
   </xs:complexType>
 
   <xs:complexType name="scheduleData">
-    <xs:choice maxOccurs="unbounded">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="Rules">
         <xs:complexType>
           <xs:all>
