@@ -651,38 +651,36 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-        if (swapVolSimNode) {
+        if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
-            swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-            swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-            setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
-            swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-            XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
-            if (cubeNode) {
-                swapVolIsCube_ = true;
-                XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
-                if (atmOnlyNode) {
-                    swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
-                } else {
-                    swapVolSimulateATMOnly_ = false;
-                }
-                if (!swapVolSimulateATMOnly_)
-                    swapVolStrikeSpreads_ =
-                        XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+        swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
+        swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
+        if (cubeNode) {
+            swapVolIsCube_ = true;
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
+            if (atmOnlyNode) {
+                swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
             } else {
-                swapVolIsCube_ = false;
+                swapVolSimulateATMOnly_ = false;
             }
-            XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
-            if (dc) {
-                for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                     child = XMLUtils::getNextSibling(child)) {
-                    string label = XMLUtils::getAttribute(child, "ccy");
-                    swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
-                }
-            }
-            QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
-                       "default daycounter is not set for swapVolSurfaces");
+            if (!swapVolSimulateATMOnly_)
+                swapVolStrikeSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        } else {
+            swapVolIsCube_ = false;
         }
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccy");
+                swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
+                   "default daycounter is not set for swapVolSurfaces");
     }
 
     DLOG("Loading Correlations");
