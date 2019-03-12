@@ -30,6 +30,7 @@ void EngineData::clear() {
     model_.clear();
     engine_.clear();
     engineParams_.clear();
+    globalParams_.clear();
 }
 
 void EngineData::fromXML(XMLNode* root) {
