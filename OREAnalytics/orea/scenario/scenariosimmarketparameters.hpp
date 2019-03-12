@@ -270,7 +270,11 @@ public:
     void setSecuritySpreadsSimulate(bool simulate);
     void setSecurities(vector<string> names);
     void setRecoveryRates(vector<string> names);
-    bool& cprSimulate() { return cprSimulate_; }
+
+    void setCprs(const vector<string>& names);
+    void setSimulateCprs(bool simulate);
+    bool simulateCprs() const { return paramsSimulate(RiskFactorKey::KeyType::CPR); }
+    const vector<string>& cprs() const { return cprs_; }
 
     void setSimulateBaseCorrelations(bool simulate);
     vector<Period>& baseCorrelationTerms() { return baseCorrelationTerms_; }
@@ -381,6 +385,7 @@ private:
     vector<string> additionalScenarioDataCcys_;
 
     bool cprSimulate_;
+    vector<string> cprs_;
 
     vector<Period> baseCorrelationTerms_;
     map<string, string> baseCorrelationDayCounters_;
