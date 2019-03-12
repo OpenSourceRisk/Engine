@@ -24,7 +24,9 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
+
 #include <ored/utilities/parsers.hpp>
+
 #include <algorithm>
 #include <regex>
 
@@ -39,6 +41,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {
+
         const boost::shared_ptr<EquityCurveConfig>& config = curveConfigs.equityCurveConfig(spec.curveConfigID());
 
         dc_ = Actual365Fixed();
@@ -130,7 +133,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     boost::dynamic_pointer_cast<EquityDividendYieldQuote>(md);
 
                 vector<string>::const_iterator it1 =
-                    std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());   
+                    std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
 
                 // is the quote one of the list in the config ?
                 if (it1 != config->fwdQuotes().end()) {
@@ -143,7 +146,6 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
         }
-
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
 
