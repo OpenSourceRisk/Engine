@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/portfolio/structuedtradeerror.hpp
+/*! \file ored/portfolio/structuredtradeerror.hpp
     \brief Structured Trade Error class
     \ingroup portfolio
 */

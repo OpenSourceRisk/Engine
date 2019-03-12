@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file ored/marketdata/structuredcurveerorr.hpp
+/*! \file ored/marketdata/structuredcurveerror.hpp
     \brief Error for market data or curve
     \ingroup marketdata
 */
