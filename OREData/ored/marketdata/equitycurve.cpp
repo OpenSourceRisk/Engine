@@ -16,7 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/algorithm/string/replace.hpp>
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
@@ -25,9 +24,7 @@
 #include <ql/termstructures/yield/discountcurve.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
-
 #include <ored/utilities/parsers.hpp>
-
 #include <algorithm>
 #include <regex>
 
@@ -42,7 +39,6 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {
-
         const boost::shared_ptr<EquityCurveConfig>& config = curveConfigs.equityCurveConfig(spec.curveConfigID());
 
         dc_ = Actual365Fixed();
@@ -123,10 +119,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         quotes_[pos] = q->quote()->value();
                         quotesRead++;
                     }
-
                 }
-
-
             }
 
             if (config->type() == EquityCurveConfig::Type::DividendYield && md->asofDate() == asof &&
@@ -169,14 +162,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 terms_.push_back(qt[i]->expiryDate());
                 quotes_.push_back(qt[i]->quote()->value());
             }
-
         }
         else {
             QL_REQUIRE(quotesRead == config->fwdQuotes().size(), 
                 "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
         }
               
-
         for (Size i = 0; i < terms_.size(); i++) {
             QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
             if (i > 0) {
