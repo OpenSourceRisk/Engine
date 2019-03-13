@@ -207,7 +207,7 @@ protected:
     map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
     map<string, CapFloorVolShiftData> capFloorVolShiftData_;                // key: ccy
     map<string, SwaptionVolShiftData> swaptionVolShiftData_;                // key: ccy
-    map<string, YieldVolShiftData> yieldVolShiftData_;                         // key: securityId
+    map<string, YieldVolShiftData> yieldVolShiftData_;                      // key: securityId
     map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
     map<string, CdsVolShiftData> cdsVolShiftData_;                          // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;

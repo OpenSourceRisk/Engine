@@ -69,7 +69,7 @@ namespace ore {
         } // namespace
 
         void BondOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-            DLOG("BondOption::build() called for trade " << id());
+            DLOG("Building Bond Option: " << id());
 
             const boost::shared_ptr<Market> market = engineFactory->market();
 
@@ -163,6 +163,8 @@ namespace ore {
             legs_ = { bondoption->cashflows() };
             legCurrencies_ = { npvCurrency_ };
             legPayers_ = { firstLegIsPayer };
+
+            DLOG("Building Bond Option done");
         }
 
         map<string, set<Date>> BondOption::fixings(const Date& settlementDate) const {
