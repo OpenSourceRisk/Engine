@@ -63,7 +63,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         bool wc_flag = false;       
         regex reg1;
         string star("*");
-        size_t found = config->fwdQuotes()[0].find(star); // find '*' char in first quote
+        size_t found = string::npos;
+        if (config->fwdQuotes().size() != 0) {
+		    found = config->fwdQuotes()[0].find(star); // find '*' char in first quote
+        }
         if (config->type() == EquityCurveConfig::Type::ForwardPrice && found != string::npos) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
@@ -101,8 +104,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
 
                 if (wc_flag) {
-                    // is the quote 'in' the config?
-                    if (regex_match(q->name(), reg1)) {
+                    // is the quote 'in' the config? (also check expiry not before asof)
+                    if (regex_match(q->name(), reg1) && asof <= q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(), "duplicate market datum found for " << q->name());
                         DLOG("EquityCurve Forward Price found for quote: " << q->name());
                         qt.push_back(q); // terms_ and quotes_
