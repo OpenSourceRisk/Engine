@@ -99,22 +99,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
       fullInitialCollateralisation_(fullInitialCollateralisation), kvaCapitalDiscountRate_(kvaCapitalDiscountRate),
       kvaAlpha_(kvaAlpha), kvaRegAdjustment_(kvaRegAdjustment), kvaCapitalHurdle_(kvaCapitalHurdle) {
 
-    // check that all trades in the portfolio are also in the cube and set up mapping trade id => cube id
-    std::vector<std::string> cubeIds = cube->ids();
-    for (auto const& t : portfolio->trades()) {
-        auto it = std::find(cubeIds.begin(), cubeIds.end(), t->id());
-        QL_REQUIRE(it != cubeIds.end(), "PostProcess: trade \"" << t->id() << "\" not found in cube");
-        cubeIds_[t->id()] = std::distance(cubeIds.begin(), it);
-        tradeIds_.push_back(t->id());
-    }
-
-    // if we have excess trades in the cube we log a warning, but continue the analysis on the given portfolio
-    if (cubeIds.size() != portfolio->size()) {
-        WLOG("cube has " << cubeIds.size() << " trades while portfolio has " << portfolio->size()
-                         << " trades. All trades in the portfolio were found in the cube, we continue and ignore the "
-                            "excess trades in the cube.");
-    }
-
     QL_REQUIRE(marginalAllocationLimit > 0.0, "positive allocationLimit expected");
 
     Size trades = portfolio->size();
@@ -157,12 +141,11 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
         matMap[tradeId] = trade->maturity();
     }
 
-    for (Size i = 0; i < tradeIds_.size(); ++i) {
-        string tradeId = tradeIds_[i];
+    for (Size i = 0; i < cube_->ids().size(); ++i) {
+        string tradeId = cube_->ids()[i];
         string nettingSetId = nidMap[tradeId];
         string cpId = cidMap[tradeId];
-        Size cubeId = cubeIds_.at(tradeId);
-        Real npv = cube_->getT0(cubeId);
+        Real npv = cube_->getT0(i);
 
         tradeValueToday[tradeId] = npv;
         counterpartyId_[nettingSetId] = cpId;
@@ -209,7 +192,6 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
     bool exerciseNextBreak = analytics_["exerciseNextBreak"];
     for (Size i = 0; i < portfolio->size(); ++i) {
         string tradeId = portfolio->trades()[i]->id();
-        Size cubeId = cubeIds_.at(tradeId);
         string nettingSetId = portfolio->trades()[i]->envelope().nettingSetId();
         LOG("Aggregate exposure for trade " << tradeId);
         if (nettingSets.find(nettingSetId) == nettingSets.end()) {
@@ -262,7 +244,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             Date d = cube_->dates()[j];
             vector<Real> distribution(samples, 0.0);
             for (Size k = 0; k < samples; ++k) {
-                Real npv = d > nextBreakDate && exerciseNextBreak ? 0.0 : cube->get(cubeId, j, k);
+                Real npv = d > nextBreakDate && exerciseNextBreak ? 0.0 : cube->get(i, j, k);
                 epe[j + 1] += max(npv, 0.0) / samples;
                 ene[j + 1] += max(-npv, 0.0) / samples;
                 nettingSetValue[nettingSetId][j][k] += npv;
@@ -274,6 +256,7 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
             Size index = Size(floor(quantile_ * (samples - 1) + 0.5));
             pfe[j + 1] = std::max(distribution[index], 0.0);
         }
+        tradeIds_.push_back(tradeId);
         tradeEPE_[tradeId] = epe;
         tradeENE_[tradeId] = ene;
         tradeEE_B_[tradeId] = ee_b;
@@ -452,15 +435,14 @@ PostProcess::PostProcess(const boost::shared_ptr<Portfolio>& portfolio,
                         if (nid != nettingSetId)
                             continue;
                         string tid = portfolio->trades()[i]->id();
-                        Size cubeId = cubeIds_.at(tid);
                         Real allocation = 0.0;
                         if (balance == 0.0)
-                            allocation = cube->get(cubeId, j, k);
+                            allocation = cube->get(i, j, k);
                         // else if (data[j][k] == 0.0)
                         else if (fabs(data[j][k]) <= marginalAllocationLimit)
                             allocation = exposure / nettingSetTrades;
                         else
-                            allocation = exposure * cube->get(cubeId, j, k) / data[j][k];
+                            allocation = exposure * cube->get(i, j, k) / data[j][k];
 
                         if (exposure > 0.0)
                             allocatedTradeEPE_[tid][j + 1] += allocation / samples;
@@ -927,12 +909,11 @@ void PostProcess::dynamicInitialMargin() {
         }
         nettingSetSize[nettingSetId]++;
 
-        Size cubeId = cubeIds_.at(tradeId);
         for (Size j = 0; j < dates; ++j) {
             for (Size k = 0; k < samples; ++k) {
-                Real npv = cube_->get(cubeId, j, k);
+                Real npv = cube_->get(i, j, k);
                 QL_REQUIRE(cube_->depth() > 1, "cube depth > 1 expected for DIM, found depth " << cube_->depth());
-                Real flow = cube_->get(cubeId, j, k, 1);
+                Real flow = cube_->get(i, j, k, 1);
                 nettingSetNPV_[nettingSetId][j][k] += npv;
                 nettingSetFLOW_[nettingSetId][j][k] += flow;
             }

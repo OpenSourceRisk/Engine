@@ -315,7 +315,6 @@ private:
     boost::shared_ptr<NPVCube> dimCube_;
     map<string, Real> net_t0_im_reg_h_, net_t0_im_simple_h_;
 
-    map<string, Size> cubeIds_;
     vector<string> tradeIds_;
     vector<string> nettingSetIds_;
     map<string, string> counterpartyId_; // for each nettingSetId
