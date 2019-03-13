@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/curveloader.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/errors.hpp>
 
@@ -123,6 +124,7 @@ void order(vector<boost::shared_ptr<CurveSpec>>& curveSpecs, const CurveConfigur
                     WLOG("Cannot build curve " << ycs->curveConfigID() << ", dependent curves missing");
                     errors[ycs->name()] = "dependent curves missing - " + missingDependents[ycs->curveConfigID()];
                 }
+                ALOG(StructuredCurveErrorMessage(ycs->curveConfigID(), "Cannot build curve", errors.at(ycs->name())));
             }
             break;
         }

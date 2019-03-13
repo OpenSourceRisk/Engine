@@ -143,10 +143,21 @@ boost::shared_ptr<QuantExt::LGM> LGMBermudanSwaptionEngineBuilder::model(const s
     DLOG("Build LGM model");
     boost::shared_ptr<LgmBuilder> calib =
         boost::make_shared<LgmBuilder>(market_, data, configuration(MarketContext::irCalibration), tolerance);
-    DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
-    calib->recalibrate();
+
+    // In some cases, we do not want to calibrate the model
+    boost::shared_ptr<QuantExt::LGM> model;
+    if (globalParameters_.count("Calibrate") == 0 || parseBool(globalParameters_.at("Calibrate"))) {
+        DLOG("Calibrate model (configuration " << configuration(MarketContext::irCalibration) << ")");
+        model = calib->model();
+    } else {
+        DLOG("Skip calibration of model based on global parameters");
+        calib->freeze();
+        model = calib->model();
+        calib->unfreeze();
+    }
     modelBuilders_.insert(std::make_pair(id, calib));
-    return calib->model();
+
+    return model;
 }
 
 boost::shared_ptr<PricingEngine> LGMGridBermudanSwaptionEngineBuilder::engineImpl(const string& id, bool isNonStandard,
