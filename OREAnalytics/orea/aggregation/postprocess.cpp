@@ -741,12 +741,12 @@ void PostProcess::updateNettingSetKVA() {
 		 << " KVA=" << theirNettingSetKVACCR_[nettingSetId]);
 
 	    // CVA Capital
-	    // maturity adjustment without cap at 5, DF set to 1 for IMM banks
+	    // effective maturity without cap at 5, DF set to 1 for IMM banks
 	    // TODO: Set MA in CCR capital calculation to 1
-	    Real kvaCvaMatAdj1 = std::max((1.0 + (kvaNWMaturity1 - 2.5) * kvaMatAdjB1) / (1.0 - 1.5 * kvaMatAdjB1), 1.0);
-	    Real kvaCvaMatAdj2 = std::max((1.0 + (kvaNWMaturity2 - 2.5) * kvaMatAdjB2) / (1.0 - 1.5 * kvaMatAdjB2), 1.0);
-	    Real scva1 = kvaTheirCvaRiskWeight_ * kvaCvaMatAdj1 * eepe_kva_1; 
-	    Real scva2 = kvaOurCvaRiskWeight_ * kvaCvaMatAdj2 * eepe_kva_2;
+	    Real kvaCvaMaturity1 = 1.0 + (effMatDenom1 == 0.0 ? 0.0 : effMatNumer1 / effMatDenom1);
+	    Real kvaCvaMaturity2 = 1.0 + (effMatDenom2 == 0.0 ? 0.0 : effMatNumer2 / effMatDenom2);
+	    Real scva1 = kvaTheirCvaRiskWeight_ * kvaCvaMaturity1 * eepe_kva_1; 
+	    Real scva2 = kvaOurCvaRiskWeight_ * kvaCvaMaturity2 * eepe_kva_2;
 	    Real kvaCVAIncrement1 = scva1 * kvaCapitalDiscount * dc.yearFraction(d0, d1) * kvaCapitalHurdle_ * kvaRegAdjustment_;
 	    Real kvaCVAIncrement2 = scva2 * kvaCapitalDiscount * dc.yearFraction(d0, d1) * kvaCapitalHurdle_ * kvaRegAdjustment_;
 	    
