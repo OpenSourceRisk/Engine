@@ -47,7 +47,6 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
 void ForwardRateAgreement::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fNode = XMLUtils::getChildNode(node, "ForwardRateAgreementData");
-
     startDate_ = XMLUtils::getChildValue(fNode, "StartDate", true);
     endDate_ = XMLUtils::getChildValue(fNode, "EndDate", true);
     currency_ = XMLUtils::getChildValue(fNode, "Currency", true);
@@ -60,8 +59,7 @@ void ForwardRateAgreement::fromXML(XMLNode* node) {
 XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
-    XMLUtils::appendNode(node, fNode);
-        
+    XMLUtils::appendNode(node, fNode);        
     XMLUtils::addChild(doc, fNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
     XMLUtils::addChild(doc, fNode, "Currency", currency_);
