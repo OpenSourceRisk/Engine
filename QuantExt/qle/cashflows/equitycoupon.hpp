@@ -48,8 +48,9 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, const Date& refPeriodStart = Date(),
-                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date());
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, Real initalPrice = Real(), 
+                 const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(), 
+                 const Date& exCouponDate = Date());
 
     //! \name CashFlow interface
     //@{
@@ -79,6 +80,8 @@ public:
     Date fixingEndDate() const { return fixingEndDate_; }
     //! return both fixing dates
     std::vector<Date> fixingDates() const;
+    //! initial price
+    Real initialPrice() const { return initialPrice_; }
     //! This function is called for other coupon types
     Date fixingDate() const {
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");
@@ -103,6 +106,7 @@ protected:
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
     Natural fixingDays_;
+    Real initialPrice_;
     Date fixingStartDate_;
     Date fixingEndDate_;
     bool isTotalReturn_;
@@ -134,6 +138,7 @@ public:
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
+    EquityLeg& withInitialPrice(Real);
     EquityLeg& withFixingDays(Natural);
     operator Leg() const;
 
@@ -145,6 +150,7 @@ private:
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    Real initialPrice_;
     Real dividendFactor_;
     Natural fixingDays_;
 };

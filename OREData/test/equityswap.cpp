@@ -99,6 +99,7 @@ struct CommonVars {
     string index;
     string eqName;
     Real dividendFactor;
+    Real initialPrice;
     Integer settlementDays;
     bool isinarrears;
     vector<double> notionals;
@@ -112,7 +113,7 @@ struct CommonVars {
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
                              floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, settlementDays),
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, initialPrice, settlementDays),
                           isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
@@ -140,7 +141,8 @@ struct CommonVars {
                         .withNotionals(notionals)
                         .withPaymentDayCounter(parseDayCounter(fixDC))
                         .withPaymentAdjustment(parseBusinessDayConvention(conv))
-                        .withTotalReturn(returnType == "Total");
+                        .withTotalReturn(returnType == "Total")
+                        .withInitialPrice(initialPrice);
 
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
@@ -160,6 +162,7 @@ struct CommonVars {
         index = "USD-LIBOR-3M";
         eqName = "SP5";
         dividendFactor = 1.0;
+        initialPrice = 2100.0;
         settlementDays = 0;
         days = 0;
         isinarrears = false;

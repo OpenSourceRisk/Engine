@@ -20,6 +20,7 @@
         <EquityLegData>
           <ReturnType>Price</ReturnType>
           <Name>SP5</Name>
+		  <InitialPrice>2196.5</InitialPrice>
         </EquityLegData>
         <ScheduleData>
           <Rules>
@@ -96,6 +97,7 @@
           <Name>SP5</Name>
           <DividendFactor>0.8</DividendFactor>
           <FixingDays>2</FixingDays>
+		  <InitialPrice>2180.3</InitialPrice>
         </EquityLegData>
         <ScheduleData>
           <Rules>

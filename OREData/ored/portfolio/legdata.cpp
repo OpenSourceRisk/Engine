@@ -312,6 +312,7 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
     indices_.insert("EQ-" + eqName_);
+    initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice", true);
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
 }
 
@@ -1124,7 +1125,8 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
-    Real dividendFactor = eqLegData->dividendFactor();
+    Real dividendFactor = eqLegData->dividendFactor();;
+    Real initialPrice = eqLegData->initialPrice();
     Natural fixingDays = eqLegData->fixingDays();
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
@@ -1136,6 +1138,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
+                  .withInitialPrice(initialPrice)
                   .withFixingDays(fixingDays);
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 

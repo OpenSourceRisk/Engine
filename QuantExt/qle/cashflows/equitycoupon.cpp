@@ -28,10 +28,11 @@ namespace QuantExt {
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
                            const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor,
-                           const Date& refPeriodStart, const Date& refPeriodEnd, const Date& exCouponDate)
+                           Real initialPrice, const Date& refPeriodStart, const Date& refPeriodEnd,
+                           const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
-      equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), isTotalReturn_(isTotalReturn),
-      dividendFactor_(dividendFactor) {
+      equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), initialPrice_(initialPrice), 
+      isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor){
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
@@ -121,6 +122,11 @@ EquityLeg& EquityLeg::withDividendFactor(Real dividendFactor) {
     return *this;
 }
 
+EquityLeg& EquityLeg::withInitialPrice(Real initialPrice) {
+    initialPrice_ = initialPrice;
+    return *this;
+}
+
 EquityLeg& EquityLeg::withFixingDays(Natural fixingDays) {
     fixingDays_ = fixingDays;
     return *this;
@@ -148,9 +154,11 @@ EquityLeg::operator Leg() const {
         endDate = schedule_.date(i + 1);
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
+        Real initialPrice = i == 0 ? initialPrice_ : Real();
+
         boost::shared_ptr<EquityCoupon> cashflow(
             new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
-                             fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_));
+                             fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, dividendFactor_, initialPrice));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);

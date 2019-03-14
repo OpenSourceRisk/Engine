@@ -23,7 +23,10 @@ namespace QuantExt {
 Rate EquityCouponPricer::swapletRate() const {
     // Start fixing shouldn't include dividends as the assumption of continuous dividends means they will have been paid
     // as they accrued in the previous period (or at least at the end when performance is measured).
-    Real start = equityCurve_->fixing(coupon_->fixingStartDate(), false, false);
+    Real start = coupon_->initialPrice();
+    if (!start){
+        start = equityCurve_->fixing(coupon_->fixingStartDate(), false, false);
+    }
     Real end = equityCurve_->fixing(coupon_->fixingEndDate(), false, false);
 
     Real dividends = 0.0;
