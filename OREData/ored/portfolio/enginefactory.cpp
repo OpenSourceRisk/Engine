@@ -110,7 +110,7 @@ boost::shared_ptr<EngineBuilder> EngineFactory::builder(const string& tradeType)
     boost::shared_ptr<EngineBuilder> builder = it->second;
 
     builder->init(market_, configurations_, engineData_->modelParameters(tradeType),
-                  engineData_->engineParameters(tradeType));
+                  engineData_->engineParameters(tradeType), engineData_->globalParameters());
 
     return builder;
 }
