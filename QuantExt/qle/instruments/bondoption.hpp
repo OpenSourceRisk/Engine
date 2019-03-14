@@ -49,7 +49,7 @@ namespace QuantExt {
     At present, only European and Bermudan put/call schedules supported 
     (no American optionality), as defined by the Callability class.
 
-    \todo calibration ?
+    \todo American/Bermudan bond options ?
     \todo floating rate bond options ?
 
     \ingroup instruments
