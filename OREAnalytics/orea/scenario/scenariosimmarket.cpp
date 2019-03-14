@@ -1446,7 +1446,17 @@ ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket
                 break;
 
             case RiskFactorKey::KeyType::CPR:
-                WLOG("RiskFactorKey CPR not yet implemented");
+                for (const auto& name : param.second.second) {
+                    DLOG("Adding cpr " << name << " from configuration " << configuration);
+                    boost::shared_ptr<SimpleQuote> cprQuote(
+                        new SimpleQuote(initMarket->cpr(name, configuration)->value()));
+                    if (param.second.first) {
+                        simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name),
+                                           std::forward_as_tuple(cprQuote));
+                    }
+                    cprs_.insert(pair<pair<string, string>, Handle<Quote>>(
+                        make_pair(Market::defaultConfiguration, name), Handle<Quote>(cprQuote)));
+                }
                 break;
 
             case RiskFactorKey::KeyType::None:
