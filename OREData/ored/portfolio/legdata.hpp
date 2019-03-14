@@ -499,7 +499,7 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice, Real quantity, Natural fixingDays)
+    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice, Natural fixingDays)
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
           initialPrice_(initialPrice), fixingDays_(fixingDays) {
         indices_.insert("EQ-" + eqName_);
