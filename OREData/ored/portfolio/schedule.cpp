@@ -65,7 +65,7 @@ void ScheduleDates::fromXML(XMLNode* node) {
 XMLNode* ScheduleDates::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Dates");
     XMLUtils::addChild(doc, node, "Calendar", calendar_);
-    if (convention_ != "")
+        if (convention_ != "")
     XMLUtils::addChild(doc, node, "Convention", convention_);
     XMLUtils::addChild(doc, node, "Tenor", tenor_);
     XMLUtils::addChildren(doc, node, "Dates", "Date", dates_);
