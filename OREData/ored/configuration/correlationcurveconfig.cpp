@@ -17,7 +17,6 @@
 */
 
 #include <boost/algorithm/string.hpp>
-#include <iostream>
 #include <ored/configuration/correlationcurveconfig.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/parsers.hpp>
