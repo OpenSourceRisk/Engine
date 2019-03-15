@@ -28,7 +28,7 @@ void OptionData::fromXML(XMLNode* node) {
     longShort_ = XMLUtils::getChildValue(node, "LongShort", true);
     callPut_ = XMLUtils::getChildValue(node, "OptionType", true);
     style_ = XMLUtils::getChildValue(node, "Style");
-    //noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
+    noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
     settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
     payoffAtExpiry_ = XMLUtils::getChildValueAsBool(node, "PayOffAtExpiry", false);
@@ -47,8 +47,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Style", style_);
     XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     XMLUtils::addChild(doc, node, "Settlement", settlement_);
-        if (settlementMethod_ != "")
-    XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
+    if (settlementMethod_ != "")
+        XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
     XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);
     XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
     XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
