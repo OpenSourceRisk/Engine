@@ -122,7 +122,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
-                                                gearingDates_);
+            gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
@@ -459,12 +459,12 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LegType", legType());
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    if (dayCounter_ != "")
-        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
-    if (paymentConvention_ != "")
-        XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
-    if (paymentLag_ != 0)
-        XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+        if (paymentConvention_ != "")
+    XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
+        if (paymentLag_ != 0)
+    XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+        if (dayCounter_ != "")
+    XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
                                                 notionalDates_);
     XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");

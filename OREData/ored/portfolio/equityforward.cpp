@@ -77,11 +77,11 @@ XMLNode* EquityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, eNode);
 
     XMLUtils::addChild(doc, eNode, "LongShort", longShort_);
+    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Name", eqName_);
     XMLUtils::addChild(doc, eNode, "Currency", currency_);
-    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
-    XMLUtils::addChild(doc, eNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, eNode, "Strike", strike_);
+    XMLUtils::addChild(doc, eNode, "Quantity", quantity_);
     return node;
 }
 } // namespace data
