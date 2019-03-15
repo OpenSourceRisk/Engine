@@ -124,11 +124,13 @@ public:
      *  before it is returned.
      */
     void init(const boost::shared_ptr<Market> market, const map<MarketContext, string>& configurations,
-              const map<string, string>& modelParameters, const map<string, string>& engineParameters) {
+              const map<string, string>& modelParameters, const map<string, string>& engineParameters,
+              const std::map<std::string, std::string>& globalParameters = {}) {
         market_ = market;
         configurations_ = configurations;
         modelParameters_ = modelParameters;
         engineParameters_ = engineParameters;
+        globalParameters_ = globalParameters;
     }
 
     //! return model builders
@@ -148,6 +150,7 @@ protected:
     map<MarketContext, string> configurations_;
     map<string, string> modelParameters_;
     map<string, string> engineParameters_;
+    std::map<std::string, std::string> globalParameters_;
     set<std::pair<string, boost::shared_ptr<ModelBuilder>>> modelBuilders_;
 };
 

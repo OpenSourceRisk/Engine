@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.8)
 
 project(App CXX)
 
-include("../cmake/writeAll.cmake")
-include("../cmake/writeTestSuiteMain.cmake")
 include("../cmake/commonSettings.cmake")
 
 get_library_name("OREPlusSensitivity" OREPSENSITIVITY_LIB_NAME)

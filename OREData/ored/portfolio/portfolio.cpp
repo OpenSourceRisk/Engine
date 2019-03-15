@@ -20,6 +20,7 @@
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/portfolio/swap.hpp>
 #include <ored/portfolio/swaption.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
 #include <ql/errors.hpp>
@@ -79,9 +80,7 @@ void Portfolio::fromXML(XMLNode* node, const boost::shared_ptr<TradeFactory>& fa
                 DLOG("Added Trade " << id << " (" << trade->id() << ")"
                                     << " type:" << tradeType);
             } catch (std::exception& ex) {
-                ALOG("Exception parsing Trade XML Node (id=" << id
-                                                             << ") (type="
-                                                             << tradeType << ") : " << ex.what());
+                ALOG(StructuredTradeErrorMessage(id, tradeType, "Error parsing Trade XML", ex.what()));
             }
         } else {
             WLOG("Unable to build Trade for tradeType=" << tradeType);
@@ -112,6 +111,17 @@ bool Portfolio::remove(const std::string& tradeID) {
     return false;
 }
 
+void Portfolio::removeMatured(const Date& asof) {
+    for (auto it = trades_.begin(); it != trades_.end(); /* manual */) {
+        if ((*it)->maturity() < asof) {
+            ALOG(StructuredTradeErrorMessage(*it, "Trade is Matured", ""));
+            it = trades_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     LOG("Building Portfolio of size " << trades_.size());
     auto trade = trades_.begin();
@@ -120,8 +130,7 @@ void Portfolio::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             (*trade)->build(engineFactory);
             ++trade;
         } catch (std::exception& e) {
-            ALOG("Exception building trade (id=" << (*trade)->id() << ") (type=" <<
-                 (*trade)->tradeType() << ") : " << e.what());
+            ALOG(StructuredTradeErrorMessage(*trade, "Error building trade", e.what()));
             trade = trades_.erase(trade);
         }
     }

@@ -81,6 +81,9 @@ public:
     //! Remove specified trade from the portfolio
     bool remove(const std::string& tradeID);
 
+    //! Remove matured trades from portfolio for a given date, each removal is logged with an Alert
+    void removeMatured(const QuantLib::Date& asof);
+
     //! Call build on all trades in the portfolio
     void build(const boost::shared_ptr<EngineFactory>&);
 

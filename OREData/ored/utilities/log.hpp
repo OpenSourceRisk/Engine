@@ -367,5 +367,29 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
+
+
+//! Utility class for having structured Error messages
+// This can be used directly in log messages, e.g.
+// ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
+// And in the log file you will get
+//
+// .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
+class StructuredErrorMessage {
+public:
+    static constexpr const char* name = "StructuredErrorMessage";
+    
+    //! return a string for the log file
+    std::string msg() const { return string(name) + string(" ") + json(); }
+protected:
+    // This should return a structured string, ideally in JSON, and should contain a field
+    // errorType
+    virtual std::string json() const = 0;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
+    return out << sem.msg();
+}
+
 } // namespace data
 } // namespace ore
