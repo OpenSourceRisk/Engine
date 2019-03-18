@@ -21,6 +21,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 \ingroup tradedata
 */
 
+#pragma once
+
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/optiondata.hpp> 
