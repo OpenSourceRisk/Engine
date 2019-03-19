@@ -48,8 +48,8 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 Real quantity, bool isTotalReturn = false, Real dividendFactor = 1.0,
-                 bool notionalReset = false, Real initialPrice = Real(),
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false, 
+                 Real initialPrice = Real(), Real quantity = Real(),
                  const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(), 
                  const Date& exCouponDate = Date());
 

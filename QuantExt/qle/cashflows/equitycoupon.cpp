@@ -27,8 +27,8 @@ namespace QuantExt {
 
 EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate,
                            Natural fixingDays, const boost::shared_ptr<EquityIndex>& equityCurve,
-                           const DayCounter& dayCounter, Real quantity, bool isTotalReturn,
-                           Real dividendFactor, bool notionalReset, Real initialPrice,
+                           const DayCounter& dayCounter, bool isTotalReturn, Real dividendFactor, 
+                           bool notionalReset, Real initialPrice, Real quantity,
                            const Date& refPeriodStart, const Date& refPeriodEnd,
                            const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
@@ -170,19 +170,21 @@ EquityLeg::operator Leg() const {
     }
 
     Size numPeriods = schedule_.size() - 1;
-    Real quantity = notionals_.front() / initialPrice_;
+    Real quantity = Real();
+    if (initialPrice_ && notionalReset_)
+        quantity = notionals_.front() / initialPrice_;
 
     for (Size i = 0; i < numPeriods; ++i) {
         startDate = schedule_.date(i);
-        endDate = schedule_.date(i + 1);
+        endDate = schedule_.date(i + 1); 
         paymentDate = calendar.adjust(endDate, paymentAdjustment_);
 
-        Real initialPrice = i == 0 ? initialPrice_ : Real();
+        Real initialPrice = (i == 0) ? initialPrice_ : Real();
 
         boost::shared_ptr<EquityCoupon> cashflow(
             new EquityCoupon(paymentDate, detail::get(notionals_, i, notionals_.back()), startDate, endDate,
-                             fixingDays_, equityCurve_, paymentDayCounter_, quantity, isTotalReturn_, 
-                             dividendFactor_, notionalReset_, initialPrice));
+                             fixingDays_, equityCurve_, paymentDayCounter_, isTotalReturn_, 
+                             dividendFactor_, notionalReset_, initialPrice, quantity));
 
         boost::shared_ptr<EquityCouponPricer> pricer(new EquityCouponPricer);
         cashflow->setPricer(pricer);
