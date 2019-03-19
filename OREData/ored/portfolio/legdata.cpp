@@ -312,8 +312,15 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
     indices_.insert("EQ-" + eqName_);
-    initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice", true);
+    if (XMLUtils::getChildNode(node, "InitialPrice"))
+        initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
+    else
+        initialPrice_ = Real();
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
+    if (XMLUtils::getChildNode(node, "NotionalReset"))
+        notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
+    else
+        notionalReset_ = false;
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -323,8 +330,11 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
+    if (initialPrice_)
+        XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
     if (fixingDays_ != 0)
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
+    XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
     return node;
 }
 
@@ -1125,8 +1135,9 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
-    Real dividendFactor = eqLegData->dividendFactor();;
+    Real dividendFactor = eqLegData->dividendFactor();
     Real initialPrice = eqLegData->initialPrice();
+    bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
@@ -1139,6 +1150,7 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
                   .withInitialPrice(initialPrice)
+                  .withNotionalReset(notionalReset)
                   .withFixingDays(fixingDays);
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
