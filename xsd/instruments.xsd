@@ -99,12 +99,15 @@
       <xs:element type="xs:string" name="LongShort"/>
       <xs:element type="xs:string" name="OptionType"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
+      <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>
       <xs:element type="settlementMethod" name="SettlementMethod" minOccurs="0"/>
       <xs:element type="xs:string" name="PayOffAtExpiry" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumAmount" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumCurrency" minOccurs="0"/>
       <xs:element type="xs:string" name="PremiumPayDate" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExerciseFees" minOccurs="0"/>
+      <xs:element type="xs:string" name="ExercisePrices" minOccurs="0"/>
       <xs:element name="ExerciseDates">
         <xs:complexType>
           <xs:sequence>
@@ -233,6 +236,14 @@
         <xs:element type="xs:string" name="Index"/>
         <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
+        <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
+        <xs:element name="Spreads">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:float" name="Spread" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
       </xs:choice>
     </xs:complexType>
   </xs:element>
@@ -294,6 +305,8 @@
                   </xs:sequence>
                 </xs:complexType>
               </xs:element>
+              <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
               <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
               <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
             </xs:choice>
@@ -376,7 +389,7 @@
       <xs:element name="Notionals" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
-            <xs:element name="Notional" maxOccurs="unbounded">
+            <xs:element name="Notional" minOccurs="0" maxOccurs="unbounded">
               <xs:complexType>
                 <xs:simpleContent>
                   <xs:extension base="xs:float">
@@ -419,7 +432,7 @@
   </xs:complexType>
 
   <xs:complexType name="scheduleData">
-    <xs:choice maxOccurs="unbounded">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
       <xs:element name="Rules">
         <xs:complexType>
           <xs:all>

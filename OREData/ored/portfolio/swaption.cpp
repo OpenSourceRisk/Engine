@@ -28,6 +28,7 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer.hpp>
@@ -231,12 +232,23 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         WLOG("Could not price underlying: " << e.what());
     }
 
-    // build exercise
+    // build exercise: only keep a) future exercise dates and b) exercise dates that exercise into a whole
+    // accrual period of the underlying; TODO handle exercises into broken periods?
+    Date lastAccrualStartDate = Date::minDate();
+    for (Size i = 0; i < 2; ++i) {
+        for (auto const c : swap->leg(i)) {
+            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+                lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
+        }
+    }
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
         Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
-        if (exDate > Settings::instance().evaluationDate())
+        if (exDate > Settings::instance().evaluationDate() && exDate <= lastAccrualStartDate)
             exDates.push_back(exDate);
+        if (exDate > lastAccrualStartDate)
+            WLOG("Remove exercise date " << ore::data::to_string(exDate) << " after last accrual start date "
+                                         << ore ::data::to_string(lastAccrualStartDate));
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
     std::sort(exDates.begin(), exDates.end());

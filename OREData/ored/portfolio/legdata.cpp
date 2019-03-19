@@ -122,7 +122,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
-                                                gearingDates_);
+            gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
@@ -219,11 +219,11 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index2", swapIndex2_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
                                                 gearingDates_);
-    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
@@ -260,15 +260,15 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     if (callStrikes_.size() > 0) {
         XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
         XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
-        XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
-        XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "Strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "Payoff", callPayoffs_);
     }
 
     if (putStrikes_.size() > 0) {
         XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
         XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
-        XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
-        XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "Strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "Payoff", putPayoffs_);
     }
     
     return node;
@@ -470,12 +470,12 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LegType", legType());
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    if (dayCounter_ != "")
-        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     if (paymentLag_ != 0)
         XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+    if (dayCounter_ != "")
+        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
                                                 notionalDates_);
     XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
