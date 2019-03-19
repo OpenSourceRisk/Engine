@@ -142,7 +142,8 @@ struct CommonVars {
                         .withPaymentDayCounter(parseDayCounter(fixDC))
                         .withPaymentAdjustment(parseBusinessDayConvention(conv))
                         .withTotalReturn(returnType == "Total")
-                        .withInitialPrice(initialPrice);
+                        .withInitialPrice(initialPrice)
+                        .withNotionalReset(false);
 
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
