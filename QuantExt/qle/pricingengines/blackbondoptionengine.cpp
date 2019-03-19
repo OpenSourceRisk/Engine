@@ -106,6 +106,7 @@ namespace QuantExt {
         Volatility yieldVol = volatility_->volatility(exerciseTime,
             maturityTime - exerciseTime,
             cashStrike);
+
         Volatility fwdPriceVol = yieldVol*fwdDur*fwdYtm;
         return fwdPriceVol;
     }
@@ -131,11 +132,11 @@ namespace QuantExt {
             **discountCurve_,
             false, discountCurve_->referenceDate());
 
-        Real discount = discountCurve_->discount(exerciseDate);
+	Real discount = discountCurve_->discount(exerciseDate);
 
-        Real fwdCashPrice = (value - spotIncome()) / discount;
+	Real fwdCashPrice = (value - spotIncome()) / discount;
 
-        Real cashStrike = arguments_.callabilityPrices[0];
+	Real cashStrike = arguments_.callabilityPrices[0];
 
         Option::Type type = (arguments_.putCallSchedule[0]->type() ==
             Callability::Call ? Option::Call : Option::Put);
@@ -166,6 +167,11 @@ namespace QuantExt {
             results_.value = embeddedOptionValue;
             results_.settlementValue = embeddedOptionValue;
         }
+
+	results_.additionalResults["FwdCashPrice"] = fwdCashPrice;
+	results_.additionalResults["CashStrike"] = cashStrike;
+	results_.additionalResults["PriceVol"] = priceVol;
+	results_.additionalResults["EmbeddedOptionValue"] = embeddedOptionValue;
     }
 
 } // namespace QuantExt
