@@ -2091,6 +2091,7 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="scenarioFile">scenariodata.dat</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="exposureProfilesByTrade">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
     <Parameter name="calculationType">Symmetric</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
@@ -2146,7 +2147,8 @@ expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
-\item {\tt exposureProfiles:} Flag to enable/disable exposure output
+\item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
+\item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties
 settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
@@ -4872,7 +4874,7 @@ In ORE we compute KVA CCR from both perspectives - ``our'' KVA driven by EPE and
 
 \subsection{KVA (BA-CVA)}\label{sec:app_kva_cva}
 
-This section briefly summarizes the calculation of a capital value adjustment associated with the CVA capital charge (in the basic approach, BA-CVA) as introduced in Basel III \cite{bcbs189}. ORE implements the {\em stand-alone} capital charge $\SCVA$ for a netting set and computes a KVA for it\footnote{In the reduced version of BA-CVA, where hedges are not recognized, the total BA-CVA capital charge across all counterparties $c$ is given by
+This section briefly summarizes the calculation of a capital value adjustment associated with the CVA capital charge (in the basic approach, BA-CVA) as introduced in Basel III \cite{bcbs189, d325, d424}. ORE implements the {\em stand-alone} capital charge $\SCVA$ for a netting set and computes a KVA for it\footnote{In the reduced version of BA-CVA, where hedges are not recognized, the total BA-CVA capital charge across all counterparties $c$ is given by
 $$
 K = \sqrt{\left(\rho \sum_c \SCVA_c\right)^2 +(1-\rho^2)\sum_c \SCVA_c^2}
 $$  
@@ -5203,6 +5205,10 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{bcbs189} Basel Committee on Banking Supervision, {\em Basel III: A global regulatory framework for more
     resilient banks and banking systems}, \url{http://www.bis.org/publ/bcbs189.pdf}, June 2011
+
+\bibitem{d325} Basel Committee on Banking Supervision, {\em Review of the Credit Valuation Adjustment Risk Framework}, \url{https://www.bis.org/bcbs/publ/d325.pdf}, 2015
+
+\bibitem{d424} Basel Committee on Banking Supervision, {\em Basel III: Finalising post-crisis reforms}, \url{https://www.bis.org/bcbs/publ/d424.pdf}, 2017
 
 \bibitem{BrigoMercurio} Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition},
   Springer, 2006.
