@@ -239,7 +239,6 @@ portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
 portfolio/builders/commodityoption.hpp
-portfolio/builders/cpicapfloor.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp

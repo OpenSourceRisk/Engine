@@ -130,11 +130,11 @@ namespace QuantExt {
             **discountCurve_,
             false, settle);
 
-        Real discount = discountCurve_->discount(exerciseDate);
+	    Real discount = discountCurve_->discount(exerciseDate);
 
-        Real fwdCashPrice = (value - spotIncome()) / discount;
+	    Real fwdCashPrice = (value - spotIncome()) / discount;
 
-        Real cashStrike = arguments_.callabilityPrices[0];
+	    Real cashStrike = arguments_.callabilityPrices[0];
 
         Option::Type type = (arguments_.putCallSchedule[0]->type() ==
             Callability::Call ? Option::Call : Option::Put);
@@ -149,7 +149,14 @@ namespace QuantExt {
             blackFormula(type,
                 cashStrike,
                 fwdCashPrice,
-                priceVol*std::sqrt(exerciseTime));
+                priceVol*std::sqrt(exerciseTime),
+                discount);
+
+	    results_.additionalResults["CashStrike"] = cashStrike;
+	    results_.additionalResults["FwdCashPrice"] = fwdCashPrice;
+	    results_.additionalResults["PriceVol"] = priceVol;
+	    results_.additionalResults["ExerciseTime"] = exerciseTime;
+	    results_.additionalResults["Discount"] = discount;
 
         results_.value = optionValue;
         results_.settlementValue = optionValue;

@@ -96,7 +96,6 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS));
 
     // build bond option
-    Date maturityDate = today;
     Real strikePrice = notional;
     Real faceAmount = notional;
     Natural settlementDays = 2;
@@ -138,16 +137,16 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
     zeroBondOption->setPricingEngine(bondOptionEngine);
 
     BOOST_TEST_MESSAGE("normal bond option price = " << bondOption->NPV());
-    BOOST_CHECK_CLOSE(bondOption->NPV(), 41.130585192314584, 0.000001);
+    BOOST_CHECK_CLOSE(bondOption->NPV(), 37.920036007710891, 0.000001);
 
     BOOST_TEST_MESSAGE("tief otm bond option price = " << otmBondOption->NPV());
-    BOOST_CHECK_CLOSE(otmBondOption->NPV(), 5.8386788966340013e-43, 0.000001);
+    BOOST_CHECK_CLOSE(otmBondOption->NPV(), 5.3829264271978572e-43, 0.000001);
 
     BOOST_TEST_MESSAGE("tief itm bond option price = " << itmBondOption->NPV());
-    BOOST_CHECK_CLOSE(itmBondOption->NPV(), 534.24837517090668, 0.000001);
+    BOOST_CHECK_CLOSE(itmBondOption->NPV(), 492.54630170754882, 0.000001);
 
     BOOST_TEST_MESSAGE("zero bond option price = " << zeroBondOption->NPV());
-    BOOST_CHECK_CLOSE(zeroBondOption->NPV(), 0.18275705142679932, 0.000001);
+    BOOST_CHECK_CLOSE(zeroBondOption->NPV(), 0.16849149941251573, 0.000001);
 
     // test put-call parity
     Real putCallStrikePrice = 1000;
@@ -165,8 +164,8 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         dc, bdc, redemption, issueDate, putCallabilitySchedule));
     bondPutOption->setPricingEngine(bondOptionEngine);
 
-    Real discount = discountTS->discount(today);
-    // forwar bond price, got from the pricing engine
+    Real discount = discountTS->discount(exerciseDate);
+    // forward bond price, read from the pricing engine
     Real fwdbond = 1034.2483751709069;
 
     BOOST_TEST_MESSAGE("bond call option price = " << bondCallOption->NPV());

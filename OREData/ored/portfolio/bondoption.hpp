@@ -21,6 +21,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 \ingroup tradedata
 */
 
+#pragma once
+
 #include <ored/portfolio/legdata.hpp>
 #include <ored/portfolio/trade.hpp>
 #include <ored/portfolio/optiondata.hpp> 
@@ -68,14 +70,14 @@ namespace ore {
                 zeroBond_(true) {}
 
             // Build QuantLib/QuantExt instrument, link pricing engine
-            virtual void build(const boost::shared_ptr<EngineFactory>&);
+            virtual void build(const boost::shared_ptr<EngineFactory>&) override;
 
             //! Return the fixings that will be requested to price the bond option given the \p settlementDate.
             std::map<std::string, std::set<QuantLib::Date>> fixings(
                 const QuantLib::Date& settlementDate = QuantLib::Date()) const override;
 
-            virtual void fromXML(XMLNode* node);
-            virtual XMLNode* toXML(XMLDocument& doc);
+            virtual void fromXML(XMLNode* node) override;
+            virtual XMLNode* toXML(XMLDocument& doc) override;
 
             const OptionData& option() const { return option_; } 
             double strike() const { return strike_; } 
