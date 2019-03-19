@@ -96,7 +96,6 @@ namespace QuantExt {
         //! Spread to apply to the valuation. This is a continuously
         //! componded rate added to the model. 
         Real spread;
-        bool bondInPrice;
         void validate() const;
     };
 
@@ -128,8 +127,7 @@ namespace QuantExt {
             Real redemption = 100.0,
             const Date& issueDate = Date(),
             const CallabilitySchedule& putCallSchedule
-            = CallabilitySchedule(),
-            bool bondInPrice = false);
+            = CallabilitySchedule());
 
         virtual void setupArguments(PricingEngine::arguments* args) const;
 
@@ -142,7 +140,6 @@ namespace QuantExt {
         coupon dates.
         */
         Real accrued(Date settlement) const;
-        bool bondInPrice_;
     };
 }
 

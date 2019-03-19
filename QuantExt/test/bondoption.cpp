@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(testBondOption) {
         CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability> >(1, callability);
 
         boost::shared_ptr<QuantExt::BondOption> bondOption(new QuantExt::FixedRateBondOption(settlementDays, faceAmount, schedule, rates,
-            dc, bdc, redemption, issueDate, callabilitySchedule, false));
+            dc, bdc, redemption, issueDate, callabilitySchedule));
 
         boost::shared_ptr<PricingEngine> bondOptionEngine(new QuantExt::BlackBondOptionEngine(
             Handle<QuantLib::SwaptionVolatilityStructure>(svs), discountTS));

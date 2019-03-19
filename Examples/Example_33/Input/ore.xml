@@ -6,22 +6,22 @@
     <Parameter name="outputPath">Output</Parameter>
     <Parameter name="logFile">log.txt</Parameter>
     <Parameter name="logMask">255</Parameter>
-    <Parameter name="marketDataFile">../../Input/market_20160205_flat.txt</Parameter>
-    <Parameter name="fixingDataFile">../../Input/fixings_20160205.txt</Parameter>
-    <Parameter name="implyTodaysFixings">Y</Parameter>
+    <Parameter name="marketDataFile">market_20160205.txt</Parameter>
+    <Parameter name="fixingDataFile">fixings_20160205.txt</Parameter>
+    <Parameter name="implyTodaysFixings">N</Parameter>
     <Parameter name="curveConfigFile">curveconfig.xml</Parameter>
-    <Parameter name="conventionsFile">../../Input/conventions.xml</Parameter>
+    <Parameter name="conventionsFile">conventions.xml</Parameter>
     <Parameter name="marketConfigFile">todaysmarket.xml</Parameter>
     <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
     <Parameter name="portfolioFile">portfolio.xml</Parameter>
-    <Parameter name="observationModel">Disable</Parameter>
+    <Parameter name="observationModel">None</Parameter>
   </Setup>
   <Markets>
-    <Parameter name="lgmcalibration">libor</Parameter>
-    <Parameter name="fxcalibration">libor</Parameter>
-    <Parameter name="pricing">libor</Parameter>
-    <Parameter name="sensitivity">libor</Parameter>
-    <Parameter name="simulation">libor</Parameter>
+    <Parameter name="lgmcalibration">collateral_inccy</Parameter>
+    <Parameter name="fxcalibration">collateral_eur</Parameter>
+    <Parameter name="pricing">collateral_eur</Parameter>
+    <Parameter name="simulation">collateral_eur</Parameter>
+    <Parameter name="sensitivity">collateral_eur</Parameter>
   </Markets>
   <Analytics>
     <Analytic type="npv">
@@ -39,21 +39,12 @@
       <Parameter name="grid">240,1M</Parameter>
       <Parameter name="outputFileName">curves.csv</Parameter>
     </Analytic>
-    <Analytic type="sensitivity">
-      <Parameter name="active">Y</Parameter>
-      <Parameter name="marketConfigFile">simulation.xml</Parameter>
-      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
-      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
-      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
-      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
-      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
-      <Parameter name="recalibrateModels">Y</Parameter>
-    </Analytic>
     <Analytic type="simulation">
       <Parameter name="active">Y</Parameter>
       <Parameter name="simulationConfigFile">simulation.xml</Parameter>
       <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
       <Parameter name="baseCurrency">EUR</Parameter>
+      <Parameter name="storeScenarios">N</Parameter>
       <Parameter name="cubeFile">cube.dat</Parameter>
       <Parameter name="aggregationScenarioDataFileName">scenariodata.dat</Parameter>
     </Analytic>
@@ -71,14 +62,27 @@
       <Parameter name="exerciseNextBreak">N</Parameter>
       <Parameter name="cva">Y</Parameter>
       <Parameter name="dva">Y</Parameter>
-      <Parameter name="dvaName">CPTY_C</Parameter>
+      <Parameter name="dvaName">BANK</Parameter>
       <Parameter name="fva">Y</Parameter>
       <Parameter name="fvaBorrowingCurve">BANK_EUR_BORROW</Parameter>
       <Parameter name="fvaLendingCurve">BANK_EUR_LEND</Parameter>
-      <Parameter name="colva">N</Parameter>
+      <Parameter name="colva">Y</Parameter>
       <Parameter name="collateralFloor">N</Parameter>
       <Parameter name="rawCubeOutputFile">rawcube.csv</Parameter>
       <Parameter name="netCubeOutputFile">netcube.csv</Parameter>
+    </Analytic>
+    <Analytic type="sensitivity">
+      <Parameter name="active">Y</Parameter>
+      <Parameter name="marketConfigFile">sensimulation.xml</Parameter>
+      <Parameter name="sensitivityConfigFile">sensitivity.xml</Parameter>
+      <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
+      <Parameter name="scenarioOutputFile">scenario.csv</Parameter>
+      <Parameter name="sensitivityOutputFile">sensitivity.csv</Parameter>
+      <Parameter name="applySimmExemptions">Y</Parameter>
+      <Parameter name="outputProductClassMapping">Y</Parameter>
+      <Parameter name="productClassMappingOutputFile">productclass_mapping.csv</Parameter>
+      <Parameter name="outputSensitivityThreshold">0.000001</Parameter>
+      <Parameter name="recalibrateModels">N</Parameter>
     </Analytic>
   </Analytics>
 </ORE>
