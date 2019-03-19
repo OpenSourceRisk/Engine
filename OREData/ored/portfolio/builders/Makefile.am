@@ -19,7 +19,6 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	bond.hpp \
-	bondoption.hpp \
 	cachingenginebuilder.hpp \
 	capfloor.hpp \
 	capfloorediborleg.hpp \

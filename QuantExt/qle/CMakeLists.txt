@@ -29,7 +29,6 @@ indexes/fxindex.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
-instruments/bondoption.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
@@ -80,7 +79,6 @@ pricingengines/analyticdkcpicapfloorengine.cpp
 pricingengines/analyticlgmcdsoptionengine.cpp
 pricingengines/analyticlgmswaptionengine.cpp
 pricingengines/analyticxassetlgmeqoptionengine.cpp
-pricingengines/blackbondoptionengine.cpp
 pricingengines/blackcdsoptionengine.cpp
 pricingengines/cpibacheliercapfloorengine.cpp
 pricingengines/cpiblackcapfloorengine.cpp
@@ -209,7 +207,6 @@ indexes/inflationindexwrapper.hpp
 indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
-instruments/bondoption.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
@@ -273,7 +270,6 @@ pricingengines/analyticdkcpicapfloorengine.hpp
 pricingengines/analyticlgmcdsoptionengine.hpp
 pricingengines/analyticlgmswaptionengine.hpp
 pricingengines/analyticxassetlgmeqoptionengine.hpp
-pricingengines/blackbondoptionengine.hpp
 pricingengines/blackcdsoptionengine.hpp
 pricingengines/cpibacheliercapfloorengine.hpp
 pricingengines/cpiblackcapfloorengine.hpp

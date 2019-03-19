@@ -3,7 +3,6 @@
 set(QuantExt-Test_SRC analyticlgmswaptionengine.cpp
 blackvariancecurve.cpp
 bonds.cpp
-bondoption.cpp
 cashflow.cpp
 commodityforward.cpp
 correlationtermstructure.cpp

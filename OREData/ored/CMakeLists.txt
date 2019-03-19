@@ -62,7 +62,6 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
-portfolio/bondoption.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
@@ -183,7 +182,6 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
-portfolio/bondoption.hpp
 portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
@@ -231,7 +229,6 @@ portfolio/trade.hpp
 portfolio/tradeactions.hpp
 portfolio/tradefactory.hpp
 portfolio/builders/bond.hpp
-portfolio/builders/bondoption.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
