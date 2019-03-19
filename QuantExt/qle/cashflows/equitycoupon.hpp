@@ -111,11 +111,11 @@ protected:
     Natural fixingDays_;
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
-    Real quantity_;
     bool isTotalReturn_;
     Real dividendFactor_;
     bool notionalReset_;
     Real initialPrice_;
+    Real quantity_;
     Date fixingStartDate_;
     Date fixingEndDate_;
 };
