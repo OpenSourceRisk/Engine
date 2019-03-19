@@ -3,8 +3,8 @@
   <Trade id="Bond_Call_Option">
     <TradeType>BondOption</TradeType>
     <Envelope>
-      <CounterParty>CPTY_C</CounterParty>
-      <NettingSetId>CPTY_C</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -15,13 +15,13 @@
         <Style>European</Style>
         <Settlement>Physical</Settlement>
         <ExerciseDates>
-          <ExerciseDate>20261205</ExerciseDate>
+          <ExerciseDate>20221105</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <!-- Pricing type: 'Dirty' or 'Clean' -->
       <PriceType>Dirty</PriceType>
       <!-- Strike of bond option -->
-      <Strike>100.00</Strike>
+      <Strike>10000.00</Strike>
       <!-- Number of bond option -->
       <Quantity>1</Quantity>
       <!-- Redemption ratio, given in percent, default 100% -->
@@ -29,8 +29,8 @@
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CPTY_A</CreditCurveId>
       <SecurityId>SECURITY_1</SecurityId>
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
@@ -41,7 +41,7 @@
         <Payer>false</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000.000000</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
@@ -70,8 +70,8 @@
   <Trade id="Bond_Put_Option">
     <TradeType>BondOption</TradeType>
     <Envelope>
-      <CounterParty>CPTY_C</CounterParty>
-      <NettingSetId>CPTY_C</NettingSetId>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
     </Envelope>
     <!-- Information for bond option -->
     <BondOptionData>
@@ -82,13 +82,13 @@
         <Style>European</Style>
         <Settlement>Physical</Settlement>
         <ExerciseDates>
-          <ExerciseDate>20261205</ExerciseDate>
+          <ExerciseDate>20221105</ExerciseDate>
         </ExerciseDates>
       </OptionData>
       <!-- Pricing type: 'Dirty' or 'Clean' -->
       <PriceType>Dirty</PriceType>
       <!-- Strike of bond option -->
-      <Strike>100.00</Strike>
+      <Strike>10000.00</Strike>
       <!-- Number of bond option -->	  
       <Quantity>1</Quantity>
       <!-- Redemption ratio, given in percent, default 100% -->
@@ -96,8 +96,8 @@
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
+      <IssuerId>CPTY_A</IssuerId>
+      <CreditCurveId>CPTY_A</CreditCurveId>
       <SecurityId>SECURITY_1</SecurityId>
       <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
       <SettlementDays>2</SettlementDays>
@@ -108,7 +108,7 @@
         <Payer>false</Payer>
         <Currency>EUR</Currency>
         <Notionals>
-          <Notional>100.000000</Notional>
+          <Notional>10000.000000</Notional>
         </Notionals>
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>F</PaymentConvention>
