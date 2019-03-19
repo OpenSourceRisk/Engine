@@ -61,9 +61,9 @@
 
 #include <boost/timer.hpp>
 
-#include <ored/marketdata/curvespecparser.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/marketdata/curvespecparser.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -191,9 +191,6 @@ ScenarioSimMarket::ScenarioSimMarket(
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
-
-    // Build fixing manager
-    // fixingManager_ = boost::make_shared<FixingManager>(asof_);
 
     // Sort parameters so they get processed in correct order
     map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;
@@ -706,18 +703,16 @@ ScenarioSimMarket::ScenarioSimMarket(
                     string forCcy = name.substr(0, 3);
                     string domCcy = name.substr(3, 3);
 
-                    // Get the yield curve IDs from the FX volatility configuration
-                    // They may still be empty
+                    // Get the yield curve IDs from the FX volatility configuration  
+                    // They may still be empty  
                     string foreignTsId;
                     string domesticTsId;
                     if (curveConfigs.hasFxVolCurveConfig(name)) {
                         auto fxVolConfig = curveConfigs.fxVolCurveConfig(name);
                         foreignTsId = fxVolConfig->fxForeignYieldCurveID();
-                        TLOG("Got foreign term structure '" << foreignTsId << "' from FX volatility curve config for "
-                                                            << name);
+                        TLOG("Got foreign term structure '" << foreignTsId << "' from FX volatility curve config for " << name);
                         domesticTsId = fxVolConfig->fxDomesticYieldCurveID();
-                        TLOG("Got domestic term structure '" << domesticTsId << "' from FX volatility curve config for "
-                                                             << name);
+                        TLOG("Got domestic term structure '" << domesticTsId << "' from FX volatility curve config for " << name);
                     }
                     Handle<BlackVolTermStructure> fvh;
 
@@ -731,20 +726,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(name));
                         vector<Time> times;
 
-                        // Attempt to get the relevant yield curves from the initial market
-                        Handle<YieldTermStructure> forTS =
-                            getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
-                        TLOG("Foreign term structure '" << foreignTsId << "' from t_0 market is "
-                                                        << (forTS.empty() ? "empty" : "not empty"));
-                        Handle<YieldTermStructure> domTS =
-                            getYieldCurve(domesticTsId, todaysMarketParams, configuration, initMarket);
-                        TLOG("Domestic term structure '" << domesticTsId << "' from t_0 market is "
-                                                         << (domTS.empty() ? "empty" : "not empty"));
-
-                        // If either term structure is empty, fall back on the initial market's discount curves
+                        // Attempt to get the relevant yield curves from the initial market  
+                        Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, configuration, initMarket);
+                        TLOG("Foreign term structure '" << foreignTsId << "' from t_0 market is " << (forTS.empty() ? "empty" : "not empty"));
+                        Handle<YieldTermStructure> domTS = getYieldCurve(domesticTsId, todaysMarketParams, configuration, initMarket);
+                        TLOG("Domestic term structure '" << domesticTsId << "' from t_0 market is " << (domTS.empty() ? "empty" : "not empty"));
+                        
+                        // If either term structure is empty, fall back on the initial market's discount curves  
                         if (forTS.empty() || domTS.empty()) {
-                            TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy
-                                                                            << " from t_0 market");
+                            TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy << " from t_0 market");
                             forTS = initMarket->discountCurve(forCcy, configuration);
                             domTS = initMarket->discountCurve(domCcy, configuration);
                         }
@@ -772,23 +762,18 @@ ScenarioSimMarket::ScenarioSimMarket(
                         boost::shared_ptr<BlackVolTermStructure> fxVolCurve;
                         if (parameters->fxVolIsSurface()) {
 
-                            // Attempt to get the relevant yield curves from this scenario simulation market
-                            Handle<YieldTermStructure> forTS =
-                                getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
-                            TLOG("Foreign term structure '" << foreignTsId << "' from sim market is "
-                                                            << (forTS.empty() ? "empty" : "not empty"));
-                            Handle<YieldTermStructure> domTS =
-                                getYieldCurve(domesticTsId, todaysMarketParams, Market::defaultConfiguration);
-                            TLOG("Domestic term structure '" << domesticTsId << "' from sim market is "
-                                                             << (domTS.empty() ? "empty" : "not empty"));
+                            // Attempt to get the relevant yield curves from this scenario simulation market  
+                            Handle<YieldTermStructure> forTS = getYieldCurve(foreignTsId, todaysMarketParams, Market::defaultConfiguration);
+                            TLOG("Foreign term structure '" << foreignTsId << "' from sim market is " << (forTS.empty() ? "empty" : "not empty"));
+                            Handle<YieldTermStructure> domTS = getYieldCurve(domesticTsId, todaysMarketParams, Market::defaultConfiguration);
+                            TLOG("Domestic term structure '" << domesticTsId << "' from sim market is " << (domTS.empty() ? "empty" : "not empty"));
 
-                            // If either term structure is empty, fall back on this scenario simulation market's
-                            // discount curves
+                            // If either term structure is empty, fall back on this scenario simulation market's discount curves  
                             if (forTS.empty() || domTS.empty()) {
-                                TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy
-                                                                                << " from sim market");
+                                TLOG("Falling back on the discount curves for " << forCcy << " and " << domCcy << " from sim market");
                                 forTS = discountCurve(forCcy);
                                 domTS = discountCurve(domCcy);
+
                             }
 
                             bool stickyStrike = true;
@@ -1019,44 +1004,38 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DLOG("ScenarioSimMarket index curve " << name << " zeroRate[" << i << "]=" << q->value());
                     }
 
-                    // Get the configured nominal term structure from this scenario sim market if possible
+                    // Get the configured nominal term structure from this scenario sim market if possible  
                     // 1) Look for zero inflation curve configuration ID in zero inflation curves of todays market
                     string zeroInflationConfigId;
-                    if (todaysMarketParams.hasConfiguration(configuration) &&
-                        todaysMarketParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
+                    if (todaysMarketParams.hasConfiguration(configuration) && todaysMarketParams.hasMarketObject(MarketObject::ZeroInflationCurve)) {
                         auto m = todaysMarketParams.mapping(MarketObject::ZeroInflationCurve, configuration);
                         auto it = m.find(name);
                         if (it != m.end()) {
                             string zeroInflationSpecId = it->second;
                             TLOG("Got spec ID " << zeroInflationSpecId << " for zero inflation index " << name);
                             auto zeroInflationSpec = parseCurveSpec(zeroInflationSpecId);
-                            QL_REQUIRE(zeroInflationSpec->baseType() == CurveSpec::CurveType::Inflation,
-                                       "Expected the curve "
-                                           << "spec type for " << zeroInflationSpecId << " to be 'Inflation'");
+                            QL_REQUIRE(zeroInflationSpec->baseType() == CurveSpec::CurveType::Inflation, "Expected the curve " <<
+                                "spec type for " << zeroInflationSpecId << " to be 'Inflation'");
                             zeroInflationConfigId = zeroInflationSpec->curveConfigID();
                         }
                     }
 
-                    // 2) Get the nominal term structure ID from the zero inflation curve configuration
+                    // 2) Get the nominal term structure ID from the zero inflation curve configuration  
                     string nominalTsId;
                     if (!zeroInflationConfigId.empty() && curveConfigs.hasInflationCurveConfig(zeroInflationConfigId)) {
                         auto zeroInflationConfig = curveConfigs.inflationCurveConfig(zeroInflationConfigId);
                         nominalTsId = zeroInflationConfig->nominalTermStructure();
-                        TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '"
-                                                               << zeroInflationConfigId << "'");
+                        TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '" << zeroInflationConfigId << "'");
                     }
 
-                    // 3) Get the nominal term structure from this scenario simulation market
-                    Handle<YieldTermStructure> nominalTs =
-                        getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
-                    TLOG("Nominal term structure '" << nominalTsId << "' from sim market is "
-                                                    << (nominalTs.empty() ? "empty" : "not empty"));
+                    // 3) Get the nominal term structure from this scenario simulation market  
+                    Handle<YieldTermStructure> nominalTs = getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
+                    TLOG("Nominal term structure '" << nominalTsId << "' from sim market is " << (nominalTs.empty() ? "empty" : "not empty"));
 
-                    // If nominal term structure is empty, fall back on this scenario simulation market's discount curve
+                    // If nominal term structure is empty, fall back on this scenario simulation market's discount curve  
                     if (nominalTs.empty()) {
                         string ccy = inflationIndex->currency().code();
-                        TLOG("Falling back on the discount curve for currency '"
-                             << ccy << "', the currency of inflation index '" << name << "'");
+                        TLOG("Falling back on the discount curve for currency '" << ccy << "', the currency of inflation index '" << name << "'");
                         nominalTs = discountCurve(ccy);
                     }
 
@@ -1066,8 +1045,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                     zeroCurve = boost::shared_ptr<ZeroInflationCurveObserverMoving<Linear>>(
                         new ZeroInflationCurveObserverMoving<Linear>(
                             0, inflationIndex->fixingCalendar(), dc, inflationTs->observationLag(),
-                            inflationTs->frequency(), inflationTs->indexIsInterpolated(), nominalTs, zeroCurveTimes,
-                            quotes, inflationTs->seasonality()));
+                            inflationTs->frequency(), inflationTs->indexIsInterpolated(), nominalTs, zeroCurveTimes, quotes,
+                            inflationTs->seasonality()));
 
                     Handle<ZeroInflationTermStructure> its(zeroCurve);
                     its->enableExtrapolation();
@@ -1120,44 +1099,38 @@ ScenarioSimMarket::ScenarioSimMarket(
                         DLOG("ScenarioSimMarket index curve " << name << " zeroRate[" << i << "]=" << q->value());
                     }
 
-                    // Get the configured nominal term structure from this scenario sim market if possible
-                    // 1) Look for yoy inflation curve configuration ID in yoy inflation curves of todays market
+                    // Get the configured nominal term structure from this scenario sim market if possible  
+                    // 1) Look for yoy inflation curve configuration ID in yoy inflation curves of todays market  
                     string yoyInflationConfigId;
-                    if (todaysMarketParams.hasConfiguration(configuration) &&
-                        todaysMarketParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
+                    if (todaysMarketParams.hasConfiguration(configuration) && todaysMarketParams.hasMarketObject(MarketObject::YoYInflationCurve)) {
                         auto m = todaysMarketParams.mapping(MarketObject::YoYInflationCurve, configuration);
                         auto it = m.find(name);
                         if (it != m.end()) {
                             string yoyInflationSpecId = it->second;
                             TLOG("Got spec ID " << yoyInflationSpecId << " for yoy inflation index " << name);
                             auto yoyInflationSpec = parseCurveSpec(yoyInflationSpecId);
-                            QL_REQUIRE(yoyInflationSpec->baseType() == CurveSpec::CurveType::Inflation,
-                                       "Expected the curve "
-                                           << "spec type for " << yoyInflationSpecId << " to be 'Inflation'");
+                            QL_REQUIRE(yoyInflationSpec->baseType() == CurveSpec::CurveType::Inflation, "Expected the curve " <<
+                                "spec type for " << yoyInflationSpecId << " to be 'Inflation'");
                             yoyInflationConfigId = yoyInflationSpec->curveConfigID();
                         }
                     }
 
-                    // 2) Get the nominal term structure ID from the yoy inflation curve configuration
+                    // 2) Get the nominal term structure ID from the yoy inflation curve configuration  
                     string nominalTsId;
                     if (!yoyInflationConfigId.empty() && curveConfigs.hasInflationCurveConfig(yoyInflationConfigId)) {
                         auto yoyInflationConfig = curveConfigs.inflationCurveConfig(yoyInflationConfigId);
                         nominalTsId = yoyInflationConfig->nominalTermStructure();
-                        TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '"
-                                                               << yoyInflationConfigId << "'");
+                        TLOG("Got nominal term structure ID '" << nominalTsId << "' from config with ID '" << yoyInflationConfigId << "'");
                     }
 
                     // 3) Get the nominal term structure from this scenario simulation market
-                    Handle<YieldTermStructure> nominalTs =
-                        getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
-                    TLOG("Nominal term structure '" << nominalTsId << "' from sim market is "
-                                                    << (nominalTs.empty() ? "empty" : "not empty"));
+                    Handle<YieldTermStructure> nominalTs = getYieldCurve(nominalTsId, todaysMarketParams, Market::defaultConfiguration);
+                    TLOG("Nominal term structure '" << nominalTsId << "' from sim market is " << (nominalTs.empty() ? "empty" : "not empty"));
 
-                    // If nominal term structure is empty, fall back on this scenario simulation market's discount curve
+                    // If nominal term structure is empty, fall back on this scenario simulation market's discount curve  
                     if (nominalTs.empty()) {
                         string ccy = yoyInflationIndex->currency().code();
-                        TLOG("Falling back on the discount curve for currency '"
-                             << ccy << "', the currency of inflation index '" << name << "'");
+                        TLOG("Falling back on the discount curve for currency '" << ccy << "', the currency of inflation index '" << name << "'");
                         nominalTs = discountCurve(ccy);
                     }
 
@@ -1167,8 +1140,8 @@ ScenarioSimMarket::ScenarioSimMarket(
                     yoyCurve = boost::shared_ptr<YoYInflationCurveObserverMoving<Linear>>(
                         new YoYInflationCurveObserverMoving<Linear>(
                             0, yoyInflationIndex->fixingCalendar(), dc, yoyInflationTs->observationLag(),
-                            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), nominalTs,
-                            yoyCurveTimes, quotes, yoyInflationTs->seasonality()));
+                            yoyInflationTs->frequency(), yoyInflationTs->indexIsInterpolated(), nominalTs, yoyCurveTimes,
+                            quotes, yoyInflationTs->seasonality()));
 
                     Handle<YoYInflationTermStructure> its(yoyCurve);
                     its->enableExtrapolation();
@@ -1542,48 +1515,49 @@ bool ScenarioSimMarket::isSimulated(const RiskFactorKey::KeyType& factor) const 
 }
 
 Handle<YieldTermStructure> ScenarioSimMarket::getYieldCurve(const string& yieldSpecId,
-                                                            const TodaysMarketParameters& todaysMarketParams,
-                                                            const string& configuration,
-                                                            const boost::shared_ptr<Market>& market) const {
-
+    const TodaysMarketParameters& todaysMarketParams, const string& configuration,
+    const boost::shared_ptr<Market>& market) const {
+    
     // If yield spec ID is "", return empty Handle
-    if (yieldSpecId.empty())
-        return Handle<YieldTermStructure>();
-
+    if (yieldSpecId.empty()) return Handle<YieldTermStructure>();
+    
     if (todaysMarketParams.hasConfiguration(configuration)) {
-        // Look for yield spec ID in discount curves of todays market
+        // Look for yield spec ID in discount curves of todays market  
         if (todaysMarketParams.hasMarketObject(MarketObject::DiscountCurve)) {
             for (const auto& discountMapping : todaysMarketParams.mapping(MarketObject::DiscountCurve, configuration)) {
                 if (discountMapping.second == yieldSpecId) {
                     if (market) {
                         return market->discountCurve(discountMapping.first, configuration);
-                    } else {
+                    }
+                    else {
                         return discountCurve(discountMapping.first, configuration);
                     }
                 }
             }
         }
 
-        // Look for yield spec ID in index curves of todays market
+        // Look for yield spec ID in index curves of todays market  
         if (todaysMarketParams.hasMarketObject(MarketObject::IndexCurve)) {
             for (const auto& indexMapping : todaysMarketParams.mapping(MarketObject::IndexCurve, configuration)) {
                 if (indexMapping.second == yieldSpecId) {
                     if (market) {
                         return market->iborIndex(indexMapping.first, configuration)->forwardingTermStructure();
-                    } else {
+                    }
+                    else {
                         return iborIndex(indexMapping.first, configuration)->forwardingTermStructure();
                     }
                 }
             }
         }
 
-        // Look for yield spec ID in yield curves of todays market
+        // Look for yield spec ID in yield curves of todays market  
         if (todaysMarketParams.hasMarketObject(MarketObject::YieldCurve)) {
             for (const auto& yieldMapping : todaysMarketParams.mapping(MarketObject::YieldCurve, configuration)) {
                 if (yieldMapping.second == yieldSpecId) {
                     if (market) {
                         return market->yieldCurve(yieldMapping.first, configuration);
-                    } else {
+                    }
+                    else {
                         return yieldCurve(yieldMapping.first, configuration);
                     }
                 }

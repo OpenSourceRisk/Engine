@@ -496,9 +496,9 @@ void OREApp::runStressTest() {
 
     LOG("Build Stress Test");
     string marketConfiguration = params_->get("markets", "pricing");
-    boost::shared_ptr<StressTest> stressTest =
-        boost::make_shared<StressTest>(portfolio, market_, marketConfiguration, engineData, simMarketData, stressData,
-                                       conventions_, curveConfigs_, marketParameters_);
+    boost::shared_ptr<StressTest> stressTest = boost::make_shared<StressTest>(
+        portfolio, market_, marketConfiguration, engineData, simMarketData, stressData, 
+        conventions_, curveConfigs_, marketParameters_);
 
     string outputFile = outputPath_ + "/" + params_->get("stress", "scenarioOutputFile");
     Real threshold = parseReal(params_->get("stress", "outputThreshold"));
@@ -583,8 +583,8 @@ void OREApp::writeBaseScenario() {
     boost::shared_ptr<ScenarioSimMarketParameters> simMarketData(new ScenarioSimMarketParameters);
     simMarketData->fromFile(marketConfigFile);
 
-    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration,
-                                                           curveConfigs_, marketParameters_, continueOnError_);
+    auto simMarket = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, marketConfiguration, 
+        curveConfigs_, marketParameters_, continueOnError_);
     boost::shared_ptr<Scenario> scenario = simMarket->baseScenario();
     QL_REQUIRE(scenario->asof() == today, "dates do not match");
 
@@ -941,8 +941,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
             vector<string> fixingFiles = getFilenames(fixingFileString, inputPath_);
             CSVLoader loader(marketFiles, fixingFiles, implyTodaysFixings);
             out_ << "OK" << endl;
-            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_,
-                                                       continueOnError_);
+            market_ = boost::make_shared<TodaysMarket>(asof_, marketParameters_, loader, curveConfigs_, conventions_, continueOnError_);
         } else {
             WLOG("No market data loaded from file");
         }
