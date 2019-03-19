@@ -81,7 +81,6 @@ namespace ore {
             double strike() const { return strike_; } 
             double quantity() const { return quantity_; } 
             double redemption() const { return redemption_; }
-            bool bondInPrice() const { return bondInPrice_; }
             string priceType() const { return priceType_; }
             const string& issuerId() const { return issuerId_; }
             const string& creditCurveId() const { return creditCurveId_; }
@@ -103,7 +102,6 @@ namespace ore {
             double strike_; 
             double quantity_; 
             double redemption_; 
-            bool bondInPrice_;
             string priceType_;
             string issuerId_;
             string creditCurveId_;

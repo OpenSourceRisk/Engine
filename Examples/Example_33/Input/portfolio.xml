@@ -1,143 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <Trade id="Callable_Bond">
-    <TradeType>BondOption</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_C</CounterParty>
-      <NettingSetId>CPTY_C</NettingSetId>
-    </Envelope>
-    <!-- Information for bond option -->
-    <BondOptionData>
-      <!-- Option data: long/short, call/put, exercise type, exercise date... -->
-      <OptionData>
-        <LongShort>Short</LongShort>
-        <OptionType>Call</OptionType>
-        <Style>European</Style>
-        <Settlement>Physical</Settlement>
-        <ExerciseDates>
-          <ExerciseDate>20261205</ExerciseDate>
-        </ExerciseDates>
-      </OptionData>
-      <!-- Pricing type: 'Dirty' or 'Clean' -->
-      <PriceType>Dirty</PriceType>
-      <!-- Strike of bond option -->
-      <Strike>100.00</Strike>
-      <!-- Number of bond option -->
-      <Quantity>1</Quantity>
-      <!-- Redemption ratio, given in percent, default 100% -->
-      <Redemption>100.00</Redemption>
-      <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <EmbeddedOption>true</EmbeddedOption>
-    </BondOptionData>
-    <!-- Information for underlying bond, the same as the normal bond -->
-    <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
-      <SecurityId>SECURITY_1</SecurityId>
-      <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>100.000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.1</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20151103</StartDate>
-            <EndDate>20271105</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </BondData>
-  </Trade>
-  <Trade id="Puttable_Bond">
-    <TradeType>BondOption</TradeType>
-    <Envelope>
-      <CounterParty>CPTY_C</CounterParty>
-      <NettingSetId>CPTY_C</NettingSetId>
-    </Envelope>
-    <!-- Information for bond option -->
-    <BondOptionData>
-      <!-- Option data: long/short, call/put, exercise type, exercise date... -->
-      <OptionData>
-        <LongShort>Long</LongShort>
-        <OptionType>Put</OptionType>
-        <Style>European</Style>
-        <Settlement>Physical</Settlement>
-        <ExerciseDates>
-          <ExerciseDate>20261205</ExerciseDate>
-        </ExerciseDates>
-      </OptionData>
-      <!-- Pricing type: 'Dirty' or 'Clean' -->
-      <PriceType>Dirty</PriceType>
-      <!-- Strike of bond option -->
-      <Strike>100.00</Strike>
-      <!-- Number of bond option -->	  
-      <Quantity>1</Quantity>
-      <!-- Redemption ratio, given in percent, default 100% -->
-      <Redemption>100.00</Redemption>
-      <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <EmbeddedOption>true</EmbeddedOption>
-    </BondOptionData>
-    <!-- Information for underlying bond, the same as the normal bond -->
-    <BondData>
-      <IssuerId>CPTY_C</IssuerId>
-      <CreditCurveId>CPTY_C</CreditCurveId>
-      <SecurityId>SECURITY_1</SecurityId>
-      <ReferenceCurveId>EUR-EURIBOR-6M</ReferenceCurveId>
-      <SettlementDays>2</SettlementDays>
-      <Calendar>TARGET</Calendar>
-      <IssueDate>20160203</IssueDate>
-      <LegData>
-        <LegType>Fixed</LegType>
-        <Payer>false</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>100.000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>F</PaymentConvention>
-        <FixedLegData>
-          <Rates>
-            <Rate>0.1</Rate>
-          </Rates>
-        </FixedLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>20151103</StartDate>
-            <EndDate>20271105</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>F</Convention>
-            <TermConvention>F</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>
-    </BondData>
-  </Trade>
   <Trade id="Bond_Call_Option">
     <TradeType>BondOption</TradeType>
     <Envelope>
@@ -164,8 +26,6 @@
       <Quantity>1</Quantity>
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
-      <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <EmbeddedOption>false</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>
@@ -233,8 +93,6 @@
       <Quantity>1</Quantity>
       <!-- Redemption ratio, given in percent, default 100% -->
       <Redemption>100.00</Redemption>
-      <!-- 'true' for the callable or puttable bond, 'false' for the normal bond option -->
-      <EmbeddedOption>false</EmbeddedOption>
     </BondOptionData>
     <!-- Information for underlying bond, the same as the normal bond -->
     <BondData>

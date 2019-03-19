@@ -137,7 +137,7 @@ namespace ore {
                 CallabilitySchedule callabilitySchedule = std::vector<boost::shared_ptr<Callability>>(1, callability);
 
                 bondoption.reset(new QuantExt::FixedRateBondOption(settlementDays, faceAmount, schedule, rates, 
-                    daycounter, business_dc, redemption(), issueDate, callabilitySchedule, bondInPrice_));
+                    daycounter, business_dc, redemption(), issueDate, callabilitySchedule));
                
                 for (auto const& c : leg)
                     bondoption->registerWith(c);
@@ -190,7 +190,6 @@ namespace ore {
             quantity_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Quantity", true);
             redemption_ = XMLUtils::getChildValueAsDouble(bondOptionNode, "Redemption", true);
             priceType_ = XMLUtils::getChildValue(bondOptionNode, "PriceType", true);
-            bondInPrice_ = XMLUtils::getChildValueAsBool(bondOptionNode, "EmbeddedOption");
 
             XMLNode* bondNode = XMLUtils::getChildNode(node, "BondData");
             QL_REQUIRE(bondNode, "No BondData Node");
@@ -221,7 +220,6 @@ namespace ore {
 
             XMLNode* bondOptionNode = doc.allocNode("BondOptionData");
             XMLUtils::appendNode(node, bondOptionNode);
-            XMLUtils::addChild(doc, bondOptionNode, "EmbeddedOption", bondInPrice_);
             XMLUtils::appendNode(bondOptionNode, option_.toXML(doc));
             XMLUtils::addChild(doc, bondOptionNode, "Strike", strike_);
             XMLUtils::addChild(doc, bondOptionNode, "Quantity", quantity_);

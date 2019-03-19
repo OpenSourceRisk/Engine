@@ -136,7 +136,6 @@
       <xs:element type="xs:string" name="Strike" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="Quantity" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="Redemption" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="EmbeddedOption" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

@@ -146,26 +146,15 @@ namespace QuantExt {
             volatility_->referenceDate(),
             exerciseDate);
 
-        Real embeddedOptionValue =
+        Real optionValue =
             blackFormula(type,
                 cashStrike,
                 fwdCashPrice,
                 priceVol*std::sqrt(exerciseTime),
                 discount);
 
-        if (arguments_.bondInPrice) {
-            if (type == Option::Call) {
-                results_.value = npv - embeddedOptionValue;
-                results_.settlementValue = value - embeddedOptionValue;
-            }
-            else {
-                results_.value = npv + embeddedOptionValue;
-                results_.settlementValue = value + embeddedOptionValue;
-            }
-        } else {
-            results_.value = embeddedOptionValue;
-            results_.settlementValue = embeddedOptionValue;
-        }
+        results_.value = optionValue;
+        results_.settlementValue = optionValue;
     }
 
 } // namespace QuantExt
