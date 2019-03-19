@@ -107,9 +107,6 @@
     <ClCompile Include="crossccybasismtmresetswap.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="bondoption.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="cpicapfloor.cpp">
       <Filter>source</Filter>
     </ClCompile>

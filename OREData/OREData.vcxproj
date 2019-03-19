@@ -104,7 +104,6 @@
     <ClInclude Include="ored\model\utilities.hpp" />
     <ClInclude Include="ored\ored.hpp" />
     <ClInclude Include="ored\portfolio\bond.hpp" />
-    <ClInclude Include="ored\portfolio\bondoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\all.hpp" />
     <ClInclude Include="ored\portfolio\builders\bond.hpp" />
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
@@ -119,7 +118,6 @@
     <ClInclude Include="ored\portfolio\builders\equityoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxforward.hpp" />
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp" />
-    <ClInclude Include="ored\portfolio\builders\bondoption.hpp" />
     <ClInclude Include="ored\portfolio\builders\swap.hpp" />
     <ClInclude Include="ored\portfolio\builders\swaption.hpp" />
     <ClInclude Include="ored\portfolio\builders\yoycapfloor.hpp" />
@@ -236,7 +234,6 @@
     <ClCompile Include="ored\model\lgmdata.cpp" />
     <ClCompile Include="ored\model\utilities.cpp" />
     <ClCompile Include="ored\portfolio\bond.cpp" />
-    <ClCompile Include="ored\portfolio\bondoption.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloor.cpp" />
     <ClCompile Include="ored\portfolio\builders\capfloorediborleg.cpp" />
     <ClCompile Include="ored\portfolio\builders\cms.cpp" />

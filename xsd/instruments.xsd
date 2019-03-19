@@ -34,7 +34,6 @@
       <xs:element type="equityForwardData" name="EquityForwardData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
       <xs:element type="bondData" name="BondData"/>  
-      <xs:element type="bondOptionData" name="BondOptionData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
@@ -126,16 +125,6 @@
       <xs:element type="xs:string" name="Calendar" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="xs:string" name="IssueDate" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="legData" name="LegData" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-  
-  <xs:complexType name="bondOptionData">
-    <xs:sequence>
-      <xs:element type="optionData" name="OptionData"/>
-      <xs:element type="xs:string" name="PriceType" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="Strike" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="Quantity" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="xs:string" name="Redemption" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 

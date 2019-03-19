@@ -372,9 +372,6 @@
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\blackbondoptionengine.hpp">
-      <Filter>pricingengines</Filter>
-    </ClInclude>
     <ClInclude Include="qle\termstructures\survivalprobabilitycurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
@@ -647,9 +644,6 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp">
       <Filter>termstructures</Filter>
-    </ClInclude>
-    <ClInclude Include="qle\instruments\bondoption.hpp">
-      <Filter>instruments</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -961,9 +955,6 @@
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp">
       <Filter>pricingengines</Filter>
     </ClCompile>
-    <ClCompile Include="qle\pricingengines\blackbondoptionengine.cpp">
-      <Filter>pricingengines</Filter>
-    </ClCompile>
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
@@ -1116,9 +1107,6 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp">
       <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\instruments\bondoption.cpp">
-      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
