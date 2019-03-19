@@ -84,17 +84,13 @@ namespace QuantExt {
         arguments() {}
         std::vector<Date> couponDates;
         std::vector<Real> couponAmounts;
-        //! redemption = face amount * redemption / 100.
         Real redemption;
         Date redemptionDate;
         DayCounter paymentDayCounter;
         Frequency frequency;
         CallabilitySchedule putCallSchedule;
-        //! bond full/dirty/cash prices
         std::vector<Real> callabilityPrices;
         std::vector<Date> callabilityDates;
-        //! Spread to apply to the valuation. This is a continuously
-        //! componded rate added to the model. 
         Real spread;
         void validate() const;
     };

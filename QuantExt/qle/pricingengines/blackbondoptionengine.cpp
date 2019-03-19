@@ -36,7 +36,7 @@ namespace QuantExt {
     }
 
     Real BlackBondOptionEngine::spotIncome() const {
-        //! settle date of embedded option assumed same as that of bond
+        //! settle date of bond option assumed same as that of bond
         Date settlement = arguments_.settlementDate;
         Leg cf = arguments_.cashflows;
         Date optionMaturity = arguments_.putCallSchedule[0]->date();
@@ -75,7 +75,7 @@ namespace QuantExt {
         DayCounter dayCounter = arguments_.paymentDayCounter;
         Frequency frequency = arguments_.frequency;
 
-        // adjust if zero coupon bond (see also bond.cpp)
+        // adjust if zero coupon bond
         if (frequency == NoFrequency || frequency == Once)
             frequency = Annual;
 
@@ -106,6 +106,9 @@ namespace QuantExt {
         Volatility yieldVol = volatility_->volatility(exerciseTime,
             maturityTime - exerciseTime,
             cashStrike);
+        // QuantLib::BlackSwaptionEngine::volatilityType() must be extended
+        if (volatility_->volatilityType() == VolatilityType::Normal)
+            yieldVol = exp(yieldVol);
         Volatility fwdPriceVol = yieldVol*fwdDur*fwdYtm;
         return fwdPriceVol;
     }
@@ -127,10 +130,6 @@ namespace QuantExt {
             **discountCurve_,
             false, settle);
 
-        Real npv = CashFlows::npv(fixedLeg,
-            **discountCurve_,
-            false, discountCurve_->referenceDate());
-
         Real discount = discountCurve_->discount(exerciseDate);
 
         Real fwdCashPrice = (value - spotIncome()) / discount;
@@ -150,8 +149,7 @@ namespace QuantExt {
             blackFormula(type,
                 cashStrike,
                 fwdCashPrice,
-                priceVol*std::sqrt(exerciseTime),
-                discount);
+                priceVol*std::sqrt(exerciseTime));
 
         results_.value = optionValue;
         results_.settlementValue = optionValue;

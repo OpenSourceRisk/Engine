@@ -98,8 +98,6 @@ namespace QuantExt {
                 paymentConvention);
             setSingleRedemption(faceAmount, redemption, redemptionDate);
         }
-
-        // used for impliedVolatility() calculation
     }
 
 
