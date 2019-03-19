@@ -448,7 +448,7 @@
    <xs:simpleType name="momentType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Variance"/>
-      <xs:enumeration value="Volatiltiy"/>
+      <xs:enumeration value="Volatility"/>
     </xs:restriction>
   </xs:simpleType>
 
