@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -199,7 +200,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false,
                                          0.005));
     portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
-                                        "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
+                                        "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", 2));
     portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
     portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
     portfolio->add(
@@ -820,7 +821,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     IndexManager::instance().clearHistories();
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
 
@@ -1391,7 +1392,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
-        recalibrateModels, useOriginalFxForBaseCcyConv);
+        recalibrateModels, CurveConfigurations(), TodaysMarketParameters(), useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;

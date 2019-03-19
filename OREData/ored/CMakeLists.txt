@@ -78,6 +78,7 @@ portfolio/envelope.cpp
 portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/fixingdates.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -204,6 +205,7 @@ portfolio/envelope.hpp
 portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/fixingdates.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
@@ -247,3 +249,14 @@ add_library(${ORED_LIB_NAME} ${OREData_SRC})
 target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+
+
+install(DIRECTORY . DESTINATION include/ored
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${ORED_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+

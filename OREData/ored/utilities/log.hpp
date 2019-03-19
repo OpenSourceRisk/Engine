@@ -23,14 +23,15 @@
 
 #pragma once
 
-//          accumulated 'filter' for 'external' DEBUG_MASK
-#define ORE_ALERT 1    // 00000001   1 = 2^1-1
-#define ORE_CRITICAL 2 // 00000010   3 = 2^2-1
-#define ORE_ERROR 4    // 00000100   7
-#define ORE_WARNING 8  // 00001000  15
-#define ORE_NOTICE 16  // 00010000  31
-#define ORE_DEBUG 32   // 00100000  63 = 2^6-1
+// accumulated 'filter' for 'external' DEBUG_MASK
+#define ORE_ALERT 1    // 00000001    1 = 2^1-1
+#define ORE_CRITICAL 2 // 00000010    3 = 2^2-1
+#define ORE_ERROR 4    // 00000100    7
+#define ORE_WARNING 8  // 00001000   15
+#define ORE_NOTICE 16  // 00010000   31
+#define ORE_DEBUG 32   // 00100000   63 = 2^6-1
 #define ORE_DATA 64    // 01000000  127
+#define ORE_MEMORY 128 // 10000000  255
 
 #include <fstream>
 #include <iostream>
@@ -50,6 +51,7 @@
 #include <iomanip>
 #include <ql/patterns/singleton.hpp>
 #include <sstream>
+#include <ored/utilities/osutils.hpp>
 
 namespace ore {
 namespace data {
@@ -304,6 +306,15 @@ private:
 //! Logging Macro (Level = Data)
 #define TLOG(text) MLOG(ORE_DATA, text)
 
+//! Logging macro specifically for logging memory usage
+#define MEM_LOG                                                                                                        \
+    if (ore::data::Log::instance().enabled() && ore::data::Log::instance().filter(ORE_MEMORY)) {                       \
+        ore::data::Log::instance().header(ORE_MEMORY, __FILE__, __LINE__);                                             \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getPeakMemoryUsageBytes()) << "|";     \
+        ore::data::Log::instance().logStream() << std::to_string(ore::data::os::getMemoryUsageBytes());                \
+        ore::data::Log::instance().log(ORE_MEMORY);                                                                    \
+    }
+
 //! LoggerStream class that is a std::ostream replacment that will log each line
 /*! LoggerStream is a simple wrapper around a string stream, it has an explicit
     cast std::ostream& method so it can be used in place of any std::ostream, this
@@ -356,5 +367,29 @@ private:
 
 #define LOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_NOTICE, __FILE__, __LINE__))
 #define DLOGGERSTREAM ((std::ostream&)ore::data::LoggerStream(ORE_DEBUG, __FILE__, __LINE__))
+
+
+//! Utility class for having structured Error messages
+// This can be used directly in log messages, e.g.
+// ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error Parsing Trade", "Invalid XML Node foo"));
+// And in the log file you will get
+//
+// .... StructuredErrorMessage { "errorType":"Trade", "tradeId":"foo", "tradeType":"SWAP" }
+class StructuredErrorMessage {
+public:
+    static constexpr const char* name = "StructuredErrorMessage";
+    
+    //! return a string for the log file
+    std::string msg() const { return string(name) + string(" ") + json(); }
+protected:
+    // This should return a structured string, ideally in JSON, and should contain a field
+    // errorType
+    virtual std::string json() const = 0;
+};
+
+inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {
+    return out << sem.msg();
+}
+
 } // namespace data
 } // namespace ore

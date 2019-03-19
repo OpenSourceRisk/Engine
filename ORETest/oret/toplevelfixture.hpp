@@ -24,11 +24,13 @@
 
 #include <ql/indexes/indexmanager.hpp>
 #include <ql/settings.hpp>
+#include <ql/patterns/observable.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/test/unit_test.hpp>
 
 using QuantLib::IndexManager;
 using QuantLib::SavedSettings;
+using QuantLib::ObservableSettings;
 
 namespace ore {
 namespace test {
@@ -37,19 +39,30 @@ namespace test {
 class TopLevelFixture {
 public:
     SavedSettings savedSettings;
+    bool updatesEnabled;
+    bool updatesDeferred;
 
     /*! Constructor
         Add things here that you want to happen at the start of every test case
     */
-    TopLevelFixture() {}
+    TopLevelFixture() {
+        updatesEnabled = ObservableSettings::instance().updatesEnabled();
+        updatesDeferred = ObservableSettings::instance().updatesDeferred();
+    }
+
     /*! Destructor
         Add things here that you want to happen after _every_ test case
     */
     virtual ~TopLevelFixture() {
+        // Restore observable settings
+        if (updatesEnabled)
+            ObservableSettings::instance().enableUpdates();
+        else
+            ObservableSettings::instance().disableUpdates(updatesDeferred);
+
         // Clear and fixings that have been added
         IndexManager::instance().clearHistories();
     }
 };
-
 }
 }

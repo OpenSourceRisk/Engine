@@ -55,10 +55,14 @@ SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Port
                                          const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
                                          const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
                                          const Conventions& conventions, const bool recalibrateModels,
-                                         const bool nonShiftedBaseCurrencyConversion, const bool continueOnError)
+                                         const CurveConfigurations& curveConfigs,
+                                         const TodaysMarketParameters& todaysMarketParams,
+                                         const bool nonShiftedBaseCurrencyConversion, 
+                                         const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), overrideTenors_(false),
+      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), 
+      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
       nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), continueOnError_(continueOnError),
       engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
@@ -115,9 +119,9 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
 
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
-                                                                           << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_,
-                                                       continueOnError_);
+        << ")");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, continueOnError_);
+
     LOG("Sim market initialised for sensitivity analysis");
 
     LOG("Create scenario factory for sensitivity analysis");
