@@ -60,14 +60,17 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         Size quotesRead = 0;
 
         // in case of wild-card in config
-        bool wc_flag = false;       
+        bool wc_flag = false;  
+		bool found_regex = false;
         regex reg1;
-        string star("*");
-        size_t found = string::npos;
-        if (config->fwdQuotes().size() != 0) {
-		    found = config->fwdQuotes()[0].find(star); // find '*' char in first quote
+        size_t found;
+        
+		// check for regex string in config
+        for (int i = 0; i < config->fwdQuotes().size(); i++) {
+		    found = config->fwdQuotes()[i].find("*"); // find '*' char in quote
+            found_regex = (found != string::npos) ? true : found_regex;
         }
-        if (config->type() == EquityCurveConfig::Type::ForwardPrice && found != string::npos) {
+        if (config->type() == EquityCurveConfig::Type::ForwardPrice && found_regex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
             wc_flag = true;
@@ -82,7 +85,6 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 terms_.push_back(Null<Date>());
             }
         }
-
 
         for (auto& md : loader.loadQuotes(asof)) {
 
