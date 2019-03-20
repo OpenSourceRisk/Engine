@@ -4456,20 +4456,7 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
 %========================================================
 \input{tradedata/intro}
 \input{tradedata/envelope}
-
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Trade Specific Data}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-After the envelope node, trade-specific data for each trade type supported by
-ORE is included. 
-Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
-configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
-sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
-
-\vspace{1em}
-
-Details of  trade-specific data for all trade types follow below.
+\input{tradedata/tradespcifics}
 
 \input{tradedata/swap}
 \input{tradedata/capfloor}
