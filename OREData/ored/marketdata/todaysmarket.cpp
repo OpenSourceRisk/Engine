@@ -42,6 +42,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/indexes/equityindex.hpp>
@@ -837,7 +838,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 LOG("Loading spec " << *spec << " done.");
 
             } catch (const std::exception& e) {
-                WLOG("Failed to build curve " << spec->name());
+                ALOG(StructuredCurveErrorMessage(spec->name(), "Faild to Build Curve", e.what()));
                 buildErrors[spec->name()] = e.what();
             }
         }
@@ -845,15 +846,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
     } // loop over configurations
 
-    if (buildErrors.size() > 0) {
+    if (buildErrors.size() > 0 && !continueOnError) {
         string errStr;
-        for (auto error : buildErrors) {
-            ALOG("Failed to build curve " << error.first << " due to error: " << error.second);
+        for (auto error : buildErrors)
             errStr += "(" + error.first + ": " + error.second + "); ";
-        }
-        if (!continueOnError) {
-            QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
-        }
+        QL_FAIL("Cannot build all required curves! Building failed for: " << errStr);
     }
 
 } // CTOR

@@ -425,6 +425,10 @@ void ScenarioSimMarketParameters::setCorrelationPairs(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::Correlation, names);
 }
 
+void ScenarioSimMarketParameters::setCprs(const vector<string>& names) {
+    addParamsName(RiskFactorKey::KeyType::CPR, names);
+}
+
 void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::DividendYield, simulate);
 }
@@ -481,6 +485,10 @@ void ScenarioSimMarketParameters::setSimulateCorrelations(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::Correlation, simulate);
 }
 
+void ScenarioSimMarketParameters::setSimulateCprs(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::CPR, simulate);
+}
+
 bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& rhs) {
 
     if (baseCcy_ != rhs.baseCcy_ || ccys_ != rhs.ccys_ || params_ != rhs.params_ ||
@@ -517,7 +525,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityVolDayCounters_ != rhs.commodityVolDayCounters_ ||
         correlationDayCounters_ != rhs.correlationDayCounters_ || correlationIsSurface_ != rhs.correlationIsSurface_ ||
         correlationExpiries_ != rhs.correlationExpiries_ || correlationStrikes_ != rhs.correlationStrikes_ ||
-        cprSimulate_ != rhs.cprSimulate_) {
+        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_) {
         return false;
     } else {
         return true;
@@ -632,38 +640,36 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     nodeChild = XMLUtils::getChildNode(node, "SwaptionVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         XMLNode* swapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
-        if (swapVolSimNode) {
+        if (swapVolSimNode)
             setSimulateSwapVols(ore::data::parseBool(XMLUtils::getNodeValue(swapVolSimNode)));
-            swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
-            swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-            setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
-            swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-            XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
-            if (cubeNode) {
-                swapVolIsCube_ = true;
-                XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
-                if (atmOnlyNode) {
-                    swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
-                } else {
-                    swapVolSimulateATMOnly_ = false;
-                }
-                if (!swapVolSimulateATMOnly_)
-                    swapVolStrikeSpreads_ =
-                        XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        swapVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+        swapVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        setSwapVolCcys(XMLUtils::getChildrenValues(nodeChild, "Currencies", "Currency", true));
+        swapVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
+        if (cubeNode) {
+            swapVolIsCube_ = true;
+            XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
+            if (atmOnlyNode) {
+                swapVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
             } else {
-                swapVolIsCube_ = false;
+                swapVolSimulateATMOnly_ = false;
             }
-            XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
-            if (dc) {
-                for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                     child = XMLUtils::getNextSibling(child)) {
-                    string label = XMLUtils::getAttribute(child, "ccy");
-                    swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
-                }
-            }
-            QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
-                       "default daycounter is not set for swapVolSurfaces");
+            if (!swapVolSimulateATMOnly_)
+                swapVolStrikeSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
+        } else {
+            swapVolIsCube_ = false;
         }
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccy");
+                swapVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
+                   "default daycounter is not set for swapVolSurfaces");
     }
 
     DLOG("Loading Correlations");
@@ -922,9 +928,13 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         setSecuritySpreadsSimulate(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
         vector<string> securities = XMLUtils::getChildrenValues(nodeChild, "Names", "Name");
         setSecurities(securities);
-        // if SimulateCPR is not given, we set it to false
-        XMLNode* cprNode = XMLUtils::getChildNode(nodeChild, "SimulateCPR");
-        cprSimulate_ = cprNode ? parseBool(XMLUtils::getNodeValue(cprNode)) : false;
+    }
+
+    DLOG("Loading CPRs");
+    nodeChild = XMLUtils::getChildNode(node, "CPRs");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        setSimulateCprs(XMLUtils::getChildValueAsBool(nodeChild, "Simulate", false));
+        setCprs(XMLUtils::getChildrenValues(nodeChild, "Names", "Name"));
     }
 
     DLOG("Loading BaseCorrelations");
@@ -1198,6 +1208,14 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     if (!securities().empty()) {
         XMLUtils::addChild(doc, secNode, "Simulate", securitySpreadsSimulate());
         XMLUtils::addChildren(doc, secNode, "Securities", "Security", securities());
+    }
+
+    // cprs
+    DLOG("Writing cprs");
+    XMLNode* cprNode = XMLUtils::addChild(doc, marketNode, "CPRs");
+    if (!cprs().empty()) {
+        XMLUtils::addChild(doc, cprNode, "Simulate", simulateCprs());
+        XMLUtils::addChildren(doc, cprNode, "Names", "Name", cprs());
     }
 
     // base correlations

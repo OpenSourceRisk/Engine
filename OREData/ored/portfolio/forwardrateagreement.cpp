@@ -36,38 +36,37 @@ void ForwardRateAgreement::build(const boost::shared_ptr<EngineFactory>& engineF
     Handle<QuantLib::IborIndex> index = market->iborIndex(index_);
 
     boost::shared_ptr<QuantLib::ForwardRateAgreement> fra(
-        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, notional_, *index, discountTS));
+        new QuantLib::ForwardRateAgreement(startDate, endDate, positionType, strike_, amount_, *index, discountTS));
     instrument_.reset(new VanillaInstrument(fra));
     npvCurrency_ = currency_;
     maturity_ = endDate;
     instrument_->qlInstrument()->update();
+    notional_ = amount_;
 }
 
 void ForwardRateAgreement::fromXML(XMLNode* node) {
     Trade::fromXML(node);
     XMLNode* fNode = XMLUtils::getChildNode(node, "ForwardRateAgreementData");
-
-    currency_ = XMLUtils::getChildValue(fNode, "Currency", true);
     startDate_ = XMLUtils::getChildValue(fNode, "StartDate", true);
     endDate_ = XMLUtils::getChildValue(fNode, "EndDate", true);
+    currency_ = XMLUtils::getChildValue(fNode, "Currency", true);
+    index_ = XMLUtils::getChildValue(fNode, "Index", true);
     longShort_ = XMLUtils::getChildValue(fNode, "LongShort", true);
     strike_ = XMLUtils::getChildValueAsDouble(fNode, "Strike", true);
-    notional_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
-    index_ = XMLUtils::getChildValue(fNode, "Index", true);
-}
+    amount_ = XMLUtils::getChildValueAsDouble(fNode, "Notional", true);
+    }
 
 XMLNode* ForwardRateAgreement::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fNode = doc.allocNode("ForwardRateAgreementData");
-    XMLUtils::appendNode(node, fNode);
-
-    XMLUtils::addChild(doc, fNode, "Currency", currency_);
+    XMLUtils::appendNode(node, fNode);        
     XMLUtils::addChild(doc, fNode, "StartDate", startDate_);
     XMLUtils::addChild(doc, fNode, "EndDate", endDate_);
+    XMLUtils::addChild(doc, fNode, "Currency", currency_);
+    XMLUtils::addChild(doc, fNode, "Index", index_);
     XMLUtils::addChild(doc, fNode, "LongShort", longShort_);
     XMLUtils::addChild(doc, fNode, "Strike", strike_);
-    XMLUtils::addChild(doc, fNode, "Notional", notional_);
-    XMLUtils::addChild(doc, fNode, "Index", index_);
+    XMLUtils::addChild(doc, fNode, "Notional", amount_);
     return node;
 }
 } // namespace data

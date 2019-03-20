@@ -224,7 +224,19 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
     }
 }
 
-bool isGenericIndex(const string& indexName) { return indexName.find("-GENERIC-") != string::npos; }
+bool isGenericIndex(const string& indexName) { 
+    return indexName.find("-GENERIC-") != string::npos;
+}
+
+bool isInflationIndex(const string& indexName) {
+    try {
+        // Currently, only way to have an inflation index is to have a ZeroInflationIndex
+        parseZeroInflationIndex(indexName);
+    } catch (...) {
+        return false;
+    }
+    return true;
+}
 
 // Swap Index Parser base
 class SwapIndexParser {
@@ -295,7 +307,6 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
                                                               const Handle<ZeroInflationTermStructure>& h) {
 
     static map<string, boost::shared_ptr<ZeroInflationIndexParserBase>> m = {
-        //{"AUCPI", boost::make_shared<ZeroInflationIndexParser<AUCPI>>()},
         {"EUHICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EU HICP", boost::make_shared<ZeroInflationIndexParser<EUHICP>>()},
         {"EUHICPXT", boost::make_shared<ZeroInflationIndexParser<EUHICPXT>>()},

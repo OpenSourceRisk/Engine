@@ -20,8 +20,10 @@
 
 #include <orea/app/reportwriter.hpp>
 
+//FIXME: including all is slow and bad
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ostream>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
@@ -79,7 +81,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
-            ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())

@@ -36,7 +36,6 @@
           <Index>EUHICPXT</Index>
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
-          <Interpolated>true</Interpolated>
         </YYLegData>
       </LegData>
       <Caps>
@@ -82,7 +81,6 @@
           <Index>EUHICPXT</Index>
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
-          <Interpolated>true</Interpolated>
         </YYLegData>
       </LegData>
       <Caps/>

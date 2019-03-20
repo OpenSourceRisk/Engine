@@ -114,24 +114,24 @@ boost::shared_ptr<CurveConfigurations> CurveConfigurations::minimalCurveConfig(c
         }
     }
 
-    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
+    // follow order in xsd
+    addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
     addMinimalCurves("FXVolatilities", fxVolCurveConfigs_, minimum->fxVolCurveConfigs_, CurveSpec::CurveType::FXVolatility, curveConfigIds);
     addMinimalCurves("SwaptionVolatilities", swaptionVolCurveConfigs_, minimum->swaptionVolCurveConfigs_,CurveSpec::CurveType::SwaptionVolatility, curveConfigIds);
     addMinimalCurves("CapFloorVolatilities", capFloorVolCurveConfigs_, minimum->capFloorVolCurveConfigs_,CurveSpec::CurveType::CapFloorVolatility, curveConfigIds);
-    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
     addMinimalCurves("CDSVolatilities", cdsVolCurveConfigs_, minimum->cdsVolCurveConfigs_, CurveSpec::CurveType::CDSVolatility, curveConfigIds);
-    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
-    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
-    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
+    addMinimalCurves("DefaultCurves", defaultCurveConfigs_, minimum->defaultCurveConfigs_, CurveSpec::CurveType::Default, curveConfigIds);
+    addMinimalCurves("YieldCurves", yieldCurveConfigs_, minimum->yieldCurveConfigs_, CurveSpec::CurveType::Yield, curveConfigIds);
     addMinimalCurves("InflationCurves", inflationCurveConfigs_, minimum->inflationCurveConfigs_, CurveSpec::CurveType::Inflation, curveConfigIds);
     addMinimalCurves("InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_, minimum->inflationCapFloorPriceSurfaceConfigs_, CurveSpec::CurveType::InflationCapFloorPrice, curveConfigIds);
     addMinimalCurves("InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_, minimum->inflationCapFloorVolCurveConfigs_, CurveSpec::CurveType::InflationCapFloorVolatility, curveConfigIds);
+    addMinimalCurves("EquityCurves", equityCurveConfigs_, minimum->equityCurveConfigs_, CurveSpec::CurveType::Equity, curveConfigIds);
+    addMinimalCurves("EquityVolatilities", equityVolCurveConfigs_, minimum->equityVolCurveConfigs_, CurveSpec::CurveType::EquityVolatility, curveConfigIds);
     addMinimalCurves("Securities", securityConfigs_, minimum->securityConfigs_, CurveSpec::CurveType::Security, curveConfigIds);
-    addMinimalCurves("FXSpots", fxSpotConfigs_, minimum->fxSpotConfigs_, CurveSpec::CurveType::FX, curveConfigIds);
+    addMinimalCurves("BaseCorrelations", baseCorrelationCurveConfigs_, minimum->baseCorrelationCurveConfigs_, CurveSpec::CurveType::BaseCorrelation, curveConfigIds);
     addMinimalCurves("CommodityCurves", commodityCurveConfigs_, minimum->commodityCurveConfigs_, CurveSpec::CurveType::Commodity, curveConfigIds);
     addMinimalCurves("CommodityVolatilities", commodityVolatilityCurveConfigs_, minimum->commodityVolatilityCurveConfigs_, CurveSpec::CurveType::CommodityVolatility,curveConfigIds);
     addMinimalCurves("Correlations", correlationCurveConfigs_, minimum->correlationCurveConfigs_, CurveSpec::CurveType::Correlation, curveConfigIds);
-
 
     return minimum;
 }
@@ -184,6 +184,53 @@ std::set<string> CurveConfigurations::quotes() const {
     addQuotes(quotes, correlationCurveConfigs_, CurveSpec::CurveType::Correlation);
 
     return quotes;
+}
+
+std::set<string> CurveConfigurations::conventions(const boost::shared_ptr<TodaysMarketParameters> todaysMarketParams,
+                                             const set<string>& configurations) const {
+                                             
+    set<string> conventions = minimalCurveConfig(todaysMarketParams, configurations)->conventions();
+    // Checking for any swapIndices
+
+    if (todaysMarketParams->hasMarketObject(MarketObject::SwapIndexCurve)) {
+        auto mapping = todaysMarketParams->mapping(MarketObject::SwapIndexCurve, Market::defaultConfiguration);
+
+        for (auto m : mapping)
+            conventions.insert(m.first);
+    }
+    
+    return conventions;
+}
+
+
+std::set<string> CurveConfigurations::conventions() const {
+    set<string> conventions;
+
+    for (auto& y : yieldCurveConfigs_) {
+        for (auto& c : y.second->curveSegments()) {
+            if (c->conventionsID() != "")
+                conventions.insert(c->conventionsID());
+        }
+    }
+
+    for (auto& d : defaultCurveConfigs_) {
+        if (d.second->conventionID() != "")
+            conventions.insert(d.second->conventionID());
+    }
+
+    for (auto& i : inflationCurveConfigs_) {
+        if (i.second->conventions() != "")
+            conventions.insert(i.second->conventions());
+    }
+
+    for (auto& c : correlationCurveConfigs_) {
+        if (c.second->conventions() != "")
+            conventions.insert(c.second->conventions());
+    }
+
+    
+
+    return conventions;
 }
 
 bool CurveConfigurations::hasYieldCurveConfig(const string& curveID) const { return has(curveID, yieldCurveConfigs_); }
@@ -357,7 +404,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
     addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
