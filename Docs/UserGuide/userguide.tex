@@ -210,6 +210,8 @@ FX Options & Y & Y & Y & Y\\
 \hline
 Equity Forwards & Y & Y & Y & Y\\
 \hline
+Equity Swaps & Y & Y & Y & N\\
+\hline
 Equity Options & Y & Y & Y & Y \\
 \hline
 Commodity Forwards & Y & Y & N & N\\
@@ -222,8 +224,8 @@ CPI Swaps & Y & Y & N & Y \\
 %\hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
 \hline
-%Year-on-Year Inflation Caps/Floors & Y & N & N \\
-%\hline
+Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
 Credit Default Swaps & Y & Y & N & N \\
 \hline
 
@@ -233,7 +235,7 @@ Credit Default Swaps & Y & Y & N & N \\
 \end{center}
 \end{table}
 
-Future releases will further extend the product and the risk factor range to Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
+Future releases will further extend the product range and analytics coverage indicated in the table above, expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
@@ -246,6 +248,7 @@ and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for i
 \item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
 \item Forum: \url{http://www.opensourcerisk.org/forum}
 \item Source code and releases: \url{https://github.com/opensourcerisk/engine}
+\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
 %An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology
@@ -264,28 +267,79 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level functionality changes between release 2 (05/2017) and 3 (12/2017).
+This section summarises the high level changes between release 3 (December 2017) and 4 (March 2019).
 
-\medskip
+\bigskip
+INSTRMENTS
 \begin{itemize}
-\item Added CMS and CMS Caps/Floors (pricing, sensitivity analysis and simulation)
-\item Added Credit Default Swaps (pricing and sensitivity analysis, no simulation yet)
-\item Added amortisation structures (fixed, percentage relative to initial or previous notional, annuity) to leg data
-\item Extended sensitivity framework (adding inflation, equity and credit) 
-\item Added inflation simulation and XVA, Dodgeson-Kainth simulation model calibrated to CPI Caps/Floors
-\item Added basic parametric Value at Risk (Delta and Delta-Gamma Normal VaR)
-\item Additional unit tests and examples
-\item Curve loader refactoring
-\item User guide updates
+\item Commodity Forward and Option, see example \ref{example:24}
+\item Equity Swap, see extended example \ref{ex:equityderivatives}
+\item YoY Inflation Cap/Floor trade builders added
+\item CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example \ref{example:25}
 \end{itemize}
 
-%\medskip
-%API changes
-%\begin{itemize}
-%\item 
-%\end{itemize}
+\bigskip
+MARKETS
+\begin{itemize}
+\item New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand 
+\item New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS, NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR 
+\item New inflation idexes and regions: DKCPI, SECPI
+\item Equity index added
+\end{itemize}
 
-\todo[inline]{Complete release notes}
+\bigskip
+TERM STRUCTURES
+\begin{itemize}
+\item Cap/Floor smile volatility surface added
+\item Cross currency basis swap helper (with MtM Reset) added 
+\item Cross currency fixed vs. float swap helper added, see example \ref{example:29}
+\item Discount ratio curves added, see example \ref{example:28} 
+%\item Interpolated YoY inflation cap floor term price surface extens QuantLib's implementation to allow the choice of term structure directly from YoY swap quotes or from atm swap quotes stripped from cap/floor price surface
+%\item Optionlet stripper added (copy of the QL class that uses an QuantExt::CapFloorTermVolSurface to support BiLinearInterpolation)
+%\item Price term structure added
+%\item Default probability bootstrap traits added
+%\item YoY Inflation Optionlet (caplet/floorlet) volatility stripper added
+%\item YoY Inflation volatility surface extends QuantLib's implementation to include a volatility type and displacement
+\item Correlation term structure added (to support CMS spread products)
+\end{itemize}
+
+\bigskip
+ANALYTICS
+\begin{itemize}
+\item KVA added (thanks to Roland Kapl)
+\end{itemize}
+
+\bigskip
+UNIT TESTS
+\begin{itemize}
+\item Unit tests suites extended to 429 cases in total 
+\item Data driven tests added in ORE Data
+\item Now using boost's automated test suite creation and registration
+\end{itemize}
+
+\bigskip
+EXAMPLES
+\begin{itemize}
+\item ORE has 29 examples now vs 23 in the previous release
+\end{itemize}
+
+\bigskip
+USER GUIDE
+\begin{itemize}
+\item Extended to 186 pages
+\end{itemize}
+
+\bigskip
+BUILDING ORE
+\begin{itemize}
+\item CMake build system added, see end of section \ref{sec:build_ore}
+\end{itemize}
+
+\bigskip
+LANGUAGE BINDINGS
+\begin{itemize}
+\item ORE SWIG projected added, to support ORE in Python, see \url{https://github.com/OpenSourceRisk/ORE-SWIG}
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -1767,6 +1821,7 @@ four {\tt exposure\_trade\_*.csv} files.
 
 %--------------------------------------------------------
 \subsection{Commodity Forward and Option}% Example 24
+\label{example:24}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_24} demonstrates pricing and sensitivity analysis for
@@ -1779,6 +1834,7 @@ The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
 
 %--------------------------------------------------------
 \subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
+\label{example:25}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_25}  demonstrates pricing, sensitivity analysis 
@@ -1831,6 +1887,7 @@ Results are in three files {\tt *\_npv.csv} and should show zero NPVs for all be
 
 %--------------------------------------------------------
 \subsection{BMA Basis Swap}% Example 27
+\label{example:27}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_27} demonstrates pricing 
@@ -1847,6 +1904,7 @@ and results are in {\tt npv.csv} and {\tt sensitivity.csv}.
 
 %--------------------------------------------------------
 \subsection{Discount Ratio Curves}% Example 28
+\label{example:28}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_28} shows how to use a yield curve 
@@ -1875,6 +1933,7 @@ Both collateralizaton scenarios can be run calling {\tt python run.py}.
 
 %--------------------------------------------------------
 \subsection{Curve Building using Fixed vs. Float Cross Currency Helpers}% Example 29
+\label{example:29}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_29} demonstrates using fixed vs. float 
