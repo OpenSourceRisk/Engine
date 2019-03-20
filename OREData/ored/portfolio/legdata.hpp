@@ -499,9 +499,11 @@ public:
     //! Default constructor
     EquityLegData() : LegAdditionalData("Equity") {}
     //! Constructor
-    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice, Natural fixingDays, bool notionalReset)
+    EquityLegData(string returnType, Real dividendFactor, string eqName, Real initialPrice,  
+        bool notionalReset, Natural fixingDays = 0, const ScheduleData& valuationSchedule = ScheduleData())
         : LegAdditionalData("Equity"), returnType_(returnType), dividendFactor_(dividendFactor), eqName_(eqName),
-          initialPrice_(initialPrice), fixingDays_(fixingDays), notionalReset_(notionalReset) {
+          initialPrice_(initialPrice), notionalReset_(notionalReset), fixingDays_(fixingDays), 
+          valuationSchedule_(valuationSchedule) {
         indices_.insert("EQ-" + eqName_);
     }
 
@@ -512,6 +514,7 @@ public:
     Real dividendFactor() const { return dividendFactor_; }
     Real initialPrice() const { return initialPrice_; }
     Natural fixingDays() const { return fixingDays_; }
+    ScheduleData valuationSchedule() const { return valuationSchedule_; }
     bool notionalReset() const { return notionalReset_; }
     //@}
 
@@ -525,8 +528,9 @@ private:
     Real dividendFactor_ = 1.0;
     string eqName_;
     Real initialPrice_;
-    Natural fixingDays_ = 0;
     bool notionalReset_ = false;
+    Natural fixingDays_ = 0;
+    ScheduleData valuationSchedule_;
 };
 
 //! Serializable object holding amortization rules

@@ -147,6 +147,7 @@ public:
     EquityLeg& withDividendFactor(Real);
     EquityLeg& withInitialPrice(Real);
     EquityLeg& withFixingDays(Natural);
+    EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
     EquityLeg& withNotionalReset(bool);
     operator Leg() const;
 
@@ -161,6 +162,7 @@ private:
     Real initialPrice_;
     Real dividendFactor_;
     Natural fixingDays_;
+    Schedule valuationSchedule_;
     bool notionalReset_;
 };
 
