@@ -4454,9 +4454,8 @@ Correlation quotes may be loaded directly (by setting QuoteType to Rate) or cali
 %========================================================
 %\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-\include{introenvelope}
-
-%\include{tradedata}
+\input{tradedata/intro}
+\input{tradedata/envelope}
 
 %- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \subsection{Trade Specific Data}
@@ -4473,22 +4472,21 @@ sub-nodes that can be used within multiple trade data containers, i.e.  by multi
 Details of  trade-specific data for all trade types follow below.
 
 \input{tradedata/swap}
-\input{../../Docs/UserGuide/tradedata/capfloor}
-\input{../../Docs/UserGuide/tradedata/forwardrateagreement}
-\input{../../Docs/UserGuide/tradedata/swaption}
-\input{../../Docs/UserGuide/tradedata/fxforward}
-\input{../../Docs/UserGuide/tradedata/fxswap}
-\input{../../Docs/UserGuide/tradedata/fxoption}
-\input{../../Docs/UserGuide/tradedata/equityoption}
-\input{../../Docs/UserGuide/tradedata/equityforward}
-\input{../../Docs/UserGuide/tradedata/equityswap}
-\input{../../Docs/UserGuide/tradedata/cpiswap}
-\input{../../Docs/UserGuide/tradedata/yyswap}
-\input{../../Docs/UserGuide/tradedata/bond}
-\input{../../Docs/UserGuide/tradedata/creditdefaultswap}
-\input{../../Docs/UserGuide/tradedata/commodityoption}
-\input{../../Docs/UserGuide/tradedata/commodityforward}
-
+\input{tradedata/capfloor}
+\input{tradedata/forwardrateagreement}
+\input{tradedata/swaption}
+\input{tradedata/fxforward}
+\input{tradedata/fxswap}
+\input{tradedata/fxoption}
+\input{tradedata/equityoption}
+\input{tradedata/equityforward}
+\input{tradedata/equityswap}
+\input{tradedata/cpiswap}
+\input{tradedata/yyswap}
+\input{tradedata/bond}
+\input{tradedata/creditdefaultswap}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityforward}
 
 \include{tradecomponents}
 \include{allowablevalues}
@@ -4508,6 +4506,7 @@ Details of  trade-specific data for all trade types follow below.
 %========================================================
 \include{fixingdata}
 
+\newpage
 \begin{appendix}
 
 %========================================================
