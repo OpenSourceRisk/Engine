@@ -60,7 +60,7 @@ namespace ore {
                 default:
                     QL_FAIL("unexpected volatility type");
                 }
-                bool isSln = volatilityType == MarketDatum::QuoteType::RATE_SLNVOL;
+                bool isSln = volatilityType == MarketDatum::QuoteType::SHIFT;
                 vector<Period> optionTenors = config->optionTenors();
                 vector<Period> bondTenors = config->bondTenors();
                 Matrix vols(optionTenors.size(), bondTenors.size());
