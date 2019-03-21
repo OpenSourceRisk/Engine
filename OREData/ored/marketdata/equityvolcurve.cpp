@@ -26,6 +26,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <regex>
 
 using namespace QuantLib;
 using namespace std;
@@ -55,26 +56,85 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         QL_REQUIRE(expiries.size() > 0, "No expiries defined");
         QL_REQUIRE(strikes.size() > 0, "No strikes defined");
 
+        // check for wild cards
+        bool strikes_wc = false;
+        bool expiries_wc = false;
+        string strike_regex, expiries_regex;
+        regex re("(\\*)");
+        regex reg_strike, reg_expiry;
+        size_t found;
+        for (int i = 0; i < strikes.size(); i++) {
+            found = strikes[i].find("*");
+            strikes_wc = (found != string::npos) ? true : strikes_wc;
+            if (strikes_wc) {
+                break;
+            }
+        }
+        for (int i = 0; i < expiries.size(); i++) {
+            found = expiries[i].find("*");
+            expiries_wc = (found != string::npos) ? true : expiries_wc;
+            if (expiries_wc) {
+                break;
+            }
+        }
+        if (strikes_wc) {
+            QL_REQUIRE(strikes.size() == 1,
+                       "If a wild card strike is provided, then only this quote is allowed " << config->curveID());
+            strike_regex = regex_replace(strikes[0], re, ".*");
+            reg_strike = regex(strike_regex);
+        }
+        if (expiries_wc) {
+            QL_REQUIRE(expiries.size() == 1,
+                       "If a wild card expiriy is provided, then only this quote is allowed " << config->curveID());
+            expiries_regex = expiries[0];
+            expiries_regex = regex_replace(expiries[0], re, ".*");
+            reg_expiry = regex(expiries_regex);
+        }
+
         // We store them all in a matrix, we start with all values negative and use
         // this to check if they have been set.
-        Matrix vols(strikes.size(), expiries.size(), -1.0);
+        Matrix vols;
+        vector<vector<map<string, Real>>> wc_m;
+        if (!strikes_wc && !expiries_wc) {
+            vols = Matrix(strikes.size(), expiries.size(), -1.0);
+        }
+       
+
 
         // We loop over all market data, looking for quotes that match the configuration
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+
+                
                 if (q->eqName() == spec.curveConfigID() && q->ccy() == spec.ccy()) {
+                    // direct quotes
+                    if (!strikes_wc && !expiries_wc) {
+                        Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
+                        Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
 
-                    Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
-                    Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
-
-                    if (i < strikes.size() && j < expiries.size()) {
-                        QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
-                                                                 << expiries[j] << " already set");
-                        vols[i][j] = q->quote()->value();
+                        if (i < strikes.size() && j < expiries.size()) {
+                            QL_REQUIRE(vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
+                                                                     << expiries[j] << " already set");
+                            vols[i][j] = q->quote()->value();
+                        }
+                     // wild card quotes
+                    } else {
+                        vector<string>::const_iterator it1 = std::find(strikes.begin(), strikes.end(), q->strike());
+                        if (it1 == strikes.end()) {
+                            // strike not found
+                            wc_m.push_back(vector<map<string,Real>>{{q->expiry(),q->quote()->value()}});
+                        } else {
+                            //strike found
+                            Size pos = it1 - strikes.begin();
+                            // check for expiry in keys.
+                            wc_m[pos] 
+                        }
                     }
+                    
                 }
+                
             }
         }
         // Check that we have all the quotes we need
