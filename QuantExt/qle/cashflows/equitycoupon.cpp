@@ -32,9 +32,9 @@ EquityCoupon::EquityCoupon(const Date& paymentDate, Real nominal, const Date& st
                            const Date& refPeriodStart, const Date& refPeriodEnd,
                            const Date& exCouponDate)
     : Coupon(paymentDate, nominal, startDate, endDate, refPeriodStart, refPeriodEnd, exCouponDate),
-      equityCurve_(equityCurve), dayCounter_(dayCounter), fixingDays_(fixingDays), 
-      isTotalReturn_(isTotalReturn), quantity_(quantity), dividendFactor_(dividendFactor), 
-      notionalReset_(notionalReset), initialPrice_(initialPrice) {
+      fixingDays_(fixingDays), equityCurve_(equityCurve), dayCounter_(dayCounter),
+      isTotalReturn_(isTotalReturn), dividendFactor_(dividendFactor), notionalReset_(notionalReset), 
+      initialPrice_(initialPrice), quantity_(quantity) {
     QL_REQUIRE(dividendFactor_ > 0.0, "Dividend factor should not be negative. It is expected to be between 0 and 1.");
     QL_REQUIRE(equityCurve_, "Equity underlying an equity swap coupon cannot be empty.");
 
