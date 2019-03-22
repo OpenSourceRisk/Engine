@@ -335,11 +335,14 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     if (!quotes_.empty()) {
         XMLNode* quotesNode = doc.allocNode("Quotes");
         if (type_ == YieldCurveSegment::Type::AverageOIS) {
-            for (Size i = 0; i < quotes_.size(); ++i) {
+            QL_REQUIRE(quotes_.size()%2==0,"Invalid quotes vector should be even")
+            for (Size i = 0; i < quotes_.size(); i = i + 2) {
+                string rateQuote = quotes_[i].first;
+                string spreadQuote = quotes_[i + 1].first;
+
                 XMLNode* compositeQuoteNode = doc.allocNode("CompositeQuote");
-                XMLUtils::addChild(doc, compositeQuoteNode, "RateQuote", quotes_[i].first);
-                i++;
-                XMLUtils::addChild(doc, compositeQuoteNode, "SpreadQuote", quotes_[i].first);
+                XMLUtils::addChild(doc, compositeQuoteNode, "SpreadQuote", spreadQuote);
+                XMLUtils::addChild(doc, compositeQuoteNode, "RateQuote", rateQuote);
                 XMLUtils::appendNode(quotesNode, compositeQuoteNode);
             }
         }
