@@ -41,13 +41,15 @@ namespace ore {
         }
 
         YieldVolatilityCurveConfig::YieldVolatilityCurveConfig(
-            const string& curveID, const string& curveDescription, const Dimension& dimension,
+            const string& curveID, const string& curveDescription, const string& curveCurrency,
+            const string& fallbackCurve, const Dimension& dimension,
             const VolatilityType& volatilityType, const bool extrapolate, const bool flatExtrapolation,
             const vector<Period>& optionTenors, const vector<Period>& bondTenors, const DayCounter& dayCounter,
             const Calendar& calendar, const BusinessDayConvention& businessDayConvention, 
             const vector<Period>& smileOptionTenors, const vector<Period>& smileBondTenors,
             const vector<Real>& smileSpreads)
-            : CurveConfig(curveID, curveDescription), dimension_(dimension), volatilityType_(volatilityType),
+            : CurveConfig(curveID, curveDescription), curveCurrency_(curveCurrency),
+            fallbackCurve_(fallbackCurve), dimension_(dimension), volatilityType_(volatilityType),
             extrapolate_(extrapolate), flatExtrapolation_(flatExtrapolation), optionTenors_(optionTenors),
             bondTenors_(bondTenors), dayCounter_(dayCounter), calendar_(calendar),
             businessDayConvention_(businessDayConvention), smileOptionTenors_(smileOptionTenors), 
@@ -64,10 +66,7 @@ namespace ore {
         const vector<string>& ore::data::YieldVolatilityCurveConfig::quotes() {
 
             if (quotes_.size() == 0) {
-                std::vector<string> tokens;
-                split(tokens, curveID_, boost::is_any_of("-"));
-
-                Currency ccy = parseCurrency(tokens[0]);
+                Currency ccy = parseCurrency(curveCurrency_);
 
                 std::stringstream ssBase;
                 ssBase << "BOND_OPTION/" << volatilityType_ << "/" << ccy.code() << "/" << curveID_ << "/";
@@ -103,6 +102,9 @@ namespace ore {
 
             curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
             curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
+
+            curveCurrency_ = XMLUtils::getChildValue(node, "CurveCurrency", true);
+            fallbackCurve_ = XMLUtils::getChildValue(node, "FallbackCurve", false);
 
             string dim = XMLUtils::getChildValue(node, "Dimension", true);
             if (dim == "ATM") {
@@ -169,6 +171,9 @@ namespace ore {
 
             XMLUtils::addChild(doc, node, "CurveId", curveID_);
             XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
+
+            XMLUtils::addChild(doc, node, "CurveCurrency", curveCurrency_);
+            XMLUtils::addChild(doc, node, "FallbackCurve", fallbackCurve_);
 
             if (dimension_ == Dimension::ATM) {
                 XMLUtils::addChild(doc, node, "Dimension", "ATM");

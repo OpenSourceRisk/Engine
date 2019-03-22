@@ -18,6 +18,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <algorithm>
 #include <ored/configuration/yieldvolcurveconfig.hpp>
+#include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/termstructures/volatility/swaption/swaptionconstantvol.hpp>
@@ -112,6 +113,56 @@ namespace ore {
                                     shiftFound[j] = true;
                                     if (--remainingShiftQuotes == 0 && remainingQuotes == 0)
                                         break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (quotesRead == 0 && config->fallbackCurve() == "SwaptionVolatility") {
+
+                    for (auto& md : loader.loadQuotes(asof)) {
+
+                        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::SWAPTION) {
+
+                            boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
+                            boost::shared_ptr<SwaptionShiftQuote> qs = boost::dynamic_pointer_cast<SwaptionShiftQuote>(md);
+
+                            if (remainingQuotes > 0 && q != NULL && q->ccy() == spec.ccy() && q->quoteType() == volatilityType &&
+                                q->dimension() == "ATM") {
+
+                                quotesRead++;
+
+                                Size i = std::find(optionTenors.begin(), optionTenors.end(), q->expiry()) - optionTenors.begin();
+                                Size j = std::find(bondTenors.begin(), bondTenors.end(), q->term()) - bondTenors.begin();
+
+                                if (i < optionTenors.size() && j < bondTenors.size()) {
+                                    vols[i][j] = q->quote()->value();
+
+                                    if (!found[i][j]) {
+                                        found[i][j] = true;
+                                        if (--remainingQuotes == 0 && remainingShiftQuotes == 0)
+                                            break;
+                                    }
+                                }
+                            }
+
+                            if (isSln && remainingShiftQuotes > 0 && qs != NULL && qs->ccy() == spec.ccy() &&
+                                qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
+
+                                shiftQuotesRead++;
+
+                                Size j = std::find(bondTenors.begin(), bondTenors.end(), qs->term()) - bondTenors.begin();
+
+                                if (j < bondTenors.size()) {
+                                    for (Size i = 0; i < shifts.rows(); ++i)
+                                        shifts[i][j] = qs->quote()->value();
+
+                                    if (!shiftFound[j]) {
+                                        shiftFound[j] = true;
+                                        if (--remainingShiftQuotes == 0 && remainingQuotes == 0)
+                                            break;
+                                    }
                                 }
                             }
                         }

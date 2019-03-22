@@ -57,7 +57,8 @@ namespace ore {
             //! Default constructor
             YieldVolatilityCurveConfig() {}
             //! Detailed constructor
-            YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
+            YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription,  
+                const string& curveCurrency, const string& fallbackCurve, const Dimension& dimension,
                 const VolatilityType& volatilityType, const bool extrapolate,
                 const bool flatExtrapolation, const vector<Period>& optionTenors,
                 const vector<Period>& bondTenors, const DayCounter& dayCounter,
@@ -93,6 +94,8 @@ namespace ore {
 
             //! \name Setters
             //@{
+            string& curveCurrency() { return curveCurrency_; }
+            string& fallbackCurve() { return fallbackCurve_; }
             Dimension& dimension() { return dimension_; }
             VolatilityType& volatilityType() { return volatilityType_; }
             bool& flatExtrapolation() { return flatExtrapolation_; }
@@ -106,6 +109,8 @@ namespace ore {
             //@}
 
         private:
+            string curveCurrency_;
+            string fallbackCurve_;
             Dimension dimension_;
             VolatilityType volatilityType_;
             bool extrapolate_, flatExtrapolation_;
