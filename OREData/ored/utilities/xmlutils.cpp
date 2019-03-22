@@ -171,8 +171,15 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
-    addChild(doc, n, name, boost::lexical_cast<std::string>(value)); //lexical_cast used to prevent loss of precision
-}
+    if (abs(value) < 1.0e-10) {
+        std::ostringstream obj1;
+        obj1.precision(16);
+        obj1 << std::fixed << value;
+        addChild(doc, n, name, obj1.str());
+    }else {
+        addChild(doc, n, name, boost::lexical_cast<std::string>(value));
+    }//lexical_cast used to prevent loss of precision
+ }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {
     addChild(doc, n, name, std::to_string(value));
