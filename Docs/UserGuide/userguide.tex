@@ -75,9 +75,18 @@
 \newcommand{\EE}{\mathit{EE}}
 \newcommand{\EPE}{\mathit{EPE}}
 \newcommand{\ENE}{\mathit{ENE}}
+\newcommand{\EEPE}{\mathit{EEPE}}
+\newcommand{\EEE}{\mathit{EEE}}
+\newcommand{\EAD}{\mathit{EAD}}
+\newcommand{\RC}{\mathit{RC}}
+\newcommand{\RW}{\mathit{RW}}
+\newcommand{\NS}{\mathit{NS}}
 \newcommand{\PD}{\mathit{PD}}
 \newcommand{\LGD}{\mathit{LGD}}
 \newcommand{\DIM}{\mathit{DIM}}
+\newcommand{\DF}{\mathit{DF}}
+\newcommand{\MA}{\mathit{MA}}
+\newcommand{\SCVA}{\mathit{SCVA}}
 \newcommand{\bs}{\textbackslash}
 \newcommand{\REDY}{\color{red}Y}
  
@@ -105,7 +114,8 @@ Date & Author & Comment \\
 7 October 2016 & Quaternion & initial release\\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
-13 June 2018 & Quaternion & updates for release 4\\
+%13 June 2018 & Quaternion & updates for release 4\\
+21 February 2019 & Quaternion & updates for release 4\\
 \hline
 \end{supertabular}
 \end{center}
@@ -2081,6 +2091,7 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="scenarioFile">scenariodata.dat</Parameter>
     <Parameter name="baseCurrency">EUR</Parameter>
     <Parameter name="exposureProfiles">Y</Parameter>
+    <Parameter name="exposureProfilesByTrade">Y</Parameter>
     <Parameter name="quantile">0.95</Parameter>
     <Parameter name="calculationType">Symmetric</Parameter>      
     <Parameter name="allocationMethod">None</Parameter>    
@@ -2099,6 +2110,10 @@ details and analyse their impact on XVAs quickly without re-generating the NPV c
     <Parameter name="kvaAlpha">1.4</Parameter>
     <Parameter name="kvaRegAdjustment">12.5</Parameter>
     <Parameter name="kvaCapitalHurdle">0.012</Parameter>
+    <Parameter name="kvaOurPdFloor">0.03</Parameter>
+    <Parameter name="kvaTheirPdFloor">0.03</Parameter>
+    <Parameter name="kvaOurCvaRiskWeight">0.005</Parameter>
+    <Parameter name="kvaTheirCvaRiskWeight">0.05</Parameter>
     <Parameter name="dim">Y</Parameter>
     <Parameter name="mva">Y</Parameter>
     <Parameter name="dimQuantile">0.99</Parameter>
@@ -2132,7 +2147,8 @@ expected to have depth $>$ 1 (e.g. storing NPVs and cumulative flows)
 \item {\tt scenarioFile:} Scenario data previously generated and used in the post-processor (simulated index fixings and
 FX rates)
 \item {\tt baseCurrency:} Expression currency for all NPVs, value adjustments, exposures
-\item {\tt exposureProfiles:} Flag to enable/disable exposure output
+\item {\tt exposureProfiles:} Flag to enable/disable exposure output for each netting set
+\item {\tt exposureProfilesByTrade:} Flag to enable/disable stand-alone exposure output for each trade
 \item {\tt quantile} Confidence level for Potential Future Exposure (PFE) reporting
 \item {\tt calculationType} Determines the settlement of margin calls: Symmetric - margin for both counterparties
 settled after the margin period of risk; AsymmetricCVA - margin requested from the counterparty settles with delay,
@@ -2154,7 +2170,7 @@ collateral rates floor to the collateral model file (netting.xml)}
 %collateral rate. 
 %basis point is 0.0001) assuming the day count convention of the collateral rate.
 \item {\tt kva:} Flag to enable setting the kva ccr parameters.
-\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle:} the kva ccr parameters (see \ref{sec:app_kva}.
+\item {\tt kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight:} the kva CCR parameters (see \ref{sec:app_kva} and \ref{sec:app_kva_cva}.
 \item {\tt dimQuantile:} Quantile for Dynamic Initial Margin (DIM) calculation
 \item {\tt dimHorizonCalendarDays:} Horizon for DIM calculation, 14 calendar days for 2 weeks, etc.
 \item {\tt dimRegressionOrder:} Order of the regression polynomial (netting set clean NPV move over the simulation
@@ -4804,41 +4820,88 @@ the risk  weight and a capital charge (following the RWA method).
 \medskip Basel II internal rating based (IRB) estimate of worst case
 probability of  default: large homogeneous pool (LHP) approximation of
 Vasicek (1997), KVA regulatory probability of default is the worst
-case  probability of default floored at 0.03:
+case probability of default floored at 0.03 (the latter is valid for 
+corporates and banks, no such floor applies to sovereign counterparties):
 $$
-PD_{99.9\%} = \max(0.03, N (\frac{N^{-1}(PD) + \sqrt{\rho}
-  N^{-1}(0.999)}{\sqrt{1 - \rho}}) - PD)
+\PD_{99.9\%} = \max\left(floor, N \left(\frac{N^{-1}(\PD) + \sqrt{\rho}
+  N^{-1}(0.999)}{\sqrt{1 - \rho}}\right) - \PD\right)
 $$
 $N$ is the cumulative standard normal distribution,
 
 $$
-\rho = 0.12 \frac{1 - e^{-50 PD}}{1 - e^{-50}} + 0.24 (1 - \frac{1 -
-  e^{-50 PD}}{1 - e^{-50}})
+\rho = 0.12 \frac{1 - e^{-50 \PD}}{1 - e^{-50}} + 0.24 \left(1 - \frac{1 -
+  e^{-50 \PD}}{1 - e^{-50}}\right)
 $$
 
 \medskip Maturity adjustment factor for RWA method capped at 5, floored at 1:
-$$MA(PD, M) = \min(5, \max(1, \frac{1 + (M - 2.5) B(PD)}{1 - 1.5 B(PD)}))$$
-\medskip where $B(PD) = (0.11852 - 0.05478 \ln(PD))^2$ and M is the
+$$
+\MA(\PD, M) = \min\left(5, \max\left(1, \frac{1 + (M - 2.5) B(\PD)}{1 - 1.5 B(\PD)}\right)\right)
+$$
+\medskip where $B(\PD) = (0.11852 - 0.05478 \ln(\PD))^2$ and M is the
 effective  maturity of the portfolio (capped at 5):
 
-$$M = \min(5, 1 + \frac{\sum\limits_{t_k > 1yr} EE(t_k)\Delta t_k
-  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} EEE(t_k)\Delta t_k B(0,t_k)})$$
+$$M = \min\left(5, 1 + \frac{\sum\limits_{t_k > 1yr} \EE_B(t_k)\Delta t_k
+  B(0,t_k)}{\sum\limits_{t_k \leq 1yr} \EEE_B(t_k)\Delta t_k B(0,t_k)}\right)
+$$
 
 \medskip where $B(0,t_k)$ is the risk-free discount factor from the
 simulation  date $t_k$ to today, $\Delta t_k$ is the difference
 between time points, 
-$EE(t_k)$ is the expected exposure at time $t_k$ and $EEE(t_k)$ is the
-effective expected exposure.
+$\EE_B(t_k)$ is the expected (Basel) exposure at time $t_k$ and $\EEE_B(t_k)$ is the
+associated effective expected exposure.
 
-\medskip (expected) risk capital at $t_i$:
-$$RC_{t_i} = EAD_{t_i} \times LGD \times PD_{99.9\%} \times MA(PD, M)$$
+\medskip 
+Expected risk capital at $t_i$:
+$$
+\RC(t_i) = EAD(t_i) \times LGD \times \PD_{99.9\%} \times \MA(\PD, M)
+$$
+where
+\begin{itemize}
+\item $\EAD(t_i) = \alpha \times \EEPE(t_i)$
+\item $\EEPE(t_i)$ is estimated as the time average of the running maximum of $\EPE(t)$ over the time interval $t_i\leq t\leq t_i+1$
+\item $\alpha$ is the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+\item the maturity adjustment MA is derived from the EPE profile for times $t\geq t_i$
+\end{itemize}
 
-$$EAD_{t_i} = \alpha \times EEPE_{t_i}$$
+\medskip 
+$\KVA_{CCR}$ is the sum of the expected risk capital amount discounted at {\em capital discount rate} $r_{cd}$ and compounded at rate given by the product of {\em capital hurdle} $h$ and {\em regulatory adjustment} $a$:
+$$
+\KVA_{CCR} = \sum_i \RC(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
+$$
+assuming Actual/Actual day count to compute the year factions $delta$.
 
-\medskip $EEPE_{t_i}$ being approximated by $EPE$ at point $t_i$ and $\alpha$ the multiplier resulting from the IRB calculations (Basel II defines a supervisory alpha of 1.4, but gives banks the option to estimate their own $\alpha$,subject to a floor of 1.2).
+In ORE we compute KVA CCR from both perspectives - ``our'' KVA driven by EPE and the counterparty default risk, and similarly ``their'' KVA driven by ENE and our default risk.
 
-\medskip $KVA_{CCR}$ is the sum of the expected risk capitals discounted at capital discount rate and factored with the capital hurdle and the regulatory adjustment:
-$$KVA_{CCR} = \sum_i RC_{t_i} \frac{1}{ (1 + capDiscRate)^{t_i-t_0}} (t_i - t_{i-1}) \times (capHurdle \times regAdj)$$
+\subsection{KVA (BA-CVA)}\label{sec:app_kva_cva}
+
+This section briefly summarizes the calculation of a capital value adjustment associated with the CVA capital charge (in the basic approach, BA-CVA) as introduced in Basel III \cite{bcbs189, d325, d424}. ORE implements the {\em stand-alone} capital charge $\SCVA$ for a netting set and computes a KVA for it\footnote{In the reduced version of BA-CVA, where hedges are not recognized, the total BA-CVA capital charge across all counterparties $c$ is given by
+$$
+K = \sqrt{\left(\rho \sum_c \SCVA_c\right)^2 +(1-\rho^2)\sum_c \SCVA_c^2}
+$$  
+with supervisory correlation $\rho=0.5$ to reflect that the credit spread risk factors across counterparties are not perfectly correlated. Each counterparty $\SCVA_c$ is given by a sum over all netting sets with this counterparty.}. In the basic approach, the stand-alone capital charge for a netting set is given by
+$$
+\SCVA = \RW_c\cdot M\cdot \EEPE \cdot\DF
+$$
+with 
+\begin{itemize}
+\item supervisory risk weight $\RW_c$ for the counterparty;
+\item effective netting set maturity $M$ as in section \ref{sec:app_kva} (for a bank using IMM to calculate EAD), but without applying a cap of 5;
+\item supervisory discount $\DF$ for the netting set which is equal to one for banks using IMM to calculate $\EEPE$ and $\DF=\left(1-\exp\left(-0.05\,M\right)\right)/(0.05\,M)$ for banks not using IMM to calculate $\EEPE$. 
+\end{itemize}
+
+The associated capital value adjustment is then computed for each netting set's stand-alone CVA charge as above
+$$
+\KVA_{BA-\CVA} = \sum_i \SCVA(t_i) \times \frac{1}{ (1 + r_{cd})^{\delta(t_{i-1}, t_i)}} \times \delta(t_{i-1}, t_i) \times h \times a
+$$
+with 
+$$
+\SCVA(t_i) = \RW_c \cdot M(t_i)\cdot \EEPE(t_i)\cdot\DF
+$$
+where we derive both $M$ and EEPE from the EPE profile for times $t\geq t_i$.
+
+In ORE we compute KVA BA-CVA from both perspectives - ``our'' KVA driven by EPE and the counterparty risk weight, and similarly ``their'' KVA driven by ENE and our risk weight. \\
+
+Note: Banks that use the BA-CVA for calculating CVA capital requirements are allowed to cap the maturity adjustment factor $\MA(\PD,M)$ in section \ref{sec:app_kva} at 1 for netting sets that contribute to CVA capital, if using the IRB approach for CCR capital.
 
 \subsection{Collateral Model}\label{sec:app_collateral}
 
@@ -5142,6 +5205,10 @@ implementation of the inverse cumulative normal distribution to transform $U[0,1
 
 \bibitem{bcbs189} Basel Committee on Banking Supervision, {\em Basel III: A global regulatory framework for more
     resilient banks and banking systems}, \url{http://www.bis.org/publ/bcbs189.pdf}, June 2011
+
+\bibitem{d325} Basel Committee on Banking Supervision, {\em Review of the Credit Valuation Adjustment Risk Framework}, \url{https://www.bis.org/bcbs/publ/d325.pdf}, 2015
+
+\bibitem{d424} Basel Committee on Banking Supervision, {\em Basel III: Finalising post-crisis reforms}, \url{https://www.bis.org/bcbs/publ/d424.pdf}, 2017
 
 \bibitem{BrigoMercurio} Damiano Brigo and Fabio Mercurio, {\em Interest Rate Models: Theory and Practice, 2nd Edition},
   Springer, 2006.
