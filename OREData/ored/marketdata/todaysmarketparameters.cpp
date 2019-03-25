@@ -27,7 +27,7 @@ namespace data {
 namespace {
 static const Size numberOfMarketObjects = 23;
 // clang-format off
-static const string marketObjectStrings[] = {"DiscountCurve", "YieldCurve", "IndexCurve", "SwapIndexCurve",
+static const string marketObjectStrings[] = {"YieldCurve","DiscountCurve", "IndexCurve", "SwapIndexCurve",
                                              "FXSpot", "FXVol", "SwaptionVol", "DefaultCurve", "CDSVol",
                                              "BaseCorrelation", "CapFloorVol", "ZeroInflationCurve",
                                              "YoYInflationCurve", "InflationCapFloorPriceSurface",
