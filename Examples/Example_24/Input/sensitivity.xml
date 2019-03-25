@@ -18,6 +18,7 @@
       <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
     </IndexCurve>
   </IndexCurves>
+  <YieldCurves/>
   <FxSpots>
     <FxSpot ccypair="EURUSD">
       <ShiftType>Relative</ShiftType>
