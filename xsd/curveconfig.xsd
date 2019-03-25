@@ -109,6 +109,8 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="CurveCurrency"/>
+      <xs:element type="xs:string" name="FallbackCurve"/>
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="volatilityType" name="VolatilityType"/>
       <xs:element type="extrapolationType" name="Extrapolation"/>
