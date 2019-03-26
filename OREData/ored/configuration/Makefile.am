@@ -16,10 +16,9 @@ libOREDataConfiguration_la_SOURCES = \
 	equitycurveconfig.cpp \
 	equityvolcurveconfig.cpp \
 	fxvolcurveconfig.cpp \
+	genericyieldvolcurveconfig.cpp \
 	inflationcapfloorpricesurfaceconfig.cpp \
 	inflationcurveconfig.cpp \
-	swaptionvolcurveconfig.cpp \
-	yieldvolcurveconfig.cpp \
 	yieldcurveconfig.cpp \
 	commoditycurveconfig.cpp \
 	commodityvolcurveconfig.cpp \
@@ -39,6 +38,7 @@ this_include_HEADERS = \
 	equitycurveconfig.hpp \
 	equityvolcurveconfig.hpp \
 	fxvolcurveconfig.hpp \
+	genericyieldvolcurveconfig.hpp \
 	inflationcapfloorpricesurfaceconfig.hpp \
 	inflationcurveconfig.hpp \
 	swaptionvolcurveconfig.hpp \

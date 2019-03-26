@@ -705,7 +705,7 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 
     // USD Lognormal swaption volatility "curve" configuration
     configs->swaptionVolCurveConfig("USD_SW_LN") = boost::make_shared<SwaptionVolatilityCurveConfig>(
-        "USD_SW_LN", "USD Lognormal swaption volatilities", SwaptionVolatilityCurveConfig::Dimension::ATM,
+        "USD_SW_LN", "USD Lognormal swaption volatilities", "USD", SwaptionVolatilityCurveConfig::Dimension::ATM,
         SwaptionVolatilityCurveConfig::VolatilityType::Lognormal, extrapolate, flatExtrapolate, optionTenors,
         swapTenors, dayCounter, UnitedStates(), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
 

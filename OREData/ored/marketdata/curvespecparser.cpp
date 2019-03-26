@@ -143,13 +143,12 @@ boost::shared_ptr<CurveSpec> parseCurveSpec(const string& s) {
     }
 
     case CurveSpec::CurveType::YieldVolatility: {
-        // YieldVolatility/EUR/CurveConfigID
-        QL_REQUIRE(tokens.size() == 3, "Unexpected number"
+        // YieldVolatility/CurveConfigID
+        QL_REQUIRE(tokens.size() == 2, "Unexpected number"
             " of tokens in yield vol curve spec "
             << s);
-        const string& ccy = tokens[1];
-        const string& curveConfigID = tokens[2];
-        return boost::make_shared<YieldVolatilityCurveSpec>(ccy, curveConfigID);
+        const string& curveConfigID = tokens[1];
+        return boost::make_shared<YieldVolatilityCurveSpec>(curveConfigID);
     }
 
     case CurveSpec::CurveType::CapFloorVolatility: {

@@ -324,28 +324,16 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
     }
 
     case MarketDatum::InstrumentType::BOND_OPTION: {
-        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 7 || tokens.size() == 8,
-            "4, 6 or 7 tokens expected in " << datumName);
-        const string& ccy = tokens[2];
-        const string& curveID = tokens[3];
-        Period expiry = tokens.size() >= 6 ? parsePeriod(tokens[4]) : Period(0 * QuantLib::Days);
-        Period term = tokens.size() >= 6 ? parsePeriod(tokens[5]) : parsePeriod(tokens[3]);
-        if (tokens.size() >= 6) { // volatility
-            const string& dimension = tokens[6];
-            Real strike = 0.0;
-            if (dimension == "ATM")
-                QL_REQUIRE(tokens.size() == 7, "7 tokens expected in ATM quote " << datumName);
-            else if (dimension == "Smile") {
-                QL_REQUIRE(tokens.size() == 8, "8 tokens expected in Smile quote " << datumName);
-                strike = parseReal(tokens[7]);
-            }
-            else
-                QL_FAIL("Yield volatility quote dimension " << dimension << " not recognised");
-            return boost::make_shared<BondOptionQuote>(value, asof, datumName, quoteType,
-                ccy, curveID, expiry, term, dimension, strike);
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6, "4 or 6 tokens expected in " << datumName);
+        const string& qualifier = tokens[2];
+        Period expiry = tokens.size() == 6 ? parsePeriod(tokens[3]) : Period(0 * QuantLib::Days);
+        Period term = tokens.size() == 6 ? parsePeriod(tokens[4]) : parsePeriod(tokens[3]);
+        if (tokens.size() == 6) { // volatility
+            QL_REQUIRE(tokens[5] == "ATM", "only ATM allowed for bond option quotes");
+            return boost::make_shared<BondOptionQuote>(value, asof, datumName, quoteType, qualifier, expiry, term);
         }
         else { // SLN volatility shift
-            return boost::make_shared<BondOptionShiftQuote>(value, asof, datumName, quoteType, ccy, curveID, term);
+            return boost::make_shared<BondOptionShiftQuote>(value, asof, datumName, quoteType, qualifier, term);
         }
     }
 

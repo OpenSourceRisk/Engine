@@ -23,106 +23,35 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #pragma once
 
-#include <ored/configuration/curveconfig.hpp>
+#include <ored/configuration/genericyieldvolcurveconfig.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
 #include <ql/types.hpp>
 
-
 namespace ore {
-    namespace data {
-        using std::string;
-        using std::vector;
-        using ore::data::XMLNode;
-        using QuantLib::Period;
-        using QuantLib::DayCounter;
-        using QuantLib::Calendar;
-        using QuantLib::BusinessDayConvention;
-        using QuantLib::Spread;
+namespace data {
 
-        //! Yield volatility curve configuration
-        /*!
-        \ingroup configuration
-        */
-        class YieldVolatilityCurveConfig : public CurveConfig {
-        public:
-            //! supported volatility dimensions
-            enum class Dimension { ATM, Smile };
-            // supported volatility types
-            enum class VolatilityType { Lognormal, Normal, ShiftedLognormal };
+//! Yield volatility curve configuration
+/*!
+\ingroup configuration
+*/
+class YieldVolatilityCurveConfig : public GenericYieldVolatilityCurveConfig {
+public:
+    YieldVolatilityCurveConfig()
+        : GenericYieldVolatilityCurveConfig("Bond", "YieldVolatility", "BOND_OPTION", "Qualifier", false, false) {}
+    //! Detailed constructor
+    YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription, const string& qualifier,
+                               const Dimension& dimension, const VolatilityType& volatilityType, const bool extrapolate,
+                               const bool flatExtrapolation, const vector<Period>& optionTenors,
+                               const vector<Period>& bondTenors, const DayCounter& dayCounter, const Calendar& calendar,
+                               const BusinessDayConvention& businessDayConvention)
+        : GenericYieldVolatilityCurveConfig("Bond", "YieldVolatility", "BOND_OPTION", "Qualifier", curveID,
+                                            curveDescription, qualifier, dimension, volatilityType, extrapolate,
+                                            flatExtrapolation, optionTenors, bondTenors, dayCounter, calendar,
+                                            businessDayConvention) {}
+    //@}
+};
 
-            //! \name Constructors/Destructors
-            //@{
-            //! Default constructor
-            YieldVolatilityCurveConfig() {}
-            //! Detailed constructor
-            YieldVolatilityCurveConfig(const string& curveID, const string& curveDescription,  
-                const string& curveCurrency, const string& fallbackCurve, const Dimension& dimension,
-                const VolatilityType& volatilityType, const bool extrapolate,
-                const bool flatExtrapolation, const vector<Period>& optionTenors,
-                const vector<Period>& bondTenors, const DayCounter& dayCounter,
-                const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-                // Only required for smile
-                const vector<Period>& smileOptionTenors = vector<Period>(),
-                const vector<Period>& smileBondTenors = vector<Period>(),
-                const vector<Spread>& smileSpreads = vector<Spread>());
-            //@}
-
-            //! \name Serialisation
-            //@{
-            void fromXML(XMLNode* node) override;
-            XMLNode* toXML(XMLDocument& doc) override;
-            //@}
-
-            //! \name Inspectors
-            //@{
-            const Dimension& dimension() const { return dimension_; }
-            const VolatilityType& volatilityType() const { return volatilityType_; }
-            const bool& extrapolate() const { return extrapolate_; }
-            const bool& flatExtrapolation() const { return flatExtrapolation_; }
-            const vector<Period>& optionTenors() const { return optionTenors_; }
-            const vector<Period>& bondTenors() const { return bondTenors_; }
-            const DayCounter& dayCounter() const { return dayCounter_; }
-            const Calendar& calendar() const { return calendar_; }
-            const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
-            const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
-            const vector<Period>& smileBondTenors() const { return smileBondTenors_; }
-            const vector<Spread>& smileSpreads() const { return smileSpreads_; }
-            const vector<string>& quotes() override;
-            //@}
-
-            //! \name Setters
-            //@{
-            string& curveCurrency() { return curveCurrency_; }
-            string& fallbackCurve() { return fallbackCurve_; }
-            Dimension& dimension() { return dimension_; }
-            VolatilityType& volatilityType() { return volatilityType_; }
-            bool& flatExtrapolation() { return flatExtrapolation_; }
-            vector<Period>& optionTenors() { return optionTenors_; }
-            vector<Period>& bondTenors() { return bondTenors_; }
-            DayCounter& dayCounter() { return dayCounter_; }
-            Calendar& calendar() { return calendar_; }
-            vector<Period>& smileOptionTenors() { return smileOptionTenors_; }
-            vector<Period>& smileBondTenors() { return smileBondTenors_; }
-            vector<Spread>& smileSpreads() { return smileSpreads_; }
-            //@}
-
-        private:
-            string curveCurrency_;
-            string fallbackCurve_;
-            Dimension dimension_;
-            VolatilityType volatilityType_;
-            bool extrapolate_, flatExtrapolation_;
-            vector<Period> optionTenors_, bondTenors_;
-            DayCounter dayCounter_;
-            Calendar calendar_;
-            BusinessDayConvention businessDayConvention_;
-            vector<Period> smileOptionTenors_;
-            vector<Period> smileBondTenors_;
-            vector<Spread> smileSpreads_;
-        };
-
-        std::ostream& operator<<(std::ostream& out, YieldVolatilityCurveConfig::VolatilityType t);
-    } // namespace data
+} // namespace data
 } // namespace ore

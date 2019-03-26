@@ -21,6 +21,7 @@ libOREDataMarketData_la_SOURCES = \
 	fxspot.cpp \
 	fxtriangulation.cpp \
 	fxvolcurve.cpp \
+	genericyieldvolcurve.cpp \
 	inflationcapfloorpricesurface.cpp \
 	inflationcurve.cpp \
 	market.cpp \
@@ -56,6 +57,7 @@ this_include_HEADERS = \
 	fxspot.hpp \
 	fxtriangulation.hpp \
 	fxvolcurve.hpp \
+	genericyieldvolcurve.hpp \
 	inflationcapfloorpricesurface.hpp \
 	inflationcurve.hpp \
 	loader.hpp \

@@ -265,19 +265,13 @@ public:
     //! Default constructor
     YieldVolatilityCurveSpec() {}
     //! Detailed constructor
-    YieldVolatilityCurveSpec(const string& ccy, const string& curveConfigID)
-        : CurveSpec(curveConfigID), ccy_(ccy), curveConfigId_(curveConfigID) {}
+    YieldVolatilityCurveSpec(const string& curveConfigID) : CurveSpec(curveConfigID) {}
     //@}
     //! \name Inspectors
     //@{
     CurveType baseType() const { return CurveType::YieldVolatility; }
-    const string& ccy() const { return ccy_; }
-    const string& curveConfigId() const { return curveConfigId_; }
-    string subName() const { return ccy() + "/" + curveConfigID(); }
+    string subName() const { return curveConfigID(); }
     //@}
-private:
-    string ccy_;
-    std::string curveConfigId_;
 };
 
 //! Cap/Floor Volatility curve description

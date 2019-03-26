@@ -23,43 +23,36 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #pragma once
 
-#include <ored/configuration/conventions.hpp>
 #include <ored/configuration/curveconfigurations.hpp>
-#include <ored/marketdata/curvespec.hpp>
-#include <ored/marketdata/loader.hpp>
-#include <ql/termstructures/volatility/swaption/swaptionvolmatrix.hpp>
-
+#include <ored/marketdata/genericyieldvolcurve.hpp>
 
 namespace ore {
-    namespace data {
-        using QuantLib::Date;
-        using QuantLib::SwaptionVolatilityMatrix;
-        using ore::data::CurveConfigurations;
+namespace data {
+using ore::data::CurveConfigurations;
+using QuantLib::Date;
 
-        //! Wrapper class for building yield volatility structures
-        /*!
-        \ingroup curves
-        */
-        class YieldVolCurve {
-        public:
-            //! \name Constructors
-            //@{
-            //! Default constructor
-            YieldVolCurve() {}
-            //! Detailed constructor
-            YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
-                const CurveConfigurations& curveConfigs);
-            //@}
+//! Wrapper class for building Yield volatility structures
+/*!
+  \ingroup curves
+*/
+class YieldVolCurve : public GenericYieldVolCurve {
+public:
+    //! \name Constructors
+    //@{
+    //! Default constructor
+    YieldVolCurve() {}
+    //! Detailed constructor
+    YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loader& loader,
+                  const CurveConfigurations& curveConfigs);
+    //@}
 
-            //! \name Inspectors
-            //@{
-            const YieldVolatilityCurveSpec& spec() const { return spec_; }
+    //! \name Inspectors
+    //@{
+    const YieldVolatilityCurveSpec& spec() const { return spec_; }
+    //@}
 
-            const boost::shared_ptr<SwaptionVolatilityStructure>& volTermStructure() { return vol_; }
-            //@}
-        private:
-            YieldVolatilityCurveSpec spec_;
-            boost::shared_ptr<SwaptionVolatilityStructure> vol_;
-        };
-    } // namespace data
+private:
+    YieldVolatilityCurveSpec spec_;
+};
+} // namespace data
 } // namespace ore
