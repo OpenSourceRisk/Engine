@@ -55,22 +55,17 @@ namespace ore {
                 case YieldVolatilityCurveConfig::VolatilityType::Normal:
                     volatilityType = MarketDatum::QuoteType::RATE_NVOL;
                     break;
-                case YieldVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-                    volatilityType = MarketDatum::QuoteType::RATE_SLNVOL;
-                    break;
                 default:
                     QL_FAIL("unexpected volatility type");
                 }
-                bool isSln = volatilityType == MarketDatum::QuoteType::SHIFT;
                 vector<Period> optionTenors = config->optionTenors();
                 vector<Period> bondTenors = config->bondTenors();
                 Matrix vols(optionTenors.size(), bondTenors.size());
-                Matrix shifts(isSln ? vols.rows() : 0, isSln ? vols.columns() : 0);
                 vector<vector<bool>> found(optionTenors.size(), vector<bool>(bondTenors.size(), false));
                 vector<bool> shiftFound(bondTenors.size());
                 Size remainingQuotes = optionTenors.size() * bondTenors.size();
-                Size remainingShiftQuotes = isSln ? bondTenors.size() : 0;
-                Size quotesRead = 0, shiftQuotesRead = 0;
+                Size quotesRead = 0;
+                Matrix shifts(0, 0);
 
                 for (auto& md : loader.loadQuotes(asof)) {
 
@@ -92,26 +87,7 @@ namespace ore {
 
                                 if (!found[i][j]) {
                                     found[i][j] = true;
-                                    if (--remainingQuotes == 0 && remainingShiftQuotes == 0)
-                                        break;
-                                }
-                            }
-                        }
-
-                        if (isSln && remainingShiftQuotes > 0 && qs != NULL && qs->ccy() == spec.ccy() && qs->curveID() == spec.curveConfigID() &&
-                            qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
-
-                            shiftQuotesRead++;
-
-                            Size j = std::find(bondTenors.begin(), bondTenors.end(), qs->term()) - bondTenors.begin();
-
-                            if (j < bondTenors.size()) {
-                                for (Size i = 0; i < shifts.rows(); ++i)
-                                    shifts[i][j] = qs->quote()->value();
-
-                                if (!shiftFound[j]) {
-                                    shiftFound[j] = true;
-                                    if (--remainingShiftQuotes == 0 && remainingQuotes == 0)
+                                    if (--remainingQuotes == 0)
                                         break;
                                 }
                             }
@@ -141,26 +117,7 @@ namespace ore {
 
                                     if (!found[i][j]) {
                                         found[i][j] = true;
-                                        if (--remainingQuotes == 0 && remainingShiftQuotes == 0)
-                                            break;
-                                    }
-                                }
-                            }
-
-                            if (isSln && remainingShiftQuotes > 0 && qs != NULL && qs->ccy() == spec.ccy() &&
-                                qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
-
-                                shiftQuotesRead++;
-
-                                Size j = std::find(bondTenors.begin(), bondTenors.end(), qs->term()) - bondTenors.begin();
-
-                                if (j < bondTenors.size()) {
-                                    for (Size i = 0; i < shifts.rows(); ++i)
-                                        shifts[i][j] = qs->quote()->value();
-
-                                    if (!shiftFound[j]) {
-                                        shiftFound[j] = true;
-                                        if (--remainingShiftQuotes == 0 && remainingQuotes == 0)
+                                        if (--remainingQuotes == 0)
                                             break;
                                     }
                                 }
@@ -172,7 +129,7 @@ namespace ore {
                 LOG("YieldVolCurve: read " << quotesRead << " vols");
 
                 // Check that we have all the data we need
-                if (remainingQuotes != 0 || remainingShiftQuotes != 0) {
+                if (remainingQuotes != 0) {
                     ostringstream m, missingQuotes;
                     m << "Not all quotes found for spec " << spec << endl;
                     if (remainingQuotes != 0) {
@@ -191,21 +148,6 @@ namespace ore {
                             if (i < optionTenors.size() - 1)
                                 m << endl;
                         }
-                    }
-                    if (remainingShiftQuotes != 0) {
-                        if (remainingQuotes != 0)
-                            m << endl;
-                        m << "Found shift data (*) and missing data (.):" << std::endl;
-                        for (Size j = 0; j < bondTenors.size(); ++j) {
-                            if (shiftFound[j]) {
-                                m << "*";
-                            }
-                            else {
-                                m << ".";
-                                missingQuotes << "Missing shifted vol: (" << bondTenors[j] << ")" << endl;
-                            }
-                        }
-                        m << endl;
                     }
                     DLOGGERSTREAM << m.str() << endl << missingQuotes.str();
                     QL_FAIL("could not build yield volatility curve");
@@ -231,7 +173,7 @@ namespace ore {
                         config->volatilityType() == YieldVolatilityCurveConfig::VolatilityType::Normal
                         ? QuantLib::Normal
                         : QuantLib::ShiftedLognormal,
-                        !shifts.empty() ? shifts[0][0] : 0.0));
+                        0.0));
                 }
 
                 if (config->dimension() == YieldVolatilityCurveConfig::Dimension::ATM) {

@@ -33,8 +33,6 @@ namespace ore {
                 return out << "RATE_LNVOL";
             case YieldVolatilityCurveConfig::VolatilityType::Normal:
                 return out << "RATE_NVOL";
-            case YieldVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-                return out << "RATE_SLNVOL";
             default:
                 QL_FAIL("unknown VolatilityType(" << Integer(t) << ")");
             }
