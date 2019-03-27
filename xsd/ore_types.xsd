@@ -370,10 +370,18 @@
     </xs:restriction>
   </xs:simpleType>
 
+  <xs:simpleType name="correlationType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="CMSSpread"/>
+      <xs:enumeration value="Generic"/> 
+    </xs:restriction>
+  </xs:simpleType>
+  
   <xs:simpleType name="correlationQuoteType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Rate"/>
-      <xs:enumeration value="Price"/>
+      <xs:enumeration value="Price"/>     
+      <xs:enumeration value="Null"/>
     </xs:restriction>
   </xs:simpleType>
 
