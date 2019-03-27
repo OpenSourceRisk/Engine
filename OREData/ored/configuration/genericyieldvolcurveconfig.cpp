@@ -64,6 +64,9 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
         QL_REQUIRE(smileOptionTenors.size() == 0 && smileUnderlyingTenors.size() == 0 && smileSpreads.size() == 0,
                    "Smile tenors/strikes/spreads should only be set when dim=Smile");
     }
+
+    if(qualifier_ == "")
+        qualifier_ = ccyFromSwapIndexBase();
 }
 
 const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
@@ -94,6 +97,15 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
         }
     }
     return quotes_;
+}
+
+string GenericYieldVolatilityCurveConfig::ccyFromSwapIndexBase() {
+        std::vector<string> tokens;
+        split(tokens, swapIndexBase_, boost::is_any_of("-"));
+        QL_REQUIRE(!tokens.empty() && tokens[0] != "",
+                   "GenericYieldVolatilityCurveConfig::fromXML(): can not derive qualifier from SwapIndexBase ("
+                       << swapIndexBase_ << ")");
+        return tokens[0];
 }
 
 void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
@@ -166,19 +178,11 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     // read qualifier from explicit field
     if(qualifierLabel_ != "")
-        qualifier_ = XMLUtils::getChildValue(node, qualifierLabel_, false);
+        qualifier_ = XMLUtils::getChildValue(node, qualifierLabel_, true);
 
     // derive qualifier (=ccy) from swapIndexBase if not given explicitly
-    if(qualifier_ == "") {
-        string tmp = swapIndexBase_;
-        std::vector<string> tokens;
-        split(tokens, tmp, boost::is_any_of("-"));
-        QL_REQUIRE(!tokens.empty() && tokens[0] != "",
-                   "GenericYieldVolatilityCurveConfig::fromXML(): can not derive qualifier from SwapIndexBase ("
-                       << tmp << ")");
-        qualifier_ = tokens[0];
-    }
-    
+    if(qualifier_ == "")
+        qualifier_ = ccyFromSwapIndexBase();
 }
 
 XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {

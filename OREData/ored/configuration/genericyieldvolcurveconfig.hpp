@@ -122,8 +122,10 @@ public:
     //@}
 
 private:
-    string underlyingLabel_, rootNodeLabel_, marketDatumInstrumentLabel_, qualifierLabel_;
-    bool allowSmile_, requireSwapIndexBases_;
+    string ccyFromSwapIndexBase();
+    //
+    const string underlyingLabel_, rootNodeLabel_, marketDatumInstrumentLabel_, qualifierLabel_;
+    const bool allowSmile_, requireSwapIndexBases_;
     //
     string qualifier_;
     Dimension dimension_;

@@ -197,7 +197,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            SwaptionVolShiftData data;
+            GenericYieldVolShiftData data;
             volShiftDataFromXML(child, data);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             if (data.shiftStrikes.size() == 0)
@@ -212,7 +212,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(yieldVols, "YieldVolatility"); child;
             child = XMLUtils::getNextSibling(child)) {
             string securityId = XMLUtils::getAttribute(child, "name");
-            YieldVolShiftData data;
+            GenericYieldVolShiftData data;
             volShiftDataFromXML(child, data);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             if (data.shiftStrikes.size() == 0)

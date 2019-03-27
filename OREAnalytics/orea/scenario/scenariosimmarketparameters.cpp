@@ -562,10 +562,8 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityVolDayCounters_ != rhs.commodityVolDayCounters_ ||
         correlationDayCounters_ != rhs.correlationDayCounters_ || correlationIsSurface_ != rhs.correlationIsSurface_ ||
         correlationExpiries_ != rhs.correlationExpiries_ || correlationStrikes_ != rhs.correlationStrikes_ ||
-        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ ||
-        yieldVolTerms_ != rhs.yieldVolTerms_ || yieldVolDayCounters_ != rhs.yieldVolDayCounters_ ||
-        yieldVolIsCube_ != rhs.yieldVolIsCube_ || yieldVolSimulateATMOnly_ != rhs.yieldVolSimulateATMOnly_ ||
-        yieldVolExpiries_ != rhs.yieldVolExpiries_ || yieldVolStrikeSpreads_ != rhs.yieldVolStrikeSpreads_ ||
+        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
+        yieldVolDayCounters_ != rhs.yieldVolDayCounters_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
         yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
         return false;
     } else {
@@ -723,23 +721,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             yieldVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
             setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
             yieldVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-            XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
-            if (cubeNode) {
-                yieldVolIsCube_ = true;
-                XMLNode* atmOnlyNode = XMLUtils::getChildNode(cubeNode, "SimulateATMOnly");
-                if (atmOnlyNode) {
-                    yieldVolSimulateATMOnly_ = XMLUtils::getChildValueAsBool(cubeNode, "SimulateATMOnly", true);
-                }
-                else {
-                    yieldVolSimulateATMOnly_ = false;
-                }
-                if (!yieldVolSimulateATMOnly_)
-                    yieldVolStrikeSpreads_ =
-                    XMLUtils::getChildrenValuesAsDoublesCompact(cubeNode, "StrikeSpreads", true);
-            }
-            else {
-                yieldVolIsCube_ = false;
-            }
             XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
             if (dc) {
                 for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
@@ -1228,19 +1209,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Expiries", yieldVolExpiries_);
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Terms", yieldVolTerms_);
-        if (yieldVolIsCube_) {
-            XMLNode* yieldVolNode = XMLUtils::addChild(doc, yieldVolatilitiesNode, "Cube");
-            XMLUtils::addChild(doc, yieldVolNode, "SimulateATMOnly", yieldVolSimulateATMOnly_);
-            XMLUtils::addGenericChildAsList(doc, yieldVolNode, "StrikeSpreads", yieldVolStrikeSpreads_);
-        }
-        if (yieldVolDayCounters_.size() > 0) {
-            XMLNode* node = XMLUtils::addChild(doc, yieldVolatilitiesNode, "DayCounters");
-            for (auto dc : yieldVolDayCounters_) {
-                XMLNode* c = doc.allocNode("DayCounter", dc.second);
-                XMLUtils::addAttribute(doc, c, "ccy", dc.first);
-                XMLUtils::appendNode(node, c);
-            }
-        }
     }
 
     // cap/floor volatilities
