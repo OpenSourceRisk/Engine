@@ -528,8 +528,8 @@ void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* CrossCcyYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "CrossCurrency");
-    XMLUtils::addChild(doc, node, "SpotRate", spotRateID_);
     XMLUtils::addChild(doc, node, "DiscountCurve", foreignDiscountCurveID_);
+    XMLUtils::addChild(doc, node, "SpotRate", spotRateID_);
     if (!domesticProjectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurveDomestic", domesticProjectionCurveID_);
     if (!foreignProjectionCurveID_.empty())
