@@ -721,7 +721,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             setSimulateYieldVols(ore::data::parseBool(XMLUtils::getNodeValue(yieldVolSimNode)));
             yieldVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
             yieldVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
-            setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Securities", "SecurityId", true));
+            setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
             yieldVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
             XMLNode* cubeNode = XMLUtils::getChildNode(nodeChild, "Cube");
             if (cubeNode) {
@@ -1225,7 +1225,7 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     if (!yieldVolNames().empty()) {
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "Simulate", simulateYieldVols());
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "ReactionToTimeDecay", yieldVolDecayMode_);
-        XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Securities", "SecurityId", yieldVolNames());
+        XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Expiries", yieldVolExpiries_);
         XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Terms", yieldVolTerms_);
         if (yieldVolIsCube_) {
