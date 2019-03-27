@@ -35,7 +35,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                                    return false;
                                expiry = q->expiry();
                                term = q->term();
-                               return q->dimension() == "ATM";
+                               return q->dimension() == "ATM" &&
+                                      q->instrumentType() == MarketDatum::InstrumentType::SWAPTION;
                            },
                            [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike) {
                                boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
@@ -44,7 +45,8 @@ SwaptionVolCurve::SwaptionVolCurve(Date asof, SwaptionVolatilityCurveSpec spec, 
                                expiry = q->expiry();
                                term = q->term();
                                strike = q->strike();
-                               return q->dimension() == "Smile";
+                               return q->dimension() == "Smile" &&
+                                   q->instrumentType() == MarketDatum::InstrumentType::SWAPTION;
                            },
                            [](const boost::shared_ptr<MarketDatum>& md, Period& term) {
                                boost::shared_ptr<SwaptionShiftQuote> q =

@@ -66,34 +66,29 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
         for (auto& p : config->quotes()) {
             boost::shared_ptr<MarketDatum> md = loader.get(p, asof);
-            if (md->instrumentType() == MarketDatum::InstrumentType::SWAPTION) {
-
-                Period expiry, term;
-
-                if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
-                    quotesRead++;
-                    Size i = std::find(config->optionTenors().begin(), config->optionTenors().end(), expiry) -
-                             config->optionTenors().begin();
-                    Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
-                             config->underlyingTenors().begin();
-                    if (i < config->optionTenors().size() && j < config->underlyingTenors().size()) {
-                        vols[i][j] = md->quote()->value();
-                    }
+            Period expiry, term;
+            if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
+                quotesRead++;
+                Size i = std::find(config->optionTenors().begin(), config->optionTenors().end(), expiry) -
+                         config->optionTenors().begin();
+                Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
+                         config->underlyingTenors().begin();
+                if (i < config->optionTenors().size() && j < config->underlyingTenors().size()) {
+                    vols[i][j] = md->quote()->value();
                 }
-
-                if (isSln && md->quoteType() == MarketDatum::QuoteType::SHIFT && matchShiftQuote(md, term)) {
-                    shiftQuotesRead++;
-                    Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
-                             config->underlyingTenors().begin();
-                    if (j < config->underlyingTenors().size()) {
-                        for (Size i = 0; i < shifts.rows(); ++i)
-                            shifts[i][j] = md->quote()->value();
-                    }
+            }
+            if (isSln && md->quoteType() == MarketDatum::QuoteType::SHIFT && matchShiftQuote(md, term)) {
+                shiftQuotesRead++;
+                Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
+                         config->underlyingTenors().begin();
+                if (j < config->underlyingTenors().size()) {
+                    for (Size i = 0; i < shifts.rows(); ++i)
+                        shifts[i][j] = md->quote()->value();
                 }
             }
         }
 
-        LOG("SwaptionVolCurve: read " << quotesRead << " vols");
+        LOG("GenericYieldVolCurve: read " << quotesRead << " vols");
 
         boost::shared_ptr<SwaptionVolatilityStructure> atm;
 
@@ -152,27 +147,23 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             Size spreadQuotesRead = 0;
             for (auto& p : config->quotes()) {
                 boost::shared_ptr<MarketDatum> md = loader.get(p, asof);
-                if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::SWAPTION) {
+                Period expiry, term;
+                Real strike;
+                if (md->quoteType() == volatilityType && matchSmileQuote(md, expiry, term, strike)) {
 
-                    Period expiry, term;
-                    Real strike;
-                    if (md->quoteType() == volatilityType && matchSmileQuote(md, expiry, term, strike)) {
+                    Size i = std::find(smileOptionTenors.begin(), smileOptionTenors.end(), expiry) -
+                             smileOptionTenors.begin();
+                    Size j = std::find(smileSwapTenors.begin(), smileSwapTenors.end(), term) - smileSwapTenors.begin();
+                    // In the MarketDatum we call it a strike, but it's really a spread
+                    Size k = std::find(spreads.begin(), spreads.end(), strike) - spreads.begin();
 
-                        Size i = std::find(smileOptionTenors.begin(), smileOptionTenors.end(), expiry) -
-                                 smileOptionTenors.begin();
-                        Size j =
-                            std::find(smileSwapTenors.begin(), smileSwapTenors.end(), term) - smileSwapTenors.begin();
-                        // In the MarketDatum we call it a strike, but it's really a spread
-                        Size k = std::find(spreads.begin(), spreads.end(), strike) - spreads.begin();
-
-                        if (i < smileOptionTenors.size() && j < smileSwapTenors.size() && k < spreads.size()) {
-                            spreadQuotesRead++;
-                            // Assume quotes are absolute vols by strike so construct the vol spreads here
-                            Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
-                            volSpreadHandles[i * smileSwapTenors.size() + j][k] =
-                                Handle<Quote>(boost::make_shared<SimpleQuote>(md->quote()->value() - atmVol));
-                            zero[i * smileSwapTenors.size() + j][k] = close_enough(md->quote()->value(), 0.0);
-                        }
+                    if (i < smileOptionTenors.size() && j < smileSwapTenors.size() && k < spreads.size()) {
+                        spreadQuotesRead++;
+                        // Assume quotes are absolute vols by strike so construct the vol spreads here
+                        Volatility atmVol = atm->volatility(smileOptionTenors[i], smileSwapTenors[j], 0.0);
+                        volSpreadHandles[i * smileSwapTenors.size() + j][k] =
+                            Handle<Quote>(boost::make_shared<SimpleQuote>(md->quote()->value() - atmVol));
+                        zero[i * smileSwapTenors.size() + j][k] = close_enough(md->quote()->value(), 0.0);
                     }
                 }
             }
@@ -234,10 +225,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         }
 
     } catch (std::exception& e) {
-        QL_FAIL("swaption volatility curve building failed for curve " << config->curveID() << " on date "
-                                                                       << io::iso_date(asof) << ": " << e.what());
+        QL_FAIL("generic yield volatility curve building failed for curve " << config->curveID() << " on date "
+                                                                            << io::iso_date(asof) << ": " << e.what());
     } catch (...) {
-        QL_FAIL("swaption vol curve building failed: unknown error");
+        QL_FAIL("generic yield vol curve building failed: unknown error");
     }
 }
 } // namespace data

@@ -34,7 +34,7 @@ YieldVolCurve::YieldVolCurve(Date asof, YieldVolatilityCurveSpec spec, const Loa
                                    return false;
                                expiry = q->expiry();
                                term = q->term();
-                               return true;
+                               return q->instrumentType() == MarketDatum::InstrumentType::BOND_OPTION;
                            },
                            [](const boost::shared_ptr<MarketDatum>& md, Period& expiry, Period& term, Real& strike) {
                                boost::shared_ptr<SwaptionQuote> q = boost::dynamic_pointer_cast<SwaptionQuote>(md);
