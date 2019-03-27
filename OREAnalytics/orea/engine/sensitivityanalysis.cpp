@@ -30,6 +30,7 @@
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -40,6 +41,7 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -315,6 +317,8 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         shiftSize = itr->second.shiftSize;
         if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
             vector<Real> strikes = itr->second.shiftStrikes;
+            QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
+                       "shift strikes should be {0.0} for yield volatilities");
             vector<Period> tenors = itr->second.shiftTerms;
             vector<Period> expiries = itr->second.shiftExpiries;
             Size keyIdx = key.index;

@@ -187,7 +187,7 @@ public:
 protected:
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
     void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
-    void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
+    void volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes = true);
 
     //! toXML helper methods
     //@{

@@ -43,10 +43,10 @@ void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftDa
     data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
 }
 
-void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data) {
+void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {
     shiftDataFromXML(child, data);
     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-    data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+    data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", requireShiftStrikes);
     if (data.shiftStrikes.size() == 0)
         data.shiftStrikes = {0.0};
 }
@@ -213,10 +213,12 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             child = XMLUtils::getNextSibling(child)) {
             string securityId = XMLUtils::getAttribute(child, "name");
             GenericYieldVolShiftData data;
-            volShiftDataFromXML(child, data);
+            volShiftDataFromXML(child, data, false);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
-            if (data.shiftStrikes.size() == 0)
-                data.shiftStrikes = { 0.0 };
+            QL_REQUIRE(data.shiftStrikes.size() == 0 ||
+                           data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0),
+                       "no shift strikes (or exactly {0.0}) should be given for yield volatilities");
+            data.shiftStrikes = { 0.0 };
             yieldVolShiftData_[securityId] = data;
         }
     }

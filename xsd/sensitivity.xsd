@@ -325,7 +325,6 @@
       </xs:choice>
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
-      <xs:element type="xs:string" name="ShiftStrikes" minOccurs="0"/>
     </xs:sequence>
     <xs:attribute type="currencyCode" name="ccy" use="required"/>
   </xs:complexType>
