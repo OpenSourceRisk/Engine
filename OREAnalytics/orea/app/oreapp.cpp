@@ -659,8 +659,10 @@ void OREApp::generateNPVCube() {
 
     if (buildSimMarket_) {
         LOG("Build Simulation Market");
-        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_,
-            params_->get("markets", "simulation"), curveConfigs_, marketParameters_, continueOnError_);
+
+        simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData, conventions_, getFixingManager(),
+                                                           params_->get("markets", "simulation"), curveConfigs_,
+                                                           marketParameters_, continueOnError_);
         simMarket_->scenarioGenerator() = sg;
 
         string groupName = "simulation";
@@ -803,11 +805,19 @@ void OREApp::runPostProcessor() {
     Real kvaAlpha = 1.4;
     Real kvaRegAdjustment = 12.5;
     Real kvaCapitalHurdle = 0.012;
+    Real kvaOurPdFloor = 0.03;
+    Real kvaTheirPdFloor = 0.03;
+    Real kvaOurCvaRiskWeight = 0.05;
+    Real kvaTheirCvaRiskWeight = 0.05;
     if (analytics["kva"]) {
         kvaCapitalDiscountRate = parseReal(params_->get("xva", "kvaCapitalDiscountRate"));
         kvaAlpha = parseReal(params_->get("xva", "kvaAlpha"));
         kvaRegAdjustment = parseReal(params_->get("xva", "kvaRegAdjustment"));
         kvaCapitalHurdle = parseReal(params_->get("xva", "kvaCapitalHurdle"));
+        kvaOurPdFloor = parseReal(params_->get("xva", "kvaOurPdFloor"));
+        kvaTheirPdFloor = parseReal(params_->get("xva", "kvaTheirPdFloor"));
+        kvaOurCvaRiskWeight = parseReal(params_->get("xva", "kvaOurCvaRiskWeight"));
+        kvaTheirCvaRiskWeight = parseReal(params_->get("xva", "kvaTheirCvaRiskWeight"));
     }
 
     if (analytics["mva"] || analytics["dim"]) {
@@ -833,7 +843,8 @@ void OREApp::runPostProcessor() {
         allocationMethod, marginalAllocationLimit, quantile, calculationType, dvaName, fvaBorrowingCurve,
         fvaLendingCurve, dimQuantile, dimHorizonCalendarDays, dimRegressionOrder, dimRegressors,
         dimLocalRegressionEvaluations, dimLocalRegressionBandwidth, dimScaling, fullInitialCollateralisation,
-        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle);
+        kvaCapitalDiscountRate, kvaAlpha, kvaRegAdjustment, kvaCapitalHurdle, kvaOurPdFloor, kvaTheirPdFloor,
+	kvaOurCvaRiskWeight, kvaTheirCvaRiskWeight);
 }
 
 void OREApp::writeXVAReports() {
@@ -841,12 +852,17 @@ void OREApp::writeXVAReports() {
     MEM_LOG;
     LOG("Writing XVA reports");
 
-    for (auto t : postProcess_->tradeIds()) {
-        ostringstream o;
-        o << outputPath_ << "/exposure_trade_" << t << ".csv";
-        string tradeExposureFile = o.str();
-        CSVFileReport tradeExposureReport(tradeExposureFile);
-        getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+    bool exposureByTrade = true;
+    if (params_->has("xva", "exposureProfilesByTrade"))
+        exposureByTrade = parseBool(params_->get("xva", "exposureProfilesByTrade"));    
+    if (exposureByTrade) {
+        for (auto t : postProcess_->tradeIds()) {
+	    ostringstream o;
+	    o << outputPath_ << "/exposure_trade_" << t << ".csv";
+	    string tradeExposureFile = o.str();
+	    CSVFileReport tradeExposureReport(tradeExposureFile);
+	    getReportWriter()->writeTradeExposures(tradeExposureReport, postProcess_, t);
+	}
     }
     for (auto n : postProcess_->nettingSetIds()) {
         ostringstream o1;
