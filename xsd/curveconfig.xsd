@@ -430,20 +430,20 @@
     <xs:sequence>
       <xs:element type="xs:string" name="CurveId"/>
       <xs:element type="xs:string" name="CurveDescription"/>
-      <xs:element type="xs:string" name="CorrelationType"/>
-      <xs:element type="xs:string" name="Index1"/>
-      <xs:element type="xs:string" name="Index2"/>
+      <xs:element type="correlationType" name="CorrelationType"/>
+      <xs:element type="indexNameType" name="Index1" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="indexNameType" name="Index2" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="Conventions" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SwaptionVolatility" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="currencyCode" name="Currency"/>
-      <xs:element type="dimensionType" name="Dimension"/>
+      <xs:element type="currencyCode" name="Currency" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dimensionType" name="Dimension" minOccurs="0" maxOccurs="1"/>
       <xs:element type="correlationQuoteType" name="QuoteType"/>
       <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
-      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="1" maxOccurs="1"/>
-      <xs:element type="xs:string" name="OptionTenors"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="xs:string" name="OptionTenors" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
