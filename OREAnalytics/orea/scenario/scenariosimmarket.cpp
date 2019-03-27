@@ -175,17 +175,22 @@ void ScenarioSimMarket::addYieldCurve(const boost::shared_ptr<Market>& initMarke
 ScenarioSimMarket::ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
                                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
                                      const Conventions& conventions, const std::string& configuration,
-                                     const CurveConfigurations& curveConfigs, 
-                                     const TodaysMarketParameters& todaysMarketParams,
-                                     const bool continueOnError)
-    : SimMarket(conventions), parameters_(parameters), filter_(boost::make_shared<ScenarioFilter>()) {
+                                     const CurveConfigurations& curveConfigs,
+                                     const TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+    : ScenarioSimMarket(initMarket, parameters, conventions, boost::make_shared<FixingManager>(initMarket->asofDate()),
+                        configuration, curveConfigs, todaysMarketParams, continueOnError) {}
+
+ScenarioSimMarket::ScenarioSimMarket(
+    const boost::shared_ptr<Market>& initMarket, const boost::shared_ptr<ScenarioSimMarketParameters>& parameters,
+    const Conventions& conventions, const boost::shared_ptr<FixingManager>& fixingManager,
+    const std::string& configuration, const ore::data::CurveConfigurations& curveConfigs,
+    const ore::data::TodaysMarketParameters& todaysMarketParams, const bool continueOnError)
+    : SimMarket(conventions), parameters_(parameters), fixingManager_(fixingManager),
+      filter_(boost::make_shared<ScenarioFilter>()) {
 
     LOG("building ScenarioSimMarket...");
     asof_ = initMarket->asofDate();
     LOG("AsOf " << QuantLib::io::iso_date(asof_));
-
-    // Build fixing manager
-    fixingManager_ = boost::make_shared<FixingManager>(asof_);
 
     // Sort parameters so they get processed in correct order
     map<RiskFactorKey::KeyType, pair<bool, set<string>>> params;

@@ -14,7 +14,7 @@
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
-*/
+*/ 
 
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -517,42 +517,6 @@ Leg makeSimpleLeg(const LegData& data) {
     }
     return leg;
 }
-
-namespace {
-void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
-                       const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()) {
-    Date lastEndDate = Date::minDate();
-    for (auto const& amort : data.amortizationData()) {
-        if (!amort.initialized())
-            continue;
-        Date startDate = parseDate(amort.startDate());
-        QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
-                                                 << startDate << ") is earlier than last end date (" << lastEndDate
-                                                 << ")");
-        lastEndDate = parseDate(amort.endDate());
-        AmortizationType amortizationType = parseAmortizationType(amort.type());
-        if (amortizationType == AmortizationType::FixedAmount)
-            notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::RelativeToInitialNotional)
-            notionals = buildAmortizationScheduleRelativeToInitialNotional(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::RelativeToPreviousNotional)
-            notionals = buildAmortizationScheduleRelativeToPreviousNotional(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(annuityAllowed, "Amortization type Annuity not allowed for leg type " << data.legType());
-            if (!rates.empty())
-                notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
-                                                                  parseDayCounter(data.dayCounter()));
-        } else
-            QL_FAIL("AmortizationType " << amort.type() << " not supported");
-        // check that for a floating leg we only have one amortization block, if the type is annuity
-        // we recognise a floating leg by an empty (fixed) rates vector
-        if (rates.empty() && amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(data.amortizationData().size() == 1,
-                       "Floating Leg supports only one amortisation block of type Annuity");
-        }
-    }
-}
-} // namespace
 
 Leg makeFixedLeg(const LegData& data) {
     boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(data.concreteLegData());
@@ -1322,6 +1286,40 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
     }
     LOG("Fixed Annuity notional schedule done");
     return nominals;
+}
+  
+void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
+                       const bool annuityAllowed, const std::vector<Real>& rates) {
+    Date lastEndDate = Date::minDate();
+    for (auto const& amort : data.amortizationData()) {
+        if (!amort.initialized())
+            continue;
+        Date startDate = parseDate(amort.startDate());
+        QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
+                                                 << startDate << ") is earlier than last end date (" << lastEndDate
+                                                 << ")");
+        lastEndDate = parseDate(amort.endDate());
+        AmortizationType amortizationType = parseAmortizationType(amort.type());
+        if (amortizationType == AmortizationType::FixedAmount)
+            notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::RelativeToInitialNotional)
+            notionals = buildAmortizationScheduleRelativeToInitialNotional(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::RelativeToPreviousNotional)
+            notionals = buildAmortizationScheduleRelativeToPreviousNotional(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::Annuity) {
+            QL_REQUIRE(annuityAllowed, "Amortization type Annuity not allowed for leg type " << data.legType());
+            if (!rates.empty())
+                notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
+                                                                  parseDayCounter(data.dayCounter()));
+        } else
+            QL_FAIL("AmortizationType " << amort.type() << " not supported");
+        // check that for a floating leg we only have one amortization block, if the type is annuity
+        // we recognise a floating leg by an empty (fixed) rates vector
+        if (rates.empty() && amortizationType == AmortizationType::Annuity) {
+            QL_REQUIRE(data.amortizationData().size() == 1,
+                       "Floating Leg supports only one amortisation block of type Annuity");
+        }
+    }
 }
 
 } // namespace data
