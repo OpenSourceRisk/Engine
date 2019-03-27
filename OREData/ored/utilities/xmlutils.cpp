@@ -171,7 +171,7 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
-    if (abs(value) < 1.0e-10) {
+    if (abs(value) < 1.0e-6) {
         std::ostringstream obj1;
         obj1.precision(16);
         obj1 << std::fixed << value;
