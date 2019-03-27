@@ -152,20 +152,29 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
 
+    if (correlationType_ == CorrelationType::CMSSpread) {
+        XMLUtils::addChild(doc, node, "CorrelationType", "CMSSpread");
+    } else {
+        QL_FAIL("Unknown CorrelationType in CorrelationCurveConfig::toXML()");
+    }
+
+    XMLUtils::addChild(doc, node, "Index1", index1_);
+    XMLUtils::addChild(doc, node, "Index2", index2_);
+    XMLUtils::addChild(doc, node, "Conventions", conventions_);
+
+    if (quoteType_ == QuoteType::Price) {
+        XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
+        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
+    }
+
+    XMLUtils::addChild(doc, node, "Currency", currency_);
+
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
     } else if (dimension_ == Dimension::Constant) {
         XMLUtils::addChild(doc, node, "Dimension", "Constant");
     } else {
         QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
-    }
-
-    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-
-    if (correlationType_ == CorrelationType::CMSSpread) {
-        XMLUtils::addChild(doc, node, "CorrelationType", "CMSSpread");
-    } else {
-        QL_FAIL("Unknown CorrelationType in CorrelationCurveConfig::toXML()");
     }
 
     if (quoteType_ == QuoteType::Rate) {
@@ -175,20 +184,12 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     } else {
         QL_FAIL("Unknown QuoteType in CorrelationCurveConfig::toXML()");
     }
-
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
-
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
-    XMLUtils::addChild(doc, node, "Index1", index1_);
-    XMLUtils::addChild(doc, node, "Index2", index2_);
-    XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
 
-    if (quoteType_ == QuoteType::Price) {
-        XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
-        XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
-    }
     return node;
 }
 } // namespace data

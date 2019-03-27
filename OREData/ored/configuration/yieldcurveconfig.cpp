@@ -491,10 +491,10 @@ void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* TenorBasisYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "TenorBasis");
-    if (!shortProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
     if (!longProjectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurveLong", longProjectionCurveID_);
+    if (!shortProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
     return node;
 }
 
@@ -519,8 +519,8 @@ void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CrossCurrency");
     YieldCurveSegment::fromXML(node);
     loadQuotesFromXML(node);
-    spotRateID_ = XMLUtils::getChildValue(node, "SpotRate", true);
     foreignDiscountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+    spotRateID_ = XMLUtils::getChildValue(node, "SpotRate", true);
     domesticProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveDomestic", false);
     foreignProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveForeign", false);
 }
