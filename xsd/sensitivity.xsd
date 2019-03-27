@@ -24,8 +24,8 @@
       <xs:element type="commodityspots" name="CommoditySpots" minOccurs="0"/>
       <xs:element type="commodityCurves" name="CommodityCurves"  minOccurs="0"/>
       <xs:element type="commodityvolatilities" name="CommodityVolatilities" minOccurs="0"/>
-      <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
       <xs:element type="correlationcurves" name="Correlations" minOccurs="0"/>
+      <xs:element type="crossgammafilter" name="CrossGammaFilter" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
