@@ -64,8 +64,6 @@ public:
     void performCalculations() const;
     //@}
 private:
-    bool stripOptionlets(std::vector<Real>&, CapFloor::Type, Size, const Handle<YieldTermStructure>&) const;
-
     mutable Matrix capFloorPrices_, optionletPrices_;
     mutable Matrix capFloorVols_;
     mutable Matrix optionletStDevs_, capletVols_;
