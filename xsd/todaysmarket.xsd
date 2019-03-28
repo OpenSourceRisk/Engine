@@ -8,7 +8,7 @@
       <xs:element type="yieldCurvesType"  name= "YieldCurves" minOccurs="0" maxOccurs="unbounded"/>
       <xs:element type="discountCurvesType" name="DiscountingCurves" maxOccurs="unbounded" minOccurs="1"/>
       <xs:element type="indexForwardingCurvesType" name="IndexForwardingCurves" maxOccurs="unbounded" minOccurs="1"/>
-      <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="swapIndexCurvesType" name="SwapIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="zeroInflationIndexCurvesType" name="ZeroInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="yyInflationIndexCurvesType" name="YYInflationIndexCurves" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="0"/>
@@ -32,13 +32,15 @@
 
   <xs:complexType name="configurationType">
     <xs:all>
-      <xs:element type="xs:string" name="DiscountingCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="YieldCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="DiscountingCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="IndexForwardingCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SwapIndexCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="ZeroInflationIndexCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="ZeroInflationCapFloorVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="YYInflationIndexCurvesId" minOccurs="0"/>
       <xs:element type="xs:string" name="FxSpotsId" minOccurs="0"/>
+      <xs:element type="xs:string" name="BaseCorrelationsId" minOccurs="0"/>
       <xs:element type="xs:string" name="FxVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SwaptionVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CapFloorVolatilitiesId" minOccurs="0"/>
@@ -51,6 +53,7 @@
       <xs:element type="xs:string" name="EquityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SecuritiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CommodityCurvesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="CommodityVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CorrelationsId" minOccurs="0"/>
     </xs:all>
     <xs:attribute type="xs:string" name="id" use="required"/>
