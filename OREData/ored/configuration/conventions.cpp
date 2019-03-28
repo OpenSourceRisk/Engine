@@ -481,6 +481,7 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
     XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
     XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
+    if (strSubPeriodsCouponType_ !="")
     XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
 
     return node;
