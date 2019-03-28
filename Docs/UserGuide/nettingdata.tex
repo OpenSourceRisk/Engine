@@ -123,7 +123,7 @@ The \lstinline!CSADetails! node contains details of the Credit Support
 Annex which are relevant for the purposes of exposure calculation. The
 meanings of the various elements are as follows:
 
-\paragraph{Bilateral} There are three possible values here:
+\paragraph*{Bilateral} There are three possible values here:
 \begin{itemize}
 \item Bilateral: Both parties to the CSA are legally entitled to
   request collateral to cover their counterparty credit risk exposure
@@ -134,32 +134,32 @@ meanings of the various elements are as follows:
   we have no such entitlement.
 \end{itemize}
 
-\paragraph{CSACurrency} A three-letter ISO code specifying the master
+\paragraph*{CSACurrency} A three-letter ISO code specifying the master
 currency of the CSA. All monetary values specified within the CSA are
 assumed to be denominated in this currency.
 
-\paragraph{Index} The index is used to derive the fixing which is used
+\paragraph*{Index} The index is used to derive the fixing which is used
 for compounding cash collateral in the master currency of the CSA.
 
-\paragraph{ThresholdPay} A threshold amount above which the
+\paragraph*{ThresholdPay} A threshold amount above which the
 counterparty is entitled to request collateral to cover excess
 exposure.
 
-\paragraph{ThresholdReceive} A threshold amount above which we are
+\paragraph*{ThresholdReceive} A threshold amount above which we are
 entitled to request collateral from the counterparty to cover excess
 exposure.
 
-\paragraph{MinimumTransferAmountPay} Any margin calls issued by the
+\paragraph*{MinimumTransferAmountPay} Any margin calls issued by the
 counterparty must exceed this minimum transfer amount. If the
 collateral shortfall is less than this amount, the counterparty is not
 entitled to request margin.
 
-\paragraph{MinimumTransferAmountReceive} Any margin calls issued by us
+\paragraph*{MinimumTransferAmountReceive} Any margin calls issued by us
 to the counterparty must exceed this minimum transfer amount. If the
 collateral shortfall is less than this amount, we are  not
 entitled to request margin.
 
-\paragraph{IndependentAmount} This element contains two child nodes:
+\paragraph*{IndependentAmount} This element contains two child nodes:
 \begin{itemize}
 \item IndependentAmountHeld: The netted sum of all independent amounts
   covered by this ISDA agreement/CSA. A negative number implies that
@@ -173,7 +173,7 @@ independent amount. In a future release this will be extended to the
 situation prescribed by the Basel/IOSCO regulation (initial margin to
 be posted by both parties without netting).
 
-\paragraph{MarginingFrequency} This element contains two child nodes:
+\paragraph*{MarginingFrequency} This element contains two child nodes:
 \begin{itemize}
 \item CallFrequency: The frequency with which we are entitled to
   request additional margin from the counterparty (e.g. \emph{1D},
@@ -183,19 +183,19 @@ be posted by both parties without netting).
   \emph{2W}, \emph{1M}).
 \end{itemize}
 
-\paragraph{MarginPeriodOfRisk} The length of time assumed necessary
+\paragraph*{MarginPeriodOfRisk} The length of time assumed necessary
 for closing out the portfolio position after a default event  (e.g. \emph{1D},
   \emph{2W}, \emph{1M}).
 
-\paragraph{CollateralCompoundingSpreadReceive} The spread over the O/N
+\paragraph*{CollateralCompoundingSpreadReceive} The spread over the O/N
 interest accrual rate taken by the clearing house, when holding
 collateral.
 
-\paragraph{CollateralCompoundingSpreadPay} The spread over the O/N
+\paragraph*{CollateralCompoundingSpreadPay} The spread over the O/N
 interest accrual rate taken by the clearing house, when collateral is
 held by the counterparty.
 
-\paragraph{EligibleCollaterals} For now the only supported type of
+\paragraph*{EligibleCollaterals} For now the only supported type of
 collateral is cash. If the CSA specifies a set of currencies which
 are eligible as collateral, these can be listed using
 \lstinline!Currency! nodes.
