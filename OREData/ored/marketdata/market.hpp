@@ -53,8 +53,7 @@ typedef BaseCorrelationTermStructure<BilinearInterpolation> BilinearBaseCorrelat
 enum class YieldCurveType {
     Discount = 0, // Chosen to match MarketObject::DiscountCurve
     Yield = 1,    // Chosen to match MarketObject::YieldCurve
-    EquityDividend = 2,
-    EquityForecast = 3
+    EquityDividend = 2
 };
 
 //! Market

@@ -27,9 +27,10 @@
 
 namespace QuantExt {
 
-EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Handle<Quote> spotQuote,
-                         const Handle<YieldTermStructure>& rate, const Handle<YieldTermStructure>& dividend)
-    : familyName_(familyName), rate_(rate), dividend_(dividend), spotQuote_(spotQuote),
+EquityIndex::EquityIndex(const std::string& familyName, const Calendar& fixingCalendar, const Currency& currency, 
+                         const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate, 
+                         const Handle<YieldTermStructure>& dividend)
+    : familyName_(familyName), currency_(currency), rate_(rate), dividend_(dividend), spotQuote_(spotQuote),
       fixingCalendar_(fixingCalendar) {
 
     name_ = familyName;
@@ -124,7 +125,7 @@ Real EquityIndex::dividendsBetweenDates(const Date& startDate, const Date& endDa
 
 boost::shared_ptr<EquityIndex> EquityIndex::clone(const Handle<Quote> spotQuote, const Handle<YieldTermStructure>& rate,
                                                   const Handle<YieldTermStructure>& dividend) const {
-    return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), spotQuote, rate, dividend);
+    return boost::make_shared<EquityIndex>(familyName(), fixingCalendar(), currency(), spotQuote, rate, dividend);
 }
 
 } // namespace QuantExt

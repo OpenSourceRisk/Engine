@@ -54,7 +54,7 @@ public:
 
         // build vectors with dates and discount factors for GBP
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = forecastSP5;
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = forecastSP5;
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "SP5")] = forecastSP5;
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = dividendSP5;
 
         // build USD Libor index
@@ -63,7 +63,7 @@ public:
 
         // build SP5 Equity Curve
         hSP5 = Handle<EquityIndex>(
-            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), spotSP5, forecastSP5, dividendSP5)));
+            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
 
         // add fixings
