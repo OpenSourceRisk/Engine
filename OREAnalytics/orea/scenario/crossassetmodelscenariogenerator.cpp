@@ -170,15 +170,6 @@ CrossAssetModelScenarioGenerator::CrossAssetModelScenarioGenerator(
         }
     }
 
-    // Equity Forecast curve keys
-    equityForecastCurveKeys_.reserve(n_ccy * simMarketConfig_->equityForecastTenors("").size());
-    for (Size j = 0; j < model_->components(EQ); j++) {
-        ten_efc_.push_back(simMarketConfig_->equityForecastTenors(simMarketConfig_->equityNames()[j]));
-        Size n_ten = ten_efc_.back().size();
-        for (Size k = 0; k < n_ten; k++)
-            equityForecastCurveKeys_.emplace_back(RiskFactorKey::KeyType::EquityForecastCurve,
-                                                  simMarketConfig_->equityNames()[j], k); // j * n_ten + k
-    }
 }
 
 std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextPath() {
@@ -237,10 +228,6 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
     for (Size j = 0; j < n_eq; ++j) {
         std::string curveName = simMarketConfig_->equityNames()[j];
         Currency ccy = model_->eqbs(j)->currency();
-        Handle<YieldTermStructure> yts = initMarket_->equityForecastCurve(curveName, configuration_);
-        auto ForecastCurve =
-            boost::make_shared<LgmImpliedYtsFwdFwdCorrected>(model_->lgm(model_->ccyIndex(ccy)), yts, dc, false);
-        equityForecastCurves.push_back(ForecastCurve);
         equityForecastCurrency.push_back(ccy);
     }
 
@@ -393,19 +380,7 @@ std::vector<boost::shared_ptr<Scenario>> CrossAssetModelScenarioGenerator::nextP
                 scenarios[i]->add(yoyInflationKeys_[j * ten_yinf_[j].size() + l], yoyRates[d_yinf[l]]);
             }
         }
-
-        // EquityForecastCurve
-        for (Size j = 0; j < n_eq; ++j) {
-            Real z = sample.value[model_->pIdx(IR, model_->ccyIndex(equityForecastCurrency[j]))][i + 1];
-            equityForecastCurves[j]->move(dates_[i], z);
-            for (Size k = 0; k < ten_efc_[j].size(); ++k) {
-                Date d = dates_[i] + ten_efc_[j][k];
-                Time T = dc.yearFraction(dates_[i], d);
-                Real discount = std::max(equityForecastCurves[j]->discount(T), 0.00001);
-                scenarios[i]->add(equityForecastCurveKeys_[j * ten_efc_[j].size() + k], discount);
-            }
-        }
-
+        
         // TODO: Further risk factor classes are added here
     }
     return scenarios;

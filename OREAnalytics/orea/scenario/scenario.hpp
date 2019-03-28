@@ -55,7 +55,6 @@ public:
         FXSpot,
         FXVolatility,
         EquitySpot,
-        EquityForecastCurve,
         EquityVolatility,
         DividendYield,
         SurvivalProbability,

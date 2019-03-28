@@ -312,7 +312,18 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
     indices_.insert("EQ-" + eqName_);
-    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
+    if (XMLUtils::getChildNode(node, "InitialPrice"))
+        initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
+    else
+        initialPrice_ = Real();
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    
+    XMLNode* tmp = XMLUtils::getChildNode(node, "ValuationSchedule");
+    if (tmp)
+        valuationSchedule_.fromXML(tmp);    
+    if (XMLUtils::getChildNode(node, "NotionalReset"))
+        notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
+    else
+        notionalReset_ = false;
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -322,7 +333,13 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
-    if (fixingDays_ != 0)
+    if (initialPrice_)
+        XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
+    XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
+
+    if (valuationSchedule_.hasData())
+        XMLUtils::appendNode(node, valuationSchedule_.toXML(doc));
+    else
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
     return node;
 }
@@ -1089,7 +1106,13 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
     Real dividendFactor = eqLegData->dividendFactor();
+    Real initialPrice = eqLegData->initialPrice();
+    bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
+    ScheduleData valuationData = eqLegData->valuationSchedule();
+    Schedule valuationSchedule;
+    if (valuationData.hasData())
+        valuationSchedule = makeSchedule(valuationData);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     applyAmortization(notionals, data, schedule, false);
@@ -1100,7 +1123,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
-                  .withFixingDays(fixingDays);
+                  .withInitialPrice(initialPrice)
+                  .withNotionalReset(notionalReset)
+                  .withFixingDays(fixingDays)
+                  .withValuationSchedule(valuationSchedule);
+    
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
     return leg;

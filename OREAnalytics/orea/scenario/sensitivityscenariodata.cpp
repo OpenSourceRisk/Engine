@@ -100,8 +100,6 @@ const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
         return equityVolShiftData().at(name);
-    case RFType::EquityForecastCurve:
-        return *equityForecastCurveShiftData().at(name);
     case RFType::DividendYield:
         return *dividendYieldShiftData().at(name);
     case RFType::CommoditySpot:
@@ -158,11 +156,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             curveShiftDataFromXML(child, data);
 
             string curveType = XMLUtils::getChildValue(child, "CurveType", false);
-            if (curveType == "EquityForecast") {
-                equityForecastCurveShiftData_[curveName] = boost::make_shared<CurveShiftData>(data);
-            } else {
-                yieldCurveShiftData_[curveName] = boost::make_shared<CurveShiftData>(data);
-            }
+            yieldCurveShiftData_[curveName] = boost::make_shared<CurveShiftData>(data);
         }
     }
 
@@ -442,17 +436,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
     }
 
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
-    if (!equityForecastCurveShiftData_.empty()) {
-        LOG("toXML for YieldCurves of type EquityForecast");
-        for (const auto& kv : equityForecastCurveShiftData_) {
-            XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
-            XMLUtils::addAttribute(doc, node, "name", kv.first);
-            XMLUtils::addChild(doc, node, "CurveType", "EquityForecast");
-            curveShiftDataToXML(doc, node, *kv.second);
-        }
-    }
     if (!yieldCurveShiftData_.empty()) {
-        LOG("toXML for YieldCurves that are not of type EquityForecast");
+        LOG("toXML for YieldCurves that are not of type Yield");
         for (const auto& kv : yieldCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);

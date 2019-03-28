@@ -95,11 +95,6 @@ void SensitivityScenarioGenerator::generateScenarios() {
     generateEquityScenarios(true);
     generateEquityScenarios(false);
 
-    if (simMarketData_->simulateEquityForecastCurve()) {
-        generateEquityForecastCurveScenarios(true);
-        generateEquityForecastCurveScenarios(false);
-    }
-
     if (simMarketData_->simulateDividendYield()) {
         generateDividendYieldScenarios(true);
         generateDividendYieldScenarios(false);
@@ -622,91 +617,6 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         } // end of shift curve tenors
     }
     LOG("Yield curve scenarios done");
-}
-
-void SensitivityScenarioGenerator::generateEquityForecastCurveScenarios(bool up) {
-    // We can choose to shift fewer yield curves than listed in the market
-    Date asof = baseScenario_->asof();
-    // Log an ALERT if some yield curves in simmarket are excluded from the list
-    for (auto sim_ec : simMarketData_->equityNames()) {
-        if (sensitivityData_->equityForecastCurveShiftData().find(sim_ec) ==
-            sensitivityData_->equityForecastCurveShiftData().end()) {
-            ALOG("equityForecast Curve " << sim_ec << " in simmarket is not included in sensitivities analysis");
-        }
-    }
-
-    for (auto e : sensitivityData_->equityForecastCurveShiftData()) {
-        string name = e.first;
-        Size n_ten = simMarketData_->equityForecastTenors(name).size();
-        // original curves' buffer
-        std::vector<Real> zeros(n_ten);
-        std::vector<Real> times(n_ten);
-        // buffer for shifted zero curves
-        std::vector<Real> shiftedZeros(n_ten);
-        SensitivityScenarioData::CurveShiftData data = *e.second;
-        ShiftType shiftType = parseShiftType(data.shiftType);
-
-        DayCounter dc = parseDayCounter(simMarketData_->yieldCurveDayCounter(name));
-
-        Real quote = 0.0;
-        bool valid = true;
-        for (Size j = 0; j < n_ten; ++j) {
-            Date d = asof + simMarketData_->equityForecastTenors(name)[j];
-            times[j] = dc.yearFraction(asof, d);
-            RiskFactorKey key(RiskFactorKey::KeyType::EquityForecastCurve, name, j);
-            valid = valid && tryGetBaseScenarioValue(baseScenario_, key, quote, continueOnError_);
-            zeros[j] = -std::log(quote) / times[j];
-        }
-        if (!valid)
-            continue;
-
-        const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityForecastTenors(name)
-                                                     ? simMarketData_->equityForecastTenors(name)
-                                                     : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
-        std::vector<Time> shiftTimes(shiftTenors.size());
-        for (Size j = 0; j < shiftTenors.size(); ++j)
-            shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
-        Real shiftSize = data.shiftSize;
-        QL_REQUIRE(shiftTenors.size() > 0, "Discount shift tenors not specified");
-
-        // Can we store a valid shift size?
-        bool validShiftSize = vectorEqual(times, shiftTimes);
-
-        for (Size j = 0; j < shiftTenors.size(); ++j) {
-
-            boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
-
-            scenarioDescriptions_.push_back(equityForecastCurveScenarioDescription(name, j, up));
-
-            // apply zero rate shift at tenor point j
-            applyShift(j, shiftSize, up, shiftType, shiftTimes, zeros, times, shiftedZeros, true);
-
-            // store shifted discount curve in the scenario
-            for (Size k = 0; k < n_ten; ++k) {
-                RiskFactorKey key(RFType::EquityForecastCurve, name, k);
-
-                Real shiftedDiscount = exp(-shiftedZeros[k] * times[k]);
-                scenario->add(key, shiftedDiscount);
-
-                // Possibly store valid shift size
-                if (validShiftSize && up && j == k) {
-                    shiftSizes_[key] = shiftedZeros[k] - zeros[k];
-                }
-            }
-
-            // Give the scenario a label
-            scenario->label(to_string(scenarioDescriptions_.back()));
-
-            // add this scenario to the scenario vector
-            scenarios_.push_back(scenario);
-            DLOG("Sensitivity scenario # " << scenarios_.size() << ", label " << scenario->label() << " created");
-
-        } // end of shift curve tenors
-    }
-    LOG("Equity forecast curve scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
@@ -2133,26 +2043,6 @@ SensitivityScenarioGenerator::yieldScenarioDescription(string name, Size bucket,
     RiskFactorKey key(RiskFactorKey::KeyType::YieldCurve, name, bucket);
     std::ostringstream o;
     o << sensitivityData_->yieldCurveShiftData()[name]->shiftTenors[bucket];
-    string text = o.str();
-    ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
-    ScenarioDescription desc(type, key, text);
-
-    if (up)
-        shiftSizes_[key] = 0.0;
-
-    return desc;
-}
-
-SensitivityScenarioGenerator::ScenarioDescription
-SensitivityScenarioGenerator::equityForecastCurveScenarioDescription(string name, Size bucket, bool up) {
-    QL_REQUIRE(sensitivityData_->equityForecastCurveShiftData().find(name) !=
-                   sensitivityData_->equityForecastCurveShiftData().end(),
-               "equity " << name << " not found in index shift data");
-    QL_REQUIRE(bucket < sensitivityData_->equityForecastCurveShiftData()[name]->shiftTenors.size(),
-               "bucket " << bucket << " out of range");
-    RiskFactorKey key(RiskFactorKey::KeyType::EquityForecastCurve, name, bucket);
-    std::ostringstream o;
-    o << sensitivityData_->equityForecastCurveShiftData()[name]->shiftTenors[bucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);

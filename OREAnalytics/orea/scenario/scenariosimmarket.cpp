@@ -83,8 +83,6 @@ RiskFactorKey::KeyType yieldCurveRiskFactor(const ore::data::YieldCurveType y) {
         return RiskFactorKey::KeyType::YieldCurve;
     } else if (y == ore::data::YieldCurveType::EquityDividend) {
         return RiskFactorKey::KeyType::DividendYield;
-    } else if (y == ore::data::YieldCurveType::EquityForecast) {
-        return RiskFactorKey::KeyType::EquityForecastCurve;
     } else {
         QL_FAIL("yieldCurveType not supported");
     }
@@ -98,8 +96,6 @@ ore::data::YieldCurveType riskFactorYieldCurve(const RiskFactorKey::KeyType rf) 
         return ore::data::YieldCurveType::Yield;
     } else if (rf == RiskFactorKey::KeyType::DividendYield) {
         return ore::data::YieldCurveType::EquityDividend;
-    } else if (rf == RiskFactorKey::KeyType::EquityForecastCurve) {
-        return ore::data::YieldCurveType::EquityForecast;
     } else {
         QL_FAIL("RiskFactorKey::KeyType not supported");
     }
@@ -226,6 +222,80 @@ ScenarioSimMarket::ScenarioSimMarket(
                     LOG("building " << name << " yield curve done");
                 }
                 break;
+                               
+            case RiskFactorKey::KeyType::IndexCurve:
+                for (const auto& name : param.second.second) {
+                    LOG("building " << name << " index curve");
+                    std::vector<string> indexTokens;
+                    split(indexTokens, name, boost::is_any_of("-"));
+                    Handle<IborIndex> index;
+                    if (indexTokens[1] == "GENERIC") {
+                        // If we have a generic curve build the index using the index currency's discount curve
+                        index = Handle<IborIndex>(
+                            parseIborIndex(name, initMarket->discountCurve(indexTokens[0], configuration)));
+                    } else {
+                        index = initMarket->iborIndex(name, configuration);
+                    }
+                    QL_REQUIRE(!index.empty(), "index object for " << name << " not provided");
+                    Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
+                    QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << name);
+                    vector<string> keys(parameters->yieldCurveTenors(name).size());
+
+                    DayCounter dc = ore::data::parseDayCounter(
+                        parameters->yieldCurveDayCounter(name)); // used to convert YieldCurve Periods to Times
+                    vector<Time> yieldCurveTimes(1, 0.0);        // include today
+                    vector<Date> yieldCurveDates(1, asof_);
+                    QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
+                        "yield curve tenors must not include t=0");
+                    for (auto& tenor : parameters->yieldCurveTenors(name)) {
+                        yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
+                        yieldCurveDates.push_back(asof_ + tenor);
+                    }
+
+                    // include today
+                    vector<Handle<Quote>> quotes;
+                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
+                    quotes.push_back(Handle<Quote>(q));
+
+                    for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
+                        boost::shared_ptr<SimpleQuote> q(
+                            new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
+                        Handle<Quote> qh(q);
+                        quotes.push_back(qh);
+
+                        simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
+                            std::forward_as_tuple(q));
+
+                        DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << q->value());
+                    }
+                    // FIXME interpolation fixed to linear, added to xml??
+                    boost::shared_ptr<YieldTermStructure> indexCurve;
+                    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
+                        indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
+                            yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
+                    } else {
+                        indexCurve = boost::shared_ptr<YieldTermStructure>(
+                            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
+                    }
+
+                    // wrapped curve, is slower than a native curve
+                    // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
+                    //     new StaticallyCorrectedYieldTermStructure(
+                    //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
+                    //         wrapperIndex));
+
+                    Handle<YieldTermStructure> ich(indexCurve);
+                    // Handle<YieldTermStructure> ich(correctedIndexCurve);
+                    if (wrapperIndex->allowsExtrapolation())
+                        ich->enableExtrapolation();
+
+                    boost::shared_ptr<IborIndex> i(index->clone(ich));
+                    Handle<IborIndex> ih(i);
+                    iborIndices_.insert(pair<pair<string, string>, Handle<IborIndex>>(
+                        make_pair(Market::defaultConfiguration, name), ih));
+                    LOG("building " << name << " index curve done");
+                }
+                break;
 
             case RiskFactorKey::KeyType::EquitySpot:
                 for (const auto& name : param.second.second) {
@@ -242,16 +312,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                 }
                 break;
 
-            case RiskFactorKey::KeyType::EquityForecastCurve:
-                for (const auto& name : param.second.second) {
-                    LOG("building " << name << " equity forecast curve..");
-                    vector<Period> tenors = parameters->equityForecastTenors(name);
-                    addYieldCurve(initMarket, configuration, param.first, name, tenors,
-                                  parameters->yieldCurveDayCounter(name), param.second.first);
-                    LOG("building " << name << " equity forecast done");
-                }
-                break;
-
             case RiskFactorKey::KeyType::DividendYield:
                 for (const auto& name : param.second.second) {
                     LOG("building " << name << " equity dividend yield curve..");
@@ -260,12 +320,32 @@ ScenarioSimMarket::ScenarioSimMarket(
                                   parameters->yieldCurveDayCounter(name), param.second.first);
                     LOG("building " << name << " equity dividend yield curve done");
 
-                    // Equity forecast and spot curves built first so we can now build equity index
-
+                    // Equity spots and Yield/Index curves added first so we can now build equity index
+                    // First get Forecast Curve
+                    string forecastCurve;
+                    if (curveConfigs.hasEquityCurveConfig(name)) {
+                        // From the equity config, get the currency and forecast curve of the equity
+                        auto eqVolConfig = curveConfigs.equityCurveConfig(name);
+                        string forecastName = eqVolConfig->forecastingCurve();
+                        string eqCcy = eqVolConfig->currency();
+                        // Build a YieldCurveSpec and extract the yieldCurveSpec name
+                        YieldCurveSpec ycspec(eqCcy, forecastName);
+                        forecastCurve = ycspec.name();
+                        TLOG("Got forecast curve '" << forecastCurve << "' from equity curve config for " << name);
+                    }
+                                        
+                    // Get the nominal term structure from this scenario simulation market
+                    Handle<YieldTermStructure> forecastTs = getYieldCurve(forecastCurve, todaysMarketParams, Market::defaultConfiguration);
                     Handle<EquityIndex> curve = initMarket->equityCurve(name, configuration);
+                    
+                    // If forecast term structure is empty, fall back on this scenario simulation market's discount curve  
+                    if (forecastTs.empty()) {
+                        string ccy = curve->currency().code();
+                        TLOG("Falling back on the discount curve for currency '" << ccy << "', the currency of inflation index '" << name << "'");
+                        forecastTs = discountCurve(ccy);
+                    }
                     boost::shared_ptr<EquityIndex> ei(
-                        curve->clone(equitySpot(name, configuration),
-                                     yieldCurve(YieldCurveType::EquityForecast, name, configuration),
+                        curve->clone(equitySpot(name, configuration), forecastTs,
                                      yieldCurve(YieldCurveType::EquityDividend, name, configuration)));
                     Handle<EquityIndex> eh(ei);
                     equityCurves_.insert(pair<pair<string, string>, Handle<EquityIndex>>(
@@ -304,80 +384,6 @@ ScenarioSimMarket::ScenarioSimMarket(
                         // security recovery rates are optional, therefore we never throw
                         ALOG("skipping this object: " << e.what());
                     }
-                }
-                break;
-
-            case RiskFactorKey::KeyType::IndexCurve:
-                for (const auto& name : param.second.second) {
-                    LOG("building " << name << " index curve");
-                    std::vector<string> indexTokens;
-                    split(indexTokens, name, boost::is_any_of("-"));
-                    Handle<IborIndex> index;
-                    if (indexTokens[1] == "GENERIC") {
-                        // If we have a generic curve build the index using the index currency's discount curve
-                        index = Handle<IborIndex>(
-                            parseIborIndex(name, initMarket->discountCurve(indexTokens[0], configuration)));
-                    } else {
-                        index = initMarket->iborIndex(name, configuration);
-                    }
-                    QL_REQUIRE(!index.empty(), "index object for " << name << " not provided");
-                    Handle<YieldTermStructure> wrapperIndex = index->forwardingTermStructure();
-                    QL_REQUIRE(!wrapperIndex.empty(), "no termstructure for index " << name);
-                    vector<string> keys(parameters->yieldCurveTenors(name).size());
-
-                    DayCounter dc = ore::data::parseDayCounter(
-                        parameters->yieldCurveDayCounter(name)); // used to convert YieldCurve Periods to Times
-                    vector<Time> yieldCurveTimes(1, 0.0);        // include today
-                    vector<Date> yieldCurveDates(1, asof_);
-                    QL_REQUIRE(parameters->yieldCurveTenors(name).front() > 0 * Days,
-                               "yield curve tenors must not include t=0");
-                    for (auto& tenor : parameters->yieldCurveTenors(name)) {
-                        yieldCurveTimes.push_back(dc.yearFraction(asof_, asof_ + tenor));
-                        yieldCurveDates.push_back(asof_ + tenor);
-                    }
-
-                    // include today
-                    vector<Handle<Quote>> quotes;
-                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(1.0));
-                    quotes.push_back(Handle<Quote>(q));
-
-                    for (Size i = 0; i < yieldCurveTimes.size() - 1; i++) {
-                        boost::shared_ptr<SimpleQuote> q(
-                            new SimpleQuote(wrapperIndex->discount(yieldCurveDates[i + 1])));
-                        Handle<Quote> qh(q);
-                        quotes.push_back(qh);
-
-                        simDataTmp.emplace(std::piecewise_construct, std::forward_as_tuple(param.first, name, i),
-                                           std::forward_as_tuple(q));
-
-                        DLOG("ScenarioSimMarket index curve " << name << " discount[" << i << "]=" << q->value());
-                    }
-                    // FIXME interpolation fixed to linear, added to xml??
-                    boost::shared_ptr<YieldTermStructure> indexCurve;
-                    if (ObservationMode::instance().mode() == ObservationMode::Mode::Unregister) {
-                        indexCurve = boost::shared_ptr<YieldTermStructure>(new QuantExt::InterpolatedDiscountCurve(
-                            yieldCurveTimes, quotes, 0, index->fixingCalendar(), dc));
-                    } else {
-                        indexCurve = boost::shared_ptr<YieldTermStructure>(
-                            new QuantExt::InterpolatedDiscountCurve2(yieldCurveTimes, quotes, dc));
-                    }
-
-                    // wrapped curve, is slower than a native curve
-                    // boost::shared_ptr<YieldTermStructure> correctedIndexCurve(
-                    //     new StaticallyCorrectedYieldTermStructure(
-                    //         discountCurves_[ccy], initMarket->discountCurve(ccy, configuration),
-                    //         wrapperIndex));
-
-                    Handle<YieldTermStructure> ich(indexCurve);
-                    // Handle<YieldTermStructure> ich(correctedIndexCurve);
-                    if (wrapperIndex->allowsExtrapolation())
-                        ich->enableExtrapolation();
-
-                    boost::shared_ptr<IborIndex> i(index->clone(ich));
-                    Handle<IborIndex> ih(i);
-                    iborIndices_.insert(pair<pair<string, string>, Handle<IborIndex>>(
-                        make_pair(Market::defaultConfiguration, name), ih));
-                    LOG("building " << name << " index curve done");
                 }
                 break;
 

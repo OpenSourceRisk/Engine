@@ -647,13 +647,11 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
 
                             boost::shared_ptr<EquityIndex> eqCurve = boost::make_shared<EquityIndex>(
-                                it.first, parseCalendar(equityConfig->currency()), eqSpot,
-                                itr->second->forecastingYieldTermStructure(), div_h);
+                                it.first, parseCalendar(equityConfig->currency()), parseCurrency(equityConfig->currency()),
+                                eqSpot, itr->second->forecastingYieldTermStructure(), div_h);
                             Handle<EquityIndex> eq_h(eqCurve);
                             yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] =
                                 div_h;
-                            yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityForecast, it.first)] =
-                                itr->second->forecastingYieldTermStructure();
                             equitySpots_[make_pair(configuration.first, it.first)] = eqSpot;
                             equityCurves_[make_pair(configuration.first, it.first)] = eq_h;
                         }
