@@ -709,5 +709,10 @@ vector<double> buildAmortizationScheduleRelativeToPreviousNotional(const vector<
 vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notionals, const vector<double>& rates,
                                                      const Schedule& schedule, const AmortizationData& data,
                                                      const DayCounter& dc);
+
+// apply amortisation to given notionals
+void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
+                       const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()); 
+
 } // namespace data
 } // namespace ore
