@@ -6,7 +6,7 @@ The trades that make up the portfolio are specified in an XML file where the por
 of nodes and sub-nodes.  The nodes containing individual trade data are referred to as elements or XML elements. These
 are generally the lowest level nodes.
 
-\vspace{1em}
+\medskip
 
 The top level portfolio node is delimited by an opening {\tt <Portfolio>} and a closing {\tt </Portfolio>} tag. Within
 the portfolio node, each trade is defined by a starting {\tt <Trade id="[Tradeid]">} and a closing {\tt </Trade>} tag.
@@ -49,16 +49,15 @@ An example of a {\tt portfolio.xml} file with one Swap trade including the full 
 \end{listing}
 
 A description of all portfolio data, i.e. of each node and XML element in the portfolio file, with examples and
-allowable values follows below. There are two XML elements directly under the top level {\tt Portfolio} node:
+allowable values follows below. There is only one XML elements directly under the top level {\tt Portfolio} node:
 
 \begin{itemize}
-% \item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
-%   portfolio. Trade ids should be unique within a portfolio.  The {\tt
-%     Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
-%   in the beginning closed by {\tt </Trade>} at the end of the trade data.
-
-% Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
-
+%\item {\tt Trade id}: The first element of each trade is the {\tt Trade id} and it is used to identify trades within a
+%  portfolio. Trade ids should be unique within a portfolio.  The {\tt
+%   Trade id} element is entered as an attribute to the XML element {\tt <Trade>}, such as {\tt <Trade id="ExampleTrade">}
+%  in the beginning closed by {\tt </Trade>} at the end of the trade data.
+%
+%Allowable values:  Any alphanumeric string. The underscore (\_) sign may be used as well. 
 \item {\tt TradeType}: %The Trade type is set with the {\tt TradeType} element, as well as with the {\tt Type} element in  the envelope. The two Trade type entries should be identical. 
 ORE currently supports 14 trade types.
 
@@ -67,4 +66,3 @@ Allowable values: \emph{ForwardRateAgreement, Swap, CapFloor, Swaption, FxForwar
 EquityForward, EquityOption, VarianceSwap, CommodityForward, CommodityOption, CreditDefaultSwap, Bond}
 
 \end{itemize}
-

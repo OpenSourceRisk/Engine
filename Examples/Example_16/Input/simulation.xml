@@ -233,6 +233,7 @@
       <Index>EUR-EURIBOR-3M</Index>
       <Index>EUR-EONIA</Index>
       <Index>USD-LIBOR-3M</Index>
+	  <Index>USD-FedFunds</Index>
       <Index>GBP-LIBOR-6M</Index>
       <Index>GBP-LIBOR-3M</Index>
       <Index>CHF-LIBOR-6M</Index>
@@ -253,14 +254,12 @@
       <Tenors>6M,1Y,2Y</Tenors>
     </DefaultCurves>
     <Equities>
-      <SimulateEquityForecastCurve>true</SimulateEquityForecastCurve>
       <SimulateDividendYield>false</SimulateDividendYield>
       <Names>
         <Name>SP5</Name>
         <Name>Lufthansa</Name>
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
     </Equities>    
     <!-- Even if we do not simulate them - option pricing needs vol
     surfaces, so we need to specify here how we propagate the

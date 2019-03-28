@@ -61,16 +61,18 @@ class ValuationCalculator;
 class SensitivityAnalysis : public ore::data::ProgressReporter {
 public:
     //! Constructor
-    SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                        const boost::shared_ptr<ore::data::Market>& market, const string& marketConfiguration,
-                        const boost::shared_ptr<ore::data::EngineData>& engineData,
-                        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                        const Conventions& conventions, const bool recalibrateModels,
-                        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
-                        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
-                        const bool nonShiftedBaseCurrencyConversion = false,
-                        const bool continueOnError = false);
+    SensitivityAnalysis(
+        const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
+        const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+        const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+        const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+        const bool recalibrateModels,
+        const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+        const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+        const bool nonShiftedBaseCurrencyConversion = false,
+        std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders = {},
+        std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders = {},
+        const bool continueOnError = false);
 
     virtual ~SensitivityAnalysis() {}
 
@@ -144,6 +146,8 @@ protected:
 
     // if true, convert sensis to base currency using the original (non-shifted) FX rate
     bool nonShiftedBaseCurrencyConversion_;
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders_;
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders_;
     // if true, the processing is continued even on build errors
     bool continueOnError_;
     //! the engine data (provided as input, needed to construct the engine factory)

@@ -215,8 +215,7 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
 }
 
 Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration,
-                                              "equity forecast yield curve");
+    return equityCurve(eqName, configuration)->equityForecastCurve();
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {

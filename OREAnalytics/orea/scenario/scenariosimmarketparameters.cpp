@@ -97,7 +97,6 @@ void ScenarioSimMarketParameters::setParamsSimulate(RiskFactorKey::KeyType kt, b
 
 void ScenarioSimMarketParameters::setDefaults() {
     // Set default simulate
-    setSimulateEquityForecastCurve(true);
     setSimulateDividendYield(false);
     setSimulateSwapVols(false);
     setSimulateCapFloorVols(false);
@@ -117,7 +116,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     capFloorVolExpiries_[""] = vector<Period>();
     defaultTenors_[""] = vector<Period>();
     equityDividendTenors_[""] = vector<Period>();
-    equityForecastTenors_[""] = vector<Period>();
     zeroInflationTenors_[""] = vector<Period>();
     yoyInflationTenors_[""] = vector<Period>();
     commodityCurveTenors_[""] = vector<Period>();
@@ -190,10 +188,6 @@ const string& ScenarioSimMarketParameters::capFloorVolDayCounter(const string& k
 
 const vector<Period>& ScenarioSimMarketParameters::equityDividendTenors(const string& key) const {
     return returnTenors(equityDividendTenors_, key);
-}
-
-const vector<Period>& ScenarioSimMarketParameters::equityForecastTenors(const string& key) const {
-    return returnTenors(equityForecastTenors_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::zeroInflationTenors(const string& key) const {
@@ -291,10 +285,6 @@ void ScenarioSimMarketParameters::setEquityDividendTenors(const string& key, con
     equityDividendTenors_[key] = p;
 }
 
-void ScenarioSimMarketParameters::setEquityForecastTenors(const string& key, const std::vector<Period>& p) {
-    equityForecastTenors_[key] = p;
-}
-
 void ScenarioSimMarketParameters::setZeroInflationTenors(const string& key, const std::vector<Period>& p) {
     zeroInflationTenors_[key] = p;
 }
@@ -384,12 +374,7 @@ void ScenarioSimMarketParameters::setCdsVolNames(vector<string> names) {
 
 void ScenarioSimMarketParameters::setEquityNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::EquitySpot, names);
-    setEquityForecastCurves(names);
     setEquityDividendCurves(names);
-}
-
-void ScenarioSimMarketParameters::setEquityForecastCurves(vector<string> names) {
-    addParamsName(RiskFactorKey::KeyType::EquityForecastCurve, names);
 }
 
 void ScenarioSimMarketParameters::setEquityDividendCurves(vector<string> names) {
@@ -442,10 +427,6 @@ void ScenarioSimMarketParameters::setCorrelationPairs(vector<string> names) {
 
 void ScenarioSimMarketParameters::setCprs(const vector<string>& names) {
     addParamsName(RiskFactorKey::KeyType::CPR, names);
-}
-
-void ScenarioSimMarketParameters::setSimulateEquityForecastCurve(bool simulate) {
-    setParamsSimulate(RiskFactorKey::KeyType::EquityForecastCurve, simulate);
 }
 
 void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
@@ -524,7 +505,7 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         defaultCurveCalendars_ != rhs.defaultCurveCalendars_ || defaultTenors_ != rhs.defaultTenors_ ||
         cdsVolExpiries_ != rhs.cdsVolExpiries_ || cdsVolDayCounters_ != rhs.cdsVolDayCounters_ ||
         cdsVolDecayMode_ != rhs.cdsVolDecayMode_ || equityDividendTenors_ != rhs.equityDividendTenors_ ||
-        equityForecastTenors_ != rhs.equityForecastTenors_ || fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
+        fxVolIsSurface_ != rhs.fxVolIsSurface_ ||
         fxVolExpiries_ != rhs.fxVolExpiries_ || fxVolDayCounters_ != rhs.fxVolDayCounters_ ||
         fxVolDecayMode_ != rhs.fxVolDecayMode_ || equityVolExpiries_ != rhs.equityVolExpiries_ ||
         equityVolDayCounters_ != rhs.equityVolDayCounters_ || equityVolDecayMode_ != rhs.equityVolDecayMode_ ||
@@ -795,11 +776,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
     DLOG("Loading Equities Rates");
     nodeChild = XMLUtils::getChildNode(node, "Equities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
-        XMLNode* equityForecastCurveSimNode = XMLUtils::getChildNode(nodeChild, "SimulateEquityForecastCurve");
-        if (equityForecastCurveSimNode)
-            setSimulateEquityForecastCurve(ore::data::parseBool(XMLUtils::getNodeValue(equityForecastCurveSimNode)));
-        else
-            setSimulateEquityForecastCurve(true);
         XMLNode* dividendYieldSimNode = XMLUtils::getChildNode(nodeChild, "SimulateDividendYield");
         if (dividendYieldSimNode)
             setSimulateDividendYield(ore::data::parseBool(XMLUtils::getNodeValue(dividendYieldSimNode)));
@@ -808,7 +784,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         vector<string> equityNames = XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true);
         setEquityNames(equityNames);
         equityDividendTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "DividendTenors", true);
-        equityForecastTenors_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "ForecastTenors", true);
     }
 
     DLOG("Loading CDSVolatilities Rates");
@@ -1128,8 +1103,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     if (!equityNames().empty()) {
         XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", equityNames());
         XMLUtils::addGenericChildAsList(doc, equitiesNode, "DividendTenors", returnTenors(equityDividendTenors_, ""));
-        XMLUtils::addGenericChildAsList(doc, equitiesNode, "ForecastTenors", returnTenors(equityForecastTenors_, ""));
-        XMLUtils::addChild(doc, equitiesNode, "SimulateEquityForecastCurve", simulateEquityForecastCurve());
         XMLUtils::addChild(doc, equitiesNode, "SimulateDividendYield", simulateDividendYield());
     }
 

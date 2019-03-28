@@ -46,9 +46,10 @@ void SensitivityRunner::runSensitivityAnalysis(boost::shared_ptr<Market> market,
     bool recalibrateModels =
         params_->has("sensitivity", "recalibrateModels") && parseBool(params_->get("sensitivity", "recalibrateModels"));
 
-    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis =
-        boost::make_shared<SensitivityAnalysis>(sensiPortfolio, market, marketConfiguration, engineData, simMarketData,
-            sensiData, conventions, recalibrateModels, curveConfigs, todaysMarketParams, false, continueOnError_);
+    boost::shared_ptr<SensitivityAnalysis> sensiAnalysis = boost::make_shared<SensitivityAnalysis>(
+        sensiPortfolio, market, marketConfiguration, engineData, simMarketData, sensiData, conventions,
+        recalibrateModels, curveConfigs, todaysMarketParams, false, extraEngineBuilders_, extraLegBuilders_,
+        continueOnError_);
     sensiAnalysis->generateSensitivities();
 
     sensiOutputReports(sensiAnalysis);

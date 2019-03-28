@@ -30,7 +30,7 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(CorrelationCurveConfigTests)
 
-BOOST_AUTO_TEST_CASE(testParseFromXml) {
+BOOST_AUTO_TEST_CASE(testParseCMSSpreadPriceQuoteCorrelationFromXml) {
 
     BOOST_TEST_MESSAGE("Testing parsing of correlation curve configuration from XML");
 
@@ -42,8 +42,11 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     configXml.append("  <CorrelationType>CMSSpread</CorrelationType>");
     configXml.append("  <Currency>EUR</Currency>");
     configXml.append("  <Dimension>ATM</Dimension>");
-    configXml.append("  <QuoteType>Rate</QuoteType>");
+    configXml.append("  <QuoteType>Price</QuoteType>");
     configXml.append("  <Extrapolation>true</Extrapolation>");
+    configXml.append("  <Conventions>EUR-CMS-10Y-1Y-CONVENTION</Conventions>");
+    configXml.append("  <SwaptionVolatility>EUR</SwaptionVolatility>");
+    configXml.append("  <DiscountCurve>EUR-EONIA</DiscountCurve>");
     configXml.append("  <Calendar>TARGET</Calendar>");
     configXml.append("  <DayCounter>A365</DayCounter>");
     configXml.append("  <BusinessDayConvention>Following</BusinessDayConvention>");
@@ -62,8 +65,8 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     config.fromXML(configNode);
 
     // Expected vector of quotes
-    vector<string> quotes = {"CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
-                             "CORRELATION/RATE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"};
+    vector<string> quotes = {"CORRELATION/PRICE/EUR-CMS-10Y/EUR-CMS-1Y/1Y/ATM",
+                             "CORRELATION/PRICE/EUR-CMS-10Y/EUR-CMS-1Y/2Y/ATM"};
 
     // Check fields
     BOOST_CHECK_EQUAL(config.curveID(), "EUR-CMS-10Y/EUR-CMS-1Y");
@@ -71,6 +74,55 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     BOOST_CHECK_EQUAL(config.index1(), "EUR-CMS-10Y");
     BOOST_CHECK_EQUAL(config.index2(), "EUR-CMS-1Y");
     BOOST_CHECK_EQUAL_COLLECTIONS(quotes.begin(), quotes.end(), config.quotes().begin(), config.quotes().end());
+    BOOST_CHECK_EQUAL(config.extrapolate(), true);    
+    BOOST_CHECK_EQUAL(config.conventions(), "EUR-CMS-10Y-1Y-CONVENTION");
+    BOOST_CHECK_EQUAL(config.swaptionVolatility(), "EUR");
+    BOOST_CHECK_EQUAL(config.discountCurve(), "EUR-EONIA");
+    BOOST_CHECK_EQUAL(config.dayCounter().name(), "Actual/365 (Fixed)");
+    BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
+    BOOST_CHECK_EQUAL(config.businessDayConvention(), BusinessDayConvention::Following);
+
+    vector<Period> p;
+    p.push_back(parsePeriod("1Y"));
+    p.push_back(parsePeriod("2Y"));
+
+    BOOST_CHECK_EQUAL_COLLECTIONS(p.begin(), p.end(), config.optionTenors().begin(), config.optionTenors().end());
+}
+
+BOOST_AUTO_TEST_CASE(testParseGenericCorrelationFromXml) {
+
+    BOOST_TEST_MESSAGE("Testing parsing of correlation curve configuration from XML");
+
+    // Create an XML string representation of the correlation curve configuration
+    string configXml;
+    configXml.append("<Correlation>");
+    configXml.append("  <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>");
+    configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
+    configXml.append("  <CorrelationType>Generic</CorrelationType>");
+    configXml.append("  <Dimension>ATM</Dimension>");
+    configXml.append("  <QuoteType>Rate</QuoteType>");
+    configXml.append("  <Extrapolation>true</Extrapolation>");
+    configXml.append("  <Calendar>TARGET</Calendar>");
+    configXml.append("  <DayCounter>A365</DayCounter>");
+    configXml.append("  <BusinessDayConvention>Following</BusinessDayConvention>");
+    configXml.append("  <OptionTenors>1Y,2Y</OptionTenors>");
+    configXml.append("  <Index1/>");
+    configXml.append("  <Index2/>");
+    configXml.append("  <Currency/>");
+    configXml.append("</CorrelationCurve>");
+
+    // Create the XMLNode
+    XMLDocument doc;
+    doc.fromXMLString(configXml);
+    XMLNode* configNode = doc.getFirstNode("Correlation");
+
+    // Parse correlation curve configuration from XML
+    CorrelationCurveConfig config;
+    config.fromXML(configNode);
+
+    // Check fields
+    BOOST_CHECK_EQUAL(config.curveID(), "EUR-CMS-10Y/EUR-CMS-1Y");
+    BOOST_CHECK_EQUAL(config.curveDescription(), "EUR CMS correlations");
     BOOST_CHECK_EQUAL(config.extrapolate(), true);
 
     BOOST_CHECK_EQUAL(config.dayCounter().name(), "Actual/365 (Fixed)");
@@ -84,6 +136,45 @@ BOOST_AUTO_TEST_CASE(testParseFromXml) {
     BOOST_CHECK_EQUAL_COLLECTIONS(p.begin(), p.end(), config.optionTenors().begin(), config.optionTenors().end());
 }
 
+BOOST_AUTO_TEST_CASE(testParseGenericCorrelationNullQuoteFromXml) {
+
+    BOOST_TEST_MESSAGE("Testing parsing of correlation curve configuration from XML");
+
+    // Create an XML string representation of the correlation curve configuration
+    string configXml;
+    configXml.append("<Correlation>");
+    configXml.append("  <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>");
+    configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
+    configXml.append("  <CorrelationType>Generic</CorrelationType>");
+    configXml.append("  <QuoteType>Null</QuoteType>");
+    configXml.append("  <Dimension/>");
+    configXml.append("  <Extrapolation/>");
+    configXml.append("  <Calendar>TARGET</Calendar>");
+    configXml.append("  <DayCounter>A365</DayCounter>");
+    configXml.append("  <BusinessDayConvention/>");
+    configXml.append("  <OptionTenors/>");
+    configXml.append("  <Index1/>");
+    configXml.append("  <Index2/>");
+    configXml.append("  <Currency/>");
+    configXml.append("</CorrelationCurve>");
+
+    // Create the XMLNode
+    XMLDocument doc;
+    doc.fromXMLString(configXml);
+    XMLNode* configNode = doc.getFirstNode("Correlation");
+
+    // Parse correlation curve configuration from XML
+    CorrelationCurveConfig config;
+    config.fromXML(configNode);
+
+    // Check fields
+    BOOST_CHECK_EQUAL(config.curveID(), "EUR-CMS-10Y/EUR-CMS-1Y");
+    BOOST_CHECK_EQUAL(config.curveDescription(), "EUR CMS correlations");
+
+    BOOST_CHECK_EQUAL(config.dayCounter().name(), "Actual/365 (Fixed)");
+    BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
+
+}
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

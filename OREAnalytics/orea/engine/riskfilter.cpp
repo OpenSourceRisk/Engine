@@ -40,12 +40,11 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
         RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::FXSpot,
         RiskFactorKey::KeyType::FXVolatility,        RiskFactorKey::KeyType::EquitySpot,
-        RiskFactorKey::KeyType::EquityForecastCurve, RiskFactorKey::KeyType::EquityVolatility,
-        RiskFactorKey::KeyType::DividendYield,       RiskFactorKey::KeyType::SurvivalProbability,
-        RiskFactorKey::KeyType::RecoveryRate,        RiskFactorKey::KeyType::CDSVolatility,
-        RiskFactorKey::KeyType::BaseCorrelation,     RiskFactorKey::KeyType::CPIIndex,
-        RiskFactorKey::KeyType::ZeroInflationCurve,  RiskFactorKey::KeyType::YoYInflationCurve,
-        RiskFactorKey::KeyType::SecuritySpread};
+        RiskFactorKey::KeyType::EquityVolatility,    RiskFactorKey::KeyType::DividendYield,       
+        RiskFactorKey::KeyType::SurvivalProbability, RiskFactorKey::KeyType::RecoveryRate,        
+        RiskFactorKey::KeyType::CDSVolatility,       RiskFactorKey::KeyType::BaseCorrelation,     
+        RiskFactorKey::KeyType::CPIIndex,            RiskFactorKey::KeyType::ZeroInflationCurve,  
+        RiskFactorKey::KeyType::YoYInflationCurve,   RiskFactorKey::KeyType::SecuritySpread};
 
     std::set<RiskFactorKey::KeyType> allowed_type, allowed;
 
@@ -56,11 +55,10 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         case 1:
             allowed_type = {RiskFactorKey::KeyType::DiscountCurve,      RiskFactorKey::KeyType::YieldCurve,
                             RiskFactorKey::KeyType::IndexCurve,         RiskFactorKey::KeyType::FXSpot,
-                            RiskFactorKey::KeyType::EquitySpot,         RiskFactorKey::KeyType::EquityForecastCurve,
-                            RiskFactorKey::KeyType::DividendYield,      RiskFactorKey::KeyType::SurvivalProbability,
-                            RiskFactorKey::KeyType::RecoveryRate,       RiskFactorKey::KeyType::CPIIndex,
-                            RiskFactorKey::KeyType::ZeroInflationCurve, RiskFactorKey::KeyType::YoYInflationCurve,
-                            RiskFactorKey::KeyType::SecuritySpread};
+                            RiskFactorKey::KeyType::EquitySpot,         RiskFactorKey::KeyType::DividendYield,      
+                            RiskFactorKey::KeyType::SurvivalProbability,RiskFactorKey::KeyType::RecoveryRate,       
+                            RiskFactorKey::KeyType::CPIIndex,           RiskFactorKey::KeyType::ZeroInflationCurve, 
+                            RiskFactorKey::KeyType::YoYInflationCurve,  RiskFactorKey::KeyType::SecuritySpread};
             break;
         case 2:
             allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility, RiskFactorKey::KeyType::OptionletVolatility,
@@ -94,8 +92,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                              RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::BaseCorrelation};
             break;
         case 4:
-            allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityForecastCurve,
-                             RiskFactorKey::KeyType::EquityVolatility, RiskFactorKey::KeyType::DividendYield};
+            allowed_class = {RiskFactorKey::KeyType::EquitySpot, RiskFactorKey::KeyType::EquityVolatility, 
+                             RiskFactorKey::KeyType::DividendYield};
             break;
         case 5:
             allowed_class = {RiskFactorKey::KeyType::FXSpot, RiskFactorKey::KeyType::FXVolatility};

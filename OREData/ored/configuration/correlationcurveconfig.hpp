@@ -31,15 +31,15 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::BusinessDayConvention;
+using QuantLib::Calendar;
+using QuantLib::DayCounter;
+using QuantLib::Null;
+using QuantLib::Period;
+using QuantLib::Spread;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Calendar;
-using QuantLib::BusinessDayConvention;
-using QuantLib::Spread;
-using QuantLib::Null;
 
 //! Correlation curve configuration
 /*!
@@ -48,11 +48,11 @@ using QuantLib::Null;
 class CorrelationCurveConfig : public CurveConfig {
 public:
     //! supported Correlation types
-    enum class CorrelationType { CMSSpread };
+    enum class CorrelationType { CMSSpread, Generic };
     //! supported Correlation dimensions
     enum class Dimension { ATM, Constant };
     // supported quote types
-    enum class QuoteType { Rate, Price };
+    enum class QuoteType { Rate, Price, Null };
 
     //! \name Constructors/Destructors
     //@{
