@@ -326,7 +326,7 @@
       <xs:element type="xs:string" name="ShiftExpiries"/>
       <xs:element type="xs:string" name="ShiftTerms"/>
     </xs:sequence>
-    <xs:attribute type="currencyCode" name="ccy" use="required"/>
+    <xs:attribute type="xs:string" name="name" use="required"/>
   </xs:complexType>
 
   <xs:complexType name="capfloorvolatility">
