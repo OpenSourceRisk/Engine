@@ -95,12 +95,6 @@
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="BondOption">
-    <Model>Black</Model>
-    <ModelParameters/>
-    <Engine>BlackBondOptionEngine</Engine>
-    <EngineParameters/>
-  </Product>
   <Product type="CreditDefaultSwap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
