@@ -113,7 +113,7 @@ struct CommonVars {
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
                              floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, initialPrice, settlementDays, false),
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, initialPrice, false, settlementDays),
                           isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
