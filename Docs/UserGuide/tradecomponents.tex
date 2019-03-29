@@ -596,7 +596,7 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
   Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
-\item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by compounding the fixings. 
+\item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by compounding the fixings.  IsAveraged only applies to Overnight indices.
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
@@ -908,7 +908,7 @@ Listing \ref{lst:digitalcmsspreadlegdata} shows an example for a leg of type Dig
 The DigitalCMSLegData block contains the following elements:
 
 \begin{itemize}
-\item DigitalCMSLegData: a DigitalCMSSpreadLegData block describing the underlying digital cms spread leg (see \ref{ss:digitalcmsspreadlegdata}.
+\item DigitalCMSLegData: a DigitalCMSSpreadLegData block describing the underlying digital cms spread leg (see \ref{ss:digitalcmsspreadlegdata}.)
 \item CallPosition: Specifies whether the call option position is long  or
   short.
 \item IsCallATMIncluded: inclusion flag on the call payoff if the call option ends at-the-money
@@ -937,9 +937,21 @@ Allowable values:  \emph{Price} or  \emph{Total}
  Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
 
 \item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price.
-\item NotionalReset [Optional]: Defaults to \emph{false}. If set to \emph{true}, the Notional is reset at the beginning of each coupon period.
-\item DividendFactor [Optional]: Factor of dividend to be included in return. Defaults to \emph{1}.
+
+Allowable values: Any positive real number
+
+\item NotionalReset [Optional]: Defaults to \emph{false}. If set to \emph{true}, the Notional is reset at the beginning of each coupon period. Notional resets only affect the equity leg.
+
+Allowable values:  \emph{true} or  \emph{false}
+
+\item DividendFactor [Optional]: Factor of dividend to be included in return. 
+
+Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
+
 \item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
+
+Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref{ss:schedule_data}). If omitted, equity valuation dates follow the schedule of the equity leg adjusted for FixingDays.
+
 \item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
 %Allowable values:  Any positive real number.
