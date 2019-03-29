@@ -48,22 +48,20 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                                         const boost::shared_ptr<ore::data::Market>& market,
-                                         const string& marketConfiguration,
-                                         const boost::shared_ptr<ore::data::EngineData>& engineData,
-                                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions, const bool recalibrateModels,
-                                         const CurveConfigurations& curveConfigs,
-                                         const TodaysMarketParameters& todaysMarketParams,
-                                         const bool nonShiftedBaseCurrencyConversion, 
-                                         const bool continueOnError)
+SensitivityAnalysis::SensitivityAnalysis(
+    const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
+    const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+    const bool recalibrateModels, const CurveConfigurations& curveConfigs,
+    const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), 
-      todaysMarketParams_(todaysMarketParams), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), continueOnError_(continueOnError),
+      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+      overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError),
       engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
@@ -80,7 +78,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     initializeSimMarket();
 
     LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory();
+    boost::shared_ptr<EngineFactory> factory = buildFactory(extraEngineBuilders_, extraLegBuilders_);
     resetPortfolio(factory);
     if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
@@ -221,21 +219,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Size keyIdx = key.index;
             Period p = itr->second->shiftTenors[keyIdx];
             Handle<YieldTermStructure> yts = simMarket->yieldCurve(yc, marketConfiguration);
-            Time t = yts->dayCounter().yearFraction(asof, asof + p);
-            Real zeroRate = yts->zeroRate(t, Continuous);
-            shiftMult = zeroRate;
-        }
-    } break;
-    case RiskFactorKey::KeyType::EquityForecastCurve: {
-        string ec = keylabel;
-        auto itr = sensiParams.equityForecastCurveShiftData().find(ec);
-        QL_REQUIRE(itr != sensiParams.equityForecastCurveShiftData().end(), "shiftData not found for " << ec);
-        shiftSize = itr->second->shiftSize;
-
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts = simMarket->equityForecastCurve(ec, marketConfiguration);
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real zeroRate = yts->zeroRate(t, Continuous);
             shiftMult = zeroRate;
