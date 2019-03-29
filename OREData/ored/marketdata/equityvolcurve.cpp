@@ -26,7 +26,7 @@
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <regex>
+#include <qle/math/fillemptymatrix.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -177,7 +177,7 @@ namespace ore {
                     
                     // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
                     oexpiries = PopulateMatrixFromMap(sparse_vols, wc_mat, asof); // Builds matrix and returns expiries (NOTE: this also takes care of dates vs periods)
-                    ore::data::FillIncompleteMatrix(sparse_vols); // still need to define this function. Make sure this is the same size as the sparse vols. 
+                    QuantExt::FillIncompleteMatrix(sparse_vols, true, -1.0);
                     final_vols = sparse_vols;
                     map<string, map<string, Real>>::iterator itr;
 
@@ -195,7 +195,7 @@ namespace ore {
                     vector<Real> strikesReal;
 
                     // expiries
-                    if (!strikes_wc && !expiries_wc) {
+                    if (no_wild_card) {
                         for (Size i = 0; i < final_vols.columns(); i++) {
                             Date tmpDate;
                             Period tmpPer;
@@ -213,7 +213,7 @@ namespace ore {
                     }
                     
                     // strikes
-                    if (!strikes_wc && !expiries_wc) {
+                    if (no_wild_card) {
                         if (!isSurface) {
                             LOG("EquityVolCurve: Building BlackVarianceCurve");
                             QL_REQUIRE(final_vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
