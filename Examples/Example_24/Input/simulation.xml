@@ -104,7 +104,6 @@
         <Name>Lufthansa</Name>
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
     </Equities>
     <SwaptionVolatilities>
       <Simulate>false</Simulate>
