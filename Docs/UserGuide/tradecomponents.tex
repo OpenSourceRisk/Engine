@@ -935,7 +935,12 @@ Allowable values:  \emph{Price} or  \emph{Total}
 \item Name: The identifier of the underlying equity or equity index.
  
  Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
-%\item Quantity: The number of units of the underlying equity.
+
+\item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price.
+\item NotionalReset [Optional]: Defaults to \emph{false}. If set to \emph{true}, the Notional is reset at the beginning of each coupon period.
+\item DividendFactor [Optional]: Factor of dividend to be included in return. Defaults to \emph{1}.
+\item ValuationSchedule [Optional]: Schedule of dates for equity valuation.
+\item FixingDays [Optional]: The number of days before payment date for equity valuation. \emph{N.B.} Only used when no valuation schedule present. Defaults to \emph{0}.
 
 %Allowable values:  Any positive real number.
 \end{itemize} 
@@ -955,7 +960,7 @@ Allowable values:  \emph{Price} or  \emph{Total}
         <ScheduleData>
           <Rules>
             <StartDate>2016-03-01</StartDate>
-            <EndDate>2036-03-01</EndDate>
+            <EndDate>2018-03-01</EndDate>
             <Tenor>3M</Tenor>
             <Calendar>TARGET</Calendar>
             <Convention>ModifiedFollowing</Convention>
@@ -969,6 +974,27 @@ Allowable values:  \emph{Price} or  \emph{Total}
         <EquityLegData>
           <ReturnType>Price</ReturnType>
           <Name>ISIN:US78378X1072</Name>
+          <InitialPrice>100</InitialPrice>
+          <NotionalReset>true</NotionalReset>
+          <DividendFactor>1</DividendFactor>
+          <ValuationSchedule>
+            <Dates>
+              <Calendar>USD</Calendar>
+              <Convention>ModifiedFollowing</Convention>
+              <Dates>
+                <Date>2016-03-01</Date>
+                <Date>2016-06-01</Date>
+                <Date>2016-09-01</Date>
+                <Date>2016-12-01</Date>
+                <Date>2017-03-01</Date>
+                <Date>2017-06-01</Date>
+                <Date>2017-09-01</Date>
+                <Date>2017-12-01</Date>
+                <Date>2018-03-01</Date>
+              </Dates>
+            </Dates>
+           </ValuationSchedule>
+           <FixingDays>0</FixingDays>
         </EquityLegData>
       </LegData>
 \end{minted}
