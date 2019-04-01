@@ -325,6 +325,7 @@ YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& convent
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
+    // TODO: Move all Quote handling up to this class
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
 }
@@ -334,6 +335,8 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Type", typeID_);
     if (!quotes_.empty()) {
         XMLNode* quotesNode = doc.allocNode("Quotes");
+        // Special case handling for AverageOIS where the quotes are stored as pairs
+        // Spread and Rate.
         if (type_ == YieldCurveSegment::Type::AverageOIS) {
             QL_REQUIRE(quotes_.size()%2==0,"Invalid quotes vector should be even")
             for (Size i = 0; i < quotes_.size(); i = i + 2) {
@@ -345,8 +348,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
                 XMLUtils::addChild(doc, compositeQuoteNode, "RateQuote", rateQuote);
                 XMLUtils::appendNode(quotesNode, compositeQuoteNode);
             }
-        }
-        else {
+        } else {
             for (auto q : quotes_) {
                 XMLNode* qNode = doc.allocNode("Quote", q.first);
                 if (q.second)
@@ -361,6 +363,7 @@ XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     return node;
 }
 
+// TODO: embed this in YieldCurveSegment::fromXML()
 void YieldCurveSegment::loadQuotesFromXML(XMLNode* parent) {
     // Was:
     //  quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);

@@ -171,14 +171,19 @@ void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, const 
 }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, Real value) {
+    // We want to write out a double that conforms to xs:double, this means no
+    // scientific notation, so we check for really small numbers here and explicitly set
+    // to 16 decimal places
     if (abs(value) < 1.0e-6) {
         std::ostringstream obj1;
         obj1.precision(16);
         obj1 << std::fixed << value;
         addChild(doc, n, name, obj1.str());
-    }else {
+    } else {
+        // And here we just use boost::lexical_cast which is better
+        // at precision than std::to_string()
         addChild(doc, n, name, boost::lexical_cast<std::string>(value));
-    }//lexical_cast used to prevent loss of precision
+    }
  }
 
 void XMLUtils::addChild(XMLDocument& doc, XMLNode* n, const string& name, int value) {

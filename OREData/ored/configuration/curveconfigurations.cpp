@@ -413,7 +413,7 @@ XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
     addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
     addNodes(doc, parent, "Correlations", correlationCurveConfigs_);
-        
+
     return parent;
 }
 } // namespace data

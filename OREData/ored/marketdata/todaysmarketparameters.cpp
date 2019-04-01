@@ -27,26 +27,27 @@ namespace data {
 namespace {
 static const Size numberOfMarketObjects = 23;
 // clang-format off
-static const string marketObjectStrings[] = {"YieldCurve","DiscountCurve", "IndexCurve", "SwapIndexCurve",
-                                             "ZeroInflationCurve","ZeroInflationCapFloorVol","YoYInflationCurve",
-                                             "FXSpot","BaseCorrelation", "FXVol", "SwaptionVol","CapFloorVol","CDSVol",
-                                             "DefaultCurve","InflationCapFloorPriceSurface","YoYInflationCapFloorPriceSurface",
+// Note the order of elements in this array must respect the XML Schema
+static const string marketObjectStrings[] = {"YieldCurve", "DiscountCurve", "IndexCurve", "SwapIndexCurve",
+                                             "ZeroInflationCurve", "ZeroInflationCapFloorVol", "YoYInflationCurve",
+                                             "FXSpot", "BaseCorrelation", "FXVol", "SwaptionVol", "CapFloorVol", "CDSVol",
+                                             "DefaultCurve", "InflationCapFloorPriceSurface", "YoYInflationCapFloorPriceSurface",
                                              "YoYInflationCapFloorVol", "EquityCurves", "EquityVols",
                                              "Securities", "CommodityCurves", "CommodityVolatilities", "Correlation"};
-static const string marketObjectXMLNames[] = {"YieldCurves","DiscountingCurves", "IndexForwardingCurves",
-                                              "SwapIndexCurves","ZeroInflationIndexCurves","ZeroInflationCapFloorVolatilities",
-                                              "YYInflationIndexCurves","FxSpots","BaseCorrelations", "FxVolatilities",
-                                              "SwaptionVolatilities","CapFloorVolatilities","CDSVolatilities","DefaultCurves",
-                                              "InflationCapFloorPriceSurfaces","YYInflationCapFloorPriceSurfaces",
-                                              "YYInflationCapFloorVolatilities","EquityCurves","EquityVolatilities",
-                                              "Securities","CommodityCurves","CommodityVolatilities", "Correlations"};
+static const string marketObjectXMLNames[] = {"YieldCurves", "DiscountingCurves", "IndexForwardingCurves",
+                                              "SwapIndexCurves", "ZeroInflationIndexCurves", "ZeroInflationCapFloorVolatilities",
+                                              "YYInflationIndexCurves", "FxSpots", "BaseCorrelations", "FxVolatilities",
+                                              "SwaptionVolatilities", "CapFloorVolatilities", "CDSVolatilities", "DefaultCurves",
+                                              "InflationCapFloorPriceSurfaces", "YYInflationCapFloorPriceSurfaces",
+                                              "YYInflationCapFloorVolatilities", "EquityCurves", "EquityVolatilities",
+                                              "Securities", "CommodityCurves", "CommodityVolatilities", "Correlations"};
 static const pair<string, string> marketObjectXMLNamesSingle[] = {
-    {"YieldCurve", "name"},{"DiscountingCurve", "currency"}, {"Index", "name"}, {"SwapIndex", "name"},
-    {"ZeroInflationIndexCurve", "name"},{"ZeroInflationCapFloorVolatility", "name" },
-    {"YYInflationIndexCurve", "name"},{"FxSpot", "pair"}, {"BaseCorrelation", "name"}, {"FxVolatility", "pair"},
-    {"SwaptionVolatility", "currency"},{"CapFloorVolatility", "currency"}, {"CDSVolatility", "name"},
-    {"DefaultCurve", "name"},{"InflationCapFloorPriceSurface", "name"},
-    {"YYInflationCapFloorPriceSurface", "name"},{"YYInflationCapFloorVolatility", "name"},
+    {"YieldCurve", "name"}, {"DiscountingCurve", "currency"}, {"Index", "name"}, {"SwapIndex", "name"},
+    {"ZeroInflationIndexCurve", "name"}, {"ZeroInflationCapFloorVolatility", "name" },
+    {"YYInflationIndexCurve", "name"}, {"FxSpot", "pair"}, {"BaseCorrelation", "name"}, {"FxVolatility", "pair"},
+    {"SwaptionVolatility", "currency"}, {"CapFloorVolatility", "currency"}, {"CDSVolatility", "name"},
+    {"DefaultCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
+    {"YYInflationCapFloorPriceSurface", "name"}, {"YYInflationCapFloorVolatility", "name"},
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
     {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"}};
 // clang-format on
@@ -143,7 +144,8 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
             XMLNode* configurationsNode = XMLUtils::addChild(doc, todaysMarketNode, "Configuration");
             XMLUtils::addAttribute(doc, configurationsNode, "id", iterator->first.c_str());
             for (Size i = 0; i < numberOfMarketObjects; ++i) {
-                XMLUtils::addChild(doc, configurationsNode, marketObjectXMLNames[i] + "Id", iterator->second(MarketObject(i))); // Added the "Id" for schema test
+                XMLUtils::addChild(doc, configurationsNode, marketObjectXMLNames[i] + "Id",
+                                   iterator->second(MarketObject(i))); // Added the "Id" for schema test
             }
         }
     }

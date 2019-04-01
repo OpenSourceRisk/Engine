@@ -197,7 +197,7 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     }
 
     if (currency_ != "")
-    XMLUtils::addChild(doc, node, "Currency", currency_);
+        XMLUtils::addChild(doc, node, "Currency", currency_);
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
