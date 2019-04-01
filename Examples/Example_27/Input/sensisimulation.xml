@@ -63,7 +63,6 @@
         <Name>Lufthansa</Name>
       </Names>
       <DividendTenors>6M,1Y,2Y</DividendTenors>
-      <ForecastTenors>6M,1Y,2Y</ForecastTenors>
     </Equities>
 
     <!-- Even if we do not simulate them - option pricing needs vol

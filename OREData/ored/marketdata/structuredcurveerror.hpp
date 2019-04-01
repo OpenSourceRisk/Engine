@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -40,9 +41,10 @@ public:
     const std::string& exceptionWhat() const { return exceptionWhat_; }
 protected:
     std::string json() const override {
+        std::string eWhat = boost::replace_all_copy(exceptionWhat_, "\"", "\\\"");
         return "{ \"errorType\":\"Curve\", \"curveId\":\"" + curveId_ + "\"," +
                " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
+               " \"exceptionMessage\":\"" + eWhat + "\"}";
     }
 private:
     std::string curveId_, exceptionType_, exceptionWhat_;

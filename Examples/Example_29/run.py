@@ -6,6 +6,5 @@ from ore_examples_helper import OreExample
 
 oreex = OreExample(sys.argv[1] if len(sys.argv)>1 else False)
 
-oreex.print_headline("Run ORE to produce NPV cube and exposures")
+oreex.print_headline("Run ORE to illustrate use of fixed vs float cross currency swaps")
 oreex.run("Input/ore.xml")
-oreex.get_times("Output/log.txt")

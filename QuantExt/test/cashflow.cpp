@@ -113,6 +113,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
     Handle<Quote> spot(sq);
     DayCounter dc = ActualActual();
     Calendar cal = TARGET();
+    Currency ccy = USDCurrency();
     Natural fixingLag = 2;
     Real divFactor = 1.0;
     Handle<YieldTermStructure> dividend(
@@ -121,7 +122,7 @@ BOOST_AUTO_TEST_CASE(testEquityCoupon) {
         boost::shared_ptr<YieldTermStructure>(new FlatForward(0, cal, 0.02, dc))); // Equity Forecast Curve
 
     boost::shared_ptr<EquityIndex> eqIndex =
-        boost::make_shared<EquityIndex>(eqName, cal, spot, equityforecast, dividend);
+        boost::make_shared<EquityIndex>(eqName, cal, ccy, spot, equityforecast, dividend);
 
     eqIndex->addFixing(cfDate1, 2000);
     eqIndex->addFixing(fixingDate1, 1980);

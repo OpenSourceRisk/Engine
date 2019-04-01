@@ -25,6 +25,7 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -48,10 +49,11 @@ public:
     const std::string& exceptionWhat() const { return exceptionWhat_; }
 protected:
     std::string json() const override {
+        std::string eWhat = boost::replace_all_copy(exceptionWhat_, "\"", "\\\"");
         return "{ \"errorType\":\"Trade\", \"tradeId\":\"" + tradeId_ + "\"," +
                " \"tradeType\":\"" + tradeType_ + "\"," +
                " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
+               " \"exceptionMessage\":\"" + eWhat + "\"}";
     }
 private:
     std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;

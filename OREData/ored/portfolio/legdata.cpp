@@ -14,7 +14,7 @@
  contribution to risk analytics and model standardisation, but WITHOUT
  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
-*/
+*/ 
 
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
@@ -122,7 +122,7 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
-                                                gearingDates_);
+            gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
@@ -219,11 +219,11 @@ XMLNode* CMSSpreadLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index2", swapIndex2_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "FixingDays", fixingDays_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
                                                 gearingDates_);
-    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
@@ -260,15 +260,15 @@ XMLNode* DigitalCMSSpreadLegData::toXML(XMLDocument& doc) {
     if (callStrikes_.size() > 0) {
         XMLUtils::addChild(doc, node, "CallPosition", to_string(callPosition_));
         XMLUtils::addChild(doc, node, "IsCallATMIncluded", isCallATMIncluded_);
-        XMLUtils::addChildren(doc, node, "CallStrikes", "strike", callStrikes_);
-        XMLUtils::addChildren(doc, node, "CallPayoffs", "payoff", callPayoffs_);
+        XMLUtils::addChildren(doc, node, "CallStrikes", "Strike", callStrikes_);
+        XMLUtils::addChildren(doc, node, "CallPayoffs", "Payoff", callPayoffs_);
     }
 
     if (putStrikes_.size() > 0) {
         XMLUtils::addChild(doc, node, "PutPosition", to_string(putPosition_));
         XMLUtils::addChild(doc, node, "IsPutATMIncluded", isPutATMIncluded_);
-        XMLUtils::addChildren(doc, node, "PutStrikes", "strike", putStrikes_);
-        XMLUtils::addChildren(doc, node, "PutPayoffs", "payoff", putPayoffs_);
+        XMLUtils::addChildren(doc, node, "PutStrikes", "Strike", putStrikes_);
+        XMLUtils::addChildren(doc, node, "PutPayoffs", "Payoff", putPayoffs_);
     }
     
     return node;
@@ -312,7 +312,18 @@ void EquityLegData::fromXML(XMLNode* node) {
         dividendFactor_ = 1.0;
     eqName_ = XMLUtils::getChildValue(node, "Name");
     indices_.insert("EQ-" + eqName_);
-    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");
+    if (XMLUtils::getChildNode(node, "InitialPrice"))
+        initialPrice_ = XMLUtils::getChildValueAsDouble(node, "InitialPrice");
+    else
+        initialPrice_ = Real();
+    fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays");    
+    XMLNode* tmp = XMLUtils::getChildNode(node, "ValuationSchedule");
+    if (tmp)
+        valuationSchedule_.fromXML(tmp);    
+    if (XMLUtils::getChildNode(node, "NotionalReset"))
+        notionalReset_ = XMLUtils::getChildValueAsBool(node, "NotionalReset");
+    else
+        notionalReset_ = false;
 }
 
 XMLNode* EquityLegData::toXML(XMLDocument& doc) {
@@ -322,7 +333,13 @@ XMLNode* EquityLegData::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "DividendFactor", dividendFactor_);
     }
     XMLUtils::addChild(doc, node, "Name", eqName_);
-    if (fixingDays_ != 0)
+    if (initialPrice_)
+        XMLUtils::addChild(doc, node, "InitialPrice", initialPrice_);
+    XMLUtils::addChild(doc, node, "NotionalReset", notionalReset_);
+
+    if (valuationSchedule_.hasData())
+        XMLUtils::appendNode(node, valuationSchedule_.toXML(doc));
+    else
         XMLUtils::addChild(doc, node, "FixingDays", static_cast<Integer>(fixingDays_));
     return node;
 }
@@ -459,12 +476,12 @@ XMLNode* LegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LegType", legType());
     XMLUtils::addChild(doc, node, "Payer", isPayer_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    if (dayCounter_ != "")
-        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     if (paymentConvention_ != "")
         XMLUtils::addChild(doc, node, "PaymentConvention", paymentConvention_);
     if (paymentLag_ != 0)
         XMLUtils::addChild(doc, node, "PaymentLag", paymentLag_);
+    if (dayCounter_ != "")
+        XMLUtils::addChild(doc, node, "DayCounter", dayCounter_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Notionals", "Notional", notionals_, "startDate",
                                                 notionalDates_);
     XMLNode* notionalsNodePtr = XMLUtils::getChildNode(node, "Notionals");
@@ -517,42 +534,6 @@ Leg makeSimpleLeg(const LegData& data) {
     }
     return leg;
 }
-
-namespace {
-void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
-                       const bool annuityAllowed = false, const std::vector<Real>& rates = std::vector<Real>()) {
-    Date lastEndDate = Date::minDate();
-    for (auto const& amort : data.amortizationData()) {
-        if (!amort.initialized())
-            continue;
-        Date startDate = parseDate(amort.startDate());
-        QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
-                                                 << startDate << ") is earlier than last end date (" << lastEndDate
-                                                 << ")");
-        lastEndDate = parseDate(amort.endDate());
-        AmortizationType amortizationType = parseAmortizationType(amort.type());
-        if (amortizationType == AmortizationType::FixedAmount)
-            notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::RelativeToInitialNotional)
-            notionals = buildAmortizationScheduleRelativeToInitialNotional(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::RelativeToPreviousNotional)
-            notionals = buildAmortizationScheduleRelativeToPreviousNotional(notionals, schedule, amort);
-        else if (amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(annuityAllowed, "Amortization type Annuity not allowed for leg type " << data.legType());
-            if (!rates.empty())
-                notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
-                                                                  parseDayCounter(data.dayCounter()));
-        } else
-            QL_FAIL("AmortizationType " << amort.type() << " not supported");
-        // check that for a floating leg we only have one amortization block, if the type is annuity
-        // we recognise a floating leg by an empty (fixed) rates vector
-        if (rates.empty() && amortizationType == AmortizationType::Annuity) {
-            QL_REQUIRE(data.amortizationData().size() == 1,
-                       "Floating Leg supports only one amortisation block of type Annuity");
-        }
-    }
-}
-} // namespace
 
 Leg makeFixedLeg(const LegData& data) {
     boost::shared_ptr<FixedLegData> fixedLegData = boost::dynamic_pointer_cast<FixedLegData>(data.concreteLegData());
@@ -1125,7 +1106,13 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
     bool isTotalReturn = eqLegData->returnType() == "Total";
     Real dividendFactor = eqLegData->dividendFactor();
+    Real initialPrice = eqLegData->initialPrice();
+    bool notionalReset = eqLegData->notionalReset();
     Natural fixingDays = eqLegData->fixingDays();
+    ScheduleData valuationData = eqLegData->valuationSchedule();
+    Schedule valuationSchedule;
+    if (valuationData.hasData())
+        valuationSchedule = makeSchedule(valuationData);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
     applyAmortization(notionals, data, schedule, false);
@@ -1136,7 +1123,11 @@ Leg makeEquityLeg(const LegData& data, const boost::shared_ptr<EquityIndex>& equ
                   .withPaymentAdjustment(bdc)
                   .withTotalReturn(isTotalReturn)
                   .withDividendFactor(dividendFactor)
-                  .withFixingDays(fixingDays);
+                  .withInitialPrice(initialPrice)
+                  .withNotionalReset(notionalReset)
+                  .withFixingDays(fixingDays)
+                  .withValuationSchedule(valuationSchedule);
+    
     QL_REQUIRE(leg.size() > 0, "Empty Equity Leg");
 
     return leg;
@@ -1322,6 +1313,40 @@ vector<double> buildAmortizationScheduleFixedAnnuity(const vector<double>& notio
     }
     LOG("Fixed Annuity notional schedule done");
     return nominals;
+}
+  
+void applyAmortization(std::vector<Real>& notionals, const LegData& data, const Schedule& schedule,
+                       const bool annuityAllowed, const std::vector<Real>& rates) {
+    Date lastEndDate = Date::minDate();
+    for (auto const& amort : data.amortizationData()) {
+        if (!amort.initialized())
+            continue;
+        Date startDate = parseDate(amort.startDate());
+        QL_REQUIRE(startDate >= lastEndDate, "Amortization start date ("
+                                                 << startDate << ") is earlier than last end date (" << lastEndDate
+                                                 << ")");
+        lastEndDate = parseDate(amort.endDate());
+        AmortizationType amortizationType = parseAmortizationType(amort.type());
+        if (amortizationType == AmortizationType::FixedAmount)
+            notionals = buildAmortizationScheduleFixedAmount(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::RelativeToInitialNotional)
+            notionals = buildAmortizationScheduleRelativeToInitialNotional(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::RelativeToPreviousNotional)
+            notionals = buildAmortizationScheduleRelativeToPreviousNotional(notionals, schedule, amort);
+        else if (amortizationType == AmortizationType::Annuity) {
+            QL_REQUIRE(annuityAllowed, "Amortization type Annuity not allowed for leg type " << data.legType());
+            if (!rates.empty())
+                notionals = buildAmortizationScheduleFixedAnnuity(notionals, rates, schedule, amort,
+                                                                  parseDayCounter(data.dayCounter()));
+        } else
+            QL_FAIL("AmortizationType " << amort.type() << " not supported");
+        // check that for a floating leg we only have one amortization block, if the type is annuity
+        // we recognise a floating leg by an empty (fixed) rates vector
+        if (rates.empty() && amortizationType == AmortizationType::Annuity) {
+            QL_REQUIRE(data.amortizationData().size() == 1,
+                       "Floating Leg supports only one amortisation block of type Annuity");
+        }
+    }
 }
 
 } // namespace data
