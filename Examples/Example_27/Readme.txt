@@ -1,6 +1,6 @@
 1) Portfolio
 
-   Digital CMS Spread Swap
+   A series of Libor 3M vs Averaged BMA swaps, corresponding to the calibration instruments of the BMA Swap curve.
 
 2) Market
 
@@ -8,12 +8,8 @@
 
 3) Pricing
 
-   Single curve
+   Libor discounting to match the Libor discounting of the quoted basis swaps. They should all have approximately 0 NPV.
 
-4) Analytics
-
-   NPV, cashflows, sensitiivities
-
-5) Run Example
+4) Run Example
 
    python run.py

@@ -98,7 +98,8 @@
 %\date{7 October 2016}
 %\date{28 April 2017}
 %\date{7 December 2017}
-\date{13 June 2018}
+%\date{13 June 2018}
+\date{20 March 2018}
 \maketitle
 
 \newpage
@@ -114,8 +115,7 @@ Date & Author & Comment \\
 7 October 2016 & Quaternion & initial release\\
 28 April 2017 & Quaternion  & updates for release 2\\
 7 December 2017 & Quaternion & updates for release 3\\
-%13 June 2018 & Quaternion & updates for release 4\\
-21 February 2019 & Quaternion & updates for release 4\\
+20 March 2019 & Quaternion & updates for release 4\\
 \hline
 \end{supertabular}
 \end{center}
@@ -193,7 +193,7 @@ Subsequent ORE releases will also compute {\bf regulatory capital charges} for c
 %releases from Q1 2017 onwards will extend the derivative product and the risk factor range to Inflation, Credit, Equity
 %and Commodity. With the introduction of credit risk factors, the scope will also be extended to cover cash products
 %(loans and bonds) and related portfolio analytics.
-The product coverage of the third release of ORE in December 2017 is sketched in the following table.
+The product coverage of the fourth release of ORE in March 2018 is sketched in the following table.
 \begin{table}[hbt]
 \scriptsize
 \begin{center}
@@ -219,25 +219,32 @@ FX Options & Y & Y & Y & Y\\
 \hline
 Equity Forwards & Y & Y & Y & Y\\
 \hline
+Equity Swaps & Y & Y & Y & N\\
+\hline
 Equity Options & Y & Y & Y & Y \\
+\hline
+Commodity Forwards & Y & Y & N & N\\
+\hline
+Commodity Options & Y & Y & N & N \\
 \hline
 CPI Swaps & Y & Y & N & Y \\
 \hline
 %CPI Caps/Floors & Y & Y & N \\
 %\hline
 Year-on-Year Inflation Swaps & Y & Y & N & Y \\
-\hline
-%Year-on-Year Inflation Caps/Floors & Y & N & N \\
 %\hline
+%Year-on-Year Inflation Caps/Floors & Y & Y & N & N\\
+\hline
 Credit Default Swaps & Y & Y & N & N \\
 \hline
+
 \end{tabular}
 \caption{ORE product coverage.}
 \label{tab_coverage}
 \end{center}
 \end{table}
 
-Future releases will further extend the product and the risk factor range to Commodity, complete the analytics scope indicated in the table above and expand on the market risk analytics, add integrated credit/market risk analytics. 
+Future releases will further extend the product range and analytics coverage indicated in the table above, expand on the market risk analytics, add integrated credit/market risk analytics. 
 
 \medskip The simulation models applied in ORE's risk factor evolution implement the models discussed in detail in {\em
   Modern Derivatives Pricing and Credit Exposure Analysis} \cite{Lichters}: The IR/FX/INF/EQ risk factor evolution is based on
@@ -250,6 +257,7 @@ and lognormal processes for FX rates and EQ prices, Dodgeson-Kainth models for i
 \item Frequently Asked Questions: \url{http://www.opensourcerisk.org/faqs}
 \item Forum: \url{http://www.opensourcerisk.org/forum}
 \item Source code and releases: \url{https://github.com/opensourcerisk/engine}
+\item Language bindings: \url{https://github.com/opensourcerisk/ore-swig}
 \item Follow ORE on Twitter {\tt @OpenSourceRisk} for updates on releases and events
 \end{itemize}
 %An ORE Book will follow in 2017 that will elaborate on the engine's design and make the connection between methodology
@@ -268,28 +276,79 @@ parametrisation and the structure of trade and market data input.
 \section{Release Notes}\label{sec:releasenotes}
 %========================================================
 
-This section summarises the high level functionality changes between release 2 (05/2017) and 3 (12/2017).
+This section summarises the high level changes between release 3 (December 2017) and 4 (March 2019).
 
-\medskip
+\bigskip
+INSTRMENTS
 \begin{itemize}
-\item Added CMS and CMS Caps/Floors (pricing, sensitivity analysis and simulation)
-\item Added Credit Default Swaps (pricing and sensitivity analysis, no simulation yet)
-\item Added amortisation structures (fixed, percentage relative to initial or previous notional, annuity) to leg data
-\item Extended sensitivity framework (adding inflation, equity and credit) 
-\item Added inflation simulation and XVA, Dodgeson-Kainth simulation model calibrated to CPI Caps/Floors
-\item Added basic parametric Value at Risk (Delta and Delta-Gamma Normal VaR)
-\item Additional unit tests and examples
-\item Curve loader refactoring
-\item User guide updates
+\item Commodity Forward and Option, see example \ref{example:24}
+\item Equity Swap, see extended example \ref{ex:equityderivatives}
+%\item YoY Inflation Cap/Floor trade builders added
+\item CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example \ref{example:25}
 \end{itemize}
 
-%\medskip
-%API changes
-%\begin{itemize}
-%\item 
-%\end{itemize}
+\bigskip
+MARKETS
+\begin{itemize}
+\item New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand 
+\item New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS, NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR 
+\item New inflation idexes and regions: DKCPI, SECPI
+\item Equity index added
+\end{itemize}
 
-\todo[inline]{Complete release notes}
+\bigskip
+TERM STRUCTURES
+\begin{itemize}
+\item Cap/Floor smile volatility surface added
+\item Cross currency basis swap helper (with MtM Reset) added 
+\item Cross currency fixed vs. float swap helper added, see example \ref{example:29}
+\item Discount ratio curves added, see example \ref{example:28} 
+%\item Interpolated YoY inflation cap floor term price surface extens QuantLib's implementation to allow the choice of term structure directly from YoY swap quotes or from atm swap quotes stripped from cap/floor price surface
+%\item Optionlet stripper added (copy of the QL class that uses an QuantExt::CapFloorTermVolSurface to support BiLinearInterpolation)
+%\item Price term structure added
+%\item Default probability bootstrap traits added
+%\item YoY Inflation Optionlet (caplet/floorlet) volatility stripper added
+%\item YoY Inflation volatility surface extends QuantLib's implementation to include a volatility type and displacement
+\item Correlation term structure added (to support CMS spread products)
+\end{itemize}
+
+\bigskip
+ANALYTICS
+\begin{itemize}
+\item KVA added (thanks to Roland Kapl)
+\end{itemize}
+
+\bigskip
+UNIT TESTS
+\begin{itemize}
+\item Unit tests suites extended to 429 cases in total 
+\item Data driven tests added in ORE Data
+\item Now using boost's automated test suite creation and registration
+\end{itemize}
+
+\bigskip
+EXAMPLES
+\begin{itemize}
+\item ORE has 29 examples now vs 23 in the previous release
+\end{itemize}
+
+\bigskip
+USER GUIDE
+\begin{itemize}
+\item Extended to 186 pages
+\end{itemize}
+
+\bigskip
+BUILDING ORE
+\begin{itemize}
+\item CMake build system added, see end of section \ref{sec:build_ore}
+\end{itemize}
+
+\bigskip
+LANGUAGE BINDINGS
+\begin{itemize}
+\item ORE SWIG projected added, to support ORE in Python, see \url{https://github.com/OpenSourceRisk/ORE-SWIG}
+\end{itemize}
 
 %========================================================
 \section{ORE Data Flow}\label{sec:process}
@@ -444,8 +503,8 @@ This will create a folder 'ore' in your current directory that contains the code
 \subsubsection{Boost}\label{sec:boost}
 
 QuantLib and ORE depend on the boost C++ libraries. Hence these need to be installed before building QuantLib and
-ORE. On all platforms we recommend boost version 1\_63 or higher.
-Older versions may work on some platforms and system configurations, but were not tested.
+ORE. On all platforms the minimum required boost version is 1\_63 as of ORE release 4.
+%Older versions may work on some platforms and system configurations, but were not tested.
 
 \subsubsection*{Windows}
 
@@ -799,6 +858,18 @@ Example & Description \\
 \hline
 23 & Forward Rate Agreement and Averaging OIS Exposure\\
 \hline
+24 & Commodity Forward and Option Pricing and Sensitivity\\
+\hline
+25 & CMS Spread with (Digital) Cap/Floor Pricing, Sensitivity and Exposures\\
+\hline
+26 & Bootstrap Consistency\\
+\hline
+27 & BMA Basis Swap Pricing and Sensitivity\\
+\hline
+28 & Discount Ratio Curves\\
+\hline
+29 & Curve Building using Fixed vs. Float Cross Currency Helpers\\
+\hline
 \end{tabular}
 \caption{ORE examples.}
 \label{tab_0}
@@ -880,7 +951,7 @@ directory {\tt bin/win32/} respectively {\tt bin/x64/}. Otherwise the examples m
 executables which come with the ORE release.
 
 %--------------------------------------------------------
-\subsection{Interest Rate Swap Exposure}\label{sec:example1}
+\subsection{Interest Rate Swap Exposure, Flat Market}\label{sec:example1}
 %--------------------------------------------------------
 
 We start with a vanilla single currency Swap (currency EUR, maturity 20y, notional 10m, receive fixed 2\% annual, pay
@@ -934,7 +1005,11 @@ perspectives (EPE and ENE) match not only at the annual resets, but also for the
 legs to the point in time when the floating leg resets. Thereafter, between floating leg (only) reset and next joint
 fixed/floating leg reset, we see and expect a deviation of the two exposure profiles.
 
-\medskip Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market
+%--------------------------------------------------------
+\subsection{Interest Rate Swap Exposure, Realistic Market}\label{sec:example2}
+%--------------------------------------------------------
+
+Moving to {\tt Examples/Example\_2}, we see what changes when using a realistic (non-flat) market
 environment. Running the example with
 
 \medskip
@@ -1069,7 +1144,7 @@ directories {\tt Examples/Example\_7/Output/portfolio\_\#}. Note that these dire
 before running the batch with {\tt python run.py}.
 
 %--------------------------------------------------------
-\subsection{FX Forward Exposure}\label{sec:fxfwd}
+\subsection{FX Forward and FX Option Exposure}\label{sec:fxfwd}
 %--------------------------------------------------------
 
 The example in folder {\tt Examples/Example\_7} generates the exposure evolution for a EUR / USD FX Forward transaction
@@ -1087,7 +1162,7 @@ trade's value date must match corresponding Vanilla FX Option prices, as shown i
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{FX Option Exposure}\label{sec:fxoption}
+\subsection*{FX Option Exposure}\label{sec:fxoption}
 %--------------------------------------------------------
 
 This example (in folder {\tt Examples/Example\_7}, as the FX Forward example) illustrates the exposure evolution for an
@@ -1114,7 +1189,7 @@ each simulation step on each path.
 %\todo[inline]{Add exposure evolution graph with 'simulated' FX vol}
 
 %--------------------------------------------------------
-\subsection{Cross Currency Swap Exposure and FX Reset}
+\subsection{Cross Currency Swap Exposure, without FX Reset}
 %--------------------------------------------------------
 
 The case in {\tt Examples/Example\_8} is a vanilla cross currency Swap. It shows the typical blend of an Interest Rate
@@ -1128,6 +1203,10 @@ figure \ref{fig_6}.
   quarterly time steps.}
 \label{fig_6}
 \end{figure}
+
+%--------------------------------------------------------
+\subsection{Cross Currency Swap Exposure, with FX Reset}
+%--------------------------------------------------------
 
 The effect of the FX resetting feature, common in Cross Currency Swaps nowadays, is shown in {\tt Examples/Example\_9}.
 The example shows the exposure evolution of a EUR/USD cross currency basis Swap with FX reset at each interest period
@@ -1143,7 +1222,7 @@ the EUR leg's notional is reset to match the USD notional.
 \end{figure}
   
 %--------------------------------------------------------
-\subsection{Netting and Collateral}
+\subsection{Netting Set, Collateral, XVAs, XVA Allocation}
 %--------------------------------------------------------
 
 In this example (see folder {\tt Examples/Example\_10}) we showcase a small netting set consisting of three Swaps in
@@ -1203,7 +1282,7 @@ from the evaluation date.
 \end{figure}
 
 %--------------------------------------------------------
-\subsection{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
+\subsection*{CVA, DVA, FVA, COLVA, MVA, Collateral Floor}
 %--------------------------------------------------------
 
 We use one of the cases in {\tt Examples/Example\_10} to demonstrate the
@@ -1238,7 +1317,7 @@ incremental contributions to these two VAs through time.
 
 
 %--------------------------------------------------------
-\subsection{Exposure Reports \& XVA Allocation to Trades}
+\subsection*{Exposure Reports \& XVA Allocation to Trades}
 %--------------------------------------------------------
 Using the example in folder {\tt Examples/Example\_10} we illustrate here the layout of an exposure report produced by
 ORE. The report shows the exposure evolution of Swap\_1 without collateral which - after running Example\_10 - is found
@@ -1576,7 +1655,7 @@ Finally, this example demonstrates a parametric VaR calculation based on the sen
 \subsection{Equity Derivatives Exposure}\label{ex:equityderivatives}
 %--------------------------------------------------------
 
-The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, exposures and XVA for a portfolio 
+The example in folder {\tt Examples/Example\_16} demonstrates the computation of NPV, sensitivities, exposures and XVA for a portfolio 
 of OTC equity derivatives. The portfolio used in this example consists of:
 
 \begin{itemize}
@@ -1586,6 +1665,8 @@ of OTC equity derivatives. The portfolio used in this example consists of:
 	\item an equity call option denominated in USD (``SP5'')
 	\item an equity put option denominated in USD (``SP5'')
 	\item an equity forward denominated in USD (``SP5'')
+	\item an equity Swap in USD with return type  ``price'' (``SP5'')
+	\item an equity Swap in USD with return type ``total'' (``SP5'')
 \end{itemize}
 
 The step-by-step procedure for running ORE is identical for equities as for other asset classes; the same market and 
@@ -1746,6 +1827,131 @@ This example in folder {\tt Examples/Example\_23} demonstrates pricing, cash flo
 \end{itemize}
 using a minimal portfolio of four trades, one FRA and three OIS. The essential results are in {\tt npv.csv}, {\tt flows.csv} and 
 four {\tt exposure\_trade\_*.csv} files.
+
+%--------------------------------------------------------
+\subsection{Commodity Forward and Option}% Example 24
+\label{example:24}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_24} demonstrates pricing and sensitivity analysis for
+\begin{itemize}
+\item Commodity Forwards
+\item European Commodity Options
+\end{itemize}
+using a minimal portfolio of four forwards and two options referencing WTI and Gold. 
+The essential results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+%--------------------------------------------------------
+\subsection{CMS Spread with (Digital) Cap/Floor}% Example 25
+\label{example:25}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_25}  demonstrates pricing, sensitivity analysis 
+and exposure simulation for 
+\begin{itemize}
+\item Capped/Floored CMS Spreads
+\item CMS Spreads with Digital Caps/Floors
+\end{itemize}
+
+The example can be run with
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+and results are in {\tt npv.csv}, {\tt sensitivity.csv}, {\tt exposure\_*.csv} 
+and the exposure graphs in {\tt mpl\_cmsspread.pdf}.
+
+%--------------------------------------------------------
+\subsection{Bootstrap Consistency}% Example 26
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_26} confirms that bootstrapped curves 
+correctly reprice the bootstrap instruments (FRAs, Interest Rate Swaps, FX Forwards, Cross
+Currency Basis Swaps) using three pricing setups with
+\begin{itemize}
+\item EUR collateral discounting (configuration xois\_eur)
+\item USD collateral discounting (configuration xois\_usd)
+\item in-currency OIS discounting (configuration collateral\_inccy)
+\end{itemize}
+all defined in {\tt Examples/Input/todaysmarket.xml}.
+
+\medskip
+The required portfolio files need to be generated from market data and conventions in
+{\tt Examples/Input} and trade templates in 
+{\tt Examples/Example\_26/Helpers}, calling
+
+\medskip
+\centerline{\tt python TradeGenerator.py}
+
+\medskip
+This will place three portfolio files {\tt *\_portfolio.xml} in the input folder.
+Thereafter, the three consistency checks can be run calling
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+Results are in three files {\tt *\_npv.csv} and should show zero NPVs for all benchmark instruments.
+
+%--------------------------------------------------------
+\subsection{BMA Basis Swap}% Example 27
+\label{example:27}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_27} demonstrates pricing 
+and sensitivity analysis for a series of USD Libor 3M vs. Averaged BMA (SIFMA) 
+Swaps that correspond to the instruments used to bootstrap the BMA curve. 
+
+The example can be run with
+
+\medskip
+\centerline{\tt python run.py}
+
+\medskip
+and results are in {\tt npv.csv} and {\tt sensitivity.csv}.
+
+%--------------------------------------------------------
+\subsection{Discount Ratio Curves}% Example 28
+\label{example:28}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_28} shows how to use a yield curve 
+built from a DiscountRatio segment. 
+In particular, it builds a GBP collateralized in EUR discount curve by referencing 
+three other discount curves:
+\begin{itemize}
+\item a GBP collateralised in USD curve
+\item a EUR collateralised in USD curve
+\item a EUR OIS curve i.e. a EUR collateralised in EUR curve
+\end{itemize}
+
+The implicit assumption in building the curve this way is that EUR/GBP FX 
+forwards collateralised in EUR have the same fair market rate as EUR/GBP 
+FX forwards collateralised in USD. This assumption is illustrated in the 
+example by the NPV of the two forward instruments in the portfolio returning 
+exactly 0 under both discounting regimes i.e. under USD collateralization with 
+direct curve building and under EUR collateralization with the discount ratio 
+modified ``GBP-IN-EUR'' curve.
+
+Also, in this example, an assumption is made that there are no direct GBP/EUR FX 
+forward or cross currency quotes available which in general is false. The example 
+s merely for illustration.
+
+Both collateralizaton scenarios can be run calling {\tt python run.py}.
+
+%--------------------------------------------------------
+\subsection{Curve Building using Fixed vs. Float Cross Currency Helpers}% Example 29
+\label{example:29}
+%--------------------------------------------------------
+
+The example in folder {\tt Examples/Example\_29} demonstrates using fixed vs. float 
+cross currency swap helpers. In particular, it builds a TRY collateralised in USD 
+discount curve using TRY annual fixed vs USD 3M Libor swap quotes.
+
+The portfolio contains an at-market fixed vs. float cross currency swap that is 
+included in the curve building. The NPV of this swap should be zero when the example is run,
+using {\tt python run.py} or ``directly'' calling {\tt ore[.exe] ore.xml}.
 
 \clearpage
 %========================================================
@@ -4280,41 +4486,26 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 %========================================================
 %\section{Trade Data}\label{sec:portfolio_data}
 %========================================================
-\include{introenvelope}
-
-%\include{tradedata}
-
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\subsection{Trade Specific Data}
-%- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-After the envelope node, trade-specific data for each trade type supported by
-ORE is included. 
-Each trade type has its own trade data container which is defined by an XML node containing a trade-specific
-configuration of individual XML tags - called elements - and trade components. The trade components are defined by XML
-sub-nodes that can be used within multiple trade data containers, i.e.  by multiple trade types.
-
-\vspace{1em}
-
-Details of  trade-specific data for all trade types follow below.
+\input{tradedata/intro}
+\input{tradedata/envelope}
+\input{tradedata/tradespecifics}
 
 \input{tradedata/swap}
-\input{../../Docs/UserGuide/tradedata/capfloor}
-\input{../../Docs/UserGuide/tradedata/forwardrateagreement}
-\input{../../Docs/UserGuide/tradedata/swaption}
-\input{../../Docs/UserGuide/tradedata/fxforward}
-\input{../../Docs/UserGuide/tradedata/fxswap}
-\input{../../Docs/UserGuide/tradedata/fxoption}
-\input{../../Docs/UserGuide/tradedata/equityoption}
-\input{../../Docs/UserGuide/tradedata/equityforward}
-\input{../../Docs/UserGuide/tradedata/equityswap}
-\input{../../Docs/UserGuide/tradedata/cpiswap}
-\input{../../Docs/UserGuide/tradedata/yyswap}
-\input{../../Docs/UserGuide/tradedata/bond}
-\input{../../Docs/UserGuide/tradedata/creditdefaultswap}
-\input{../../Docs/UserGuide/tradedata/commodityoption}
-\input{../../Docs/UserGuide/tradedata/commodityforward}
-
+\input{tradedata/capfloor}
+\input{tradedata/forwardrateagreement}
+\input{tradedata/swaption}
+\input{tradedata/fxforward}
+\input{tradedata/fxswap}
+\input{tradedata/fxoption}
+\input{tradedata/equityoption}
+\input{tradedata/equityforward}
+\input{tradedata/equityswap}
+\input{tradedata/cpiswap}
+\input{tradedata/yyswap}
+\input{tradedata/bond}
+\input{tradedata/creditdefaultswap}
+\input{tradedata/commodityoption}
+\input{tradedata/commodityforward}
 
 \include{tradecomponents}
 \include{allowablevalues}
@@ -4334,6 +4525,7 @@ Details of  trade-specific data for all trade types follow below.
 %========================================================
 \include{fixingdata}
 
+\newpage
 \begin{appendix}
 
 %========================================================
