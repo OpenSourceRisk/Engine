@@ -134,7 +134,7 @@ namespace ore {
                     }
                 }
 
-                // No wild card - Check that we have all the quotes in config in case of 
+                // No wild card - Check that we have all the quotes in config
                 if (no_wild_card) {
                     for (Size i = 0; i < strikes.size(); i++) {
                         for (Size j = 0; j < expiries.size(); j++) {
@@ -186,7 +186,8 @@ namespace ore {
                     }
                     sort(ostrikes.begin(), ostrikes.end()); // 
                 }
-                    
+
+                // set up vols
                 if (final_vols.rows() == 1 && final_vols.columns() == 1) {
                     LOG("EquityVolCurve: Building BlackConstantVol");
                     vol_ = boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(asof, Calendar(), final_vols[0][0], dc));
@@ -202,7 +203,7 @@ namespace ore {
                             bool tmpIsDate;
                             parseDateOrPeriod(expiries[i], tmpDate, tmpPer, tmpIsDate);
                             if (!tmpIsDate)
-                                tmpDate = WeekendsOnly().adjust(asof + tmpPer); // todo the QL require below should be implemented for the wc case as well (no need will always be the case)
+                                tmpDate = WeekendsOnly().adjust(asof + tmpPer);
                             QL_REQUIRE(tmpDate > asof, "Equity Vol Curve cannot contain a vol quote for a past date ("
                                                            << io::iso_date(tmpDate) << ")");
                             dates[i] = tmpDate;
@@ -217,7 +218,7 @@ namespace ore {
                         if (!isSurface) {
                             LOG("EquityVolCurve: Building BlackVarianceCurve");
                             QL_REQUIRE(final_vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
-                            vector<Volatility> atmVols(final_vols.begin(), final_vols.end());
+                            vector<Volatility> atmVols(final_vols.begin(), final_vols.end());       // does this give the vector?
                             vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
                         } else {
                             LOG("EquityVolCurve: Building BlackVarianceSurface");
@@ -235,7 +236,7 @@ namespace ore {
                             if (!isSurface) {
                             LOG("EquityVolCurve: Building BlackVarianceCurve");
                             QL_REQUIRE(final_vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
-                            vector<Volatility> atmVols(final_vols.begin(), final_vols.end());
+                            vector<Volatility> atmVols(final_vols.begin(), final_vols.end());   // does this give the vector?
                             vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
                         } else {
                             LOG("EquityVolCurve: Building BlackVarianceSurface");
@@ -258,13 +259,15 @@ namespace ore {
 
         vector<Date> EquityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) { 
             bool r_check, c_check;
+            map<string, map<string, Real>>::iterator outItr;
+            map<string, Real>::iterator inItr;
             vector<string> tmpLenVect;
-            for (map<string, map<string, Real>>::iterator itr = mp.begin(); itr != mp.end(); itr++) {
-                for (map<string, Real>::iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
+            for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
+                for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
                     vector<string>::iterator foundItr;
-                    foundItr = find(tmpLenVect.begin(), tmpLenVect.end(), itr2->first);
+                    foundItr = find(tmpLenVect.begin(), tmpLenVect.end(), inItr->first);
                     if (foundItr == tmpLenVect.end()) {
-                        tmpLenVect.push_back(itr2->first); // if not found add
+                        tmpLenVect.push_back(inItr->first); // if not found add
                     }
                 }
             }
@@ -274,10 +277,8 @@ namespace ore {
         
             vector<Date> exprs;
             vector<Real> strks;
-        
-            map<string, map<string, Real>>::iterator outItr;
-            map<string, Real>::iterator inItr;
-        
+            
+            // get unique strikes and expiries in map
             for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
                 // strikes
                 strks.push_back(stof(outItr->first)); // make sure this worked. (no duplicates)
@@ -315,7 +316,15 @@ namespace ore {
         
                 //which column
                 for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
-                    cfind = find(exprs.begin(), exprs.end(), inItr->first);
+                    //date/period string to date obj
+                    Date tmpDate;
+                    Period tmpPer;
+                    bool tmpIsDate;
+                    parseDateOrPeriod(inItr->first, tmpDate, tmpPer, tmpIsDate);
+                    if (!tmpIsDate)
+                        tmpDate = WeekendsOnly().adjust(asf + tmpPer);
+
+                    cfind = find(exprs.begin(), exprs.end(), tmpDate);
                     cl = cfind - exprs.begin();
                 }
         

@@ -114,7 +114,7 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
                                                                              << config->quotes().size()
                                                                              << " quotes given in config.");
         } else {
-			QL_REQUIRE(curveData.size() > 0, "wild card specified in commodity config " << config->curveID << " but no quotes read");
+			QL_REQUIRE(curveData.size() > 0, "wild card specified in commodity config " << config->curveID() << " but no quotes read");
         }
 		
 
