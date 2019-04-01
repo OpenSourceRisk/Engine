@@ -253,9 +253,10 @@
     </SecuritySpread>
   </SecuritySpreads>
   <Correlations>
-    <Correlation>
+    <Correlation  index1="EUR-CMS-10Y" index2="EUR-CMS-2Y">
+      <ShiftType>Absolute</ShiftType>
       <ShiftSize>0.01</ShiftSize>
-      <ShiftExpiries>1Y</ShiftExpiries>
+      <ShiftExpiries>1Y,2Y</ShiftExpiries>
       <ShiftStrikes>0</ShiftStrikes>
     </Correlation>
   </Correlations>
