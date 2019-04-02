@@ -25,9 +25,22 @@ namespace ore {
 namespace data {
 
 namespace {
-static const Size numberOfMarketObjects = 23;
-// clang-format off
-// Note the order of elements in this array must respect the XML Schema
+
+// container class to link the enum in the header with the various XML strings
+struct MarketObjectMetaInfo {
+  enum MarketObject obj;
+  string name;
+  string xmlName;
+  pair<string, string> xmlSingleName;
+};
+
+// Note the order of elements in this array MUST respect the XML Schema
+static const vector<MarketObjectMetaInfo> marketObjectData = {
+    { MarketObject::YieldCurve,     "YieldCurve",      "YieldCurves",        { "YieldCurve",       "name" } },
+    { MarketObject::DiscountCurve,  "DiscountCurve",   "DiscountingCurves",  { "DiscountingCurve", "currency" } }
+};
+
+/*
 static const string marketObjectStrings[] = {"YieldCurve", "DiscountCurve", "IndexCurve", "SwapIndexCurve",
                                              "ZeroInflationCurve", "ZeroInflationCapFloorVol", "YoYInflationCurve",
                                              "FXSpot", "BaseCorrelation", "FXVol", "SwaptionVol", "CapFloorVol", "CDSVol",
@@ -50,27 +63,20 @@ static const pair<string, string> marketObjectXMLNamesSingle[] = {
     {"YYInflationCapFloorPriceSurface", "name"}, {"YYInflationCapFloorVolatility", "name"},
     {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
     {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"}};
-// clang-format on
 
-// check that the lists above have all the correct length
-static_assert(numberOfMarketObjects == sizeof(marketObjectStrings) / sizeof(marketObjectStrings[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectStrings");
-static_assert(numberOfMarketObjects == sizeof(marketObjectXMLNames) / sizeof(marketObjectXMLNames[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectXMLNames");
-static_assert(numberOfMarketObjects == sizeof(marketObjectXMLNamesSingle) / sizeof(marketObjectXMLNamesSingle[0]),
-              "numberOfMarketObjects is inconsistent with marketObjectXMLNamesSingle");
+*/
 } // anonymous namespace
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o) {
-    Size idx = static_cast<Size>(o);
-    if (idx > numberOfMarketObjects)
-        return out << "Unknown";
-    else
-        return out << marketObjectStrings[idx];
+    for (Size i = 0; i < marketObjectData.size(); i++) {
+        if (marketObjectData[i].obj == o)
+            return out << marketObjectData[i].name;
+    }
+    return out << "Unknown";
 }
 
 MarketConfiguration::MarketConfiguration() {
-    for (Size i = 0; i < numberOfMarketObjects; ++i) {
+    for (Size i = 0; i < marketObjectData.size(); ++i) {
         marketObjectIds_[MarketObject(i)] = Market::defaultConfiguration;
     }
 }
@@ -91,23 +97,23 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
     while (n) {
         if (XMLUtils::getNodeName(n) == "Configuration") {
             MarketConfiguration tmp;
-            for (Size i = 0; i < numberOfMarketObjects; ++i) {
-                tmp.setId(MarketObject(i), XMLUtils::getChildValue(n, marketObjectXMLNames[i] + "Id", false));
+            for (Size i = 0; i < marketObjectData.size(); ++i) {
+                tmp.setId(MarketObject(i), XMLUtils::getChildValue(n, marketObjectData[i].xmlName + "Id", false));
                 addConfiguration(XMLUtils::getAttribute(n, "id"), tmp);
             }
         } else {
             Size i = 0;
-            for (; i < numberOfMarketObjects; ++i) {
-                if (XMLUtils::getNodeName(n) == marketObjectXMLNames[i]) {
+            for (; i < marketObjectData.size(); ++i) {
+                if (XMLUtils::getNodeName(n) == marketObjectData[i].name) {
                     string id = XMLUtils::getAttribute(n, "id");
                     if (id == "")
                         id = Market::defaultConfiguration;
                     // The XML schema for swap indices is different ...
                     if (MarketObject(i) == MarketObject::SwapIndexCurve) {
-                        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(n, marketObjectXMLNamesSingle[i].first);
+                        vector<XMLNode*> nodes = XMLUtils::getChildrenNodes(n, marketObjectData[i].xmlSingleName.first);
                         map<string, string> swapIndices;
                         for (XMLNode* xn : nodes) {
-                            string name = XMLUtils::getAttribute(xn, marketObjectXMLNamesSingle[i].second);
+                            string name = XMLUtils::getAttribute(xn, marketObjectData[i].xmlSingleName.second);
                             QL_REQUIRE(name != "", "no name given for SwapIndex");
                             QL_REQUIRE(swapIndices.find(name) == swapIndices.end(),
                                        "Duplicate SwapIndex found for " << name);
@@ -117,17 +123,17 @@ void TodaysMarketParameters::fromXML(XMLNode* node) {
                         addMarketObject(MarketObject::SwapIndexCurve, id, swapIndices);
 
                     } else {
-                        auto mp = XMLUtils::getChildrenAttributesAndValues(n, marketObjectXMLNamesSingle[i].first,
-                                                                           marketObjectXMLNamesSingle[i].second, false);
+                        auto mp = XMLUtils::getChildrenAttributesAndValues(n, marketObjectData[i].xmlSingleName.first,
+                                                                           marketObjectData[i].xmlSingleName.second, false);
                         Size nc = XMLUtils::getChildrenNodes(n, "").size();
                         QL_REQUIRE(mp.size() == nc, "could not recognise " << (nc - mp.size()) << " sub nodes under "
-                                                                           << marketObjectXMLNames[i]);
+                                                                           << marketObjectData[i].xmlName);
                         addMarketObject(MarketObject(i), id, mp);
                     }
                     break;
                 }
             }
-            QL_REQUIRE(i < numberOfMarketObjects,
+            QL_REQUIRE(i < marketObjectData.size(),
                        "TodaysMarketParameters::fromXML(): node not recognized: " << XMLUtils::getNodeName(n));
         }
         n = XMLUtils::getNextSibling(n);
@@ -143,35 +149,35 @@ XMLNode* TodaysMarketParameters::toXML(XMLDocument& doc) {
         for (auto iterator = configurations_.begin(); iterator != configurations_.end(); iterator++) {
             XMLNode* configurationsNode = XMLUtils::addChild(doc, todaysMarketNode, "Configuration");
             XMLUtils::addAttribute(doc, configurationsNode, "id", iterator->first.c_str());
-            for (Size i = 0; i < numberOfMarketObjects; ++i) {
-                XMLUtils::addChild(doc, configurationsNode, marketObjectXMLNames[i] + "Id",
+            for (Size i = 0; i < marketObjectData.size(); ++i) {
+                XMLUtils::addChild(doc, configurationsNode, marketObjectData[i].xmlName + "Id",
                                    iterator->second(MarketObject(i))); // Added the "Id" for schema test
             }
         }
     }
 
-    for (Size i = 0; i < numberOfMarketObjects; ++i) {
+    for (Size i = 0; i < marketObjectData.size(); ++i) {
         if (marketObjects_.find(MarketObject(i)) != marketObjects_.end()) {
             auto mapping = marketObjects_.at(MarketObject(i));
             for (auto mappingSetIterator = mapping.begin(); mappingSetIterator != mapping.end(); mappingSetIterator++) {
 
-                XMLNode* node = XMLUtils::addChild(doc, todaysMarketNode, marketObjectXMLNames[i]);
+                XMLNode* node = XMLUtils::addChild(doc, todaysMarketNode, marketObjectData[i].xmlName);
                 XMLUtils::addAttribute(doc, node, "id", mappingSetIterator->first.c_str());
 
                 for (auto singleMappingIterator = mappingSetIterator->second.begin();
                      singleMappingIterator != mappingSetIterator->second.end(); singleMappingIterator++) {
                     // Again, swap indices are different...
                     if (MarketObject(i) == MarketObject::SwapIndexCurve) {
-                        XMLNode* swapIndexNode = XMLUtils::addChild(doc, node, marketObjectXMLNamesSingle[i].first);
-                        XMLUtils::addAttribute(doc, swapIndexNode, marketObjectXMLNamesSingle[i].second,
+                        XMLNode* swapIndexNode = XMLUtils::addChild(doc, node, marketObjectData[i].xmlSingleName.first);
+                        XMLUtils::addAttribute(doc, swapIndexNode, marketObjectData[i].xmlSingleName.second,
                                                singleMappingIterator->first.c_str());
                         XMLUtils::addChild(doc, swapIndexNode, "Discounting",
                                            (string)singleMappingIterator->second.c_str());
                     } else {
                         XMLNode* singleMappingNode =
-                            doc.allocNode(marketObjectXMLNamesSingle[i].first, singleMappingIterator->second);
+                            doc.allocNode(marketObjectData[i].xmlSingleName.first, singleMappingIterator->second);
                         XMLUtils::appendNode(node, singleMappingNode);
-                        XMLUtils::addAttribute(doc, singleMappingNode, marketObjectXMLNamesSingle[i].second,
+                        XMLUtils::addAttribute(doc, singleMappingNode, marketObjectData[i].xmlSingleName.second,
                                                singleMappingIterator->first);
                     }
                 }
@@ -195,7 +201,7 @@ void TodaysMarketParameters::curveSpecs(const map<string, map<string, string>>& 
 
 vector<string> TodaysMarketParameters::curveSpecs(const string& configuration) const {
     vector<string> specs;
-    for (Size i = 0; i < numberOfMarketObjects; ++i) {
+    for (Size i = 0; i < marketObjectData.size(); ++i) {
         // swap indices have to be exlcuded here...
         if (MarketObject(i) != MarketObject::SwapIndexCurve &&
             marketObjects_.find(MarketObject(i)) != marketObjects_.end()) {
