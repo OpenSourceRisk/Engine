@@ -179,7 +179,7 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
             } else {
                 QL_FAIL("Unknown target volatility type: " << volatilityType_);
             }
-        } catch (std::exception& e) {
+        } catch (std::exception&) {
             /*
             QL_FAIL("could not bootstrap optionlet:"
                 << "\n type:    " << optionletType
