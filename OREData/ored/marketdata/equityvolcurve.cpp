@@ -78,9 +78,13 @@ namespace ore {
                     d_vols = Matrix(strikes.size(), expiries.size(), -1.0);
                 }
 
-                // We loop over all market data, looking for quotes that match the configuration
+                // In case of wild card we need the following granularity within the mkt data loop
                 bool strike_relevant, expiry_relevant;
-                strike_relevant, expiry_relevant = true;
+                strike_relevant, expiry_relevant;
+                strike_relevant = (strikes_wc) ? true : false;
+                expiry_relevant = (expiries_wc) ? true : false;
+
+                // We loop over all market data, looking for quotes that match the configuration
                 for (auto& md : loader.loadQuotes(asof)) {
                     // skip irrelevant data
                     if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
@@ -100,16 +104,16 @@ namespace ore {
                             }
                             // some wild card
                             else {
-                                if (strikes_wc && !expiries_wc) {
-                                    // all strikes are valid
-                                    strike_relevant = true;
+                                if (!expiries_wc) {
                                     vector<string>::iterator j = std::find(expiries.begin(), expiries.end(), q->expiry());
                                     expiry_relevant = (j != expiries.end()) ? true : false;
-                                } else if (!strikes_wc && expiries_wc) {
-                                    // all expiries are valid
-                                    expiry_relevant = true;
+                                }
+                                if (!strikes_wc) {
                                     vector<string>::iterator i = std::find(strikes.begin(), strikes.end(), q->strike());
                                     strike_relevant = (i != strikes.end()) ? true : false;
+                                } else {
+                                // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
+                                    strike_relevant = (q->strike() != "ATMF") ? true : false;
                                 }
 
                                 // strike found?
@@ -180,11 +184,14 @@ namespace ore {
                     QuantExt::FillIncompleteMatrix(sparse_vols, true, -1.0);
                     final_vols = sparse_vols;
                     map<string, map<string, Real>>::iterator itr;
-
-                    for (itr = wc_mat.begin(); itr != wc_mat.end();itr++) {
-                        ostrikes.push_back(parseReal(itr->first)); // not ordered but the strks vect in PopulateMatrixFromMap is. Maybe return this instead. or mimic order logic
+                    if (isSurface) {
+                        for (itr = wc_mat.begin(); itr != wc_mat.end(); itr++) {
+                            ostrikes.push_back(
+                                parseReal(itr->first)); // not ordered but the strks vect in PopulateMatrixFromMap is.
+                                                        // Maybe return this instead. or mimic order logic
+                        }
+                        sort(ostrikes.begin(), ostrikes.end()); //
                     }
-                    sort(ostrikes.begin(), ostrikes.end()); // 
                 }
 
                 // set up vols
@@ -281,7 +288,11 @@ namespace ore {
             // get unique strikes and expiries in map
             for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
                 // strikes
-                strks.push_back(stof(outItr->first)); // make sure this worked. (no duplicates)
+                if (outItr->first == "ATMF" && mp.size() == 1) {
+                    strks.push_back(9999); // make sure this worked. (no duplicates)
+                } else {
+                    strks.push_back(stof(outItr->first)); // make sure this worked. (no duplicates)
+                }
         
                 //expiries
                 for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
@@ -311,9 +322,13 @@ namespace ore {
             vector<Date>::iterator cfind;
             for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
                 // which row
-                rfind = find(strks.begin(), strks.end(), stof(outItr->first));
-                rw = rfind - strks.begin();
-        
+                if (outItr->first == "ATMF" && mp.size() == 1) {
+                    rw = 0;
+                } else {
+                    rfind = find(strks.begin(), strks.end(), stof(outItr->first));
+                    rw = rfind - strks.begin();
+                }
+                
                 //which column
                 for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
                     //date/period string to date obj
@@ -326,17 +341,14 @@ namespace ore {
 
                     cfind = find(exprs.begin(), exprs.end(), tmpDate);
                     cl = cfind - exprs.begin();
+
+                    mt[rw][cl] = inItr->second;
                 }
-        
-                mt[rw][cl] = inItr->second;
             }
-        
         
             // return
             return exprs;
-            
+
         }
-
-
 } // namespace data
 } // namespace ore
