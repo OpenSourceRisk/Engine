@@ -186,11 +186,11 @@ XMLNode* SwaptionVolatilityCurveConfig::toXML(XMLDocument& doc) {
         extr_str = "None";
     XMLUtils::addChild(doc, node, "Extrapolation", extr_str);
 
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
     XMLUtils::addGenericChildAsList(doc, node, "SwapTenors", swapTenors_);
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "ShortSwapIndexBase", shortSwapIndexBase_);
     XMLUtils::addChild(doc, node, "SwapIndexBase", swapIndexBase_);
 

@@ -396,20 +396,20 @@ void CurveConfigurations::fromXML(XMLNode* node) {
 XMLNode* CurveConfigurations::toXML(XMLDocument& doc) {
     XMLNode* parent = doc.allocNode("CurveConfiguration");
 
-    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
+    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
     addNodes(doc, parent, "FXVolatilities", fxVolCurveConfigs_);
     addNodes(doc, parent, "SwaptionVolatilities", swaptionVolCurveConfigs_);
     addNodes(doc, parent, "CapFloorVolatilities", capFloorVolCurveConfigs_);
-    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
     addNodes(doc, parent, "CDSVolatilities", cdsVolCurveConfigs_);
-    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
-    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
-    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
+    addNodes(doc, parent, "DefaultCurves", defaultCurveConfigs_);
+    addNodes(doc, parent, "YieldCurves", yieldCurveConfigs_);
     addNodes(doc, parent, "InflationCurves", inflationCurveConfigs_);
     addNodes(doc, parent, "InflationCapFloorPriceSurfaces", inflationCapFloorPriceSurfaceConfigs_);
     addNodes(doc, parent, "InflationCapFloorVolatilities", inflationCapFloorVolCurveConfigs_);
+    addNodes(doc, parent, "EquityCurves", equityCurveConfigs_);
+    addNodes(doc, parent, "EquityVolatilities", equityVolCurveConfigs_);
     addNodes(doc, parent, "Securities", securityConfigs_);
-    addNodes(doc, parent, "FXSpots", fxSpotConfigs_);
+    addNodes(doc, parent, "BaseCorrelations", baseCorrelationCurveConfigs_);
     addNodes(doc, parent, "CommodityCurves", commodityCurveConfigs_);
     addNodes(doc, parent, "CommodityVolatilities", commodityVolatilityCurveConfigs_);
     addNodes(doc, parent, "Correlations", correlationCurveConfigs_);

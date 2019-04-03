@@ -98,14 +98,13 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);
-
     if (dimension_ == Dimension::Smile) {
         XMLUtils::addChild(doc, node, "FXForeignCurveID", fxForeignYieldCurveID_);
         XMLUtils::addChild(doc, node, "FXDomesticCurveID", fxDomesticYieldCurveID_);
     }
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;
 }
