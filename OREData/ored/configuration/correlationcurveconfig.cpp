@@ -175,18 +175,9 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
 XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Correlation");
-
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-
-    if (correlationType_ == CorrelationType::CMSSpread) {
-        XMLUtils::addChild(doc, node, "CorrelationType", "CMSSpread");
-    } else if (correlationType_ == CorrelationType::Generic) {
-        XMLUtils::addChild(doc, node, "CorrelationType", "Generic");
-    } else {
-        QL_FAIL("Unknown CorrelationType in CorrelationCurveConfig::toXML()");
-    }
-
+    XMLUtils::addChild(doc, node, "CorrelationType", to_string(correlationType_));
     XMLUtils::addChild(doc, node, "Index1", index1_);
     XMLUtils::addChild(doc, node, "Index2", index2_);
     XMLUtils::addChild(doc, node, "Conventions", conventions_);
@@ -194,17 +185,16 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     if (quoteType_ == QuoteType::Price) {
         XMLUtils::addChild(doc, node, "SwaptionVolatility", swaptionVol_);
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
-    }
-
-    if (currency_ != "")
         XMLUtils::addChild(doc, node, "Currency", currency_);
-
-    if (dimension_ == Dimension::ATM) {
-        XMLUtils::addChild(doc, node, "Dimension", "ATM");
-    } else if (dimension_ == Dimension::Constant) {
-        XMLUtils::addChild(doc, node, "Dimension", "Constant");
-    } else {
-        QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
+    }
+    if (quoteType_ != QuoteType::Null) {
+        if (dimension_ == Dimension::ATM) {
+            XMLUtils::addChild(doc, node, "Dimension", "ATM");
+        } else if (dimension_ == Dimension::Constant) {
+            XMLUtils::addChild(doc, node, "Dimension", "Constant");
+        } else {
+            QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
+        }
     }
 
     if (quoteType_ == QuoteType::Rate) {
@@ -216,11 +206,23 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
     } else {
         QL_FAIL("Unknown QuoteType in CorrelationCurveConfig::toXML()");
     }
-    XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
-    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
+
+    if (quoteType_ != QuoteType::Null) {
+
+        XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+
+        if (dimension_ == Dimension::ATM)
+            XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
+
+        XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
+    }
+
+    if (quoteType_ == QuoteType::Null) {
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+        XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    }
 
     return node;
 }
