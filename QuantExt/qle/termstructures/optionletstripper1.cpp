@@ -162,7 +162,7 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
         CapFloor capFloor = MakeCapFloor(capFloorType, capFloorLengths_[i], iborIndex_, strike, -0 * Days)
                    .withPricingEngine(capFloorEngines_[i][j]);
         Real capFloorPrice = capFloor.NPV();
-        Real optionletPrice = capFloorPrice - previousCapFloorPrice;
+        Real optionletPrice = std::max(0.0, capFloorPrice - previousCapFloorPrice);
         previousCapFloorPrice = capFloorPrice;
 
         DiscountFactor d = discountCurve->discount(optionletPaymentDates_[i]);
@@ -179,13 +179,13 @@ bool OptionletStripper1::stripOptionlets(std::vector<Real>& out, CapFloor::Type 
             } else {
                 QL_FAIL("Unknown target volatility type: " << volatilityType_);
             }
-        } catch (std::exception&) {
+        } catch (std::exception& /*e*/) {
             /*
             QL_FAIL("could not bootstrap optionlet:"
                 << "\n type:    " << optionletType
-                << "\n strike:  " << io::rate(strikes[j])
+                << "\n strike:  " << io::rate(strike)
                 << "\n atm:     " << io::rate(atmOptionletRate_[i])
-                << "\n price:   " << optionletPrices_[i][j] << "\n annuity: " << optionletAnnuity
+                << "\n price:   " << optionletPrice << "\n annuity: " << optionletAnnuity
                 << "\n expiry:  " << optionletDates_[i] << "\n error:   " << e.what());
             */
             // No need to wipe the output (?)
