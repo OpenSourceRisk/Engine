@@ -28,7 +28,7 @@ namespace {
 
 // container class to link the enum in the header with the various XML strings
 struct MarketObjectMetaInfo {
-  enum MarketObject obj;
+  MarketObject obj;
   string name; // AKA marketObjectStrings
   string xmlName; // AKA marketObjectXMLNames
   pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
