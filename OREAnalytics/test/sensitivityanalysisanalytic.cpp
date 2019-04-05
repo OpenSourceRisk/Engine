@@ -180,7 +180,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Absolute";
     swvsData.shiftSize = 1E-5;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 2 * Years,  3 * Years,

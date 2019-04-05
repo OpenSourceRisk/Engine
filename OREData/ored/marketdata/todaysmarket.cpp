@@ -42,6 +42,7 @@
 #include <ored/marketdata/swaptionvolcurve.hpp>
 #include <ored/marketdata/todaysmarket.hpp>
 #include <ored/marketdata/yieldcurve.hpp>
+#include <ored/marketdata/yieldvolcurve.hpp>
 #include <ored/marketdata/structuredcurveerror.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
@@ -86,6 +87,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     map<string, boost::shared_ptr<FXSpot>> requiredFxSpots;
     map<string, boost::shared_ptr<FXVolCurve>> requiredFxVolCurves;
     map<string, boost::shared_ptr<SwaptionVolCurve>> requiredSwaptionVolCurves;
+    map<string, boost::shared_ptr<YieldVolCurve>> requiredYieldVolCurves;
     map<string, boost::shared_ptr<CapFloorVolCurve>> requiredCapFloorVolCurves;
     map<string, boost::shared_ptr<DefaultCurve>> requiredDefaultCurves;
     map<string, boost::shared_ptr<CDSVolCurve>> requiredCDSVolCurves;
@@ -260,6 +262,34 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                                 Handle<SwaptionVolatilityStructure>(itr->second->volTermStructure());
                             swaptionIndexBases_[make_pair(configuration.first, it.first)] =
                                 make_pair(cfg->shortSwapIndexBase(), cfg->swapIndexBase());
+                        }
+                    }
+                    break;
+                }
+
+                case CurveSpec::CurveType::YieldVolatility: {
+                    // convert to volspec
+                    boost::shared_ptr<YieldVolatilityCurveSpec> ydvolspec =
+                        boost::dynamic_pointer_cast<YieldVolatilityCurveSpec>(spec);
+                    QL_REQUIRE(ydvolspec, "Failed to convert spec " << *spec);
+                    // have we built the curve already ?
+                    auto itr = requiredYieldVolCurves.find(ydvolspec->name());
+                    if (itr == requiredYieldVolCurves.end()) {
+                        // build the curve
+                        LOG("Building Yield Volatility for asof " << asof);
+                        boost::shared_ptr<YieldVolCurve> yieldVolCurve = boost::make_shared<YieldVolCurve>(
+                            asof, *ydvolspec, loader, curveConfigs);
+                        itr = requiredYieldVolCurves.insert(make_pair(ydvolspec->name(), yieldVolCurve)).first;
+                    }
+                    boost::shared_ptr<YieldVolatilityCurveConfig> cfg =
+                        curveConfigs.yieldVolCurveConfig(ydvolspec->curveConfigID());
+                    // add the handle to the Market Map (possible lots of times for proxies)
+                    for (const auto& it : params.mapping(MarketObject::YieldVol, configuration.first)) {
+                        if (it.second == spec->name()) {
+                            LOG("Adding YieldVol (" << it.first << ") with spec " << *ydvolspec
+                                << " to configuration " << configuration.first);
+                            yieldVolCurves_[make_pair(configuration.first, it.first)] =
+                                Handle<SwaptionVolatilityStructure>(itr->second->volTermStructure());
                         }
                     }
                     break;

@@ -82,6 +82,10 @@ public:
                                     const string& configuration = Market::defaultConfiguration) const;
     const string swapIndexBase(const string& ccy, const string& configuration = Market::defaultConfiguration) const;
 
+    //! Yield volatility
+    Handle<QuantLib::SwaptionVolatilityStructure>
+        yieldVol(const string& securityID, const string& configuration = Market::defaultConfiguration) const;
+
     //! FX
     Handle<Quote> fxSpot(const string& ccypair, const string& configuration = Market::defaultConfiguration) const;
     Handle<BlackVolTermStructure> fxVol(const string& ccypair,
@@ -191,6 +195,7 @@ protected:
     map<pair<string, string>, Handle<SwapIndex>> swapIndices_;
     map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> swaptionCurves_;
     map<pair<string, string>, pair<string, string>> swaptionIndexBases_;
+    map<pair<string, string>, Handle<QuantLib::SwaptionVolatilityStructure>> yieldVolCurves_;
     map<string, FXTriangulation> fxSpots_;
     mutable map<pair<string, string>, Handle<BlackVolTermStructure>> fxVols_;
     map<pair<string, string>, Handle<DefaultProbabilityTermStructure>> defaultCurves_;

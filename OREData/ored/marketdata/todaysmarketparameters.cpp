@@ -58,23 +58,11 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::Security,                          "Securities",                         "Securities",                        { "Security", "name" } },
     { MarketObject::CommodityCurve,                    "CommodityCurves",                    "CommodityCurves",                   { "CommodityCurve", "name" } },
     { MarketObject::CommodityVolatility,               "CommodityVolatilities",              "CommodityVolatilities",             { "CommodityVolatility", "name" } },
-    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } }
+    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } },
+    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } }
 
 };
 
-/*
-;
-static const pair<string, string> marketObjectXMLNamesSingle[] = {
-    {"YieldCurve", "name"}, {"DiscountingCurve", "currency"}, {"Index", "name"}, {"SwapIndex", "name"},
-    {"ZeroInflationIndexCurve", "name"}, {"ZeroInflationCapFloorVolatility", "name" },
-    {"YYInflationIndexCurve", "name"}, {"FxSpot", "pair"}, {"BaseCorrelation", "name"}, {"FxVolatility", "pair"},
-    {"SwaptionVolatility", "currency"}, {"CapFloorVolatility", "currency"}, {"CDSVolatility", "name"},
-    {"DefaultCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
-    {"YYInflationCapFloorPriceSurface", "name"}, {"YYInflationCapFloorVolatility", "name"},
-    {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
-    {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"}};
-
-*/
 } // anonymous namespace
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o) {

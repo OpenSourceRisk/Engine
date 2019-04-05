@@ -10,16 +10,16 @@ libOREDataConfiguration_la_SOURCES = \
 	capfloorvolcurveconfig.cpp \
 	curveconfigurations.cpp \
 	conventions.cpp \
-    cdsvolcurveconfig.cpp \
+	cdsvolcurveconfig.cpp \
 	defaultcurveconfig.cpp \
 	basecorrelationcurveconfig.cpp \
 	equitycurveconfig.cpp \
 	equityvolcurveconfig.cpp \
 	fxvolcurveconfig.cpp \
-    inflationcapfloorpricesurfaceconfig.cpp \
-    inflationcurveconfig.cpp \
-	swaptionvolcurveconfig.cpp \
-    yieldcurveconfig.cpp \
+	genericyieldvolcurveconfig.cpp \
+	inflationcapfloorpricesurfaceconfig.cpp \
+	inflationcurveconfig.cpp \
+	yieldcurveconfig.cpp \
 	commoditycurveconfig.cpp \
 	commodityvolcurveconfig.cpp \
 	correlationcurveconfig.cpp \
@@ -32,18 +32,20 @@ this_include_HEADERS = \
 	curveconfig.hpp \
 	curveconfigurations.hpp \
 	conventions.hpp \
-    cdsvolcurveconfig.hpp \
+	cdsvolcurveconfig.hpp \
 	defaultcurveconfig.hpp \
 	basecorrelationcurveconfig.hpp \
 	equitycurveconfig.hpp \
 	equityvolcurveconfig.hpp \
 	fxvolcurveconfig.hpp \
-    inflationcapfloorpricesurfaceconfig.hpp \
-    inflationcurveconfig.hpp \
+	genericyieldvolcurveconfig.hpp \
+	inflationcapfloorpricesurfaceconfig.hpp \
+	inflationcurveconfig.hpp \
 	swaptionvolcurveconfig.hpp \
-    yieldcurveconfig.hpp \
-    securityconfig.hpp \
-    fxspotconfig.hpp \
+	yieldvolcurveconfig.hpp \
+	yieldcurveconfig.hpp \
+	securityconfig.hpp \
+	fxspotconfig.hpp \
 	commoditycurveconfig.hpp \
 	commodityvolcurveconfig.hpp \
 	correlationcurveconfig.hpp \

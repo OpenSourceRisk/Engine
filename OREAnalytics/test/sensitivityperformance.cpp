@@ -281,7 +281,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5Big() {
         91 * Months, 92 * Months, 10 * Years,  15 * Years,  20 * Years,  25 * Years,  30 * Years,  50 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {1 * Weeks,   2 * Weeks,   1 * Months,  2 * Months,  3 * Months,  4 * Months,  5 * Months,
@@ -378,7 +378,7 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {6 * Months, 1 * Years, 3 * Years, 5 * Years, 10 * Years};
