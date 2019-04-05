@@ -47,6 +47,7 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::BaseCorrelation,                   "BaseCorrelation",                    "BaseCorrelations",                  { "BaseCorrelation", "name" } },
     { MarketObject::FXVol,                             "FXVol",                              "FxVolatilities",                    { "FxVolatility", "pair" } },
     { MarketObject::SwaptionVol,                       "SwaptionVol",                        "SwaptionVolatilities",              { "SwaptionVolatility", "currency" } },
+    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } },
     { MarketObject::CapFloorVol,                       "CapFloorVol",                        "CapFloorVolatilities",              { "CapFloorVolatility", "currency" } },
     { MarketObject::CDSVol,                            "CDSVol",                             "CDSVolatilities",                   { "CDSVolatility", "name" } },
     { MarketObject::DefaultCurve,                      "DefaultCurve",                       "DefaultCurves",                     { "DefaultCurve", "name" } },
@@ -58,9 +59,7 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::Security,                          "Securities",                         "Securities",                        { "Security", "name" } },
     { MarketObject::CommodityCurve,                    "CommodityCurves",                    "CommodityCurves",                   { "CommodityCurve", "name" } },
     { MarketObject::CommodityVolatility,               "CommodityVolatilities",              "CommodityVolatilities",             { "CommodityVolatility", "name" } },
-    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } },
-    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } }
-
+    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } }
 };
 
 } // anonymous namespace
