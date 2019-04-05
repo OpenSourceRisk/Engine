@@ -41,10 +41,9 @@ public:
     const std::string& exceptionWhat() const { return exceptionWhat_; }
 protected:
     std::string json() const override {
-        std::string eWhat = boost::replace_all_copy(exceptionWhat_, "\"", "\\\"");
         return "{ \"errorType\":\"Curve\", \"curveId\":\"" + curveId_ + "\"," +
                " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + eWhat + "\"}";
+               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
     }
 private:
     std::string curveId_, exceptionType_, exceptionWhat_;

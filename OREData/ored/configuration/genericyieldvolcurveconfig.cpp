@@ -218,11 +218,15 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addGenericChildAsList(doc, node, underlyingLabel_ + "Tenors", underlyingTenors_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
 
-    if (dimension_ == Dimension::Smile) {
+    if (requireSwapIndexBases_ || dimension_ == Dimension::Smile) {
         XMLUtils::addChild(doc, node, "ShortSwapIndexBase", shortSwapIndexBase_);
         XMLUtils::addChild(doc, node, "SwapIndexBase", swapIndexBase_);
+    }
+
+    if (dimension_ == Dimension::Smile) {
         XMLUtils::addGenericChildAsList(doc, node, "SmileOptionTenors", smileOptionTenors_);
         XMLUtils::addGenericChildAsList(doc, node, "Smile" + underlyingLabel_ + "Tenors", smileUnderlyingTenors_);
         XMLUtils::addGenericChildAsList(doc, node, "SmileSpreads", smileSpreads_);

@@ -385,6 +385,9 @@ protected:
     // This should return a structured string, ideally in JSON, and should contain a field
     // errorType
     virtual std::string json() const = 0;
+
+    // utility function to delimate string for json, handles \" and \\ and control characters
+    std::string jsonify (const std::string& s) const;
 };
 
 inline std::ostream& operator<<(std::ostream& out, const StructuredErrorMessage& sem) {

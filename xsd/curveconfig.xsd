@@ -52,7 +52,9 @@
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="xs:string" name="FXSpotID" minOccurs="0" />
       <xs:element type="xs:string" name="FXForeignCurveID" minOccurs="0" />
-      <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />
+      <xs:element type="xs:string" name="FXDomesticCurveID" minOccurs="0" />  
+      <xs:element type="calendar" name="Calendar" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -70,6 +72,7 @@
       <xs:element type="dimensionType" name="Dimension"/>
       <xs:element type="xs:string" name="Expiries"/>
       <xs:element type="xs:string" name="Strikes" minOccurs="0" />
+      <xs:element type="xs:string" name="DayCounter" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
@@ -183,6 +186,7 @@
       <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dividendInterpolation" name="DividendInterpolation" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="bool" name="Extrapolation" minOccurs="0" maxOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
