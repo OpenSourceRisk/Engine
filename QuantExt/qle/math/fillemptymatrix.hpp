@@ -30,10 +30,8 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-
-
 //! function that fills a matrix
 /*! This function fills a matrix that is not completely populated by linear interpolation across
  * the desired axis. */
-void FillIncompleteMatrix(Matrix& mat, bool interpRows, Real blank);
+void fillIncompleteMatrix(Matrix& mat, bool interpRows, Real blank);
 }

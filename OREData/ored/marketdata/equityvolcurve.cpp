@@ -181,7 +181,7 @@ namespace ore {
                     
                     // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
                     oexpiries = PopulateMatrixFromMap(sparse_vols, wc_mat, asof); // Builds matrix and returns expiries (NOTE: this also takes care of dates vs periods)
-                    QuantExt::FillIncompleteMatrix(sparse_vols, true, -1.0);
+                    QuantExt::fillIncompleteMatrix(sparse_vols, true, -1.0);
                     final_vols = sparse_vols;
                     map<string, map<string, Real>>::iterator itr;
                     if (isSurface) {

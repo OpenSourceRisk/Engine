@@ -122,7 +122,7 @@ struct VolData {
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(FillIncompleteMatrixTest)
+BOOST_AUTO_TEST_SUITE(fillIncompleteMatrixTest)
 
 BOOST_AUTO_TEST_CASE(testBlankLineFill) {
 
@@ -143,32 +143,32 @@ BOOST_AUTO_TEST_CASE(testBlankLineFill) {
     // check fail
     try {
         Matrix tmp_mat = empty_row;
-        FillIncompleteMatrix(tmp_mat, true, non_val);
-        BOOST_FAIL("FillIncompleteMatrix succeded with Matrix with empty row while interpolating within rows.");
+        fillIncompleteMatrix(tmp_mat, true, non_val);
+        BOOST_FAIL("fillIncompleteMatrix succeded with Matrix with empty row while interpolating within rows.");
     } catch (QuantLib::Error) {
     } catch (...) {
-        BOOST_FAIL("FillIncompleteMatrix failed where is should, but unknown error. Blank row.");
+        BOOST_FAIL("fillIncompleteMatrix failed where is should, but unknown error. Blank row.");
     }
 
     try {
         Matrix tmp_mat = empty_col;
-        FillIncompleteMatrix(tmp_mat, false, non_val);
-        BOOST_FAIL("FillIncompleteMatrix succeded with Matrix with empty column");
+        fillIncompleteMatrix(tmp_mat, false, non_val);
+        BOOST_FAIL("fillIncompleteMatrix succeded with Matrix with empty column");
     } catch (QuantLib::Error) {
     } catch (...) {
-        BOOST_FAIL("FillIncompleteMatrix failed where is should, but unknown error. Blank column.");
+        BOOST_FAIL("fillIncompleteMatrix failed where is should, but unknown error. Blank column.");
     }
 
     try {
         Matrix tmp_mat = empty_row;
-        FillIncompleteMatrix(tmp_mat, false, non_val);
+        fillIncompleteMatrix(tmp_mat, false, non_val);
     } catch (...) {
         BOOST_FAIL("Matrix fill failed with empty row when interpolating within columns.");
     }
 
     try {
         Matrix tmp_mat = empty_col;
-        FillIncompleteMatrix(tmp_mat, true, non_val);
+        fillIncompleteMatrix(tmp_mat, true, non_val);
     } catch (...) {
         BOOST_FAIL("Matrix fill failed with empty col when interpolating within rows.");
     }
@@ -202,14 +202,14 @@ BOOST_AUTO_TEST_CASE(testInterpolateOnly) {
     // fill matrix
     Matrix to_fill_row = incomplete_m;
     Matrix to_fill_col = incomplete_m;
-    FillIncompleteMatrix(to_fill_row, true, non_val);
-    FillIncompleteMatrix(to_fill_col, false, non_val);
+    fillIncompleteMatrix(to_fill_row, true, non_val);
+    fillIncompleteMatrix(to_fill_col, false, non_val);
 
     // check results
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
             if (to_fill_row[i][j] != to_fill_col[i][j] || to_fill_row[i][j] != j + i + 1) {
-                BOOST_FAIL("FillIncompleteMatrix incorrectly interpolated internal entries");
+                BOOST_FAIL("fillIncompleteMatrix incorrectly interpolated internal entries");
             }
         }
     }
@@ -266,8 +266,8 @@ BOOST_AUTO_TEST_CASE(testExtrapolateOnly) {
         // fill matrices
         Matrix to_fill_rows = missing_rows;
         Matrix to_fill_cols = missing_cols;
-        FillIncompleteMatrix(to_fill_rows, false, non_val);
-        FillIncompleteMatrix(to_fill_cols, true, non_val);
+        fillIncompleteMatrix(to_fill_rows, false, non_val);
+        fillIncompleteMatrix(to_fill_cols, true, non_val);
 
         // check results
         for (int i = 0; i < 5; i++) {
@@ -322,8 +322,8 @@ BOOST_AUTO_TEST_CASE(testInterpExtrap) {
     // fill matrix
     Matrix to_fill_rows = incomplete_m;
     Matrix to_fill_cols = incomplete_m;
-    FillIncompleteMatrix(to_fill_rows, true, non_val);
-    FillIncompleteMatrix(to_fill_cols, false, non_val);
+    fillIncompleteMatrix(to_fill_rows, true, non_val);
+    fillIncompleteMatrix(to_fill_cols, false, non_val);
 
     // check results
     for (int i = 0; i < 5; i++) {
@@ -331,11 +331,28 @@ BOOST_AUTO_TEST_CASE(testInterpExtrap) {
             bool check_row = to_fill_rows[i][j] == incomplete_m[i][i];
             bool check_col = to_fill_cols[i][j] == incomplete_m[j][j];
             if (!check_row || !check_col) {
-                BOOST_FAIL("FillIncompleteMatrix failed to correclty fill a diagonal matrix.");
+                BOOST_FAIL("fillIncompleteMatrix failed to correclty fill a diagonal matrix.");
             }
         }
     }
 }
+
+BOOST_AUTO_TEST_CASE(testSingleEntry){ 
+    BOOST_TEST_MESSAGE("Testing single non-empty entry");
+
+    Matrix inc = Matrix(1, 1, 22.5);
+    Matrix tmp1 = inc;
+    Matrix tmp2 = inc;
+
+    fillIncompleteMatrix(tmp1, true, -1);
+    fillIncompleteMatrix(tmp2, false, -1);
+
+    // check
+    
+    
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
