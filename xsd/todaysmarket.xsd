@@ -14,6 +14,7 @@
       <xs:element type="fxSpotsType" name="FxSpots" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="fxVolatilitiesType" name="FxVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="swaptionVolatilitiesType" name="SwaptionVolatilities" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="yieldVolatilitiesType" name="YieldVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="capFloorVolatilitiesType" name="CapFloorVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="cdsVolatilitiesType" name="CDSVolatilities" maxOccurs="unbounded" minOccurs="0"/>
       <xs:element type="defaultCurvesType" name="DefaultCurves" maxOccurs="unbounded" minOccurs="0"/>
@@ -43,6 +44,7 @@
       <xs:element type="xs:string" name="BaseCorrelationsId" minOccurs="0"/>
       <xs:element type="xs:string" name="FxVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="SwaptionVolatilitiesId" minOccurs="0"/>
+      <xs:element type="xs:string" name="YieldVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CapFloorVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="CDSVolatilitiesId" minOccurs="0"/>
       <xs:element type="xs:string" name="DefaultCurvesId" minOccurs="0"/>
@@ -187,6 +189,21 @@
           <xs:simpleContent>
             <xs:extension base="xs:string">
               <xs:attribute type="currencyCode" name="currency" use="required"/>
+            </xs:extension>
+          </xs:simpleContent>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute type="xs:string" name="id"/>
+  </xs:complexType>
+
+  <xs:complexType name="yieldVolatilitiesType">
+    <xs:sequence>
+      <xs:element name="YieldVolatility" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:simpleContent>
+            <xs:extension base="xs:string">
+              <xs:attribute type="xs:string" name="name" use="required"/>
             </xs:extension>
           </xs:simpleContent>
         </xs:complexType>

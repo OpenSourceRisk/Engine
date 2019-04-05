@@ -7,6 +7,7 @@
       <xs:element type="fxSpots" name="FXSpots" minOccurs="0" />
       <xs:element type="fxVolatilities" name="FXVolatilities" minOccurs="0" />
       <xs:element type="swaptionVolatilities" name="SwaptionVolatilities" minOccurs="0" />
+      <xs:element type="yieldVolatilities" name="YieldVolatilities" minOccurs="0" />
       <xs:element type="capFloorVolatilities" name="CapFloorVolatilities" minOccurs="0" />
       <xs:element type="cdsVolatilities" name="CDSVolatilities" minOccurs="0" />
       <xs:element type="defaultCurves" name="DefaultCurves" minOccurs="0" />
@@ -98,6 +99,27 @@
       <xs:element type="xs:string" name="SmileOptionTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSwapTenors" minOccurs="0"/>
       <xs:element type="xs:string" name="SmileSpreads" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldVolatilities">
+    <xs:sequence>
+      <xs:element type="yieldVolatility" name="YieldVolatility" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="yieldVolatility">
+    <xs:sequence>
+      <xs:element type="xs:string" name="CurveId"/>
+      <xs:element type="xs:string" name="CurveDescription"/>
+      <xs:element type="xs:string" name="Qualifier"/>
+      <xs:element type="volatilityType" name="VolatilityType"/>
+      <xs:element type="extrapolationType" name="Extrapolation"/>
+      <xs:element type="dayCounter" name="DayCounter"/>
+      <xs:element type="calendar" name="Calendar"/>
+      <xs:element type="businessDayConvention" name="BusinessDayConvention"/>
+      <xs:element type="xs:string" name="OptionTenors"/>
+      <xs:element type="xs:string" name="BondTenors"/>
     </xs:sequence>
   </xs:complexType>
 

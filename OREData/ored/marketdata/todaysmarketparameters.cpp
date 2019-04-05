@@ -28,7 +28,7 @@ namespace {
 
 // container class to link the enum in the header with the various XML strings
 struct MarketObjectMetaInfo {
-  enum MarketObject obj;
+  MarketObject obj;
   string name; // AKA marketObjectStrings
   string xmlName; // AKA marketObjectXMLNames
   pair<string, string> xmlSingleName; // AKA marketObjectXMLNamesSingle
@@ -58,7 +58,8 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
     { MarketObject::Security,                          "Securities",                         "Securities",                        { "Security", "name" } },
     { MarketObject::CommodityCurve,                    "CommodityCurves",                    "CommodityCurves",                   { "CommodityCurve", "name" } },
     { MarketObject::CommodityVolatility,               "CommodityVolatilities",              "CommodityVolatilities",             { "CommodityVolatility", "name" } },
-    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } }
+    { MarketObject::Correlation,                       "Correlation",                        "Correlations",                      { "Correlation", "name" } },
+    { MarketObject::YieldVol,                          "YieldVol",                           "YieldVolatilities",                 { "YieldVolatility", "name" } }
 
 };
 
