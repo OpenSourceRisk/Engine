@@ -62,19 +62,6 @@ static const vector<MarketObjectMetaInfo> marketObjectData = {
 
 };
 
-/*
-;
-static const pair<string, string> marketObjectXMLNamesSingle[] = {
-    {"YieldCurve", "name"}, {"DiscountingCurve", "currency"}, {"Index", "name"}, {"SwapIndex", "name"},
-    {"ZeroInflationIndexCurve", "name"}, {"ZeroInflationCapFloorVolatility", "name" },
-    {"YYInflationIndexCurve", "name"}, {"FxSpot", "pair"}, {"BaseCorrelation", "name"}, {"FxVolatility", "pair"},
-    {"SwaptionVolatility", "currency"}, {"CapFloorVolatility", "currency"}, {"CDSVolatility", "name"},
-    {"DefaultCurve", "name"}, {"InflationCapFloorPriceSurface", "name"},
-    {"YYInflationCapFloorPriceSurface", "name"}, {"YYInflationCapFloorVolatility", "name"},
-    {"EquityCurve", "name"}, {"EquityVolatility", "name"}, {"Security", "name"},
-    {"CommodityCurve", "name"}, {"CommodityVolatility", "name"}, {"Correlation", "name"}};
-
-*/
 } // anonymous namespace
 
 std::ostream& operator<<(std::ostream& out, const MarketObject& o) {
