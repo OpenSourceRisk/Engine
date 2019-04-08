@@ -21,7 +21,6 @@
     \ingroup math
 */
 
-#pragma once
 #include <ql/math/matrix.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
