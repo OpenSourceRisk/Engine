@@ -46,7 +46,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
                     break;
                 }
             }
-            QL_REQUIRE(pos1 < mat.columns(), "Matrix has empty row.");
+            QL_REQUIRE(pos1 < mat.columns(), "Matrix has empty line.");
             for (int j = 0; j < pos1; j++) {
                 mat[i][j] = mat[i][pos1];
             }
@@ -85,14 +85,40 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
     }
 }
 
-void fillIncompleteMatrix(Matrix& mat, bool interpRows, Real blank) {
-    if (interpRows)
-        fillMatrixImpl(mat, blank);
-    else {
-        Matrix m2 = transpose(mat);
-        fillMatrixImpl(m2, blank);
-        Matrix m3 = transpose(m2);
-        mat.swap(m3);
+void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_NULL_REAL) {
+    QL_REQUIRE(mat.columns() > 0 && mat.rows() > 0, "Matrix has no elements.");
+
+    // check if already complete
+    bool is_full = true;
+    for (int i = 0; i < mat.rows(); i++) {
+        for (int j = 0; j < mat.columns(); j++) {
+            if (mat[i][j] == blank) {
+                is_full = false;
+            }
+            if (!is_full) {
+                break;
+            }
+        }
+        if (!is_full) {
+            break;
+        }
+    }
+
+    // not complete
+    if (!is_full) {
+        if (mat.columns() == 1 && mat.rows() == 1) {
+           QL_FAIL("1 X 1 empty matrix given to fill.");    // !is_full and 1 X 1 matrix.
+        } 
+        if (interpRows) {
+            QL_REQUIRE(mat.columns() > 1, "Too few columns in matrix to interpolate within rows.")
+            fillMatrixImpl(mat, blank);
+        }else {
+            QL_REQUIRE(mat.rows() > 1, "Too few rows in matrix to interpolate within columns.");
+            Matrix m2 = transpose(mat);
+            fillMatrixImpl(m2, blank);
+            Matrix m3 = transpose(m2);
+            mat.swap(m3);
+        }
     }
 }
 } // namespace QuantExt

@@ -21,161 +21,53 @@
 */
 
 #include "toplevelfixture.hpp"
-#include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
-#include <ql/math/matrix.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
-#include <ql/termstructures/yield/discountcurve.hpp>
-#include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/calendars/target.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
-#include <ql/utilities/dataparsers.hpp>
 #include <qle/math/fillemptymatrix.hpp>
-#include <qle/termstructures/blackinvertedvoltermstructure.hpp>
-#include <qle/termstructures/fxblackvolsurface.hpp>
-#include <qle/termstructures/fxvannavolgasmilesection.hpp>
-#include <iostream>
 
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace boost::unit_test_framework;
 using namespace std;
 
-namespace {
-
-struct CommonVars {
-
-    /* ------ GLOBAL VARIABLES ------ */
-    Date today;
-    DayCounter dc;
-    vector<Date> dates;
-    vector<Real> strikes;
-    Matrix vols;
-    vector<Real> atmVols;
-
-    vector<Volatility> rrs;
-    vector<Volatility> bfs;
-
-    Handle<Quote> baseSpot;
-    Handle<YieldTermStructure> baseDomesticYield;
-    Handle<YieldTermStructure> baseForeignYield;
-
-    CommonVars() {
-
-        today = Date(1, Jan, 2014);
-        dc = ActualActual();
-
-        Settings::instance().evaluationDate() = today;
-
-        dates.push_back(Date(1, Feb, 2014));
-        dates.push_back(Date(1, Mar, 2014));
-        dates.push_back(Date(1, Apr, 2014));
-        dates.push_back(Date(1, Jan, 2015));
-
-        strikes.push_back(90);
-        strikes.push_back(100);
-        strikes.push_back(110);
-
-        vols = Matrix(3, 4);
-        vols[0][0] = 0.12;
-        vols[1][0] = 0.10;
-        vols[2][0] = 0.13;
-        vols[0][1] = 0.22;
-        vols[1][1] = 0.20;
-        vols[2][1] = 0.23;
-        vols[0][2] = 0.32;
-        vols[1][2] = 0.30;
-        vols[2][2] = 0.33;
-        vols[0][3] = 0.42;
-        vols[1][3] = 0.40;
-        vols[2][3] = 0.43;
-
-        atmVols.push_back(0.1);
-        atmVols.push_back(0.2);
-        atmVols.push_back(0.3);
-        atmVols.push_back(0.4);
-
-        rrs = vector<Volatility>(atmVols.size(), 0.01);
-        bfs = vector<Volatility>(atmVols.size(), 0.001);
-
-        baseSpot = Handle<Quote>(boost::shared_ptr<Quote>(new SimpleQuote(100)));
-
-        baseDomesticYield = Handle<YieldTermStructure>(
-            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.03)), dc));
-        baseForeignYield = Handle<YieldTermStructure>(
-            boost::make_shared<FlatForward>(today, Handle<Quote>(boost::make_shared<SimpleQuote>(0.01)), dc));
-    }
-};
-
-struct VolData {
-    const char* tenor;
-    Volatility atm;
-    Volatility rr;
-    Volatility bf;
-    Time time;
-    Real df_d;
-    Real df_f;
-};
-
-} // namespace
-
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(fillIncompleteMatrixTest)
 
 BOOST_AUTO_TEST_CASE(testBlankLineFill) {
-
     BOOST_TEST_MESSAGE("Testing filling matrices with blank lines");
 
     Real non_val = -1;
 
-    // empty row matrix & col matrix
+    // empty row matrix & empty col matrix
     Matrix empty_row, empty_col;
-    empty_row = Matrix(5, 5, Real(33));
-    empty_col = Matrix(5, 5, Real(33));
+    empty_row = Matrix(5, 5, Real(22.5));
+    empty_col = Matrix(5, 5, Real(22.5));
 
     for (int i = 0; i < 5; i++) {
         empty_row[2][i] = non_val;
         empty_col[i][2] = non_val;
     }
 
-    // check fail
-    try {
-        Matrix tmp_mat = empty_row;
-        fillIncompleteMatrix(tmp_mat, true, non_val);
-        BOOST_FAIL("fillIncompleteMatrix succeded with Matrix with empty row while interpolating within rows.");
-    } catch (QuantLib::Error) {
-    } catch (...) {
-        BOOST_FAIL("fillIncompleteMatrix failed where is should, but unknown error. Blank row.");
-    }
+    // check fails + successes
+    Matrix tmp_mat_r = empty_row;
+    Matrix tmp_mat_c = empty_col;
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_mat_r, true, non_val), QuantLib::Error);
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_mat_c, false, non_val), QuantLib::Error);
 
-    try {
-        Matrix tmp_mat = empty_col;
-        fillIncompleteMatrix(tmp_mat, false, non_val);
-        BOOST_FAIL("fillIncompleteMatrix succeded with Matrix with empty column");
-    } catch (QuantLib::Error) {
-    } catch (...) {
-        BOOST_FAIL("fillIncompleteMatrix failed where is should, but unknown error. Blank column.");
-    }
+    tmp_mat_r = empty_row;
+    tmp_mat_c = empty_col;
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_mat_r, false, non_val));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_mat_c, true, non_val));
 
-    try {
-        Matrix tmp_mat = empty_row;
-        fillIncompleteMatrix(tmp_mat, false, non_val);
-    } catch (...) {
-        BOOST_FAIL("Matrix fill failed with empty row when interpolating within columns.");
-    }
-
-    try {
-        Matrix tmp_mat = empty_col;
-        fillIncompleteMatrix(tmp_mat, true, non_val);
-    } catch (...) {
-        BOOST_FAIL("Matrix fill failed with empty col when interpolating within rows.");
+    // check vals
+    Real tol = 1.0E-8;
+    for (int i = 0; i < 5; i++) {
+        BOOST_CHECK_CLOSE(tmp_mat_r[2][i], Real(22.5), tol);
+        BOOST_CHECK_CLOSE(tmp_mat_c[i][2], Real(22.5), tol);
     }
 }
 
 BOOST_AUTO_TEST_CASE(testInterpolateOnly) {
-
     BOOST_TEST_MESSAGE("Testing interpolation only");
 
     Real non_val = -1;
@@ -193,7 +85,7 @@ BOOST_AUTO_TEST_CASE(testInterpolateOnly) {
     incomplete_m = Matrix(5, 5, non_val);
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
-            if (i == 0 || j == 0 || i == 4 || j== 4) {
+            if (i == 0 || j == 0 || i == 4 || j == 4) {
                 incomplete_m[i][j] = j + i + 1;
             }
         }
@@ -206,17 +98,16 @@ BOOST_AUTO_TEST_CASE(testInterpolateOnly) {
     fillIncompleteMatrix(to_fill_col, false, non_val);
 
     // check results
+    Real tol = 1.0E-8;
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
-            if (to_fill_row[i][j] != to_fill_col[i][j] || to_fill_row[i][j] != j + i + 1) {
-                BOOST_FAIL("fillIncompleteMatrix incorrectly interpolated internal entries");
-            }
+            BOOST_CHECK_CLOSE(to_fill_row[i][j], j + i + 1, tol);
+            BOOST_CHECK_CLOSE(to_fill_col[i][j], j + i + 1, tol);
         }
     }
 }
 
 BOOST_AUTO_TEST_CASE(testExtrapolateOnly) {
-
     BOOST_TEST_MESSAGE("Testing extrapolation of edges in filling the matrix");
 
     Real non_val = -1;
@@ -312,11 +203,7 @@ BOOST_AUTO_TEST_CASE(testInterpExtrap) {
 
     incomplete_m = Matrix(5, 5, non_val);
     for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            if (i == j) {
-                incomplete_m[i][j] = i;
-            }
-        }
+        incomplete_m[i][i] = i;
     }
 
     // fill matrix
@@ -328,28 +215,80 @@ BOOST_AUTO_TEST_CASE(testInterpExtrap) {
     // check results
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
-            bool check_row = to_fill_rows[i][j] == incomplete_m[i][i];
-            bool check_col = to_fill_cols[i][j] == incomplete_m[j][j];
-            if (!check_row || !check_col) {
-                BOOST_FAIL("fillIncompleteMatrix failed to correclty fill a diagonal matrix.");
-            }
+            BOOST_CHECK_EQUAL(to_fill_rows[i][j], incomplete_m[i][i]);
+            BOOST_CHECK_EQUAL(to_fill_cols[i][j], incomplete_m[j][j]);
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(testSingleEntry){ 
-    BOOST_TEST_MESSAGE("Testing single non-empty entry");
+BOOST_AUTO_TEST_CASE(testSingleEntry) {
 
     Matrix inc = Matrix(1, 1, 22.5);
-    Matrix tmp1 = inc;
-    Matrix tmp2 = inc;
+    Matrix tmp1 = inc, tmp2 = inc, tmp3 = inc, tmp4 = inc;
 
-    fillIncompleteMatrix(tmp1, true, -1);
-    fillIncompleteMatrix(tmp2, false, -1);
+    // non-blank value.
+    BOOST_TEST_MESSAGE("Testing single non-blank entry");
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp1, true, -1));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp2, false, -1));
+    BOOST_CHECK_EQUAL(tmp1[0][0], inc[0][0]);
+    BOOST_CHECK_EQUAL(tmp2[0][0], inc[0][0]);
 
-    // check
+    // blank value.
+    BOOST_TEST_MESSAGE("Testing single blank entry");
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp3, true, 22.5), QuantLib::Error);
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp4, false, 22.5), QuantLib::Error);
+}
+
+BOOST_AUTO_TEST_CASE(testEmptyMatrix) {
+    BOOST_TEST_MESSAGE("testing empty matrices");
     
-    
+    Matrix m;
+    BOOST_CHECK_THROW(fillIncompleteMatrix(m, true, -1), QuantLib::Error);
+    BOOST_CHECK_THROW(fillIncompleteMatrix(m, false, -1), QuantLib::Error);
+}
+
+BOOST_AUTO_TEST_CASE(testFullMatrix) {
+    BOOST_TEST_MESSAGE("tesing full matrices");
+
+    // set up matrices
+    Matrix full_single = Matrix(1, 1, 22.5);
+    Matrix full = Matrix(5, 5, 22.5);
+    Matrix tmp_single_r = full_single;
+    Matrix tmp_single_c = full_single;
+    Matrix tmp_r = full;
+    Matrix tmp_c = full;
+
+    // "fill"
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_single_r, true, -1));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_single_c, false, -1));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_r, true, -1));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_c, false, -1));
+
+    // check results
+    BOOST_CHECK_EQUAL(tmp_single_r[0][0], full_single[0][0]);
+    BOOST_CHECK_EQUAL(tmp_single_c[0][0], full_single[0][0]);
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            BOOST_CHECK_EQUAL(tmp_r[i][j], full[i][j]);
+            BOOST_CHECK_EQUAL(tmp_c[i][j], full[i][j]);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(testSingleRowCol) {
+    Matrix single_row = Matrix(1, 5, 22.5);
+    Matrix single_col = Matrix(5, 1, 22.5);
+    single_row[0][3] = -1; // single blank entry
+    single_col[3][0] = -1; // single blank entry
+    Matrix tmp_row = single_row;
+    Matrix tmp_col = single_col;
+
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_row, false, -1), QuantLib::Error);
+    BOOST_CHECK_THROW(fillIncompleteMatrix(tmp_col, true, -1), QuantLib::Error);
+
+
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_row, true, -1));
+    BOOST_CHECK_NO_THROW(fillIncompleteMatrix(tmp_col, false, -1));
 
 }
 
