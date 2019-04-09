@@ -94,6 +94,7 @@ public:
         EQUITY_DIVIDEND,
         EQUITY_OPTION,
         BOND,
+        BOND_OPTION,
         INDEX_CDS_OPTION,
         COMMODITY_SPOT,
         COMMODITY_FWD,
@@ -647,12 +648,71 @@ public:
     //! \name Inspectors
     //@{
     const string& ccy() const { return ccy_; }
-    const Period& expiry() const { return expiry_; }
     const Period& term() const { return term_; }
     //@}
 private:
     string ccy_;
+    Period term_;
+};
+
+//! Bond option data class
+/*!
+This class holds single market points of type
+- BOND_OPTION
+Specific data comprise
+- qualifier
+- expiry
+- term
+
+\ingroup marketdata
+*/
+
+class BondOptionQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string qualifier, Period expiry,
+                    Period term)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), qualifier_(qualifier),
+          expiry_(expiry), term_(term) {}
+    //! \name Inspectors
+    //@{
+    const string& qualifier() const { return qualifier_; }
+    const Period& expiry() const { return expiry_; }
+    const Period& term() const { return term_; }
+    //@}
+private:
+    string qualifier_;
     Period expiry_;
+    Period term_;
+};
+
+//! Shift data class (for SLN bond option volatilities)
+/*!
+This class holds single market points of type
+- SHIFT
+Specific data comprise
+- qualifier
+- term
+
+\ingroup marketdata
+*/
+
+class BondOptionShiftQuote : public MarketDatum {
+public:
+    //! Constructor
+    BondOptionShiftQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string qualifier,
+                         Period term)
+        : MarketDatum(value, asofDate, name, quoteType, InstrumentType::BOND_OPTION), qualifier_(qualifier),
+          term_(term) {
+        QL_REQUIRE(quoteType == MarketDatum::QuoteType::SHIFT, "quote type must be SHIFT for shift data");
+    }
+    //! \name Inspectors
+    //@{
+    const string& qualifier() const { return qualifier_; }
+    const Period& term() const { return term_; }
+    //@}
+private:
+    string qualifier_;
     Period term_;
 };
 

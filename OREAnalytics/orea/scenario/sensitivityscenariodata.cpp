@@ -43,10 +43,10 @@ void SensitivityScenarioData::curveShiftDataFromXML(XMLNode* child, CurveShiftDa
     data.shiftTenors = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTenors", true);
 }
 
-void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data) {
+void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes) {
     shiftDataFromXML(child, data);
     data.shiftExpiries = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftExpiries", true);
-    data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", true);
+    data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", requireShiftStrikes);
     if (data.shiftStrikes.size() == 0)
         data.shiftStrikes = {0.0};
 }
@@ -80,6 +80,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const
         return fxShiftData().at(name);
     case RFType::SwaptionVolatility:
         return swaptionVolShiftData().at(name);
+    case RFType::YieldVolatility:
+        return yieldVolShiftData().at(name);
     case RFType::OptionletVolatility:
         return capFloorVolShiftData().at(name);
     case RFType::FXVolatility:
@@ -189,12 +191,29 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(swaptionVols, "SwaptionVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            SwaptionVolShiftData data;
+            GenericYieldVolShiftData data;
             volShiftDataFromXML(child, data);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             if (data.shiftStrikes.size() == 0)
                 data.shiftStrikes = {0.0};
             swaptionVolShiftData_[ccy] = data;
+        }
+    }
+
+    LOG("Get yield vol sensitivity parameters");
+    XMLNode* yieldVols = XMLUtils::getChildNode(node, "YieldVolatilities");
+    if (yieldVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(yieldVols, "YieldVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string securityId = XMLUtils::getAttribute(child, "name");
+            GenericYieldVolShiftData data;
+            volShiftDataFromXML(child, data, false);
+            data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
+            QL_REQUIRE(data.shiftStrikes.size() == 0 ||
+                           data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0),
+                       "no shift strikes (or exactly {0.0}) should be given for yield volatilities");
+            data.shiftStrikes = { 0.0 };
+            yieldVolShiftData_[securityId] = data;
         }
     }
 
@@ -452,6 +471,17 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : swaptionVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "SwaptionVolatility");
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
+            volShiftDataToXML(doc, node, kv.second);
+            XMLUtils::addGenericChildAsList(doc, node, "ShiftTerms", kv.second.shiftTerms);
+        }
+    }
+
+    if (!yieldVolShiftData_.empty()) {
+        LOG("toXML for YieldVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "YieldVolatilities");
+        for (const auto& kv : yieldVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "YieldVolatility");
+            XMLUtils::addAttribute(doc, node, "name", kv.first);
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addGenericChildAsList(doc, node, "ShiftTerms", kv.second.shiftTerms);
         }

@@ -80,9 +80,8 @@ public:
         string indexName;
     };
 
-    struct SwaptionVolShiftData : VolShiftData {
+    struct GenericYieldVolShiftData : VolShiftData {
         vector<Period> shiftTerms;
-        string indexName;
     };
 
     //! Default constructor
@@ -97,7 +96,8 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
     const map<string, CapFloorVolShiftData>& capFloorVolShiftData() const { return capFloorVolShiftData_; }
-    const map<string, SwaptionVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
+    const map<string, GenericYieldVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
+    const map<string, GenericYieldVolShiftData>& yieldVolShiftData() const { return yieldVolShiftData_; }
     const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
     const map<string, CdsVolShiftData>& cdsVolShiftData() const { return cdsVolShiftData_; }
     const map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() const { return baseCorrelationShiftData_; }
@@ -135,7 +135,8 @@ public:
     map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() { return indexCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() { return yieldCurveShiftData_; }
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
-    map<string, SwaptionVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
+    map<string, GenericYieldVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
+    map<string, GenericYieldVolShiftData>& yieldVolShiftData() { return yieldVolShiftData_; }
     map<string, CapFloorVolShiftData>& capFloorVolShiftData() { return capFloorVolShiftData_; }
     map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
@@ -180,7 +181,7 @@ public:
 protected:
     void shiftDataFromXML(XMLNode* child, ShiftData& data);
     void curveShiftDataFromXML(XMLNode* child, CurveShiftData& data);
-    void volShiftDataFromXML(XMLNode* child, VolShiftData& data);
+    void volShiftDataFromXML(XMLNode* child, VolShiftData& data, const bool requireShiftStrikes = true);
 
     //! toXML helper methods
     //@{
@@ -194,7 +195,8 @@ protected:
     map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;    // key: yieldCurveName
     map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
     map<string, CapFloorVolShiftData> capFloorVolShiftData_;                // key: ccy
-    map<string, SwaptionVolShiftData> swaptionVolShiftData_;                // key: ccy
+    map<string, GenericYieldVolShiftData> swaptionVolShiftData_;            // key: ccy
+    map<string, GenericYieldVolShiftData> yieldVolShiftData_;               // key: securityId
     map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
     map<string, CdsVolShiftData> cdsVolShiftData_;                          // key: ccy pair
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
