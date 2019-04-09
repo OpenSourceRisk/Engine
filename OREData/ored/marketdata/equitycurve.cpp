@@ -76,7 +76,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             wc_flag = true;
             regex re("(\\*)");
             string regexstr = config->fwdQuotes()[0];
-            regexstr = regex_replace(regexstr, re, ".*");
+            regexstr = regex_replace(regexstr, re, string(".*"));
             reg1 = regex(regexstr);
         }
         else {
