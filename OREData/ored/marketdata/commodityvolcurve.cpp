@@ -26,8 +26,6 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
 
-#include <regex>
-
 using namespace std;
 using namespace QuantLib;
 
@@ -98,36 +96,8 @@ void CommodityVolCurve::buildConstantVolatility(const Date& asof, CommodityVolat
 void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatilityCurveConfig& config,
                                              const Loader& loader) {
 
-    // Loop over all market datums and find the quotes *in* the config
+    // Loop over all market datums and find the quotes in the config
     // Return error if there are duplicate quotes (this is why we do not use loader.get() method)
-
-    QL_REQUIRE(config.quotes().size() > 0, "No quotes specified in config " << config.curveID());
-
-    size_t found;
-    bool found_regex = false;
-    regex reg1;
-
-    // check for regex string in config
-    for (int i = 0; i < config.quotes().size(); i++) {
-        found = config.quotes()[i].find("*"); // find '*' char in quote
-        found_regex = (found != string::npos) ? true : found_regex;
-        if (found_regex) {
-            break;
-        }
-    }
-
-    if (found_regex) {
-        QL_REQUIRE(config.quotes().size() == 1,
-                   "Wild card specified in config " << config.curveID << " but more quotes also specified.")
-        found = config.quotes()[0].find('*');
-
-        // build regex string
-        regex re("(\\*)");
-        string regexstr = config.quotes[0];
-        regexstr = regex_replace(regexstr, re, ".*");
-        reg1 = regex(regexstr);
-    }
-
     map<Date, Real> curveData;
     Calendar calendar = parseCalendar(config.calendar());
     for (const boost::shared_ptr<MarketDatum>& md : loader.loadQuotes(asof)) {
@@ -135,32 +105,16 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
             boost::shared_ptr<CommodityOptionQuote> q = boost::dynamic_pointer_cast<CommodityOptionQuote>(md);
 
-            // relevant quote?
-            bool add_quote = false;
-            string q_name;                      // for printing quote name (wild-card or not)
-            vector<string>::const_iterator it;  // if not wild-card -> find quote.
-            if (found_regex) {
-                if (regex_match(q->name(), reg1)) {
-                    add_quote = true;
-                    q_name = config.quotes()[0];
-                }
-            } else {
-                it = find(config.quotes().begin(), config.quotes().end(), q->name()); // find in config
-                if (it != config.quotes().end()) {
-                    add_quote = true;
-                    q_name = *it;
-                }
-            }
-
-            // add quote if relevant
-            if (add_quote) {
-                // Convert expiry to a date if necessary
+            vector<string>::const_iterator it = find(config.quotes().begin(), config.quotes().end(), q->name());
+            if (it != config.quotes().end()) {
+                // The quote expiry is a string that may be a period or a date
+                // Convert it to a date here
                 Date aDate;
                 Period aPeriod;
                 bool isDate;
                 parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
                 if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q_name << "' is for a past date ("
+                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << *it << "' is for a past date ("
                                                                             << io::iso_date(aDate) << ")");
                 } else {
                     aDate = calendar.adjust(asof + aPeriod);
@@ -175,17 +129,14 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
     }
     LOG("CommodityVolatilityCurve: read " << curveData.size() << " quotes.");
 
-    if (found_regex) {
-        QL_REQUIRE(curveData.size() > 0, "No quotes found matching " << config.quotes()[0]);
-    } else {
-        QL_REQUIRE(curveData.size() == config.quotes().size(), "Found " << curveData.size() << " quotes, but "
-                                                                        << config.quotes().size()
-                                                                        << " quotes given in config.");
-    }
+    QL_REQUIRE(curveData.size() == config.quotes().size(),
+               "Found " << curveData.size() << " quotes, but " << config.quotes().size() << " quotes given in config.");
 
     // Create the dates and volatility vector
     vector<Date> dates;
+    dates.reserve(curveData.size());
     vector<Volatility> volatilities;
+    volatilities.reserve(curveData.size());
     for (const auto& datum : curveData) {
         dates.push_back(datum.first);
         volatilities.push_back(datum.second);

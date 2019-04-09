@@ -26,10 +26,8 @@
 
 #include <ored/marketdata/commoditycurve.hpp>
 #include <ored/utilities/log.hpp>
-#include <regex>
 
 using QuantExt::InterpolatedPriceCurve;
-using namespace ::std;
 
 namespace ore {
 namespace data {
@@ -45,27 +43,6 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         // Loop over all market data looking for the quotes
         map<Date, Real> curveData;
 
-        // in case of wild-card in config
-        bool wc_flag = false;
-        bool found_regex = false;
-        regex reg1;
-        size_t found;
-
-        // check for regex string in config
-        for (int i = 0; i < config->quotes().size(); i++) {
-            found = config->quotes()[i].find("*"); // find '*' char in quote
-            found_regex = (found != string::npos) ? true : found_regex;
-        }
-        if (found_regex) {
-            QL_REQUIRE(config->quotes().size() == 1,"wild card specified in " << config->curveID() << " but more quotes also specified.");
-            LOG("Wild card quote specified for " << config->curveID())
-            wc_flag = true;
-            regex re("(\\*)");
-            string regexstr = config->quotes()[0];
-            regexstr = regex_replace(regexstr, re, ".*");
-            reg1 = regex(regexstr);
-        } 
-        
         for (auto& md : loader.loadQuotes(asof)) {
             // Only looking for quotes on asof date with quote type PRICE
             if (md->asofDate() == asof && md->quoteType() == MarketDatum::QuoteType::PRICE) {
@@ -88,20 +65,12 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
                     boost::shared_ptr<CommodityForwardQuote> q = boost::dynamic_pointer_cast<CommodityForwardQuote>(md);
 
-					if (!wc_flag) {
-                        vector<string>::const_iterator it =
-                            find(config->quotes().begin(), config->quotes().end(), q->name());
-                        if (it != config->quotes().end()) {
-                            QL_REQUIRE(curveData.find(q->expiryDate()) == curveData.end(), "duplicate market datum found for " << *it);
-                            curveData[q->expiryDate()] = q->quote()->value();
-						}
-                    } else {
-						// is the quote 'in' the config? (also check expiry not before asof)
-						if (regex_match(q->name(), reg1) && asof < q->expiryDate()) {
-						    QL_REQUIRE(curveData.find(q->expiryDate()) == curveData.end(), "duplicate market datum found for " << q->name());
-						    DLOG("Commodity Forward Price found for quote: " << q->name());
-						    curveData[q->expiryDate()] = q->quote()->value();
-						}
+                    vector<string>::const_iterator it =
+                        find(config->quotes().begin(), config->quotes().end(), q->name());
+                    if (it != config->quotes().end()) {
+                        QL_REQUIRE(curveData.find(q->expiryDate()) == curveData.end(),
+                                   "duplicate market datum found for " << *it);
+                        curveData[q->expiryDate()] = q->quote()->value();
                     }
                 }
             }
@@ -109,14 +78,9 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
 
         LOG("CommodityCurve: read " << curveData.size() << " quotes.");
 
-        if (!wc_flag) {
-            QL_REQUIRE(curveData.size() == config->quotes().size(), "Found " << curveData.size() << " quotes, but "
-                                                                             << config->quotes().size()
-                                                                             << " quotes given in config.");
-        } else {
-			QL_REQUIRE(curveData.size() > 0, "wild card specified in commodity config " << config->curveID() << " but no quotes read");
-        }
-		
+        QL_REQUIRE(curveData.size() == config->quotes().size(), "Found " << curveData.size() << " quotes, but "
+                                                                         << config->quotes().size()
+                                                                         << " quotes given in config.");
 
         // curveData is already ordered by date. Make sure asof is first entry.
         QL_REQUIRE(curveData.begin()->first == asof, "All quotes must be after the asof date, " << asof << ".");
