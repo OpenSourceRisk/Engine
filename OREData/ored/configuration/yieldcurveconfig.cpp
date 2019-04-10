@@ -327,18 +327,18 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
     string name = XMLUtils::getNodeName(node);
     if (name == "DiscountRatio") {
-    }else if (name =="AverageOIS") {
+    } else if (name =="AverageOIS") {
         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
-        if (quotesNode) {
-            for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
-                child = XMLUtils::getNextSibling(child)) {
-                quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
-                quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
-            }
-        } else {
+         if (quotesNode) {
+              for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
+                  child = XMLUtils::getNextSibling(child)) {
+                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
+                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
+              }
+         } else {
              QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
-        }
-    } else if (name ==  "Simple" || name == "Direct" || name == "TenorBasis" || name == "ZeroSpread" || name == "CrossCurrency") {
+         }
+    } else {
          quotes_.clear();
          XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
          if (quotesNode) {
@@ -348,8 +348,6 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
               quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
               }
          }         
-    } else {
-        QL_FAIL("Segment name is unknown");
     }
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
