@@ -17,7 +17,7 @@
 */
 
 #include <ql/errors.hpp>
-#include <rapidxml.hpp>
+
 #include <boost/algorithm/string/predicate.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/utilities/log.hpp>
@@ -325,8 +325,9 @@ YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& convent
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
-    if (node->name() == "DiscountRatio") {}
-    else if (node->name()=="AverageOIS") {
+    string name = XMLUtils::getNodeName(node);
+    if (name == "DiscountRatio") {
+    }else if (name =="AverageOIS") {
         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
         if (quotesNode) {
             for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
@@ -337,7 +338,7 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
         } else {
              QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
         }
-    } else if (node->name() ==  "Simple" || "Direct" || "TenorBasis" || "ZeroSpread" || "CrossCurrency") {
+    } else if (name ==  "Simple" || name == "Direct" || name == "TenorBasis" || name == "ZeroSpread" || name == "CrossCurrency") {
          quotes_.clear();
          XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
          if (quotesNode) {
