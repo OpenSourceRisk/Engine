@@ -426,6 +426,9 @@
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp">
+      <Filter>portfolio\builders</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">

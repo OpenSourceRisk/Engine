@@ -64,6 +64,12 @@
     <Engine>YYCapEngine</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CapFlooredYYLeg">
+    <Model>CapFlooredYYModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredYYCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>

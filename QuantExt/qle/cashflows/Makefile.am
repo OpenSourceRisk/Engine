@@ -18,6 +18,7 @@ libCashflows_la_SOURCES = \
 	quantocouponpricer.cpp \
 	equitycouponpricer.cpp \
 	equitycoupon.cpp \
+	inflationcouponpricer.cpp \
 	lognormalcmsspreadpricer.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -35,6 +36,7 @@ this_include_HEADERS =  \
 	quantocouponpricer.hpp \
 	equitycouponpricer.hpp \
 	equitycoupon.hpp \
+	inflationcouponpricer.hpp \
 	lognormalcmsspreadpricer.hpp
 
 all.hpp: Makefile.am
