@@ -61,6 +61,8 @@ private:
 
     CommodityVolatilityCurveSpec spec_;
     boost::shared_ptr<QuantLib::BlackVolTermStructure> volatility_;
+
+    vector<Date> PopulateMatrixFromMap(Matrix&, map<string, map<string, Real>>&, Date);
 };
 
 } // namespace data
