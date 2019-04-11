@@ -868,7 +868,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                 LOG("Loading spec " << *spec << " done.");
 
             } catch (const std::exception& e) {
-                ALOG(StructuredCurveErrorMessage(spec->name(), "Faild to Build Curve", e.what()));
+                ALOG(StructuredCurveErrorMessage(spec->name(), "Failed to Build Curve", e.what()));
                 buildErrors[spec->name()] = e.what();
             }
         }
