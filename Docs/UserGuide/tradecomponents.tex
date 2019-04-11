@@ -1108,6 +1108,12 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
 \item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 
 Allowable values:  \emph{true, false} 
+
+\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+  given rate (after applying gearing and spread, if any).
+
+\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+  the given rate (after applying gearing and spread, if any).
 \end{itemize}
 
 \begin{listing}[H]
@@ -1141,6 +1147,12 @@ Allowable values:  \emph{true, false}
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
           <Interpolated>true</Interpolated>
+          <Caps>
+            <Cap>0.05</Cap>
+          </Caps>
+          <Floors>
+            <Floor>0.01</Floor>
+          </Floors>
         </YYLegData>
       </LegData>
 \end{minted}
