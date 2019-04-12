@@ -328,7 +328,7 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
     string name = XMLUtils::getNodeName(node);
     if (name == "DiscountRatio") {
     } else if (name =="AverageOIS") {
-        XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
          if (quotesNode) {
               for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
                   child = XMLUtils::getNextSibling(child)) {
