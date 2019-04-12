@@ -118,7 +118,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                     ? QuantLib::Normal
                     : QuantLib::ShiftedLognormal,
-                shifts));
+                isSln ? shifts : Matrix(vols.rows(), vols.columns(), 0.0)));
 
             atm->enableExtrapolation(config->extrapolate());
         } else {
