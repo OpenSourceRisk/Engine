@@ -148,7 +148,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
 
             vector<vector<bool>> zero(smileOptionTenors.size() * smileUnderlyingTenors.size(),
-                                      std::vector<bool>(spreads.size(), false));
+                                      std::vector<bool>(spreads.size(), true));
 
             if (smileOptionTenors.size() == 0)
                 smileOptionTenors = config->optionTenors();
@@ -170,7 +170,7 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                 // we default them to zero instead and post process them below
                 boost::shared_ptr<MarketDatum> md = loader.get(std::make_pair(p, true), asof);
                 if (md == nullptr)
-                    md = boost::make_shared<SimpleQuote>(0.0);
+                    continue;
                 Period expiry, term;
                 Real strike;
                 if (md->quoteType() == volatilityType && matchSmileQuote(md, expiry, term, strike)) {
