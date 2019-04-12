@@ -76,15 +76,17 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
         ssBase << marketDatumInstrumentLabel_ << "/" << volatilityType_ << "/" << qualifier_ << "/";
         string base = ssBase.str();
 
-        if (dimension_ == Dimension::ATM) {
-            for (auto o : optionTenors_) {
-                for (auto s : underlyingTenors_) {
-                    std::stringstream ss;
-                    ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
-                    quotes_.push_back(ss.str());
-                }
+        // add atm vols (always required)
+        for (auto o : optionTenors_) {
+            for (auto s : underlyingTenors_) {
+                std::stringstream ss;
+                ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
+                quotes_.push_back(ss.str());
             }
-        } else {
+        }
+
+        // add Smile Spreads, if dimension is Smile
+        if (dimension_ == Dimension::Smile) {
             for (auto o : smileOptionTenors_) {
                 for (auto s : smileUnderlyingTenors_) {
                     for (auto sp : smileSpreads_) {
