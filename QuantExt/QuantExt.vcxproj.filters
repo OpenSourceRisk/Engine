@@ -645,9 +645,6 @@
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
-    <ClInclude Include="qle\cashflows\inflationcouponpricer.hpp">
-      <Filter>cashflows</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1110,9 +1107,6 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp">
       <Filter>termstructures</Filter>
-    </ClCompile>
-    <ClCompile Include="qle\cashflows\inflationcouponpricer.cpp">
-      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
