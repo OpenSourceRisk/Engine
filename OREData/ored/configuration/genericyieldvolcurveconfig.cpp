@@ -95,6 +95,14 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
                 }
             }
         }
+        // add SHIFT quotes, if vol type is SLN
+        for (auto s : underlyingTenors_) {
+            if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+                std::stringstream ss;
+                ss << marketDatumInstrumentLabel_ << "/SHIFT/" << qualifier_ << "/" << to_string(s);
+                quotes_.push_back(ss.str());
+            }
+        }
     }
     return quotes_;
 }
