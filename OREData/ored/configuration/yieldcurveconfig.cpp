@@ -343,9 +343,9 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
          XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
          if (quotesNode) {
               for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
-              string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
-              bool opt = (!attr.empty() && parseBool(attr));
-              quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
+                  string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
+                  bool opt = (!attr.empty() && parseBool(attr));
+                  quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
               }
          }         
     }
