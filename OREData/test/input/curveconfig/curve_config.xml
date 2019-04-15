@@ -422,7 +422,7 @@
       <!-- ATM -->
       <Dimension>ATM</Dimension>
       <!-- Rate, Price -->
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -441,7 +441,7 @@
       <!-- ATM -->
       <Dimension>ATM</Dimension>
       <!-- Rate, Price -->
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -460,7 +460,7 @@
       <!-- ATM -->
       <Dimension>Constant</Dimension>
       <!-- Rate, Price -->
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->     
       <DayCounter>Actual/365 (Fixed)</DayCounter>

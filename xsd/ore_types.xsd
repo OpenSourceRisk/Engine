@@ -379,9 +379,9 @@
   
   <xs:simpleType name="correlationQuoteType">
     <xs:restriction base="xs:string">
-      <xs:enumeration value="Rate"/>
-      <xs:enumeration value="Price"/>     
-      <xs:enumeration value="Null"/>
+      <xs:enumeration value="RATE"/>
+      <xs:enumeration value="PRICE"/>
+      <xs:enumeration value="NULL"/>
     </xs:restriction>
   </xs:simpleType>
 
