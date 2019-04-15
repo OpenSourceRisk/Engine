@@ -360,10 +360,10 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
-  <xs:element name="ZeroCouponFixed" substitutionGroup="legDataType">
+  <xs:element name="ZeroCouponFixedLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element type="xs:float" name="Years" maxOccurs="1"/>
+        <xs:element type="xs:float" name="Rate" maxOccurs="1"/>
         <xs:element type="xs:integer" name="Years" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>

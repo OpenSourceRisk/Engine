@@ -34,7 +34,8 @@ OREDATA_TESTS = \
 	equityswap.cpp \
 	conventions.cpp \
     digitalcms.cpp \
-	fixings.cpp
+	fixings.cpp \
+    zerocouponswap.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
