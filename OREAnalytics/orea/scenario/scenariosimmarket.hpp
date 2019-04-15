@@ -118,6 +118,14 @@ public:
                       const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
                       const bool continueOnError = false);
 
+    ScenarioSimMarket(const boost::shared_ptr<Market>& initMarket,
+                      const boost::shared_ptr<ScenarioSimMarketParameters>& parameters, const Conventions& conventions,
+                      const boost::shared_ptr<FixingManager>& fixingManager,
+                      const std::string& configuration = Market::defaultConfiguration,
+		      const ore::data::CurveConfigurations& curveConfigs = ore::data::CurveConfigurations(),
+                      const ore::data::TodaysMarketParameters& todaysMarketParams = ore::data::TodaysMarketParameters(),
+                      const bool continueOnError = false);
+
     //! Set scenario generator
     boost::shared_ptr<ScenarioGenerator>& scenarioGenerator() { return scenarioGenerator_; }
     //! Get scenario generator

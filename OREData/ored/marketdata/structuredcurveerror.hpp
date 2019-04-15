@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/utilities/log.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -42,7 +43,7 @@ protected:
     std::string json() const override {
         return "{ \"errorType\":\"Curve\", \"curveId\":\"" + curveId_ + "\"," +
                " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
+               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
     }
 private:
     std::string curveId_, exceptionType_, exceptionWhat_;

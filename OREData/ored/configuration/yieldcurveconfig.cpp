@@ -325,6 +325,30 @@ YieldCurveSegment::YieldCurveSegment(const string& typeID, const string& convent
 
 void YieldCurveSegment::fromXML(XMLNode* node) {
     typeID_ = XMLUtils::getChildValue(node, "Type", true);
+    string name = XMLUtils::getNodeName(node);
+    if (name == "DiscountRatio") {
+    } else if (name =="AverageOIS") {
+         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+         if (quotesNode) {
+              for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
+                  child = XMLUtils::getNextSibling(child)) {
+                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
+                  quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
+              }
+         } else {
+             QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
+         }
+    } else {
+         quotes_.clear();
+         XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
+         if (quotesNode) {
+              for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
+                  string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
+                  bool opt = (!attr.empty() && parseBool(attr));
+                  quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
+              }
+         }         
+    }
     type_ = parseYieldCurveSegment(typeID_);
     conventionsID_ = XMLUtils::getChildValue(node, "Conventions", false);
 }
@@ -332,36 +356,33 @@ void YieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* YieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("Segment");
     XMLUtils::addChild(doc, node, "Type", typeID_);
-    XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
-    return node;
-}
+    if (!quotes_.empty()) {
+        XMLNode* quotesNode = doc.allocNode("Quotes");
+        // Special case handling for AverageOIS where the quotes are stored as pairs
+        // Spread and Rate.
+        if (type_ == YieldCurveSegment::Type::AverageOIS) {
+            QL_REQUIRE(quotes_.size()%2==0,"Invalid quotes vector should be even")
+            for (Size i = 0; i < quotes_.size(); i = i + 2) {
+                string rateQuote = quotes_[i].first;
+                string spreadQuote = quotes_[i + 1].first;
 
-void YieldCurveSegment::loadQuotesFromXML(XMLNode* parent) {
-    // Was:
-    //  quotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote", true);
-    // Now we also look for the attribute optional and populate quotes_ directly
-    quotes_.clear();
-    XMLNode* quotesNode = XMLUtils::getChildNode(parent, "Quotes");
-    if (quotesNode) {
-        for (auto n : XMLUtils::getChildrenNodes(quotesNode, "Quote")) {
-            string attr = XMLUtils::getAttribute(n, "optional"); // return "" if not present
-            bool opt = (!attr.empty() && parseBool(attr));
-            quotes_.emplace_back(quote(XMLUtils::getNodeValue(n), opt));
+                XMLNode* compositeQuoteNode = doc.allocNode("CompositeQuote");
+                XMLUtils::addChild(doc, compositeQuoteNode, "SpreadQuote", spreadQuote);
+                XMLUtils::addChild(doc, compositeQuoteNode, "RateQuote", rateQuote);
+                XMLUtils::appendNode(quotesNode, compositeQuoteNode);
+            }
+        } else {
+            for (auto q : quotes_) {
+                XMLNode* qNode = doc.allocNode("Quote", q.first);
+                if (q.second)
+                    XMLUtils::addAttribute(doc, qNode, "optional", "true");
+                XMLUtils::appendNode(quotesNode, qNode);
+            }
         }
+        XMLUtils::appendNode(node, quotesNode);
     }
-}
 
-XMLNode* YieldCurveSegment::writeQuotesToXML(XMLDocument& doc) {
-    // Was:
-    //  XMLUtils::addChildren(doc, node, "Quotes", "Quote", quotes_);
-    // Now add optional="true" when this is present
-    XMLNode* node = doc.allocNode("Quotes");
-    for (auto q : quotes_) {
-        XMLNode* qNode = doc.allocNode("Quote", q.first);
-        if (q.second)
-            XMLUtils::addAttribute(doc, qNode, "optional", "true");
-        XMLUtils::appendNode(node, qNode);
-    }
+    XMLUtils::addChild(doc, node, "Conventions", conventionsID_);
     return node;
 }
 
@@ -380,13 +401,11 @@ DirectYieldCurveSegment::DirectYieldCurveSegment(const string& typeID, const str
 void DirectYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Direct");
     YieldCurveSegment::fromXML(node);
-    loadQuotesFromXML(node);
 }
 
 XMLNode* DirectYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "Direct");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
     return node;
 }
 
@@ -405,14 +424,12 @@ SimpleYieldCurveSegment::SimpleYieldCurveSegment(const string& typeID, const str
 void SimpleYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "Simple");
     YieldCurveSegment::fromXML(node);
-    loadQuotesFromXML(node);
     projectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurve", false);
 }
 
 XMLNode* SimpleYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "Simple");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
     if (!projectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurve", projectionCurveID_);
     return node;
@@ -434,18 +451,6 @@ void AverageOISYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "AverageOIS");
     YieldCurveSegment::fromXML(node);
     projectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurve", false);
-
-    // Read the Quotes node.
-    XMLNode* quotesNode = XMLUtils::getChildNode(node, "Quotes");
-    if (quotesNode) {
-        for (XMLNode* child = XMLUtils::getChildNode(quotesNode, "CompositeQuote"); child;
-             child = XMLUtils::getNextSibling(child)) {
-            quotes_.push_back(quote(XMLUtils::getChildValue(child, "RateQuote", true)));
-            quotes_.push_back(quote(XMLUtils::getChildValue(child, "SpreadQuote", true)));
-        }
-    } else {
-        QL_FAIL("No Quotes in segment. Remove segment or add quotes.");
-    }
 }
 
 XMLNode* AverageOISYieldCurveSegment::toXML(XMLDocument& doc) {
@@ -453,18 +458,6 @@ XMLNode* AverageOISYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLUtils::setNodeName(doc, node, "AverageOIS");
     if (!projectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurve", projectionCurveID_);
-
-    // Add the Quotes node.
-    XMLNode* quotesNode = doc.allocNode("Quotes");
-    XMLUtils::appendNode(node, quotesNode);
-    for (Size i = 0; i < quotes_.size(); ++i) {
-        XMLNode* compositeQuoteNode = doc.allocNode("CompositeQuote");
-        XMLUtils::addChild(doc, compositeQuoteNode, "RateQuote", quotes_[i].first);
-        i++;
-        XMLUtils::addChild(doc, compositeQuoteNode, "SpreadQuote", quotes_[i].first);
-        XMLUtils::appendNode(quotesNode, compositeQuoteNode);
-    }
-
     return node;
 }
 
@@ -486,7 +479,6 @@ TenorBasisYieldCurveSegment::TenorBasisYieldCurveSegment(const string& typeID, c
 void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "TenorBasis");
     YieldCurveSegment::fromXML(node);
-    loadQuotesFromXML(node);
     shortProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveShort", false);
     longProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveLong", false);
 }
@@ -494,11 +486,10 @@ void TenorBasisYieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* TenorBasisYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "TenorBasis");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
-    if (!shortProjectionCurveID_.empty())
-        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
     if (!longProjectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurveLong", longProjectionCurveID_);
+    if (!shortProjectionCurveID_.empty())
+        XMLUtils::addChild(doc, node, "ProjectionCurveShort", shortProjectionCurveID_);
     return node;
 }
 
@@ -522,9 +513,8 @@ CrossCcyYieldCurveSegment::CrossCcyYieldCurveSegment(const string& type, const s
 void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CrossCurrency");
     YieldCurveSegment::fromXML(node);
-    loadQuotesFromXML(node);
-    spotRateID_ = XMLUtils::getChildValue(node, "SpotRate", true);
     foreignDiscountCurveID_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
+    spotRateID_ = XMLUtils::getChildValue(node, "SpotRate", true);
     domesticProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveDomestic", false);
     foreignProjectionCurveID_ = XMLUtils::getChildValue(node, "ProjectionCurveForeign", false);
 }
@@ -532,9 +522,8 @@ void CrossCcyYieldCurveSegment::fromXML(XMLNode* node) {
 XMLNode* CrossCcyYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "CrossCurrency");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
-    XMLUtils::addChild(doc, node, "SpotRate", spotRateID_);
     XMLUtils::addChild(doc, node, "DiscountCurve", foreignDiscountCurveID_);
+    XMLUtils::addChild(doc, node, "SpotRate", spotRateID_);
     if (!domesticProjectionCurveID_.empty())
         XMLUtils::addChild(doc, node, "ProjectionCurveDomestic", domesticProjectionCurveID_);
     if (!foreignProjectionCurveID_.empty())
@@ -558,14 +547,12 @@ ZeroSpreadedYieldCurveSegment::ZeroSpreadedYieldCurveSegment(const string& typeI
 void ZeroSpreadedYieldCurveSegment::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "ZeroSpread");
     YieldCurveSegment::fromXML(node);
-    loadQuotesFromXML(node);
     referenceCurveID_ = XMLUtils::getChildValue(node, "ReferenceCurve", false);
 }
 
 XMLNode* ZeroSpreadedYieldCurveSegment::toXML(XMLDocument& doc) {
     XMLNode* node = YieldCurveSegment::toXML(doc);
     XMLUtils::setNodeName(doc, node, "ZeroSpread");
-    XMLUtils::appendNode(node, writeQuotesToXML(doc));
     XMLUtils::addChild(doc, node, "ReferenceCurve", referenceCurveID_);
     return node;
 }

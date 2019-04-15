@@ -1,6 +1,7 @@
 1) Portfolio
 
    CMS Spread Swap
+   Digital CMS Spread Swap
 
 2) Market
 
@@ -12,7 +13,7 @@
 
 4) Analytics
 
-   NPV, cashflows, EPE and ENE
+   NPV, cashflows, sensitivity analysis, EPE and ENE
 
 5) Run Example
 

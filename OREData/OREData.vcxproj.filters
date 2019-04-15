@@ -411,8 +411,20 @@
     <ClInclude Include="ored\marketdata\correlationcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\configuration\yieldvolcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\yieldvolcurve.hpp">
+      <Filter>marketdata</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\fixingdates.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\configuration\genericyieldvolcurveconfig.hpp">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp">
+      <Filter>marketdata</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -429,9 +441,6 @@
       <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\fxvolcurveconfig.cpp">
-      <Filter>configuration</Filter>
-    </ClCompile>
-    <ClCompile Include="ored\configuration\swaptionvolcurveconfig.cpp">
       <Filter>configuration</Filter>
     </ClCompile>
     <ClCompile Include="ored\configuration\yieldcurveconfig.cpp">
@@ -740,8 +749,17 @@
     <ClCompile Include="ored\marketdata\correlationcurve.cpp">
       <Filter>marketdata</Filter>
     </ClCompile>
+    <ClCompile Include="ored\marketdata\yieldvolcurve.cpp">
+      <Filter>marketdata</Filter>
+    </ClCompile>
     <ClCompile Include="ored\portfolio\fixingdates.cpp">
       <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\configuration\genericyieldvolcurveconfig.cpp">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp">
+      <Filter>marketdata</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

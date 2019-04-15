@@ -153,7 +153,15 @@ public:
         //! regulatory adjustment, 1/min cap requirement
         Real kvaRegAdjustment = 12.5,
         //! Cost of Capital for KVA = regulatory adjustment x capital hurdle
-        Real kvaCapitalHurdle = 0.012);
+        Real kvaCapitalHurdle = 0.012,
+        //! Our KVA PD floor
+        Real kvaOurPdFloor = 0.03,
+        //! Their KVA PD floor
+        Real kvaTheirPdFloor = 0.03,
+	//! Our KVA CVA Risk Weight
+	Real kvaOurCvaRiskWeight = 0.05,
+	//! Their KVA CVA Risk Weight,
+	Real kvaTheirCvaRiskWeight = 0.05);
 
     //! Return list of Trade IDs in the portfolio
     const vector<string>& tradeIds() { return tradeIds_; }
@@ -236,8 +244,14 @@ public:
     Real nettingSetFBA(const string& nettingSetId);
     //! Return netting set FCA
     Real nettingSetFCA(const string& nettingSetId);
-    //! Return netting set KVA
-    Real nettingSetKVACCR(const string& nettingSetId);
+    //! Return netting set KVA-CCR
+    Real nettingSetOurKVACCR(const string& nettingSetId);
+    //! Return netting set KVA-CCR from counterparty persepctive
+    Real nettingSetTheirKVACCR(const string& nettingSetId);
+    //! Return netting set KVA-CVA
+    Real nettingSetOurKVACVA(const string& nettingSetId);
+    //! Return netting set KVA-CVA from counterparty persepctive
+    Real nettingSetTheirKVACVA(const string& nettingSetId);
     //! Return netting set FBA excluding own survival probability
     Real nettingSetFBA_exOwnSP(const string& nettingSetId);
     //! Return netting set FCA excluding own survival probability
@@ -272,6 +286,7 @@ private:
                     const vector<vector<Real>>& nettingSetValue, Real nettingSetValueToday,
                     const Date& nettingSetMaturity);
 
+    void updateNettingSetKVA();   
     void updateStandAloneXVA();
     void updateAllocatedXVA();
 
@@ -298,8 +313,7 @@ private:
     map<string, vector<Real>> tradeEPE_, tradeENE_, tradeEE_B_, tradeEEE_B_, tradePFE_, tradeVAR_;
     map<string, Real> tradeEPE_B_, tradeEEPE_B_;
     map<string, vector<Real>> allocatedTradeEPE_, allocatedTradeENE_;
-    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_,
-        netEEE_B_kva_;
+    map<string, vector<Real>> netEPE_, netENE_, netEE_B_, netEEE_B_, netPFE_, netVAR_, expectedCollateral_;
     map<string, Real> netEPE_B_, netEEPE_B_;
     map<string, vector<Real>> colvaInc_, eoniaFloorInc_;
     map<string, Real> tradeCVA_, tradeDVA_, tradeMVA_, tradeFBA_, tradeFCA_, tradeFBA_exOwnSP_, tradeFCA_exOwnSP_,
@@ -308,7 +322,7 @@ private:
     map<string, Real> allocatedTradeCVA_, allocatedTradeDVA_;
     map<string, Real> nettingSetCVA_, nettingSetDVA_, nettingSetMVA_;
     map<string, Real> nettingSetCOLVA_, nettingSetCollateralFloor_;
-    map<string, Real> effMatNumer_, effMatDenom_, nettingSetKVACCR_;
+    map<string, Real> ourNettingSetKVACCR_, theirNettingSetKVACCR_, ourNettingSetKVACVA_, theirNettingSetKVACVA_;
     map<string, Real> nettingSetFCA_, nettingSetFBA_, nettingSetFCA_exOwnSP_, nettingSetFBA_exOwnSP_,
         nettingSetFCA_exAllSP_, nettingSetFBA_exAllSP_;
     boost::shared_ptr<NPVCube> nettedCube_;
@@ -336,6 +350,10 @@ private:
     Real kvaAlpha_;
     Real kvaRegAdjustment_;
     Real kvaCapitalHurdle_;
+    Real kvaOurPdFloor_;
+    Real kvaTheirPdFloor_;
+    Real kvaOurCvaRiskWeight_;
+    Real kvaTheirCvaRiskWeight_;
 };
 } // namespace analytics
 } // namespace ore

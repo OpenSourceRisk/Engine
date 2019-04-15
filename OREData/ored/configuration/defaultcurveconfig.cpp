@@ -125,6 +125,7 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     if (type_ == Type::SpreadCDS || type_ == Type::HazardRate) {
         XMLUtils::addChild(doc, node, "Type", type_ == Type::SpreadCDS ? "SpreadCDS" : "HazardRate");
         XMLUtils::addChild(doc, node, "DiscountCurve", discountCurveID_);
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "RecoveryRate", recoveryRateQuote_);
         XMLNode* quotesNode = XMLUtils::addChild(doc, node, "Quotes");
         for (auto q : cdsQuotes_) {
@@ -133,9 +134,9 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
                 XMLUtils::addAttribute(doc, qNode, "optional", "true");
             XMLUtils::appendNode(quotesNode, qNode);
         }
-        XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     } else if (type_ == Type::Benchmark) {
         XMLUtils::addChild(doc, node, "Type", "Benchmark");
+        XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
         XMLUtils::addChild(doc, node, "BenchmarkCurve", benchmarkCurveID_);
         XMLUtils::addChild(doc, node, "SourceCurve", sourceCurveID_);
         XMLUtils::addGenericChildAsList(doc, node, "Pillars", pillars_);
@@ -144,7 +145,7 @@ XMLNode* DefaultCurveConfig::toXML(XMLDocument& doc) {
     } else {
         QL_FAIL("Unkown type in DefaultCurveConfig::toXML()");
     }
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Conventions", conventionID_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     if (startDate_ != Date())

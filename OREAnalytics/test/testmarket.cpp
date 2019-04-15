@@ -156,17 +156,13 @@ TestMarket::TestMarket(Date asof) {
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = flatRateDiv(0.01);
     yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "Lufthansa")] =
         flatRateDiv(0.0);
-
-    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = flatRateYts(0.03);
-    yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "Lufthansa")] =
-        flatRateYts(0.02);
-
+    
     equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = Handle<EquityIndex>(boost::make_shared<EquityIndex>(
-        "SP5", UnitedStates(), equitySpot("SP5"), yieldCurve(YieldCurveType::EquityForecast, "SP5"),
+        "SP5", UnitedStates(), parseCurrency("USD"), equitySpot("SP5"), yieldCurve(YieldCurveType::Discount, "USD"),
         yieldCurve(YieldCurveType::EquityDividend, "SP5")));
     equityCurves_[make_pair(Market::defaultConfiguration, "Lufthansa")] =
-        Handle<EquityIndex>(boost::make_shared<EquityIndex>("Lufthansa", TARGET(), equitySpot("Lufthansa"),
-                                                            yieldCurve(YieldCurveType::EquityForecast, "Lufthansa"),
+        Handle<EquityIndex>(boost::make_shared<EquityIndex>("Lufthansa", TARGET(), parseCurrency("EUR"), equitySpot("Lufthansa"),
+                                                            yieldCurve(YieldCurveType::Discount, "EUR"),
                                                             yieldCurve(YieldCurveType::EquityDividend, "Lufthansa")));
 
     // build swaption vols
@@ -492,12 +488,6 @@ boost::shared_ptr<ore::analytics::ScenarioSimMarketParameters> TestConfiguration
     simMarketData->setEquityNames({"SP5", "Lufthansa"});
     simMarketData->setEquityDividendTenors("SP5", {6 * Months, 1 * Years, 2 * Years});
     simMarketData->setEquityDividendTenors("Lufthansa", {6 * Months, 1 * Years, 2 * Years});
-    simMarketData->setEquityForecastTenors("SP5",
-                                           {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
-    simMarketData->setEquityForecastTenors("Lufthansa",
-                                           {1 * Months, 6 * Months, 1 * Years, 2 * Years, 3 * Years, 4 * Years,
-                                            5 * Years, 7 * Years, 10 * Years, 15 * Years, 20 * Years, 30 * Years});
 
     simMarketData->setSimulateEquityVols(true);
     simMarketData->equityVolDecayMode() = "ForwardVariance";
@@ -559,7 +549,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.05};
 
-    ore::analytics::SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
@@ -627,7 +617,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.05};
 
-    ore::analytics::SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {3 * Years, 5 * Years, 10 * Years};
@@ -691,7 +681,7 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
     cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
-    ore::analytics::SensitivityScenarioData::SwaptionVolShiftData swvsData;
+    ore::analytics::SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Relative";
     swvsData.shiftSize = 0.01;
     swvsData.shiftExpiries = {2 * Years, 5 * Years, 10 * Years};
@@ -790,10 +780,6 @@ boost::shared_ptr<ore::analytics::SensitivityScenarioData> TestConfigurationObje
     sensiData->equityVolShiftData()["SP5"] = eqvsData;
     sensiData->equityVolShiftData()["Lufthansa"] = eqvsData;
 
-    sensiData->equityForecastCurveShiftData()["SP5"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
-    sensiData->equityForecastCurveShiftData()["Lufthansa"] =
-        boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(cvsData);
     sensiData->zeroInflationCurveShiftData()["UKRPI"] =
         boost::make_shared<ore::analytics::SensitivityScenarioData::CurveShiftData>(zinfData);
 

@@ -33,7 +33,7 @@
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
-      <xs:element type="bondData" name="BondData"/>
+      <xs:element type="bondData" name="BondData"/>  
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
@@ -352,8 +352,11 @@
       <xs:all>
         <xs:element type="xs:string" name="ReturnType" minOccurs="1" maxOccurs="1"/>
         <xs:element type="xs:string" name="Name" minOccurs="1" maxOccurs="1"/>
+        <xs:element type="xs:float" name="InitialPrice" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:float" name="DividendFactor" minOccurs="0" maxOccurs="1"/>
-        <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="NotionalReset" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="scheduleData" name="ValuationSchedule" minOccurs="0" maxOccurs="1" />
+        <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1" />
       </xs:all>
     </xs:complexType>
   </xs:element>
@@ -498,6 +501,7 @@
       <xs:enumeration value="DigitalCMSSpread"/>
       <xs:enumeration value="Cashflow"/>
       <xs:enumeration value="Equity"/>
+      <xs:enumeration value="FormulaBased"/>
     </xs:restriction>
   </xs:simpleType>
 

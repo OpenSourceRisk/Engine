@@ -12,10 +12,10 @@ configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
+configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
-configuration/swaptionvolcurveconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -34,6 +34,7 @@ marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
 marketdata/fxvolcurve.cpp
+marketdata/genericyieldvolcurve.cpp
 marketdata/inflationcapfloorpricesurface.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
@@ -47,6 +48,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
+marketdata/yieldvolcurve.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -127,12 +129,14 @@ configuration/equitycurveconfig.hpp
 configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
+configuration/genericyieldvolcurveconfig.hpp
 configuration/inflationcapfloorpricesurfaceconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/yieldcurveconfig.hpp
+configuration/yieldvolcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
@@ -150,6 +154,7 @@ marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
+marketdata/genericyieldvolcurve.hpp
 marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
@@ -160,10 +165,12 @@ marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
+marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
+marketdata/yieldvolcurve.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp
@@ -219,6 +226,7 @@ portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/schedule.hpp
+portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp

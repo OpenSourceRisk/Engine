@@ -149,16 +149,16 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     if (!extrapolate_)
         extr_str = "None";
     XMLUtils::addChild(doc, node, "Extrapolation", extr_str);
+    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
 
     XMLUtils::addChild(doc, node, "IncludeAtm", includeAtm_);
+    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
+    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
+    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
     XMLUtils::addChild(doc, node, "Strikes", strikes_);
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
-    XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
-    XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
-    XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
 
     return node;
 }

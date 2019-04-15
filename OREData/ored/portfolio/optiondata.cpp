@@ -46,7 +46,8 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "OptionType", callPut_);
     XMLUtils::addChild(doc, node, "Style", style_);
     XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
-    XMLUtils::addChild(doc, node, "Settlement", settlement_);
+    if (settlement_ != "")
+        XMLUtils::addChild(doc, node, "Settlement", settlement_);
     if (settlementMethod_ != "")
         XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
     XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);

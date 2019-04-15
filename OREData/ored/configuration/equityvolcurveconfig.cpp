@@ -79,11 +79,12 @@ XMLNode* EquityVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", ccy_);
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
+        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     } else {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
+        XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
         XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     }
-    XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
 
     return node;

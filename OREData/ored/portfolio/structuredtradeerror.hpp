@@ -25,6 +25,7 @@
 
 #include <ored/utilities/log.hpp>
 #include <ored/portfolio/trade.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace ore {
 namespace data {
@@ -51,7 +52,7 @@ protected:
         return "{ \"errorType\":\"Trade\", \"tradeId\":\"" + tradeId_ + "\"," +
                " \"tradeType\":\"" + tradeType_ + "\"," +
                " \"exceptionType\":\"" + exceptionType_ + "\"," +
-               " \"exceptionMessage\":\"" + exceptionWhat_ + "\"}";
+               " \"exceptionMessage\":\"" + jsonify(exceptionWhat_) + "\"}";
     }
 private:
     std::string tradeId_, tradeType_, exceptionType_, exceptionWhat_;
