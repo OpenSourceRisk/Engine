@@ -522,6 +522,9 @@
     <ClInclude Include="qle\indexes\ibor\chfsaron.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\saibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\seksior.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>

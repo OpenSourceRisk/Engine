@@ -194,6 +194,7 @@ indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/rubmosprime.hpp
+indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
 indexes/ibor/sekstibor.hpp
 indexes/ibor/sgdsibor.hpp

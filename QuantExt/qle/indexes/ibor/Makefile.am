@@ -20,6 +20,7 @@ this_include_HEADERS = \
 	nzdbkbm.hpp \
 	plnwibor.hpp \
 	rubmosprime.hpp \
+	saibor.hpp \
 	sekstibor.hpp \
 	sgdsibor.hpp \
 	sgdsor.hpp \
