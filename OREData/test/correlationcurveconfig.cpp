@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(testParseCMSSpreadPriceQuoteCorrelationFromXml) {
     configXml.append("  <CorrelationType>CMSSpread</CorrelationType>");
     configXml.append("  <Currency>EUR</Currency>");
     configXml.append("  <Dimension>ATM</Dimension>");
-    configXml.append("  <QuoteType>Price</QuoteType>");
+    configXml.append("  <QuoteType>PRICE</QuoteType>");
     configXml.append("  <Extrapolation>true</Extrapolation>");
     configXml.append("  <Conventions>EUR-CMS-10Y-1Y-CONVENTION</Conventions>");
     configXml.append("  <SwaptionVolatility>EUR</SwaptionVolatility>");
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(testParseGenericCorrelationFromXml) {
     configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
     configXml.append("  <CorrelationType>Generic</CorrelationType>");
     configXml.append("  <Dimension>ATM</Dimension>");
-    configXml.append("  <QuoteType>Rate</QuoteType>");
+    configXml.append("  <QuoteType>RATE</QuoteType>");
     configXml.append("  <Extrapolation>true</Extrapolation>");
     configXml.append("  <Calendar>TARGET</Calendar>");
     configXml.append("  <DayCounter>A365</DayCounter>");
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(testParseGenericCorrelationNullQuoteFromXml) {
     configXml.append("  <CurveId>EUR-CMS-10Y/EUR-CMS-1Y</CurveId>");
     configXml.append("  <CurveDescription>EUR CMS correlations</CurveDescription>");
     configXml.append("  <CorrelationType>Generic</CorrelationType>");
-    configXml.append("  <QuoteType>Null</QuoteType>");
+    configXml.append("  <QuoteType>NULL</QuoteType>");
     configXml.append("  <Dimension/>");
     configXml.append("  <Extrapolation/>");
     configXml.append("  <Calendar>TARGET</Calendar>");
