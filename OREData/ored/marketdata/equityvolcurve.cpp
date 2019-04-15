@@ -57,15 +57,19 @@ namespace ore {
                 QL_REQUIRE(strikes.size() > 0, "No strikes defined");
 
                 // check for wild cards
+                vector<string>::iterator expr_wc_it = find(expiries.begin(), expiries.end(), "*");
+                vector<string>::iterator strk_wc_it = find(strikes.begin(), strikes.end(), "*");
                 bool strikes_wc = false;
                 bool expiries_wc = false;
                 vector<Real> ostrikes;
                 vector<Date> oexpiries;
-                if (strikes.size() == 1 && strikes[0] == "*") {
-                    strikes_wc = true;
-                }
-                if (expiries.size() == 1 && expiries[0] == "*") {
+                if (expr_wc_it != expiries.end()) {
+                    QL_REQUIRE(expiries.size() == 1, "Wild card expiriy specified but more expiries also specified.")
                     expiries_wc = true;
+                }
+                if (strk_wc_it != strikes.end()) {
+                    QL_REQUIRE(strikes.size() == 1, "Wild card strike specified but more strikes also specified.")
+                    strikes_wc = true;
                 }
                 bool no_wild_card = (!strikes_wc && !expiries_wc) ? true : false;
 
@@ -79,12 +83,12 @@ namespace ore {
                 }
 
                 // In case of wild card we need the following granularity within the mkt data loop
-                bool strike_relevant, expiry_relevant;
-                strike_relevant, expiry_relevant;
-                strike_relevant = (strikes_wc) ? true : false;
-                expiry_relevant = (expiries_wc) ? true : false;
+                bool strike_relevant = (strikes_wc) ? true : false;
+                bool expiry_relevant = (expiries_wc) ? true : false;
+                bool quote_relevant;
 
                 // We loop over all market data, looking for quotes that match the configuration
+                Size quotes_added = 0;
                 for (auto& md : loader.loadQuotes(asof)) {
                     // skip irrelevant data
                     if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
@@ -100,6 +104,7 @@ namespace ore {
                                     QL_REQUIRE(d_vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
                                         << expiries[j] << " already set");
                                     d_vols[i][j] = q->quote()->value();
+                                    quotes_added++;
                                 }
                             }
                             // some wild card
@@ -115,30 +120,31 @@ namespace ore {
                                 // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
                                     strike_relevant = (q->strike() != "ATMF") ? true : false;
                                 }
+                                quote_relevant = (strike_relevant && expiry_relevant) ? true : false;
 
-                                // strike found?
-                                if (wc_mat.find(q->strike()) != wc_mat.end()) {
-                                    // add expiry if requested and not already there
-                                    if (expiry_relevant) {
-                                        if (wc_mat[q->strike()].find(q->expiry()) == wc_mat[q->strike()].end()) {
-                                            wc_mat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
-                                        }
-                                    }
-                                }
-                                else if (strike_relevant){
-                                    //add strike and expiry if relevant
-                                    map<string, Real> tmp_inner;
-                                    if (expiry_relevant) {
+                                // add quote to matrix map, if relevant
+                                if (quote_relevant) {
+                                    // strike found?
+                                    if (wc_mat.find(q->strike()) != wc_mat.end()) {
+                                        // add expiry
+                                        QL_REQUIRE(wc_mat[q->strike()].find(q->expiry()) == wc_mat[q->strike()].end(),
+                                                   "quote" << q->name() << "duplicate"); 
+                                         wc_mat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
+                                    } else {
+                                        // add strike and expiry
+                                        map<string, Real> tmp_inner;
                                         tmp_inner.insert(pair<string, Real>(q->expiry(), q->quote()->value()));
+                                        wc_mat.insert(pair<string, map<string, Real>>(q->strike(), tmp_inner));
                                     }
-                                    wc_mat.insert(pair<string, map<string, Real>>(q->strike(), tmp_inner));
+                                    quotes_added++;
                                 }
                             }
                         }
                     }
                 }
+                LOG("EquityVolatilityCurve: read " << quotes_added << " quotes.")
 
-                // No wild card - Check that we have all the quotes in config
+                // Check loaded quotes
                 if (no_wild_card) {
                     for (Size i = 0; i < strikes.size(); i++) {
                         for (Size j = 0; j < expiries.size(); j++) {
@@ -148,7 +154,6 @@ namespace ore {
                     }
                     final_vols = d_vols;
                 }
-                //wild card
                 else {
                     // no wild card for strikes
                     if (!strikes_wc) {
