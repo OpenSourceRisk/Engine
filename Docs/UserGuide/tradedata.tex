@@ -421,6 +421,36 @@ specification.
 \label{lst:yyswap}
 \end{listing}
 
+\subsubsection{Zero Coupon Swap}
+
+A Zero Coupon swap is set up as a swap, with one leg of type {\tt ZeroCouponFixed}. Listing \ref{lst:zeroswap} shows an
+example. The ZeroCouponFixed leg contains an additional {\tt ZeroCouponFixedLegData} block. See \ref{ss:zerolegdata} for details on the ZeroCouponFixed leg
+specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>ZeroCouponFixed</LegType>
+        <Payer>false</Payer>
+        ...
+        <ZeroCouponFixedLegData>
+            <Rate>0.02</Rate>
+            <Years>5</Years>
+        </ZeroCouponFixedLegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{Zero Coupon Swap Data}
+\label{lst:zeroswap}
+\end{listing}
+
 \subsubsection{Bond}
 
 A vanilla Bond is set up using a {\tt BondData} block as shown in listing \ref{lst:bonddata}. The bond specific elements

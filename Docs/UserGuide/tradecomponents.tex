@@ -349,6 +349,8 @@ outlined in section \ref{ss:floatingleg_data} Floating Leg Data and Spreads.
   outlined in section \ref{ss:cpilegdata}.
 \item YYLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{YY}. It is
   outlined in section \ref{ss:yylegdata}.
+\item ZeroCouponFixedLegData: This trade component sub-node is required if \lstinline!LegType! is set to \emph{ZeroCouponFixed}. It is
+  outlined in section \ref{ss:zerolegdata}.
 \end{itemize}
 
 \subsubsection{Schedule Data (Rules and Dates)}\label{ss:schedule_data}
@@ -1146,5 +1148,58 @@ Allowable values:  \emph{true, false}
 \end{minted}
 \caption{YY leg data}
 \label{lst:yylegdata}
+\end{listing}
+
+\subsubsection{ZeroCouponFixed Leg Data}
+\label{ss:yylegdata}
+
+Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fixed. The ZeroCouponFixedLegData block contains the following
+elements:
+
+\begin{itemize}
+\item Rate: The underlying rate.
+
+Allowable values:  Any real number. The rate is expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+
+\item Years: The number of years the rate is compounded for.
+
+Allowable values: An integer, the trade is expected to compund for an integer number of years,
+
+\end{itemize}
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>ZeroCouponFixed</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-07-18</StartDate>
+            <EndDate>2021-07-18</EndDate>
+            <Tenor>5Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <ZeroCouponFixedLegData>
+          <Rate>0.02</Rate>
+          <Years>5</Years>
+        </ZeroCouponFixedLegData>
+      </LegData>
+\end{minted}
+\caption{ZeroCouponFixed leg data}
+\label{lst:zerolegdata}
 \end{listing}
 
