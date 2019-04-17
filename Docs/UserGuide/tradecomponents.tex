@@ -1157,13 +1157,14 @@ Listing \ref{lst:zerolegdata} shows an example for a leg of type Zero Coupon Fix
 elements:
 
 \begin{itemize}
-\item Rate: The underlying rate.
+\item Rates: The fixed real rate(s) of the leg. While this can be a single value, a vector of values or a dated vector of
+  values, the current ZeroCouponFixed leg requires only a single rate value to be passed. 
+ 
+ Allowable values: Each rate element can take any  real number. The rate is
+  expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+\item Compounding: The method of compounding applied to the rate.
 
-Allowable values:  Any real number. The rate is expressed in decimal form, e.g. 0.05 is a rate of 5\%.
-
-\item Years: The number of years the rate is compounded for.
-
-Allowable values: An integer, the trade is expected to compund for an integer number of years,
+Allowable values: 'Simple' i.e. (1 + r * t), or 'Compounded' i.e. (1 + r)\^t
 
 \end{itemize}
 
@@ -1194,8 +1195,10 @@ Allowable values: An integer, the trade is expected to compund for an integer nu
           </Rules>
         </ScheduleData>
         <ZeroCouponFixedLegData>
-          <Rate>0.02</Rate>
-          <Years>5</Years>
+            <Rates>
+                <Rate>0.02</Rate>
+            </Rates>
+            <Compounding>Simple</Compounding>
         </ZeroCouponFixedLegData>
       </LegData>
 \end{minted}
