@@ -35,7 +35,7 @@
 		  <Rates>
             <Rate>0.056467309</Rate>
           </Rates>
-          <Compounding>Compounded</Compunding>
+          <Compounding>Compounded</Compounding>
         </ZeroCouponFixedLegData>
 	  </LegData>
       <LegData>
