@@ -30,15 +30,21 @@
 #include <ql/time/daycounters/business252.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
 //! BRL-CDI index
 
-class BRLCdi : public OvernightIndex {
+class BRLCdi : public QuantLib::OvernightIndex {
 public:
-    BRLCdi(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : OvernightIndex("BRL-CDI", 1, BRLCurrency(), Brazil(Brazil::Settlement), Business252(), h) {}
+    BRLCdi(const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>())
+        : QuantLib::OvernightIndex("BRL-CDI", 1, QuantLib::BRLCurrency(), 
+          QuantLib::Brazil(QuantLib::Brazil::Settlement), QuantLib::Business252(), h) {}
+
+    //! \name InterestRateIndex interface
+    //@{
+    QuantLib::Rate forecastFixing(const QuantLib::Date& fixingDate) const;
+    // @}
 };
+
 } // namespace QuantExt
 
 #endif

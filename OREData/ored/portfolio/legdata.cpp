@@ -41,6 +41,7 @@
 #include <ql/version.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
@@ -737,6 +738,12 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
         if (floatData->gearings().size() > 0)
             leg.withGearings(buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule));
+
+
+        // If the overnight index is BRL CDI, we need a special coupon pricer
+        boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
+        if (brlCdiIndex)
+            setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
 
         return leg;
     }
