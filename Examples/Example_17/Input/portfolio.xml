@@ -18,18 +18,18 @@
           <Notional>10000000</Notional>
         </Notionals>
         <ScheduleData>
-            <Rules>
-                <StartDate>2016-02-05</StartDate>
-                <EndDate>2036-02-05</EndDate>
-                <Tenor>20Y</Tenor>
-                <Calendar>TARGET</Calendar>
-                <Convention>MF</Convention>
-                <TermConvention>MF</TermConvention>
-                <Rule>Zero</Rule>
-                <EndOfMonth/>
-                <FirstDate/>
-                <LastDate/>
-            </Rules>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2036-02-05</EndDate>
+            <Tenor>20Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Zero</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
         </ScheduleData>
         <ZeroCouponFixedLegData>
 		  <Rates>
