@@ -274,6 +274,8 @@
       <xs:enumeration value="ACT/ACT.ISDA"/>
       <xs:enumeration value="ACT/ACT.AFB"/>
       <xs:enumeration value="ACT/ACT.ISMA"/>
+      <xs:enumeration value="Simple"/>
+      <xs:enumeration value="Year"/>
     </xs:restriction>
   </xs:simpleType>
 
