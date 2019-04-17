@@ -363,8 +363,22 @@
   <xs:element name="ZeroCouponFixedLegData" substitutionGroup="legDataType">
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
-        <xs:element type="xs:float" name="Rate" maxOccurs="1"/>
-        <xs:element type="xs:integer" name="Years" maxOccurs="1"/>
+        <xs:element name="Rates">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Rate" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="Compounding" maxOccurs="1"/>
       </xs:choice>
     </xs:complexType>
   </xs:element>

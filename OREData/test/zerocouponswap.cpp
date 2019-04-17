@@ -198,8 +198,7 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     Date maturity = schedule.endDate();
     Date fixedPayDate = schedule.calendar().adjust(maturity, parseBusinessDayConvention(paymentConvention));
     Real df = market->discountCurve("GBP")->discount(fixedPayDate);
-    BOOST_TEST_MESSAGE(df);
-    Real expectedNPV = -1 * notional.back() * (pow(1.0 + rate, years) - 1.0);
+    Real expectedNPV = -1 * notional.back() * (pow(1.0 + rate, years) - 1.0) * df;
     BOOST_CHECK_CLOSE(swap->instrument()->NPV(), expectedNPV, 1E-8); // this is 1E-10 rel diff
 }
 
