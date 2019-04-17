@@ -99,6 +99,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Set default simulate
     setSimulateDividendYield(false);
     setSimulateSwapVols(false);
+    setSimulateYieldVols(false);
     setSimulateCapFloorVols(false);
     setSimulateSurvivalProbabilities(false);
     setSimulateRecoveryRates(false);
@@ -122,6 +123,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     // Default day counters
     yieldCurveDayCounters_[""] = "A365";
     swapVolDayCounters_[""] = "A365";
+    yieldVolDayCounters_[""] = "A365";
     fxVolDayCounters_[""] = "A365";
     cdsVolDayCounters_[""] = "A365";
     equityVolDayCounters_[""] = "A365";
@@ -168,6 +170,10 @@ const string& ScenarioSimMarketParameters::defaultCurveCalendar(const string& ke
 
 const string& ScenarioSimMarketParameters::swapVolDayCounter(const string& key) const {
     return returnDayCounter(swapVolDayCounters_, key);
+}
+
+const string& ScenarioSimMarketParameters::yieldVolDayCounter(const string& key) const {
+    return returnDayCounter(yieldVolDayCounters_, key);
 }
 
 const string& ScenarioSimMarketParameters::fxVolDayCounter(const string& key) const {
@@ -309,6 +315,10 @@ void ScenarioSimMarketParameters::setSwapVolDayCounters(const string& key, const
     swapVolDayCounters_[key] = s;
 }
 
+void ScenarioSimMarketParameters::setYieldVolDayCounters(const string& key, const string& s) {
+    yieldVolDayCounters_[key] = s;
+}
+
 void ScenarioSimMarketParameters::setCdsVolDayCounters(const string& key, const string& s) {
     cdsVolDayCounters_[key] = s;
 }
@@ -357,6 +367,10 @@ void ScenarioSimMarketParameters::setFxCcyPairs(vector<string> names) {
 
 void ScenarioSimMarketParameters::setSwapVolCcys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::SwaptionVolatility, names);
+}
+
+void ScenarioSimMarketParameters::setYieldVolNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::YieldVolatility, names);
 }
 
 void ScenarioSimMarketParameters::setCapFloorVolCcys(vector<string> names) {
@@ -435,6 +449,10 @@ void ScenarioSimMarketParameters::setSimulateDividendYield(bool simulate) {
 
 void ScenarioSimMarketParameters::setSimulateSwapVols(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::SwaptionVolatility, simulate);
+}
+
+void ScenarioSimMarketParameters::setSimulateYieldVols(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::YieldVolatility, simulate);
 }
 
 void ScenarioSimMarketParameters::setSimulateCapFloorVols(bool simulate) {
@@ -525,7 +543,9 @@ bool ScenarioSimMarketParameters::operator==(const ScenarioSimMarketParameters& 
         commodityVolDayCounters_ != rhs.commodityVolDayCounters_ ||
         correlationDayCounters_ != rhs.correlationDayCounters_ || correlationIsSurface_ != rhs.correlationIsSurface_ ||
         correlationExpiries_ != rhs.correlationExpiries_ || correlationStrikes_ != rhs.correlationStrikes_ ||
-        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_) {
+        cprSimulate_ != rhs.cprSimulate_ || cprs_ != rhs.cprs_ || yieldVolTerms_ != rhs.yieldVolTerms_ ||
+        yieldVolDayCounters_ != rhs.yieldVolDayCounters_ || yieldVolExpiries_ != rhs.yieldVolExpiries_ ||
+        yieldVolDecayMode_ != rhs.yieldVolDecayMode_) {
         return false;
     } else {
         return true;
@@ -670,6 +690,29 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(swapVolDayCounters_.find("") != swapVolDayCounters_.end(),
                    "default daycounter is not set for swapVolSurfaces");
+    }
+
+    DLOG("Loading YieldVolatilities");
+    nodeChild = XMLUtils::getChildNode(node, "YieldVolatilities");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        XMLNode* yieldVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yieldVolSimNode) {
+            setSimulateYieldVols(ore::data::parseBool(XMLUtils::getNodeValue(yieldVolSimNode)));
+            yieldVolTerms_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Terms", true);
+            yieldVolExpiries_ = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+            setYieldVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+            yieldVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+            XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+            if (dc) {
+                for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                    child = XMLUtils::getNextSibling(child)) {
+                    string label = XMLUtils::getAttribute(child, "ccy");
+                    yieldVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+                }
+            }
+            QL_REQUIRE(yieldVolDayCounters_.find("") != yieldVolDayCounters_.end(),
+                "default daycounter is not set for yieldVolSurfaces");
+        }
     }
 
     DLOG("Loading Correlations");
@@ -1128,6 +1171,17 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
                 XMLUtils::appendNode(node, c);
             }
         }
+    }
+
+    // yield volatilities
+    DLOG("Writing yield volatilities");
+    XMLNode* yieldVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YieldVolatilities");
+    if (!yieldVolNames().empty()) {
+        XMLUtils::addChild(doc, yieldVolatilitiesNode, "Simulate", simulateYieldVols());
+        XMLUtils::addChild(doc, yieldVolatilitiesNode, "ReactionToTimeDecay", yieldVolDecayMode_);
+        XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
+        XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Expiries", yieldVolExpiries_);
+        XMLUtils::addGenericChildAsList(doc, yieldVolatilitiesNode, "Terms", yieldVolTerms_);
     }
 
     // cap/floor volatilities

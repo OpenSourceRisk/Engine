@@ -30,6 +30,7 @@
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -40,6 +41,7 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -289,6 +291,28 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             // Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof, asof + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
+            Real vol = vts->volatility(p_exp, p_ten, strike);
+            shiftMult = vol;
+        }
+    } break;
+    case RiskFactorKey::KeyType::YieldVolatility: {
+        string securityId = keylabel;
+        auto itr = sensiParams.yieldVolShiftData().find(securityId);
+        QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
+                       "shift strikes should be {0.0} for yield volatilities");
+            vector<Period> tenors = itr->second.shiftTerms;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / (tenors.size() * strikes.size());
+            Period p_exp = expiries[expIdx];
+            Size tenIdx = keyIdx % tenors.size();
+            Period p_ten = tenors[tenIdx];
+            Real strike = Null<Real>(); // for cubes this will be ATM
+            Handle<SwaptionVolatilityStructure> vts = simMarket->yieldVol(securityId, marketConfiguration);
             Real vol = vts->volatility(p_exp, p_ten, strike);
             shiftMult = vol;
         }

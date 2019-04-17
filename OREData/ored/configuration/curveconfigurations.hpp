@@ -39,6 +39,7 @@
 #include <ored/configuration/inflationcurveconfig.hpp>
 #include <ored/configuration/securityconfig.hpp>
 #include <ored/configuration/swaptionvolcurveconfig.hpp>
+#include <ored/configuration/yieldvolcurveconfig.hpp>
 #include <ored/configuration/yieldcurveconfig.hpp>
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
@@ -75,6 +76,12 @@ public:
         return swaptionVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) const;
+
+    bool hasYieldVolCurveConfig(const std::string& curveID) const;
+    boost::shared_ptr<YieldVolatilityCurveConfig>& yieldVolCurveConfig(const string& curveID) {
+        return yieldVolCurveConfigs_[curveID];
+    }
+    const boost::shared_ptr<YieldVolatilityCurveConfig>& yieldVolCurveConfig(const string& curveID) const;
 
     bool hasCapFloorVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<CapFloorVolatilityCurveConfig>& capFloorVolCurveConfig(const string& curveID) {
@@ -182,6 +189,7 @@ private:
     std::map<std::string, boost::shared_ptr<YieldCurveConfig>> yieldCurveConfigs_;
     std::map<std::string, boost::shared_ptr<FXVolatilityCurveConfig>> fxVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<SwaptionVolatilityCurveConfig>> swaptionVolCurveConfigs_;
+    std::map<std::string, boost::shared_ptr<YieldVolatilityCurveConfig>> yieldVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CapFloorVolatilityCurveConfig>> capFloorVolCurveConfigs_;
     std::map<std::string, boost::shared_ptr<DefaultCurveConfig>> defaultCurveConfigs_;
     std::map<std::string, boost::shared_ptr<CDSVolatilityCurveConfig>> cdsVolCurveConfigs_;

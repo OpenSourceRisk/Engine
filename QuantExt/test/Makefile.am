@@ -36,7 +36,8 @@ QLE_TESTS = \
 	crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.cpp \
-    correlationtermstructure.cpp \
+	cpicapfloor.cpp 
+	correlationtermstructure.cpp \
 	cpicapfloor.cpp
 
 dist-hook:
@@ -51,9 +52,9 @@ bin_PROGRAMS = quantext-test-suite
 quantext_test_suite_SOURCES = ${QLE_TESTS}
 quantext_test_suite_LDADD =
 quantext_test_suite_LDFLAGS = \
-    -lQuantLib \
-    -L../qle -lQuantExt \
-    -lboost_unit_test_framework
+	-lQuantLib \
+	-L../qle -lQuantExt \
+	-lboost_unit_test_framework
 
 TESTS = quantext-test-suite$(EXEEXT)
 TESTS_ENVIRONMENT = BOOST_TEST_LOG_LEVEL=message

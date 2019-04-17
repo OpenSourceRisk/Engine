@@ -51,7 +51,6 @@ public:
         : extrapolate_(false), swapVolIsCube_(false), swapVolSimulateATMOnly_(true), swapVolStrikeSpreads_({0.0}),
           fxVolIsSurface_(false), fxMoneyness_({0.0}), equityIsSurface_(false), equityVolSimulateATMOnly_(true),
           equityMoneyness_({1.0}), cprSimulate_(false), correlationIsSurface_(false), correlationStrikes_({0.0}) {
-
         // set defaults
         setDefaults();
     }
@@ -90,6 +89,13 @@ public:
     const string& swapVolDayCounter(const string& key) const;
     const string& swapVolDecayMode() const { return swapVolDecayMode_; }
     const vector<Real>& swapVolStrikeSpreads() const { return swapVolStrikeSpreads_; }
+
+    bool simulateYieldVols() const { return paramsSimulate(RiskFactorKey::KeyType::YieldVolatility); }
+    const vector<Period>& yieldVolTerms() const { return yieldVolTerms_; }
+    const vector<Period>& yieldVolExpiries() const { return yieldVolExpiries_; }
+    vector<string> yieldVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YieldVolatility); }
+    const string& yieldVolDayCounter(const string& key) const;
+    const string& yieldVolDecarayMode() const { return yieldVolDecayMode_; }
 
     bool simulateCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::OptionletVolatility); }
     vector<string> capFloorVolCcys() const { return paramsLookup(RiskFactorKey::KeyType::OptionletVolatility); }
@@ -214,6 +220,13 @@ public:
     vector<Real>& swapVolStrikeSpreads() { return swapVolStrikeSpreads_; }
     string& swapVolDecayMode() { return swapVolDecayMode_; }
     void setSwapVolDayCounters(const string& key, const string& p);
+
+    void setSimulateYieldVols(bool simulate);
+    vector<Period>& yieldVolTerms() { return yieldVolTerms_; }
+    void setYieldVolNames(vector<string> names);
+    vector<Period>& yieldVolExpiries() { return yieldVolExpiries_; }
+    string& yieldVolDecayMode() { return yieldVolDecayMode_; }
+    void setYieldVolDayCounters(const string& key, const string& p);
 
     void setSimulateCapFloorVols(bool simulate);
     void setCapFloorVolCcys(vector<string> names);
@@ -344,6 +357,11 @@ private:
     vector<Period> swapVolExpiries_;
     vector<Real> swapVolStrikeSpreads_;
     string swapVolDecayMode_;
+
+    vector<Period> yieldVolTerms_;
+    map<string, string> yieldVolDayCounters_;
+    vector<Period> yieldVolExpiries_;
+    string yieldVolDecayMode_;
 
     map<string, string> capFloorVolDayCounters_;
     map<string, vector<Period>> capFloorVolExpiries_;

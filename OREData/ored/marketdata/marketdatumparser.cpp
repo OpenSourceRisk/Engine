@@ -62,6 +62,7 @@ static MarketDatum::InstrumentType parseInstrumentType(const string& s) {
         {"EQUITY_DIVIDEND", MarketDatum::InstrumentType::EQUITY_DIVIDEND},
         {"EQUITY_OPTION", MarketDatum::InstrumentType::EQUITY_OPTION},
         {"BOND", MarketDatum::InstrumentType::BOND},
+        {"BOND_OPTION", MarketDatum::InstrumentType::BOND_OPTION},
         {"ZC_INFLATIONSWAP", MarketDatum::InstrumentType::ZC_INFLATIONSWAP},
         {"ZC_INFLATIONCAPFLOOR", MarketDatum::InstrumentType::ZC_INFLATIONCAPFLOOR},
         {"YY_INFLATIONSWAP", MarketDatum::InstrumentType::YY_INFLATIONSWAP},
@@ -319,6 +320,20 @@ boost::shared_ptr<MarketDatum> parseMarketDatum(const Date& asof, const string& 
                                                      strike);
         } else { // SLN volatility shift
             return boost::make_shared<SwaptionShiftQuote>(value, asof, datumName, quoteType, ccy, term);
+        }
+    }
+
+    case MarketDatum::InstrumentType::BOND_OPTION: {
+        QL_REQUIRE(tokens.size() == 4 || tokens.size() == 6, "4 or 6 tokens expected in " << datumName);
+        const string& qualifier = tokens[2];
+        Period expiry = tokens.size() == 6 ? parsePeriod(tokens[3]) : Period(0 * QuantLib::Days);
+        Period term = tokens.size() == 6 ? parsePeriod(tokens[4]) : parsePeriod(tokens[3]);
+        if (tokens.size() == 6) { // volatility
+            QL_REQUIRE(tokens[5] == "ATM", "only ATM allowed for bond option quotes");
+            return boost::make_shared<BondOptionQuote>(value, asof, datumName, quoteType, qualifier, expiry, term);
+        }
+        else { // SLN volatility shift
+            return boost::make_shared<BondOptionShiftQuote>(value, asof, datumName, quoteType, qualifier, term);
         }
     }
 

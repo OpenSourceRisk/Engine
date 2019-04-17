@@ -33,7 +33,7 @@
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
-      <xs:element type="bondData" name="BondData"/>
+      <xs:element type="bondData" name="BondData"/>  
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
