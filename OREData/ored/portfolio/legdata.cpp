@@ -77,7 +77,7 @@ void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
     XMLNode* compNode = XMLUtils::getChildNode(node, "Compounding");
     if (compNode)
-        compounding_ = XMLUtils::getChildValueAsInt(node, "Compounding", true);
+        compounding_ = XMLUtils::getChildValue(node, "Compounding", true);
     else 
         compounding_ = "Compounded";
     QL_REQUIRE(compounding_ == "Compounded" || compounding_ == "Simple", "Compounding method " << compounding_ << " not supported");
