@@ -135,7 +135,8 @@ termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
-termstructures/yoyinflationoptionletvolstripper.cpp)
+termstructures/yoyinflationoptionletvolstripper.cpp
+time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -351,6 +352,7 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/yearcounter.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

@@ -74,14 +74,19 @@ XMLNode* FixedLegData::toXML(XMLDocument& doc) {
 
 void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    rate_ = XMLUtils::getChildValueAsDouble(node, "Rate", true);
-    years_ = XMLUtils::getChildValueAsInt(node, "Years", true);
+    rates_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Rates", "Rate", "startDate", rateDates_, true);
+    XMLNode* compNode = XMLUtils::getChildNode(node, "Compounding");
+    if (compNode)
+        compounding_ = XMLUtils::getChildValue(node, "Compounding", true);
+    else 
+        compounding_ = "Compounded";
+    QL_REQUIRE(compounding_ == "Compounded" || compounding_ == "Simple", "Compounding method " << compounding_ << " not supported");
 }
 
 XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
-    XMLUtils::addChild(doc, node, "Rate", rate_);
-    XMLUtils::addChild(doc, node, "Years", years_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
+    XMLUtils::addChild(doc, node, "Compounding", compounding_);
     return node;
 }
 
@@ -562,19 +567,43 @@ Leg makeZCFixedLeg(const LegData& data) {
     QL_REQUIRE(zcFixedLegData, "Wrong LegType, expected Zero Coupon Fixed, got " << data.legType());
 
     Schedule schedule = makeSchedule(data.schedule());
+    DayCounter dc = parseDayCounter(data.dayCounter());
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
-
     // check we have a single notional and two dates in the schedule
     vector<double> notionals = data.notionals();
     int numNotionals = notionals.size();
+    int numRates = zcFixedLegData->rates().size();
     int numDates = schedule.size();
+    QL_REQUIRE(numDates >= 2, "Incorrect number of schedule dates entered, expected at least 2, got " << numDates);
     QL_REQUIRE(numNotionals == 1, "Incorrect number of notional values entered, expected 1, got " << numNotionals);
-    QL_REQUIRE(numDates == 2, "Incorrect number of schedule dates entered, expected 2, got " << numDates);
+    QL_REQUIRE(numRates == 1, "Incorrect number of rate values entered, expected 1, got " << numRates);
 
     // coupon
-    Rate fixedRate = zcFixedLegData->rate();
-    int T = zcFixedLegData->years();
-    Real fixedAmount = notionals[0] * (pow(1.0 + fixedRate, T) - 1.0);
+    Rate fixedRate = zcFixedLegData->rates()[0];
+    Real fixedAmount = notionals[0];
+    vector<Date> dates = schedule.dates();
+    
+    Compounding comp = parseCompounding(zcFixedLegData->compounding());
+    QL_REQUIRE(comp == QuantLib::Compounded || comp == QuantLib::Simple, "Compounding method " << zcFixedLegData->compounding() << " not supported");
+
+    // we loop over the dates in the schedule, computing the compound factor.
+    // For the Compounded rule:
+    // (1+r)^dcf_0 *  (1+r)^dcf_1 * ... = (1+r)^(dcf_0 + dcf_1 + ...)
+    // So we compute the sum of all DayCountFractions in the loop.
+    // For the Simple rule:
+    // (1 + r * dcf_0) * (1 + r * dcf_1)...
+    double totalDCF = 0;
+    double compoundFactor = 1;
+    for (Size i = 0; i < dates.size() - 1; i++) {
+        double dcf = dc.yearFraction(dates[i], dates[i+1]);
+        if (comp == QuantLib::Simple)
+            compoundFactor *= (1 + fixedRate * dcf);
+        else
+            totalDCF += dcf;
+    }
+    if (comp == QuantLib::Compounded)
+        compoundFactor = pow(1.0 + fixedRate, totalDCF);
+    fixedAmount *= (compoundFactor - 1);
     Date maturity = schedule.endDate();
     Date fixedPayDate = schedule.calendar().adjust(maturity, bdc);
 

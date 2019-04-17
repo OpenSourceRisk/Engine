@@ -174,6 +174,7 @@ AC_CONFIG_FILES([
     qle/processes/Makefile
     qle/termstructures/Makefile
     qle/quotes/Makefile
+    qle/time/Makefile
     m4/Makefile
     doc/Makefile
     test/Makefile])
