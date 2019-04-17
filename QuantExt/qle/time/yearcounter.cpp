@@ -38,7 +38,7 @@ namespace QuantExt {
                                               const Date&) const {
         Time t = underlyingDCF.yearFraction(d1,d2);
 
-        return std::round(t);
+        return std::floor(0.5 + t); //rounding to the nearest integer
     }
 
 }
