@@ -32,6 +32,7 @@
 #include <ql/time/calendars/unitedkingdom.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
+#include <qle/time/yearcounter.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -140,8 +141,9 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     Envelope env("CP");
 
     // Start/End date
+    Size years = 5;
     Date startDate = today;
-    Date endDate = today + 5 * Years;
+    Date endDate = today + years * Years;
 
     // date 2 string
     std::ostringstream oss;
@@ -153,26 +155,27 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     string end(oss.str());
 
     // Leg variables
-    string dc = "ACT/ACT";
     vector<Real> notional(1, 1000000);
-    string paymentConvention = "F";
+    string paymentConvention = "MF";
     Real rate = 0.02;
-    Size years = 5;
+    vector<Real> rates;
+    rates.push_back(rate);
     
     // Schedule
     string conv = "MF";
-    string rule = "Forward";
+    string rule = "Zero";
     ScheduleData scheduleData(ScheduleRules(start, end, "5y", "UK", conv, conv, rule));
     Schedule schedule = makeSchedule(scheduleData);
+    BOOST_CHECK_EQUAL(schedule.dates().size(), 2);
 
     // GBP Libor Leg
     bool isPayerLibor = true;
     string indexLibor = "GBP-LIBOR-6M";
-    vector<Real> spread(1, 0);
-    LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rate,years), isPayerLibor, "GBP",
-                     scheduleData, "A365F", notional, vector<string>(), paymentConvention);
+    LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP",
+                     scheduleData, "Year", notional, vector<string>(), paymentConvention);
 
-
+    QuantExt::YearCounter sdc;
+    double yf = sdc.yearFraction(startDate, endDate);
     // Build swap trades
     vector<LegData> legData;
     legData.push_back(leg);
@@ -196,7 +199,7 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     Date fixedPayDate = schedule.calendar().adjust(maturity, parseBusinessDayConvention(paymentConvention));
     Real df = market->discountCurve("GBP")->discount(fixedPayDate);
     BOOST_TEST_MESSAGE(df);
-    Real expectedNPV = -1 * notional.back() * (pow(1.0 + rate, years) - 1.0) * df;
+    Real expectedNPV = -1 * notional.back() * (pow(1.0 + rate, years) - 1.0);
     BOOST_CHECK_CLOSE(swap->instrument()->NPV(), expectedNPV, 1E-8); // this is 1E-10 rel diff
 }
 
