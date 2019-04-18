@@ -657,6 +657,9 @@
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\time\yearcounter.hpp">
+      <Filter>time</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1131,6 +1134,9 @@
     </ClCompile>
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp">
       <Filter>indexes\ibor</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\time\yearcounter.cpp">
+      <Filter>time</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
