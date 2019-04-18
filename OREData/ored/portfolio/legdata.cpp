@@ -45,6 +45,7 @@
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/cashflows/couponpricer.hpp>
 
 using namespace QuantLib;
 using namespace QuantExt;
@@ -728,22 +729,23 @@ Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& ind
 
     } else {
 
-        OvernightLeg leg = OvernightLeg(schedule, index)
+        vector<Real> gearings{ 1.0 };
+        if (!floatData->gearings().empty())
+            gearings = buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule);
+
+        Leg leg = OvernightLeg(schedule, index)
                                .withNotionals(notionals)
                                .withSpreads(spreads)
                                .withPaymentDayCounter(dc)
                                .withPaymentAdjustment(bdc)
                                .withPaymentCalendar(paymentCalendar)
-                               .withPaymentLag(paymentLag);
-
-        if (floatData->gearings().size() > 0)
-            leg.withGearings(buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule));
-
+                               .withPaymentLag(paymentLag)
+                               .withGearings(gearings);
 
         // If the overnight index is BRL CDI, we need a special coupon pricer
         boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(index);
         if (brlCdiIndex)
-            setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
+            QuantExt::setCouponPricer(leg, boost::make_shared<BRLCdiCouponPricer>());
 
         return leg;
     }
