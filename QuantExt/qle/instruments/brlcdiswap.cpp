@@ -24,8 +24,9 @@ namespace QuantExt {
 // https://stackoverflow.com/a/17805923/1771882
 BRLCdiSwap::BRLCdiSwap(Type type, Real nominal, const Date& startDate, const Date& endDate, Rate fixedRate, 
     const boost::shared_ptr<BRLCdi>& overnightIndex, Spread spread, bool telescopicValueDates) 
-    : OvernightIndexedSwap(type, nominal, Schedule(list_of(startDate)(endDate).convert_to_container<vector<Date> >()), 
-        fixedRate, overnightIndex->dayCounter(), overnightIndex, spread, 0, ModifiedFollowing, overnightIndex->fixingCalendar(),
+    : OvernightIndexedSwap(type, nominal, Schedule(list_of(startDate)(endDate).convert_to_container<vector<Date> >(), 
+        NullCalendar(), QuantLib::Unadjusted, QuantLib::Unadjusted, 100 * Years), fixedRate, 
+        overnightIndex->dayCounter(), overnightIndex, spread, 0, ModifiedFollowing, overnightIndex->fixingCalendar(), 
         telescopicValueDates), startDate_(startDate), endDate_(endDate), index_(overnightIndex) {
 
     // Need to overwrite the fixed leg with the correct fixed leg for a standard BRL CDI swap
