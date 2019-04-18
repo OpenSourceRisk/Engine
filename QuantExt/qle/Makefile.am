@@ -31,6 +31,7 @@ libQuantExt_la_LIBADD = \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
 	indexes/libIndexes.la \
+	indexes/ibor/libIborIndexes.la \
 	math/libMath.la \
 	methods/libMethods.la \
 	models/libModels.la \
