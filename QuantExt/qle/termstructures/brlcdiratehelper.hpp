@@ -11,15 +11,16 @@
 #ifndef quantext_brl_cdi_rate_helper_hpp
 #define quantext_brl_cdi_rate_helper_hpp
 
-#include <qle/termstructures/oisratehelper.hpp>
 #include <qle/indexes/ibor/brlcdi.hpp>
+#include <qle/instruments/brlcdiswap.hpp>
+#include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace QuantExt {
 
 /*! Tenor based rate helper for bootstrapping using standard BRL CDI swaps
     \ingroup termstructures
 */
-class BRLCdiRateHelper : public OISRateHelper {
+class BRLCdiRateHelper : public QuantLib::RelativeDateRateHelper {
 public:
     BRLCdiRateHelper(
         const QuantLib::Period& swapTenor,
@@ -29,6 +30,17 @@ public:
             QuantLib::Handle<QuantLib::YieldTermStructure>(),
         bool telescopicValueDates = false);
 
+    //! \name inspectors
+    //@{
+    boost::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
+    //@}
+
+    //! \name RateHelper interface
+    //@{
+    QuantLib::Real impliedQuote() const;
+    void setTermStructure(QuantLib::YieldTermStructure*);
+    //@}
+
     //! \name Visitability
     //@{
     void accept(QuantLib::AcyclicVisitor&);
@@ -36,12 +48,21 @@ public:
 
 protected:
     void initializeDates();
+
+    QuantLib::Period swapTenor_;
+    boost::shared_ptr<BRLCdi> brlCdiIndex_;
+    boost::shared_ptr<BRLCdiSwap> swap_;
+    bool telescopicValueDates_;
+
+    QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
+    QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> discountRelinkableHandle_;
 };
 
 /*! Absolute date based rate helper for bootstrapping using standard BRL CDI swaps
     \ingroup termstructures
 */
-class DatedBRLCdiRateHelper : public DatedOISRateHelper {
+class DatedBRLCdiRateHelper : public QuantLib::RateHelper {
 public:
     DatedBRLCdiRateHelper(
         const QuantLib::Date& startDate,
@@ -52,10 +73,30 @@ public:
             QuantLib::Handle<QuantLib::YieldTermStructure>(),
         bool telescopicValueDates = false);
 
+    //! \name inspectors
+    //@{
+    boost::shared_ptr<BRLCdiSwap> swap() const { return swap_; }
+    //@}
+
+    //! \name RateHelper interface
+    //@{
+    QuantLib::Real impliedQuote() const;
+    void setTermStructure(QuantLib::YieldTermStructure*);
+    //@}
+
     //! \name Visitability
     //@{
     void accept(QuantLib::AcyclicVisitor&);
     //@}
+
+protected:
+    boost::shared_ptr<BRLCdi> brlCdiIndex_;
+    boost::shared_ptr<BRLCdiSwap> swap_;
+    bool telescopicValueDates_;
+
+    QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> termStructureHandle_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> discountHandle_;
+    QuantLib::RelinkableHandle<QuantLib::YieldTermStructure> discountRelinkableHandle_;
 };
 
 }
