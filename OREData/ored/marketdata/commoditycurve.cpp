@@ -52,16 +52,16 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         size_t found;
 
         // check for regex string in config
-        for (int i = 0; i < config->quotes().size(); i++) {
-            found = config->quotes()[i].find("*"); // find '*' char in quote
+        for (int i = 0; i < config->fwdQuotes().size(); i++) {
+            found = config->fwdQuotes()[i].find("*"); // find '*' char in quote
             found_regex = (found != string::npos) ? true : found_regex;
         }
         if (found_regex) {
-            QL_REQUIRE(config->quotes().size() == 1,"wild card specified in " << config->curveID() << " but more quotes also specified.");
+            QL_REQUIRE(config->fwdQuotes().size() == 1,"wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
             wc_flag = true;
             regex re("(\\*)");
-            string regexstr = config->quotes()[0];
+            string regexstr = config->fwdQuotes()[0];
             regexstr = regex_replace(regexstr, re, ".*");
             reg1 = regex(regexstr);
         } 
