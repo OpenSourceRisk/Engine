@@ -42,7 +42,12 @@ public:
     //! \name InterestRateIndex interface
     //@{
     QuantLib::Rate forecastFixing(const QuantLib::Date& fixingDate) const;
-    // @}
+    //@}
+
+    //! \name IborIndex interface
+    //@{
+    boost::shared_ptr<IborIndex> clone(const QuantLib::Handle<QuantLib::YieldTermStructure>& h) const;
+    //@}
 };
 
 } // namespace QuantExt

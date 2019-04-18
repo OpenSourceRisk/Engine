@@ -5,6 +5,7 @@
 
 #include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/instruments/brlcdiswap.hpp>
+#include <ql/pricingengines/swap/discountingswapengine.hpp>
 
 using namespace QuantLib;
 
@@ -15,6 +16,15 @@ BRLCdiRateHelper::BRLCdiRateHelper(const Period& swapTenor, const Handle<Quote>&
     bool telescopicValueDates)
     : OISRateHelper(2, swapTenor, fixedRate, brlCdiIndex, brlCdiIndex->dayCounter(), 0, false, Once, 
       ModifiedFollowing, ModifiedFollowing, DateGeneration::Backward, discountingCurve, telescopicValueDates) {
+
+    // Need to do this again
+    if (brlCdiIndex->forwardingTermStructure().empty()) {
+        boost::shared_ptr<IborIndex> clonedIborIndex = brlCdiIndex->clone(termStructureHandle_);
+        overnightIndex_ = boost::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
+        overnightIndex_->unregisterWith(termStructureHandle_);
+    } else {
+        overnightIndex_ = brlCdiIndex;
+    }
 
     // Call BRLCdiRateHelper::initializeDates to override work done in OISRateHelper::initializeDates
     initializeDates();
@@ -45,6 +55,9 @@ void BRLCdiRateHelper::initializeDates() {
     swap_ = boost::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate, 
         endDate, 0.01, brlCdiIndex, 0.0, telescopicValueDates_);
 
+    // Set the pricing engine
+    swap_->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
+
     // Update earliest and latest dates
     earliestDate_ = swap_->startDate();
     latestDate_ = swap_->maturityDate();
@@ -68,9 +81,25 @@ DatedBRLCdiRateHelper::DatedBRLCdiRateHelper(const Date& startDate, const Date& 
     : DatedOISRateHelper(startDate, endDate, fixedRate, brlCdiIndex, brlCdiIndex->dayCounter(), 0, 
       Once, ModifiedFollowing, ModifiedFollowing, DateGeneration::Backward, discountingCurve, telescopicValueDates) {
 
+    // Need to do this again
+    if (brlCdiIndex->forwardingTermStructure().empty()) {
+        boost::shared_ptr<IborIndex> clonedIborIndex = brlCdiIndex->clone(termStructureHandle_);
+        overnightIndex_ = boost::dynamic_pointer_cast<BRLCdi>(clonedIborIndex);
+        overnightIndex_->unregisterWith(termStructureHandle_);
+    } else {
+        overnightIndex_ = brlCdiIndex;
+    }
+
+    // Check is redundant here
+    boost::shared_ptr<BRLCdi> brlCdiIndexTmp = boost::dynamic_pointer_cast<BRLCdi>(overnightIndex_);
+    QL_REQUIRE(brlCdiIndex, "BRLCdiRateHelper expected a BRLCdi overnight index");
+
     // Reset the swap_ member to a BRL CDI swap
     swap_ = boost::make_shared<BRLCdiSwap>(OvernightIndexedSwap::Payer, 1.0, startDate,
-        endDate, 0.01, brlCdiIndex, 0.0, telescopicValueDates_);
+        endDate, 0.01, brlCdiIndexTmp, 0.0, telescopicValueDates_);
+
+    // Set the pricing engine
+    swap_->setPricingEngine(boost::make_shared<DiscountingSwapEngine>(discountRelinkableHandle_));
 
     // Update earliest and latest dates
     Calendar calendar = brlCdiIndex->fixingCalendar();
