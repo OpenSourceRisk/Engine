@@ -174,8 +174,6 @@ BOOST_AUTO_TEST_CASE(testZeroCouponSwapPrice) {
     LegData leg(boost::make_shared<ZeroCouponFixedLegData>(rates), isPayerLibor, "GBP",
                      scheduleData, "Year", notional, vector<string>(), paymentConvention);
 
-    QuantExt::YearCounter sdc;
-    double yf = sdc.yearFraction(startDate, endDate);
     // Build swap trades
     vector<LegData> legData;
     legData.push_back(leg);
