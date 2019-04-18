@@ -15,6 +15,9 @@ BRLCdiRateHelper::BRLCdiRateHelper(const Period& swapTenor, const Handle<Quote>&
     bool telescopicValueDates)
     : OISRateHelper(2, swapTenor, fixedRate, brlCdiIndex, brlCdiIndex->dayCounter(), 0, false, Once, 
       ModifiedFollowing, ModifiedFollowing, DateGeneration::Backward, discountingCurve, telescopicValueDates) {
+
+    // Call BRLCdiRateHelper::initializeDates to override work done in OISRateHelper::initializeDates
+    initializeDates();
 }
 
 
