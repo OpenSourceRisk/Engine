@@ -22,6 +22,7 @@ discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+fillemptymatrix.cpp
 fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp

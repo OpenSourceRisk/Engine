@@ -660,6 +660,9 @@
     <ClInclude Include="qle\time\yearcounter.hpp">
       <Filter>time</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\fillemptymatrix.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1137,6 +1140,9 @@
     </ClCompile>
     <ClCompile Include="qle\time\yearcounter.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\fillemptymatrix.cpp">
+      <Filter>math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

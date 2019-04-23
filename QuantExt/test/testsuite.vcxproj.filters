@@ -113,6 +113,9 @@
     <ClCompile Include="correlationtermstructure.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="fillemptymatrix.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

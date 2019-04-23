@@ -658,6 +658,7 @@
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="fillemptymatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />

@@ -581,6 +581,7 @@
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
+    <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
     <ClInclude Include="qle\math\nadarayawatson.hpp" />
     <ClInclude Include="qle\math\stabilisedglls.hpp" />
@@ -760,6 +761,7 @@
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
+    <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
     <ClCompile Include="qle\models\cdsoptionhelper.cpp" />
     <ClCompile Include="qle\models\cmscaphelper.cpp" />
