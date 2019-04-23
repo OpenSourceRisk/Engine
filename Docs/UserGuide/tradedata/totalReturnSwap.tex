@@ -1,0 +1,38 @@
+\subsubsection{Bond Total Return Swap}
+\label{ss:TRS}
+
+A vanilla Bond Total Return Swap is set up using a {\tt BondTRSData} block as shown in listing \ref{lst:bondtrsdata}. The block is comprised of three sub-blocks, which
+are {\tt TotalReturnData}, {\tt FundingData}, {\tt BondData}.
+
+\begin{itemize}
+\item The {\tt BondData} block specifies the underlying bond. It is set up as for the ordinary bond, see Section~\ref{ss:bonddata}.
+\item The {\tt FundingData} block specifies the funding leg, which is of either fixed or floating type. The {\tt FundingData} contains exactly one {\tt Leg}.
+\item The {\tt TotalReturnData} block specifies the schedule of the total return payments and contains a "Payer" element, which determines if the counterparty receives or pays the returns of the underlying bond.
+\end{itemize}
+
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <BondTRSData>
+      <BondData>
+      ...
+      </BondData>
+      <TotalReturnData>
+         <Payer>false</Payer>
+          <ScheduleData>
+          ...
+          </ScheduleData>
+      </TotalReturnData>
+      <FundingData>
+         <LegData>
+          ...
+         </LegData>
+      </FundingData>
+    </BondTRSData>
+\end{minted}
+\caption{Bond Data}
+\label{lst:bondtrsdata}
+\end{listing}
+
+The bond pricing requires a recovery rate that can be specified per SecurityId in the market data configuration.

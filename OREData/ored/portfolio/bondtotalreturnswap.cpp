@@ -18,12 +18,11 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
-#include <ored/portfolio/builders/forwardbond.hpp>
+#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/fixingdates.hpp>
-#include <ored/portfolio/forwardbond.hpp>
 #include <ored/portfolio/legdata.hpp>
-#include <ored/portfolio/swap.hpp>
 #include <ored/utilities/indexparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
@@ -31,7 +30,7 @@
 #include <ql/instruments/bond.hpp>
 #include <ql/instruments/bonds/zerocouponbond.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <qle/instruments/forwardbond.hpp>
+#include <qle/instruments/bondtotalreturnswap.hpp>
 
 #include <boost/make_shared.hpp>
 #include <ql/time/calendars/weekendsonly.hpp>
@@ -65,33 +64,32 @@ Leg joinLegs(const std::vector<Leg>& legs) {
 }
 } // namespace
 
-void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    DLOG("ForwardBond::build() called for trade " << id());
+void BondTRS::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
+    DLOG("BondTRS::build() called for trade " << id());
 
     // Clear the separateLegs_ member here. Should be done in reset() but it is not virtual
     separateLegs_.clear();
 
     const boost::shared_ptr<Market> market = engineFactory->market();
 
-    boost::shared_ptr<EngineBuilder> builder_fwd = engineFactory->builder("ForwardBond");
+    boost::shared_ptr<EngineBuilder> builder_trs = engineFactory->builder("BondTRS");
     boost::shared_ptr<EngineBuilder> builder_bd = engineFactory->builder("Bond");
 
+    Schedule schedule_;
+    schedule_ = makeSchedule(scheduleData_);
     Date issueDate = parseDate(issueDate_);
-    Date fwdMaturityDate = parseDate(fwdMaturityDate_);
-    Real payOff = parseReal(payOff_);
-    bool longInBond = parseBool(longInBond_);
     Calendar calendar = parseCalendar(calendar_);
-
-    bool settlementDirty = !settlementDirty_.empty() ? parseBool(settlementDirty_) : true;
-    Real compensationPayment = parseReal(compensationPayment_);
-    Date compensationPaymentDate = parseDate(compensationPaymentDate_);
-
-    QL_REQUIRE(compensationPaymentDate <= fwdMaturityDate, "Premium cannot be paid after forward contract maturity");
-
+    bool longInBond = parseBool(longInBond_);
     Natural settlementDays = boost::lexical_cast<Natural>(settlementDays_);
+
+    Leg fundingLeg;
+    auto configuration = builder_bd->configuration(MarketContext::pricing);
+    auto legBuilder = engineFactory->legBuilder(fundingLegData_.legType());
+    fundingLeg = legBuilder->buildLeg(fundingLegData_, engineFactory, configuration);
+
     boost::shared_ptr<QuantLib::Bond> bond; // pointer to QuantLib Bond
-    boost::shared_ptr<QuantExt::ForwardBond>
-        fwdBond; // pointer to fwdBond; both are needed. But only the fwdBond equipped with pricer
+    boost::shared_ptr<QuantExt::BondTRS>
+        bondTRS; // pointer to bondTRS; both are needed. But only the bondTRS equipped with pricer
     std::vector<boost::shared_ptr<IborIndex>> indexes;
     std::vector<boost::shared_ptr<OptionletVolatilityStructure>> ovses;
 
@@ -99,13 +97,6 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     bool firstLegIsPayer = (coupons_.size() == 0) ? false : coupons_[0].isPayer();
     QL_REQUIRE(firstLegIsPayer == false,
                "Require long position in bond. Specify long/short position of forward in longInBond");
-    QL_REQUIRE(compensationPayment >= 0,
-               "Require long position in bond. Specify long/short position of forward in longInBond");
-
-    boost::shared_ptr<Payoff> payoff =
-        longInBond ? boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Long, payOff)
-                   : boost::make_shared<QuantExt::ForwardBondTypePayoff>(Position::Short, payOff);
-    compensationPayment = longInBond ? compensationPayment : compensationPayment * (-1.0);
 
     if (zeroBond_) { // Zero coupon bond
         bond.reset(new QuantLib::ZeroCouponBond(settlementDays, calendar, faceAmount_, parseDate(maturityDate_)));
@@ -140,7 +131,8 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     }
 
     npvCurrency_ = currency_;
-    maturity_ = bond->cashflows().back()->date();
+    maturity_ = schedule_.endDate();
+    Date start_ = schedule_.startDate();
     notional_ = currentNotional(bond->cashflows());
 
     // Add legs (only 1)
@@ -150,23 +142,21 @@ void ForwardBond::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
     Currency currency = parseCurrency(currency_);
 
-    fwdBond.reset(new QuantExt::ForwardBond(bond, payoff, fwdMaturityDate, settlementDirty, compensationPayment,
-                                            compensationPaymentDate)); // nur bond payoff maturityDate lassen
+    bondTRS.reset(new QuantExt::BondTRS(bond, fundingLeg, schedule_, start_, maturity_, longInBond));
 
-    boost::shared_ptr<fwdBondEngineBuilder> fwdBondBuilder =
-        boost::dynamic_pointer_cast<fwdBondEngineBuilder>(builder_fwd);
-    QL_REQUIRE(fwdBondBuilder, "No Builder found for fwdBond: " << id());
+    boost::shared_ptr<trsBondEngineBuilder> trsBondBuilder =
+        boost::dynamic_pointer_cast<trsBondEngineBuilder>(builder_trs);
+    QL_REQUIRE(trsBondBuilder, "No Builder found for BondTRS: " << id());
 
-    LOG("Calling engine for forward bond " << id() << " with credit curve: " << creditCurveId_
-                                           << " with reference curve:" << referenceCurveId_
-                                           << " with income curve: " << incomeCurveId_);
+    LOG("Calling engine for bond trs " << id() << " with credit curve: " << creditCurveId_
+                                       << " with reference curve:" << referenceCurveId_);
 
-    fwdBond->setPricingEngine(fwdBondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_,
-                                                     incomeCurveId_, adjustmentSpread_));
-    instrument_.reset(new VanillaInstrument(fwdBond, 1.0)); // long or short is regulated via the payoff class
+    bondTRS->setPricingEngine(
+        trsBondBuilder->engine(currency, creditCurveId_, securityId_, referenceCurveId_, adjustmentSpread_));
+    instrument_.reset(new VanillaInstrument(bondTRS, 1.0)); // long or short is regulated inside pricing engine
 }
 
-map<string, set<Date>> ForwardBond::fixings(const Date& settlementDate) const {
+map<string, set<Date>> BondTRS::fixings(const Date& settlementDate) const {
 
     map<string, set<Date>> result;
 
@@ -186,13 +176,12 @@ map<string, set<Date>> ForwardBond::fixings(const Date& settlementDate) const {
     return result;
 }
 
-void ForwardBond::fromXML(XMLNode* node) {
+void BondTRS::fromXML(XMLNode* node) {
     Trade::fromXML(node);
-    XMLNode* fwdBondNode = XMLUtils::getChildNode(node, "ForwardBondData");
-    QL_REQUIRE(fwdBondNode, "No ForwardBondData Node");
-    XMLNode* bondNode = XMLUtils::getChildNode(fwdBondNode, "BondData");
+    XMLNode* bondTRSNode = XMLUtils::getChildNode(node, "BondTRSData");
+    QL_REQUIRE(bondTRSNode, "No BondTRSData Node");
+    XMLNode* bondNode = XMLUtils::getChildNode(bondTRSNode, "BondData");
     QL_REQUIRE(bondNode, "No bondData Node");
-    issuerId_ = XMLUtils::getChildValue(bondNode, "IssuerId", false);
     creditCurveId_ =
         XMLUtils::getChildValue(bondNode, "CreditCurveId", false); // issuer credit term structure not mandatory
     securityId_ = XMLUtils::getChildValue(bondNode, "SecurityId", true);
@@ -207,32 +196,24 @@ void ForwardBond::fromXML(XMLNode* node) {
         legNode = XMLUtils::getNextSibling(legNode, "LegData");
     }
 
-    incomeCurveId_ = XMLUtils::getChildValue(fwdBondNode, "IncomeCurveId", true);
-    XMLNode* fwdSettlementNode = XMLUtils::getChildNode(fwdBondNode, "SettlementData");
-    QL_REQUIRE(fwdSettlementNode, "No fwdSettlementNode Node");
+    XMLNode* bondTSRDataNode = XMLUtils::getChildNode(bondTRSNode, "TotalReturnData");
+    QL_REQUIRE(bondTSRDataNode, "No bondTSRDataNode Node");
 
-    payOff_ = XMLUtils::getChildValue(fwdSettlementNode, "Amount", true);
-    fwdMaturityDate_ = XMLUtils::getChildValue(fwdSettlementNode, "ForwardMaturityDate", true);
-    settlementDirty_ = XMLUtils::getChildValue(fwdSettlementNode, "SettlementDirty", true);
-    XMLNode* fwdPremiumNode = XMLUtils::getChildNode(fwdBondNode, "PremiumData");
-    if (fwdPremiumNode) {
-        compensationPayment_ = XMLUtils::getChildValue(fwdPremiumNode, "Amount", true);
-        compensationPaymentDate_ = XMLUtils::getChildValue(fwdPremiumNode, "Date", true);
-    } else {
-        compensationPayment_ = "0.0";
-        compensationPaymentDate_ = fwdMaturityDate_;
-    }
+    longInBond_ = XMLUtils::getChildValue(bondTSRDataNode, "Payer", true);
+    scheduleData_.fromXML(XMLUtils::getChildNode(bondTSRDataNode, "ScheduleData"));
 
-    longInBond_ = XMLUtils::getChildValue(fwdBondNode, "LongInForward", true);
+    XMLNode* bondTSRFundingNode = XMLUtils::getChildNode(bondTRSNode, "FundingData");
+    XMLNode* fLegNode = XMLUtils::getChildNode(bondTSRFundingNode, "LegData");
+    fundingLegData_ = LegData();
+    fundingLegData_.fromXML(fLegNode);
 }
 
-XMLNode* ForwardBond::toXML(XMLDocument& doc) {
+XMLNode* BondTRS::toXML(XMLDocument& doc) {
     XMLNode* node = Trade::toXML(doc);
-    XMLNode* fwdBondNode = doc.allocNode("ForwardBondData");
-    XMLUtils::appendNode(node, fwdBondNode);
+    XMLNode* bondTRSNode = doc.allocNode("BondTRSData");
+    XMLUtils::appendNode(node, bondTRSNode);
     XMLNode* bondNode = doc.allocNode("BondData");
-    XMLUtils::appendNode(fwdBondNode, bondNode);
-    XMLUtils::addChild(doc, bondNode, "IssuerId", issuerId_);
+    XMLUtils::appendNode(bondTRSNode, bondNode);
     XMLUtils::addChild(doc, bondNode, "CreditCurveId", creditCurveId_);
     XMLUtils::addChild(doc, bondNode, "ReferenceCurveId", referenceCurveId_);
     XMLUtils::addChild(doc, bondNode, "SecurityId", securityId_);
@@ -243,21 +224,16 @@ XMLNode* ForwardBond::toXML(XMLDocument& doc) {
     for (auto& c : coupons_)
         XMLUtils::appendNode(bondNode, c.toXML(doc));
 
-    XMLUtils::addChild(doc, fwdBondNode, "IncomeCurveId", incomeCurveId_);
-    XMLUtils::addChild(doc, fwdBondNode, "LongInForward", longInBond_);
+    XMLNode* trsDataNode = doc.allocNode("TotalReturnData");
+    XMLUtils::appendNode(bondTRSNode, trsDataNode);
+    XMLUtils::addChild(doc, trsDataNode, "Payer", longInBond_);
+    XMLUtils::appendNode(trsDataNode, scheduleData_.toXML(doc));
 
-    XMLNode* fwdSettlmentNode = doc.allocNode("SettlementData");
-    XMLUtils::appendNode(fwdSettlmentNode, fwdBondNode);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "ForwardMaturityDate", fwdMaturityDate_);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "Amount", payOff_);
-    XMLUtils::addChild(doc, fwdSettlmentNode, "SettlementDirty", settlementDirty_);
-
-    XMLNode* fwdPremiumNode = doc.allocNode("PremiumData");
-    XMLUtils::appendNode(fwdPremiumNode, fwdBondNode);
-    XMLUtils::addChild(doc, fwdPremiumNode, "Amount", compensationPayment_);
-    XMLUtils::addChild(doc, fwdPremiumNode, "Date", compensationPaymentDate_);
-
+    XMLNode* fundingDataNode = doc.allocNode("FundingData");
+    XMLUtils::appendNode(bondTRSNode, fundingDataNode);
+    XMLUtils::appendNode(fundingDataNode, fundingLegData_.toXML(doc));
     return node;
 }
+
 } // namespace data
 } // namespace ore

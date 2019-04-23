@@ -95,10 +95,18 @@
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
-    <Product type="ForwardBond">
+  <Product type="ForwardBond">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>
     <Engine>DiscountingForwardBondEngine</Engine>
+    <EngineParameters>
+      <Parameter name="TimestepPeriod">6M</Parameter>
+    </EngineParameters>
+  </Product>
+  <Product type="BondTRS">
+    <Model>DiscountedCashflows</Model>
+    <ModelParameters/>
+    <Engine>DiscountingBondTRSEngine</Engine>
     <EngineParameters>
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
@@ -178,11 +186,11 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
-    <Product type="CPICapFloor">
+  <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>
     <ModelParameters/>
     <!--<Engine>CPICapFloorEngine</Engine>-->
     <Engine>CPIBlackCapFloorEngine</Engine>
-    <EngineParameters/> 
+    <EngineParameters/>
   </Product>
 </PricingEngines>
