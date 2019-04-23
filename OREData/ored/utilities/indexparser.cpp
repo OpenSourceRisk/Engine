@@ -144,6 +144,10 @@ bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
+    return parseIborIndex(s, string(), h);
+}
+
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h) {
 
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -152,10 +156,13 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
                "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
 
     Period p;
-    if (tokens.size() == 3)
+    if (tokens.size() == 3) {
+        tenor = tokens[2];
         p = parsePeriod(tokens[2]);
-    else
+    } else {
+        tenor = "";
         p = 1 * Days;
+    }
 
     static map<string, boost::shared_ptr<IborIndexParser>> m = {
         {"EUR-EONIA", boost::make_shared<IborIndexParserOIS<Eonia>>()},
