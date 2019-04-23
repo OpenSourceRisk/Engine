@@ -134,13 +134,14 @@ public:
     //! Default constructor
     ZeroCouponFixedLegData() : LegAdditionalData("ZeroCouponFixed") {}
     //! Constructor
-    ZeroCouponFixedLegData(const Rate& rate, const int& years)
-        : LegAdditionalData("ZeroCouponFixed"), rate_(rate), years_(years) {}
+    ZeroCouponFixedLegData(const vector<double>& rates, const vector<string>& rateDates = vector<string>(), const string& compounding = "Compounded")
+        : LegAdditionalData("ZeroCouponFixed"), rates_(rates), rateDates_(rateDates), compounding_(compounding) {}
 
     //! \name Inspectors
     //@{
-    const Rate& rate() const { return rate_; }
-    const int& years() const { return years_; }
+    const vector<double>& rates() const { return rates_; }
+    const vector<string>& rateDates() const { return rateDates_; }
+    const string& compounding() const { return compounding_; }
     //@}
 
     //! \name Serialisation
@@ -149,8 +150,9 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
-    Rate rate_;
-    int years_;
+    vector<double> rates_;
+    vector<string> rateDates_;
+    string compounding_;
 };
 
 //! Serializable Floating Leg Data

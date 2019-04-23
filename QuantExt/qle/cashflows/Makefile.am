@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libCashflows.la
 libCashflows_la_SOURCES = \
 	averageonindexedcoupon.cpp \
 	averageonindexedcouponpricer.cpp \
+	brlcdicouponpricer.cpp \
 	couponpricer.cpp \
 	subperiodscoupon.cpp \
 	subperiodscouponpricer.cpp \
@@ -25,6 +26,7 @@ this_include_HEADERS =  \
 	all.hpp \
 	averageonindexedcoupon.hpp \
 	averageonindexedcouponpricer.hpp \
+	brlcdicouponpricer.hpp \
 	couponpricer.hpp \
 	subperiodscoupon.hpp \
 	subperiodscouponpricer.hpp \
