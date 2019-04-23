@@ -60,6 +60,7 @@
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
@@ -186,6 +187,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>()},
         {"NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>()},
         {"HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>()},
+        {"SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>()},
         {"SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>()},
         {"SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>()},
         {"DKK-CIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKCibor>>()},
@@ -205,7 +207,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"USD-SIFMA", boost::make_shared<IborIndexParserBMA<BMAIndexWrapper>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
-        {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
+        {"COP-IBR", boost::make_shared<IborIndexParserOIS<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"BRL-CDI", boost::make_shared<IborIndexParserOIS<BRLCdi>>()},
         {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},

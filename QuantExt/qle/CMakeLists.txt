@@ -10,6 +10,7 @@ calendars/philippines.cpp
 calendars/thailand.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/brlcdicouponpricer.cpp
 cashflows/couponpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
@@ -26,9 +27,11 @@ currencies/asia.cpp
 currencies/metals.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
+indexes/ibor/brlcdi.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
+instruments/brlcdiswap.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
@@ -100,6 +103,7 @@ processes/irlgm1fstateprocess.cpp
 quotes/logquote.cpp
 termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
+termstructures/brlcdiratehelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvolsurfacewithatm.cpp
@@ -135,7 +139,8 @@ termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
-termstructures/yoyinflationoptionletvolstripper.cpp)
+termstructures/yoyinflationoptionletvolstripper.cpp
+time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -150,6 +155,7 @@ calendars/philippines.hpp
 calendars/thailand.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/brlcdicouponpricer.hpp
 cashflows/couponpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
@@ -194,6 +200,7 @@ indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/rubmosprime.hpp
+indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
 indexes/ibor/sekstibor.hpp
 indexes/ibor/sgdsibor.hpp
@@ -207,6 +214,7 @@ indexes/inflationindexwrapper.hpp
 indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
+instruments/brlcdiswap.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
@@ -292,6 +300,7 @@ quotes/exceptionquote.hpp
 quotes/logquote.hpp
 termstructures/averageoisratehelper.hpp
 termstructures/basistwoswaphelper.hpp
+termstructures/brlcdiratehelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
@@ -350,6 +359,7 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/yearcounter.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")

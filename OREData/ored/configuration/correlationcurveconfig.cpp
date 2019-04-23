@@ -37,7 +37,16 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::CorrelationT
         QL_FAIL("unknown QuoteType(" << Integer(t) << ")");
     }
 }
-
+std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::Dimension t) {
+    switch (t) {
+    case CorrelationCurveConfig::Dimension::ATM:
+        return out << "ATM";
+    case CorrelationCurveConfig::Dimension::Constant:
+        return out << "Constant";
+    default:
+        QL_FAIL("unknown Dimension(" << Integer(t) << ")");
+    }
+}
 std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t) {
     switch (t) {
     case CorrelationCurveConfig::QuoteType::Rate:
@@ -105,11 +114,11 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     }
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "Rate") {
+    if (quoteType == "RATE") {
         quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "Price") {
+    } else if (quoteType == "PRICE") {
         quoteType_ = QuoteType::Price;
-    } else if (quoteType == "Null") {
+    } else if (quoteType == "NULL") {
         quoteType_ = QuoteType::Null;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
@@ -188,24 +197,11 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Currency", currency_);
     }
     if (quoteType_ != QuoteType::Null) {
-        if (dimension_ == Dimension::ATM) {
-            XMLUtils::addChild(doc, node, "Dimension", "ATM");
-        } else if (dimension_ == Dimension::Constant) {
-            XMLUtils::addChild(doc, node, "Dimension", "Constant");
-        } else {
-            QL_FAIL("Unknown Dimension in CorrelationCurveConfig::toXML()");
-        }
+        XMLUtils::addChild(doc, node, "Dimension", to_string(dimension_));
     }
 
-    if (quoteType_ == QuoteType::Rate) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Rate");
-    } else if (quoteType_ == QuoteType::Price) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Price");
-    } else if (quoteType_ == QuoteType::Null) {
-        XMLUtils::addChild(doc, node, "QuoteType", "Null");
-    } else {
-        QL_FAIL("Unknown QuoteType in CorrelationCurveConfig::toXML()");
-    }
+    XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
+
 
     if (quoteType_ != QuoteType::Null) {
 

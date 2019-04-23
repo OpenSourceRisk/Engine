@@ -33,7 +33,7 @@
       <xs:element type="equityOptionData" name="EquityOptionData"/>
       <xs:element type="equityForwardData" name="EquityForwardData"/>
       <xs:element type="commodityForwardData" name="CommodityForwardData"/>
-      <xs:element type="bondData" name="BondData"/>  
+      <xs:element type="bondData" name="BondData"/>
       <xs:element type="creditDefaultSwapData" name="CreditDefaultSwapData"/>
       <xs:element type="commodityOptionData" name="CommodityOptionData"/>
     </xs:choice>
@@ -360,7 +360,28 @@
       </xs:all>
     </xs:complexType>
   </xs:element>
-
+  <xs:element name="ZeroCouponFixedLegData" substitutionGroup="legDataType">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded" minOccurs="0">
+        <xs:element name="Rates">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="Rate" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:simpleContent>
+                    <xs:extension base="xs:float">
+                      <xs:attribute name="startDate" type="xs:string" />
+                    </xs:extension>
+                  </xs:simpleContent>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element type="xs:string" name="Compounding" maxOccurs="1"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
   <xs:complexType name="amortizationData">
     <xs:sequence>
       <xs:element type="amortizationType" name="Type"/>
@@ -502,6 +523,7 @@
       <xs:enumeration value="Cashflow"/>
       <xs:enumeration value="Equity"/>
       <xs:enumeration value="FormulaBased"/>
+      <xs:enumeration value="ZeroCouponFixed"/>
     </xs:restriction>
   </xs:simpleType>
 

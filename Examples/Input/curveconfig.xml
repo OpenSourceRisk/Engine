@@ -3230,7 +3230,7 @@
       <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
       <!-- Rate, Price -->
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
@@ -3249,7 +3249,7 @@
       <!-- ATM, Constant -->
       <Dimension>Constant</Dimension>
       <!-- Rate, Price -->
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>

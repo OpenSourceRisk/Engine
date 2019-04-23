@@ -4441,7 +4441,7 @@ a SpreadQuote and a RecoveryRateQuote.
 
 \subsubsection{Correlations}
 
-Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to Rate) or calibrated from prices (set QuoteType to Price).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to Null). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
+Listing \ref{lst:correlation_configuration} shows the configuration of the Correlations. The Correlation type can be either CMSSpread or Generic. The former one is to configure the correlation between two CMS indexes, the latter one is to  generally configure the correlation between two indexes, e.g. between a CMS index and a IBOR index. Currently only ATM correlation curves or Flat correlation structures are supported. Correlation quotes may be loaded directly (by setting QuoteType to RATE) or calibrated from prices (set QuoteType to PRICE).  Moreover a flat zero correlation curve can be loaded (by setting  QuoteType to NULL). In this case market quotes are not needed to be provided. Currently only CMSSpread correlations can be calibrated. This is done using CMS Spread Options, and requires a CMSSpreadOption convention, SwaptionVolatility and DiscountCurve to be provided.
 
 \begin{longlisting}
 %\hrule\medskip
@@ -4454,15 +4454,15 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
       <CorrelationType>CMSSpread</CorrelationType>
       <Index1>EUR-CMS-10Y</Index1>
       <Index2>EUR-CMS-2Y</Index2>
-      <!--Conventions, SwaptionVolatility and DiscountCurve only required when QuoteType = Price-->
+      <!--Conventions, SwaptionVolatility and DiscountCurve only required when QuoteType = PRICE-->
       <Conventions>EUR-CMS-10Y-2Y-CONVENTION</Conventions>
       <SwaptionVolatility>EUR</SwaptionVolatility>
       <DiscountCurve>EUR-EONIA</DiscountCurve>
       <Currency>EUR</Currency>
       <!-- ATM, Constant -->
       <Dimension>ATM</Dimension>
-      <!-- Rate, Price, Null -->
-      <QuoteType>Price</QuoteType>
+      <!-- RATE, PRICE, NULL -->
+      <QuoteType>PRICE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <!-- Day counter for date to time conversion -->
       <DayCounter>Actual/365 (Fixed)</DayCounter>
