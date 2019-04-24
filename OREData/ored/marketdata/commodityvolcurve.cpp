@@ -125,7 +125,7 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
         // build regex string
         regex re("(\\*)");
         string regexstr = config.quotes()[0];
-        regexstr = regex_replace(regexstr, re, ".*");
+        regexstr = regex_replace(regexstr, re, string(".*"));
         reg1 = regex(regexstr);
     }
 
