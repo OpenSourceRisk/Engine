@@ -22,11 +22,12 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 #include <ql/math/matrix.hpp>
-#include <ql/time/calendars/weekendsonly.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvariancesurface.hpp>
+#include <ql/time/calendars/weekendsonly.hpp>
 #include <qle/math/fillemptymatrix.hpp>
+
 #include <regex>
 
 using namespace std;
@@ -99,7 +100,7 @@ void CommodityVolCurve::buildConstantVolatility(const Date& asof, CommodityVolat
 void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatilityCurveConfig& config,
                                              const Loader& loader) {
 
-    // Loop over all market datums and find the quotes in the config
+    // Loop over all market datums and find the quotes *in* the config
     // Return error if there are duplicate quotes (this is why we do not use loader.get() method)
 
     QL_REQUIRE(config.quotes().size() > 0, "No quotes specified in config " << config.curveID());
@@ -161,7 +162,7 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
                 bool isDate;
                 parseDateOrPeriod(q->expiry(), aDate, aPeriod, isDate);
                 if (isDate) {
-                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << *it << "' is for a past date ("
+                    QL_REQUIRE(aDate > asof, "Commodity volatility quote '" << q_name << "' is for a past date ("
                                                                             << io::iso_date(aDate) << ")");
                 } else {
                     aDate = calendar.adjust(asof + aPeriod);
@@ -176,14 +177,17 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
     }
     LOG("CommodityVolatilityCurve: read " << curveData.size() << " quotes.");
 
-    QL_REQUIRE(curveData.size() == config.quotes().size(),
-               "Found " << curveData.size() << " quotes, but " << config.quotes().size() << " quotes given in config.");
+    if (found_regex) {
+        QL_REQUIRE(curveData.size() > 0, "No quotes found matching " << config.quotes()[0]);
+    } else {
+        QL_REQUIRE(curveData.size() == config.quotes().size(), "Found " << curveData.size() << " quotes, but "
+                                                                        << config.quotes().size()
+                                                                        << " quotes given in config.");
+    }
 
     // Create the dates and volatility vector
     vector<Date> dates;
-    dates.reserve(curveData.size());
     vector<Volatility> volatilities;
-    volatilities.reserve(curveData.size());
     for (const auto& datum : curveData) {
         dates.push_back(datum.first);
         volatilities.push_back(datum.second);
@@ -198,8 +202,9 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolatilityCurveConfig& config,
                                                const Loader& loader) {
 
-    map<Date, vector<Real>> surfaceData;    // implicit order is assumed here for known stirkes and expiries from config.
-    map<string, map<string, Real>> wc_mat;  // same as "surfaceDate but in case of wild cards (unknows size => need to preserve more information)
+    map<Date, vector<Real>> surfaceData; // implicit order is assumed here for known stirkes and expiries from config.
+    map<string, map<string, Real>>
+        wc_mat; // same as "surfaceDate but in case of wild cards (unknows size => need to preserve more information)
 
     // Assume the config has required strike strings to be sorted by value
     const vector<string>& configStrikes = config.strikes();
@@ -265,8 +270,8 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                     surfaceData[aDate][pos] = q->quote()->value();
                     quotesAdded++;
                 }
-            // some wild card
-            } else { 
+                // some wild card
+            } else {
                 if (!expr_wc) {
                     // strike only wild card
                     it = find(config.expiries().begin(), config.expiries().end(), q->expiry());
@@ -289,10 +294,10 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                     if (wc_mat.find(q->strike()) != wc_mat.end()) {
                         // add expiry
                         QL_REQUIRE(wc_mat[q->strike()].find(q->expiry()) == wc_mat[q->strike()].end(),
-                                   "quote " << q->name() << "duplicate."); 
+                                   "quote " << q->name() << "duplicate.");
                         wc_mat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
                     } else {
-                        // add strike and expiry 
+                        // add strike and expiry
                         map<string, Real> tmp_inner = {{q->expiry(), q->quote()->value()}};
                         wc_mat.insert(pair<string, map<string, Real>>(q->strike(), tmp_inner));
                     }
@@ -341,7 +346,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
         LOG("CommodityVolatilityCurve: Building BlackVarianceSurface term structure");
         volatility_ =
             boost::make_shared<BlackVarianceSurface>(asof, calendar, get<1>(s_and_e), get<0>(s_and_e), volatilities,
-                                                               dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
+                                                     dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
     } else {
         // Vol matrix (strikes, dates), date & expiry vectors
         int wc_mat_rows = wc_mat.size();
@@ -360,26 +365,25 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
         volatilities = Matrix(wc_mat_rows, wc_mat_cols, -1.0);
 
         // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
-        s_and_e = PopulateMatrixFromMap(
-            volatilities, wc_mat, asof); // Builds matrix and returns expiries as dates (may still be tenors)
+        s_and_e = PopulateMatrixFromMap(volatilities, wc_mat,
+                                        asof); // Builds matrix and returns expiries as dates (may still be tenors)
         QuantExt::fillIncompleteMatrix(volatilities, true, -1.0); // interpolate missing.
 
         // set up surface
         LOG("CommodityVolCurve: Building BlackVarianceSurface");
 
-        //Calendar cal = NullCalendar(); // why do we need this?
+        // Calendar cal = NullCalendar(); // why do we need this?
 
         // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
         volatility_ =
             boost::make_shared<BlackVarianceSurface>(asof, calendar, get<1>(s_and_e), get<0>(s_and_e), volatilities,
-                                                               dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
+                                                     dayCounter, lowerStrikeExtrap, upperStrikeExtrap);
     }
-  
-    
 }
 
-std::pair<vector<Real>, vector<Date>> CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) {
-    
+std::pair<vector<Real>, vector<Date>>
+CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) {
+
     // Check matrix size and map size.
     bool r_check, c_check;
     map<string, map<string, Real>>::iterator outItr;
@@ -465,7 +469,6 @@ std::pair<vector<Real>, vector<Date>> CommodityVolCurve::PopulateMatrixFromMap(M
     // return
     return std::make_pair(strks, exprs);
 }
-
 
 } // namespace data
 } // namespace ore
