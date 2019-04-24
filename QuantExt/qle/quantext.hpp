@@ -15,6 +15,7 @@
 #include <qle/calendars/thailand.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
@@ -59,6 +60,7 @@
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
@@ -72,6 +74,7 @@
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
+#include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
@@ -163,6 +166,7 @@
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
@@ -217,4 +221,5 @@
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
+#include <qle/time/yearcounter.hpp>
 #include <qle/version.hpp>
