@@ -45,7 +45,7 @@ public:
                              boost::optional<bool> includeSettlementDateFlows = boost::none);
 
     void calculate() const;
-    Real calculateBondNpv(Date, Date, Date) const;
+    Real calculateBondNpv(Date, Date, Date, Handle<YieldTermStructure>) const;
     Real calculateFundingLegNpv(Date, Date, Date) const;
     Real calculatecompensationPaymentsNpv(Date, Date, Date) const;
 

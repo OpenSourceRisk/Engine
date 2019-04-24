@@ -63,9 +63,10 @@ void DiscountingBondTRSEngine::calculate() const {
 
     // initialize
     results_.value = 0.0; // this is today's npv of the trs contract
+    // note that we use the derivative discount curve here
     results_.underlyingSpotValue =
         calculateBondNpv(npvDate, arguments_.bondTRSStartDate,
-                         arguments_.bondTRSMaturityDate); // cashflows before npvDate will be ignored
+                         arguments_.bondTRSMaturityDate, discountCurve_); // cashflows before npvDate will be ignored
     results_.fundingLegSpotValue =
         calculateFundingLegNpv(npvDate, arguments_.bondTRSStartDate,
                                arguments_.bondTRSMaturityDate); // cashflows before npvDate will be ignored
@@ -78,7 +79,8 @@ void DiscountingBondTRSEngine::calculate() const {
     }
 }
 
-Real DiscountingBondTRSEngine::calculateBondNpv(Date npvDate, Date trsStart, Date trsMaturity) const {
+Real DiscountingBondTRSEngine::calculateBondNpv(Date npvDate, Date trsStart, Date trsMaturity,
+                                                Handle<YieldTermStructure> discountCurve) const {
     Real npvValue = 0.0;
     Size numCoupons = 0;
     bool hasLiveCashFlow = false;
@@ -117,15 +119,14 @@ Real DiscountingBondTRSEngine::calculateBondNpv(Date npvDate, Date trsStart, Dat
             Date defaultDate = effectiveStartDate + (endDate - effectiveStartDate) / 2;
             Probability P = creditCurvePtr->defaultProbability(effectiveStartDate, endDate);
 
-            npvValue += coupon->nominal() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
+            npvValue += coupon->nominal() * recoveryVal * P * discountCurve->discount(defaultDate);
         }
 
         hasLiveCashFlow = true; // check if a cashflow  is available after the date of valuation.
 
         // Coupon value is discounted future payment times the survival probability
-        Probability S = creditCurvePtr->survivalProbability(bd->cashflows()[i]->date()) /
-                        creditCurvePtr->survivalProbability(trsStart);
-        npvValue += bd->cashflows()[i]->amount() * S * bondReferenceYieldCurve_->discount(bd->cashflows()[i]->date());
+        Probability S = creditCurvePtr->survivalProbability(bd->cashflows()[i]->date());
+        npvValue += bd->cashflows()[i]->amount() * S * discountCurve->discount(bd->cashflows()[i]->date());
     }
 
     // the ql instrument might not yet be expired and still have not anything to value if
@@ -151,7 +152,7 @@ Real DiscountingBondTRSEngine::calculateBondNpv(Date npvDate, Date trsStart, Dat
                 Date defaultDate = startDate + (endDate - startDate) / 2;
                 Probability P = creditCurvePtr->defaultProbability(startDate, endDate);
 
-                npvValue += redemption->amount() * recoveryVal * P * bondReferenceYieldCurve_->discount(defaultDate);
+                npvValue += redemption->amount() * recoveryVal * P * discountCurve->discount(defaultDate);
                 startDate = stepDate;
             }
         }
@@ -195,10 +196,10 @@ Real DiscountingBondTRSEngine::calculatecompensationPaymentsNpv(Date npvDate, Da
         boost::shared_ptr<Bond> bdForAcc = arguments_.underlying;
         if (firstPeriod) {
             npvValue +=
-                ((calculateBondNpv(npvDate, trsStart, trsMaturity) -
+	      ((calculateBondNpv(npvDate, trsStart, trsMaturity, bondReferenceYieldCurve_) -
                   bdForAcc->accruedAmount(trsStart) * bdForAcc->notional(trsStart) / 100) *
                      discountCurve_->discount(trsStart) / bondReferenceYieldCurve_->discount(trsStart) -
-                 (calculateBondNpv(npvDate, schedule.dates().at(i), trsMaturity) -
+	       (calculateBondNpv(npvDate, schedule.dates().at(i), trsMaturity, bondReferenceYieldCurve_) -
                   bdForAcc->accruedAmount(schedule.dates().at(i)) * bdForAcc->notional(schedule.dates().at(i)) / 100) *
                      discountCurve_->discount(schedule.dates().at(i)) /
                      bondReferenceYieldCurve_->discount(schedule.dates().at(i)));
@@ -207,11 +208,11 @@ Real DiscountingBondTRSEngine::calculatecompensationPaymentsNpv(Date npvDate, Da
             // note the below is inefficient. one could simply sum the teleskop series, i.e. only take account of first
             // and last term
             npvValue +=
-                ((calculateBondNpv(npvDate, schedule.dates().at(i), trsMaturity) -
+	      ((calculateBondNpv(npvDate, schedule.dates().at(i), trsMaturity, bondReferenceYieldCurve_) -
                   bdForAcc->accruedAmount(schedule.dates().at(i)) * bdForAcc->notional(schedule.dates().at(i)) / 100) *
                      discountCurve_->discount(schedule.dates().at(i)) /
                      bondReferenceYieldCurve_->discount(schedule.dates().at(i)) -
-                 (calculateBondNpv(npvDate, schedule.dates().at(i - 1), trsMaturity) -
+	       (calculateBondNpv(npvDate, schedule.dates().at(i - 1), trsMaturity, bondReferenceYieldCurve_) -
                   bdForAcc->accruedAmount(schedule.dates().at(i - 1)) * bdForAcc->notional(schedule.dates().at(i - 1)) /
                       100) *
                      discountCurve_->discount(schedule.dates().at(i - 1)) /
