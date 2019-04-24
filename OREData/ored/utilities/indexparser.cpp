@@ -144,7 +144,8 @@ bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
-    return parseIborIndex(s, string(), h);
+    string dummy;
+    return parseIborIndex(s, dummy, h);
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h) {
