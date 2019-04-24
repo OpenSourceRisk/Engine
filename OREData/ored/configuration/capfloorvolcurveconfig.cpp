@@ -44,7 +44,7 @@ const string CapFloorVolatilityCurveConfig::defaultInterpolationMethod = "Bicubi
 
 CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const VolatilityType& volatilityType, const bool extrapolate,
-    const bool flatExtrapolation, bool inlcudeAtm, const vector<Period>& tenors, const vector<double>& strikes,
+    const bool flatExtrapolation, bool inlcudeAtm, const vector<std::string>& tenors, const vector<std::string>& strikes,
     const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& iborIndex, const string& discountCurve,
     const string& interpolationMethod)
@@ -67,14 +67,14 @@ const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
         // TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
             for (auto s : strikes_) {
-                quotes_.push_back(base + to_string(t) + "/" + to_string(tenor) + "/0/0/" + to_string(s));
+                quotes_.push_back(base + t + "/" + to_string(tenor) + "/0/0/" + s);
             }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + to_string(t));
+                quotes_.push_back("CAPFLOOR/SHIFT/" + ccy.code() + "/" + t);
             }
         }
     }
@@ -88,7 +88,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
 
     // We are requiring explicit strikes so there should be at least one strike
-    strikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "Strikes", true);
+    strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");
 
     // Get the volatility type
@@ -117,7 +117,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Extrapolation " << extr << " not recognized");
     }
 
-    tenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "Tenors", true);
+    tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", true);
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
@@ -156,7 +156,7 @@ XMLNode* CapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
-    XMLUtils::addChild(doc, node, "Strikes", strikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "IborIndex", iborIndex_);
     XMLUtils::addChild(doc, node, "DiscountCurve", discountCurve_);
 

@@ -157,10 +157,11 @@ void CorrelationCurve::calibrateCMSSpreadCorrelations(
     Calendar calendar = conv->calendar();
     DayCounter dcount = conv->dayCounter();
     BusinessDayConvention bdc = conv->rollConvention();
+    vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
 
     for (Size i = 0; i < prices.size(); i++) {
         boost::shared_ptr<QuantExt::CmsCapHelper> inst = boost::make_shared<QuantExt::CmsCapHelper>(
-            asof, index1, index2, yts, prices[i], correlations[i], config->optionTenors()[i], forwardStart, spotDays,
+            asof, index1, index2, yts, prices[i], correlations[i], optionTenors[i], forwardStart, spotDays,
             cmsTenor, fixingDays, calendar, dcount, bdc, pricer, cmsPricer);
         instruments.push_back(inst);
     }
@@ -211,7 +212,7 @@ CorrelationCurve::CorrelationCurve(Date asof, CorrelationCurveSpec spec, const L
                            config->dimension() == CorrelationCurveConfig::Dimension::Constant,
                        "Unsupported correlation curve building dimension");
 
-            vector<Period> optionTenors = config->optionTenors();
+            vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
             vector<Handle<Quote>> quotes(optionTenors.size());
             bool failed = false;
 

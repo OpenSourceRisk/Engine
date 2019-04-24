@@ -74,8 +74,8 @@ InflationCapFloorVolCurve::InflationCapFloorVolCurve(Date asof, InflationCapFloo
         }
 
         // Read in quotes matrix
-        vector<Period> tenors = config->tenors();
-        vector<double> strikes = config->strikes();
+        vector<Period> tenors = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
+        vector<double> strikes = parseVectorOfValues<Real>(config->strikes(), &parseReal);
         QL_REQUIRE(!strikes.empty(), "Strikes should not be empty - expect a cap matrix");
         Matrix vols(tenors.size(), strikes.size());
         vector<vector<bool>> found(tenors.size(), vector<bool>(strikes.size()));

@@ -64,9 +64,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                                                    << spec.name() << ", was not found.");
         }
 
-        const std::vector<Period>& terms = config->maturities();
-        std::vector<Real> capStrikes = config->capStrikes();
-        std::vector<Real> floorStrikes = config->floorStrikes();
+        std::vector<Period> terms = parseVectorOfValues<Period>(config->maturities(), &parsePeriod);
+        std::vector<Real> capStrikes = parseVectorOfValues<Real>(config->capStrikes(), &parseReal);
+        std::vector<Real> floorStrikes = parseVectorOfValues<Real>(config->floorStrikes(), &parseReal);
 
         Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
             fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());

@@ -51,7 +51,7 @@ public:
     InflationCapFloorVolatilityCurveConfig() {}
     InflationCapFloorVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Type type,
                                            const VolatilityType& volatilityType, const bool extrapolate,
-                                           const vector<Period>& tenors, const vector<double>& strikes,
+                                           const vector<string>& tenors, const vector<string>& strikes,
                                            const DayCounter& dayCounter, Natural settleDays, const Calendar& calendar,
                                            const BusinessDayConvention& businessDayConvention, const string& index,
                                            const string& indexCurve, const string& yieldTermStructure);
@@ -67,8 +67,8 @@ public:
     const Type& type() const { return type_; }
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
-    const vector<Period>& tenors() const { return tenors_; }
-    const vector<double>& strikes() const { return strikes_; }
+    const vector<string>& tenors() const { return tenors_; }
+    const vector<string>& strikes() const { return strikes_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Natural& settleDays() const { return settleDays_; }
     const Calendar& calendar() const { return calendar_; }
@@ -84,8 +84,8 @@ public:
     Type& type() { return type_; }
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate() { return extrapolate_; }
-    vector<Period>& tenors() { return tenors_; }
-    vector<double>& strikes() { return strikes_; }
+    vector<string>& tenors() { return tenors_; }
+    vector<string>& strikes() { return strikes_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Natural& settleDays() { return settleDays_; }
     Calendar& calendar() { return calendar_; }
@@ -98,8 +98,8 @@ private:
     Type type_;
     VolatilityType volatilityType_;
     bool extrapolate_;
-    vector<Period> tenors_;
-    vector<double> strikes_;
+    vector<string> tenors_;
+    vector<string> strikes_;
     DayCounter dayCounter_;
     Natural settleDays_;
     Calendar calendar_;
