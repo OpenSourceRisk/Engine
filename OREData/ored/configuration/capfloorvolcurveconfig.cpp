@@ -56,9 +56,9 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
 
 const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_);
+        string tenor;
+        boost::shared_ptr<IborIndex> index = parseIborIndex(iborIndex_, tenor);
         Currency ccy = index->currency();
-        Period tenor = index->tenor();
 
         std::stringstream ssBase;
         ssBase << "CAPFLOOR/" << volatilityType_ << "/" << ccy.code() << "/";
