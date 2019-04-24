@@ -104,7 +104,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
     // initialize the helper member objects
     initialize(cube);
     QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
     for (auto const& i : this->progressIndicators())
