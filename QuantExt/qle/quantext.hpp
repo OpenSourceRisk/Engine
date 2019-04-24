@@ -72,7 +72,6 @@
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
-#include <qle/instruments/bondtotalreturnswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
@@ -143,7 +142,6 @@
 #include <qle/pricingengines/cpicapfloorengines.hpp>
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
-#include <qle/pricingengines/discountingbondtrsengine.hpp>
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingequityforwardengine.hpp>

@@ -103,14 +103,6 @@
       <Parameter name="TimestepPeriod">6M</Parameter>
     </EngineParameters>
   </Product>
-  <Product type="BondTRS">
-    <Model>DiscountedCashflows</Model>
-    <ModelParameters/>
-    <Engine>DiscountingBondTRSEngine</Engine>
-    <EngineParameters>
-      <Parameter name="TimestepPeriod">6M</Parameter>
-    </EngineParameters>
-  </Product>
   <Product type="CreditDefaultSwap">
     <Model>DiscountedCashflows</Model>
     <ModelParameters/>

@@ -42,7 +42,6 @@ instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/fxforward.cpp
 instruments/forwardbond.cpp
-instruments/bondtotalreturnswap.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -88,7 +87,6 @@ pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
-pricingengines/discountingbondtrsengine.cpp
 pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
@@ -213,7 +211,6 @@ indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
 instruments/forwardbond.hpp
-instruments/bondtotalreturnswap.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
@@ -284,7 +281,6 @@ pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
-pricingengines/discountingbondtrsengine.hpp
 pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingequityforwardengine.hpp

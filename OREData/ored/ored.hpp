@@ -75,9 +75,7 @@
 #include <ored/model/modelbuilder.hpp>
 #include <ored/model/utilities.hpp>
 #include <ored/portfolio/bond.hpp>
-#include <ored/portfolio/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/bond.hpp>
-#include <ored/portfolio/builders/bondtotalreturnswap.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
