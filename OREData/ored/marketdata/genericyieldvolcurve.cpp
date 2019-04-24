@@ -205,7 +205,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     for (Size k = 0; k < spreads.size(); ++k) {
                         boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
                             *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
-                        if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
+                        // do not overwrite vol spread for zero strike spread (ATM point)
+                        if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
+                            !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
                             q->setValue(lastNonZeroValue);
                             WLOG("Overwrite vol spread for "
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]
