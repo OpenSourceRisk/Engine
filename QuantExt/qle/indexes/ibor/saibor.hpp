@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,29 +16,36 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/cashflows/couponpricer.hpp
-    \brief Utility functions for setting coupon pricers on legs
-    \ingroup cashflows
+/*! \file saibor.hpp
+    \brief SAR-SAIBOR index
+    \ingroup indexes
 */
 
-#ifndef quantext_coupon_pricer_hpp
-#define quantext_coupon_pricer_hpp
+#ifndef quantext_saibor_hpp
+#define quantext_saibor_hpp
 
-#include <boost/shared_ptr.hpp>
-
-#include <ql/cashflows/couponpricer.hpp>
+#include <ql/currencies/asia.hpp>
+#include <ql/indexes/iborindex.hpp>
+#include <ql/time/calendars/saudiarabia.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
-/*! \addtogroup cashflows
-    @{
-*/
-//! Set Coupon Pricer
-void setCouponPricer(const Leg& leg, const boost::shared_ptr<FloatingRateCouponPricer>&);
-//! Set Coupon Pricers
-void setCouponPricers(const Leg& leg, const std::vector<boost::shared_ptr<FloatingRateCouponPricer> >&);
 
-// @}
+//! SAR-SAIBOR index
+/*! SAR-SAIBOR rate published by SAMA
+
+    See <http://www.sama.gov.sa>
+
+    \warning Check roll convention and EOM.
+
+    \ingroup indexes
+*/
+class SAibor : public IborIndex {
+public:
+    SAibor(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : IborIndex("SAR-SAIBOR", tenor, 2, SARCurrency(), SaudiArabia(), ModifiedFollowing, false, Actual360(), h) {}
+};
 } // namespace QuantExt
 
 #endif
