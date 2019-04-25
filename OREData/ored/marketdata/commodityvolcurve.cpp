@@ -105,14 +105,12 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
     QL_REQUIRE(config.quotes().size() > 0, "No quotes specified in config " << config.curveID());
 
-    size_t found;
     bool found_regex = false;
     regex reg1;
 
     // check for regex string in config
-    for (int i = 0; i < config.quotes().size(); i++) {
-        found = config.quotes()[i].find("*"); // find '*' char in quote
-        found_regex = (found != string::npos) ? true : found_regex;
+    for (Size i = 0; i < config.quotes().size(); i++) {
+        found_regex |= config.quotes()[i].find("*") != string::npos;
         if (found_regex) {
             break;
         }
@@ -120,8 +118,7 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
 
     if (found_regex) {
         QL_REQUIRE(config.quotes().size() == 1,
-                   "Wild card specified in config " << config.curveID() << " but more quotes also specified.")
-        found = config.quotes()[0].find('*');
+                   "Wild card specified in config " << config.curveID() << " but more quotes also specified.");
 
         // build regex string
         regex re("(\\*)");

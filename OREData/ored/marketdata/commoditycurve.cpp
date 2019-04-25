@@ -49,12 +49,10 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
         bool wc_flag = false;
         bool found_regex = false;
         regex reg1;
-        size_t found;
 
         // check for regex string in config
-        for (int i = 0; i < config->fwdQuotes().size(); i++) {
-            found = config->fwdQuotes()[i].find("*"); // find '*' char in quote
-            found_regex = (found != string::npos) ? true : found_regex;
+        for (Size i = 0; i < config->fwdQuotes().size(); i++) {
+            found_regex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
         if (found_regex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1,

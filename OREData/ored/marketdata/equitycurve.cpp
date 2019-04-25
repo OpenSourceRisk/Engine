@@ -63,12 +63,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         bool wc_flag = false;  
 		bool found_regex = false;
         regex reg1;
-        size_t found;
         
 		// check for regex string in config
-        for (int i = 0; i < config->fwdQuotes().size(); i++) {
-		    found = config->fwdQuotes()[i].find("*"); // find '*' char in quote
-            found_regex = (found != string::npos) ? true : found_regex;
+        for (Size i = 0; i < config->fwdQuotes().size(); i++) {
+            found_regex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
         if (config->type() == EquityCurveConfig::Type::ForwardPrice && found_regex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
@@ -80,7 +78,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             reg1 = regex(regexstr);
         }
         else {
-            for (int i=0; i < config->fwdQuotes().size(); i++) {
+            for (Size i=0; i < config->fwdQuotes().size(); i++) {
                 quotes_.push_back(Null<Real>());
                 terms_.push_back(Null<Date>());
             }
