@@ -208,10 +208,17 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     } // for legs
 
-    // NPV currency is just taken from the first leg, so for XCCY this is just the first one
-    // that appears in the XML
-    npvCurrency_ = ccy_str;
-    notional_ = currentNotional(legs_[0]); // match npvCurrency_
+    // NPV currency and Current notional taken from the first leg that appears in the XML
+    // unless the first leg is a Resettable XCCY, then use the second leg
+    // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
+    // using this leg if possible
+    if (legData_.size() > 1 && !legData_[0].isNotResetXCCY()) {
+        npvCurrency_ = legData_[1].currency();
+        notional_ = currentNotional(legs_[1]);
+    } else {
+        npvCurrency_ = legData_[0].currency();
+        notional_ = currentNotional(legs_[0]);
+    }    
     DLOG("Notional is " << notional_ << " " << npvCurrency_);
 
     if (isXCCY) {
