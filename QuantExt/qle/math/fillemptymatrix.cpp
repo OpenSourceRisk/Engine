@@ -33,8 +33,8 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // loop over rows and interpolate
     for (int i = 0; i < mat.rows(); i++) {
-        vector<Real> y;                        // values for the expiries we have for this strike
-        vector<Real> x;                        // the 'tics' expiries.
+        vector<Real> y;                        // values for the expiries we have
+        vector<Real> x;                        // the required 'tics' on axis to interpolate
         vector<Real> y_desired(x_axis.size()); // interpolated y over defined x_axis
 
         // flat extrapolate short end
@@ -104,7 +104,6 @@ void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_N
         }
     }
 
-    // not complete
     if (!is_full) {
         if (mat.columns() == 1 && mat.rows() == 1) {
            QL_FAIL("1 X 1 empty matrix given to fill.");    // !is_full and 1 X 1 matrix.

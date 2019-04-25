@@ -17,7 +17,7 @@
 */
 
 /*! \file qle/math/fillemptymatrix.hpp
-    \brief functions to compute delta or delta-gamma VaR numbers
+    \brief functions to fill a "not-completely-populated" matrix.
     \ingroup math
 */
 
