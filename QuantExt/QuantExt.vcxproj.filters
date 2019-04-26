@@ -648,6 +648,9 @@
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\math\fillemptymatrix.hpp">
+      <Filter>math</Filter>
+    </ClInclude>
     <ClInclude Include="qle\cashflows\brlcdicouponpricer.hpp">
       <Filter>cashflows</Filter>
     </ClInclude>
@@ -659,6 +662,9 @@
     </ClInclude>
     <ClInclude Include="qle\time\yearcounter.hpp">
       <Filter>time</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\math\fillemptymatrix.hpp">
+      <Filter>math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1123,6 +1129,9 @@
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
+    <ClCompile Include="qle\math\fillemptymatrix.cpp">
+      <Filter>math</Filter>
+    </ClCompile>
     <ClCompile Include="qle\cashflows\brlcdicouponpricer.cpp">
       <Filter>cashflows</Filter>
     </ClCompile>
@@ -1137,6 +1146,9 @@
     </ClCompile>
     <ClCompile Include="qle\time\yearcounter.cpp">
       <Filter>time</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\math\fillemptymatrix.cpp">
+      <Filter>math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
