@@ -79,7 +79,6 @@ Real BRLCdiSwap::fairRate() const {
     
     calculate();
     
-    static Spread basisPoint = 1.0e-4;
     if (!close(endDiscounts_[0], 0.0) && endDiscounts_[0] != Null<DiscountFactor>()) {
         DiscountFactor df = endDiscounts_[0];
         Time dcf = index_->dayCounter().yearFraction(startDate_, endDate_);
