@@ -121,9 +121,8 @@ void CommodityVolCurve::buildVolatilityCurve(const Date& asof, CommodityVolatili
                    "Wild card specified in config " << config.curveID() << " but more quotes also specified.");
 
         // build regex string
-        regex re("(\\*)");
         string regexstr = config.quotes()[0];
-        regexstr = regex_replace(regexstr, re, string(".*"));
+        boost::replace_all(regexstr, "*", ".*");
         reg1 = regex(regexstr);
     }
 

@@ -72,9 +72,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
             wc_flag = true;
-            regex re("(\\*)");
             string regexstr = config->fwdQuotes()[0];
-            regexstr = regex_replace(regexstr, re, string(".*"));
+            boost::replace_all(regexstr, "*", ".*");
             reg1 = regex(regexstr);
         }
         else {
@@ -163,7 +162,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             });
 
             // populate individual quote, term vectors
-            for (int i = 0; i < qt.size(); i++) {
+            for (Size i = 0; i < qt.size(); i++) {
                 terms_.push_back(qt[i]->expiryDate());
                 quotes_.push_back(qt[i]->quote()->value());
             }

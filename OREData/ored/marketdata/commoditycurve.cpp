@@ -59,9 +59,8 @@ CommodityCurve::CommodityCurve(const Date& asof, const CommodityCurveSpec& spec,
                        "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
             wc_flag = true;
-            regex re("(\\*)");
             string regexstr = config->fwdQuotes()[0];
-            regexstr = regex_replace(regexstr, re, string(".*"));
+            boost::replace_all(regexstr, "*", ".*");
             reg1 = regex(regexstr);
         }
 
