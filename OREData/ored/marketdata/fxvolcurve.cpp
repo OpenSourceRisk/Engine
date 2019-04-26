@@ -61,7 +61,8 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
         // we replicate this for all 3 types of quotes were applicable.
         Size n = isATM ? 1 : 3; // [0] = ATM, [1] = RR, [2] = BF
         vector<vector<boost::shared_ptr<FXOptionQuote>>> quotes(n);
-        vector<vector<Period>> expiries(n, config->expiries());
+        vector<Period> cExpiries = parseVectorOfValues<Period>(config->expiries(), &parsePeriod);
+        vector<vector<Period>> expiries(n, cExpiries);
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_OPTION) {

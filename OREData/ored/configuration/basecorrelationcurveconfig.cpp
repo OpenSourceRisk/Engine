@@ -27,8 +27,8 @@ namespace ore {
 namespace data {
 
 BaseCorrelationCurveConfig::BaseCorrelationCurveConfig(const string& curveID, const string& curveDescription,
-                                                       const vector<Real>& detachmentPoints,
-                                                       const vector<Period>& terms)
+                                                       const vector<string>& detachmentPoints,
+                                                       const vector<string>& terms)
     : CurveConfig(curveID, curveDescription), detachmentPoints_(detachmentPoints), terms_(terms) {}
 
 const vector<string>& BaseCorrelationCurveConfig::quotes() {
@@ -36,7 +36,7 @@ const vector<string>& BaseCorrelationCurveConfig::quotes() {
         string base = "CDS_INDEX/BASE_CORRELATION/" + curveID_ + "/";
         for (auto t : terms_) {
             for (auto dp : detachmentPoints_) {
-                quotes_.push_back(base + to_string(t) + "/" + to_string(dp));
+                quotes_.push_back(base + t + "/" + dp);
             }
         }
     }
@@ -48,8 +48,8 @@ void BaseCorrelationCurveConfig::fromXML(XMLNode* node) {
 
     curveID_ = XMLUtils::getChildValue(node, "CurveId", true);
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
-    terms_ = XMLUtils::getChildrenValuesAsPeriods(node, "Terms", true);
-    detachmentPoints_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "DetachmentPoints", true);
+    terms_ = XMLUtils::getChildrenValuesAsStrings(node, "Terms", true);
+    detachmentPoints_ = XMLUtils::getChildrenValuesAsStrings(node, "DetachmentPoints", true);
     settlementDays_ = parseInteger(XMLUtils::getChildValue(node, "SettlementDays", true));
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));

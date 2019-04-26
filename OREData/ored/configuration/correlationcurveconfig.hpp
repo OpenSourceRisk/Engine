@@ -61,7 +61,7 @@ public:
     //! Detailed constructor
     CorrelationCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                            const CorrelationType& corrType, const string& conventions, const QuoteType& quoteType,
-                           const bool extrapolate, const vector<Period>& optionTenors, const DayCounter& dayCounter,
+                           const bool extrapolate, const vector<string>& optionTenors, const DayCounter& dayCounter,
                            const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
                            const string& index1, const string& index2, const string& currency,
                            const string& swaptionVol = "", const string& discountCurve = "");
@@ -80,7 +80,7 @@ public:
     const Dimension& dimension() const { return dimension_; }
     const QuoteType& quoteType() const { return quoteType_; }
     const bool& extrapolate() const { return extrapolate_; }
-    const vector<Period>& optionTenors() const { return optionTenors_; }
+    const vector<string>& optionTenors() const { return optionTenors_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Calendar& calendar() const { return calendar_; }
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
@@ -100,7 +100,7 @@ public:
     Dimension& dimension() { return dimension_; }
     QuoteType& quoteType() { return quoteType_; }
     bool& extrapolate() { return extrapolate_; }
-    vector<Period>& optionTenors() { return optionTenors_; }
+    vector<string>& optionTenors() { return optionTenors_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     string& index1() { return index1_; }
@@ -117,7 +117,7 @@ private:
     string conventions_;
     QuoteType quoteType_;
     bool extrapolate_;
-    vector<Period> optionTenors_;
+    vector<string> optionTenors_;
     DayCounter dayCounter_;
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;
