@@ -27,12 +27,12 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // define entire axis
     vector<Real> x_axis;
-    for (int i = 0; i < mat.columns(); i++) {
+    for (Size i = 0; i < mat.columns(); i++) {
         x_axis.push_back(i);
     }
 
     // loop over rows and interpolate
-    for (int i = 0; i < mat.rows(); i++) {
+    for (Size i = 0; i < mat.rows(); i++) {
         vector<Real> y;                        // values for the expiries we have
         vector<Real> x;                        // the required 'tics' on axis to interpolate
         vector<Real> y_desired(x_axis.size()); // interpolated y over defined x_axis
@@ -40,7 +40,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
         // flat extrapolate short end
         if (mat[i][0] == blank) {
             int pos1 = mat.columns();
-            for (int j = 1; j < mat.columns(); j++) {
+            for (Size j = 1; j < mat.columns(); j++) {
                 if (mat[i][j] != blank) {
                     pos1 = j;
                     break;
@@ -55,19 +55,19 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
         // flat extrapolate far end
         if (mat[i][mat.columns() - 1] == blank) {
             int pos1 = -1;
-            for (int j = mat.columns() - 2; j >= 0; j--) {
+            for (Size j = mat.columns() - 2; j >= 0; j--) {
                 if (mat[i][j] != blank) {
                     pos1 = j;
                     break;
                 }
             }
-            for (int j = pos1 + 1; j < mat.columns(); j++) {
+            for (Size j = pos1 + 1; j < mat.columns(); j++) {
                 mat[i][j] = mat[i][pos1];
             }
         }
 
         // build x and y for row
-        for (int j = 0; j < mat.columns(); j++) {
+        for (Size j = 0; j < mat.columns(); j++) {
             if (mat[i][j] != blank) {
                 x.push_back(j);
                 y.push_back(mat[i][j]);
@@ -79,7 +79,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
         std::transform(x_axis.begin(), x_axis.end(), y_desired.begin(), f);
 
         // set row in mat
-        for (int j = 0; j < mat.columns(); j++) {
+        for (Size j = 0; j < mat.columns(); j++) {
             mat[i][j] = y_desired[j];
         }
     }
@@ -90,8 +90,8 @@ void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_N
 
     // check if already complete
     bool is_full = true;
-    for (int i = 0; i < mat.rows(); i++) {
-        for (int j = 0; j < mat.columns(); j++) {
+    for (Size i = 0; i < mat.rows(); i++) {
+        for (Size j = 0; j < mat.columns(); j++) {
             if (mat[i][j] == blank) {
                 is_full = false;
             }
