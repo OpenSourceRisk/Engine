@@ -183,7 +183,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
             sparse_vols = Matrix(wc_mat_rows, wc_mat_cols, -1.0);
 
             // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
-            s_and_e = PopulateMatrixFromMap(
+            s_and_e = populateMatrixFromMap(
                 sparse_vols, wc_mat,
                 asof); // Builds matrix and returns expiries (NOTE: this also takes care of dates vs periods)
             QuantExt::fillIncompleteMatrix(sparse_vols, true, -1.0);
@@ -257,7 +257,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
     }
 }
 
-pair<vector<Real>, vector<Date>> EquityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp,
+pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp,
                                                                        Date asf) {
     bool r_check, c_check;
     map<string, map<string, Real>>::iterator outItr;
@@ -311,7 +311,8 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::PopulateMatrixFromMap(Matrix& m
     sort(exprs.begin(), exprs.end());
 
     // populate matrix
-    int rw, cl;
+    ptrdiff_t rw;
+    ptrdiff_t cl;
     vector<Real>::iterator rfind;
     vector<Date>::iterator cfind;
     for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
@@ -320,7 +321,7 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::PopulateMatrixFromMap(Matrix& m
             rw = 0;
         } else {
             rfind = find(strks.begin(), strks.end(), stof(outItr->first));
-            rw = rfind - strks.begin();
+            rw = distance(strks.begin(), rfind);
         }
 
         // which column
@@ -334,7 +335,7 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::PopulateMatrixFromMap(Matrix& m
                 tmpDate = WeekendsOnly().adjust(asf + tmpPer);
 
             cfind = find(exprs.begin(), exprs.end(), tmpDate);
-            cl = cfind - exprs.begin();
+            cl = distance(exprs.begin(), cfind);
 
             mt[rw][cl] = inItr->second;
         }

@@ -361,7 +361,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
         volatilities = Matrix(wc_mat_rows, wc_mat_cols, -1.0);
 
         // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
-        s_and_e = PopulateMatrixFromMap(volatilities, wc_mat,
+        s_and_e = populateMatrixFromMap(volatilities, wc_mat,
                                         asof); // Builds matrix and returns expiries as dates (may still be tenors)
         QuantExt::fillIncompleteMatrix(volatilities, true, -1.0); // interpolate missing.
 
@@ -378,7 +378,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
 }
 
 std::pair<vector<Real>, vector<Date>>
-CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) {
+CommodityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp, Date asf) {
 
     // Check matrix size and map size.
     bool r_check, c_check;
@@ -433,7 +433,8 @@ CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Rea
     sort(exprs.begin(), exprs.end());
 
     // populate matrix
-    int rw, cl;
+    ptrdiff_t rw;
+    ptrdiff_t cl;
     vector<Real>::iterator rfind;
     vector<Date>::iterator cfind;
     for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
@@ -442,7 +443,7 @@ CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Rea
             rw = 0;
         } else {
             rfind = find(strks.begin(), strks.end(), stof(outItr->first));
-            rw = rfind - strks.begin();
+            rw = distance(strks.begin(), rfind);
         }
 
         // which column
@@ -456,7 +457,7 @@ CommodityVolCurve::PopulateMatrixFromMap(Matrix& mt, map<string, map<string, Rea
                 tmpDate = WeekendsOnly().adjust(asf + tmpPer);
 
             cfind = find(exprs.begin(), exprs.end(), tmpDate);
-            cl = cfind - exprs.begin();
+            cl = distance(exprs.begin(), cfind);
 
             mt[rw][cl] = inItr->second;
         }

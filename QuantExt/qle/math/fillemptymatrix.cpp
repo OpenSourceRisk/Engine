@@ -27,7 +27,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // define entire axis
     vector<Real> x_axis;
-    for (Size i = 0; i < mat.columns(); i++) {
+    for (unsigned int i = 0; i < mat.columns(); i++) {
         x_axis.push_back(i);
     }
 
@@ -67,7 +67,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
         }
 
         // build x and y for row
-        for (Size j = 0; j < mat.columns(); j++) {
+        for (unsigned int j = 0; j < mat.columns(); j++) {
             if (mat[i][j] != blank) {
                 x.push_back(j);
                 y.push_back(mat[i][j]);
