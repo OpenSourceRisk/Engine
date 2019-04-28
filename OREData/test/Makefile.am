@@ -35,7 +35,8 @@ OREDATA_TESTS = \
 	conventions.cpp \
     digitalcms.cpp \
 	fixings.cpp \
-    zerocouponswap.cpp
+    zerocouponswap.cpp \
+	mxnircurves.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
