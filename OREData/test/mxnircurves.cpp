@@ -43,8 +43,8 @@ BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(MXNIrCurvesTest)
 
-// This is mainly a check that the schedule gets built correctly given that MXN-TIIE has a 28D tenor
-BOOST_AUTO_TEST_CASE(testYieldCurveBootstrap) {
+// Test in-currency yield curve bootstrap
+BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
 
     // Evaluation date
     Date asof(17, Apr, 2019);
@@ -71,6 +71,39 @@ BOOST_AUTO_TEST_CASE(testYieldCurveBootstrap) {
 
     // The single trade in the portfolio is a MXN 10Y swap, i.e. 10 x 13 28D coupons, with nominal 100 million. The 
     // rate on the swap is equal to the 10Y rate in the market file 'market_01.txt' so we should get an NPV of 0.
+    BOOST_CHECK_EQUAL(portfolio->size(), 1);
+    BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
+}
+
+// Test cross-currency yield curve bootstrap
+BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
+
+    // Evaluation date
+    Date asof(17, Apr, 2019);
+    Settings::instance().evaluationDate() = asof;
+
+    // Market
+    Conventions conventions;
+    conventions.fromFile(TEST_INPUT_FILE("conventions_02.xml"));
+    TodaysMarketParameters todaysMarketParams;
+    todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
+    CurveConfigurations curveConfigs;
+    curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_02.xml"));
+    CSVLoader loader({ TEST_INPUT_FILE("market_02.txt") }, { TEST_INPUT_FILE("fixings.txt") }, false);
+    boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
+        asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+
+    // Portfolio to test market
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->fromFile(TEST_INPUT_FILE("pricingengine_02.xml"));
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    portfolio->load(TEST_INPUT_FILE("mxn_usd_xccy_swap.xml"));
+    portfolio->build(factory);
+
+    // The single trade in the portfolio is a USD/MXN 10Y cross currency basis swap, i.e. 10 x 13 28D coupons, with 
+    // nominal USD 100 million. The spread on the swap is equal to the 10Y basis spread in the market file 
+    // 'market_02.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
     BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
 }
