@@ -31,7 +31,6 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
-#include <iostream>
 
 namespace ore {
 namespace analytics {
@@ -70,6 +69,9 @@ public:
     //! Check if the cube has scenario NPVs for trade with ID \p tradeId
     bool hasTrade(const std::string& tradeId) const;
 
+    //! Return the map of up trade id's to index in cube
+    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return tradeIdx_; };
+
     /*! Return factor for given up/down scenario index or None if given index
       is not an up/down scenario (to be reviewed) */
     RiskFactorKey upDownFactor(const Size upDownIndex) const;
@@ -84,10 +86,12 @@ public:
     //! Returns the set of risk factor keys for which a delta and gamma can be calculated
     const std::set<RiskFactorKey>& factors() const;
 
+    //! Return the map of up risk factors to it's factor data
     const boost::bimap<RiskFactorKey, SensitivityCube::FactorData>& upFactors() const { return upFactors_; };
+
+    //! Return the map of down risk factors to it's factor data
     const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
-    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return tradeIdx_; };
-    
+        
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
     const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>& crossFactors() const;
 
@@ -100,22 +104,29 @@ public:
     //! Get the NPV with scenario description \p scenarioDescription for trade with ID \p tradeId
     QuantLib::Real npv(const std::string& tradeId, const ShiftScenarioDescription& scenarioDescription) const;
 
+    //! Get the NPV for trade given the index of trade in the cube
     QuantLib::Real npv(QuantLib::Size id) const;
+
+    //! Get the NPV for trade given the index of trade and scenario in the cube
+    QuantLib::Real npv(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
 
     //! Get the trade delta for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real delta(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
+    //! Get the trade delta for trade given the index of trade and risk factors in the cube
     QuantLib::Real delta(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
         
     //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
+    //! Get the trade gamma for trade given the index of trade and risk factors in the cube
     QuantLib::Real gamma(QuantLib::Size id, QuantLib::Size upScenarioIdx, QuantLib::Size downScenarioIdx) const;
 
     //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p
     //! riskFactorKeyPair
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
 
+    //! Get the trade cross gamma for trade given the index of trade and risk factors in the cube
     QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2, QuantLib::Size crossIdx) const;
 
 private:
@@ -136,7 +147,7 @@ private:
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
     boost::bimap<RiskFactorKey, FactorData> upFactors_;
     std::map<RiskFactorKey, FactorData> downFactors_;
-    // map of crossPair to tuple of (index of first \p RiskFactorKey, index of second \p RiskFactorKey, index of crossFactor)
+    // map of crossPair to tuple of (data of first \p RiskFactorKey, data of second \p RiskFactorKey, index of crossFactor)
     std::map<crossPair, std::tuple<FactorData, FactorData, QuantLib::Size>> crossFactors_;
 };
 

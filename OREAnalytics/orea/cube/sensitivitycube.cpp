@@ -211,31 +211,26 @@ Real SensitivityCube::shiftSize(const RiskFactorKey& riskFactorKey) const {
 
 Real SensitivityCube::npv(const string& tradeId) const { return cube_->getT0(tradeId, 0); }
 
-Real SensitivityCube::npv(QuantLib::Size id) const { return cube_->getT0(id, 0); }
+Real SensitivityCube::npv(Size id) const { return cube_->getT0(id, 0); }
+
+Real SensitivityCube::npv(Size id, Size scenarioIdx) const {
+    return cube_->get(id, scenarioIdx);
+}
 
 Real SensitivityCube::npv(const string& tradeId, const ShiftScenarioDescription& scenarioDescription) const {
     Size scenarioIdx = index(scenarioDescription, scenarioIdx_);
-    return cube_->get(tradeId, scenarioIdx);
+    Size tradeIdx = cube_->getTradeIndex(tradeId);
+    return npv(tradeIdx, scenarioIdx);
+}
+
+Real SensitivityCube::delta(Size id, Size scenarioIdx) const {
+    return cube_->get(id, scenarioIdx) - cube_->getT0(id, 0);
 }
 
 Real SensitivityCube::delta(const string& tradeId, const RiskFactorKey& riskFactorKey) const {
     Size scenarioIdx = index(riskFactorKey, upFactors_.left).index;
-    return cube_->get(tradeId, scenarioIdx) - cube_->getT0(tradeId, 0);
-}
-
-Real SensitivityCube::delta(QuantLib::Size id, Size scenarioIdx) const {
-    return cube_->get(id, scenarioIdx) - cube_->getT0(id, 0);
-}
-
-Real SensitivityCube::gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const {
-    Size upIdx = index(riskFactorKey, upFactors_.left).index;
-    Size downIdx = index(riskFactorKey, downFactors_).index;
-
-    Real baseNpv = cube_->getT0(tradeId, 0);
-    Real upNpv = cube_->get(tradeId, upIdx);
-    Real downNpv = cube_->get(tradeId, downIdx);
-
-    return upNpv - 2.0 * baseNpv + downNpv;
+    Size tradeIdx = cube_->getTradeIndex(tradeId);
+    return delta(tradeIdx, scenarioIdx);
 }
 
 Real SensitivityCube::gamma(Size id, Size upScenarioIdx, Size downScenarioIdx) const {
@@ -245,6 +240,14 @@ Real SensitivityCube::gamma(Size id, Size upScenarioIdx, Size downScenarioIdx) c
     Real downNpv = cube_->get(id, downScenarioIdx);
 
     return upNpv - 2.0 * baseNpv + downNpv;
+}
+
+Real SensitivityCube::gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const {
+    Size upIdx = index(riskFactorKey, upFactors_.left).index;
+    Size downIdx = index(riskFactorKey, downFactors_).index;
+    Size tradeIdx = cube_->getTradeIndex(tradeId);
+
+    return gamma(tradeIdx, upIdx, downIdx);
 }
 
 Real SensitivityCube::crossGamma(Size id, Size upIdx_1, Size upIdx_2, Size crossIdx) const {
@@ -261,20 +264,13 @@ Real SensitivityCube::crossGamma(Size id, Size upIdx_1, Size upIdx_2, Size cross
 
 Real SensitivityCube::crossGamma(const string& tradeId, const crossPair& riskFactorKeyPair) const {
     FactorData upFd_1, upFd_2;
-    Size upIdx_1, upIdx_2, crossIdx;
+    Size upIdx_1, upIdx_2, crossIdx, tradeIdx;
     std::tie(upFd_1, upFd_2, crossIdx) = index(riskFactorKeyPair, crossFactors_);
     upIdx_1 = upFd_1.index;
     upIdx_2 = upFd_2.index;
+    tradeIdx = cube_->getTradeIndex(tradeId);
 
-    // Approximate f_{xy}|(x,y) by
-    // ([f_{x}|(x,y + dy)] - [f_{x}|(x,y)]) / dy
-    // ([f(x + dx,y + dy) - f(x, y + dy)] - [f(x + dx,y) - f(x,y)]) / (dx dy)
-    Real baseNpv = cube_->getT0(tradeId, 0);
-    Real upNpv_1 = cube_->get(tradeId, upIdx_1);
-    Real upNpv_2 = cube_->get(tradeId, upIdx_2);
-    Real crossNpv = cube_->get(tradeId, crossIdx);
-
-    return crossNpv - upNpv_1 - upNpv_2 + baseNpv;
+    return crossGamma(tradeIdx, upIdx_1, upIdx_2, crossIdx);
 }
 
 
