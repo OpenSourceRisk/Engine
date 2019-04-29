@@ -39,7 +39,8 @@ QLE_TESTS = \
 	crossccybasismtmresetswaphelper.cpp \
 	cpicapfloor.cpp 
 	correlationtermstructure.cpp \
-	cpicapfloor.cpp
+	cpicapfloor.cpp \
+	strippedoptionletadapter.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build
