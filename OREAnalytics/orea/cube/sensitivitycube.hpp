@@ -31,6 +31,7 @@
 #include <ql/time/date.hpp>
 #include <ql/types.hpp>
 #include <vector>
+#include <iostream>
 
 namespace ore {
 namespace analytics {
@@ -41,6 +42,14 @@ class SensitivityCube {
 public:
     typedef std::pair<RiskFactorKey, RiskFactorKey> crossPair;
     typedef ShiftScenarioGenerator::ScenarioDescription ShiftScenarioDescription;
+    
+    struct FactorData {
+        QuantLib::Size index;
+        QuantLib::Real shiftSize;
+        string factorDesc;
+
+        bool operator<(const FactorData& fd) const { return index < fd.index; }
+    };
 
     //! Constructor using a vector of scenario descriptions
     SensitivityCube(const boost::shared_ptr<NPVSensiCube>& cube,
@@ -75,8 +84,12 @@ public:
     //! Returns the set of risk factor keys for which a delta and gamma can be calculated
     const std::set<RiskFactorKey>& factors() const;
 
+    const boost::bimap<RiskFactorKey, SensitivityCube::FactorData>& upFactors() const { return upFactors_; };
+    const std::map<RiskFactorKey, SensitivityCube::FactorData>& downFactors() const { return downFactors_; };
+    const std::map<std::string, QuantLib::Size>& tradeIdx() const { return tradeIdx_; };
+    
     //! Returns the set of pairs of risk factor keys for which a cross gamma is available
-    const std::set<crossPair>& crossFactors() const;
+    const std::map<crossPair, std::tuple<SensitivityCube::FactorData, SensitivityCube::FactorData, QuantLib::Size>>& crossFactors() const;
 
     //! Returns the absolute shift size for given risk factor \p key
     QuantLib::Real shiftSize(const RiskFactorKey& riskFactorKey) const;
@@ -87,15 +100,23 @@ public:
     //! Get the NPV with scenario description \p scenarioDescription for trade with ID \p tradeId
     QuantLib::Real npv(const std::string& tradeId, const ShiftScenarioDescription& scenarioDescription) const;
 
+    QuantLib::Real npv(QuantLib::Size id) const;
+
     //! Get the trade delta for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real delta(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
 
+    QuantLib::Real delta(QuantLib::Size id, QuantLib::Size scenarioIdx) const;
+        
     //! Get the trade gamma for trade with ID \p tradeId and for the given risk factor key \p riskFactorKey
     QuantLib::Real gamma(const std::string& tradeId, const RiskFactorKey& riskFactorKey) const;
+
+    QuantLib::Real gamma(QuantLib::Size id, QuantLib::Size upScenarioIdx, QuantLib::Size downScenarioIdx) const;
 
     //! Get the trade cross gamma for trade with ID \p tradeId and for the given risk factor key pair \p
     //! riskFactorKeyPair
     QuantLib::Real crossGamma(const std::string& tradeId, const crossPair& riskFactorKeyPair) const;
+
+    QuantLib::Real crossGamma(QuantLib::Size id, QuantLib::Size upIdx_1, QuantLib::Size upIdx_2, QuantLib::Size crossIdx) const;
 
 private:
     //! Initialise method used by the constructors
@@ -108,16 +129,18 @@ private:
     // Duplication between map keys below and these sets but trade-off
     // Means that we can return by reference in public inspector methods
     std::set<RiskFactorKey> factors_;
-    std::set<crossPair> crossPairs_;
 
     // Maps for faster lookup of cube entries. They are populated in the constructor
     // TODO: Review this i.e. could it be done better / using less memory
     std::map<std::string, QuantLib::Size> tradeIdx_;
     std::map<ShiftScenarioDescription, QuantLib::Size> scenarioIdx_;
-    boost::bimap<RiskFactorKey, QuantLib::Size> upFactors_;
-    std::map<RiskFactorKey, QuantLib::Size> downFactors_;
-    std::map<crossPair, QuantLib::Size> crossFactors_;
+    boost::bimap<RiskFactorKey, FactorData> upFactors_;
+    std::map<RiskFactorKey, FactorData> downFactors_;
+    // map of crossPair to tuple of (index of first \p RiskFactorKey, index of second \p RiskFactorKey, index of crossFactor)
+    std::map<crossPair, std::tuple<FactorData, FactorData, QuantLib::Size>> crossFactors_;
 };
+
+std::ostream& operator<<(std::ostream& out, const SensitivityCube::crossPair& cp);
 
 } // namespace analytics
 } // namespace ore
