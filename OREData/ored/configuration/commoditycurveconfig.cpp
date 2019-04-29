@@ -58,10 +58,10 @@ XMLNode* CommodityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
 
     XMLUtils::addChild(doc, node, "Currency", currency_);
-    XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
     XMLUtils::addChild(doc, node, "SpotQuote", commoditySpotQuoteId_);
     vector<string> forwardQuotes(quotes_.begin() + 1, quotes_.end());
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", forwardQuotes);
+    XMLUtils::addChild(doc, node, "DayCounter", dayCountId_);
     XMLUtils::addChild(doc, node, "InterpolationMethod", interpolationMethod_);
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
