@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(testSingleCurrencyYieldCurveBootstrap) {
     todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket_01.xml"));
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_01.xml"));
-    CSVLoader loader({ TEST_INPUT_FILE("market_01.txt") }, { TEST_INPUT_FILE("fixings.txt") }, false);
+    CSVLoader loader(TEST_INPUT_FILE("market_01.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
         asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket_02.xml"));
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_02.xml"));
-    CSVLoader loader({ TEST_INPUT_FILE("market_02.txt") }, { TEST_INPUT_FILE("fixings.txt") }, false);
+    CSVLoader loader(TEST_INPUT_FILE("market_02.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
         asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
     todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));
     CurveConfigurations curveConfigs;
     curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_03.xml"));
-    CSVLoader loader({ TEST_INPUT_FILE("market_03.txt") }, { TEST_INPUT_FILE("fixings.txt") }, false);
+    CSVLoader loader(TEST_INPUT_FILE("market_03.txt"), TEST_INPUT_FILE("fixings.txt"), false);
     boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
         asof, todaysMarketParams, loader, curveConfigs, conventions, false);
 
