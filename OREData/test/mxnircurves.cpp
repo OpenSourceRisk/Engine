@@ -31,6 +31,8 @@
 
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
+#include <ql/instruments/capfloor.hpp>
+#include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 
 using namespace ore::data;
 using namespace QuantLib;
@@ -106,6 +108,52 @@ BOOST_AUTO_TEST_CASE(testCrossCurrencyYieldCurveBootstrap) {
     // 'market_02.txt' so we should get an NPV of 0.
     BOOST_CHECK_EQUAL(portfolio->size(), 1);
     BOOST_CHECK_SMALL(portfolio->trades()[0]->instrument()->NPV(), 0.01);
+}
+
+// Test cap floor strip
+BOOST_AUTO_TEST_CASE(testCapFloorStrip) {
+
+    // Evaluation date
+    Date asof(17, Apr, 2019);
+    Settings::instance().evaluationDate() = asof;
+
+    // Market
+    Conventions conventions;
+    conventions.fromFile(TEST_INPUT_FILE("conventions_03.xml"));
+    TodaysMarketParameters todaysMarketParams;
+    todaysMarketParams.fromFile(TEST_INPUT_FILE("todaysmarket_03.xml"));
+    CurveConfigurations curveConfigs;
+    curveConfigs.fromFile(TEST_INPUT_FILE("curveconfig_03.xml"));
+    CSVLoader loader({ TEST_INPUT_FILE("market_03.txt") }, { TEST_INPUT_FILE("fixings.txt") }, false);
+    boost::shared_ptr<TodaysMarket> market = boost::make_shared<TodaysMarket>(
+        asof, todaysMarketParams, loader, curveConfigs, conventions, false);
+
+    // Portfolio to test market
+    boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
+    engineData->fromFile(TEST_INPUT_FILE("pricingengine_03.xml"));
+    boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, market);
+    boost::shared_ptr<Portfolio> portfolio = boost::make_shared<Portfolio>();
+    portfolio->load(TEST_INPUT_FILE("mxn_ir_cap.xml"));
+    portfolio->build(factory);
+
+    // The single trade in the portfolio is a MXN 10Y cap, i.e. 10 x 13 28D coupons (without first caplet), with 
+    // nominal USD 100 million.
+    BOOST_CHECK_EQUAL(portfolio->size(), 1);
+
+    // Get the npv of the trade using the market i.e. the stripped optionlet surface from TodaysMarket
+    Real npvTodaysMarket = portfolio->trades()[0]->instrument()->NPV();
+    BOOST_TEST_MESSAGE("NPV using TodaysMarket is: " << npvTodaysMarket);
+
+    // Price the same cap using the constant volatility from the market
+    auto cap = boost::dynamic_pointer_cast<CapFloor>(portfolio->trades()[0]->instrument()->qlInstrument());
+    BOOST_REQUIRE(cap);
+    auto engine = boost::make_shared<BlackCapFloorEngine>(market->discountCurve("MXN"), 0.20320);
+    cap->setPricingEngine(engine);
+    Real npvMarketVol = cap->NPV();
+    BOOST_TEST_MESSAGE("NPV using the constant market volatility is: " << npvMarketVol);
+
+    // Check the difference in the NPVs. Should be small if the stripping is working correctly.
+    BOOST_CHECK_SMALL(fabs(npvTodaysMarket - npvMarketVol), 0.01);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
