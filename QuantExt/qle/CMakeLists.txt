@@ -25,6 +25,7 @@ currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
 currencies/metals.cpp
+indexes/bondindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -175,6 +176,7 @@ currencies/america.hpp
 currencies/asia.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
+indexes/bondindex.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp

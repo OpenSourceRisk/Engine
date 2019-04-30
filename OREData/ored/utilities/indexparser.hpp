@@ -31,6 +31,7 @@
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
+#include <qle/indexes/bondindex.hpp>
 
 namespace ore {
 namespace data {
@@ -112,6 +113,12 @@ parseSwapIndex(const string& s, const Handle<YieldTermStructure>& forwarding = H
 boost::shared_ptr<ZeroInflationIndex>
 parseZeroInflationIndex(const string& s, bool isInterpolated = false,
                         const Handle<ZeroInflationTermStructure>& h = Handle<ZeroInflationTermStructure>());
+
+//! Convert std::string to QuantExt::BondIndex
+/*!
+ \ingroup utilities
+ */
+boost::shared_ptr<BondIndex> parseBondIndex(const string& s);
 
 //! Convert std::string to QuantLib::Index
 /*!
