@@ -114,11 +114,13 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     }
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "RATE") {
+    // For QuoteType, we use an insensitive compare because we previously used "Rate" here
+    // But now we want to be consistent with the market datum name
+    if (boost::iequals(quoteType, "RATE")) {
         quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "PRICE") {
+    } else if (boost::iequals(quoteType, "PRICE")) {
         quoteType_ = QuoteType::Price;
-    } else if (quoteType == "NULL") {
+    } else if (boost::iequals(quoteType, "NULL")) {
         quoteType_ = QuoteType::Null;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
@@ -132,8 +134,7 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
         dc = XMLUtils::getChildValue(node, "DayCounter", false);
         dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
-    } else // Compulsory information for Rate and Price QuoteTypes
-    {
+    } else { // Compulsory information for Rate and Price QuoteTypes
         cal = XMLUtils::getChildValue(node, "Calendar", true);
         calendar_ = parseCalendar(cal);
 
