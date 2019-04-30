@@ -41,6 +41,7 @@
 #include <qle/termstructures/defaultprobabilityhelpers.hpp>
 
 #include <ql/utilities/null_deleter.hpp>
+#include <ql/time/daycounters/actual360.hpp>
 
 #include <boost/make_shared.hpp>
 
@@ -139,9 +140,15 @@ Real SpreadCdsHelper::impliedQuote() const {
 }
 
 void SpreadCdsHelper::resetEngine() {
-    swap_ = boost::make_shared<QuantExt::CreditDefaultSwap>(Protection::Buyer, 100.0, 0.01, schedule_,
-                                                            paymentConvention_, dayCounter_, settlesAccrual_,
-                                                            paysAtDefaultTime_, protectionStart_);
+
+    // For CDS, the standard day counter is Actual/360 and the final period coupon accrual includes the maturity date.
+    Actual360 standardDayCounter;
+    DayCounter lastPeriodDayCounter = dayCounter_ == standardDayCounter ? Actual360(true) : dayCounter_;
+
+    swap_ = boost::shared_ptr<QuantExt::CreditDefaultSwap>(new QuantExt::CreditDefaultSwap(
+        Protection::Buyer, 100.0, 0.01, schedule_, paymentConvention_, dayCounter_, settlesAccrual_, 
+        paysAtDefaultTime_, protectionStart_, boost::shared_ptr<Claim>(), lastPeriodDayCounter));
+
     swap_->setPricingEngine(
         boost::make_shared<QuantExt::MidPointCdsEngine>(probability_, recoveryRate_, discountCurve_));
 }

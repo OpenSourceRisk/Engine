@@ -52,7 +52,7 @@ namespace QuantExt {
 CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate spread, const Schedule& schedule,
                                      BusinessDayConvention convention, const DayCounter& dayCounter,
                                      bool settlesAccrual, bool paysAtDefaultTime, const Date& protectionStart,
-                                     const boost::shared_ptr<Claim>& claim)
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(boost::none), runningSpread_(spread), settlesAccrual_(settlesAccrual),
       paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
@@ -62,7 +62,8 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(spread, dayCounter)
-               .withPaymentAdjustment(convention);
+               .withPaymentAdjustment(convention)
+               .withLastPeriodDayCounter(lastPeriodDayCounter);
 
     // acrual rebate
     if (schedule.rule() == DateGeneration::CDS || schedule.rule() == DateGeneration::CDS2015) {
@@ -88,7 +89,7 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
                                      const Schedule& schedule, BusinessDayConvention convention,
                                      const DayCounter& dayCounter, bool settlesAccrual, bool paysAtDefaultTime,
                                      const Date& protectionStart, const Date& upfrontDate,
-                                     const boost::shared_ptr<Claim>& claim)
+                                     const boost::shared_ptr<Claim>& claim, const DayCounter& lastPeriodDayCounter)
     : side_(side), notional_(notional), upfront_(upfront), runningSpread_(runningSpread),
       settlesAccrual_(settlesAccrual), paysAtDefaultTime_(paysAtDefaultTime), claim_(claim),
       protectionStart_(protectionStart == Null<Date>() ? schedule[0] : protectionStart) {
@@ -100,7 +101,8 @@ CreditDefaultSwap::CreditDefaultSwap(Protection::Side side, Real notional, Rate 
     leg_ = FixedRateLeg(schedule)
                .withNotionals(notional)
                .withCouponRates(runningSpread, dayCounter)
-               .withPaymentAdjustment(convention);
+               .withPaymentAdjustment(convention)
+               .withLastPeriodDayCounter(lastPeriodDayCounter);
 
     // If empty, adjust to T+3 standard settlement
     Date effectiveUpfrontDate =
