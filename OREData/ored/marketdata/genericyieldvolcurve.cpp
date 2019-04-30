@@ -25,6 +25,7 @@
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/termstructures/swaptionvolcube2.hpp>
 #include <qle/termstructures/swaptionvolcubewithatm.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using namespace QuantLib;
 using namespace std;
@@ -63,6 +64,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
         Matrix vols(config->optionTenors().size(), config->underlyingTenors().size(), Null<Real>());
         Matrix shifts(isSln ? vols.rows() : 0, isSln ? vols.columns() : 0, Null<Real>());
         Size quotesRead = 0, shiftQuotesRead = 0;
+        vector<Period> optionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
+        vector<Period> underlyingTenors = parseVectorOfValues<Period>(config->underlyingTenors(), &parsePeriod);
 
         for (auto& p : config->quotes()) {
             // optional, because we do not require all spread quotes; we check below that we have all atm quotes
@@ -70,10 +73,10 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             Period expiry, term;
             if (md->quoteType() == volatilityType && matchAtmQuote(md, expiry, term)) {
                 quotesRead++;
-                Size i = std::find(config->optionTenors().begin(), config->optionTenors().end(), expiry) -
-                         config->optionTenors().begin();
-                Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
-                         config->underlyingTenors().begin();
+                Size i = std::find(optionTenors.begin(), optionTenors.end(), expiry) -
+                         optionTenors.begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
+                         underlyingTenors.begin();
                 QL_REQUIRE(i < config->optionTenors().size(),
                            "expiry " << expiry << " not in configuration, this is unexpected");
                 QL_REQUIRE(j < config->underlyingTenors().size(),
@@ -82,8 +85,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             }
             if (isSln && md->quoteType() == MarketDatum::QuoteType::SHIFT && matchShiftQuote(md, term)) {
                 shiftQuotesRead++;
-                Size j = std::find(config->underlyingTenors().begin(), config->underlyingTenors().end(), term) -
-                         config->underlyingTenors().begin();
+                Size j = std::find(underlyingTenors.begin(), underlyingTenors.end(), term) -
+                         underlyingTenors.begin();
                 QL_REQUIRE(j < config->underlyingTenors().size(),
                            "term " << term << " not in configuration, this is unexpected");
                 for (Size i = 0; i < shifts.rows(); ++i)
@@ -113,8 +116,8 @@ GenericYieldVolCurve::GenericYieldVolCurve(
 
         if (quotesRead != 1) {
             atm = boost::shared_ptr<SwaptionVolatilityStructure>(new SwaptionVolatilityMatrix(
-                asof, config->calendar(), config->businessDayConvention(), config->optionTenors(),
-                config->underlyingTenors(), vols, config->dayCounter(), config->flatExtrapolation(),
+                asof, config->calendar(), config->businessDayConvention(), optionTenors,
+                underlyingTenors, vols, config->dayCounter(), config->flatExtrapolation(),
                 config->volatilityType() == GenericYieldVolatilityCurveConfig::VolatilityType::Normal
                     ? QuantLib::Normal
                     : QuantLib::ShiftedLognormal,
@@ -137,9 +140,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
             vol_ = atm;
         } else {
             LOG("Building Cube for config " << config->curveID());
-            vector<Period> smileOptionTenors = config->smileOptionTenors();
-            vector<Period> smileUnderlyingTenors = config->smileUnderlyingTenors();
-            vector<Spread> spreads = config->smileSpreads();
+            vector<Period> smileOptionTenors = parseVectorOfValues<Period>(config->smileOptionTenors(), &parsePeriod);
+            vector<Period> smileUnderlyingTenors = parseVectorOfValues<Period>(config->smileUnderlyingTenors(), &parsePeriod);
+            vector<Spread> spreads = parseVectorOfValues<Real>(config->smileSpreads(), &parseReal);
 
             // add smile spread 0, if not already existent
             auto spr = std::upper_bound(spreads.begin(), spreads.end(), 0.0);
@@ -151,9 +154,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                                       std::vector<bool>(spreads.size(), true));
 
             if (smileOptionTenors.size() == 0)
-                smileOptionTenors = config->optionTenors();
+                smileOptionTenors = parseVectorOfValues<Period>(config->optionTenors(), &parsePeriod);
             if (smileUnderlyingTenors.size() == 0)
-                smileUnderlyingTenors = config->underlyingTenors();
+                smileUnderlyingTenors = parseVectorOfValues<Period>(config->underlyingTenors(), &parsePeriod);
             QL_REQUIRE(spreads.size() > 0, "Need at least 1 strike spread for a SwaptionVolCube");
 
             Size n = smileOptionTenors.size() * smileUnderlyingTenors.size();
@@ -205,7 +208,9 @@ GenericYieldVolCurve::GenericYieldVolCurve(
                     for (Size k = 0; k < spreads.size(); ++k) {
                         boost::shared_ptr<SimpleQuote> q = boost::static_pointer_cast<SimpleQuote>(
                             *volSpreadHandles[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]);
-                        if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k]) {
+                        // do not overwrite vol spread for zero strike spread (ATM point)
+                        if (zero[i * smileUnderlyingTenors.size() + j][spreads.size() - 1 - k] &&
+                            !close_enough(spreads[spreads.size() - 1 - k], 0.0)) {
                             q->setValue(lastNonZeroValue);
                             WLOG("Overwrite vol spread for "
                                  << config->curveID() << "/" << smileOptionTenors[i] << "/" << smileUnderlyingTenors[j]

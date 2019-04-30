@@ -66,14 +66,14 @@ public:
                                       const string& curveID, const string& curveDescription, const string& qualifier,
                                       const Dimension& dimension, const VolatilityType& volatilityType,
                                       const bool extrapolate, const bool flatExtrapolation,
-                                      const vector<Period>& optionTenors, const vector<Period>& underlyingTenors,
+                                      const vector<string>& optionTenors, const vector<string>& underlyingTenors,
                                       const DayCounter& dayCounter, const Calendar& calendar,
                                       const BusinessDayConvention& businessDayConvention,
                                       const string& shortSwapIndexBase = "", const string& swapIndexBase = "",
                                       // Only required for smile
-                                      const vector<Period>& smileOptionTenors = vector<Period>(),
-                                      const vector<Period>& smileUnderlyingTenors = vector<Period>(),
-                                      const vector<Spread>& smileSpreads = vector<Spread>());
+                                      const vector<string>& smileOptionTenors = vector<string>(),
+                                      const vector<string>& smileUnderlyingTenors = vector<string>(),
+                                      const vector<string>& smileSpreads = vector<string>());
     //@}
 
     //! \name Serialisation
@@ -89,16 +89,16 @@ public:
     const VolatilityType& volatilityType() const { return volatilityType_; }
     const bool& extrapolate() const { return extrapolate_; }
     const bool& flatExtrapolation() const { return flatExtrapolation_; }
-    const vector<Period>& optionTenors() const { return optionTenors_; }
-    const vector<Period>& underlyingTenors() const { return underlyingTenors_; }
+    const vector<string>& optionTenors() const { return optionTenors_; }
+    const vector<string>& underlyingTenors() const { return underlyingTenors_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
     const Calendar& calendar() const { return calendar_; }
     const BusinessDayConvention& businessDayConvention() const { return businessDayConvention_; }
     const string& shortSwapIndexBase() const { return shortSwapIndexBase_; }
     const string& swapIndexBase() const { return swapIndexBase_; }
-    const vector<Period>& smileOptionTenors() const { return smileOptionTenors_; }
-    const vector<Period>& smileUnderlyingTenors() const { return smileUnderlyingTenors_; }
-    const vector<Spread>& smileSpreads() const { return smileSpreads_; }
+    const vector<string>& smileOptionTenors() const { return smileOptionTenors_; }
+    const vector<string>& smileUnderlyingTenors() const { return smileUnderlyingTenors_; }
+    const vector<string>& smileSpreads() const { return smileSpreads_; }
     const vector<string>& quotes() override;
     //@}
 
@@ -109,16 +109,16 @@ public:
     VolatilityType& volatilityType() { return volatilityType_; }
     bool& extrapolate()  { return extrapolate_; }
     bool& flatExtrapolation() { return flatExtrapolation_; }
-    vector<Period>& optionTenors() { return optionTenors_; }
-    vector<Period>& underlyingTenors() { return underlyingTenors_; }
+    vector<string>& optionTenors() { return optionTenors_; }
+    vector<string>& underlyingTenors() { return underlyingTenors_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
     BusinessDayConvention& businessDayConvention() { return businessDayConvention_; }
     string& shortSwapIndexBase() { return shortSwapIndexBase_; }
     string& swapIndexBase() { return swapIndexBase_; }
-    vector<Period>& smileOptionTenors() { return smileOptionTenors_; }
-    vector<Period>& smileUnderlyingTenors() { return smileUnderlyingTenors_; }
-    vector<Spread>& smileSpreads() { return smileSpreads_; }
+    vector<string>& smileOptionTenors() { return smileOptionTenors_; }
+    vector<string>& smileUnderlyingTenors() { return smileUnderlyingTenors_; }
+    vector<string>& smileSpreads() { return smileSpreads_; }
     //@}
 
 private:
@@ -131,14 +131,14 @@ private:
     Dimension dimension_;
     VolatilityType volatilityType_;
     bool extrapolate_, flatExtrapolation_;
-    vector<Period> optionTenors_, underlyingTenors_;
+    vector<string> optionTenors_, underlyingTenors_;
     DayCounter dayCounter_;
     Calendar calendar_;
     BusinessDayConvention businessDayConvention_;
     string shortSwapIndexBase_, swapIndexBase_;
-    vector<Period> smileOptionTenors_;
-    vector<Period> smileUnderlyingTenors_;
-    vector<Spread> smileSpreads_;
+    vector<string> smileOptionTenors_;
+    vector<string> smileUnderlyingTenors_;
+    vector<string> smileSpreads_;
 };
 
 std::ostream& operator<<(std::ostream& out, GenericYieldVolatilityCurveConfig::VolatilityType t);
