@@ -205,6 +205,7 @@
       <xs:element type="xs:string" name="DiscountCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter"/>
       <xs:element type="xs:string" name="RecoveryRate" minOccurs="0" maxOccurs="1"/>
+      <xs:element type="date" name="StartDate" minOccurs="0" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="BenchmarkCurve" minOccurs="0" maxOccurs="1"/>
       <xs:element type="xs:string" name="SourceCurve" minOccurs="0" maxOccurs="1"/>
