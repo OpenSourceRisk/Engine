@@ -364,6 +364,22 @@ void SensitivityScenarioGenerator::generateEquityScenarios(bool up) {
     LOG("Equity scenarios done");
 }
 
+namespace {
+void checkShiftTenors(const std::vector<Period>& effective, const std::vector<Period>& config,
+                      const std::string& curveLabel) {
+    if (effective.size() != config.size()) {
+        string message = "mismatch between effective shift tenors (" + std::to_string(effective.size()) +
+                         ") and configured shift tenors (" + std::to_string(config.size()) + ") for " + curveLabel;
+        ALOG(message);
+        for (auto const& p : effective)
+            ALOG("effetive tenor: " << p);
+        for (auto const& p : config)
+            ALOG("config   tenor: " << p);
+        QL_FAIL(message);
+    }
+}
+} // namespace
+
 void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
     // Log an ALERT if some currencies in simmarket are excluded from the list
@@ -402,9 +418,7 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(ccy)
                                               ? simMarketData_->yieldCurveTenors(ccy)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Discount Curve " + ccy);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -489,9 +503,7 @@ void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(indexName)
                                               ? simMarketData_->yieldCurveTenors(indexName)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Index Curve " + indexName);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -574,9 +586,7 @@ void SensitivityScenarioGenerator::generateYieldCurveScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasYieldCurveTenors(name)
                                                      ? simMarketData_->yieldCurveTenors(name)
                                                      : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Yield Curve " + name);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -658,9 +668,7 @@ void SensitivityScenarioGenerator::generateDividendYieldScenarios(bool up) {
         const std::vector<Period>& shiftTenors = overrideTenors_ && simMarketData_->hasEquityDividendTenors(name)
                                                      ? simMarketData_->equityDividendTenors(name)
                                                      : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Divident Yield " + name);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1205,9 +1213,7 @@ void SensitivityScenarioGenerator::generateSurvivalProbabilityScenarios(bool up)
                                               ? simMarketData_->defaultTenors(name)
                                               : data.shiftTenors;
 
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Default Curve " + name);
 
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
@@ -1363,9 +1369,7 @@ void SensitivityScenarioGenerator::generateZeroInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasZeroInflationTenors(indexName)
                                               ? simMarketData_->zeroInflationTenors(indexName)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Zero Inflation " + indexName);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1448,9 +1452,7 @@ void SensitivityScenarioGenerator::generateYoYInflationScenarios(bool up) {
         std::vector<Period> shiftTenors = overrideTenors_ && simMarketData_->hasYoyInflationTenors(indexName)
                                               ? simMarketData_->yoyInflationTenors(indexName)
                                               : data.shiftTenors;
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "YoY Inflation " + indexName);
         std::vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j)
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
@@ -1679,9 +1681,7 @@ void SensitivityScenarioGenerator::generateCommodityCurveScenarios(bool up) {
             overrideTenors_ && simMarketData_->hasCommodityCurveTenors(name) ? simMarketTenors : data.shiftTenors;
 
         QL_REQUIRE(!shiftTenors.empty(), "Commodity curve shift tenors have not been given");
-        QL_REQUIRE(shiftTenors.size() == data.shiftTenors.size(), "mismatch between effective shift tenors ("
-                                                                      << shiftTenors.size() << ") and shift tenors ("
-                                                                      << data.shiftTenors.size() << ")");
+        checkShiftTenors(shiftTenors, data.shiftTenors, "Commodity Curve " + name);
 
         vector<Time> shiftTimes(shiftTenors.size());
         for (Size j = 0; j < shiftTenors.size(); ++j) {
