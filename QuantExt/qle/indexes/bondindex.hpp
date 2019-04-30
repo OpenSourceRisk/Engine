@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qlep/indexes/bondindex.hpp
+/*! \file qle/indexes/bondindex.hpp
     \brief Light-weight bond index class for holding clean bond price fixing histories,
     without forwarding which is left to the respective engines.
     \ingroup indexes

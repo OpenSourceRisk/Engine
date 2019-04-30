@@ -24,7 +24,7 @@
 #include <ql/settings.hpp>
 
 #include <boost/make_shared.hpp>
-#include <qlep/indexes/bondindex.hpp>
+#include <qle/indexes/bondindex.hpp>
 
 namespace QuantExt {
 

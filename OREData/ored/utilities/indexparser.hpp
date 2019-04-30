@@ -118,7 +118,7 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
 /*!
  \ingroup utilities
  */
-boost::shared_ptr<BondIndex> parseBondIndex(const string& s);
+boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
 
 //! Convert std::string to QuantLib::Index
 /*!

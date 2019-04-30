@@ -32,6 +32,7 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
