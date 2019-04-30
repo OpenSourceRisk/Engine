@@ -6,6 +6,7 @@ SUBDIRS =
 
 libInstruments_la_SOURCES = \
 	averageois.cpp \
+	brlcdiswap.cpp \
 	crossccybasisswap.cpp \
 	crossccybasismtmresetswap.cpp \
 	crossccyswap.cpp \
@@ -31,6 +32,7 @@ this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
 	averageois.hpp \
+	brlcdiswap.hpp \
 	crossccybasisswap.hpp \
 	crossccybasismtmresetswap.hpp \
 	crossccyswap.hpp \

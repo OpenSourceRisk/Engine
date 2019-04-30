@@ -84,12 +84,12 @@ XMLNode* CommodityForward::toXML(XMLDocument& doc) {
     XMLUtils::appendNode(node, commodityDataNode);
 
     XMLUtils::addChild(doc, commodityDataNode, "Position", position_);
+    XMLUtils::addChild(doc, commodityDataNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, commodityDataNode, "Name", commodityName_);
     XMLUtils::addChild(doc, commodityDataNode, "Currency", currency_);
-    XMLUtils::addChild(doc, commodityDataNode, "Quantity", quantity_);
-    XMLUtils::addChild(doc, commodityDataNode, "Maturity", maturityDate_);
     XMLUtils::addChild(doc, commodityDataNode, "Strike", strike_);
-
+    XMLUtils::addChild(doc, commodityDataNode, "Quantity", quantity_);
+    
     return node;
 }
 

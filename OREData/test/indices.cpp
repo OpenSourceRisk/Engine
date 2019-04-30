@@ -106,7 +106,7 @@ static struct test_data index_data[] = {
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
     {"NOK-NOWA", "NowaON Actual/Actual (ISMA)", 1 * Days},
     {"NZD-OCR", "NzocrON Actual/365 (Fixed)", 1 * Days},
-    {"BRL-CDI", "BRL-CDITN Business/252(Brazil)", 1 * Days},
+    {"BRL-CDI", "BRL-CDION Business/252(Brazil)", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
@@ -214,6 +214,12 @@ static struct test_data index_data[] = {
     {"CHF-LIBOR-6M", "CHFLibor6M Actual/360", 6 * Months},
     {"CHF-LIBOR-12M", "CHFLibor1Y Actual/360", 1 * Years},
     {"CHF-LIBOR-1Y", "CHFLibor1Y Actual/360", 1 * Years},
+
+    {"SAR-SAIBOR-1W", "SAR-SAIBOR1W Actual/360", 1 * Weeks},
+    {"SAR-SAIBOR-1M", "SAR-SAIBOR1M Actual/360", 1 * Months},
+    {"SAR-SAIBOR-2M", "SAR-SAIBOR2M Actual/360", 2 * Months},
+    {"SAR-SAIBOR-3M", "SAR-SAIBOR3M Actual/360", 3 * Months},
+    {"SAR-SAIBOR-6M", "SAR-SAIBOR6M Actual/360", 6 * Months},
 
     {"SEK-STIBOR-1W", "SEK-STIBOR1W Actual/360", 1 * Weeks},
     {"SEK-STIBOR-1M", "SEK-STIBOR1M Actual/360", 1 * Months},

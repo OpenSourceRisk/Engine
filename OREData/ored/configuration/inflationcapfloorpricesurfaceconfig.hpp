@@ -49,8 +49,8 @@ public:
                                         const Period& observationLag, const Calendar& calendar,
                                         const BusinessDayConvention& businessDayConvention,
                                         const DayCounter& dayCounter, const string& index, const string& indexCurve,
-                                        const string& yieldTermStructure, const vector<Real>& capStrikes,
-                                        const vector<Real>& floorStrikes, const vector<Period>& maturities,
+                                        const string& yieldTermStructure, const vector<string>& capStrikes,
+                                        const vector<string>& floorStrikes, const vector<string>& maturities,
                                         bool implySeparateCapFloorVolSurfaces);
 
     void fromXML(XMLNode* node) override;
@@ -66,9 +66,9 @@ public:
     const string& index() const { return index_; }
     const string& indexCurve() const { return indexCurve_; }
     const string& yieldTermStructure() const { return yieldTermStructure_; }
-    const vector<Real>& capStrikes() const { return capStrikes_; }
-    const vector<Real>& floorStrikes() const { return floorStrikes_; }
-    const vector<Period>& maturities() const { return maturities_; }
+    const vector<string>& capStrikes() const { return capStrikes_; }
+    const vector<string>& floorStrikes() const { return floorStrikes_; }
+    const vector<string>& maturities() const { return maturities_; }
     const vector<string>& quotes() override;
     const bool& implySeparateCapFloorVolSurfaces() const { return implySeparateCapFloorVolSurfaces_; }
 
@@ -82,9 +82,9 @@ public:
     string& index() { return index_; }
     string& indexCurve() { return indexCurve_; }
     string& yieldTermStructure() { return yieldTermStructure_; }
-    vector<Real>& capStrikes() { return capStrikes_; }
-    vector<Real>& floorStrikes() { return floorStrikes_; }
-    vector<Period>& maturities() { return maturities_; }
+    vector<string>& capStrikes() { return capStrikes_; }
+    vector<string>& floorStrikes() { return floorStrikes_; }
+    vector<string>& maturities() { return maturities_; }
     bool& implySeparateCapFloorVolSurfaces() { return implySeparateCapFloorVolSurfaces_; }
 
 private:
@@ -97,9 +97,9 @@ private:
     string index_;
     string indexCurve_;
     string yieldTermStructure_;
-    vector<Real> capStrikes_;
-    vector<Real> floorStrikes_;
-    vector<Period> maturities_;
+    vector<string> capStrikes_;
+    vector<string> floorStrikes_;
+    vector<string> maturities_;
     bool implySeparateCapFloorVolSurfaces_;
 };
 } // namespace data

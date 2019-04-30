@@ -203,6 +203,14 @@ template <class T> std::vector<T> parseListOfValues(string s, std::function<T(st
     return vec;
 }
 
+template <class T> std::vector<T> parseVectorOfValues(std::vector<std::string> str, std::function<T(string)> parser) {
+    std::vector<T> vec;
+    for (auto s : str) {
+        vec.push_back(parser(s));
+    }
+    return vec;
+}
+
 std::vector<string> parseListOfValues(string s);
 
 enum class AmortizationType { None, FixedAmount, RelativeToInitialNotional, RelativeToPreviousNotional, Annuity };

@@ -671,35 +671,35 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
 
     // Swaption volatility structure option and swap tenors
     // clang-format off
-    vector<Period> optionTenors{
-        Period(1, Months),
-        Period(3, Months),
-        Period(6, Months),
-        Period(1, Years),
-        Period(2, Years),
-        Period(3, Years),
-        Period(4, Years),
-        Period(5, Years),
-        Period(7, Years),
-        Period(10, Years),
-        Period(15, Years),
-        Period(20, Years),
-        Period(25, Years),
-        Period(30, Years)
+    vector<string> optionTenors{
+        "1M",
+        "3M",
+        "6M",
+        "1Y",
+        "2Y",
+        "3Y",
+        "4Y",
+        "5Y",
+        "7Y",
+        "10Y",
+        "15Y",
+        "20Y",
+        "25Y",
+        "30Y"
     };
 
-    vector<Period> swapTenors{
-        Period(1, Years),
-        Period(2, Years),
-        Period(3, Years),
-        Period(4, Years),
-        Period(5, Years),
-        Period(7, Years),
-        Period(10, Years),
-        Period(15, Years),
-        Period(20, Years),
-        Period(25, Years),
-        Period(30, Years)
+    vector<string> swapTenors{
+        "1Y",
+        "2Y",
+        "3Y",
+        "4Y",
+        "5Y",
+        "7Y",
+        "10Y",
+        "15Y",
+        "20Y",
+        "25Y",
+        "30Y"
     };
     // clang-format on
 
@@ -710,8 +710,8 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
         swapTenors, dayCounter, UnitedStates(), bdc, "USD-CMS-1Y", "USD-CMS-30Y");
 
     // Capfloor volatility structure tenors and strikes
-    vector<Period> capTenors{1 * Years, 2 * Years, 5 * Years, 7 * Years, 10 * Years};
-    vector<Rate> strikes{0.005, 0.010, 0.015, 0.020, 0.025, 0.030};
+    vector<string> capTenors{"1Y", "2Y", "5Y", "7Y", "10Y"};
+    vector<string> strikes{"0.005", "0.010", "0.015", "0.020", "0.025", "0.030"};
 
     // USD Lognormal capfloor volatility "curve" configuration
     configs->capFloorVolCurveConfig("USD_CF_LN") = boost::make_shared<CapFloorVolatilityCurveConfig>(
@@ -719,9 +719,9 @@ boost::shared_ptr<CurveConfigurations> curveConfigurations() {
         extrapolate, false, false, capTenors, strikes, dayCounter, 2, UnitedStates(), bdc, "USD-LIBOR-3M",
         "Yield/USD/USD1D");
 
-    vector<Period> optionTenors2{Period(1, Years)};
+    vector<string> optionTenors2{"1Y"};
 
-    vector<Period> optionTenors3{Period(1, Years), Period(2, Years)};
+    vector<string> optionTenors3{"1Y", "2Y"};
     // Correlation curve
     configs->correlationCurveConfig("EUR-CORR") = boost::make_shared<CorrelationCurveConfig>(
         "EUR-CORR", "EUR CMS Correlations", CorrelationCurveConfig::Dimension::Constant,

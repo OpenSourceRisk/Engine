@@ -18,6 +18,7 @@
 
 #include <ored/marketdata/basecorrelationcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -37,8 +38,8 @@ BaseCorrelationCurve::BaseCorrelationCurve(Date asof, BaseCorrelationCurveSpec s
             curveConfigs.baseCorrelationCurveConfig(spec.curveConfigID());
 
         // Read in quotes matrix
-        vector<Period> terms = config->terms();
-        vector<double> detachmentPoints = config->detachmentPoints();
+        vector<Period> terms = parseVectorOfValues<Period>(config->terms(), &parsePeriod);
+        vector<Real> detachmentPoints = parseVectorOfValues<Real>(config->detachmentPoints(), &parseReal);
         QL_REQUIRE(!terms.empty(), "At least one term > 0*Days expected");
         QL_REQUIRE(!detachmentPoints.empty(), "At least one detachment point expected");
         vector<vector<Handle<Quote>>> data(detachmentPoints.size(), vector<Handle<Quote>>(terms.size()));

@@ -28,8 +28,10 @@
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
@@ -894,6 +896,9 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
         onIndex = boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve->handle()));
     }
 
+    // BRL CDI overnight needs a specialised rate helper so we use this below to switch
+    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(onIndex);
+
     auto oisQuoteIDs = oisSegment->quotes();
     for (Size i = 0; i < oisQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(oisQuoteIDs[i], asofDate_);
@@ -907,11 +912,17 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
 
             // Create a swap helper if we do.
             Period oisTenor = oisQuote->term();
-            boost::shared_ptr<RateHelper> oisHelper(new QuantExt::OISRateHelper(
-                oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
-                oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
+            boost::shared_ptr<RateHelper> oisHelper;
+            if (brlCdiIndex) {
+                oisHelper = boost::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex, 
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+            } else {
+                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                    oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
+                    oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+            }
 
             instruments.push_back(oisHelper);
         }

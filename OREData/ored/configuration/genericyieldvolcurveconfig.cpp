@@ -44,11 +44,11 @@ GenericYieldVolatilityCurveConfig::GenericYieldVolatilityCurveConfig(
     const std::string& underlyingLabel, const std::string& rootNodeLabel, const std::string& marketDatumInstrumentLabel,
     const std::string& qualifierLabel, const string& curveID, const string& curveDescription,
     const std::string& qualifier, const Dimension& dimension, const VolatilityType& volatilityType,
-    const bool extrapolate, const bool flatExtrapolation, const vector<Period>& optionTenors,
-    const vector<Period>& underlyingTenors, const DayCounter& dayCounter, const Calendar& calendar,
+    const bool extrapolate, const bool flatExtrapolation, const vector<string>& optionTenors,
+    const vector<string>& underlyingTenors, const DayCounter& dayCounter, const Calendar& calendar,
     const BusinessDayConvention& businessDayConvention, const string& shortSwapIndexBase, const string& swapIndexBase,
-    const vector<Period>& smileOptionTenors, const vector<Period>& smileUnderlyingTenors,
-    const vector<Real>& smileSpreads)
+    const vector<string>& smileOptionTenors, const vector<string>& smileUnderlyingTenors,
+    const vector<string>& smileSpreads)
     : CurveConfig(curveID, curveDescription), underlyingLabel_(underlyingLabel), rootNodeLabel_(rootNodeLabel),
       marketDatumInstrumentLabel_(marketDatumInstrumentLabel), qualifierLabel_(qualifierLabel), allowSmile_(true),
       requireSwapIndexBases_(false), qualifier_(qualifier), dimension_(dimension), volatilityType_(volatilityType),
@@ -76,23 +76,33 @@ const vector<string>& GenericYieldVolatilityCurveConfig::quotes() {
         ssBase << marketDatumInstrumentLabel_ << "/" << volatilityType_ << "/" << qualifier_ << "/";
         string base = ssBase.str();
 
-        if (dimension_ == Dimension::ATM) {
-            for (auto o : optionTenors_) {
-                for (auto s : underlyingTenors_) {
-                    std::stringstream ss;
-                    ss << base << to_string(o) << "/" << to_string(s) << "/ATM";
-                    quotes_.push_back(ss.str());
-                }
+        // add atm vols (always required)
+        for (auto o : optionTenors_) {
+            for (auto s : underlyingTenors_) {
+                std::stringstream ss;
+                ss << base << o << "/" << s << "/ATM";
+                quotes_.push_back(ss.str());
             }
-        } else {
+        }
+
+        // add Smile Spreads, if dimension is Smile
+        if (dimension_ == Dimension::Smile) {
             for (auto o : smileOptionTenors_) {
                 for (auto s : smileUnderlyingTenors_) {
                     for (auto sp : smileSpreads_) {
                         std::stringstream ss;
-                        ss << base << to_string(o) << "/" << to_string(s) << "/Smile/" << to_string(sp);
+                        ss << base << o << "/" << s << "/Smile/" << sp;
                         quotes_.push_back(ss.str());
                     }
                 }
+            }
+        }
+        // add SHIFT quotes, if vol type is SLN
+        for (auto s : underlyingTenors_) {
+            if (volatilityType_ == VolatilityType::ShiftedLognormal) {
+                std::stringstream ss;
+                ss << marketDatumInstrumentLabel_ << "/SHIFT/" << qualifier_ << "/" << s;
+                quotes_.push_back(ss.str());
             }
         }
     }
@@ -151,9 +161,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Extrapolation " << extr << " not recognized");
     }
 
-    optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
+    optionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "OptionTenors", true);
 
-    underlyingTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, underlyingLabel_ + "Tenors", false);
+    underlyingTenors_ = XMLUtils::getChildrenValuesAsStrings(node, underlyingLabel_ + "Tenors", false);
 
     string cal = XMLUtils::getChildValue(node, "Calendar", true);
     calendar_ = parseCalendar(cal);
@@ -171,9 +181,9 @@ void GenericYieldVolatilityCurveConfig::fromXML(XMLNode* node) {
 
     // smile data
     if (dimension_ == Dimension::Smile) {
-        smileOptionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "SmileOptionTenors", true);
-        smileUnderlyingTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "Smile" + underlyingLabel_ + "Tenors", true);
-        smileSpreads_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "SmileSpreads", true);
+        smileOptionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "SmileOptionTenors", true);
+        smileUnderlyingTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Smile" + underlyingLabel_ + "Tenors", true);
+        smileSpreads_ = XMLUtils::getChildrenValuesAsStrings(node, "SmileSpreads", true);
     }
 
     // read qualifier from explicit field

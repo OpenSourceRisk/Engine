@@ -201,7 +201,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         }
 
         if (config->type() == DefaultCurveConfig::Type::Benchmark) {
-            std::vector<Period> pillars = config->pillars();
+            std::vector<Period> pillars = parseVectorOfValues<Period>(config->pillars(), &parsePeriod);
             Calendar cal = config->calendar();
             Size spotLag = config->spotLag();
             // setup

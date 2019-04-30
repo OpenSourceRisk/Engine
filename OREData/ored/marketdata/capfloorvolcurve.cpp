@@ -18,6 +18,7 @@
 
 #include <ored/marketdata/capfloorvolcurve.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/parsers.hpp>
 
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
@@ -76,8 +77,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
         }
 
         // Read in quotes matrix. If we hit any ATM quotes that match one of the tenors, store those also.
-        vector<Period> tenors = config->tenors();
-        vector<double> strikes = config->strikes();
+        vector<Period> tenors = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
+        vector<Real> strikes = parseVectorOfValues<Real>(config->strikes(), &parseReal);
         QL_REQUIRE(!strikes.empty(), "Strikes should not be empty - expect a cap matrix");
         Matrix vols(tenors.size(), strikes.size());
         map<Period, Volatility> atmVolCurve;
