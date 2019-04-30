@@ -42,12 +42,16 @@ Real BondIndex::fixing(const Date& fixingDate, bool forecastTodaysFixing) const 
     Date today = Settings::instance().evaluationDate();
 
     QL_REQUIRE(fixingDate < today || (fixingDate == today && forecastTodaysFixing == false),
-               "Bond index covers historical fixings only");
+               "Bond index covers historical fixings only (queried fixing date"
+                   << QuantLib::io::iso_date(fixingDate) << ", today is " << QuantLib::io::iso_date(today) << ")");
 
-    QL_REQUIRE(IndexManager::instance().hasHistory(name_), "missing fixing history for bond index " << name_);
+    QL_REQUIRE(IndexManager::instance().hasHistory(name_), "missing fixing history for bond index "
+                                                               << name_ << " (fixing required as of "
+                                                               << QuantLib::io::iso_date(fixingDate) << ")");
     const TimeSeries<Real>& history = IndexManager::instance().getHistory(name_);
 
-    QL_REQUIRE(!history.empty(), "fixing history for bond index " << name_ << " is empty");
+    QL_REQUIRE(!history.empty(), "fixing history for bond index " << name_ << " is empty (fixing required as of "
+                                                                  << QuantLib::io::iso_date(fixingDate) << ")");
     QL_REQUIRE(isValidFixingDate(fixingDate), fixingDate << " is not a valid fixing date");
     QL_REQUIRE(history[fixingDate] != Null<Real>(),
                "missing bond price fixing for name " << name_ << " date " << QuantLib::io::iso_date(fixingDate));
