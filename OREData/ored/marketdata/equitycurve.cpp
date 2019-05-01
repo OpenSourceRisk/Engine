@@ -60,18 +60,18 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         Size quotesRead = 0;
 
         // in case of wild-card in config
-        bool wc_flag = false;  
-		bool found_regex = false;
+        bool wcFlag = false;  
+		bool foundRegex = false;
         regex reg1;
         
 		// check for regex string in config
         for (Size i = 0; i < config->fwdQuotes().size(); i++) {
-            found_regex |= config->fwdQuotes()[i].find("*") != string::npos;
+            foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
-        if (config->type() == EquityCurveConfig::Type::ForwardPrice && found_regex) {
+        if (config->type() == EquityCurveConfig::Type::ForwardPrice && foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
-            wc_flag = true;
+            wcFlag = true;
             string regexstr = config->fwdQuotes()[0];
             boost::replace_all(regexstr, "*", ".*");
             reg1 = regex(regexstr);
@@ -102,7 +102,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
                 boost::shared_ptr<EquityForwardQuote> q = boost::dynamic_pointer_cast<EquityForwardQuote>(md);
 
-                if (wc_flag) {
+                if (wcFlag) {
                     // is the quote 'in' the config? (also check expiry not before asof)
                     if (regex_match(q->name(), reg1) && asof <= q->expiryDate()) {
                         QL_REQUIRE(find(qt.begin(), qt.end(), q) == qt.end(), "duplicate market datum found for " << q->name());
@@ -152,7 +152,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
 
         // sort quotes and terms in case of wild-card
-        if (wc_flag){
+        if (wcFlag){
             QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
 
             // sort

@@ -57,36 +57,36 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         QL_REQUIRE(strikes.size() > 0, "No strikes defined");
 
         // check for wild cards
-        vector<string>::iterator expr_wc_it = find(expiries.begin(), expiries.end(), "*");
-        vector<string>::iterator strk_wc_it = find(strikes.begin(), strikes.end(), "*");
-        bool strikes_wc = false;
-        bool expiries_wc = false;
-        if (expr_wc_it != expiries.end()) {
+        vector<string>::iterator exprWcIt = find(expiries.begin(), expiries.end(), "*");
+        vector<string>::iterator strkWcIt = find(strikes.begin(), strikes.end(), "*");
+        bool strikesWc = false;
+        bool expiriesWc = false;
+        if (exprWcIt != expiries.end()) {
             QL_REQUIRE(expiries.size() == 1, "Wild card expiriy specified but more expiries also specified.")
-            expiries_wc = true;
+            expiriesWc = true;
         }
-        if (strk_wc_it != strikes.end()) {
+        if (strkWcIt != strikes.end()) {
             QL_REQUIRE(strikes.size() == 1, "Wild card strike specified but more strikes also specified.")
-            strikes_wc = true;
+            strikesWc = true;
         }
-        bool no_wild_card = (!strikes_wc && !expiries_wc) ? true : false;
+        bool noWildCard = (!strikesWc && !expiriesWc) ? true : false;
 
         // We store them all in a matrix, we start with all values negative and use
         // this to check if they have been set.
-        Matrix d_vols, sparse_vols, final_vols;
-        vector<vector<map<string, Real>>> wc_m;
-        map<string, map<string, Real>> wc_mat;
-        if (no_wild_card) {
-            d_vols = Matrix(strikes.size(), expiries.size(), -1.0);
+        Matrix dVols, sparseVols, finalVols;
+        vector<vector<map<string, Real>>> wcM;
+        map<string, map<string, Real>> wcMat;
+        if (noWildCard) {
+            dVols = Matrix(strikes.size(), expiries.size(), -1.0);
         }
 
         // In case of wild card we need the following granularity within the mkt data loop
-        bool strike_relevant = (strikes_wc) ? true : false;
-        bool expiry_relevant = (expiries_wc) ? true : false;
-        bool quote_relevant;
+        bool strikeRelevant = (strikesWc) ? true : false;
+        bool expiryRelevant = (expiriesWc) ? true : false;
+        bool quoteRelevant;
 
         // We loop over all market data, looking for quotes that match the configuration
-        Size quotes_added = 0;
+        Size quotesAdded = 0;
         for (auto& md : loader.loadQuotes(asof)) {
             // skip irrelevant data
             if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION) {
@@ -94,113 +94,109 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
                 if (q->eqName() == spec.curveConfigID() && q->ccy() == spec.ccy()) {
                     // no wild cards
-                    if (no_wild_card) {
+                    if (noWildCard) {
                         Size i = std::find(strikes.begin(), strikes.end(), q->strike()) - strikes.begin();
                         Size j = std::find(expiries.begin(), expiries.end(), q->expiry()) - expiries.begin();
 
                         if (i < strikes.size() && j < expiries.size()) {
-                            QL_REQUIRE(d_vols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
+                            QL_REQUIRE(dVols[i][j] < 0, "Error vol (" << spec << ") for " << strikes[i] << ", "
                                                                        << expiries[j] << " already set");
-                            d_vols[i][j] = q->quote()->value();
-                            quotes_added++;
+                            dVols[i][j] = q->quote()->value();
+                            quotesAdded++;
                         }
                     }
                     // some wild card
                     else {
-                        if (!expiries_wc) {
+                        if (!expiriesWc) {
                             vector<string>::iterator j = std::find(expiries.begin(), expiries.end(), q->expiry());
-                            expiry_relevant = (j != expiries.end()) ? true : false;
+                            expiryRelevant = (j != expiries.end()) ? true : false;
                         }
-                        if (!strikes_wc) {
+                        if (!strikesWc) {
                             vector<string>::iterator i = std::find(strikes.begin(), strikes.end(), q->strike());
-                            strike_relevant = (i != strikes.end()) ? true : false;
+                            strikeRelevant = (i != strikes.end()) ? true : false;
                         } else {
                             // todo - for now we will ignore ATMF quotes in case of strike wild card. ----
-                            strike_relevant = (q->strike() != "ATMF") ? true : false;
+                            strikeRelevant = (q->strike() != "ATMF") ? true : false;
                         }
-                        quote_relevant = (strike_relevant && expiry_relevant) ? true : false;
+                        quoteRelevant = (strikeRelevant && expiryRelevant) ? true : false;
 
                         // add quote to matrix map, if relevant
-                        if (quote_relevant) {
+                        if (quoteRelevant) {
                             // strike found?
-                            if (wc_mat.find(q->strike()) != wc_mat.end()) {
+                            if (wcMat.find(q->strike()) != wcMat.end()) {
                                 // add expiry
-                                QL_REQUIRE(wc_mat[q->strike()].find(q->expiry()) == wc_mat[q->strike()].end(),
+                                QL_REQUIRE(wcMat[q->strike()].find(q->expiry()) == wcMat[q->strike()].end(),
                                            "quote" << q->name() << "duplicate");
-                                wc_mat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
+                                wcMat[q->strike()].insert(make_pair(q->expiry(), q->quote()->value()));
                             } else {
                                 // add strike and expiry
-                                map<string, Real> tmp_inner;
-                                tmp_inner.insert(pair<string, Real>(q->expiry(), q->quote()->value()));
-                                wc_mat.insert(pair<string, map<string, Real>>(q->strike(), tmp_inner));
+                                map<string, Real> tmpInner;
+                                tmpInner.insert(pair<string, Real>(q->expiry(), q->quote()->value()));
+                                wcMat.insert(pair<string, map<string, Real>>(q->strike(), tmpInner));
                             }
-                            quotes_added++;
+                            quotesAdded++;
                         }
                     }
                 }
             }
         }
-        LOG("EquityVolatilityCurve: read " << quotes_added << " quotes.")
+        LOG("EquityVolatilityCurve: read " << quotesAdded << " quotes.")
 
         // Check loaded quotes + build vol matrix
-        pair<vector<Real>, vector<Date>> s_and_e;
-        if (no_wild_card) {
+        pair<vector<Real>, vector<Date>> sAndE;
+        if (noWildCard) {
             for (Size i = 0; i < strikes.size(); i++) {
                 for (Size j = 0; j < expiries.size(); j++) {
-                    QL_REQUIRE(d_vols[i][j] >= 0,
+                    QL_REQUIRE(dVols[i][j] >= 0,
                                "Error vol (" << spec << ") for " << strikes[i] << ", " << expiries[j] << " not set");
                 }
             }
-            final_vols = d_vols;
+            finalVols = dVols;
         } else {
             // no wild card for strikes
-            if (!strikes_wc) {
-                QL_REQUIRE(wc_mat.size() == strikes.size(), "Error vol (" << spec << ") all required strikes not set");
+            if (!strikesWc) {
+                QL_REQUIRE(wcMat.size() == strikes.size(), "Error vol (" << spec << ") all required strikes not set");
             }
             // no wild card for expiries
-            if (!expiries_wc) {
+            if (!expiriesWc) {
                 map<string, map<string, Real>>::iterator tmpItr;
-                for (tmpItr = wc_mat.begin(); tmpItr != wc_mat.end(); tmpItr++) {
+                for (tmpItr = wcMat.begin(); tmpItr != wcMat.end(); tmpItr++) {
                     QL_REQUIRE(tmpItr->second.size() == expiries.size(),
                                "Error vol (" << spec << ") all required expiries not set");
                 }
             }
 
             // Create matrix
-            int wc_mat_rows = wc_mat.size();
-            int wc_mat_cols;
-            vector<string> tmpLenVect;
-            for (map<string, map<string, Real>>::iterator itr = wc_mat.begin(); itr != wc_mat.end(); itr++) {
+            int wcMatRows = wcMat.size();
+            int wcMatCols;
+            set<string> tmpLenSet;
+            for (map<string, map<string, Real>>::iterator itr = wcMat.begin(); itr != wcMat.end(); itr++) {
                 for (map<string, Real>::iterator itr2 = itr->second.begin(); itr2 != itr->second.end(); itr2++) {
-                    vector<string>::iterator foundItr;
-                    foundItr = find(tmpLenVect.begin(), tmpLenVect.end(), itr2->first);
-                    if (foundItr == tmpLenVect.end()) {
-                        tmpLenVect.push_back(itr2->first); // if not found add
-                    }
+                    tmpLenSet.insert(itr2->first); // if not found add
                 }
             }
-            wc_mat_cols = tmpLenVect.size();
-            sparse_vols = Matrix(wc_mat_rows, wc_mat_cols, -1.0);
+            wcMatCols = tmpLenSet.size();
+            sparseVols = Matrix(wcMatRows, wcMatCols, -1.0);
 
-            // populate sparse_vols matrix with contents of wc_mat map. (make sure strikes and dates are ordered first!)
-            s_and_e = populateMatrixFromMap(
-                sparse_vols, wc_mat,
+            // populate sparse_vols matrix with contents of wc_mat map.
+            sAndE = populateMatrixFromMap(
+                sparseVols, wcMat,
                 asof); // Builds matrix and returns expiries (NOTE: this also takes care of dates vs periods)
-            QuantExt::fillIncompleteMatrix(sparse_vols, true, -1.0);
-            final_vols = sparse_vols;
+            QuantExt::fillIncompleteMatrix(sparseVols, true, -1.0);
+            finalVols = sparseVols;
         }
 
         // set up vols
-        if (final_vols.rows() == 1 && final_vols.columns() == 1) {
+        if (finalVols.rows() == 1 && finalVols.columns() == 1) {
             LOG("EquityVolCurve: Building BlackConstantVol");
             vol_ =
-                boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(asof, Calendar(), final_vols[0][0], dc));
+                boost::shared_ptr<BlackVolTermStructure>(new BlackConstantVol(asof, Calendar(), finalVols[0][0], dc));
         } else {
-            if (no_wild_card) {
-                vector<Date> dates(final_vols.columns());
+            if (noWildCard) {
+                vector<Date> dates(finalVols.columns());
                 vector<Real> strikesReal;
                 // expiries
-                for (Size i = 0; i < final_vols.columns(); i++) {
+                for (Size i = 0; i < finalVols.columns(); i++) {
                     Date tmpDate;
                     Period tmpPer;
                     bool tmpIsDate;
@@ -215,9 +211,9 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 // strikes + surface
                 if (!isSurface) {
                     LOG("EquityVolCurve: Building BlackVarianceCurve");
-                    QL_REQUIRE(final_vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
-                    vector<Volatility> atmVols(final_vols.begin(),
-                                               final_vols.end()); // does this give the vector?
+                    QL_REQUIRE(finalVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+                    vector<Volatility> atmVols(finalVols.begin(),
+                                               finalVols.end()); 
                     vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
                 } else {
                     LOG("EquityVolCurve: Building BlackVarianceSurface");
@@ -228,24 +224,24 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                     Calendar cal = NullCalendar(); // why do we need this?
 
                     // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
-                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, final_vols, dc);
+                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, dates, strikesReal, finalVols, dc);
                 }
 
             // some wild card
             } else {
                 if (!isSurface) {
                     LOG("EquityVolCurve: Building BlackVarianceCurve");
-                    QL_REQUIRE(final_vols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
-                    vector<Volatility> atmVols(final_vols.begin(), final_vols.end()); // does this give the vector?
-                    vol_ = boost::make_shared<BlackVarianceCurve>(asof, get<1>(s_and_e), atmVols, dc);
+                    QL_REQUIRE(finalVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+                    vector<Volatility> atmVols(finalVols.begin(), finalVols.end()); 
+                    vol_ = boost::make_shared<BlackVarianceCurve>(asof, get<1>(sAndE), atmVols, dc);
                 } else {
                     LOG("EquityVolCurve: Building BlackVarianceSurface");
 
                     Calendar cal = NullCalendar(); // why do we need this?
 
                     // This can get wrapped in a QuantExt::BlackVolatilityWithATM later on
-                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, get<1>(s_and_e), get<0>(s_and_e),
-                                                                    final_vols, dc);
+                    vol_ = boost::make_shared<BlackVarianceSurface>(asof, cal, get<1>(sAndE), get<0>(sAndE),
+                                                                    finalVols, dc);
                 }
             }
         }
@@ -259,35 +255,20 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
 pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp,
                                                                        Date asf) {
-    bool r_check, c_check;
     map<string, map<string, Real>>::iterator outItr;
     map<string, Real>::iterator inItr;
-    vector<string> tmpLenVect;
-    for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
-        for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
-            vector<string>::iterator foundItr;
-            foundItr = find(tmpLenVect.begin(), tmpLenVect.end(), inItr->first);
-            if (foundItr == tmpLenVect.end()) {
-                tmpLenVect.push_back(inItr->first); // if not found add
-            }
-        }
-    }
-    r_check = (mt.rows() == mp.size()) ? true : false;            // input matrix rows match map size
-    c_check = (mt.columns() == tmpLenVect.size()) ? true : false; // input matrix cols match map longest entry
-    QL_REQUIRE((r_check && c_check), "Matrix and map incompatible sizes.");
-
-    vector<Date> exprs;
-    vector<Real> strks;
-
-    // get unique strikes and expiries in map
+    bool isATM = false;
+    set<Date> exprsSet;
+    set<Real> strksSet;
+    // Get and sort unique strikes and expiries in map. To create matrix with ordered cols and rows.
     for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
         // strikes
         if (outItr->first == "ATMF" && mp.size() == 1) {
-            strks.push_back(9999); // make sure this worked. (no duplicates)
+            strksSet.insert(9999);
+            isATM = true;
         } else {
-            strks.push_back(stof(outItr->first)); // make sure this worked. (no duplicates)
+            strksSet.insert(parseReal(outItr->first));
         }
-
         // expiries
         for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
             Date tmpDate;
@@ -298,17 +279,17 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& m
                 tmpDate = WeekendsOnly().adjust(asf + tmpPer);
             QL_REQUIRE(tmpDate > asf,
                        "Equity Vol Curve cannot contain a vol quote for a past date (" << io::iso_date(tmpDate) << ")");
-            // if not found, add
-            vector<Date>::iterator found = find(exprs.begin(), exprs.end(), tmpDate);
-            if (found == exprs.end()) {
-                exprs.push_back(tmpDate);
-            }
+            exprsSet.insert(tmpDate);
         }
     }
+    QL_REQUIRE(mt.rows() == mp.size(), "Matrix and map incompatible number of rows");           // input matrix rows match map size
+    QL_REQUIRE(mt.columns() == exprsSet.size(), "Matrix and map incompatible number of  columns"); // input matrix cols match map unique expires
 
     // sort
-    sort(strks.begin(), strks.end());
-    sort(exprs.begin(), exprs.end());
+    vector<Real> strksVect(strksSet.begin(), strksSet.end());
+    vector<Date> exprsVect(exprsSet.begin(), exprsSet.end());
+    sort(strksVect.begin(), strksVect.end());
+    sort(exprsVect.begin(), exprsVect.end());
 
     // populate matrix
     ptrdiff_t rw;
@@ -317,11 +298,12 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& m
     vector<Date>::iterator cfind;
     for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
         // which row
-        if (outItr->first == "ATMF" && mp.size() == 1) {
+        if (isATM) {
             rw = 0;
         } else {
-            rfind = find(strks.begin(), strks.end(), stof(outItr->first));
-            rw = distance(strks.begin(), rfind);
+            Real a = parseReal(outItr->first);
+            rfind = find_if(strksVect.begin(), strksVect.end(), [a](Real b) { return close(a, b, QL_EPSILON); });
+            rw = distance(strksVect.begin(), rfind);
         }
 
         // which column
@@ -334,15 +316,15 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& m
             if (!tmpIsDate)
                 tmpDate = WeekendsOnly().adjust(asf + tmpPer);
 
-            cfind = find(exprs.begin(), exprs.end(), tmpDate);
-            cl = distance(exprs.begin(), cfind);
+            cfind = find(exprsVect.begin(), exprsVect.end(), tmpDate);
+            cl = distance(exprsVect.begin(), cfind);
 
             mt[rw][cl] = inItr->second;
         }
     }
 
     // return
-    return std::make_pair(strks, exprs);
+    return std::make_pair(strksVect, exprsVect);
 }
 } // namespace data
 } // namespace ore
