@@ -82,9 +82,9 @@ BOOST_AUTO_TEST_CASE(testParseCMSSpreadPriceQuoteCorrelationFromXml) {
     BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
     BOOST_CHECK_EQUAL(config.businessDayConvention(), BusinessDayConvention::Following);
 
-    vector<Period> p;
-    p.push_back(parsePeriod("1Y"));
-    p.push_back(parsePeriod("2Y"));
+    vector<string> p;
+    p.push_back("1Y");
+    p.push_back("2Y");
 
     BOOST_CHECK_EQUAL_COLLECTIONS(p.begin(), p.end(), config.optionTenors().begin(), config.optionTenors().end());
 }
@@ -129,9 +129,9 @@ BOOST_AUTO_TEST_CASE(testParseGenericCorrelationFromXml) {
     BOOST_CHECK_EQUAL(config.calendar().name(), "TARGET");
     BOOST_CHECK_EQUAL(config.businessDayConvention(), BusinessDayConvention::Following);
 
-    vector<Period> p;
-    p.push_back(parsePeriod("1Y"));
-    p.push_back(parsePeriod("2Y"));
+    vector<string> p;
+    p.push_back("1Y");
+    p.push_back("2Y");
 
     BOOST_CHECK_EQUAL_COLLECTIONS(p.begin(), p.end(), config.optionTenors().begin(), config.optionTenors().end());
 }

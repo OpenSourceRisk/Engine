@@ -658,6 +658,7 @@
     <ClCompile Include="discountratiomodifiedcurve.cpp" />
     <ClCompile Include="dynamicblackvoltermstructure.cpp" />
     <ClCompile Include="dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="fillemptymatrix.cpp" />
     <ClCompile Include="fxvolsmile.cpp" />
     <ClCompile Include="index.cpp" />
     <ClCompile Include="interpolatedyoycapfloortermpricesurface.cpp" />
@@ -670,6 +671,7 @@
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
+    <ClCompile Include="strippedoptionletadapter.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />

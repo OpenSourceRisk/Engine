@@ -22,6 +22,7 @@ discountingcommodityforwardengine.cpp
 discountratiomodifiedcurve.cpp
 dynamicblackvoltermstructure.cpp
 dynamicswaptionvolmatrix.cpp
+fillemptymatrix.cpp
 fxvolsmile.cpp
 index.cpp
 interpolatedyoycapfloortermpricesurface.cpp
@@ -34,6 +35,7 @@ qle_calendars.cpp
 ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
+strippedoptionletadapter.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp

@@ -58,6 +58,7 @@ public:
     const std::string& dayCountId() const { return dayCountId_; }
     const std::string& interpolationMethod() const { return interpolationMethod_; }
     bool extrapolation() const { return extrapolation_; }
+    const vector<string>& fwdQuotes() { return fwdQuotes_; }
     //@}
 
     //! \name Setters
@@ -70,6 +71,7 @@ public:
     //@}
 
 private:
+    vector<string> fwdQuotes_;
     std::string currency_;
     std::string commoditySpotQuoteId_;
     std::string dayCountId_;

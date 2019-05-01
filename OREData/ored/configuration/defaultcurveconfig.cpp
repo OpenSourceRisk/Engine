@@ -32,7 +32,7 @@ DefaultCurveConfig::DefaultCurveConfig(const string& curveID, const string& curv
                                        const DayCounter& dayCounter, const string& conventionID,
                                        const std::vector<std::pair<std::string, bool>>& cdsQuotes, bool extrapolation,
                                        const string& benchmarkCurveID, const string& sourceCurveID,
-                                       const std::vector<Period>& pillars, const Calendar& calendar, const Size spotLag,
+                                       const std::vector<string>& pillars, const Calendar& calendar, const Size spotLag,
                                        const Date& startDate)
     : CurveConfig(curveID, curveDescription), cdsQuotes_(cdsQuotes), currency_(currency), type_(type),
       discountCurveID_(discountCurveID), recoveryRateQuote_(recoveryRateQuote), dayCounter_(dayCounter),
@@ -78,7 +78,7 @@ void DefaultCurveConfig::fromXML(XMLNode* node) {
     if (type_ == Type::Benchmark) {
         benchmarkCurveID_ = XMLUtils::getChildValue(node, "BenchmarkCurve", true);
         sourceCurveID_ = XMLUtils::getChildValue(node, "SourceCurve", true);
-        pillars_ = XMLUtils::getChildrenValuesAsPeriods(node, "Pillars", true);
+        pillars_ = XMLUtils::getChildrenValuesAsStrings(node, "Pillars", true);
         spotLag_ = parseInteger(XMLUtils::getChildValue(node, "SpotLag", true));
         calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
         discountCurveID_ = conventionID_ = recoveryRateQuote_ = "";
