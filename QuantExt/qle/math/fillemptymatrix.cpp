@@ -26,20 +26,20 @@ using namespace std;
 static void fillMatrixImpl(Matrix& mat, Real blank) {
 
     // define entire axis
-    vector<Real> x_axis;
+    vector<Real> xAxis;
     for (unsigned int i = 0; i < mat.columns(); i++) {
-        x_axis.push_back(i);
+        xAxis.push_back(i);
     }
 
     // loop over rows and interpolate
     for (Size i = 0; i < mat.rows(); i++) {
         vector<Real> y;                        // values for the expiries we have
         vector<Real> x;                        // the required 'tics' on axis to interpolate
-        vector<Real> y_desired(x_axis.size()); // interpolated y over defined x_axis
+        vector<Real> yDesired(xAxis.size()); // interpolated y over defined x_axis
 
         // flat extrapolate short end
         if (mat[i][0] == blank) {
-            int pos1 = mat.columns();
+            Size pos1 = mat.columns();
             for (Size j = 1; j < mat.columns(); j++) {
                 if (mat[i][j] != blank) {
                     pos1 = j;
@@ -47,7 +47,7 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
                 }
             }
             QL_REQUIRE(pos1 < mat.columns(), "Matrix has empty line.");
-            for (int j = 0; j < pos1; j++) {
+            for (Size j = 0; j < pos1; j++) {
                 mat[i][j] = mat[i][pos1];
             }
         }
@@ -76,11 +76,11 @@ static void fillMatrixImpl(Matrix& mat, Real blank) {
 
         // interpolate over entire x_axis
         Interpolation f = LinearInterpolation(x.begin(), x.end(), y.begin());
-        std::transform(x_axis.begin(), x_axis.end(), y_desired.begin(), f);
+        std::transform(xAxis.begin(), xAxis.end(), yDesired.begin(), f);
 
         // set row in mat
         for (Size j = 0; j < mat.columns(); j++) {
-            mat[i][j] = y_desired[j];
+            mat[i][j] = yDesired[j];
         }
     }
 }
@@ -89,22 +89,22 @@ void fillIncompleteMatrix(Matrix& mat, bool interpRows = true, Real blank = QL_N
     QL_REQUIRE(mat.columns() > 0 && mat.rows() > 0, "Matrix has no elements.");
 
     // check if already complete
-    bool is_full = true;
+    bool isFull = true;
     for (Size i = 0; i < mat.rows(); i++) {
         for (Size j = 0; j < mat.columns(); j++) {
             if (mat[i][j] == blank) {
-                is_full = false;
+                isFull = false;
             }
-            if (!is_full) {
+            if (!isFull) {
                 break;
             }
         }
-        if (!is_full) {
+        if (!isFull) {
             break;
         }
     }
 
-    if (!is_full) {
+    if (!isFull) {
         if (mat.columns() == 1 && mat.rows() == 1) {
            QL_FAIL("1 X 1 empty matrix given to fill.");    // !is_full and 1 X 1 matrix.
         } 
