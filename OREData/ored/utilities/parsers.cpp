@@ -246,8 +246,6 @@ Calendar parseCalendar(const string& s) {
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"RON", TARGET()},
-                                      {"ILS", TARGET()},
                                       {"KWD", TARGET()},
                                       {"TND", TARGET()},
                                       {"KZT", TARGET()},
