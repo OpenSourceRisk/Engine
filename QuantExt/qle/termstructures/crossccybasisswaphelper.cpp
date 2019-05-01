@@ -37,11 +37,14 @@ CrossCcyBasisSwapHelper::CrossCcyBasisSwapHelper(const Handle<Quote>& spreadQuot
                                                  const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
                                                  const Handle<YieldTermStructure>& flatDiscountCurve,
                                                  const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom,
-                                                 bool flatIsDomestic)
+                                                 bool flatIsDomestic, boost::optional<Period> flatTenor,
+                                                 boost::optional<Period> spreadTenor)
     : RelativeDateRateHelper(spreadQuote), spotFX_(spotFX), settlementDays_(settlementDays),
       settlementCalendar_(settlementCalendar), swapTenor_(swapTenor), rollConvention_(rollConvention),
       flatIndex_(flatIndex), spreadIndex_(spreadIndex), flatDiscountCurve_(flatDiscountCurve),
-      spreadDiscountCurve_(spreadDiscountCurve), eom_(eom), flatIsDomestic_(flatIsDomestic) {
+      spreadDiscountCurve_(spreadDiscountCurve), eom_(eom), flatIsDomestic_(flatIsDomestic),
+      flatTenor_(flatTenor ? *flatTenor : flatIndex_->tenor()), 
+      spreadTenor_(spreadTenor ? *spreadTenor : spreadIndex_->tenor()) {
 
     flatLegCurrency_ = flatIndex_->currency();
     spreadLegCurrency_ = spreadIndex_->currency();
@@ -91,20 +94,18 @@ void CrossCcyBasisSwapHelper::initializeDates() {
     Date settlementDate = settlementCalendar_.advance(refDate, settlementDays_, Days);
     Date maturityDate = settlementDate + swapTenor_;
 
-    Period flatLegTenor = flatIndex_->tenor();
     Schedule flatLegSchedule = MakeSchedule()
                                    .from(settlementDate)
                                    .to(maturityDate)
-                                   .withTenor(flatLegTenor)
+                                   .withTenor(flatTenor_)
                                    .withCalendar(settlementCalendar_)
                                    .withConvention(rollConvention_)
                                    .endOfMonth(eom_);
 
-    Period spreadLegTenor = spreadIndex_->tenor();
     Schedule spreadLegSchedule = MakeSchedule()
                                      .from(settlementDate)
                                      .to(maturityDate)
-                                     .withTenor(spreadLegTenor)
+                                     .withTenor(spreadTenor_)
                                      .withCalendar(settlementCalendar_)
                                      .withConvention(rollConvention_)
                                      .endOfMonth(eom_);

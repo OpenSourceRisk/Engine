@@ -152,7 +152,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
 
         // Non-ATM cap/floor volatility surface
         boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol =
-            boost::make_shared<QuantExt::CapFloorTermVolSurface>(0, config->calendar(), config->businessDayConvention(),
+            boost::make_shared<QuantExt::CapFloorTermVolSurface>(iborIndex->fixingDays(), config->calendar(), config->businessDayConvention(),
                                                                  tenors, strikes, vols, config->dayCounter(),
                                                                  interpolationMethod);
 
@@ -165,7 +165,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                                                              discountCurve, quoteVolatilityType, shift, true, Normal,
                                                              0.0, minVol);
         boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
-            boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
+            boost::make_shared<DatedStrippedOptionlet>(capVol->referenceDate(), optionletStripper);
         capletVol_ =
             boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
         capletVol_->enableExtrapolation(config->extrapolate());
@@ -181,8 +181,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             }
 
             boost::shared_ptr<QuantExt::CapFloorTermVolCurve> atmCapVol =
-                boost::make_shared<QuantExt::CapFloorTermVolCurve>(
-                    0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
+                boost::make_shared<QuantExt::CapFloorTermVolCurve>(iborIndex->fixingDays(),
+                    config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
             Handle<QuantExt::CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
             boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper =
                 boost::make_shared<QuantExt::OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType,
