@@ -74,7 +74,6 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         // We store them all in a matrix, we start with all values negative and use
         // this to check if they have been set.
         Matrix dVols, sparseVols, finalVols;
-        vector<vector<map<string, Real>>> wcM;
         map<string, map<string, Real>> wcMat;
         if (noWildCard) {
             dVols = Matrix(strikes.size(), expiries.size(), -1.0);
@@ -211,7 +210,7 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 // strikes + surface
                 if (!isSurface) {
                     LOG("EquityVolCurve: Building BlackVarianceCurve");
-                    QL_REQUIRE(finalVols.rows() == 1, "Matrix error, should only have 1 row (ATMF)");
+                    QL_REQUIRE(finalVols.rows() == 1 && wcMat.begin()->first == "ATMF", "Matrix error, should only have 1 row (ATMF)");
                     vector<Volatility> atmVols(finalVols.begin(), finalVols.end());
                     vol_ = boost::make_shared<BlackVarianceCurve>(asof, dates, atmVols, dc);
                 } else {
@@ -254,22 +253,16 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
 pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Real>>& mp,
                                                                        Date asf) {
-    map<string, map<string, Real>>::iterator outItr;
-    map<string, Real>::iterator inItr;
-    bool isATM = false;
+
     set<Date> exprsSet;
-    set<Real> strksSet;
+    set<string> strksSet;
     // Get and sort unique strikes and expiries in map. To create matrix with ordered cols and rows.
-    for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
+    for (auto outItr = mp.begin(); outItr != mp.end(); outItr++) {
         // strikes
-        if (outItr->first == "ATMF" && mp.size() == 1) {
-            strksSet.insert(9999);
-            isATM = true;
-        } else {
-            strksSet.insert(parseReal(outItr->first));
-        }
+        strksSet.insert(outItr->first);
+
         // expiries
-        for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
+        for (auto inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
             Date tmpDate;
             Period tmpPer;
             bool tmpIsDate;
@@ -287,28 +280,23 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& m
                "Matrix and map incompatible number of  columns"); // input matrix cols match map unique expires
 
     // sort
-    vector<Real> strksVect(strksSet.begin(), strksSet.end());
+    vector<string> strksVect(strksSet.begin(), strksSet.end());
     vector<Date> exprsVect(exprsSet.begin(), exprsSet.end());
-    sort(strksVect.begin(), strksVect.end());
+    sort(strksVect.begin(), strksVect.end(), [](const string& a, const string& b) { return parseReal(a) < parseReal(b); });
     sort(exprsVect.begin(), exprsVect.end());
 
     // populate matrix
     ptrdiff_t rw;
     ptrdiff_t cl;
-    vector<Real>::iterator rfind;
+    vector<string>::iterator rfind;
     vector<Date>::iterator cfind;
-    for (outItr = mp.begin(); outItr != mp.end(); outItr++) {
+    for (auto outItr = mp.begin(); outItr != mp.end(); outItr++) {
         // which row
-        if (isATM) {
-            rw = 0;
-        } else {
-            Real a = parseReal(outItr->first);
-            rfind = find_if(strksVect.begin(), strksVect.end(), [a](Real b) { return close(a, b, QL_EPSILON); });
-            rw = distance(strksVect.begin(), rfind);
-        }
+        rfind = find(strksVect.begin(), strksVect.end(), outItr->first);
+        rw = distance(strksVect.begin(), rfind);
 
         // which column
-        for (inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
+        for (auto inItr = outItr->second.begin(); inItr != outItr->second.end(); inItr++) {
             // date/period string to date obj
             Date tmpDate;
             Period tmpPer;
@@ -324,8 +312,15 @@ pair<vector<Real>, vector<Date>> EquityVolCurve::populateMatrixFromMap(Matrix& m
         }
     }
 
-    // return
-    return std::make_pair(strksVect, exprsVect);
+    // return {strikes, expiries} - strikes are Reals.
+    vector<Real> retStrks;
+    if (mp.begin()->first == "ATMF" && mp.size() == 1) {
+        retStrks.push_back(QL_NULL_REAL);
+    } else {
+        for_each(strksVect.begin(), strksVect.end(), [&retStrks](const string &a) { retStrks.push_back(parseReal(a)); });
+    }
+
+    return std::make_pair(retStrks, exprsVect);
 }
 } // namespace data
 } // namespace ore
