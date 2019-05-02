@@ -152,7 +152,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
 
         // Non-ATM cap/floor volatility surface
         boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol =
-            boost::make_shared<QuantExt::CapFloorTermVolSurface>(iborIndex->fixingDays(), config->calendar(), config->businessDayConvention(),
+            boost::make_shared<QuantExt::CapFloorTermVolSurface>(0, config->calendar(), config->businessDayConvention(),
                                                                  tenors, strikes, vols, config->dayCounter(),
                                                                  interpolationMethod);
 
@@ -165,7 +165,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                                                              discountCurve, quoteVolatilityType, shift, true, Normal,
                                                              0.0, minVol);
         boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
-            boost::make_shared<DatedStrippedOptionlet>(capVol->referenceDate(), optionletStripper);
+            boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
         capletVol_ =
             boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
         capletVol_->enableExtrapolation(config->extrapolate());
