@@ -101,6 +101,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSimulateSwapVols(false);
     setSimulateYieldVols(false);
     setSimulateCapFloorVols(false);
+    setSimulateYoYInflationCapFloorVols(false);
     setSimulateSurvivalProbabilities(false);
     setSimulateRecoveryRates(false);
     setSimulateCdsVols(false);
@@ -115,6 +116,7 @@ void ScenarioSimMarketParameters::setDefaults() {
 
     // Set default tenors (don't know why but keep it as is)
     capFloorVolExpiries_[""] = vector<Period>();
+    yoyInflationCapFloorVolExpiries_[""] = vector<Period>();
     defaultTenors_[""] = vector<Period>();
     equityDividendTenors_[""] = vector<Period>();
     zeroInflationTenors_[""] = vector<Period>();
@@ -128,6 +130,7 @@ void ScenarioSimMarketParameters::setDefaults() {
     cdsVolDayCounters_[""] = "A365";
     equityVolDayCounters_[""] = "A365";
     capFloorVolDayCounters_[""] = "A365";
+    yoyInflationCapFloorVolDayCounters_[""] = "A365";
     defaultCurveDayCounters_[""] = "A365";
     baseCorrelationDayCounters_[""] = "A365";
     zeroInflationDayCounters_[""] = "A365";
@@ -154,6 +157,10 @@ const string& ScenarioSimMarketParameters::yieldCurveDayCounter(const string& ke
 
 const vector<Period>& ScenarioSimMarketParameters::capFloorVolExpiries(const string& key) const {
     return returnTenors(capFloorVolExpiries_, key);
+}
+
+const vector<Period>& ScenarioSimMarketParameters::yoyInflationCapFloorVolExpiries(const string& key) const {
+    return returnTenors(yoyInflationCapFloorVolExpiries_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::defaultTenors(const string& key) const {
@@ -190,6 +197,10 @@ const string& ScenarioSimMarketParameters::equityVolDayCounter(const string& key
 
 const string& ScenarioSimMarketParameters::capFloorVolDayCounter(const string& key) const {
     return returnDayCounter(capFloorVolDayCounters_, key);
+}
+
+const string& ScenarioSimMarketParameters::yoyInflationCapFloorVolDayCounter(const string& key) const {
+    return returnDayCounter(yoyInflationCapFloorVolDayCounters_, key);
 }
 
 const vector<Period>& ScenarioSimMarketParameters::equityDividendTenors(const string& key) const {
@@ -377,6 +388,10 @@ void ScenarioSimMarketParameters::setCapFloorVolCcys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::OptionletVolatility, names);
 }
 
+void ScenarioSimMarketParameters::setYoYInflationCapFloorNames(vector<string> names) {
+    addParamsName(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, names);
+}
+
 void ScenarioSimMarketParameters::setDefaultNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::SurvivalProbability, names);
     setRecoveryRates(names);
@@ -457,6 +472,10 @@ void ScenarioSimMarketParameters::setSimulateYieldVols(bool simulate) {
 
 void ScenarioSimMarketParameters::setSimulateCapFloorVols(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::OptionletVolatility, simulate);
+}
+
+void ScenarioSimMarketParameters::setSimulateYoYInflationCapFloorVols(bool simulate) {
+    setParamsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, simulate);
 }
 
 void ScenarioSimMarketParameters::setSimulateSurvivalProbabilities(bool simulate) {
@@ -778,6 +797,29 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         }
         QL_REQUIRE(capFloorVolDayCounters_.find("") != capFloorVolDayCounters_.end(),
                    "default daycounter is not set for capFloorVolSurfaces");
+    }
+
+    DLOG("Loading YoYInflationCapFloorVolatilities");
+    nodeChild = XMLUtils::getChildNode(node, "YoYInflationCapFloorVolatilities");
+    if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
+        setSimulateYoYInflationCapFloorVols(false);
+        XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
+        if (yoyCapVolSimNode)
+            setSimulateYoYInflationCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode)));
+        yoyInflationCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
+        yoyInflationCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
+        setYoYInflationCapFloorNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+        yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "ccy");
+                yoyInflationCapFloorVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(yoyInflationCapFloorVolDayCounters_.find("") != yoyInflationCapFloorVolDayCounters_.end(),
+            "default daycounter is not set for YoYInflationCapFloorVolSurfaces");
     }
 
     DLOG("Loading DefaultCurves Rates");

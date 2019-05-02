@@ -114,6 +114,7 @@ termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
+termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
@@ -310,6 +311,7 @@ termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
+termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp

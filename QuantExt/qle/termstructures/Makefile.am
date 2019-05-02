@@ -21,6 +21,7 @@ libTermStructures_la_SOURCES = \
 	datedstrippedoptionlet.cpp \
 	datedstrippedoptionletadapter.cpp \
 	dynamicoptionletvolatilitystructure.cpp \
+	dynamicyoyoptionletvolatilitystructure.cpp \
 	optionletstripper.cpp \
 	optionletstripper1.cpp \
 	optionletstripper2.cpp \
@@ -70,6 +71,7 @@ this_include_HEADERS = \
 	datedstrippedoptionletbase.hpp \
 	dynamicoptionletvolatilitystructure.hpp \
 	dynamicstype.hpp \
+	dynamicyoyoptionletvolatilitystructure.hpp \
 	optionletstripper.hpp \
 	optionletstripper1.hpp \
 	optionletstripper2.hpp \
