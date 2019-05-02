@@ -181,8 +181,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             }
 
             boost::shared_ptr<QuantExt::CapFloorTermVolCurve> atmCapVol =
-                boost::make_shared<QuantExt::CapFloorTermVolCurve>(iborIndex->fixingDays(),
-                    config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
+                boost::make_shared<QuantExt::CapFloorTermVolCurve>(
+                    0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
             Handle<QuantExt::CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
             boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper =
                 boost::make_shared<QuantExt::OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType,
