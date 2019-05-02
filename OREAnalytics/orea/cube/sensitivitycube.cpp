@@ -148,8 +148,8 @@ void SensitivityCube::initialise() {
 
     // Add each cross factor to crossFactors with index of the two contributing factors
     for (auto cf : crossFactors) {
-        FactorData id_1 = index(cf.first.first, downFactors_);
-        FactorData id_2 = index(cf.first.second, downFactors_);
+        FactorData id_1 = index(cf.first.first, upFactors_.left);
+        FactorData id_2 = index(cf.first.second, upFactors_.left);
         crossFactors_[cf.first] = make_tuple(id_1, id_2, cf.second);
     }
 
