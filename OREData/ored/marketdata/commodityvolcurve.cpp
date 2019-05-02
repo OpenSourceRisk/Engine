@@ -208,9 +208,9 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
     // wild cards?
     vector<string>::iterator exprWcIt = find(config.expiries().begin(), config.expiries().end(), "*");
     vector<string>::iterator strkWcIt = find(config.strikes().begin(), config.strikes().end(), "*");
-    bool expWc = (exprWcIt != config.expiries().end()) ? true : false;
-    bool strkWc = (strkWcIt != config.strikes().end()) ? true : false;
-    bool wildCard = (expWc || strkWc) ? true : false;
+    bool expWc = exprWcIt != config.expiries().end();
+    bool strkWc = strkWcIt != config.strikes().end();
+    bool wildCard = expWc || strkWc;
     if (expWc) {
         QL_REQUIRE(config.expiries().size() == 1, "Wild card expiry specified but more expiries also specified.");
     }
@@ -221,8 +221,8 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
     // Loop over all market datums and find the quotes in the config
     // Return error if there are duplicate quotes (this is why we do not use loader.get() method)
     bool relevantQuote = false;
-    bool strikeRelevant = (strkWc) ? true : false;
-    bool expiryRelevant = (expWc) ? true : false;
+    bool strikeRelevant = strkWc;
+    bool expiryRelevant = expWc;
     Size quotesAdded = 0;
     Calendar calendar = parseCalendar(config.calendar());
     DayCounter dayCounter = parseDayCounter(config.dayCounter());
@@ -235,7 +235,7 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
             // no wild cards
             if (!wildCard) {
                 it = find(config.quotes().begin(), config.quotes().end(), q->name());
-                relevantQuote = (it != config.quotes().end()) ? true : false;
+                relevantQuote = it != config.quotes().end();
                 if (relevantQuote) {
                     // Convert expiry to date if necessary
                     Date aDate;
@@ -271,19 +271,19 @@ void CommodityVolCurve::buildVolatilitySurface(const Date& asof, CommodityVolati
                 if (!expWc) {
                     // strike only wild card
                     it = find(config.expiries().begin(), config.expiries().end(), q->expiry());
-                    expiryRelevant = (it != config.expiries().end()) ? true : false;
+                    expiryRelevant = it != config.expiries().end();
                 } else {
                     expiryRelevant = true;
                 }
                 if (!strkWc) {
                     // expiry only wild card
                     it = find(config.strikes().begin(), config.strikes().end(), q->strike());
-                    strikeRelevant = (it != config.strikes().end()) ? true : false;
+                    strikeRelevant = it != config.strikes().end();
                 } else {
                     // for now we ignore ATMF quotes
-                    strikeRelevant = (q->strike() != "ATMF") ? true : false;
+                    strikeRelevant = q->strike() != "ATMF";
                 }
-                relevantQuote = (strikeRelevant && expiryRelevant) ? true : false;
+                relevantQuote = strikeRelevant && expiryRelevant;
 
                 if (relevantQuote) {
                     // strike found?
