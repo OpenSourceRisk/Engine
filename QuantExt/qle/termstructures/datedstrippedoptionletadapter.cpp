@@ -39,7 +39,7 @@ DatedStrippedOptionletAdapter::DatedStrippedOptionletAdapter(const boost::shared
 }
 
 boost::shared_ptr<SmileSection> DatedStrippedOptionletAdapter::smileSectionImpl(Time t) const {
-    QL_FAIL("Smile section not yet implemented for DatedStrippedOptionletAdapter");
+    
     // Arbitrarily choose the first row of strikes for the smile section independent variable
     // Generally a reasonable choice since:
     // 1) OptionletStripper1: all strike rows are the same
