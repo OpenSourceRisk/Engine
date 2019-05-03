@@ -40,7 +40,7 @@ namespace {
 struct CommonVars {
     // Constructor
     CommonVars()
-        : referenceDate(5, Feb, 2016), calendar(TARGET()), bdc(Following),
+        : referenceDate(5, Feb, 2016), settlementDays(0), calendar(TARGET()), bdc(Following),
           dayCounter(Actual365Fixed()), accuracy(1.0e-6), maxIter(100) {
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
@@ -52,6 +52,7 @@ struct CommonVars {
     Date referenceDate;
 
     // Some common conventions for our cap floor curve and surface construction
+    Natural settlementDays;
     Calendar calendar;
     BusinessDayConvention bdc;
     DayCounter dayCounter;
@@ -79,7 +80,7 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStripping) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -102,7 +103,8 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStripping) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -130,7 +132,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
@@ -153,7 +155,8 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStripping) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -181,7 +184,7 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -205,7 +208,8 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStripping) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -233,7 +237,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
@@ -257,7 +261,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStripping) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -285,7 +290,7 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
@@ -309,7 +314,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStripping) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -337,13 +343,13 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
     // EUR cap floor normal ATM curve
     Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
-        vars.iborIndex->fixingDays(), vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
 
     // Create Normal stripped optionlet surface
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper = boost::shared_ptr<OptionletStripper1>(
@@ -372,7 +378,8 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -400,7 +407,8 @@ BOOST_AUTO_TEST_CASE(testUsualNormalStrippingWithAtm) {
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
         // Need a temp BlackCapFloorEngine for ATM strike to be calculated (bad - should be fixed in QL)
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>())
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
                   .withPricingEngine(tempEngine);
 
         cap->setPricingEngine(engine);
@@ -428,13 +436,13 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_2,
                                                              vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
     Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
-        vars.iborIndex->fixingDays(), vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_2, vars.dayCounter));
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_2, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper = boost::shared_ptr<OptionletStripper1>(
@@ -463,7 +471,8 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -486,7 +495,8 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>())
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
                   .withPricingEngine(engine);
         Real strippedPrice = cap->NPV();
 
@@ -505,20 +515,20 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
+BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAt) {
     BOOST_TEST_MESSAGE("Testing stripping of normal capfloor vols with ATM to give shifted lognormal...");
 
     CommonVars vars;
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
     // EUR cap floor normal ATM curve
     Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
-        vars.iborIndex->fixingDays(), vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.nAtmVols, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
@@ -548,7 +558,8 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -571,7 +582,8 @@ BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
     // ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>())
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
                   .withPricingEngine(engine);
         Real strippedPrice = cap->NPV();
 
@@ -597,13 +609,13 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
     Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
-        vars.iborIndex->fixingDays(), vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
 
     // Create normal stripped optionlet surface
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
@@ -633,7 +645,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -657,7 +670,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToNormalStrippingWithAtm) {
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>())
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
                   .withPricingEngine(flatEngine);
         Real flatPrice = cap->NPV();
 
@@ -682,13 +696,13 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
 
     // EUR cap floor shifted lognormal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.slnVols_1,
                                                              vars.dayCounter);
 
     // EUR cap floor shifted lognormal ATM curve
     Handle<CapFloorTermVolCurve> atmVolCurve(boost::make_shared<CapFloorTermVolCurve>(
-        vars.iborIndex->fixingDays(), vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
+        vars.settlementDays, vars.calendar, vars.bdc, vars.vols.atmTenors, vars.vols.slnAtmVols_1, vars.dayCounter));
 
     // Create shifted lognormal stripped optionlet surface
     boost::shared_ptr<QuantExt::OptionletStripper1> tempStripper =
@@ -718,7 +732,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
     // Non-ATM pillar points: check flat cap/foor surface price = stripped optionlet surface price
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < vars.vols.strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], vars.iborIndex, vars.vols.strikes[j],
+                               vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
@@ -742,7 +757,8 @@ BOOST_AUTO_TEST_CASE(testShiftedLognormalToShiftedLognormalStrippingWithAtm) {
     for (Size i = 0; i < vars.vols.atmTenors.size(); ++i) {
         quote.linkTo(boost::make_shared<SimpleQuote>(vars.vols.slnAtmVols_1[i]));
         // Null strike => cap is set up with ATM strike
-        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>())
+        cap = MakeCapFloor(CapFloor::Cap, vars.vols.atmTenors[i], vars.iborIndex, Null<Rate>(),
+                           vars.settlementDays * Days)
                   .withPricingEngine(flatEngine);
         Real flatPrice = cap->NPV();
 
@@ -767,7 +783,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalGivesError) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, vars.vols.strikes, vars.vols.nVols,
                                                              vars.dayCounter);
 
@@ -794,7 +810,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalModifiedGivesError) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
@@ -826,7 +842,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
 
     // EUR cap floor normal volatility surface
     boost::shared_ptr<QuantExt::CapFloorTermVolSurface> volSurface =
-        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.iborIndex->fixingDays(), vars.calendar, vars.bdc,
+        boost::make_shared<QuantExt::CapFloorTermVolSurface>(vars.settlementDays, vars.calendar, vars.bdc,
                                                              vars.vols.tenors, strikes, vols, vars.dayCounter);
 
     // Create shifted lognormal stripped optionlet surface and Black engine
@@ -848,7 +864,7 @@ BOOST_AUTO_TEST_CASE(testNormalToLognormalWithPositiveForwards) {
 
     for (Size i = 0; i < vars.vols.tenors.size(); ++i) {
         for (Size j = 0; j < strikes.size(); ++j) {
-            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], iborIndex, strikes[j]);
+            cap = MakeCapFloor(CapFloor::Cap, vars.vols.tenors[i], iborIndex, strikes[j], vars.settlementDays * Days);
 
             cap->setPricingEngine(engine);
             Real strippedPrice = cap->NPV();
