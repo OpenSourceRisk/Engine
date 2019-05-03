@@ -95,6 +95,20 @@ public:
     }
 };
 
+// Specialise for MXN-TIIE. If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
+// with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
+template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
+        if (p == 28 * Days) {
+            return boost::make_shared<MXNTiie>(4 * Weeks, h);
+        } else {
+            return boost::make_shared<MXNTiie>(p, h);
+        }
+    }
+};
+
 template <class T> class IborIndexParserOIS : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
