@@ -34,7 +34,8 @@ swaption.cpp
 testsuite.cpp
 todaysmarket.cpp
 xmlmanipulation.cpp
-yieldcurve.cpp)
+yieldcurve.cpp
+zerocouponswap.cpp)
 
 add_executable(ored-test-suite ${OREData-Test_SRC})
 target_link_libraries(ored-test-suite ${ORED_LIB_NAME})
