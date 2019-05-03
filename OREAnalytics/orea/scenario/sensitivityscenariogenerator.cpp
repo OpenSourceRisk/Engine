@@ -1851,13 +1851,16 @@ void SensitivityScenarioGenerator::generateCorrelationScenarios(bool up) {
             Date expiry = asof + simMarketData_->correlationExpiries()[j];
             corrExpiryTimes[j] = dc.yearFraction(asof, expiry);
         }
+        bool valid = true;
         for (Size j = 0; j < n_c_exp; ++j) {
             for (Size k = 0; k < n_c_strikes; ++k) {
                 Size idx = j * n_c_strikes + k;
                 RiskFactorKey key(RiskFactorKey::KeyType::Correlation, label, idx);
-                corrData[j][k] = baseScenario_->get(key);
+                valid = valid && tryGetBaseScenarioValue(baseScenario_, key, corrData[j][k], continueOnError_);
             }
         }
+        if (!valid)
+            continue;
 
         // cache tenor times
         for (Size j = 0; j < shiftExpiryTimes.size(); ++j)
@@ -1929,7 +1932,6 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
 
         boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
 
-        scenarioDescriptions_.push_back(securitySpreadScenarioDescription(bond, up));
         RiskFactorKey key(RiskFactorKey::KeyType::SecuritySpread, bond);
         Real base_spread;
         if (!tryGetBaseScenarioValue(baseScenario_, key, base_spread, continueOnError_))
@@ -1937,6 +1939,7 @@ void SensitivityScenarioGenerator::generateSecuritySpreadScenarios(bool up) {
         Real newSpread = relShift ? base_spread * (1.0 + size) : (base_spread + size);
         // Real newRate = up ? rate * (1.0 + data.shiftSize) : rate * (1.0 - data.shiftSize);
         scenario->add(key, newSpread);
+        scenarioDescriptions_.push_back(securitySpreadScenarioDescription(bond, up));
 
         // Store absolute shift size
         if (up)
