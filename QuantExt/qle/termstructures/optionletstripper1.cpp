@@ -120,11 +120,9 @@ void OptionletStripper1::performCalculations() const {
         Real previousCapFloorPrice = 0.0;
         for (Size i = 0; i < nOptionletTenors_; ++i) {
 
-            // Don't rely on conversion from Period to Date here because it can give the wrong answer if the lengths are in units
-            // of days as they are for MXN caps/floors. Just use the end date of the cap/floor directly. 
-            capFloorVols_[i][j] = termVolSurface_->volatility(optionletPaymentDates_[i], strikes[j], true);
+            capFloorVols_[i][j] = termVolSurface_->volatility(capFloorLengths_[i], strikes[j], true);
             volQuotes_[i][j]->setValue(capFloorVols_[i][j]);
-            capFloors_[i][j] = MakeCapFloor(capFloorType, capFloorLengths_[i], iborIndex_, strikes[j], 0 * Days)
+            capFloors_[i][j] = MakeCapFloor(capFloorType, capFloorLengths_[i], iborIndex_, strikes[j], -0 * Days)
                                    .withPricingEngine(capFloorEngines_[i][j]);
             capFloorPrices_[i][j] = capFloors_[i][j]->NPV();
             optionletPrices_[i][j] = capFloorPrices_[i][j] - previousCapFloorPrice;
