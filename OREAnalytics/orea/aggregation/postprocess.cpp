@@ -935,7 +935,7 @@ void PostProcess::dynamicInitialMargin() {
     LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
-    std::vector<boost::function1<Real, Array>> v(
+    std::vector<ext::function<Real(Array)>> v(
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
     LOG("DIM confidence level " << confidenceLevel);
