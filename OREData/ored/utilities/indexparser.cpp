@@ -102,7 +102,7 @@ template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
-        if (p == 28 * Days) {
+        if (p.units() == Days && p.length() == 28) {
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
         } else {
             return boost::make_shared<MXNTiie>(p, h);
