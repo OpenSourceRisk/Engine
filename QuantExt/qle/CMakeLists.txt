@@ -53,6 +53,7 @@ instruments/payment.cpp
 instruments/subperiodsswap.cpp
 instruments/tenorbasisswap.cpp
 math/deltagammavar.cpp
+math/fillemptymatrix.cpp
 methods/multipathgeneratorbase.cpp
 models/cdsoptionhelper.cpp
 models/cmscaphelper.cpp
@@ -236,6 +237,7 @@ instruments/payment.hpp
 instruments/subperiodsswap.hpp
 instruments/tenorbasisswap.hpp
 math/deltagammavar.hpp
+math/fillemptymatrix.hpp
 math/flatextrapolation.hpp
 math/nadarayawatson.hpp
 math/stabilisedglls.hpp
