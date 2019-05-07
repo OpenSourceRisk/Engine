@@ -50,6 +50,7 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -216,6 +217,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>()},
         {"HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>()},
         {"IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>()},
+        {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
         {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
         {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
