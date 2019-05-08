@@ -29,6 +29,7 @@ libTermStructures_la_SOURCES = \
 	spreadedsmilesection.cpp \
 	spreadedswaptionvolatility.cpp \
 	strippedoptionletadapter2.cpp \
+	strippedyoyinflationoptionletvol.cpp \
 	swaptionvolatilityconverter.cpp \
 	subperiodsswaphelper.cpp \
 	defaultprobabilityhelpers.cpp \
@@ -79,6 +80,7 @@ this_include_HEADERS = \
 	spreadedsmilesection.hpp \
 	spreadedswaptionvolatility.hpp \
 	strippedoptionletadapter2.hpp \
+	strippedyoyinflationoptionletvol.hpp \
 	swaptionvolatilityconverter.hpp \
 	subperiodsswaphelper.hpp \
 	blackvolsurfacewithatm.hpp \

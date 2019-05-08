@@ -648,6 +648,9 @@
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1112,6 +1115,9 @@
       <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

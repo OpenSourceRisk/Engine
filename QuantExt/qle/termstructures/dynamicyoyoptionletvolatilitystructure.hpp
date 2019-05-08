@@ -25,7 +25,7 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
-
+#include <ql/termstructures/volatility/smilesection.hpp>
 #include <boost/make_shared.hpp>
 
 namespace QuantExt {

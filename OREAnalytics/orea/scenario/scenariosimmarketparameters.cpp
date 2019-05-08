@@ -799,8 +799,8 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
                    "default daycounter is not set for capFloorVolSurfaces");
     }
 
-    DLOG("Loading YoYInflationCapFloorVolatilities");
-    nodeChild = XMLUtils::getChildNode(node, "YoYInflationCapFloorVolatilities");
+    DLOG("Loading YYCapFloorVolatilities");
+    nodeChild = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
     if (nodeChild && XMLUtils::getChildNode(nodeChild)) {
         setSimulateYoYInflationCapFloorVols(false);
         XMLNode* yoyCapVolSimNode = XMLUtils::getChildNode(nodeChild, "Simulate");
@@ -810,16 +810,6 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
         yoyInflationCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
         setYoYInflationCapFloorNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
         yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
-        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
-        if (dc) {
-            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
-                child = XMLUtils::getNextSibling(child)) {
-                string label = XMLUtils::getAttribute(child, "ccy");
-                yoyInflationCapFloorVolDayCounters_[label] = XMLUtils::getNodeValue(child);
-            }
-        }
-        QL_REQUIRE(yoyInflationCapFloorVolDayCounters_.find("") != yoyInflationCapFloorVolDayCounters_.end(),
-            "default daycounter is not set for YoYInflationCapFloorVolSurfaces");
     }
 
     DLOG("Loading DefaultCurves Rates");

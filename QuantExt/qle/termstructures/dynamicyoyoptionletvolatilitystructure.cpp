@@ -55,7 +55,7 @@ namespace QuantExt {
 
         // TODO: check validity of ForwardVariance option before using it.
         QL_REQUIRE(decayMode_ != ForwardForwardVariance,
-            "ForwardVariance not yet supported for DynamicOptionletVolatilityStructure");
+            "ForwardVariance not yet supported for DynamicYoYOptionletVolatilityStructure");
         if (decayMode_ == ForwardForwardVariance) {
             Volatility varToRef = source_->totalVariance(referenceDate(), strike, source_->observationLag());
             Volatility varToOptTime = source_->totalVariance(referenceDate() + timeFromReference(optionDate), strike, source_->observationLag());
