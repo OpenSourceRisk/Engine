@@ -121,8 +121,6 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         }
 
         if (config->type() == DefaultCurveConfig::Type::SpreadCDS) {
-            // Use fixed start date if provided by config
-            Date startDate = config->startDate() != Date() ? config->startDate() : asof + cdsConv->settlementDays();
 
             QL_REQUIRE(recoveryRate_ != Null<Real>(), "DefaultCurve: no recovery rate given for type "
                                                       "SpreadCDS");
@@ -131,7 +129,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
                 helper.push_back(boost::make_shared<QuantExt::SpreadCdsHelper>(
                     quote.second, quote.first, cdsConv->settlementDays(), cdsConv->calendar(), cdsConv->frequency(),
                     cdsConv->paymentConvention(), cdsConv->rule(), cdsConv->dayCounter(), recoveryRate_, discountCurve,
-                    startDate, cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
+                    config->startDate(), cdsConv->settlesAccrual(), cdsConv->paysAtDefaultTime()));
             }
             boost::shared_ptr<DefaultProbabilityTermStructure> tmp =
                 boost::make_shared<PiecewiseDefaultCurve<QuantExt::SurvivalProbability, LogLinear>>(
@@ -201,7 +199,7 @@ DefaultCurve::DefaultCurve(Date asof, DefaultCurveSpec spec, const Loader& loade
         }
 
         if (config->type() == DefaultCurveConfig::Type::Benchmark) {
-            std::vector<Period> pillars = config->pillars();
+            std::vector<Period> pillars = parseVectorOfValues<Period>(config->pillars(), &parsePeriod);
             Calendar cal = config->calendar();
             Size spotLag = config->spotLag();
             // setup

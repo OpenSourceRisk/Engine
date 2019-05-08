@@ -1237,6 +1237,15 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
+    DLOG("Writing CDS volatilities");
+    XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CDSVolatilities");
+    if (!cdsVolNames().empty()) {
+        XMLUtils::addChild(doc, cdsVolatilitiesNode, "Simulate", simulateCdsVols());
+        XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
+        XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
+        XMLUtils::addGenericChildAsList(doc, cdsVolatilitiesNode, "Expiries", cdsVolExpiries_);
+    }
+
     // fx volatilities
     DLOG("Writing FX volatilities");
     XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");

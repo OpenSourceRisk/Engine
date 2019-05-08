@@ -194,7 +194,7 @@
       <Index2>EUR-CMS-2Y</Index2>
       <Currency>EUR</Currency>
       <Dimension>ATM</Dimension>
-      <QuoteType>Rate</QuoteType>
+      <QuoteType>RATE</QuoteType>
       <Extrapolation>true</Extrapolation>
       <DayCounter>Actual/365 (Fixed)</DayCounter>
       <Calendar>TARGET</Calendar>

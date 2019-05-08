@@ -212,7 +212,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             volShiftDataFromXML(child, data, false);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             QL_REQUIRE(data.shiftStrikes.size() == 0 ||
-                           data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0),
+                           (data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0)),
                        "no shift strikes (or exactly {0.0}) should be given for yield volatilities");
             data.shiftStrikes = { 0.0 };
             yieldVolShiftData_[securityId] = data;

@@ -50,6 +50,7 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -60,6 +61,7 @@
 #include <qle/indexes/ibor/phpphiref.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
@@ -91,6 +93,20 @@ public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
         return boost::make_shared<T>(p, h);
+    }
+};
+
+// Specialise for MXN-TIIE. If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
+// with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
+template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
+        if (p == 28 * Days) {
+            return boost::make_shared<MXNTiie>(4 * Weeks, h);
+        } else {
+            return boost::make_shared<MXNTiie>(p, h);
+        }
     }
 };
 
@@ -143,6 +159,11 @@ bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index) {
 }
 
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldTermStructure>& h) {
+    string dummy;
+    return parseIborIndex(s, dummy, h);
+}
+
+boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, const Handle<YieldTermStructure>& h) {
 
     std::vector<string> tokens;
     split(tokens, s, boost::is_any_of("-"));
@@ -151,10 +172,13 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
                "Two or three tokens required in " << s << ": CCY-INDEX or CCY-INDEX-TERM");
 
     Period p;
-    if (tokens.size() == 3)
+    if (tokens.size() == 3) {
+        tenor = tokens[2];
         p = parsePeriod(tokens[2]);
-    else
+    } else {
+        tenor = "";
         p = 1 * Days;
+    }
 
     static map<string, boost::shared_ptr<IborIndexParser>> m = {
         {"EUR-EONIA", boost::make_shared<IborIndexParserOIS<Eonia>>()},
@@ -186,12 +210,14 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>()},
         {"NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>()},
         {"HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>()},
+        {"SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>()},
         {"SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>()},
         {"SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>()},
         {"DKK-CIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKCibor>>()},
         {"DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>()},
         {"HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>()},
         {"IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>()},
+        {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
         {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
         {"PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>()},
@@ -205,7 +231,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"USD-SIFMA", boost::make_shared<IborIndexParserBMA<BMAIndexWrapper>>()},
         {"THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>()},
         {"PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>()},
-        {"COP-IBR", boost::make_shared<IborIndexParserWithPeriod<COPIbr>>()},
+        {"COP-IBR", boost::make_shared<IborIndexParserOIS<COPIbr>>()},
         {"DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>()},
         {"BRL-CDI", boost::make_shared<IborIndexParserOIS<BRLCdi>>()},
         {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},

@@ -590,7 +590,7 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
-void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -602,12 +602,18 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
     report.addColumn("Scenario NPV", double(), 2);
     report.addColumn("Difference", double(), 2);
 
-    for (const auto& tradeId : sensitivityCube->tradeIds()) {
-        Real baseNpv = sensitivityCube->npv(tradeId);
+    auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
+    auto tradeIds = sensitivityCube->tradeIds();
+    auto npvCube = sensitivityCube->npvCube();
 
-        for (const auto& scenarioDescription : sensitivityCube->scenarioDescriptions()) {
+    for (Size i = 0; i < tradeIds.size(); i++) {
+        Real baseNpv = npvCube->getT0(i);
+        auto tradeId = tradeIds[i];
 
-            Real scenarioNpv = sensitivityCube->npv(tradeId, scenarioDescription);
+        for (Size j = 0; j < scenarioDescriptions.size(); j++) {
+            auto scenarioDescription = scenarioDescriptions[j];
+
+            Real scenarioNpv = npvCube->get(i, j);
             Real difference = scenarioNpv - baseNpv;
 
             if (fabs(difference) > outputThreshold) {
@@ -618,10 +624,11 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
                 report.add(baseNpv);
                 report.add(scenarioNpv);
                 report.add(difference);
-            } else if (!std::isfinite(difference)) {
+            }
+            else if (!std::isfinite(difference)) {
                 // TODO: is this needed?
                 ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                                                       << " is not finite (" << difference << ")");
+                    << " is not finite (" << difference << ")");
             }
         }
     }

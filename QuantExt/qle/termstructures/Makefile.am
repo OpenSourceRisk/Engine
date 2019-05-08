@@ -9,6 +9,7 @@ noinst_LTLIBRARIES = libTermStructures.la
 libTermStructures_la_SOURCES = \
 	averageoisratehelper.cpp \
 	basistwoswaphelper.cpp \
+	brlcdiratehelper.cpp \
 	crossccybasisswaphelper.cpp \
 	crossccybasismtmresetswaphelper.cpp \
 	dynamicswaptionvolmatrix.cpp \
@@ -54,6 +55,7 @@ this_include_HEADERS = \
 	averageoisratehelper.hpp \
 	basistwoswaphelper.hpp \
 	blackinvertedvoltermstructure.hpp \
+	brlcdiratehelper.hpp \
 	crossccybasisswaphelper.hpp \
 	crossccybasismtmresetswaphelper.hpp \
 	dynamicblackvoltermstructure.hpp \
