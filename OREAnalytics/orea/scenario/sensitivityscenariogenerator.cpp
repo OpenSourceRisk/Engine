@@ -2168,11 +2168,8 @@ SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size ex
     Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 0)) {
-        o << data.shiftExpiries[expiryBucket] << "/ATM";
-    } else {
-        o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
-    }
+    // Currently CapFloorVolShiftData must have a collection of absolute strikes
+    o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
     string text = o.str();
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
     ScenarioDescription desc(type, key, text);
