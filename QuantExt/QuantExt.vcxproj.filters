@@ -666,6 +666,9 @@
     <ClInclude Include="qle\math\fillemptymatrix.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1149,6 +1152,9 @@
     </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
