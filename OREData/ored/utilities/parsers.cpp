@@ -209,6 +209,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"Sweden", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
+                                      {"BWP", Botswana()},
                                       {"CNH", China()},
                                       {"CNY", China()},
                                       {"CZK", CzechRepublic()},
@@ -218,6 +219,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"FIN", Finland()},
                                       {"HKD", HongKong()},
                                       {"ISK", Iceland()},
+                                      {"ILS", Israel()},
                                       {"INR", India()},
                                       {"IDR", Indonesia()},
                                       {"MXN", Mexico()},
@@ -225,6 +227,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"NOK", Norway()},
                                       {"Norway", Norway()},
                                       {"PLN", Poland()},
+                                      {"RON", Romania()},
                                       {"RUB", Russia()},
                                       {"SAR", SaudiArabia()},
                                       {"SGD", Singapore()},
@@ -244,8 +247,6 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"RON", TARGET()},
-                                      {"ILS", TARGET()},
                                       {"KWD", TARGET()},
                                       {"TND", TARGET()},
                                       {"KZT", TARGET()},

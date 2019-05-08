@@ -57,7 +57,9 @@ public:
                             const boost::shared_ptr<QuantLib::IborIndex>& spreadIndex,
                             const Handle<YieldTermStructure>& flatDiscountCurve,
                             const Handle<YieldTermStructure>& spreadDiscountCurve, bool eom = false,
-                            bool flatIsDomestic = true);
+                            bool flatIsDomestic = true,
+                            boost::optional<QuantLib::Period> flatTenor = boost::none,
+                            boost::optional<QuantLib::Period> spreadTenor = boost::none);
     //! \name RateHelper interface
     //@{
     Real impliedQuote() const;
@@ -84,7 +86,10 @@ protected:
     boost::shared_ptr<QuantLib::IborIndex> spreadIndex_;
     Handle<YieldTermStructure> flatDiscountCurve_;
     Handle<YieldTermStructure> spreadDiscountCurve_;
-    bool eom_, flatIsDomestic_;
+    bool eom_;
+    bool flatIsDomestic_;
+    QuantLib::Period flatTenor_;
+    QuantLib::Period spreadTenor_;
 
     Currency flatLegCurrency_;
     Currency spreadLegCurrency_;

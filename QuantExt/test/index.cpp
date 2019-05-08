@@ -34,6 +34,7 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -87,6 +88,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
                            { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
                            { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
+                           { ILSTelbor(pd), "ILS-TELBOR", Israel().name(), ILSCurrency().name() },
                            { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
                            { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
                            { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
