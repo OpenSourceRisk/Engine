@@ -25,6 +25,7 @@
 #include <map>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -154,7 +155,7 @@ bool parseBool(const string& s) {
     }
 }
 
-Calendar parseCalendar(const string& s) {
+Calendar parseCalendar(const string& s, bool adjustCalendar) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
@@ -268,7 +269,20 @@ Calendar parseCalendar(const string& s) {
 
     auto it = m.find(s);
     if (it != m.end()) {
-        return it->second;
+        Calendar cal = it->second;
+        if (adjustCalendar) {
+            //add custom holidays from populated calendar adjustments
+            const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
+            for (auto h : config.getHolidays(cal.name())) {
+                cal.addHoliday(h);
+            }
+            for (auto b : config.getBusinessDays(cal.name())) {
+                cal.removeHoliday(b);
+            }
+
+        }
+         return cal;
+
     } else {
         // Try to split them up
         vector<string> calendarNames;
@@ -285,7 +299,7 @@ Calendar parseCalendar(const string& s) {
         for (Size i = 0; i < calendarNames.size(); i++) {
             boost::trim(calendarNames[i]);
             try {
-                calendars.push_back(parseCalendar(calendarNames[i]));
+                calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
             } catch (std::exception& e) {
                 QL_FAIL("Cannot convert " << s << " to Calendar [exception:" << e.what() << "]");
             } catch (...) {
