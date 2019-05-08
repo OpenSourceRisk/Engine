@@ -33,8 +33,8 @@ namespace data {
 InflationCapFloorPriceSurfaceConfig::InflationCapFloorPriceSurfaceConfig(
     const string& curveID, const string& curveDescription, const Type type, const Period& observationLag,
     const Calendar& calendar, const BusinessDayConvention& businessDayConvention, const DayCounter& dayCounter,
-    const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<Real>& capStrikes,
-    const vector<Real>& floorStrikes, const vector<Period>& maturities, bool implySeparateCapFloorVolSurfaces)
+    const string& index, const string& indexCurve, const string& yieldTermStructure, const vector<string>& capStrikes,
+    const vector<string>& floorStrikes, const vector<string>& maturities, bool implySeparateCapFloorVolSurfaces)
     : CurveConfig(curveID, curveDescription), type_(type), observationLag_(observationLag), calendar_(calendar),
       businessDayConvention_(businessDayConvention), dayCounter_(dayCounter), index_(index), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure), capStrikes_(capStrikes), floorStrikes_(floorStrikes),
@@ -51,10 +51,10 @@ const vector<string>& InflationCapFloorPriceSurfaceConfig::quotes() {
         string base = type + "_INFLATIONCAPFLOOR/PRICE/" + index_ + "/";
         for (auto m : maturities_) {
             for (auto f : floorStrikes_) {
-                quotes_.push_back(base + to_string(m) + "/F/" + to_string(f));
+                quotes_.push_back(base + m + "/F/" + f);
             }
             for (auto c : capStrikes_) {
-                quotes_.push_back(base + to_string(m) + "/C/" + to_string(c));
+                quotes_.push_back(base + m + "/C/" + c);
             }
         }
     }
@@ -95,9 +95,9 @@ void InflationCapFloorPriceSurfaceConfig::fromXML(XMLNode* node) {
 
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
 
-    capStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "CapStrikes", true);
-    floorStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "FloorStrikes", true);
-    maturities_ = XMLUtils::getChildrenValuesAsPeriods(node, "Maturities", true);
+    capStrikes_ = XMLUtils::getChildrenValuesAsStrings(node, "CapStrikes", true);
+    floorStrikes_ = XMLUtils::getChildrenValuesAsStrings(node, "FloorStrikes", true);
+    maturities_ = XMLUtils::getChildrenValuesAsStrings(node, "Maturities", true);
 
     implySeparateCapFloorVolSurfaces_ = true;
     implySeparateCapFloorVolSurfaces_ = XMLUtils::getChildValueAsBool(node, "ImplySeparateCapFloorVolSurfaces", false);
@@ -132,8 +132,8 @@ XMLNode* InflationCapFloorPriceSurfaceConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
     XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
-    XMLUtils::addChild(doc, node, "CapStrikes", capStrikes_);
-    XMLUtils::addChild(doc, node, "FloorStrikes", floorStrikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "CapStrikes", capStrikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "FloorStrikes", floorStrikes_);
     XMLUtils::addGenericChildAsList(doc, node, "Maturities", maturities_);
     XMLUtils::addChild(doc, node, "ImplySeparateCapFloorVolSurfaces", implySeparateCapFloorVolSurfaces_);
 

@@ -44,6 +44,7 @@
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/time/yearcounter.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -207,6 +208,7 @@ Calendar parseCalendar(const string& s) {
                                       {"Sweden", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
+                                      {"BWP", Botswana()},
                                       {"CNH", China()},
                                       {"CNY", China()},
                                       {"CZK", CzechRepublic()},
@@ -216,6 +218,7 @@ Calendar parseCalendar(const string& s) {
                                       {"FIN", Finland()},
                                       {"HKD", HongKong()},
                                       {"ISK", Iceland()},
+                                      {"ILS", Israel()},
                                       {"INR", India()},
                                       {"IDR", Indonesia()},
                                       {"MXN", Mexico()},
@@ -223,6 +226,7 @@ Calendar parseCalendar(const string& s) {
                                       {"NOK", Norway()},
                                       {"Norway", Norway()},
                                       {"PLN", Poland()},
+                                      {"RON", Romania()},
                                       {"RUB", Russia()},
                                       {"SAR", SaudiArabia()},
                                       {"SGD", Singapore()},
@@ -242,8 +246,6 @@ Calendar parseCalendar(const string& s) {
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"RON", TARGET()},
-                                      {"ILS", TARGET()},
                                       {"KWD", TARGET()},
                                       {"TND", TARGET()},
                                       {"KZT", TARGET()},
@@ -377,7 +379,10 @@ DayCounter parseDayCounter(const string& s) {
                                         {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
-                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
+                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Simple", SimpleDayCounter()},
+                                        {"Year", YearCounter()}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {

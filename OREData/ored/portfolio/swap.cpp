@@ -208,18 +208,26 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         }
     } // for legs
 
-    // NPV currency is just taken from the first leg, so for XCCY this is just the first one
-    // that appears in the XML
-    npvCurrency_ = ccy_str;
-    notional_ = currentNotional(legs_[0]); // match npvCurrency_
+    // NPV currency and Current notional taken from the first leg that appears in the XML
+    // unless the first leg is a Resettable XCCY, then use the second leg
+    // For a XCCY Resettable the currentNotional may fail due missing FX fixing so we avoid
+    // using this leg if possible
+    if (legData_.size() > 1 && !legData_[0].isNotResetXCCY()) {
+        npvCurrency_ = legData_[1].currency();
+        notional_ = currentNotional(legs_[1]);
+    } else {
+        npvCurrency_ = legData_[0].currency();
+        notional_ = currentNotional(legs_[0]);
+    }    
     DLOG("Notional is " << notional_ << " " << npvCurrency_);
+    Currency npvCcy = parseCurrency(npvCurrency_);
 
     if (isXCCY) {
         boost::shared_ptr<QuantExt::CurrencySwap> swap(new QuantExt::CurrencySwap(legs_, legPayers_, currencies));
         boost::shared_ptr<CrossCurrencySwapEngineBuilder> swapBuilder =
             boost::dynamic_pointer_cast<CrossCurrencySwapEngineBuilder>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for CrossCurrencySwap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currencies, currency));
+        swap->setPricingEngine(swapBuilder->engine(currencies, npvCcy));
         // take the first legs currency as the npv currency (arbitrary choice)
         instrument_.reset(new VanillaInstrument(swap));
     } else {
@@ -227,7 +235,7 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::shared_ptr<SwapEngineBuilderBase> swapBuilder =
             boost::dynamic_pointer_cast<SwapEngineBuilderBase>(builder);
         QL_REQUIRE(swapBuilder, "No Builder found for Swap " << id());
-        swap->setPricingEngine(swapBuilder->engine(currency));
+        swap->setPricingEngine(swapBuilder->engine(npvCcy));
         instrument_.reset(new VanillaInstrument(swap));
     }
 

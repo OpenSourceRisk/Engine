@@ -55,7 +55,7 @@ public:
                        const string& discountCurveID, const string& recoveryRateQuote, const DayCounter& dayCounter,
                        const string& conventionID, const std::vector<std::pair<std::string, bool>>& cdsQuotes,
                        bool extrapolation = true, const string& benchmarkCurveID = "", const string& sourceCurveID = "",
-                       const std::vector<Period>& pillars = std::vector<Period>(),
+                       const std::vector<string>& pillars = std::vector<string>(),
                        const Calendar& calendar = Calendar(), const Size spotLag = 0,
                        const QuantLib::Date& startDate = QuantLib::Date());
     //! Default constructor
@@ -78,7 +78,7 @@ public:
     const string& recoveryRateQuote() const { return recoveryRateQuote_; }
     const string& conventionID() const { return conventionID_; }
     const DayCounter& dayCounter() const { return dayCounter_; }
-    const std::vector<Period>& pillars() const { return pillars_; }
+    const std::vector<string>& pillars() const { return pillars_; }
     const Calendar& calendar() const { return calendar_; }
     const Size& spotLag() const { return spotLag_; }
     bool extrapolation() const { return extrapolation_; }
@@ -97,7 +97,7 @@ public:
     string& recoveryRateQuote() { return recoveryRateQuote_; }
     string& conventionID() { return conventionID_; }
     DayCounter& dayCounter() { return dayCounter_; }
-    std::vector<Period> pillars() { return pillars_; }
+    std::vector<string> pillars() { return pillars_; }
     Calendar calendar() { return calendar_; }
     Size spotLag() { return spotLag_; }
     bool& extrapolation() { return extrapolation_; }
@@ -116,7 +116,7 @@ private:
     bool extrapolation_;
     string benchmarkCurveID_;
     string sourceCurveID_;
-    vector<Period> pillars_;
+    vector<string> pillars_;
     Calendar calendar_;
     Size spotLag_;
     QuantLib::Date startDate_;
