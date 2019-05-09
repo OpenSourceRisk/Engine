@@ -16,7 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file qle/termstructures/strippedyoyinflationoptionletvoladapter.hpp
+/*! \file qle/termstructures/strippedyoyinflationoptionletvol.hpp
 \brief Stripped YoYInfaltion Optionlet Vol Adapter (with a deeper update method, linear interpolation and optional flat extrapolation)
 \ingroup termstructures
 */
@@ -71,8 +71,6 @@ namespace QuantExt {
         QuantLib::Volatility volatilityImpl(Time length, QuantLib::Rate strike) const;
 
     private:
-        mutable std::vector<boost::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
-
         void checkInputs() const;
         void registerWithMarketData();
 
@@ -91,6 +89,7 @@ namespace QuantExt {
 
         std::vector<std::vector<Handle<Quote> > > yoyoptionletVolQuotes_;
         mutable std::vector<std::vector<Volatility> > yoyoptionletVolatilities_;
+        mutable std::vector<boost::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
     };
 
     inline void StrippedYoYInflationOptionletVol::update() {
