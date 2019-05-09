@@ -58,6 +58,7 @@
 #include <qle/indexes/ibor/nowa.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnpolonia.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
@@ -210,7 +211,8 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, const Handle<YieldT
         {"BRL-CDI", boost::make_shared<IborIndexParserOIS<BRLCdi>>()},
         {"NOK-NOWA", boost::make_shared<IborIndexParserOIS<Nowa>>()},
         {"CLP-CAMARA", boost::make_shared<IborIndexParserOIS<CLPCamara>>()},
-        {"NZD-OCR", boost::make_shared<IborIndexParserOIS<Nzocr>>()}};
+        {"NZD-OCR", boost::make_shared<IborIndexParserOIS<Nzocr>>()},
+        {"PLN-POLONIA", boost::make_shared<IborIndexParserOIS<PLNPolonia>>()}};
 
     auto it = m.find(tokens[0] + "-" + tokens[1]);
     if (it != m.end()) {
