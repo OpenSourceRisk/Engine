@@ -200,6 +200,7 @@ indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
 indexes/ibor/plnwibor.hpp
+indexes/ibor/plnpolonia.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
