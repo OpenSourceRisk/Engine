@@ -19,11 +19,9 @@
 #include "toplevelfixture.hpp"
 #include <boost/make_shared.hpp>
 #include <boost/test/unit_test.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/equityfx/blackvariancecurve.hpp>
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
-#include <qle/termstructures/blackvariancecurve3.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 using namespace boost::unit_test_framework;
 using namespace QuantLib;
@@ -84,7 +82,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurface) {
         { 124.61, 00.00, 00.00, 00.00, 18.71, 17.85, 17.93, 19.45, 00.00, 20.54, 21.03, 21.64, 22.51},
         { 131.94, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 19.88, 20.54, 21.05, 21.90},
         { 139.27, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 19.30, 20.02, 20.54, 21.35},
-        { 146.60, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 18.49, 19.64, 20.12},
+        { 146.60, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 00.00, 18.49, 19.64, 20.12}
     });
 
     // the 3 vectors we pass into the vol term structure
@@ -110,7 +108,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurface) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual();
 
-    BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
+    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
 
     // 1. Check that we recover all of the above inputs
     for (auto vd: volData) {
@@ -150,8 +148,7 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceConstantVol) {
 
     Settings::instance().evaluationDate() = Date(1, Mar, 2010);
     Date today = Settings::instance().evaluationDate();
-    Real spot = 2772.70;
-
+    
     // the 3 vectors we pass into the vol term structure
     // We setup a small grid with 10% everywhere, this should return 10% vol for
     // any point, i.e. a flat surface
@@ -166,12 +163,12 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceConstantVol) {
     Calendar cal = TARGET();
     DayCounter dc = ActualActual();
 
-    BlackVarianceSurfaceSparse surface(today, cal, dates, strikes, vols, dc);
+    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse> (today, cal, dates, strikes, vols, dc);
 
     // Check we don't throw for all points and get a vol of 10%
     for (Time t = 0.2; t < 20; t += 0.2) {
         for (Real strike = 1500; strike < 6000; strike += 100) {
-            BOOST_CHECK_CLOSE(surface->blackVol(d, strike), 0.1, 1e-12);
+            BOOST_CHECK_CLOSE(surface->blackVol(t, strike), 0.1, 1e-12);
         }
     }
 }

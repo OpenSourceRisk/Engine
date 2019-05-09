@@ -37,7 +37,7 @@ struct BlackVarianceSurfaceSparse::ExpData {
 
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal,
                                                        const std::vector<Date>& dates, const std::vector<Real>& strikes,
-                                                       const std::vector<Volatility> volatilities,
+                                                       const std::vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter)
     : BlackVarianceTermStructure(referenceDate, cal), dayCounter_(dayCounter), maxDate_(dates.back()),
       strikes_(strikes), dates_(dates), volatilities_(volatilities) {
@@ -88,6 +88,11 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
         itr->second.expVars_ = sortedVars;
 
         // set interpolation
+        if (itr->second.expStrikes_.size() == 1) {
+            // if only one strike => add different strike with same value for interpolation object.
+            itr->second.expStrikes_.push_back(itr->second.expStrikes_[0] + itr->second.expStrikes_[0]/5.0);
+            itr->second.expVars_.push_back(itr->second.expVars_[0]);
+        }
         LinearInterpolation tmpInterpolation(itr->second.expStrikes_.begin(), itr->second.expStrikes_.end(),
                                              itr->second.expVars_.begin());
         itr->second.expStrikeCurve_ = tmpInterpolation;
@@ -97,9 +102,11 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     if (expiries_.find(this->referenceDate()) == expiries_.end()) {
         // ExpData
         ExpData tmpData;
-        tmpData.expStrikes_ = vector<Real>({ 5, 10 });
-        tmpData.expVars_ = vector<Real>({ 0, 0 });
-        tmpData.expTime_ = Real(0);
+        tmpData.expStrikes_ = vector<Real>({ 5.0, 100.0 });
+        tmpData.expVars_ = vector<Real>({ 0.0, 0.0 });
+        tmpData.expTime_ = Real(0.0);
+        expiries_[this->referenceDate()] =
+            tmpData; // add expiry struct before setting interpolation. Pointing to vectors.
         LinearInterpolation tmpInterpolation(tmpData.expStrikes_.begin(), tmpData.expStrikes_.end(),
                                              tmpData.expVars_.begin());
         expiries_[this->referenceDate()].expStrikeCurve_ = tmpInterpolation;
@@ -113,11 +120,11 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
 Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, ExpData expiryData) const {
     Real retVar;
     if (strike > expiryData.expStrikes_.back()) {
-        retVar = expiryData.expVars_.back();                // flat extrapolate far stirke
+        retVar = expiryData.expVars_.back(); // flat extrapolate far stirke
     } else if (strike < expiryData.expStrikes_.front()) {
-        retVar = expiryData.expStrikes_.front();            // flat extrapolate near stirke
+        retVar = expiryData.expVars_.front(); // flat extrapolate near stirke
     } else {
-        retVar = expiryData.expStrikeCurve_(strike);        // interpolate between strikes
+        retVar = expiryData.expStrikeCurve_(strike); // interpolate between strikes
     }
     return retVar;
 }
@@ -125,8 +132,8 @@ Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, ExpData expiryData
 Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << this->referenceDate());
     Real varReturn;
-    std::map<Date, ExpData>::const_iterator itr;        // expiry just after requested time
-    std::map<Date, ExpData>::const_iterator itrPrev;    // expiry just before requested time
+    std::map<Date, ExpData>::const_iterator itr;     // expiry just after requested time
+    std::map<Date, ExpData>::const_iterator itrPrev; // expiry just before requested time
     bool farEnd = true;
 
     // find expiries to interpolate between
@@ -138,6 +145,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
     }
 
     if (!farEnd) {
+        itrPrev = prev(itr);
         // interpolate between expiries
         vector<Real> tmpVars(2);
         vector<Time> xAxis = { itrPrev->second.expTime_, itr->second.expTime_ };
@@ -147,8 +155,8 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
         varReturn = tmpInterpolation(t);
     } else {
         // far end of expiries
-        varReturn = getVarForStrike(strike, expiries_.end()->second);
-        varReturn = varReturn * t / expiries_.end()->second.expTime_;   // scale
+        varReturn = getVarForStrike(strike, prev(expiries_.end())->second);
+        varReturn = varReturn * t / prev(expiries_.end())->second.expTime_; // scale
     }
 
     return varReturn;

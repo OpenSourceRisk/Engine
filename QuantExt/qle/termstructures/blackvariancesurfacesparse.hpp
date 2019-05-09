@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file blackvariancesurfaceSparse.hpp
+/*! \file blackvariancesurfacesparse.hpp
  \brief Black volatility surface modelled as variance surface
  */
 
@@ -36,7 +36,7 @@ class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal, const std::vector<Date>& dates,
-                               const std::vector<Real>& strikes, const std::vector<Volatility>volatilities,
+                               const std::vector<Real>& strikes, const std::vector<Volatility>& volatilities,
                                const DayCounter& dayCounter);
 
     //! \name TermStructure interface
