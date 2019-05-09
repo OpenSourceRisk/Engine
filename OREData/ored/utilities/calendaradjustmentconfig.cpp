@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <calendaradjustmentconfig.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <string>
 #include <ql/time/calendar.hpp>
 #include <ored/utilities/parsers.hpp>
