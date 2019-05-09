@@ -65,7 +65,8 @@ elements. An example structure of the \lstinline!OptionData! trade component nod
                 <LongShort>Long</LongShort>
                 <OptionType>Call</OptionType>
                 <Style>Bermudan</Style>
-                <Settlement>Cash</Settlement> 
+                <Settlement>Cash</Settlement>
+                <SettlementMethod>CollateralizedCashPrice</SettlementMethod>
                 <PayOffAtExpiry>true</PayOffAtExpiry>
                 <ExerciseDates>
                     <ExerciseDate>2016-04-20</ExerciseDate>
@@ -116,7 +117,11 @@ FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined 
 
 \item Settlement: Delivery type. 
 
-Allowable values: \emph{Cash} or \emph{Physical} 
+  Allowable values: \emph{Cash} or \emph{Physical}
+
+\item SettlementMethod [Optional]: Settlement method for swaptions.
+
+  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}
 
 \item PayOffAtExpiry [Optional]: Relevant for options with early
   exercise, i.e. the exercise occurs before expiry; \emph{true}
