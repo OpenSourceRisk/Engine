@@ -25,7 +25,7 @@
 #include <map>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
-#include <calendaradjustmentconfig.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
