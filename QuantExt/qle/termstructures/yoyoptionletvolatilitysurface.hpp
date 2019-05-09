@@ -77,22 +77,30 @@ protected:
 
 inline Volatility YoYOptionletVolatilitySurface::volatility(const Date& maturityDate, Rate strike, const Period& obsLag,
                                                             bool extrapolate) const {
-    return referenceVolSurface_->volatility(maturityDate, strike, obsLag, extrapolate);
+    // force flat extrapolation 
+    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
+    return referenceVolSurface_->volatility(maturityDate, k, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::volatility(const Period& optionTenor, Rate strike,
                                                             const Period& obsLag, bool extrapolate) const {
-    return referenceVolSurface_->volatility(optionTenor, strike, obsLag, extrapolate);
+    // force flat extrapolation 
+    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
+    return referenceVolSurface_->volatility(optionTenor, k, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Date& exerciseDate, Rate strike,
                                                                const Period& obsLag, bool extrapolate) const {
-    return referenceVolSurface_->totalVariance(exerciseDate, strike, obsLag, extrapolate);
+    // force flat extrapolation 
+    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
+    return referenceVolSurface_->totalVariance(exerciseDate, k, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Period& optionTenor, Rate strike,
                                                                const Period& obsLag, bool extrapolate) const {
-    return referenceVolSurface_->totalVariance(optionTenor, strike, obsLag, extrapolate);
+    // force flat extrapolation 
+    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
+    return referenceVolSurface_->totalVariance(optionTenor, k, obsLag, extrapolate);
 }
 
 inline VolatilityType YoYOptionletVolatilitySurface::volatilityType() const { return volType_; }
