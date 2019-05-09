@@ -89,7 +89,6 @@ namespace QuantExt {
 
         std::vector<std::vector<Handle<Quote> > > yoyoptionletVolQuotes_;
         mutable std::vector<std::vector<Volatility> > yoyoptionletVolatilities_;
-        mutable std::vector<boost::shared_ptr<QuantLib::Interpolation> > strikeInterpolations_;
     };
 
     inline void StrippedYoYInflationOptionletVol::update() {

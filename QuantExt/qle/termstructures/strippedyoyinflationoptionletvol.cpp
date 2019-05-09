@@ -41,8 +41,7 @@ StrippedYoYInflationOptionletVol::StrippedYoYInflationOptionletVol(
     calendar_(calendar), settlementDays_(settlementDays), businessDayConvention_(bdc), dc_(dc), type_(type),
     displacement_(displacement), nYoYOptionletDates_(yoyoptionletDates.size()), yoyoptionletDates_(yoyoptionletDates),
     yoyoptionletTimes_(nYoYOptionletDates_), yoyoptionletStrikes_(nYoYOptionletDates_, strikes), nStrikes_(strikes.size()), 
-    yoyoptionletVolQuotes_(v), yoyoptionletVolatilities_(nYoYOptionletDates_, vector< Volatility >(nStrikes_)),
-    strikeInterpolations_(nYoYOptionletDates_) {
+    yoyoptionletVolQuotes_(v), yoyoptionletVolatilities_(nYoYOptionletDates_, vector< Volatility >(nStrikes_)) {
 
         checkInputs();
         registerWith(Settings::instance().evaluationDate());
@@ -95,14 +94,12 @@ StrippedYoYInflationOptionletVol::StrippedYoYInflationOptionletVol(
             const std::vector<Volatility>& yoyoptionletVolatilities = StrippedYoYInflationOptionletVol::yoyoptionletVolatilities(i);
             boost::shared_ptr<LinearInterpolation> tmp(
                 new LinearInterpolation(yoyoptionletStrikes.begin(), yoyoptionletStrikes.end(), yoyoptionletVolatilities.begin()));
-            tmp->enableExtrapolation();
             vol[i] = tmp->operator()(strike, true);
         }
 
         const std::vector<Time>& yoyoptionletTimes = yoyoptionletFixingTimes();
         boost::shared_ptr<LinearInterpolation> timeVolInterpolator(
             new LinearInterpolation(yoyoptionletTimes.begin(), yoyoptionletTimes.end(), vol.begin()));
-        timeVolInterpolator->enableExtrapolation();
         return timeVolInterpolator->operator()(length, true);
     }
 
