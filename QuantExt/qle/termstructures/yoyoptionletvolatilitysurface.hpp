@@ -40,7 +40,7 @@ public:
     YoYOptionletVolatilitySurface(boost::shared_ptr<QuantLib::YoYOptionletVolatilitySurface> referenceVolSurface,
                                   VolatilityType volType = ShiftedLognormal, Real displacement = 0.0)
         : TermStructure(), referenceVolSurface_(referenceVolSurface), volType_(volType), displacement_(displacement) {
-        referenceVolSurface->enableExtrapolation();
+      referenceVolSurface->enableExtrapolation();
     }
 
     Volatility volatility(const Date& maturityDate, Rate strike, const Period& obsLag = Period(-1, Days),
@@ -79,30 +79,22 @@ protected:
 
 inline Volatility YoYOptionletVolatilitySurface::volatility(const Date& maturityDate, Rate strike, const Period& obsLag,
                                                             bool extrapolate) const {
-    // force flat extrapolation 
-    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
-    return referenceVolSurface_->volatility(maturityDate, k, obsLag, extrapolate);
+    return referenceVolSurface_->volatility(maturityDate, strike, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::volatility(const Period& optionTenor, Rate strike,
                                                             const Period& obsLag, bool extrapolate) const {
-    // force flat extrapolation 
-    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
-    return referenceVolSurface_->volatility(optionTenor, k, obsLag, extrapolate);
+    return referenceVolSurface_->volatility(optionTenor, strike, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Date& exerciseDate, Rate strike,
                                                                const Period& obsLag, bool extrapolate) const {
-    // force flat extrapolation 
-    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
-    return referenceVolSurface_->totalVariance(exerciseDate, k, obsLag, extrapolate);
+    return referenceVolSurface_->totalVariance(exerciseDate, strike, obsLag, extrapolate);
 }
 
 inline Volatility YoYOptionletVolatilitySurface::totalVariance(const Period& optionTenor, Rate strike,
                                                                const Period& obsLag, bool extrapolate) const {
-    // force flat extrapolation 
-    Real k = std::max(minStrike(), std::min(strike, maxStrike()));
-    return referenceVolSurface_->totalVariance(optionTenor, k, obsLag, extrapolate);
+    return referenceVolSurface_->totalVariance(optionTenor, strike, obsLag, extrapolate);
 }
 
 inline VolatilityType YoYOptionletVolatilitySurface::volatilityType() const { return volType_; }
