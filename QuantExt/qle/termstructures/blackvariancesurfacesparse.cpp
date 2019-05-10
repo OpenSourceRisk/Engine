@@ -101,8 +101,8 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     if (dates_[0] != this->referenceDate()) {
         dates_.insert(dates_.begin(), this->referenceDate());
         times_.insert(times_.begin(), 0.0);
-        strikes_.insert(strikes_.begin(), vector<Real>({ 5.0, 100.0 }));
-        variances_.insert(variances_.begin(), vector<Real>({ 0.0, 0.0 }));
+        strikes_.insert(strikes_.begin(), vector<Real>{ 5.0, 100.0 });
+        variances_.insert(variances_.begin(), vector<Real>{ 0.0, 0.0 });
         interpolations_.insert(interpolations_.begin(),
                                LinearInterpolation(strikes_[0].begin(), strikes_[0].end(), variances_[0].begin()));
     } else {
