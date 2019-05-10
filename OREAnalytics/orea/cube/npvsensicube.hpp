@@ -61,6 +61,9 @@ public:
         this->set(value, id, asof(), sample, 0);
     }
 
+    //! Return the index of the trade in the cube
+    Size getTradeIndex(const std::string& tradeId) const { return index(tradeId); }
+
     /*! Return a map for the trade ID at index \p tradeIdx where the map key is the index of the
         risk factor shift and the map value is the NPV under that shift
     */

@@ -309,6 +309,13 @@ static struct test_data index_data[] = {
     {"TWD-TAIBOR-5M", "TWD-TAIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"TWD-TAIBOR-6M", "TWD-TAIBOR6M Actual/365 (Fixed)", 6 * Months},
 
+    {"TRY-TRLIBOR-1M", "TRLibor1M Actual/360", 1 * Months},
+    {"TRY-TRLIBOR-2M", "TRLibor2M Actual/360", 2 * Months},
+    {"TRY-TRLIBOR-3M", "TRLibor3M Actual/360", 3 * Months},
+    {"TRY-TRLIBOR-4M", "TRLibor4M Actual/360", 4 * Months},
+    {"TRY-TRLIBOR-5M", "TRLibor5M Actual/360", 5 * Months},
+    {"TRY-TRLIBOR-6M", "TRLibor6M Actual/360", 6 * Months},
+  
     {"MYR-KLIBOR-1M", "MYR-KLIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"MYR-KLIBOR-2M", "MYR-KLIBOR2M Actual/365 (Fixed)", 2 * Months},
     {"MYR-KLIBOR-3M", "MYR-KLIBOR3M Actual/365 (Fixed)", 3 * Months},
