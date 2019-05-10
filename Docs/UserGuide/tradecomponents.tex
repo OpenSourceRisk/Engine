@@ -119,9 +119,16 @@ FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined 
 
   Allowable values: \emph{Cash} or \emph{Physical}
 
-\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions. It only applies for the pricing of standard European swaptions. For non-standard Europeans (i.e. amortising / accreting, changing rate or margin) the field is ignored.
+\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions.
 
-  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. 
+  
+  Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+
+\emph{PhysicalOTC} = OTC traded swaptions with physical settlement\\
+\emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
+\emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
+\emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
 
 \item PayOffAtExpiry [Optional]: Relevant for options with early
   exercise, i.e. the exercise occurs before expiry; \emph{true}
