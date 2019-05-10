@@ -1125,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
         y.push_back(yt);
     }
 
-    std::vector<boost::function1<Real, Array> > basis =
+    std::vector<ext::function<Real(Array)> > basis =
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
