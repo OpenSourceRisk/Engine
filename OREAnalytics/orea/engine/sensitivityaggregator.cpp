@@ -113,14 +113,11 @@ void SensitivityAggregator::add(SensitivityRecord& sr, set<SensitivityRecord>& r
 bool SensitivityAggregator::inCategory(const string& tradeId, const string& category) const {
     QL_REQUIRE(setCategories_.count(category), "The category " << category << " is not valid");
     auto tradeIds = setCategories_.at(category);
-    bool inCat = false;
     for (auto it = tradeIds.begin(); it != tradeIds.end(); ++it) {
-        if (it->first == tradeId) {
-            inCat = true;
-            break;
-        }
+        if (it->first == tradeId)
+            return true;
     }
-    return inCat;
+    return false;
 }
 
 } // namespace analytics
