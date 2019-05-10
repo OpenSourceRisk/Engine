@@ -27,104 +27,103 @@ using namespace std;
 
 namespace QuantExt {
 
-struct BlackVarianceSurfaceSparse::ExpData {
-
-    std::vector<Real> expStrikes_;
-    std::vector<Real> expVars_;
-    Time expTime_;
-    Interpolation expStrikeCurve_;
-};
-
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal,
                                                        const std::vector<Date>& dates, const std::vector<Real>& strikes,
                                                        const std::vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter)
-    : BlackVarianceTermStructure(referenceDate, cal), dayCounter_(dayCounter), maxDate_(dates.back()),
-      strikes_(strikes), dates_(dates), volatilities_(volatilities) {
+    : BlackVarianceTermStructure(referenceDate, cal), dayCounter_(dayCounter) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
-               "dates, strikes and volatilites vectors not of equal size.");
+               "dates, strikes and volatilities vectors not of equal size.");
+    
+    // first get uniques dates and sort
+    set<Date> datesSet(dates.begin(), dates.end());
+    dates_ = vector<Date>(datesSet.begin(), datesSet.end());
+    vector<bool> dateDone(dates_.size(), false);
+    times_ = vector<Time>(dates_.size());
+    interpolations_ = vector<Interpolation>(dates_.size());
+    variances_ = vector<vector<Real>>(dates_.size());
+    strikes_ = vector<vector<Real> >(dates_.size());
 
-    // populate expiries set map. (Except interpolation obj members)
-    for (Size i = 0; i < strikes_.size(); i++) {
 
-        if (expiries_.find(dates_[i]) == expiries_.end()) {
-            // add expiry struct if not found
-            ExpData tmpData;
-            QL_REQUIRE(dates_[i] > referenceDate, "Expiry date before asof date: " << referenceDate);
-            tmpData.expTime_ = timeFromReference(dates_[i]);
-            vector<Real> tmpStrikes{ strikes_[i] };
-            vector<Real> tmpVars{ tmpData.expTime_ * volatilities_[i] * volatilities_[i] };
-            tmpData.expStrikes_ = tmpStrikes;
-            tmpData.expVars_ = tmpVars;
-            expiries_[dates_[i]] = tmpData;
+    // Populate strike info. (Except interpolation obj members)
+    for (Size i = 0; i < strikes.size(); i++) {
+        vector<Date>::const_iterator found = find(dates_.begin(), dates_.end(), dates[i]);
+        QL_REQUIRE(found != dates_.end(), "Date should already be loaded" << dates[i]);
+        Size ii = found - dates_.begin(); // index of expiry
+        
+        if (!dateDone[ii]) {
+            // add expiry data if not found
+            QL_REQUIRE(dates[i] >= referenceDate, "Expiry date:" << dates[i] << " before asof date: " << referenceDate);
+            times_[ii] = timeFromReference(dates[i]);
+            strikes_[ii].push_back(strikes[i]);
+            variances_[ii].push_back(volatilities[i] * volatilities[i] * times_[ii] );
+            dateDone[ii] = true;
         } else {
-            // expiry found
-            Real tmpStrike = strikes_[i];
-            auto fnd = find_if(expiries_[dates_[i]].expStrikes_.begin(), expiries_[dates_[i]].expStrikes_.end(),
+            // expiry found => add if strike not found
+            Real tmpStrike = strikes[i];
+            auto fnd = find_if(strikes_[ii].begin(), strikes_[ii].end(),
                                [tmpStrike](Real b) { return close(tmpStrike, b, QL_EPSILON); });
-            if (fnd == expiries_[dates_[i]].expStrikes_.end()) {
-                expiries_[dates_[i]].expStrikes_.push_back(strikes_[i]);
-                expiries_[dates_[i]].expVars_.push_back(expiries_[dates_[i]].expTime_ * volatilities_[i] *
-                                                        volatilities_[i]);
+            if (fnd == strikes_[ii].end()) {
+                // add strike/var pairs if strike not found for this expiry
+                strikes_[ii].push_back(strikes[i]);
+                variances_[ii].push_back(volatilities[i] * volatilities[i] * times_[ii]);
             }
         }
     }
-    // set expiries' interpolation obj members.
-    for (auto itr = expiries_.begin(); itr != expiries_.end(); itr++) {
-        // sort (improve)
-        vector<pair<Real, Real> > tmpPairs(itr->second.expStrikes_.size());
+    // set expiries' interpolations.
+    for (Size i = 0; i < dates_.size(); i++) {
+        // sort strikes within this expiry 
+        vector<pair<Real, Real> > tmpPairs(strikes_[i].size());
         vector<Real> sortedStrikes; //(itr->second.expStrikes_.size());
         vector<Real> sortedVars;    // (sortedStrikes)
-        for (Size i = 0; i, i < itr->second.expStrikes_.size(); i++) {
-            tmpPairs[i] = { itr->second.expStrikes_[i], itr->second.expVars_[i] };
+        for (Size j = 0; j < strikes_[i].size(); j++) {
+            tmpPairs[j] = { strikes_[i][j], variances_[i][j] };
         }
         sort(tmpPairs.begin(), tmpPairs.end());
         for (auto it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
             sortedStrikes.push_back(it->first);
             sortedVars.push_back(it->second);
         }
-        itr->second.expStrikes_ = sortedStrikes;
-        itr->second.expVars_ = sortedVars;
+        strikes_[i] = sortedStrikes;
+        variances_[i] = sortedVars;
 
         // set interpolation
-        if (itr->second.expStrikes_.size() == 1) {
+        if (strikes_[i].size() == 1) {
             // if only one strike => add different strike with same value for interpolation object.
-            itr->second.expStrikes_.push_back(itr->second.expStrikes_[0] + itr->second.expStrikes_[0]/5.0);
-            itr->second.expVars_.push_back(itr->second.expVars_[0]);
+            strikes_[i].push_back(strikes_[i][0] + strikes_[i][0] * 0.3);
+            variances_[i].push_back(variances_[i][0]);
         }
-        LinearInterpolation tmpInterpolation(itr->second.expStrikes_.begin(), itr->second.expStrikes_.end(),
-                                             itr->second.expVars_.begin());
-        itr->second.expStrikeCurve_ = tmpInterpolation;
+        LinearInterpolation tmpInterpolation(strikes_[i].begin(), strikes_[i].end(), variances_[i].begin());
+        interpolations_[i] = tmpInterpolation;
     }
 
     // Short end
-    if (expiries_.find(this->referenceDate()) == expiries_.end()) {
-        // ExpData
-        ExpData tmpData;
-        tmpData.expStrikes_ = vector<Real>({ 5.0, 100.0 });
-        tmpData.expVars_ = vector<Real>({ 0.0, 0.0 });
-        tmpData.expTime_ = Real(0.0);
-        expiries_[this->referenceDate()] =
-            tmpData; // add expiry struct before setting interpolation. Pointing to vectors.
-        LinearInterpolation tmpInterpolation(tmpData.expStrikes_.begin(), tmpData.expStrikes_.end(),
-                                             tmpData.expVars_.begin());
-        expiries_[this->referenceDate()].expStrikeCurve_ = tmpInterpolation;
+    if (dates_[0] != this->referenceDate()) {
+        dates_.insert(dates_.begin(), this->referenceDate());
+        times_.insert(times_.begin(), 0.0);
+        strikes_.insert(strikes_.begin(), { 5.0, 100.0 });
+        variances_.insert(variances_.begin(), { 0.0, 0.0 });
+        interpolations_.insert(interpolations_.begin(),
+                               LinearInterpolation(strikes_[0].begin(), strikes_[0].end(), variances_[0].begin()));
     } else {
-        QL_REQUIRE(expiries_[this->referenceDate()].expStrikeCurve_(3) == Real(0),
-                   "Variance at asof: " << this->referenceDate() << " should be 0");
-        QL_REQUIRE(expiries_[this->referenceDate()].expTime_ == Real(0), "Time to asof should be zero.");
+        // all variances at reference date should be zero
+        for (Size i = 0; i < variances_[0].size(); i++) {
+            QL_REQUIRE(variances_[0][i] == 0.0, "Variance at reference date not equal to zero");
+        }
+        // time at reference date should be zero
+        QL_REQUIRE(times_[0] == 0.0, "Time at the reference date not equal to zero.");
     }
 }
 
-Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, ExpData expiryData) const {
+Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, const vector<Real>& strks, const vector<Real>& vars, const Interpolation& intrp) const {
     Real retVar;
-    if (strike > expiryData.expStrikes_.back()) {
-        retVar = expiryData.expVars_.back(); // flat extrapolate far stirke
-    } else if (strike < expiryData.expStrikes_.front()) {
-        retVar = expiryData.expVars_.front(); // flat extrapolate near stirke
+    if (strike > strks.back()) {
+        retVar = vars.back();               // flat extrapolate far stirke
+    } else if (strike < strks.front()) {
+        retVar = vars.front();              // flat extrapolate near stirke
     } else {
-        retVar = expiryData.expStrikeCurve_(strike); // interpolate between strikes
+        retVar = intrp(strike);             // interpolate between strikes
     }
     return retVar;
 }
@@ -132,31 +131,34 @@ Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, ExpData expiryData
 Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << this->referenceDate());
     Real varReturn;
-    std::map<Date, ExpData>::const_iterator itr;     // expiry just after requested time
-    std::map<Date, ExpData>::const_iterator itrPrev; // expiry just before requested time
+    std::vector<Date>::const_iterator itr;     // expiry just after requested time
+    std::vector<Date>::const_iterator itrPrev; // expiry just before requested time
     bool farEnd = true;
 
     // find expiries to interpolate between
-    for (itr = expiries_.begin(); itr != expiries_.end(); itr++) {
-        if (t < itr->second.expTime_) {
+    Size dt;
+    Size dtPrev;
+    for (dt = 0;  dt < dates_.size(); dt++) {
+        if (t < times_[dt]) {
             farEnd = false;
             break;
         }
     }
 
     if (!farEnd) {
-        itrPrev = prev(itr);
+        dtPrev = dt - 1;
         // interpolate between expiries
         vector<Real> tmpVars(2);
-        vector<Time> xAxis = { itrPrev->second.expTime_, itr->second.expTime_ };
-        tmpVars[1] = getVarForStrike(strike, itr->second);
-        tmpVars[0] = getVarForStrike(strike, itrPrev->second);
+        vector<Time> xAxis = { times_[dtPrev], times_[dt] };
+        tmpVars[1] = getVarForStrike(strike, strikes_[dt], variances_[dt], interpolations_[dt]);
+        tmpVars[0] = getVarForStrike(strike, strikes_[dtPrev], variances_[dtPrev], interpolations_[dtPrev]);
         LinearInterpolation tmpInterpolation(xAxis.begin(), xAxis.end(), tmpVars.begin());
         varReturn = tmpInterpolation(t);
     } else {
         // far end of expiries
-        varReturn = getVarForStrike(strike, prev(expiries_.end())->second);
-        varReturn = varReturn * t / prev(expiries_.end())->second.expTime_; // scale
+
+        varReturn = getVarForStrike(strike, strikes_.back(), variances_.back(),interpolations_.back());
+        varReturn = varReturn * t / times_.back(); // scale
     }
 
     return varReturn;

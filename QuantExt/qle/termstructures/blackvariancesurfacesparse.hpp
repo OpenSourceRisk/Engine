@@ -26,6 +26,7 @@
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/math/interpolation.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -58,15 +59,16 @@ protected:
     virtual Real blackVarianceImpl(Time t, Real strike) const;
 
 private:
-    struct ExpData;
-    Real getVarForStrike(Real strike, ExpData expiryData) const;
+    Real getVarForStrike(Real strike, const std::vector<Real>& strks, const std::vector<Real>& vars,
+                         const QuantLib::Interpolation& intrp) const;
 
     DayCounter dayCounter_;
     Date maxDate_;
-    std::vector<Real> strikes_;
-    std::vector<Date> dates_;
-    std::vector<Volatility> volatilities_;
-    std::map<Date, ExpData> expiries_;
+    std::vector<Date> dates_;                               // expiries
+    std::vector<Time> times_;                               // times
+    std::vector<Interpolation> interpolations_;             // strike interpolations for each expiry
+    std::vector<std::vector<Real>> strikes_;                // strikes for each expiry
+    std::vector<std::vector<Real>> variances_;
 };
 
 // inline definitions
