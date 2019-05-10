@@ -42,7 +42,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     vector<bool> dateDone(dates_.size(), false);
     times_ = vector<Time>(dates_.size());
     interpolations_ = vector<Interpolation>(dates_.size());
-    variances_ = vector<vector<Real>>(dates_.size());
+    variances_ = vector<vector<Real> >(dates_.size());
     strikes_ = vector<vector<Real> >(dates_.size());
 
 
@@ -62,8 +62,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
         } else {
             // expiry found => add if strike not found
             Real tmpStrike = strikes[i];
-            auto fnd = find_if(strikes_[ii].begin(), strikes_[ii].end(),
-                               [tmpStrike](Real b) { return close(tmpStrike, b, QL_EPSILON); });
+            vector<Real>::iterator fnd = find_if(strikes_[ii].begin(), strikes_[ii].end(),QuantExt::detail::CloseEnoughComparator(tmpStrike));
             if (fnd == strikes_[ii].end()) {
                 // add strike/var pairs if strike not found for this expiry
                 strikes_[ii].push_back(strikes[i]);
@@ -81,7 +80,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
             tmpPairs[j] = { strikes_[i][j], variances_[i][j] };
         }
         sort(tmpPairs.begin(), tmpPairs.end());
-        for (auto it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
+        for (vector<pair<Real,Real> >::iterator it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
             sortedStrikes.push_back(it->first);
             sortedVars.push_back(it->second);
         }

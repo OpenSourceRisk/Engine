@@ -31,6 +31,15 @@
 namespace QuantExt {
 using namespace QuantLib;
 
+namespace detail {
+struct CloseEnoughComparator {
+    explicit CloseEnoughComparator(const Real v) : v_(v) {}
+    bool operator()(const Real w) const { return close_enough(v_, w); }
+    Real v_;
+};
+} // namespace detail
+
+
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
 class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
