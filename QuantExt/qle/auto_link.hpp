@@ -26,8 +26,12 @@
 #define QE_LIB_TOOLSET "vc120"
 #elif(_MSC_VER == 1900)
 #define QE_LIB_TOOLSET "vc140"
-#else
+#elif (_MSC_VER == 1910)
 #define QE_LIB_TOOLSET "vc141"
+#elif (_MSC_VER == 1920)
+#define QE_LIB_TOOLSET "vc142"
+#else
+#define QE_LIB_TOOLSET "vc142"
 #endif
 
 #ifdef _M_X64
