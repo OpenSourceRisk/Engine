@@ -85,12 +85,7 @@ protected:
             if (!creditCurveId.empty())
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
-        Handle<Quote> spread;
-        try {
-            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
-            spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
-        } catch (...) {
-        }
+        Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
 
         return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
     }
