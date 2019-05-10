@@ -67,8 +67,8 @@ private:
     std::vector<Date> dates_;                               // expiries
     std::vector<Time> times_;                               // times
     std::vector<Interpolation> interpolations_;             // strike interpolations for each expiry
-    std::vector<std::vector<Real>> strikes_;                // strikes for each expiry
-    std::vector<std::vector<Real>> variances_;
+    std::vector<std::vector<Real> > strikes_;               // strikes for each expiry
+    std::vector<std::vector<Real> > variances_;
 };
 
 // inline definitions
