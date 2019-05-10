@@ -101,8 +101,8 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     if (dates_[0] != this->referenceDate()) {
         dates_.insert(dates_.begin(), this->referenceDate());
         times_.insert(times_.begin(), 0.0);
-        strikes_.insert(strikes_.begin(), { 5.0, 100.0 });
-        variances_.insert(variances_.begin(), { 0.0, 0.0 });
+        strikes_.insert(strikes_.begin(), vector<Real>({ 5.0, 100.0 }));
+        variances_.insert(variances_.begin(), vector<Real>({ 0.0, 0.0 }));
         interpolations_.insert(interpolations_.begin(),
                                LinearInterpolation(strikes_[0].begin(), strikes_[0].end(), variances_[0].begin()));
     } else {
@@ -148,7 +148,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
         dtPrev = dt - 1;
         // interpolate between expiries
         vector<Real> tmpVars(2);
-        vector<Time> xAxis = { times_[dtPrev], times_[dt] };
+        vector<Time> xAxis = vector<Time>({ times_[dtPrev], times_[dt] });
         tmpVars[1] = getVarForStrike(strike, strikes_[dt], variances_[dt], interpolations_[dt]);
         tmpVars[0] = getVarForStrike(strike, strikes_[dtPrev], variances_[dtPrev], interpolations_[dtPrev]);
         LinearInterpolation tmpInterpolation(xAxis.begin(), xAxis.end(), tmpVars.begin());
