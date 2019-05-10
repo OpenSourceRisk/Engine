@@ -119,9 +119,9 @@ FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined 
 
   Allowable values: \emph{Cash} or \emph{Physical}
 
-\item SettlementMethod [Optional]: Settlement method for swaptions.
+\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions. It only applies for the pricing of standard European swaptions. For non-standard Europeans (i.e. amortising / accreting, changing rate or margin) the field is ignored.
 
-  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}
+  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
 
 \item PayOffAtExpiry [Optional]: Relevant for options with early
   exercise, i.e. the exercise occurs before expiry; \emph{true}
@@ -390,6 +390,10 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
 %\hrule\medskip
 \begin{minted}[fontsize=\footnotesize]{xml}
                <ScheduleData>
+                <Dates>
+                 <Calendar>NYB</Calendar>
+                 <Convention>Following</Convention>
+                 <Tenor>3M</Tenor>
                     <Dates>
                         <Date>2012-01-06</Date>
                         <Date>2012-04-10</Date>
@@ -398,6 +402,7 @@ respectively dates are shown in Listing \ref{lst:schedule_data_true} and Listing
                         <Date>2013-01-07</Date>
                         <Date>2013-04-08</Date>
                     </Dates>
+                 </Dates> 
                 </ScheduleData>
 \end{minted}
 \caption{Schedule data, date based}
@@ -409,7 +414,7 @@ The ScheduleData section can contain any number and combination of
 then be an ordered concatenation of individual schedules.
  
 \medskip
-The meanings and allowable values of the elements in the \lstinline!ScheduleData! node follow below.
+The meanings and allowable values of the elements in a {\tt <Rules>} based section of the  \lstinline!ScheduleData! node follow below.
 
 \begin{itemize}
   % \item IsRulesBased: Determines whether the schedule is set by specifying dates directly, or by specifying rules that
@@ -465,8 +470,33 @@ Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}. Inco
 \item LastDate [Optional]: Date for final stub period.
 
 Allowable values: See \lstinline!Date! in Table \ref{tab:allow_stand_data}.
+\end{itemize}
 
-\item Dates: This is a sub-node and contains child elements of type
+\medskip
+The meanings and allowable values of the elements in a {\tt <Dates>} based section of the  \lstinline!ScheduleData! node follow below.
+
+\begin{itemize}
+
+\item Dates: a sub-node that determines that the schedule is set by specifying schedule dates explicitly. 
+
+\item Calendar [Optional]: Calendar used to determine payment dates, and also to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based. 
+
+Allowable values: See Table \ref{tab:calendar} Calendar. Defaults to \emph{NullCalendar} if omitted, i.e. no holidays at all, not even on weekends.
+
+\item Convention [Optional]: Convention used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+
+Allowable values: See \lstinline!Roll Convention! in Table
+\ref{tab:allow_stand_data}. Defaults to \emph{Unadjusted} if omitted.
+
+\item Tenor [Optional]: Tenor used to compute day count fractions for irregular periods when day count convention is ActActISMA and the schedule is dates based.
+
+Allowable values: A string where the last character must be D or W or
+M or Y.  The characters before that must be a positive integer. \\D
+$=$ Day, W $=$ Week, M $=$ Month, Y $=$ Year
+
+Defaults to \emph{null} if omitted.
+
+\item Dates: This is a sub-sub-node and contains child elements of type
   \lstinline!Date!. In this case the schedule dates are determined
   directly by the \lstinline!Date! child elements.  At least two
   \lstinline!Date! child elements must be provided.     
