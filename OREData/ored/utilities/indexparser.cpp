@@ -396,5 +396,18 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
+
+bool isOvernightIndex(const string& indexName) {
+
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(indexName, index)) {
+        auto onIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
+        if (onIndex)
+            return true;
+    }
+
+    return false;
+}
+
 } // namespace data
 } // namespace ore
