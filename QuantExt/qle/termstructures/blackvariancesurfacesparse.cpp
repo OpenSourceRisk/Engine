@@ -17,6 +17,7 @@
 */
 
 #include <boost/make_shared.hpp>
+#include <iostream>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/quotes/simplequote.hpp>
@@ -35,7 +36,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
                "dates, strikes and volatilities vectors not of equal size.");
-    
+
     // first get uniques dates and sort
     set<Date> datesSet(dates.begin(), dates.end());
     dates_ = vector<Date>(datesSet.begin(), datesSet.end());
@@ -45,24 +46,24 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     variances_ = vector<vector<Real> >(dates_.size());
     strikes_ = vector<vector<Real> >(dates_.size());
 
-
     // Populate strike info. (Except interpolation obj members)
     for (Size i = 0; i < strikes.size(); i++) {
         vector<Date>::const_iterator found = find(dates_.begin(), dates_.end(), dates[i]);
         QL_REQUIRE(found != dates_.end(), "Date should already be loaded" << dates[i]);
         Size ii = found - dates_.begin(); // index of expiry
-        
+
         if (!dateDone[ii]) {
             // add expiry data if not found
             QL_REQUIRE(dates[i] >= referenceDate, "Expiry date:" << dates[i] << " before asof date: " << referenceDate);
             times_[ii] = timeFromReference(dates[i]);
             strikes_[ii].push_back(strikes[i]);
-            variances_[ii].push_back(volatilities[i] * volatilities[i] * times_[ii] );
+            variances_[ii].push_back(volatilities[i] * volatilities[i] * times_[ii]);
             dateDone[ii] = true;
         } else {
             // expiry found => add if strike not found
             Real tmpStrike = strikes[i];
-            vector<Real>::iterator fnd = find_if(strikes_[ii].begin(), strikes_[ii].end(),QuantExt::detail::CloseEnoughComparator(tmpStrike));
+            vector<Real>::iterator fnd =
+                find_if(strikes_[ii].begin(), strikes_[ii].end(), QuantExt::detail::CloseEnoughComparator(tmpStrike));
             if (fnd == strikes_[ii].end()) {
                 // add strike/var pairs if strike not found for this expiry
                 strikes_[ii].push_back(strikes[i]);
@@ -72,7 +73,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     }
     // set expiries' interpolations.
     for (Size i = 0; i < dates_.size(); i++) {
-        // sort strikes within this expiry 
+        // sort strikes within this expiry
         vector<pair<Real, Real> > tmpPairs(strikes_[i].size());
         vector<Real> sortedStrikes; //(itr->second.expStrikes_.size());
         vector<Real> sortedVars;    // (sortedStrikes)
@@ -80,7 +81,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
             tmpPairs[j] = pair<Real, Real>(strikes_[i][j], variances_[i][j]);
         }
         sort(tmpPairs.begin(), tmpPairs.end());
-        for (vector<pair<Real,Real> >::iterator it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
+        for (vector<pair<Real, Real> >::iterator it = tmpPairs.begin(); it != tmpPairs.end(); it++) {
             sortedStrikes.push_back(it->first);
             sortedVars.push_back(it->second);
         }
@@ -121,19 +122,37 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
     }
 }
 
-Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, const vector<Real>& strks, const vector<Real>& vars, const Interpolation& intrp) const {
+Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, const vector<Real>& strks, const vector<Real>& vars,
+                                                 const Interpolation& intrp) const {
     Real retVar;
     if (strike > strks.back()) {
-        retVar = vars.back();               // flat extrapolate far stirke
+        retVar = vars.back(); // flat extrapolate far stirke
     } else if (strike < strks.front()) {
-        retVar = vars.front();              // flat extrapolate near stirke
+        retVar = vars.front(); // flat extrapolate near stirke
     } else {
-        retVar = intrp(strike);             // interpolate between strikes
+        retVar = intrp(strike); // interpolate between strikes
     }
     return retVar;
 }
 
 Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
+    std::cout << "Debuging here. --------------------" << endl;
+    std::cout << "Requested var for time: " << t << " and strike: " << strike << endl;
+    for (Size i = 0; i < dates_.size(); i++) {
+        cout << "Date: " << dates_[i] << endl;
+        cout << "Time: " << times_[i] << endl;
+        cout << "Strikes: ";
+        for (Size j = 0; j < strikes_[i].size(); j++) {
+            cout << strikes_[i][j] << ", ";
+        }
+        cout << std::endl;
+        cout << "Variances: ";
+        for (Size j = 0; j < variances_.size(); j++) {
+            cout << variances_[i][j] << ", ";
+        }
+        cout << std::endl;
+    }
+
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << this->referenceDate());
     Real varReturn;
     std::vector<Date>::const_iterator itr;     // expiry just after requested time
@@ -143,7 +162,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
     // find expiries to interpolate between
     Size dt;
     Size dtPrev;
-    for (dt = 0;  dt < dates_.size(); dt++) {
+    for (dt = 0; dt < dates_.size(); dt++) {
         if (t < times_[dt]) {
             farEnd = false;
             break;
@@ -164,7 +183,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
     } else {
         // far end of expiries
 
-        varReturn = getVarForStrike(strike, strikes_.back(), variances_.back(),interpolations_.back());
+        varReturn = getVarForStrike(strike, strikes_.back(), variances_.back(), interpolations_.back());
         varReturn = varReturn * t / times_.back(); // scale
     }
 
