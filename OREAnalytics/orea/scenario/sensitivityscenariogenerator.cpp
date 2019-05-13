@@ -453,10 +453,9 @@ void SensitivityScenarioGenerator::generateDiscountCurveScenarios(bool up) {
 void SensitivityScenarioGenerator::generateIndexCurveScenarios(bool up) {
     Date asof = baseScenario_->asof();
 
-    // Log an ALERT if some ibor indices in simmarket are excluded from the list
     for (auto sim_idx : simMarketData_->indices()) {
         if (sensitivityData_->indexCurveShiftData().find(sim_idx) == sensitivityData_->indexCurveShiftData().end()) {
-            ALOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
+            DLOG("Index " << sim_idx << " in simmarket is not included in sensitivities analysis");
         }
     }
 
