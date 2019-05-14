@@ -191,6 +191,7 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
+indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmifor.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
@@ -199,6 +200,7 @@ indexes/ibor/noknibor.hpp
 indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
+indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
