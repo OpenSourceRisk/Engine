@@ -71,6 +71,12 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
             }
         }
     }
+
+    for (Size i = 0; i < dates_.size(); i++) {
+        QL_REQUIRE(strikes_[i].size() == variances_[i].size(),
+                   "different number of variances and strikes for date: " << dates_[i]);
+    }
+
     // set expiries' interpolations.
     for (Size i = 0; i < dates_.size(); i++) {
         // sort strikes within this expiry
@@ -136,8 +142,9 @@ Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, const vector<Real>
 }
 
 Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
-    std::cout << "Debuging here. --------------------" << endl;
+    std::cout << "blackVarianceImpl Called. --------------------" << endl;
     std::cout << "Requested var for time: " << t << " and strike: " << strike << endl;
+    cout << "Reference Date: " << this->referenceDate();
     for (Size i = 0; i < dates_.size(); i++) {
         cout << "Date: " << dates_[i] << endl;
         cout << "Time: " << times_[i] << endl;
@@ -147,7 +154,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
         }
         cout << std::endl;
         cout << "Variances: ";
-        for (Size j = 0; j < variances_.size(); j++) {
+        for (Size j = 0; j < variances_[i].size(); j++) {
             cout << variances_[i][j] << ", ";
         }
         cout << std::endl;
