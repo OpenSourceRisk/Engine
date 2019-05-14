@@ -29,38 +29,36 @@ namespace data {
 }
 
 void CalendarAdjustmentConfig::addHolidays(const string& calname, const Date& d) {
-    additionalHolidays_[normalisedName(calname)].push_back(d);
+    additionalHolidays_[normalisedName(calname)].insert(d);
 }
 
 
 void CalendarAdjustmentConfig::addBusinessDays(const string& calname, const Date& d) {
-    additionalBusinessDays_[normalisedName(calname)].push_back(d);
+    additionalBusinessDays_[normalisedName(calname)].insert(d);
 }
 
-const vector<Date>& CalendarAdjustmentConfig::getHolidays(const string& calname) const {
+const set<Date>& CalendarAdjustmentConfig::getHolidays(const string& calname) const {
     auto holidays = additionalHolidays_.find(normalisedName(calname));
     if (holidays != additionalHolidays_.end()) {
         return holidays->second;
     } else {
-        static vector<Date> empty;
+        static set<Date> empty;
         return empty;
     }
 }
 
-const vector<Date>& CalendarAdjustmentConfig::getBusinessDays(const string& calname) const {
+const set<Date>& CalendarAdjustmentConfig::getBusinessDays(const string& calname) const {
     auto businessDays = additionalBusinessDays_.find(normalisedName(calname));
     if (businessDays != additionalBusinessDays_.end()) {
         return businessDays->second;
     } else {
-        static vector<Date> empty;
+        static set<Date> empty;
         return empty;
     }
 }
 
 set<string> CalendarAdjustmentConfig::getCalendars() const {
     set<string> cals;
-    vector<string> calendarNames;
-    vector<string> bcalendarNames;
     for (auto it: additionalHolidays_) {
         cals.insert(it.first);
     }
@@ -73,6 +71,17 @@ set<string> CalendarAdjustmentConfig::getCalendars() const {
 string CalendarAdjustmentConfig::normalisedName(const string& c) const {
     return parseCalendar(c,false).name();
 }
+
+void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig&  c) {
+    for (auto it : c.getCalendars()) {
+        for (auto h : c.getHolidays(it)){
+            addHolidays(it, h);
+        }
+        for (auto b : c.getBusinessDays(it)) {
+            addBusinessDays(it, b);
+        }        
+    }
+};
 
 void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CalendarAdjustments");

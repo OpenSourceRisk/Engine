@@ -60,35 +60,36 @@ public:
     void addBusinessDays(const string& calname, const Date& d);
 
     //! Returns all the holidays for a given calname
-    const vector<Date>& getHolidays(const string& calname) const;
+    const set<Date>& getHolidays(const string& calname) const;
 
     //! Returns all the business days for a given calname
-    const vector<Date>& getBusinessDays(const string& calname) const;
+    const set<Date>& getBusinessDays(const string& calname) const;
 
     set<string> getCalendars() const; 
 
     void fromXML(XMLNode* node) override;
     XMLNode* toXML(XMLDocument& doc) override;
 
-
+    //! addd all holidays and business days from c to this instance
+    void append(const CalendarAdjustmentConfig& c);
 
 private:
-    map<string, vector<Date>> additionalHolidays_;
-    map<string, vector<Date>> additionalBusinessDays_;
+    map<string, set<Date>> additionalHolidays_;
+    map<string, set<Date>> additionalBusinessDays_;
 
     string normalisedName(const string&) const;
 
 };
-
+//! global config
 class CalendarAdjustments : public QuantLib::Singleton<CalendarAdjustments> {
     friend class QuantLib::Singleton<CalendarAdjustments>;
 public:
-    //get the global config
+    //! get the global config
     const CalendarAdjustmentConfig& config() const {
         return config_;
     }
 
-    // set the global config
+    //! set the global config
     CalendarAdjustmentConfig& setConfig(const CalendarAdjustmentConfig& c) {
         config_ = c;
     }

@@ -267,6 +267,20 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
                                       {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()},
                                       {"", NullCalendar()}};
+    static bool isInitialised = false;
+    if (!isInitialised) {
+        //extend the static map to include quantlib map names 
+        //allCals should be set, but it doesn't know how to order dates
+        vector<Calendar> allCals;
+        for (auto it : m) 
+            allCals.push_back(it.second);
+        for (auto cal : allCals)
+            m[cal.name()] = cal;
+        isInitialised = true;
+    }
+
+
+
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -274,10 +288,10 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         if (adjustCalendar) {
             //add custom holidays from populated calendar adjustments
             const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
-            for (auto h : config.getHolidays(cal.name())) {
+            for (auto h : config.getHolidays(s)) {
                 cal.addHoliday(h);
             }
-            for (auto b : config.getBusinessDays(cal.name())) {
+            for (auto b : config.getBusinessDays(s)) {
                 cal.removeHoliday(b);
             }
 

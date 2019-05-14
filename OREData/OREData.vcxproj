@@ -35,7 +35,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="calendaradjustmentconfig.hpp" />
     <ClInclude Include="ored\auto_link.hpp" />
     <ClInclude Include="ored\configuration\basecorrelationcurveconfig.hpp" />
     <ClInclude Include="ored\configuration\capfloorvolcurveconfig.hpp" />
@@ -156,6 +155,7 @@
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
+    <ClInclude Include="ored\utilities\calendaradjustmentconfig.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
@@ -174,7 +174,6 @@
     <ClInclude Include="ored\version.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\configuration\basecorrelationcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp" />
     <ClCompile Include="ored\configuration\cdsvolcurveconfig.cpp" />
@@ -274,6 +273,7 @@
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
+    <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />

@@ -637,6 +637,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="bond.cpp" />
+    <ClCompile Include="calendaradjustment.cpp" />
     <ClCompile Include="calendars.cpp" />
     <ClCompile Include="ccyswapwithresets.cpp" />
     <ClCompile Include="cds.cpp" />
