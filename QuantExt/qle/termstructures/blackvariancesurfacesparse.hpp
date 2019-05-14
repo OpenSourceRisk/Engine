@@ -72,7 +72,6 @@ private:
                          const QuantLib::Interpolation& intrp) const;
 
     DayCounter dayCounter_;
-    Date maxDate_;
     std::vector<Date> dates_;                               // expiries
     std::vector<Time> times_;                               // times
     std::vector<Interpolation> interpolations_;             // strike interpolations for each expiry

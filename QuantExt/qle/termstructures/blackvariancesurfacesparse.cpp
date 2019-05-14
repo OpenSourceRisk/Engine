@@ -130,14 +130,30 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
 
 Real BlackVarianceSurfaceSparse::getVarForStrike(Real strike, const vector<Real>& strks, const vector<Real>& vars,
                                                  const Interpolation& intrp) const {
+    cout << "getVarForStrike Called ------------------------" << endl;
+    cout << "Strike: " << strike << endl;
+    cout << "Strikes: ";
+    for (Size i = 0; i < strks.size(); i++) {
+        cout << strks[i] << ", ";
+    }
+    cout << endl << "vars: ";
+    for (Size i = 0; i < vars.size(); i++) {
+        cout << vars[i] << ", ";
+    }
+    cout << endl;
+
     Real retVar;
     if (strike > strks.back()) {
+        cout << "Extrapolating (Taking last var: " << vars.back() << ")" << endl;
         retVar = vars.back(); // flat extrapolate far stirke
     } else if (strike < strks.front()) {
+        cout << "Extrapolating (Taking first var: " << vars.front() << ")" << endl;
         retVar = vars.front(); // flat extrapolate near stirke
     } else {
+        cout << "Calling interpolation object for " << strike << "!" << endl;
         retVar = intrp(strike); // interpolate between strikes
     }
+    cout << "Returning retVar = " << retVar << "-----------------" << endl;
     return retVar;
 }
 
@@ -158,6 +174,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
             cout << variances_[i][j] << ", ";
         }
         cout << std::endl;
+        cout << "blackVarianceImpl done ---------------" << endl;
     }
 
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << this->referenceDate());
