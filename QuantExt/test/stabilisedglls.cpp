@@ -1125,7 +1125,11 @@ BOOST_AUTO_TEST_CASE(test2DRegression) {
         y.push_back(yt);
     }
 
+#if QL_HEX_VERSION > 0x01150000
+    std::vector<ext::function<Real(Array)> > basis =
+#else // QL 1.14 and below
     std::vector<boost::function1<Real, Array> > basis =
+#endif
         LsmBasisSystem::multiPathBasisSystem(2, 2, LsmBasisSystem::Monomial);
 
     StabilisedGLLS m(x, y, basis, StabilisedGLLS::MaxAbs);
