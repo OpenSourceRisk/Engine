@@ -212,6 +212,10 @@ Allowable values:  See \lstinline!Currency! in Table \ref{tab:allow_stand_data}.
 
 Allowable values: See \lstinline!Roll Convention! in Table \ref{tab:allow_stand_data}.
 
+\item PaymentLag [optional]: The payment lag given as as number business days, applies to fixed, Ibor and OIS legs.
+
+Allowable values: A non-negative whole number, if not given it defaults to zero.
+
 \item DayCounter: The day count convention of the leg coupons. 
 
 Allowable values: See \lstinline!DayCount Convention! in Table \ref{tab:daycount}.
@@ -633,7 +637,21 @@ The meanings and allowable values of the elements in the \lstinline!FloatingLegD
   Allowable values: An alphanumeric string of the form CCY-INDEX-TERM. CCY, INDEX and TERM must be separated by dashes (-). CCY and INDEX must be among the supported currency and index combinations. TERM must be an integer followed by D, W,
   M or Y. See Table \ref{tab:indices}.
 
-\item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by compounding the fixings.  IsAveraged only applies to Overnight indices.
+\item IsAveraged [Optional]:  For cases where there are multiple index fixings over a period \emph{true} indicates that
+  the average of the fixings is used to calculate the coupon.  \emph{false} indicates that the coupon is calculated by
+  compounding the fixings.  IsAveraged only applies to Overnight indices and Sub Periods Coupons.
+
+Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
+
+\item HasSubPeriods [Optional]: For cases where several Ibor fixings result in a single payment for a period, e.g. if
+  the Ibor tenor is 3M and the schedule tenor is 6M, two fixings are used to compute the amount of the semiannual coupon
+  payments. \emph{true} indicates that an average (IsAveraged = true) or a compounded (IsAveraged=false) value of the
+  fixings is used to determine the payment rate.
+
+Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
+
+\item IncludeSpread [Optional]: Only applies to Sub Periods Coupons. If \emph{true} the spread is included in the
+  compounding, otherwise it is excluded.
 
 Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or omitted.
 
