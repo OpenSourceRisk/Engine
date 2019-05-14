@@ -39,21 +39,20 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
 
     // first get uniques dates and sort
     set<Date> datesSet(dates.begin(), dates.end());
+    datesSet.insert(this->referenceDate());
     dates_ = vector<Date>(datesSet.begin(), datesSet.end());
-    if (dates_[0] != this->referenceDate()) {
-        dates_.insert(dates_.begin(), this->referenceDate());
-    }
     vector<bool> dateDone(dates_.size(), false);
     times_ = vector<Time>(dates_.size());
     interpolations_ = vector<Interpolation>(dates_.size());
     variances_ = vector<vector<Real> >(dates_.size());
     strikes_ = vector<vector<Real> >(dates_.size());
 
-    // Populate strike info. (Except interpolation obj members)
+    // Populate expiry info. (Except interpolation obj members)
     for (Size i = 0; i < dates.size(); i++) {
-        vector<Date>::const_iterator found = find(dates_.begin(), dates_.end(), dates[i]);
+        vector<Date>::iterator found = find(dates_.begin(), dates_.end(), dates[i]);
         QL_REQUIRE(found != dates_.end(), "Date should already be loaded" << dates[i]);
-        Size ii = found - dates_.begin() + 1; // index of expiry
+        ptrdiff_t ii;
+        ii = distance(dates_.begin(), found); // index of expiry
 
         if (!dateDone[ii]) {
             // add expiry data if not found
