@@ -106,6 +106,21 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
 
     // Short end
     if (dates_[0] != this->referenceDate()) {
+        cout << "Short end setup hit! -----------------" << endl;
+        cout << "status of vars: BEFORE short end insertion ----" << endl;
+        for (Size i = 0; i < strikes_.size(); i++) {
+            cout << i << endl << "Strikes: ";
+            for (Size j = 0; j < strikes_[i].size(); j++) {
+                cout << strikes_[i][j] << ", ";
+            }
+            cout << endl;
+
+            cout << "Variances: ";
+            for (Size j = 0; j < variances_[i].size(); j++) {
+                cout << variances_[i][j] << ", ";
+            }
+            cout << endl;
+        }
         dates_.insert(dates_.begin(), this->referenceDate());
         times_.insert(times_.begin(), 0.0);
         vector<Real> tmpStrkVect;
@@ -116,8 +131,24 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
         tmpVarVect.push_back(0.0);
         strikes_.insert(strikes_.begin(), tmpStrkVect);
         variances_.insert(variances_.begin(), tmpVarVect);
-        interpolations_.insert(interpolations_.begin(),
-                               LinearInterpolation(strikes_[0].begin(), strikes_[0].end(), variances_[0].begin()));
+        cout << "status of vars: BEFORE short end insertion ----" << endl;
+        for (Size i = 0; i < strikes_.size(); i++) {
+            cout << i << endl << "Strikes: ";
+            for (Size j = 0; j < strikes_[i].size(); j++) {
+                cout << strikes_[i][j] << ", ";
+            }
+            cout << endl;
+
+            cout << "Variances: ";
+            for (Size j = 0; j < variances_[i].size(); j++) {
+                cout << variances_[i][j] << ", ";
+            }
+            cout << endl;
+        }
+        cout << "Setting up and inserting interpolation with strikes_[0] and variances_[0]." << endl;
+        LinearInterpolation tmpInterpl(strikes_[0].begin(), strikes_[0].end(), variances_[0].begin());
+        interpolations_.insert(interpolations_.begin(), tmpInterpl);
+        cout << "Short end setup finished! ---" << endl;
     } else {
         // all variances at reference date should be zero
         for (Size i = 0; i < variances_[0].size(); i++) {
@@ -174,7 +205,6 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
             cout << variances_[i][j] << ", ";
         }
         cout << std::endl;
-        cout << "blackVarianceImpl done ---------------" << endl;
     }
 
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << this->referenceDate());
@@ -210,7 +240,7 @@ Real BlackVarianceSurfaceSparse::blackVarianceImpl(Time t, Real strike) const {
         varReturn = getVarForStrike(strike, strikes_.back(), variances_.back(), interpolations_.back());
         varReturn = varReturn * t / times_.back(); // scale
     }
-
+    cout << "blackVarianceImpl done (returning varReturn: " << varReturn << ".--------------- " << endl;
     return varReturn;
 }
 
