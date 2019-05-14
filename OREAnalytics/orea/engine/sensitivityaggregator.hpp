@@ -44,7 +44,7 @@ public:
         The \p categories map has a string key that defines the name of the category and a value
         that defines the set of trade IDs in that category.
     */
-    SensitivityAggregator(const std::map<std::string, std::set<std::string>>& categories);
+    SensitivityAggregator(const std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>>& categories);
 
     /*! Constructor that uses fuctions to define the aggregation categories.
 
@@ -74,7 +74,7 @@ private:
     /*! Container for category names and their definition via sets. This will be
         empty if constructor is provided functions directly.
     */
-    std::map<std::string, std::set<std::string>> setCategories_;
+    std::map<std::string, std::set<std::pair<std::string, QuantLib::Size>>> setCategories_;
     //! Container for category names and their definition via functions
     std::map<std::string, std::function<bool(std::string)>> categories_;
     //! Sensitivity records aggregated according to <code>categories_</code>
