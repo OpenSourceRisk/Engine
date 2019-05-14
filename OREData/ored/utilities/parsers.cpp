@@ -271,7 +271,7 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
     static bool isInitialised = false;
     if (!isInitialised) {
         //extend the static map to include quantlib map names 
-        //allCals should be set, but it doesn't know how to order dates
+        //allCals should be set, but it doesn't know how to order calendar
         vector<Calendar> allCals;
         for (auto it : m) 
             allCals.push_back(it.second);
