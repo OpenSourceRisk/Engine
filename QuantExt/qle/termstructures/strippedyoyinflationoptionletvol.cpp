@@ -33,9 +33,9 @@ StrippedYoYInflationOptionletVol::StrippedYoYInflationOptionletVol(
         Natural settlementDays, const Calendar &calendar,
         BusinessDayConvention bdc, const DayCounter& dc,
         const Period& observationLag, Frequency frequency,
-        bool indexIsInterpolated, const std::vector<Date> &yoyoptionletDates,
-        const std::vector<Rate> &strikes,
-        const std::vector<std::vector<Handle<Quote>>> &v,
+        bool indexIsInterpolated, const std::vector < Date > &yoyoptionletDates,
+        const std::vector < Rate > &strikes,
+        const std::vector < std::vector < Handle < Quote > > > &v,
         VolatilityType type, Real displacement) :
     YoYOptionletVolatilitySurface(settlementDays, calendar, bdc, dc, observationLag, frequency, indexIsInterpolated),
     calendar_(calendar), settlementDays_(settlementDays), businessDayConvention_(bdc), dc_(dc), type_(type),
