@@ -30,7 +30,7 @@ using std::function;
 namespace ore {
 namespace analytics {
 
-SensitivityAggregator::SensitivityAggregator(const map<string, set<string>>& categories) : setCategories_(categories) {
+SensitivityAggregator::SensitivityAggregator(const map<string, set<pair<string, Size>>>& categories) : setCategories_(categories) {
 
     // Initialise the category functions
     for (const auto& kv : setCategories_) {
@@ -41,7 +41,7 @@ SensitivityAggregator::SensitivityAggregator(const map<string, set<string>>& cat
     init();
 }
 
-SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(std::string)>>& categories)
+SensitivityAggregator::SensitivityAggregator(const map<string, function<bool(string)>>& categories)
     : categories_(categories) {
 
     // Initialise the categorised records
@@ -112,7 +112,12 @@ void SensitivityAggregator::add(SensitivityRecord& sr, set<SensitivityRecord>& r
 
 bool SensitivityAggregator::inCategory(const string& tradeId, const string& category) const {
     QL_REQUIRE(setCategories_.count(category), "The category " << category << " is not valid");
-    return setCategories_.at(category).count(tradeId) > 0;
+    auto tradeIds = setCategories_.at(category);
+    for (auto it = tradeIds.begin(); it != tradeIds.end(); ++it) {
+        if (it->first == tradeId)
+            return true;
+    }
+    return false;
 }
 
 } // namespace analytics

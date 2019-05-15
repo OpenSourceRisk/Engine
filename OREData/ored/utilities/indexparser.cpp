@@ -52,6 +52,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
 #include <qle/indexes/ibor/myrklibor.hpp>
@@ -103,7 +104,7 @@ template <> class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
-        if (p == 28 * Days) {
+        if (p.units() == Days && p.length() == 28) {
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
         } else {
             return boost::make_shared<MXNTiie>(p, h);
@@ -227,6 +228,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>()},
         {"TWD-TAIBOR", boost::make_shared<IborIndexParserWithPeriod<TWDTaibor>>()},
         {"MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>()},
+        {"KRW-CD", boost::make_shared<IborIndexParserWithPeriod<KRWCd>>()},
         {"KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>()},
         {"ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>()},
         {"RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>()},
@@ -396,5 +398,18 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     QL_REQUIRE(ret_idx, "parseIndex \"" << s << "\" not recognized");
     return ret_idx;
 }
+
+bool isOvernightIndex(const string& indexName) {
+
+    boost::shared_ptr<IborIndex> index;
+    if (tryParseIborIndex(indexName, index)) {
+        auto onIndex = boost::dynamic_pointer_cast<OvernightIndex>(index);
+        if (onIndex)
+            return true;
+    }
+
+    return false;
+}
+
 } // namespace data
 } // namespace ore
