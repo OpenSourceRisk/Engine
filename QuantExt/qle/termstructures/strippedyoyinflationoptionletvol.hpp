@@ -41,9 +41,9 @@ namespace QuantExt {
             Natural settlementDays, const Calendar &calendar,
             BusinessDayConvention bdc, const DayCounter& dc,
             const Period& observationLag, Frequency frequency,
-            bool indexIsInterpolated, const std::vector<Date> &yoyoptionletDates,
-            const std::vector<Rate> &strikes,
-            const std::vector<std::vector<Handle<Quote>>> &,
+            bool indexIsInterpolated, const std::vector < Date > &yoyoptionletDates,
+            const std::vector < Rate > &strikes,
+            const std::vector < std::vector < Handle < Quote > > > &,
             VolatilityType type = ShiftedLognormal,
             Real displacement = 0.0);
 
