@@ -669,6 +669,9 @@
     <ClInclude Include="qle\termstructures\optionletcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1152,6 +1155,9 @@
     </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

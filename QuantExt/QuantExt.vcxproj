@@ -652,6 +652,7 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacemoneyness.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
@@ -817,6 +818,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacemoneyness.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloortermvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\correlationtermstructure.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />
