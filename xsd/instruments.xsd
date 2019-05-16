@@ -237,10 +237,10 @@
         <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Spreads">
+        <xs:element name="Spreads" minOccurs="0" maxOccurs="1">
           <xs:complexType>
             <xs:sequence>
-              <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
+              <xs:element type="xs:float" name="Spread" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
