@@ -36,6 +36,7 @@
 #include <qle/indexes/ibor/idridrfix.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
 #include <qle/indexes/ibor/myrklibor.hpp>
@@ -100,6 +101,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
                            { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
                            { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
+                           { KRWCd(pd), "KRW-CD", SouthKorea().name(), KRWCurrency().name() },
                            { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
                            { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
                            { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
