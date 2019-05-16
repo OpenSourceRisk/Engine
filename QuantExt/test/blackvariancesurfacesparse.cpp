@@ -173,6 +173,103 @@ BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceConstantVol) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceInputs) { 
+    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceSurfaceSparse with erroneous inputs"); 
+
+    SavedSettings backup;
+
+    Settings::instance().evaluationDate() = Date(1, Mar, 2010);
+    Date today = Settings::instance().evaluationDate();
+
+    // the 3 vectors we pass into the vol term structure
+    // We insure that the vectors don't match in size.
+    vector<Date> dates = { Date(1, Mar, 2011), Date(1, Mar, 2011), Date(1, Mar, 2012), Date(1, Mar, 2012)};
+    vector<Real> strikes = { 2000, 3000, 2500, 3500, 3000 };
+    vector<Volatility> vols(strikes.size(), 0.1); 
+
+    Calendar cal = TARGET();
+    DayCounter dc = ActualActual();
+
+    BOOST_CHECK_THROW(QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc), QuantLib::Error);
+
+}
+
+BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) { 
+    // Asking on/past first/last points on strikes/expiries
+    BOOST_TEST_MESSAGE("Testing edge cases"); 
+    
+    SavedSettings backup;
+
+    Settings::instance().evaluationDate() = Date(1, Mar, 2010);
+    Date today = Settings::instance().evaluationDate();
+
+    // the 3 vectors we pass into the vol term structure
+    // We setup a small grid with 10% everywhere, this should return 10% vol for
+    // any point, i.e. a flat surface
+    vector<Date> dates = { Date(1, Mar, 2011), Date(1, Mar, 2011), Date(1, Mar, 2012), Date(1, Mar, 2012),
+                           Date(1, Mar, 2013) };
+    vector<Real> strikes = { 2000, 3000, 2500, 3500, 3000 };
+    vector<Volatility> vols(strikes.size(), 0.1); // 10% everywhere
+
+    Calendar cal = TARGET();
+    DayCounter dc = ActualActual();
+
+    Time t = 0.0;                       // vol at reference should be 0
+    Real strike1 = 0.0;                 // 0 strike
+    Real strike2 = strikes.front();     // lowest strike given
+    Real strike3 = 1500.0;              // between strikes strike
+    Real strike4 = strikes.back();      // highest strike
+    Real strike5 = strikes.back() * 2;  // larger than highest strike
+
+    Real strikeNeg = -1000;
+    // at reference date
+    auto surface = QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc);
+    BOOST_CHECK_CLOSE(surface.blackVol(t, strike1), 0.1, 1e-12);
+    BOOST_CHECK_CLOSE(surface.blackVol(t, strike2), 0.1, 1e-12);
+    BOOST_CHECK_CLOSE(surface.blackVol(t, strike3), 0.1, 1e-12);
+    BOOST_CHECK_CLOSE(surface.blackVol(t, strike4), 0.1, 1e-12);
+
+    // passed reference date
+    Time t1 = surface.timeFromReference(Date(1, Mar, 2014));
+    Real expectedVol = 0.1;
+    BOOST_CHECK_CLOSE(surface.blackVol(t1, strike2), expectedVol, 1e-12);
+
+    // negative strike
+    BOOST_CHECK_THROW(surface.blackVol(t, strikeNeg), QuantLib::Error);
+
+    
+}
+
+BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {
+    BOOST_TEST_MESSAGE("Testing surface from single point");
+    // Given a single point, every request should be expected extrapolated value.
+
+    SavedSettings backup;
+
+    Settings::instance().evaluationDate() = Date(1, Mar, 2010);
+    Date today = Settings::instance().evaluationDate();
+
+    // the 3 vectors we pass into the vol term structure
+    // We setup a single point with 10% - should be a flat surface
+    vector<Date> dates = { Date(1, Mar, 2011) };
+    vector<Real> strikes = { 2500 };
+    vector<Volatility> vols(strikes.size(), 0.1); // 10% everywhere
+
+    Calendar cal = TARGET();
+    DayCounter dc = ActualActual();
+
+    auto surface = QuantExt::BlackVarianceSurfaceSparse(today, cal, dates, strikes, vols, dc);
+    
+    // Check we don't throw for all points and get a vol of 10%
+    for (Time t = 0.0; t < 20; t += 0.2) {
+        for (Real strike = 1500; strike < 6000; strike += 100) {
+            BOOST_CHECK_CLOSE(surface.blackVol(t, strike), 0.1, 1e-12);
+        }
+    }
+
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
