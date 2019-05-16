@@ -337,6 +337,7 @@ termstructures/interpolatedyoycapfloortermpricesurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp
+termstructures/optionletcurve.hpp
 termstructures/optionletstripper.hpp
 termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
