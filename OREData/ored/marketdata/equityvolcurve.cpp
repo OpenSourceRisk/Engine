@@ -58,17 +58,13 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
         QL_REQUIRE(strikes.size() > 0, "No strikes defined");
 
         // check for wild cards
-        vector<string>::iterator exprWcIt = find(expiries.begin(), expiries.end(), "*");
-        vector<string>::iterator strkWcIt = find(strikes.begin(), strikes.end(), "*");
-        bool strikesWc = false;
-        bool expiriesWc = false;
-        if (exprWcIt != expiries.end()) {
-            QL_REQUIRE(expiries.size() == 1, "Wild card expiriy specified but more expiries also specified.")
-            expiriesWc = true;
+        bool expiriesWc = find(expiries.begin(), expiries.end(), "*") != expiries.end();
+        bool strikesWc = find(strikes.begin(), strikes.end(), "*") != strikes.end();
+        if (expiriesWc) {
+            QL_REQUIRE(expiries.size() == 1, "Wild card expiriy specified but more expiries also specified.");
         }
-        if (strkWcIt != strikes.end()) {
-            QL_REQUIRE(strikes.size() == 1, "Wild card strike specified but more strikes also specified.")
-            strikesWc = true;
+        if (strikesWc) {
+            QL_REQUIRE(strikes.size() == 1, "Wild card strike specified but more strikes also specified.");
         }
         bool noWildCard = !strikesWc && !expiriesWc;
 
@@ -153,12 +149,12 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
 
         } else {
             QL_REQUIRE(sStrikes.size() == sVols.size() && sVols.size() == sExpiries.size(),
-                       "Quotes loaded don't produces strike,vol,expiry vectors of equal length.");
+                       "Quotes loaded don't produce strike,vol,expiry vectors of equal length.");
         }
 
         // set up vols
-        // no wild cards
         if (noWildCard) {
+            // no wild cards
             if (dVols.rows() == 1 && dVols.columns() == 1){
                 LOG("EquityVolCurve: Building BlackConstantVol");
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(
@@ -198,9 +194,8 @@ EquityVolCurve::EquityVolCurve(Date asof, EquityVolatilityCurveSpec spec, const 
                 }
             }
             vol_->enableExtrapolation();
-
-            // some wild card
         } else {
+            // some wild card
             Calendar cal = NullCalendar(); 
             vol_ = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, sExpiries, sStrikes, sVols, dc);
         }
