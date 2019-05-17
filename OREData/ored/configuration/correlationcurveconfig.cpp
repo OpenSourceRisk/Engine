@@ -203,7 +203,6 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "QuoteType", to_string(quoteType_));
 
-
     if (quoteType_ != QuoteType::Null) {
 
         XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
@@ -223,5 +222,64 @@ XMLNode* CorrelationCurveConfig::toXML(XMLDocument& doc) {
 
     return node;
 }
+
+bool indexNameLessThan(const std::string& index1, const std::string& index2) {
+    vector<string> tokens1;
+    boost::split(tokens1, index1, boost::is_any_of("-"));
+    vector<string> tokens2;
+    boost::split(tokens2, index2, boost::is_any_of("-"));
+
+    QL_REQUIRE(tokens1.size() >= 2, "at least two tokens expected in " << index1);
+    QL_REQUIRE(tokens2.size() >= 2, "at least two tokens expected in " << index2);
+
+    Size s1, s2;
+
+    if (tokens1[0] == "CMS")
+        s1 = 4;
+    else if (tokens1[0] == "FX")
+        s1 = 2;
+    else if (tokens1[0] == "EQ")
+        s1 = 1;
+    else if (tokens1[0] == "COM")
+        s1 = 0;
+    else
+        s1 = 3; // assume Ibor
+
+    if (tokens2[0] == "CMS")
+        s2 = 4;
+    else if (tokens2[0] == "FX")
+        s2 = 2;
+    else if (tokens2[0] == "EQ")
+        s2 = 1;
+    else if (tokens2[0] == "COM")
+        s2 = 0;
+    else
+        s2 = 3; // assume Ibor
+
+    if (s1 < s2)
+        return true;
+    else if (s2 < s1)
+        return false;
+
+    // both EQ or both COM
+    if (s1 == 0 || s1 == 1)
+        return tokens1[1] < tokens2[1];
+
+    QL_REQUIRE(tokens1.size() >= 3, "at least three tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 3, "at least three tokens expected in " << index2)
+
+    // both CMS or both Ibor
+    if (s1 == 3 || s1 == 4)
+        return parsePeriod(tokens1[2]) < parsePeriod(tokens2[2]);
+
+    QL_REQUIRE(tokens1.size() >= 4, "at least four tokens expected in " << index1)
+    QL_REQUIRE(tokens2.size() >= 4, "at least four tokens expected in " << index2)
+
+    // both FX, compare CCY1 then CCY2 alphabetical
+    if (s1 == 2) {
+        return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens1[3]);
+    }
+}
+
 } // namespace data
 } // namespace ore
