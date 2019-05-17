@@ -62,9 +62,9 @@ public:
         QuantLib::BusinessDayConvention bdc,
         const QuantLib::DayCounter& dayCounter,
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
-        const Interpolator& interpolator = Interpolator(),
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
-        QuantLib::Real displacement = 0.0);
+        QuantLib::Real displacement = 0.0,
+        const Interpolator& interpolator = Interpolator());
     
     //! \name TermStructure interface
     //@{
@@ -88,6 +88,7 @@ public:
     const std::vector<QuantLib::Time>& times() const;
     const std::vector<QuantLib::Date>& dates() const;
     const std::vector<QuantLib::Real>& volatilities() const;
+    const std::vector<QuantLib::Real>& data() const;
     std::vector<std::pair<QuantLib::Date, QuantLib::Real> > nodes() const;
     //@}
     
@@ -95,27 +96,27 @@ protected:
     InterpolatedOptionletCurve(
         QuantLib::BusinessDayConvention bdc,
         const QuantLib::DayCounter& dayCounter,
-        const Interpolator& interpolator = Interpolator(),
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
-        QuantLib::Real displacement = 0.0);
+        QuantLib::Real displacement = 0.0,
+        const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(
         const QuantLib::Date& referenceDate,
         const QuantLib::Calendar& calendar,
         QuantLib::BusinessDayConvention bdc,
         const QuantLib::DayCounter& dayCounter,
-        const Interpolator& interpolator = Interpolator(),
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
-        QuantLib::Real displacement = 0.0);
+        QuantLib::Real displacement = 0.0,
+        const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(
         QuantLib::Natural settlementDays,
         const QuantLib::Calendar& calendar,
         QuantLib::BusinessDayConvention bdc,
         const QuantLib::DayCounter& dayCounter,
-        const Interpolator& interpolator = Interpolator(),
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
-        QuantLib::Real displacement = 0.0);
+        QuantLib::Real displacement = 0.0,
+        const Interpolator& interpolator = Interpolator());
 
     //! \name OptionletVolatilityStructure interface
     //@{
@@ -155,9 +156,9 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter,
     const QuantLib::Calendar& calendar,
-    const Interpolator& interpolator,
     QuantLib::VolatilityType volatilityType,
-    QuantLib::Real displacement)
+    QuantLib::Real displacement,
+    const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(dates.at(0), calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(), volatilities, interpolator),
       dates_(dates), volatilityType_(volatilityType), displacement_(displacement) {
@@ -168,9 +169,9 @@ template <class Interpolator>
 InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter,
-    const Interpolator& interpolator,
     QuantLib::VolatilityType volatilityType,
-    QuantLib::Real displacement)
+    QuantLib::Real displacement,
+    const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), 
       volatilityType_(volatilityType), displacement_(displacement) {}
@@ -181,9 +182,9 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::Calendar& calendar,
     QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter,
-    const Interpolator& interpolator,
     QuantLib::VolatilityType volatilityType,
-    QuantLib::Real displacement)
+    QuantLib::Real displacement,
+    const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(referenceDate, calendar, bdc, dayCounter),
     QuantLib::InterpolatedCurve<Interpolator>(interpolator),
     volatilityType_(volatilityType), displacement_(displacement) {}
@@ -194,9 +195,9 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::Calendar& calendar,
     QuantLib::BusinessDayConvention bdc,
     const QuantLib::DayCounter& dayCounter,
-    const Interpolator& interpolator,
     QuantLib::VolatilityType volatilityType,
-    QuantLib::Real displacement)
+    QuantLib::Real displacement,
+    const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(settlementDays, calendar, bdc, dayCounter),
     QuantLib::InterpolatedCurve<Interpolator>(interpolator),
     volatilityType_(volatilityType), displacement_(displacement) {}
@@ -251,6 +252,12 @@ InterpolatedOptionletCurve<T>::volatilities() const {
 }
 
 template <class T>
+inline const std::vector<QuantLib::Real>&
+InterpolatedOptionletCurve<T>::data() const {
+    return this->data_;
+}
+
+template <class T>
 inline std::vector<std::pair<QuantLib::Date, QuantLib::Real> >
 InterpolatedOptionletCurve<T>::nodes() const {
     std::vector<std::pair<QuantLib::Date, QuantLib::Real> > results(dates_.size());
@@ -269,11 +276,9 @@ InterpolatedOptionletCurve<T>::smileSectionImpl(QuantLib::Time optionTime) const
 
 template <class T>
 QuantLib::Real InterpolatedOptionletCurve<T>::volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const {
-    // Flat extrapolation for now
     if (optionTime > this->times_.back()) {
+        // Flat extrapolation for now
         return this->data_.back();
-    } else if (optionTime < this->times_.front()) {
-        return this->data_.front();
     } else {
         return this->interpolation_(optionTime, true);
     }
@@ -286,7 +291,8 @@ void InterpolatedOptionletCurve<T>::initialise() {
     QL_REQUIRE(this->data_.size() == dates_.size(), "Number of dates does not equal the number of volatilities");
 
     this->times_.resize(dates_.size());
-    for (QuantLib::Size i = 0; i < dates_.size(); ++i) {
+    this->times_[0] = 0.0;
+    for (QuantLib::Size i = 1; i < dates_.size(); ++i) {
         QL_REQUIRE(dates_[i] > dates_[i-1], "Dates must be increasing but " << QuantLib::io::ordinal(i) << " date " << 
             dates_[i] << " is not after " << QuantLib::io::ordinal(i - 1) << " date " << dates_[i-1]);
         this->times_[i] = dayCounter().yearFraction(dates_[0], dates_[i]);
