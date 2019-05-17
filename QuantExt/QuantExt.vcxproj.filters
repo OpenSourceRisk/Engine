@@ -672,6 +672,9 @@
     <ClInclude Include="qle\termstructures\capfloorhelper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
