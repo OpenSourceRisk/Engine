@@ -22,6 +22,7 @@
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 
 using namespace QuantLib;
+using std::ostream;
 
 namespace {
 void no_deletion(OptionletVolatilityStructure*) {}
@@ -116,6 +117,17 @@ void CapFloorHelper::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         RelativeDateBootstrapHelper<OptionletVolatilityStructure>::accept(v);
+}
+
+ostream& operator<<(ostream& out, CapFloorHelper::QuoteType type) {
+    switch (type) {
+    case CapFloorHelper::Volatility:
+        return out << "Volatility";
+    case CapFloorHelper::Premium:
+        return out << "Premium";
+    default:
+        QL_FAIL("Unknown CapFloorHelper::QuoteType (" << Integer(type) << ")");
+    }
 }
 
 }

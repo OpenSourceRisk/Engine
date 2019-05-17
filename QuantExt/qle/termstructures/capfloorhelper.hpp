@@ -105,6 +105,9 @@ protected:
     QuantLib::RelinkableHandle<QuantLib::OptionletVolatilityStructure> ovtsHandle_;
 };
 
+//! In order to convert CapFloorHelper::QuoteType to string
+std::ostream& operator<<(std::ostream& out, CapFloorHelper::QuoteType type);
+
 }
 
 #endif
