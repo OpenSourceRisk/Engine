@@ -6,9 +6,9 @@
     <xs:sequence>
       <xs:element type="xs:boolean" name="ParConversion" minOccurs="0"/>
       <xs:element type="discountcurves" name="DiscountCurves"/>
-      <xs:element type="indexcurves" name="IndexCurves"/>
-      <xs:element type="yieldcurves" name="YieldCurves"/>
-      <xs:element type="fxspots" name="FxSpots"/>
+      <xs:element type="indexcurves" name="IndexCurves" minOccurs="0"/>
+      <xs:element type="yieldcurves" name="YieldCurves" minOccurs="0"/>
+      <xs:element type="fxspots" name="FxSpots" minOccurs="0"/>
       <xs:element type="fxvolatilities" name="FxVolatilities" minOccurs="0"/>
       <xs:element type="swaptionvolatilities" name="SwaptionVolatilities" minOccurs="0"/>
       <xs:element type="yieldvolatilities" name="YieldVolatilities" minOccurs="0"/>
