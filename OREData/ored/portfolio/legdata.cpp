@@ -46,6 +46,7 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 
@@ -174,6 +175,10 @@ void YoYLegData::fromXML(XMLNode* node) {
     spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
+    if (XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
@@ -186,6 +191,7 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -939,6 +945,18 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
             boost::dynamic_pointer_cast<CappedFlooredYoYInflationCoupon>(leg[i])
                 ->setPricer(boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
         }
+
+        // build naked option leg if required
+        if (yoyLegData->nakedOption()) {
+            leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
+            // fix for missing registration in ql 1.13
+            for (auto const& t : leg) {
+                auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
+                if (s != nullptr)
+                    s->registerWith(s->underlying());
+            }
+        }
+
         return leg;
     }
     else {

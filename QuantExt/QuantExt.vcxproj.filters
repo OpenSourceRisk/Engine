@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="qle\quantext.hpp" />
@@ -672,6 +672,9 @@
     <ClInclude Include="qle\math\fillemptymatrix.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1161,6 +1164,9 @@
     </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
