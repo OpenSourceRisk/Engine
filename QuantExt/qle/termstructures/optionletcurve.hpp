@@ -211,7 +211,7 @@ inline QuantLib::Date InterpolatedOptionletCurve<T>::maxDate() const {
 
 template <class T>
 inline QuantLib::Rate InterpolatedOptionletCurve<T>::minStrike() const {
-    if (volatilityType == QuantLib::ShiftedLognormal) {
+    if (volatilityType() == QuantLib::ShiftedLognormal) {
         return displacement_ > 0.0 ? -displacement_ : 0.0;
     } else {
         return QL_MIN_REAL;
