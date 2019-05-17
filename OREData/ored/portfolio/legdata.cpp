@@ -949,7 +949,6 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
         // build naked option leg if required
         if (yoyLegData->nakedOption()) {
             leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
-            // fix for missing registration in ql 1.13
             for (auto const& t : leg) {
                 auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
                 if (s != nullptr)
