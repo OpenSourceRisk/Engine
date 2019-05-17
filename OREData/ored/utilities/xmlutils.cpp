@@ -261,7 +261,7 @@ string XMLUtils::getChildValue(XMLNode* node, const string& name, bool mandatory
     if (mandatory) {
         QL_REQUIRE(child, "Error: No XML Child Node " << name << " found.");
     }
-    return child ? child->value() : "";
+    return child ? getNodeValue(child) : "";
 }
 
 Real XMLUtils::getChildValueAsDouble(XMLNode* node, const string& name, bool mandatory) {
@@ -287,7 +287,7 @@ vector<string> XMLUtils::getChildrenValues(XMLNode* parent, const string& names,
     }
     if (node) {
         for (xml_node<>* child = node->first_node(name.c_str()); child; child = child->next_sibling(name.c_str()))
-            vec.push_back(child->value());
+            vec.push_back(getNodeValue(child));
     }
     return vec;
 }
@@ -316,7 +316,7 @@ vector<Real> XMLUtils::getChildrenValuesAsDoublesWithAttributes(XMLNode* parent,
     if (node) {
         for (xml_node<>* child = node->first_node(name.c_str()); child; child = child->next_sibling(name.c_str())) {
 
-            vec.push_back(parseReal(child->value()));
+            vec.push_back(parseReal(getNodeValue(child)));
 
             xml_attribute<>* attr = child->first_attribute(attrName.c_str());
             if (attr && attr->value())
@@ -362,7 +362,7 @@ map<string, string> XMLUtils::getChildrenAttributesAndValues(XMLNode* parent, co
     for (XMLNode* child = getChildNode(parent, names.c_str()); child;
          child = XMLUtils::getNextSibling(child, names.c_str())) {
         string first = getAttribute(child, attributeName);
-        string second = child->value();
+        string second = getNodeValue(child);
         if (mandatory) {
             QL_REQUIRE(first != "", "empty attribute for " << names);
         }
@@ -444,6 +444,11 @@ XMLNode* XMLUtils::getNextSibling(XMLNode* node, const string& name) {
 
 string XMLUtils::getNodeValue(XMLNode* node) {
     QL_REQUIRE(node, "XMLUtils::getNodeValue(): XML Node is NULL");
+    // handle CDATA nodes
+    XMLNode* n = node->first_node();
+    if (n && n->type() == node_cdata)
+        return n->value();
+    // all other cases
     return node->value();
 }
 
