@@ -18,6 +18,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/variant.hpp>
+#include <boost/assign/list_of.hpp>
+#include <boost/typeof/typeof.hpp>
 
 #include <test/capfloormarketdata.hpp>
 #include <test/yieldcurvemarketdata.hpp>
@@ -36,6 +39,7 @@ using namespace boost::unit_test_framework;
 namespace bdata = boost::unit_test::data;
 typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
 using std::ostream;
+using boost::assign::list_of;
 
 namespace {
 
@@ -50,7 +54,7 @@ struct CommonVars {
           bdc(Following),
           dayCounter(Actual365Fixed()),
           accuracy(1.0e-12),
-          tolerance(1.0e-12) {
+          tolerance(1.0e-10) {
         
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
@@ -149,18 +153,47 @@ vector<VolatilityColumn> generateVolatilityColumns() {
     return volatilityColumns;
 }
 
+vector<CapFloor::Type> capFloorTypes = list_of(CapFloor::Cap)(CapFloor::Floor);
+
+vector<CapFloorHelper::QuoteType> quoteTypes = list_of(CapFloorHelper::Volatility)(CapFloorHelper::Premium);
+
+typedef boost::variant<Linear, BackwardFlat> InterpolationType;
+vector<InterpolationType> interpolationTypes = list_of(InterpolationType(Linear()))(InterpolationType(BackwardFlat()));
+
+}
+
+// Needed for BOOST_DATA_TEST_CASE below
+// https://stackoverflow.com/a/33965517/1771882
+namespace boost {
+namespace test_tools {
+namespace tt_detail {
+template <> struct print_log_value<InterpolationType> {
+    void operator()(std::ostream& os, const InterpolationType& interpolationType) {
+        switch (interpolationType.which()) {
+        case 0:
+            os << "Linear";
+            break;
+        case 1:
+            os << "BackwardFlat";
+            break;
+        default:
+            BOOST_FAIL("Unexpected interpolation type");
+        }
+    }
+};
+}
+}
 }
 
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PiecewiseOptionletCurveTests)
 
-BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::make(generateVolatilityColumns()), volatilityColumn) {
-    
-    BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
+BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, 
+    bdata::make(generateVolatilityColumns()) * bdata::make(capFloorTypes) * bdata::make(quoteTypes) * bdata::make(interpolationTypes),
+    volatilityColumn, capFloorType, quoteType, interpolationType) {
 
-    CapFloor::Type capFloorType = CapFloor::Cap;
-    CapFloorHelper::QuoteType quoteType = CapFloorHelper::Volatility;
+    BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
 
     BOOST_TEST_MESSAGE("Test inputs are:");
     BOOST_TEST_MESSAGE("  Cap floor type: " << capFloorType);
@@ -211,12 +244,24 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::make(
             quote, iborIndex, testYieldCurves.discountEonia, quoteType, volatilityColumn.type, volatilityColumn.displacement);
     }
 
-    // Create the piecewise optionlet curve and fail if it is not created
+    // Create the piecewise optionlet curve, with the given interpolation type, and fail if it is not created
     VolatilityType curveVolatilityType = Normal;
     Real curveDisplacement = 0.0;
-    boost::shared_ptr<PiecewiseOptionletCurve<Linear> > ovCurve;
-    BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Linear> >(referenceDate, helpers,
-        calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+    boost::shared_ptr<OptionletVolatilityStructure> ovCurve;
+    switch (interpolationType.which()) {
+    case 0:
+        BOOST_TEST_MESSAGE("Using Linear interpolation");
+        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        break;
+    case 1:
+        BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
+        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        break;
+    default:
+        BOOST_FAIL("Unexpected interpolation type");
+    }
     Handle<OptionletVolatilityStructure> hovs(ovCurve);
 
     // Price each cap floor instrument using the piecewise optionlet curve and check it against the flat NPV

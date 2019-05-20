@@ -29,6 +29,7 @@ interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 optionletstripper.cpp
 payment.cpp
+piecewiseoptionletcurve.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
