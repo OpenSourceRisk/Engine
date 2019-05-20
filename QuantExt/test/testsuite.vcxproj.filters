@@ -119,6 +119,9 @@
     <ClCompile Include="strippedoptionletadapter.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="piecewiseoptionletcurve.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

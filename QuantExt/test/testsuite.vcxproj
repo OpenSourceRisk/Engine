@@ -665,6 +665,7 @@
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
+    <ClCompile Include="piecewiseoptionletcurve.cpp" />
     <ClCompile Include="pricecurve.cpp" />
     <ClCompile Include="pricetermstructureadapter.cpp" />
     <ClCompile Include="qle_calendars.cpp" />
