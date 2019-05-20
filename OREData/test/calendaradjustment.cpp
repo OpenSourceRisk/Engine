@@ -21,16 +21,71 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/date.hpp>
+#include <ored/marketdata/csvloader.hpp>
+#include <ored/utilities/csvfilereader.hpp>
+#include <oret/toplevelfixture.hpp>
+#include <oret/datapaths.hpp>
+#include <ored/utilities/parsers.hpp>
 
-
-using namespace ore::data;
+using namespace QuantLib;
 using namespace boost::unit_test_framework;
 using namespace std;
-using namespace QuantLib;
+using namespace ore::data;
 
-BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, ore::test::TopLevelFixture)
+using ore::test::TopLevelFixture;
+
+namespace bdata = boost::unit_test::data;
+
+namespace {
+
+// Fixture used in test case below:
+// - Provide calendar adjustment file
+// - Provide expected calendars from another system
+class F : public TopLevelFixture {
+public:
+    CalendarAdjustmentConfig calendarAdjustments;
+    Date startDate;
+    Date endDate; 
+
+    F() {
+        calendarAdjustments.fromFile(TEST_INPUT_FILE("calendaradjustments.xml"));
+        startDate = Date(1, Jan, 2019);
+        endDate = Date(31, Dec, 2019);
+    }
+
+    ~F() {}
+};
+
+struct TestDatum {
+    string calendarName;
+    std::vector<Date> holidays;
+};
+
+// Needed for BOOST_DATA_TEST_CASE below as it writes out the TestDatum
+ostream& operator<<(ostream& os, const TestDatum& testDatum) {
+    return os << "[" << testDatum.calendarName << "," << testDatum.holidays.size() << " holidays]";
+}
+
+std::vector<TestDatum> loadExpectedHolidays() {
+    std::vector<TestDatum> data;
+
+    // load from file
+
+    return data;
+}
+}
+
+BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, F)
 
 BOOST_AUTO_TEST_SUITE(CalendarAdjustmentsTests)
+
+BOOST_DATA_TEST_CASE(testCalendarAdjustmentRealCalendars, bdata::make(loadExpectedHolidays()), expectedHolidays) {
+    //loop over expected holidays, for each calendar call parseCalendar() 
+    //and check that the holidays match the expected ones
+    vector<Date> qcalHols;
+    qcalHols = Calendar::holidayList(parseCalendar(expectedHolidays.calendarName), startDate, endDate, false);
+    BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(), expectedHolidays.holidays.end());
+}
 
 BOOST_AUTO_TEST_CASE(testCalendarAdjustment) {
     BOOST_TEST_MESSAGE("Testing calendar adjustments...");
