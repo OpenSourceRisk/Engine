@@ -35,6 +35,7 @@ using namespace boost::unit_test_framework;
 
 namespace bdata = boost::unit_test::data;
 typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
+using std::ostream;
 
 namespace {
 
@@ -76,12 +77,77 @@ struct CommonVars {
     // Cap floor ibor index
     boost::shared_ptr<IborIndex> iborIndex;
 
-    // EUR cap floor test volatility data from file test/capfloormarketdata.hpp
-    CapFloorVolatilityEUR testVols;
-
     // EUR discount curve test data from file test/yieldcurvemarketdata.hpp
     YieldCurveEUR testYieldCurves;
 };
+
+// Struct to hold a cap floor volatility column and some associated meta data
+struct VolatilityColumn {
+    Real strike;
+    vector<Period> tenors;
+    vector<Real> volatilities;
+    VolatilityType type;
+    Real displacement;
+};
+
+// Needed for data driven test case below as it writes out the VolatilityColumn
+ostream& operator<<(ostream& os, const VolatilityColumn& vc) {
+    return os << "Column with strike: " << vc.strike << ", volatility type: " << 
+        vc.type << ", shift: " << vc.displacement;
+}
+
+// From the EUR cap floor test volatility data in file test/capfloormarketdata.hpp, create a vector of 
+// VolatilityColumns which will be the data in the data driven test below
+vector<VolatilityColumn> generateVolatilityColumns() {
+
+    // Will hold the generated volatility columns
+    vector<VolatilityColumn> volatilityColumns;
+
+    // EUR cap floor test volatility data from file test/capfloormarketdata.hpp
+    CapFloorVolatilityEUR testVols;
+
+    VolatilityColumn volatilityColumn;
+    vector<Real> volatilities(testVols.tenors.size());
+    volatilityColumn.tenors = testVols.tenors;
+
+    // The normal volatilities
+    volatilityColumn.type = Normal;
+    volatilityColumn.displacement = 0.0;
+    for (Size j = 0; j < testVols.strikes.size(); j++) {
+        for (Size i = 0; i < testVols.tenors.size(); i++) {
+            volatilities[i] = testVols.nVols[i][j];
+        }
+        volatilityColumn.strike = testVols.strikes[j];
+        volatilityColumn.volatilities = volatilities;
+        volatilityColumns.push_back(volatilityColumn);
+    }
+
+    // The shifted lognormal volatilities with shift 1
+    volatilityColumn.type = ShiftedLognormal;
+    volatilityColumn.displacement = testVols.shift_1;
+    for (Size j = 0; j < testVols.strikes.size(); j++) {
+        for (Size i = 0; i < testVols.tenors.size(); i++) {
+            volatilities[i] = testVols.slnVols_1[i][j];
+        }
+        volatilityColumn.strike = testVols.strikes[j];
+        volatilityColumn.volatilities = volatilities;
+        volatilityColumns.push_back(volatilityColumn);
+    }
+
+    // The shifted lognormal volatilities with shift 2
+    volatilityColumn.type = ShiftedLognormal;
+    volatilityColumn.displacement = testVols.shift_2;
+    for (Size j = 0; j < testVols.strikes.size(); j++) {
+        for (Size i = 0; i < testVols.tenors.size(); i++) {
+            volatilities[i] = testVols.slnVols_2[i][j];
+        }
+        volatilityColumn.strike = testVols.strikes[j];
+        volatilityColumn.volatilities = volatilities;
+        volatilityColumns.push_back(volatilityColumn);
+    }
+
+    return volatilityColumns;
+}
 
 }
 
@@ -89,62 +155,60 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(PiecewiseOptionletCurveTests)
 
-BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::xrange(6), strikeIdx) {
+BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::make(generateVolatilityColumns()), volatilityColumn) {
     
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
 
     CapFloor::Type capFloorType = CapFloor::Cap;
     CapFloorHelper::QuoteType quoteType = CapFloorHelper::Volatility;
-    VolatilityType quoteVolatilityType = Normal;
-    Real quoteDisplacement = 0.0;
 
     BOOST_TEST_MESSAGE("Test inputs are:");
     BOOST_TEST_MESSAGE("  Cap floor type: " << capFloorType);
-    BOOST_TEST_MESSAGE("  Cap floor strike: " << testVols.strikes[strikeIdx]);
+    BOOST_TEST_MESSAGE("  Cap floor strike: " << volatilityColumn.strike);
     BOOST_TEST_MESSAGE("  Quote type: " << quoteType);
     if (quoteType == CapFloorHelper::Volatility) {
-        BOOST_TEST_MESSAGE("  Quote volatility type: " << quoteVolatilityType);
-        BOOST_TEST_MESSAGE("  Quote displacement: " << quoteDisplacement);
+        BOOST_TEST_MESSAGE("  Quote volatility type: " << volatilityColumn.type);
+        BOOST_TEST_MESSAGE("  Quote displacement: " << volatilityColumn.displacement);
     }
 
     // Form the cap floor helper instrument for each tenor in the strike column
-    vector<boost::shared_ptr<helper> > helpers(testVols.tenors.size());
+    vector<boost::shared_ptr<helper> > helpers(volatilityColumn.tenors.size());
     
     // Store each cap floor instrument in the strike column and its NPV using the flat cap floor volatilities
-    vector<boost::shared_ptr<CapFloor> > instruments(testVols.tenors.size());
-    vector<Real> flatNpvs(testVols.tenors.size());
+    vector<boost::shared_ptr<CapFloor> > instruments(volatilityColumn.tenors.size());
+    vector<Real> flatNpvs(volatilityColumn.tenors.size());
     
     BOOST_TEST_MESSAGE("The input values at each tenor are:");
-    for (Size i = 0; i < testVols.tenors.size(); i++) {
+    for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
         
         // Get the relevant quote value
-        Real volatility = testVols.nVols[i][strikeIdx];
+        Real volatility = volatilityColumn.volatilities[i];
 
         // Create the cap floor instrument and store its price using the quoted flat volatility
-        instruments[i] = MakeCapFloor(capFloorType, testVols.tenors[i], iborIndex, testVols.strikes[strikeIdx]);
-        if (quoteVolatilityType == ShiftedLognormal) {
+        instruments[i] = MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
+        if (volatilityColumn.type == ShiftedLognormal) {
             instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                testYieldCurves.discountEonia, volatility, dayCounter, quoteDisplacement));
+                testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
         } else {
             instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
                 testYieldCurves.discountEonia, volatility, dayCounter));
         }
         flatNpvs[i] = instruments[i]->NPV();
         
-        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV) = (" << testVols.tenors[i] << 
+        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV) = (" << volatilityColumn.tenors[i] <<
             ", " << volatility << ", " << flatNpvs[i] << ")");
 
         // Create a volatility or premium quote
         RelinkableHandle<Quote> quote;
-        if (quoteType = CapFloorHelper::Volatility) {
+        if (quoteType == CapFloorHelper::Volatility) {
             quote.linkTo(boost::make_shared<SimpleQuote>(volatility));
         } else {
             quote.linkTo(boost::make_shared<SimpleQuote>(flatNpvs[i]));
         }
         
         // Create the helper instrument
-        helpers[i] = boost::make_shared<CapFloorHelper>(capFloorType, testVols.tenors[i], testVols.strikes[strikeIdx],
-            quote, iborIndex, testYieldCurves.discountEonia, quoteType, quoteVolatilityType, quoteDisplacement);
+        helpers[i] = boost::make_shared<CapFloorHelper>(capFloorType, volatilityColumn.tenors[i], volatilityColumn.strike,
+            quote, iborIndex, testYieldCurves.discountEonia, quoteType, volatilityColumn.type, volatilityColumn.displacement);
     }
 
     // Create the piecewise optionlet curve and fail if it is not created
@@ -158,7 +222,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::xrang
     // Price each cap floor instrument using the piecewise optionlet curve and check it against the flat NPV
     BOOST_TEST_MESSAGE("The stripped values and differences at each tenor are:");
     Real strippedNpv;
-    for (Size i = 0; i < testVols.tenors.size(); i++) {
+    for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
         if (ovCurve->volatilityType() == ShiftedLognormal) {
             instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
                 testYieldCurves.discountEonia, hovs));
@@ -168,8 +232,8 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, bdata::xrang
         }
         strippedNpv = instruments[i]->NPV();
 
-        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" << testVols.tenors[i] << 
-            ", " << testVols.nVols[i][strikeIdx] << ", " << flatNpvs[i] << ", " << strippedNpv << ", " <<
+        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" << volatilityColumn.tenors[i] <<
+            ", " << volatilityColumn.volatilities[i] << ", " << flatNpvs[i] << ", " << strippedNpv << ", " <<
             (flatNpvs[i] - strippedNpv) << ")");
 
         BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
