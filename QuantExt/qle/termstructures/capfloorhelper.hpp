@@ -83,7 +83,7 @@ public:
     void accept(QuantLib::AcyclicVisitor&);
     //@}
 
-protected:
+private:
     //! RelativeDateBootstrapHelper interface
     void initializeDates();
 
@@ -97,12 +97,19 @@ protected:
     QuantLib::VolatilityType quoteVolatilityType_;
     QuantLib::Real quoteDisplacement_;
     bool endOfMonth_;
+    QuantLib::Handle<QuantLib::Quote> rawQuote_;
 
     //! The underlying instrument
     boost::shared_ptr<QuantLib::CapFloor> capFloor_;
 
     //! The OptionletVolatilityStructure Handle that we link to the \c capFloor_ instrument
     QuantLib::RelinkableHandle<QuantLib::OptionletVolatilityStructure> ovtsHandle_;
+
+    //! A copy of the underlying instrument that is used in the npv method
+    boost::shared_ptr<QuantLib::CapFloor> capFloorCopy_;
+
+    //! A method to calculate the cap floor premium from a flat cap floor volatility value
+    QuantLib::Real npv(QuantLib::Real quote);
 };
 
 //! In order to convert CapFloorHelper::QuoteType to string

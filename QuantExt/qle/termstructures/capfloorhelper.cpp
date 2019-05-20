@@ -20,6 +20,9 @@
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/quotes/derivedquote.hpp>
+#include <boost/function.hpp>
+#include <boost/bind.hpp>
 
 using namespace QuantLib;
 using std::ostream;
@@ -30,6 +33,12 @@ void no_deletion(OptionletVolatilityStructure*) {}
 
 namespace QuantExt {
 
+// The argument to RelativeDateBootstrapHelper below is not simply the `quote`. Instead we create a DerivedQuote that,
+// each time it is asked for its value, it returns a premium by calling CapFloorHelper::npv with the `quote` value. In 
+// this way, the `BootstrapHelper<T>::quoteError()` is always based on the cap floor premium and we do not have imply 
+// the volatility. This leads to all kinds of issues when deciding on max and min values in the iterative bootstrap 
+// where the quote volatility type input is of one type and the optionlet structure that we are trying to build is of 
+// another different type. 
 CapFloorHelper::CapFloorHelper(
     CapFloor::Type type,
     const Period& tenor,
@@ -41,7 +50,9 @@ CapFloorHelper::CapFloorHelper(
     QuantLib::VolatilityType quoteVolatilityType,
     QuantLib::Real quoteDisplacement,
     bool endOfMonth)
-    : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(quote),
+    : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(Handle<Quote>(
+        boost::make_shared<DerivedQuote<boost::function<Real(Real)>>>(
+            quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
       type_(type),
       tenor_(tenor),
       strike_(strike),
@@ -50,7 +61,8 @@ CapFloorHelper::CapFloorHelper(
       quoteType_(quoteType),
       quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement),
-      endOfMonth_(endOfMonth) {
+      endOfMonth_(endOfMonth),
+      rawQuote_(quote) {
 
     registerWith(iborIndex_);
     registerWith(discountHandle_);
@@ -60,7 +72,9 @@ CapFloorHelper::CapFloorHelper(
 
 void CapFloorHelper::initializeDates() {
 
+    // Initialise the instrument and a copy
     capFloor_ = MakeCapFloor(type_, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+    capFloorCopy_ = MakeCapFloor(type_, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
 
     // Maturity date is just the maturity date of the cap floor
     maturityDate_ = capFloor_->maturityDate();
@@ -96,20 +110,24 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     } else {
         capFloor_->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discountHandle_, ovtsHandle_));
     }
+
+    // If the quote type is not a premium, we will need to use capFloorCopy_ to return the premium from the volatility
+    // quote 
+    if (quoteType_ != Premium) {
+        if (quoteVolatilityType_ == ShiftedLognormal) {
+            capFloorCopy_->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(discountHandle_, rawQuote_,
+                ovtsHandle_->dayCounter(), quoteDisplacement_));
+        } else {
+            capFloorCopy_->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discountHandle_, rawQuote_,
+                ovtsHandle_->dayCounter()));
+        }
+    }
 }
 
 Real CapFloorHelper::impliedQuote() const {
-    
     QL_REQUIRE(termStructure_ != 0, "CapFloorHelper's optionlet volatility term structure has not been set");
     capFloor_->recalculate();
-
-    Real npv = capFloor_->NPV();
-    if (quoteType_ == Premium) {
-        return npv;
-    } else {
-        return capFloor_->impliedVolatility(npv, discountHandle_, quote_->value(), 
-            1e-12, 100, 1e-8, 5.0, quoteVolatilityType_, quoteDisplacement_);
-    }
+    return capFloor_->NPV();
 }
 
 void CapFloorHelper::accept(AcyclicVisitor& v) {
@@ -117,6 +135,15 @@ void CapFloorHelper::accept(AcyclicVisitor& v) {
         v1->visit(*this);
     else
         RelativeDateBootstrapHelper<OptionletVolatilityStructure>::accept(v);
+}
+
+Real CapFloorHelper::npv(Real quoteValue) {
+    if (quoteType_ == Premium) {
+        return quoteValue;
+    } else {
+        // If the quote value is a volatility, return the premium
+        return capFloorCopy_->NPV();
+    }
 }
 
 ostream& operator<<(ostream& out, CapFloorHelper::QuoteType type) {
