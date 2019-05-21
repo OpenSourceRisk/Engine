@@ -154,16 +154,22 @@ vector<VolatilityColumn> generateVolatilityColumns() {
     return volatilityColumns;
 }
 
+// Cap floor types for the data driven test case
 vector<CapFloor::Type> capFloorTypes = list_of(CapFloor::Cap)(CapFloor::Floor);
 
+// Quote types for the data driven test case
 vector<CapFloorHelper::QuoteType> quoteTypes = list_of(CapFloorHelper::Volatility)(CapFloorHelper::Premium);
 
+// Interpolation types for the data driven test case
 typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat> InterpolationType;
 vector<InterpolationType> interpolationTypes = list_of
     (InterpolationType(Linear()))
     (InterpolationType(QuantExt::LinearFlat()))
     (InterpolationType(BackwardFlat())
 );
+
+// If the built optionlet structure in the test has a floating or fixed reference date
+vector<bool> isMovingValues = list_of(true)(false);
 
 }
 
@@ -198,8 +204,9 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(PiecewiseOptionletCurveTests)
 
 BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, 
-    bdata::make(generateVolatilityColumns()) * bdata::make(capFloorTypes) * bdata::make(quoteTypes) * bdata::make(interpolationTypes),
-    volatilityColumn, capFloorType, quoteType, interpolationType) {
+    bdata::make(generateVolatilityColumns()) * bdata::make(capFloorTypes) * bdata::make(quoteTypes) * 
+    bdata::make(interpolationTypes) * bdata::make(isMovingValues),
+    volatilityColumn, capFloorType, quoteType, interpolationType, isMoving) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
 
@@ -258,19 +265,37 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
     boost::shared_ptr<OptionletVolatilityStructure> ovCurve;
     switch (interpolationType.which()) {
     case 0:
-        BOOST_TEST_MESSAGE("Using Linear interpolation");
-        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
-            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        if (isMoving) {
+            BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        } else {
+            BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        }
         break;
     case 1:
-        BOOST_TEST_MESSAGE("Using LinearFlat interpolation");
-        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
-            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        if (isMoving) {
+            BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        } else {
+            BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        }
         break;
     case 2:
-        BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
-        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
-            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        if (isMoving) {
+            BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        } else {
+            BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
+            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        }
         break;
     default:
         BOOST_FAIL("Unexpected interpolation type");
