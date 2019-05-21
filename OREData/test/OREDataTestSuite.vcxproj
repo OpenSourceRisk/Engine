@@ -39,6 +39,7 @@
     <ProjectGuid>{A613045C-34AF-4706-AA3C-730C92524F74}</ProjectGuid>
     <RootNamespace>OREDataTestSuite</RootNamespace>
     <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\ore.props" />

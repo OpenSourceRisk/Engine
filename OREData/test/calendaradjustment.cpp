@@ -50,7 +50,7 @@ public:
     F() {
         calendarAdjustments.fromFile(TEST_INPUT_FILE("calendaradjustments.xml"));
         startDate = Date(1, Jan, 2019);
-        endDate = Date(31, Dec, 2019);
+        endDate = Date(31, Dec, 2020);
     }
 
     ~F() {}
@@ -67,10 +67,29 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
 }
 
 std::vector<TestDatum> loadExpectedHolidays() {
-    std::vector<TestDatum> data;
-
     // load from file
-
+    std::vector<TestDatum> data;
+    string fileName = TEST_INPUT_FILE("holidays.csv");
+    ifstream file;
+    file.open(fileName);
+    QL_REQUIRE(file.is_open(), "error opening file " << fileName);
+    std::string line;
+    // skip empty lines
+    while (!file.eof()) {
+        getline(file, line);
+        boost::trim(line);
+        vector<string> elements;
+        boost::split(elements, line, boost::is_any_of(","), boost::token_compress_on);
+        QL_REQUIRE(elements.size() > 1,"Not enough elements in the calendar");
+        TestDatum td; 
+        td.calendarName = elements.front();
+        for (Size i = 1; i < elements.size(); i++) {
+            td.holidays.push_back(parseDate(elements[i]));
+        }
+        data.push_back(td);
+    }
+    file.close(); 
+    
     return data;
 }
 }
