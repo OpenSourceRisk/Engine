@@ -276,12 +276,7 @@ InterpolatedOptionletCurve<T>::smileSectionImpl(QuantLib::Time optionTime) const
 
 template <class T>
 QuantLib::Real InterpolatedOptionletCurve<T>::volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const {
-    if (optionTime > this->times_.back()) {
-        // Flat extrapolation for now
-        return this->data_.back();
-    } else {
-        return this->interpolation_(optionTime, true);
-    }
+    return this->interpolation_(optionTime, true);
 }
 
 template <class T>

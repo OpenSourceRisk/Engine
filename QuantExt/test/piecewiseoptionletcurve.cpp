@@ -28,6 +28,7 @@
 
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
+#include <qle/math/flatextrapolation.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
@@ -157,8 +158,12 @@ vector<CapFloor::Type> capFloorTypes = list_of(CapFloor::Cap)(CapFloor::Floor);
 
 vector<CapFloorHelper::QuoteType> quoteTypes = list_of(CapFloorHelper::Volatility)(CapFloorHelper::Premium);
 
-typedef boost::variant<Linear, BackwardFlat> InterpolationType;
-vector<InterpolationType> interpolationTypes = list_of(InterpolationType(Linear()))(InterpolationType(BackwardFlat()));
+typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat> InterpolationType;
+vector<InterpolationType> interpolationTypes = list_of
+    (InterpolationType(Linear()))
+    (InterpolationType(QuantExt::LinearFlat()))
+    (InterpolationType(BackwardFlat())
+);
 
 }
 
@@ -174,6 +179,9 @@ template <> struct print_log_value<InterpolationType> {
             os << "Linear";
             break;
         case 1:
+            os << "LinearFlat";
+            break;
+        case 2:
             os << "BackwardFlat";
             break;
         default:
@@ -255,6 +263,11 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
         break;
     case 1:
+        BOOST_TEST_MESSAGE("Using LinearFlat interpolation");
+        BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+            referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+        break;
+    case 2:
         BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
         BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
             referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
