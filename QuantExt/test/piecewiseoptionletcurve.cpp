@@ -45,7 +45,7 @@ using boost::assign::list_of;
 namespace {
 
 // Variables to be used in the test
-struct CommonVars {
+struct CommonVars : public qle::test::TopLevelFixture {
     
     // Constructor
     CommonVars()
