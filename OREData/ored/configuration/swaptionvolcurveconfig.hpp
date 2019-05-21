@@ -40,7 +40,7 @@ class SwaptionVolatilityCurveConfig : public GenericYieldVolatilityCurveConfig {
 public:
     //! ctor, currency is derived from swap index base
     SwaptionVolatilityCurveConfig()
-        : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "Currency", true, true) {}
+        : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", true, true) {}
     //! Detailed constructor
     SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                                   const VolatilityType& volatilityType, const bool extrapolate,
