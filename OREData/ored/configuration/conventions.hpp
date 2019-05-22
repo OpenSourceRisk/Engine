@@ -690,7 +690,8 @@ public:
     CrossCcyBasisSwapConvention(const string& id, const string& strSettlementDays, const string& strSettlementCalendar,
                                 const string& strRollConvention, const string& flatIndex, const string& spreadIndex,
                                 const string& strEom = "", const string& strIsResettable = "",
-                                const string& strFlatIndexIsResettable = "");
+                                const string& strFlatIndexIsResettable = "", const std::string& strFlatTenor = "",
+                                const std::string& strSpreadTenor = "");
     //@}
 
     //! \name Inspectors
@@ -705,7 +706,9 @@ public:
 
     bool eom() const { return eom_; }
     bool isResettable() const { return isResettable_; }
-    bool FlatIndexIsResettable() const { return FlatIndexIsResettable_; }
+    bool flatIndexIsResettable() const { return flatIndexIsResettable_; }
+    const QuantLib::Period& flatTenor() const { return flatTenor_; }
+    const QuantLib::Period& spreadTenor() const { return spreadTenor_; }
     //@}
 
     //! \name Serialisation
@@ -722,7 +725,9 @@ private:
     boost::shared_ptr<IborIndex> spreadIndex_;
     bool eom_;
     bool isResettable_;
-    bool FlatIndexIsResettable_;
+    bool flatIndexIsResettable_;
+    QuantLib::Period flatTenor_;
+    QuantLib::Period spreadTenor_;
 
     // Strings to store the inputs
     string strSettlementDays_;
@@ -733,6 +738,8 @@ private:
     string strEom_;
     string strIsResettable_;
     string strFlatIndexIsResettable_;
+    std::string strFlatTenor_;
+    std::string strSpreadTenor_;
 };
 
 /*! Container for storing Cross Currency Fix vs Float Swap quote conventions

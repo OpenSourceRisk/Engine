@@ -67,7 +67,7 @@ void SensitivityScenarioData::volShiftDataToXML(XMLDocument& doc, XMLNode* node,
     XMLUtils::addChild(doc, node, "ShiftStrikes", data.shiftStrikes);
 }
 
-const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const string& name) const {
+const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType& keyType, const string& name) const {
     // Not nice but not spending time refactoring the class now.
     switch (keyType) {
     case RFType::DiscountCurve:
@@ -435,9 +435,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
-    XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
     if (!yieldCurveShiftData_.empty()) {
-        LOG("toXML for YieldCurves that are not of type Yield");
+        XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
+        LOG("toXML for YieldCurves");
         for (const auto& kv : yieldCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);

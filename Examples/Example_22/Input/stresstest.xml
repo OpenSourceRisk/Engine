@@ -54,7 +54,7 @@
       <IndexCurve index="GBP-LIBOR-3M">
 	<ShiftType>Absolute</ShiftType>
 	<Shifts>0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01</Shifts>
-    <ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
+	<ShiftTenors>6M,1Y,2Y,3Y,5Y,7Y,10Y,15Y,20Y</ShiftTenors>
       </IndexCurve>
       <IndexCurve index="GBP-LIBOR-6M">
 	<ShiftType>Absolute</ShiftType>
@@ -109,7 +109,7 @@
       <FxVolatility ccypair="GBPEUR">
 	<ShiftType>Absolute</ShiftType>
 	<Shifts>0.1,0.1,0.1,0.1</Shifts>
-    <ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
+	<ShiftExpiries>1Y,2Y,3Y,5Y</ShiftExpiries>
       </FxVolatility>
       <FxVolatility ccypair="JPYEUR">
 	<ShiftType>Absolute</ShiftType>
@@ -128,7 +128,7 @@
 	  <Shift expiry="1Y" term="5Y">0.0010</Shift>
 	  <Shift expiry="1Y" term="10Y">0.0010</Shift>
 	  <Shift expiry="5Y" term="1Y">0.0010</Shift>
-	  <Shift expiry="5Y" term="15Y">0.0010</Shift>
+	  <Shift expiry="5Y" term="5Y">0.0010</Shift>
 	  <Shift expiry="5Y" term="10Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="1Y">0.0010</Shift>
 	  <Shift expiry="10Y" term="5Y">0.0010</Shift>
@@ -152,8 +152,8 @@
 	<ShiftExpiries>6M,1Y,2Y,3Y,5Y,10Y</ShiftExpiries>
       </CapFloorVolatility>
     </CapFloorVolatilities>
-    
-	<!-- Equity spot shifts -->
+	
+    <!-- Equity spot shifts -->
     <EquitySpots>
       <EquitySpot equity="SP5">
     <ShiftType>Relative</ShiftType>

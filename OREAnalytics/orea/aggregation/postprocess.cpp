@@ -425,7 +425,9 @@ PostProcess::PostProcess(
                     Real dcf = dc.yearFraction(prevDate, date);
                     Real collateralSpread = (balance >= 0.0 ? netting->collatSpreadRcv() : netting->collatSpreadPay());
                     Real colvaDelta = -balance * collateralSpread * dcf / samples;
-                    Real floorDelta = -balance * std::max(-indexValue, 0.0) * dcf / samples;
+                    // inutuitive floorDelta including collateralSpread would be: 
+                    // -balance * (max(indexValue - collateralSpread,0) - (indexValue - collateralSpread)) * dcf / samples
+                    Real floorDelta = -balance * std::max(-(indexValue-collateralSpread), 0.0) * dcf / samples;
                     colvaInc[j + 1] += colvaDelta;
                     nettingSetCOLVA_[nettingSetId] += colvaDelta;
                     eoniaFloorInc[j + 1] += floorDelta;
@@ -1097,7 +1099,11 @@ void PostProcess::dynamicInitialMargin() {
     LsmBasisSystem::PolynomType polynomType = LsmBasisSystem::Monomial;
     Size regressionDimension = dimRegressors_.empty() ? 1 : dimRegressors_.size();
     LOG("DIM regression dimension = " << regressionDimension);
+#if QL_HEX_VERSION > 0x01150000
+    std::vector<ext::function<Real(Array)>> v(
+#else // QL 1.14 and below
     std::vector<boost::function1<Real, Array>> v(
+#endif
         LsmBasisSystem::multiPathBasisSystem(regressionDimension, polynomOrder, polynomType));
     Real confidenceLevel = QuantLib::InverseCumulativeNormal()(dimQuantile_);
     LOG("DIM confidence level " << confidenceLevel);

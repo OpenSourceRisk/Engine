@@ -34,7 +34,10 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/idrjibor.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
+#include <qle/indexes/ibor/krwcd.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
 #include <qle/indexes/ibor/myrklibor.hpp>
@@ -87,6 +90,8 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { HKDHibor(pd), "HKD-HIBOR", HongKong().name(), HKDCurrency().name() },
                            { HUFBubor(pd), "HUF-BUBOR", Hungary().name(), HUFCurrency().name() },
                            { IDRIdrfix(pd), "IDR-IDRFIX", Indonesia().name(), IDRCurrency().name() },
+                           { IDRJibor(pd), "IDR-JIBOR", Indonesia().name(), IDRCurrency().name() },
+                           { ILSTelbor(pd), "ILS-TELBOR", Israel().name(), ILSCurrency().name() },
                            { INRMifor(pd), "INR-MIFOR", India().name(), INRCurrency().name() },
                            { MXNTiie(pd), "MXN-TIIE", Mexico().name(), MXNCurrency().name() },
                            { NOKNibor(pd), "NOK-NIBOR", Norway().name(), NOKCurrency().name() },
@@ -98,6 +103,7 @@ BOOST_AUTO_TEST_CASE(testIborIndex) {
                            { SGDSor(pd), "SGD-SOR", Singapore().name(), SGDCurrency().name() },
                            { SKKBribor(pd), "SKK-BRIBOR", Slovakia().name(), SKKCurrency().name() },
                            { Tonar(), "TONAR", Japan().name(), JPYCurrency().name() },
+                           { KRWCd(pd), "KRW-CD", SouthKorea().name(), KRWCurrency().name() },
                            { KRWKoribor(pd), "KRW-KORIBOR", SouthKorea().name(), KRWCurrency().name() },
                            { MYRKlibor(pd), "MYR-KLIBOR", Malaysia().name(), MYRCurrency().name() },
                            { TWDTaibor(pd), "TWD-TAIBOR", Taiwan().name(), TWDCurrency().name() } };
