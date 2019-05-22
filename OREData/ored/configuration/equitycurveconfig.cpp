@@ -100,6 +100,8 @@ std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
         return out << "DividendYield";
     case EquityCurveConfig::Type::ForwardPrice:
         return out << "ForwardPrice";
+    case EquityCurveConfig::Type::OptionVolatility:
+        return out << "OptionVolatility";
     case EquityCurveConfig::Type::NoDividends:
         return out << "NoDividends";
     default:
@@ -112,6 +114,8 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
         return EquityCurveConfig::Type::DividendYield;
     else if (str == "ForwardPrice")
         return EquityCurveConfig::Type::ForwardPrice;
+    else if (str == "OptionVolatility")
+        return EquityCurveConfig::Type::OptionVolatility;
     else if (str == "NoDividends")
         return EquityCurveConfig::Type::NoDividends;
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);

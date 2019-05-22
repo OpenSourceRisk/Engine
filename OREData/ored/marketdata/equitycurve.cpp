@@ -75,8 +75,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             string regexstr = config->fwdQuotes()[0];
             boost::replace_all(regexstr, "*", ".*");
             reg1 = regex(regexstr);
-        }
-        else {
+        } else if (config->type() == EquityCurveConfig::Type::OptionVolatility && foundRegex) {
+            LOG("here");
+
+        } else {
             for (Size i=0; i < config->fwdQuotes().size(); i++) {
                 quotes_.push_back(Null<Real>());
                 terms_.push_back(Null<Date>());
