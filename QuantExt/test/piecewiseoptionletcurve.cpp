@@ -40,6 +40,8 @@ using namespace boost::unit_test_framework;
 namespace bdata = boost::unit_test::data;
 typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
 using std::ostream;
+using std::boolalpha;
+using std::string;
 using boost::assign::list_of;
 
 namespace {
@@ -154,8 +156,9 @@ vector<VolatilityColumn> generateVolatilityColumns() {
     return volatilityColumns;
 }
 
-// Cap floor types for the data driven test case
-vector<CapFloor::Type> capFloorTypes = list_of(CapFloor::Cap)(CapFloor::Floor);
+// Cap floor helper types for the data driven test case
+vector<CapFloorHelper::Type> helperTypes = list_of(CapFloorHelper::Cap)
+    (CapFloorHelper::Floor)(CapFloorHelper::Automatic);
 
 // Quote types for the data driven test case
 vector<CapFloorHelper::QuoteType> quoteTypes = list_of(CapFloorHelper::Volatility)(CapFloorHelper::Premium);
@@ -171,6 +174,25 @@ vector<InterpolationType> interpolationTypes = list_of
 // If the built optionlet structure in the test has a floating or fixed reference date
 vector<bool> isMovingValues = list_of(true)(false);
 
+// So that I can reuse below
+string to_string(const InterpolationType& interpolationType) {
+    string result;
+    switch (interpolationType.which()) {
+    case 0:
+        result = "Linear";
+        break;
+    case 1:
+        result = "LinearFlat";
+        break;
+    case 2:
+        result = "BackwardFlat";
+        break;
+    default:
+        BOOST_FAIL("Unexpected interpolation type");
+    }
+    return result;
+}
+
 }
 
 // Needed for BOOST_DATA_TEST_CASE below
@@ -179,20 +201,8 @@ namespace boost {
 namespace test_tools {
 namespace tt_detail {
 template <> struct print_log_value<InterpolationType> {
-    void operator()(std::ostream& os, const InterpolationType& interpolationType) {
-        switch (interpolationType.which()) {
-        case 0:
-            os << "Linear";
-            break;
-        case 1:
-            os << "LinearFlat";
-            break;
-        case 2:
-            os << "BackwardFlat";
-            break;
-        default:
-            BOOST_FAIL("Unexpected interpolation type");
-        }
+    void operator()(ostream& os, const InterpolationType& interpolationType) {
+        os << to_string(interpolationType);
     }
 };
 }
@@ -204,122 +214,161 @@ BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, qle::test::TopLevelFixture)
 BOOST_AUTO_TEST_SUITE(PiecewiseOptionletCurveTests)
 
 BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, 
-    bdata::make(generateVolatilityColumns()) * bdata::make(capFloorTypes) * bdata::make(quoteTypes) * 
+    bdata::make(generateVolatilityColumns()) * bdata::make(helperTypes) * bdata::make(quoteTypes) * 
     bdata::make(interpolationTypes) * bdata::make(isMovingValues),
-    volatilityColumn, capFloorType, quoteType, interpolationType, isMoving) {
+    volatilityColumn, helperType, quoteType, interpolationType, isMoving) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
 
     BOOST_TEST_MESSAGE("Test inputs are:");
-    BOOST_TEST_MESSAGE("  Cap floor type: " << capFloorType);
+    BOOST_TEST_MESSAGE("  Cap floor helper type: " << helperType);
     BOOST_TEST_MESSAGE("  Cap floor strike: " << volatilityColumn.strike);
     BOOST_TEST_MESSAGE("  Quote type: " << quoteType);
     if (quoteType == CapFloorHelper::Volatility) {
         BOOST_TEST_MESSAGE("  Quote volatility type: " << volatilityColumn.type);
         BOOST_TEST_MESSAGE("  Quote displacement: " << volatilityColumn.displacement);
     }
+    BOOST_TEST_MESSAGE("  Interpolation type: " << to_string(interpolationType));
+    BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
 
-    // Form the cap floor helper instrument for each tenor in the strike column
-    vector<boost::shared_ptr<helper> > helpers(volatilityColumn.tenors.size());
-    
-    // Store each cap floor instrument in the strike column and its NPV using the flat cap floor volatilities
-    vector<boost::shared_ptr<CapFloor> > instruments(volatilityColumn.tenors.size());
-    vector<Real> flatNpvs(volatilityColumn.tenors.size());
-    
-    BOOST_TEST_MESSAGE("The input values at each tenor are:");
-    for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
+    if (quoteType == CapFloorHelper::Premium && helperType == CapFloorHelper::Automatic) {
+
+        // This is a combination that should throw an error when creating the helper
+        // Don't care about the value of the premium quote
+        Handle<Quote> quote(boost::make_shared<SimpleQuote>(0.01));
+        BOOST_REQUIRE_THROW(boost::make_shared<CapFloorHelper>(helperType, 
+            volatilityColumn.tenors.front(), volatilityColumn.strike, quote, iborIndex, 
+            testYieldCurves.discountEonia, quoteType, volatilityColumn.type, 
+            volatilityColumn.displacement), Error);
+
+    } else {
         
-        // Get the relevant quote value
-        Real volatility = volatilityColumn.volatilities[i];
+        // Form the cap floor helper instrument for each tenor in the strike column
+        vector<boost::shared_ptr<helper> > helpers(volatilityColumn.tenors.size());
 
-        // Create the cap floor instrument and store its price using the quoted flat volatility
-        instruments[i] = MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
-        if (volatilityColumn.type == ShiftedLognormal) {
-            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
-        } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, volatility, dayCounter));
-        }
-        flatNpvs[i] = instruments[i]->NPV();
+        // Store each cap floor instrument in the strike column and its NPV using the flat cap floor volatilities
+        vector<boost::shared_ptr<CapFloor> > instruments(volatilityColumn.tenors.size());
+        vector<Real> flatNpvs(volatilityColumn.tenors.size());
+
+        BOOST_TEST_MESSAGE("The input values at each tenor are:");
+        for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
         
-        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV) = (" << volatilityColumn.tenors[i] <<
-            ", " << volatility << ", " << flatNpvs[i] << ")");
+            // Get the relevant quote value
+            Real volatility = volatilityColumn.volatilities[i];
 
-        // Create a volatility or premium quote
-        RelinkableHandle<Quote> quote;
-        if (quoteType == CapFloorHelper::Volatility) {
-            quote.linkTo(boost::make_shared<SimpleQuote>(volatility));
-        } else {
-            quote.linkTo(boost::make_shared<SimpleQuote>(flatNpvs[i]));
-        }
+            // Create the cap floor instrument and store its price using the quoted flat volatility
+            CapFloor::Type capFloorType = CapFloor::Cap;
+            if (helperType == CapFloorHelper::Floor) {
+                capFloorType = CapFloor::Floor;
+            }
+            instruments[i] = MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
+            if (volatilityColumn.type == ShiftedLognormal) {
+                instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                    testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
+            } else {
+                instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                    testYieldCurves.discountEonia, volatility, dayCounter));
+            }
+            flatNpvs[i] = instruments[i]->NPV();
+
+            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Volatility, Flat NPV) = (" << capFloorType << ", " << 
+                volatilityColumn.tenors[i] << ", " << volatility << ", " << flatNpvs[i] << ")");
+
+            // Create a volatility or premium quote
+            RelinkableHandle<Quote> quote;
+            if (quoteType == CapFloorHelper::Volatility) {
+                quote.linkTo(boost::make_shared<SimpleQuote>(volatility));
+            } else {
+                quote.linkTo(boost::make_shared<SimpleQuote>(flatNpvs[i]));
+            }
         
-        // Create the helper instrument
-        helpers[i] = boost::make_shared<CapFloorHelper>(capFloorType, volatilityColumn.tenors[i], volatilityColumn.strike,
-            quote, iborIndex, testYieldCurves.discountEonia, quoteType, volatilityColumn.type, volatilityColumn.displacement);
-    }
-
-    // Create the piecewise optionlet curve, with the given interpolation type, and fail if it is not created
-    VolatilityType curveVolatilityType = Normal;
-    Real curveDisplacement = 0.0;
-    boost::shared_ptr<OptionletVolatilityStructure> ovCurve;
-    switch (interpolationType.which()) {
-    case 0:
-        if (isMoving) {
-            BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
-                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
-        } else {
-            BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            // Create the helper instrument
+            helpers[i] = boost::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors[i], volatilityColumn.strike,
+                quote, iborIndex, testYieldCurves.discountEonia, quoteType, volatilityColumn.type, volatilityColumn.displacement);
         }
-        break;
-    case 1:
-        if (isMoving) {
-            BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
-                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
-        } else {
-            BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
-        }
-        break;
-    case 2:
-        if (isMoving) {
-            BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
-                settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
-        } else {
-            BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
-                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
-        }
-        break;
-    default:
-        BOOST_FAIL("Unexpected interpolation type");
-    }
-    Handle<OptionletVolatilityStructure> hovs(ovCurve);
 
-    // Price each cap floor instrument using the piecewise optionlet curve and check it against the flat NPV
-    BOOST_TEST_MESSAGE("The stripped values and differences at each tenor are:");
-    Real strippedNpv;
-    for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
-        if (ovCurve->volatilityType() == ShiftedLognormal) {
-            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
-        } else {
-            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                testYieldCurves.discountEonia, hovs));
+        // Create the piecewise optionlet curve, with the given interpolation type, and fail if it is not created
+        VolatilityType curveVolatilityType = Normal;
+        Real curveDisplacement = 0.0;
+        boost::shared_ptr<OptionletVolatilityStructure> ovCurve;
+        switch (interpolationType.which()) {
+        case 0:
+            if (isMoving) {
+                BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            } else {
+                BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            }
+            break;
+        case 1:
+            if (isMoving) {
+                BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            } else {
+                BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            }
+            break;
+        case 2:
+            if (isMoving) {
+                BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            } else {
+                BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+            }
+            break;
+        default:
+            BOOST_FAIL("Unexpected interpolation type");
         }
-        strippedNpv = instruments[i]->NPV();
+        Handle<OptionletVolatilityStructure> hovs(ovCurve);
 
-        BOOST_TEST_MESSAGE("  (Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" << volatilityColumn.tenors[i] <<
-            ", " << volatilityColumn.volatilities[i] << ", " << flatNpvs[i] << ", " << strippedNpv << ", " <<
-            (flatNpvs[i] - strippedNpv) << ")");
+        // Price each cap floor instrument using the piecewise optionlet curve and check it against the flat NPV
+        BOOST_TEST_MESSAGE("The stripped values and differences at each tenor are:");
+        Real strippedNpv;
+        for (Size i = 0; i < volatilityColumn.tenors.size(); i++) {
 
-        BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
+            // May need to update instruments type if it is being chosen automatically in the bootstrap
+            if (helperType == CapFloorHelper::Automatic && quoteType != CapFloorHelper::Premium) {
+                Real volatility = volatilityColumn.volatilities[i];
+                CapFloor::Type capFloorType = boost::dynamic_pointer_cast<CapFloorHelper>(helpers[i])->capFloor()->type();
+                if (capFloorType != instruments[i]->type()) {
+                    // Need to update the instrument and the flat NPV for the test
+                    instruments[i] = MakeCapFloor(capFloorType, volatilityColumn.tenors[i], iborIndex, volatilityColumn.strike);
+                    if (volatilityColumn.type == ShiftedLognormal) {
+                        instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                            testYieldCurves.discountEonia, volatility, dayCounter, volatilityColumn.displacement));
+                    } else {
+                        instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                            testYieldCurves.discountEonia, volatility, dayCounter));
+                    }
+                    flatNpvs[i] = instruments[i]->NPV();
+                }
+            }
+
+            // Price the instrument using the stripped optionlet structure
+            if (ovCurve->volatilityType() == ShiftedLognormal) {
+                instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                    testYieldCurves.discountEonia, hovs));
+            } else {
+                instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                    testYieldCurves.discountEonia, hovs));
+            }
+            strippedNpv = instruments[i]->NPV();
+
+            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
+                instruments[i]->type() << ", " << volatilityColumn.tenors[i] << ", " << volatilityColumn.volatilities[i] <<
+                ", " << flatNpvs[i] << ", " << strippedNpv << ", " << (flatNpvs[i] - strippedNpv) << ")");
+
+            BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
+        }
     }
 }
 

@@ -34,12 +34,19 @@ namespace QuantExt {
     \ingroup termstructures
 */
 class CapFloorHelper : public QuantLib::RelativeDateBootstrapHelper<QuantLib::OptionletVolatilityStructure> {
+
 public:
+    /*! Enum to indicate whether the instrument underlying the helper is a Cap, a Floor or should be chosen 
+        automatically. If Automatic is chosen and the quote type is volatility, the instrument's ATM rate is queried 
+        and if it is greater than the strike, the instrument is a Floor otherwise it is a Cap.
+    */
+    enum Type { Cap, Floor, Automatic };
+
     //! Enum to indicate the type of the quote provided with the CapFloorHelper
     enum QuoteType { Premium, Volatility };
 
     /*! Constructor
-        \param type                The underlying instrument type
+        \param type                The CapFloorHelper type as described above
         \param tenor               The underlying cap floor instrument's tenor
         \param strike              The underlying cap floor instrument's strike
         \param premium             The quoted premium or implied volatility for the underlying cap floor instrument
@@ -52,7 +59,7 @@ public:
         \param endOfMonth          Whether or not to use end of month adjustment when generating the cap floor schedule
     */
     CapFloorHelper(
-        QuantLib::CapFloor::Type type,
+        Type type,
         const QuantLib::Period& tenor,
         QuantLib::Rate strike,
         const QuantLib::Handle<QuantLib::Quote>& quote,
@@ -88,7 +95,7 @@ private:
     void initializeDates();
 
     // Details needed to construct the instrument
-    QuantLib::CapFloor::Type type_;
+    Type type_;
     QuantLib::Period tenor_;
     QuantLib::Rate strike_;
     boost::shared_ptr<QuantLib::IborIndex> iborIndex_;
@@ -111,6 +118,9 @@ private:
     //! A method to calculate the cap floor premium from a flat cap floor volatility value
     QuantLib::Real npv(QuantLib::Real quote);
 };
+
+//! In order to convert CapFloorHelper::Type to string
+std::ostream& operator<<(std::ostream& out, CapFloorHelper::Type type);
 
 //! In order to convert CapFloorHelper::QuoteType to string
 std::ostream& operator<<(std::ostream& out, CapFloorHelper::QuoteType type);

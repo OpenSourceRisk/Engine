@@ -40,7 +40,7 @@ namespace QuantExt {
 // where the quote volatility type input is of one type and the optionlet structure that we are trying to build is of 
 // another different type. 
 CapFloorHelper::CapFloorHelper(
-    CapFloor::Type type,
+    Type type,
     const Period& tenor,
     Rate strike,
     const Handle<Quote>& quote,
@@ -64,6 +64,10 @@ CapFloorHelper::CapFloorHelper(
       endOfMonth_(endOfMonth),
       rawQuote_(quote) {
 
+    if (quoteType_ == Premium) {
+        QL_REQUIRE(type_ != Automatic, "Cannot have CapFloorHelper type 'Automatic' with quote type of Premium");
+    }
+
     registerWith(iborIndex_);
     registerWith(discountHandle_);
     
@@ -72,9 +76,14 @@ CapFloorHelper::CapFloorHelper(
 
 void CapFloorHelper::initializeDates() {
 
+    CapFloor::Type capFloorType = CapFloor::Cap;
+    if (type_ == CapFloorHelper::Floor) {
+        capFloorType = CapFloor::Floor;
+    }
+    
     // Initialise the instrument and a copy
-    capFloor_ = MakeCapFloor(type_, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
-    capFloorCopy_ = MakeCapFloor(type_, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+    capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+    capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
 
     // Maturity date is just the maturity date of the cap floor
     maturityDate_ = capFloor_->maturityDate();
@@ -97,6 +106,16 @@ void CapFloorHelper::initializeDates() {
 
 void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     
+    // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
+    if (type_ == CapFloorHelper::Automatic && quoteType_ != Premium) {
+        Rate atm = capFloor_->atmRate(**discountHandle_);
+        CapFloor::Type capFloorType = atm > strike_ ? CapFloor::Floor : CapFloor::Cap;
+        if (capFloor_->type() != capFloorType) {
+            capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+            capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+        }
+    }
+
     // Set this helper's optionlet volatility structure
     boost::shared_ptr<OptionletVolatilityStructure> temp(ovts, no_deletion);
     ovtsHandle_.linkTo(temp, false);
@@ -143,6 +162,19 @@ Real CapFloorHelper::npv(Real quoteValue) {
     } else {
         // If the quote value is a volatility, return the premium
         return capFloorCopy_->NPV();
+    }
+}
+
+ostream& operator<<(ostream& out, CapFloorHelper::Type type) {
+    switch (type) {
+    case CapFloorHelper::Cap:
+        return out << "Cap";
+    case CapFloorHelper::Floor:
+        return out << "Floor";
+    case CapFloorHelper::Automatic:
+        return out << "Automatic";
+    default:
+        QL_FAIL("Unknown CapFloorHelper::Type (" << Integer(type) << ")");
     }
 }
 
