@@ -199,7 +199,8 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(rootNodeLabel_);
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    XMLUtils::addChild(doc, node, qualifierLabel_, qualifier_);
+    if(qualifierLabel_ != "")
+        XMLUtils::addChild(doc, node, qualifierLabel_, qualifier_);
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
