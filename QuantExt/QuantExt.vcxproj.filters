@@ -669,6 +669,9 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

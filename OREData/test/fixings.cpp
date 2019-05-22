@@ -330,6 +330,54 @@ BOOST_AUTO_TEST_CASE(testAddMarketFixings) {
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(testFxNotionalResettingSwapFirstCoupon, F) {
+
+    // Set the flag determining what happens if fixings are required today
+    Settings::instance().enforcesTodaysHistoricFixings() = true;
+
+    // Set the flag determining what happens when cashflows happen today
+    Settings::instance().includeTodaysCashFlows() = true;
+
+    // Read in the trade
+    Portfolio p;
+    string portfolioFile = "trades/xccy_resetting_swap/simple_case_in_first_coupon.xml";
+    p.load(TEST_INPUT_FILE(portfolioFile));
+    BOOST_REQUIRE_MESSAGE(p.size() == 1, "Expected portfolio to contain a single trade");
+
+    // Ask for fixings before trades are built should return empty set
+    auto m = p.fixings(today);
+    BOOST_CHECK_MESSAGE(m.empty(), "Expected fixings to be empty when trades not built");
+
+    // Build the portfolio and retrieve the fixings
+    p.build(engineFactory);
+    m = p.fixings(today);
+
+    // Expected results
+    map<string, Date> exp = {
+        { "USD-LIBOR-3M", Date(5, Feb, 2019) },
+        { "EUR-EURIBOR-3M", Date(5, Feb, 2019) }
+    };
+
+    // Check the expected results against the actual results
+    BOOST_CHECK_EQUAL(m.size(), exp.size());
+    for (const auto& kv : exp) {
+        BOOST_CHECK_MESSAGE(m.count(kv.first) == 1, "Could not find index " << kv.first << " in retrieved fixings");
+        if (m.count(kv.first) == 1) {
+            BOOST_CHECK_EQUAL(m.at(kv.first).size(), 1);
+            BOOST_CHECK_EQUAL(kv.second, *m.at(kv.first).begin());
+        }
+    }
+
+    // Trade should throw if we ask for NPV and have not added the fixings
+    BOOST_CHECK_THROW(p.trades()[0]->instrument()->NPV(), Error);
+
+    // Add the fixings
+    loadFixings(m, conventions);
+
+    // Trade should now not throw when we try to price it
+    BOOST_CHECK_NO_THROW(p.trades()[0]->instrument()->NPV());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
