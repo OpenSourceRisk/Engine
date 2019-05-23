@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2016 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Piotr Siejda
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,33 +16,33 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file phpphiref.hpp
-    \brief PHP-PHIREF index
+/*! \file plnpolonia.hpp
+    \brief PLN-POLONIA index
     \ingroup indexes
 */
 
-#ifndef quantext_phpphiref_hpp
-#define quantext_phpphiref_hpp
+#ifndef quantext_plnpolonia_hpp
+#define quantext_plnpolonia_hpp
 
-#include <ql/currencies/asia.hpp>
+#include <ql/currencies/europe.hpp>
 #include <ql/indexes/iborindex.hpp>
-#include <ql/time/daycounters/actual360.hpp>
-#include <qle/calendars/philippines.hpp>
+#include <ql/time/calendars/poland.hpp>
+#include <ql/time/daycounters/actual365fixed.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
-//! PHP-PHIREF index
-/*! PHP-PHIREF rate.
+//! PLN-POLONIA index
+/*! PLN-POLONIA rate published by NBP (National Bank of Poland).
 
-No PHP Calendar in QuantLib
+    See <http://www.nbp.pl/homen.aspx?f=/en/aktualnosci/2017/polonia.html>, data: <http://www.nbp.pl/Polonia/Stawka_POLONIA.xlsx>.
 
-\ingroup indexes
+            \ingroup indexes
 */
-class PHPPhiref : public IborIndex {
+class PLNPolonia : public OvernightIndex {
 public:
-    PHPPhiref(const Period& tenor, const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
-        : IborIndex("PHP-PHIREF", tenor, 1, PHPCurrency(), Philippines(), ModifiedFollowing, false, Actual360(), h) {}
+    PLNPolonia(const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>())
+        : OvernightIndex("PLN-POLONIA", 1, PLNCurrency(), Poland(), Actual365Fixed(), h) {}
 };
 } // namespace QuantExt
 

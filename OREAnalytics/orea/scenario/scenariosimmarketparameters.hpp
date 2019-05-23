@@ -330,7 +330,6 @@ public:
     bool& correlationIsSurface() { return correlationIsSurface_; }
     vector<Period>& correlationExpiries() { return correlationExpiries_; }
     void setCorrelationPairs(vector<string> names);
-    void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
     vector<Real>& correlationStrikes() { return correlationStrikes_; }
     //@}
 

@@ -106,6 +106,7 @@ termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
+termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -194,6 +195,7 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
+indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmifor.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
@@ -202,6 +204,7 @@ indexes/ibor/noknibor.hpp
 indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
+indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/rubmosprime.hpp
 indexes/ibor/saibor.hpp
@@ -308,6 +311,7 @@ termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
+termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloortermvolsurface.hpp
