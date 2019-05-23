@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file strikeinterpolatedyoyoptionletvolatilitysurface.hpp
+/*! \file kinterpolatedyoyoptionletvolatilitysurface.hpp
     \brief Interpolated yoy optionlet volatility, derived from QuantLib's to control extrapolation
 */
 
