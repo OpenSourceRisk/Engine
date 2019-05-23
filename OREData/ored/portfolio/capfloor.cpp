@@ -162,7 +162,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                 boost::make_shared<QuantExt::YoYInflationIndexWrapper>(zeroIndex.currentLink(), zeroIndex->interpolated()));
         }
 
-        legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink()));
+        legs_.push_back(makeYoYLeg(legData_, yoyIndex.currentLink(), engineFactory));
 
         // If a vector of cap/floor rates are provided, ensure they align with the number of schedule periods
         if (floors_.size() > 1) {

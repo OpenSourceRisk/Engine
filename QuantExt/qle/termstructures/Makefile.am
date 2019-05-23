@@ -22,6 +22,7 @@ libTermStructures_la_SOURCES = \
 	datedstrippedoptionlet.cpp \
 	datedstrippedoptionletadapter.cpp \
 	dynamicoptionletvolatilitystructure.cpp \
+	dynamicyoyoptionletvolatilitystructure.cpp \
 	optionletstripper.cpp \
 	optionletstripper1.cpp \
 	optionletstripper2.cpp \
@@ -29,6 +30,7 @@ libTermStructures_la_SOURCES = \
 	spreadedsmilesection.cpp \
 	spreadedswaptionvolatility.cpp \
 	strippedoptionletadapter2.cpp \
+	strippedyoyinflationoptionletvol.cpp \
 	swaptionvolatilityconverter.cpp \
 	subperiodsswaphelper.cpp \
 	defaultprobabilityhelpers.cpp \
@@ -73,6 +75,7 @@ this_include_HEADERS = \
 	datedstrippedoptionletbase.hpp \
 	dynamicoptionletvolatilitystructure.hpp \
 	dynamicstype.hpp \
+	dynamicyoyoptionletvolatilitystructure.hpp \
 	optionletstripper.hpp \
 	optionletstripper1.hpp \
 	optionletstripper2.hpp \
@@ -80,6 +83,7 @@ this_include_HEADERS = \
 	spreadedsmilesection.hpp \
 	spreadedswaptionvolatility.hpp \
 	strippedoptionletadapter2.hpp \
+	strippedyoyinflationoptionletvol.hpp \
 	swaptionvolatilityconverter.hpp \
 	subperiodsswaphelper.hpp \
 	blackvolsurfacewithatm.hpp \
