@@ -16,35 +16,18 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*
- Copyright (C) 2009 Chris Kenyon
-
- This file is part of QuantLib, a free-software/open-source library
- for financial quantitative analysts and developers - http://quantlib.org/
-
- QuantLib is free software: you can redistribute it and/or modify it
- under the terms of the QuantLib license.  You should have received a
- copy of the license along with this program; if not, please email
- <quantlib-dev@lists.sf.net>. The license is also available online at
- <http://quantlib.org/license.shtml>.
-
- This program is distributed in the hope that it will be useful, but WITHOUT
- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- FOR A PARTICULAR PURPOSE.  See the license for more details.
+/*! \file strikeinterpolatedyoyoptionletvolatilitysurface.hpp
+    \brief Interpolated yoy optionlet volatility, derived from QuantLib's to control extrapolation
 */
 
-/*! \file kinterpolatedyoyoptionletvolatilitysurface.hpp
-    \brief K-interpolated yoy optionlet volatility, copied from QuantLib with extrapolation enabled
-*/
+#ifndef quantext_strike_interpolated_yoy_optionlet_volatility_surface_hpp
+#define quantext_strike_interpolated_yoy_optionlet_volatility_surface_hpp
 
-#ifndef quantext_k_interpolated_yoy_optionlet_volatility_surface_hpp
-#define quantext_k_interpolated_yoy_optionlet_volatility_surface_hpp
-
-#include <ql/experimental/inflation/yoyoptionletstripper.hpp>
+#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
 
-//! K-interpolated YoY optionlet volatility
+//! Strike-interpolated YoY optionlet volatility
 /*! The stripper provides curves in the T direction along each K.
     We don't know whether this is interpolating or fitting in the
     T direction.  Our K direction interpolations are not model
@@ -58,7 +41,8 @@ namespace QuantExt {
     \bug Tests currently fail.
 */
 template <class Interpolator1D>
-class StrikeInterpolatedYoYOptionletVolatilitySurface : public QuantLib::YoYOptionletVolatilitySurface {
+class StrikeInterpolatedYoYOptionletVolatilitySurface
+    : public QuantLib::KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D> {
 public:
     //! \name Constructor
     //! calculate the reference date based on the global evaluation date
@@ -70,30 +54,11 @@ public:
                                                     const ext::shared_ptr<YoYOptionletStripper>& yoyOptionletStripper,
                                                     const Real slope,
                                                     const Interpolator1D& interpolator = Interpolator1D());
-
     virtual Real minStrike() const;
     virtual Real maxStrike() const;
-    virtual Date maxDate() const;
-    std::pair<std::vector<Rate>, std::vector<Volatility> > Dslice(const Date& d) const;
 
 protected:
     virtual Volatility volatilityImpl(const Date& d, Rate strike) const;
-    virtual Volatility volatilityImpl(Time length, Rate strike) const;
-    virtual void performCalculations() const;
-
-    ext::shared_ptr<YoYCapFloorTermPriceSurface> capFloorPrices_;
-    ext::shared_ptr<YoYInflationCapFloorEngine> yoyInflationCouponPricer_;
-    ext::shared_ptr<YoYOptionletStripper> yoyOptionletStripper_;
-
-    mutable Interpolator1D factory1D_;
-    mutable Real slope_;
-    mutable bool lastDateisSet_;
-    mutable Date lastDate_;
-    mutable Interpolation tempKinterpolation_;
-    mutable std::pair<std::vector<Rate>, std::vector<Volatility> > slice_;
-
-private:
-    void updateSlice(const Date& d) const;
 };
 
 // template definitions
@@ -105,73 +70,42 @@ StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::StrikeInterpola
     const ext::shared_ptr<YoYInflationCapFloorEngine>& pricer,
     const ext::shared_ptr<YoYOptionletStripper>& yoyOptionletStripper, const Real slope,
     const Interpolator1D& interpolator)
-    : QuantLib::YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, lag,
-                                              capFloorPrices->yoyIndex()->frequency(),
-                                              capFloorPrices->yoyIndex()->interpolated()),
-      capFloorPrices_(capFloorPrices), yoyInflationCouponPricer_(pricer), yoyOptionletStripper_(yoyOptionletStripper),
-      factory1D_(interpolator), slope_(slope), lastDateisSet_(false) {
-    performCalculations();
-}
-
-template <class Interpolator1D> Date StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::maxDate() const {
-    Size n = capFloorPrices_->maturities().size();
-    return referenceDate() + capFloorPrices_->maturities()[n - 1];
-}
+    : QuantLib::KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>(
+          settlementDays, cal, bdc, dc, lag, capFloorPrices, pricer, yoyOptionletStripper, slope, interpolator) {}
 
 template <class Interpolator1D>
 Real StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::minStrike() const {
-    return capFloorPrices_->strikes().front();
+    if (this->allowsExtrapolation())
+        return QL_MIN_REAL;
+    else
+        return this->capFloorPrices_->strikes().front();
 }
 
 template <class Interpolator1D>
 Real StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::maxStrike() const {
-    return capFloorPrices_->strikes().back();
-}
-
-template <class Interpolator1D>
-void StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::performCalculations() const {
-
-    // slope is the assumption on the initial caplet volatility change
-    yoyOptionletStripper_->initialize(capFloorPrices_, yoyInflationCouponPricer_, slope_);
+    if (this->allowsExtrapolation())
+        return QL_MAX_REAL;
+    else
+        return this->capFloorPrices_->strikes().back();
 }
 
 template <class Interpolator1D>
 Volatility StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::volatilityImpl(const Date& d,
                                                                                            Rate strike) const {
-    updateSlice(d);
-    return tempKinterpolation_(strike);
-}
+    Real kmax = this->capFloorPrices_->strikes().back();
+    Real kmin = this->capFloorPrices_->strikes().front();
+    Real tmpStrike = (kmax + kmin) / 2;
 
-template <class Interpolator1D>
-std::pair<std::vector<Rate>, std::vector<Volatility> >
-StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::Dslice(const Date& d) const {
-    updateSlice(d);
-    return slice_;
-}
+    // call the base class' function such that it does not throw, i.e. with a valid strike, this resets
+    // tempKinterpolation_
+    KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::volatilityImpl(d, tmpStrike);
 
-template <class Interpolator1D>
-Volatility StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::volatilityImpl(Time length,
-                                                                                           Rate strike) const {
+    // now enable extrapolation...
+    if (this->allowsExtrapolation())
+        this->tempKinterpolation_.enableExtrapolation();
 
-    Natural years = (Natural)floor(length);
-    Natural days = (Natural)floor((length - years) * 365.0);
-    Date d = referenceDate() + Period(years, Years) + Period(days, Days);
-
-    return this->volatilityImpl(d, strike);
-}
-
-template <class Interpolator1D>
-void StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::updateSlice(const Date& d) const {
-
-    if (!lastDateisSet_ || d != lastDate_) {
-        slice_ = yoyOptionletStripper_->slice(d);
-
-        tempKinterpolation_ = factory1D_.interpolate(slice_.first.begin(), slice_.first.end(), slice_.second.begin());
-        // The only change compared to QuantLib
-        tempKinterpolation_.enableExtrapolation();
-        lastDateisSet_ = true;
-        lastDate_ = d;
-    }
+    // ...and return the vol for the strike we want
+    return this->tempKinterpolation_(strike);
 }
 
 } // namespace QuantExt
