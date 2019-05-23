@@ -181,7 +181,9 @@
         <xs:element type="xs:boolean" name="IsInArrears"/>
         <xs:element type="xs:integer" name="FixingDays"/>
         <xs:element type="xs:boolean" name="IsAveraged"/>
-        <xs:element type="xs:boolean" name="IsNotResettingXCCY"/>
+        <xs:element type="xs:boolean" name="HasSubPeriods" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IsNotResettingXCCY" minOccurs="0" maxOccurs="1"/>
         <xs:element name="Spreads">
           <xs:complexType>
             <xs:sequence>
