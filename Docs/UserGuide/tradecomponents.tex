@@ -1151,6 +1151,8 @@ Allowable values:  \emph{true, false}
 
 \item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any).
+
+\item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
 \end{itemize}
 
 \begin{listing}[H]
@@ -1190,6 +1192,7 @@ Allowable values:  \emph{true, false}
           <Floors>
             <Floor>0.01</Floor>
           </Floors>
+          <NakedOption>N</NakedOption>
         </YYLegData>
       </LegData>
 \end{minted}

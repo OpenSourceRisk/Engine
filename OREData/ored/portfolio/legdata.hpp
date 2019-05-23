@@ -277,11 +277,12 @@ public:
                const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(),
                const vector<double>& floors = vector<double>(),
-               const vector<string>& floorDates = vector<string>())
+               const vector<string>& floorDates = vector<string>(),
+               bool nakedOption = false)
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag),
           fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates),
           spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
-          floors_(floors), floorDates_(floorDates) {
+          floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -298,6 +299,7 @@ public:
     const vector<string>& capDates() const { return capDates_; }
     const vector<double>& floors() const { return floors_; }
     const vector<string>& floorDates() const { return floorDates_; }
+    bool nakedOption() const { return nakedOption_; }
     //@}
 
     //! \name Serialisation
@@ -318,6 +320,7 @@ private:
     vector<string> capDates_;
     vector<double> floors_;
     vector<string> floorDates_;
+    bool nakedOption_;
 };
 
 //! Serializable CMS Leg Data

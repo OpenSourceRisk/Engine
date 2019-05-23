@@ -678,6 +678,9 @@
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1170,6 +1173,9 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
+      <Filter>cashflows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
