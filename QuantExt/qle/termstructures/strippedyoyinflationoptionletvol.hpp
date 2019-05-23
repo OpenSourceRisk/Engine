@@ -17,8 +17,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
 /*! \file qle/termstructures/strippedyoyinflationoptionletvol.hpp
-\brief Stripped YoYInfaltion Optionlet Vol Adapter (with a deeper update method, linear interpolation and optional flat extrapolation)
-\ingroup termstructures
+\brief Stripped YoYInfaltion Optionlet Vol Adapter (with a deeper update method, linear interpolation and optional flat
+extrapolation) \ingroup termstructures
 */
 
 #ifndef quantext_stripped_yoy_inflation_optionlet_vol
@@ -27,74 +27,70 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/math/interpolation.hpp>
 #include <ql/math/interpolations/sabrinterpolation.hpp>
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
+#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
 
-    /*! Helper class to wrap in a YoYOptionletVolatilitySurface object.
-    \ingroup termstructures
-    */
-    class StrippedYoYInflationOptionletVol : public QuantLib::YoYOptionletVolatilitySurface, public QuantLib::LazyObject {
-    public:
-        StrippedYoYInflationOptionletVol(
-            Natural settlementDays, const Calendar &calendar,
-            BusinessDayConvention bdc, const DayCounter& dc,
-            const Period& observationLag, Frequency frequency,
-            bool indexIsInterpolated, const std::vector < Date > &yoyoptionletDates,
-            const std::vector < Rate > &strikes,
-            const std::vector < std::vector < Handle < Quote > > > &,
-            VolatilityType type = ShiftedLognormal,
-            Real displacement = 0.0);
+/*! Helper class to wrap in a YoYOptionletVolatilitySurface object.
+\ingroup termstructures
+*/
+class StrippedYoYInflationOptionletVol : public QuantLib::YoYOptionletVolatilitySurface, public QuantLib::LazyObject {
+public:
+    StrippedYoYInflationOptionletVol(Natural settlementDays, const Calendar& calendar, BusinessDayConvention bdc,
+                                     const DayCounter& dc, const Period& observationLag, Frequency frequency,
+                                     bool indexIsInterpolated, const std::vector<Date>& yoyoptionletDates,
+                                     const std::vector<Rate>& strikes, const std::vector<std::vector<Handle<Quote> > >&,
+                                     VolatilityType type = ShiftedLognormal, Real displacement = 0.0);
 
-        QuantLib::Date maxDate() const;
-        void performCalculations() const;
-        void update();
-        
-        const std::vector<Rate>& yoyoptionletStrikes(Size i) const;
-        const std::vector<Volatility>& yoyoptionletVolatilities(Size i) const;
+    QuantLib::Date maxDate() const;
+    void performCalculations() const;
+    void update();
 
-        const std::vector<Date>& yoyoptionletFixingDates() const;
-        const std::vector<Time>& yoyoptionletFixingTimes() const;
+    const std::vector<Rate>& yoyoptionletStrikes(Size i) const;
+    const std::vector<Volatility>& yoyoptionletVolatilities(Size i) const;
 
-        DayCounter dayCounter() const;
-        Calendar calendar() const;
-        Natural settlementDays() const;
-        BusinessDayConvention businessDayConvention() const;
+    const std::vector<Date>& yoyoptionletFixingDates() const;
+    const std::vector<Time>& yoyoptionletFixingTimes() const;
 
-        QuantLib::VolatilityType volatilityType() const;
-        QuantLib::Real displacement() const;
+    DayCounter dayCounter() const;
+    Calendar calendar() const;
+    Natural settlementDays() const;
+    BusinessDayConvention businessDayConvention() const;
 
-    protected:
-        QuantLib::Rate minStrike() const;
-        QuantLib::Rate maxStrike() const;
-        QuantLib::Volatility volatilityImpl(Time length, QuantLib::Rate strike) const;
+    QuantLib::VolatilityType volatilityType() const;
+    QuantLib::Real displacement() const;
 
-    private:
-        void checkInputs() const;
-        void registerWithMarketData();
+protected:
+    QuantLib::Rate minStrike() const;
+    QuantLib::Rate maxStrike() const;
+    QuantLib::Volatility volatilityImpl(Time length, QuantLib::Rate strike) const;
 
-        Calendar calendar_;
-        Natural settlementDays_;
-        BusinessDayConvention businessDayConvention_;
-        DayCounter dc_;
-        VolatilityType type_;
-        Real displacement_;
+private:
+    void checkInputs() const;
+    void registerWithMarketData();
 
-        Size nYoYOptionletDates_;
-        std::vector<Date> yoyoptionletDates_;
-        std::vector<Time> yoyoptionletTimes_;
-        std::vector<std::vector<Rate> > yoyoptionletStrikes_;
-        Size nStrikes_;
+    Calendar calendar_;
+    Natural settlementDays_;
+    BusinessDayConvention businessDayConvention_;
+    DayCounter dc_;
+    VolatilityType type_;
+    Real displacement_;
 
-        std::vector<std::vector<Handle<Quote> > > yoyoptionletVolQuotes_;
-        mutable std::vector<std::vector<Volatility> > yoyoptionletVolatilities_;
-    };
+    Size nYoYOptionletDates_;
+    std::vector<Date> yoyoptionletDates_;
+    std::vector<Time> yoyoptionletTimes_;
+    std::vector<std::vector<Rate> > yoyoptionletStrikes_;
+    Size nStrikes_;
 
-    inline void StrippedYoYInflationOptionletVol::update() {
-        TermStructure::update();
-        LazyObject::update();
-    }
+    std::vector<std::vector<Handle<Quote> > > yoyoptionletVolQuotes_;
+    mutable std::vector<std::vector<Volatility> > yoyoptionletVolatilities_;
+};
+
+inline void StrippedYoYInflationOptionletVol::update() {
+    TermStructure::update();
+    LazyObject::update();
+}
 
 } // namespace QuantExt
 

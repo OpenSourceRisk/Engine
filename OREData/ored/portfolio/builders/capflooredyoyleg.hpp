@@ -25,36 +25,37 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <ql/cashflows/couponpricer.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
 #include <ql/indexes/inflationindex.hpp>
+#include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 
 namespace ore {
-    namespace data {
-        //! CouponPricer Builder for Capped/Floored YoY Inflation Leg
-        /*! The coupon pricers are cached by index name
-        \ingroup builders
-        */
-        class CapFlooredYoYLegEngineBuilder : public CachingInflationCouponPricerBuilder<string, const string&> {
-        public:
-            CapFlooredYoYLegEngineBuilder()
-                : CachingEngineBuilder("CapFlooredYYModel", "CapFlooredYYCouponPricer", { "CapFlooredYYLeg" }) {}
-        protected:
-            virtual string keyImpl(const string& indexName) override { return indexName; }
-            virtual boost::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
-                boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> vol =
-                    market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
-                Handle<QuantLib::YoYOptionletVolatilitySurface> hvol(vol->yoyVolSurface());
-                if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() == 0.0)
-                    return boost::make_shared<QuantExt::BlackYoYInflationCouponPricer>(hvol);
-                else if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() != 0.0)
-                    return boost::make_shared<QuantExt::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
-                else if (vol->volatilityType() == VolatilityType::Normal)
-                    return boost::make_shared<QuantExt::BachelierYoYInflationCouponPricer>(hvol);
-                else
-                    QL_FAIL("Unknown VolatilityType of YoYOptionletVolatilitySurface");
-            }
-        };
-    } // namespace data
+namespace data {
+//! CouponPricer Builder for Capped/Floored YoY Inflation Leg
+/*! The coupon pricers are cached by index name
+\ingroup builders
+*/
+class CapFlooredYoYLegEngineBuilder : public CachingInflationCouponPricerBuilder<string, const string&> {
+public:
+    CapFlooredYoYLegEngineBuilder()
+        : CachingEngineBuilder("CapFlooredYYModel", "CapFlooredYYCouponPricer", {"CapFlooredYYLeg"}) {}
+
+protected:
+    virtual string keyImpl(const string& indexName) override { return indexName; }
+    virtual boost::shared_ptr<QuantLib::InflationCouponPricer> engineImpl(const string& indexName) override {
+        boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> vol =
+            market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
+        Handle<QuantLib::YoYOptionletVolatilitySurface> hvol(vol->yoyVolSurface());
+        if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() == 0.0)
+            return boost::make_shared<QuantExt::BlackYoYInflationCouponPricer>(hvol);
+        else if (vol->volatilityType() == VolatilityType::ShiftedLognormal && vol->displacement() != 0.0)
+            return boost::make_shared<QuantExt::UnitDisplacedBlackYoYInflationCouponPricer>(hvol);
+        else if (vol->volatilityType() == VolatilityType::Normal)
+            return boost::make_shared<QuantExt::BachelierYoYInflationCouponPricer>(hvol);
+        else
+            QL_FAIL("Unknown VolatilityType of YoYOptionletVolatilitySurface");
+    }
+};
+} // namespace data
 } // namespace ore

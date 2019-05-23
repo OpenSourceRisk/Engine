@@ -16,7 +16,6 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-
 /*! \file strippedcapflooredyoyinflationcoupon.hpp
 \brief strips the embedded option from cap floored yoy inflation coupons
 */
@@ -28,53 +27,52 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #include <ql/cashflows/inflationcouponpricer.hpp>
 
 namespace QuantExt {
-    using namespace QuantLib;
+using namespace QuantLib;
 
-    class StrippedCappedFlooredYoYInflationCoupon : public YoYInflationCoupon {
+class StrippedCappedFlooredYoYInflationCoupon : public YoYInflationCoupon {
 
-    public:
+public:
+    explicit StrippedCappedFlooredYoYInflationCoupon(
+        const ext::shared_ptr<CappedFlooredYoYInflationCoupon>& underlying);
 
-        explicit StrippedCappedFlooredYoYInflationCoupon(const ext::shared_ptr<CappedFlooredYoYInflationCoupon> &underlying);
+    //! Coupon interface
+    Rate rate() const;
+    //! cap
+    Rate cap() const;
+    //! floor
+    Rate floor() const;
+    //! effective cap
+    Rate effectiveCap() const;
+    //! effective floor
+    Rate effectiveFloor() const;
 
-        //! Coupon interface
-        Rate rate() const;
-        //! cap
-        Rate cap() const;
-        //! floor
-        Rate floor() const;
-        //! effective cap
-        Rate effectiveCap() const;
-        //! effective floor
-        Rate effectiveFloor() const;
+    //! Observer interface
+    void update();
 
-        //! Observer interface
-        void update();
+    //! Visitability
+    virtual void accept(AcyclicVisitor&);
 
-        //! Visitability
-        virtual void accept(AcyclicVisitor&);
+    bool isCap() const;
+    bool isFloor() const;
+    bool isCollar() const;
 
-        bool isCap() const;
-        bool isFloor() const;
-        bool isCollar() const;
+    void setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer);
 
-        void setPricer(const ext::shared_ptr<YoYInflationCouponPricer>& pricer);
+    const ext::shared_ptr<CappedFlooredYoYInflationCoupon> underlying() { return underlying_; }
 
-        const ext::shared_ptr<CappedFlooredYoYInflationCoupon> underlying() { return underlying_; }
+protected:
+    ext::shared_ptr<CappedFlooredYoYInflationCoupon> underlying_;
+};
 
-    protected:
-        ext::shared_ptr<CappedFlooredYoYInflationCoupon> underlying_;
+class StrippedCappedFlooredYoYInflationCouponLeg {
+public:
+    explicit StrippedCappedFlooredYoYInflationCouponLeg(const Leg& underlyingLeg);
+    operator Leg() const;
 
-    };
-
-    class StrippedCappedFlooredYoYInflationCouponLeg {
-    public:
-        explicit StrippedCappedFlooredYoYInflationCouponLeg(const Leg &underlyingLeg);
-        operator Leg() const;
-    private:
-        Leg underlyingLeg_;
-    };
+private:
+    Leg underlyingLeg_;
+};
 
 } // namespace QuantExt
 
 #endif
-
