@@ -464,6 +464,13 @@
       <xs:enumeration value="Floor"/>
     </xs:restriction>
   </xs:simpleType>
-
+  
+  <xs:simpleType name="exerciseStyle">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="European"/>
+      <xs:enumeration value="American"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 

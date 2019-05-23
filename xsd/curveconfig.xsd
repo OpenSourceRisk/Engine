@@ -183,6 +183,7 @@
       <xs:element type="xs:string" name="ForecastingCurve"/>
       <xs:element type="equityType" name="Type"/>
       <xs:element type="xs:string" name="SpotQuote"/>
+      <xs:element type="exerciseStyle" name="ExerciseStyle" minOccurs="0" maxOccurs="1"/>
       <xs:element type="quoteType" name="Quotes" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dayCounter" name="DayCounter" minOccurs="0" maxOccurs="1"/>
       <xs:element type="dividendInterpolation" name="DividendInterpolation" minOccurs="0" maxOccurs="1"/>
