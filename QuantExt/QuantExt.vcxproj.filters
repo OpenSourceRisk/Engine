@@ -678,6 +678,12 @@
     <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1163,6 +1169,9 @@
       <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\capfloorhelper.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>
