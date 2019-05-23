@@ -170,11 +170,11 @@ public:
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
-                    bool nakedOption = false)
+                    bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false)
         : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears),
-          isAveraged_(isAveraged), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
-          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {
+          isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
+          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -184,6 +184,8 @@ public:
     QuantLib::Natural fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
+    bool hasSubPeriods() const { return hasSubPeriods_; }
+    bool includeSpread() const { return includeSpread_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
     const vector<double>& caps() const { return caps_; }
@@ -205,6 +207,8 @@ private:
     QuantLib::Natural fixingDays_;
     bool isInArrears_;
     bool isAveraged_;
+    bool hasSubPeriods_;
+    bool includeSpread_;
     vector<double> spreads_;
     vector<string> spreadDates_;
     vector<double> caps_;
