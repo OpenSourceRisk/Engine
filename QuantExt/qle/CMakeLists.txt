@@ -106,6 +106,7 @@ termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
+termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloortermvolsurface.cpp
@@ -307,6 +308,7 @@ termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
+termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloortermvolsurface.hpp

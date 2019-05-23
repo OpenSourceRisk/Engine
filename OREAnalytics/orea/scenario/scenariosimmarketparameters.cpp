@@ -1059,15 +1059,6 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, marketNode, "BaseCurrency", baseCcy_);
     XMLUtils::addChildren(doc, marketNode, "Currencies", "Currency", ccys_);
 
-    // benchmark yield curves
-    DLOG("Writing benchmaerk yield curves data");
-    XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
-    for (Size i = 0; i < yieldCurveNames().size(); ++i) {
-        XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
-        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
-        XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
-    }
-
     // yield curves
     DLOG("Writing yield curves data");
     XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, marketNode, "YieldCurves");
@@ -1089,33 +1080,44 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (yieldCurveTenors_.count(key) > 0) {
             XMLUtils::addGenericChildAsList(doc, configNode, "Tenors", yieldCurveTenors_.at(key));
         }
-        if (yieldCurveDayCounters_.count(key) > 0) {
-            XMLUtils::addChild(doc, configNode, "DayCounter", yieldCurveDayCounters_.at(key));
-        }
         if (key == "") {
             XMLUtils::addChild(doc, configNode, "Interpolation", interpolation_);
             XMLUtils::addChild(doc, configNode, "Extrapolation", extrapolate_);
         }
+        if (yieldCurveDayCounters_.count(key) > 0) {
+            XMLUtils::addChild(doc, configNode, "DayCounter", yieldCurveDayCounters_.at(key));
+        }
         XMLUtils::appendNode(yieldCurvesNode, configNode);
     }
 
+    // fx rates
+    if (fxCcyPairs().size() > 0) {
+        DLOG("Writing FX rates");
+        XMLNode* fxRatesNode = XMLUtils::addChild(doc, marketNode, "FxRates");
+        XMLUtils::addChildren(doc, fxRatesNode, "CurrencyPairs", "CurrencyPair", fxCcyPairs());
+    }
+
     // indices
-    DLOG("Writing libor indices");
-    XMLUtils::addChildren(doc, marketNode, "Indices", "Index", indices());
+    if (indices().size() > 0) {
+        DLOG("Writing libor indices");
+        XMLUtils::addChildren(doc, marketNode, "Indices", "Index", indices());
+    }
 
     // swap indices
-    DLOG("Writing swap indices");
-    XMLNode* swapIndicesNode = XMLUtils::addChild(doc, marketNode, "SwapIndices");
-    for (auto swapIndexInterator : swapIndices_) {
-        XMLNode* swapIndexNode = XMLUtils::addChild(doc, swapIndicesNode, "SwapIndex");
-        XMLUtils::addChild(doc, swapIndexNode, "Name", swapIndexInterator.first);
-        XMLUtils::addChild(doc, swapIndexNode, "DiscountingIndex", swapIndexInterator.second);
+    if (swapIndices_.size() > 0) {
+        DLOG("Writing swap indices");
+        XMLNode* swapIndicesNode = XMLUtils::addChild(doc, marketNode, "SwapIndices");
+        for (auto kv : swapIndices_) {
+            XMLNode* swapIndexNode = XMLUtils::addChild(doc, swapIndicesNode, "SwapIndex");
+            XMLUtils::addChild(doc, swapIndexNode, "Name", kv.first);
+            XMLUtils::addChild(doc, swapIndexNode, "DiscountingIndex", kv.second);
+        }
     }
 
     // default curves
-    DLOG("Writing default curves");
-    XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
     if (!defaultNames().empty()) {
+        DLOG("Writing default curves");
+        XMLNode* defaultCurvesNode = XMLUtils::addChild(doc, marketNode, "DefaultCurves");
         XMLUtils::addChildren(doc, defaultCurvesNode, "Names", "Name", defaultNames());
         XMLUtils::addGenericChildAsList(doc, defaultCurvesNode, "Tenors", returnTenors(defaultTenors_, ""));
         XMLUtils::addChild(doc, defaultCurvesNode, "SimulateSurvivalProbabilities", simulateSurvivalProbabilities());
@@ -1141,18 +1143,18 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // equities
-    DLOG("Writing equities");
-    XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
     if (!equityNames().empty()) {
+        DLOG("Writing equities");
+        XMLNode* equitiesNode = XMLUtils::addChild(doc, marketNode, "Equities");
         XMLUtils::addChildren(doc, equitiesNode, "Names", "Name", equityNames());
         XMLUtils::addGenericChildAsList(doc, equitiesNode, "DividendTenors", returnTenors(equityDividendTenors_, ""));
         XMLUtils::addChild(doc, equitiesNode, "SimulateDividendYield", simulateDividendYield());
     }
 
     // swaption volatilities
-    DLOG("Writing swaption volatilities");
-    XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
     if (!swapVolCcys().empty()) {
+        DLOG("Writing swaption volatilities");
+        XMLNode* swaptionVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "SwaptionVolatilities");
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "Simulate", simulateSwapVols());
         XMLUtils::addChild(doc, swaptionVolatilitiesNode, "ReactionToTimeDecay", swapVolDecayMode_);
         XMLUtils::addChildren(doc, swaptionVolatilitiesNode, "Currencies", "Currency", swapVolCcys());
@@ -1174,9 +1176,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // yield volatilities
-    DLOG("Writing yield volatilities");
-    XMLNode* yieldVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YieldVolatilities");
     if (!yieldVolNames().empty()) {
+        DLOG("Writing yield volatilities");
+        XMLNode* yieldVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "YieldVolatilities");
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "Simulate", simulateYieldVols());
         XMLUtils::addChild(doc, yieldVolatilitiesNode, "ReactionToTimeDecay", yieldVolDecayMode_);
         XMLUtils::addChildren(doc, yieldVolatilitiesNode, "Names", "Name", yieldVolNames());
@@ -1185,9 +1187,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // cap/floor volatilities
-    DLOG("Writing cap/floor volatilities");
-    XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
     if (!capFloorVolCcys().empty()) {
+        DLOG("Writing cap/floor volatilities");
+        XMLNode* capFloorVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CapFloorVolatilities");
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "Simulate", simulateCapFloorVols());
         XMLUtils::addChild(doc, capFloorVolatilitiesNode, "ReactionToTimeDecay", capFloorVolDecayMode_);
         XMLUtils::addChildren(doc, capFloorVolatilitiesNode, "Currencies", "Currency", capFloorVolCcys());
@@ -1205,9 +1207,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    DLOG("Writing CDS volatilities");
-    XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CDSVolatilities");
     if (!cdsVolNames().empty()) {
+        DLOG("Writing CDS volatilities");
+        XMLNode* cdsVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CDSVolatilities");
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "Simulate", simulateCdsVols());
         XMLUtils::addChild(doc, cdsVolatilitiesNode, "ReactionToTimeDecay", cdsVolDecayMode_);
         XMLUtils::addChildren(doc, cdsVolatilitiesNode, "Names", "Name", cdsVolNames());
@@ -1215,9 +1217,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // fx volatilities
-    DLOG("Writing FX volatilities");
-    XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
     if (!fxVolCcyPairs().empty()) {
+        DLOG("Writing FX volatilities");
+        XMLNode* fxVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "FxVolatilities");
         XMLUtils::addChild(doc, fxVolatilitiesNode, "Simulate", simulateFXVols());
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
@@ -1232,15 +1234,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // fx rates
-    DLOG("Writing FX rates");
-    XMLNode* fxRatesNode = XMLUtils::addChild(doc, marketNode, "FxRates");
-    XMLUtils::addChildren(doc, fxRatesNode, "CurrencyPairs", "CurrencyPair", fxCcyPairs());
-
     // eq volatilities
-    DLOG("Writing equity volatilities");
-    XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
     if (!equityVolNames().empty()) {
+        DLOG("Writing equity volatilities");
+        XMLNode* eqVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "EquityVolatilities");
         XMLUtils::addChild(doc, eqVolatilitiesNode, "Simulate", simulateEquityVols());
         XMLUtils::addChild(doc, eqVolatilitiesNode, "ReactionToTimeDecay", equityVolDecayMode_);
         XMLUtils::addChildren(doc, eqVolatilitiesNode, "Names", "Name", equityVolNames());
@@ -1251,65 +1248,42 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         }
     }
 
-    // additional scenario data currencies
-    DLOG("Writing aggregation scenario data currencies");
-    if (!additionalScenarioDataCcys_.empty()) {
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
-                              additionalScenarioDataCcys_);
-    }
-
-    // additional scenario data indices
-    DLOG("Writing aggregation scenario data indices");
-    if (!additionalScenarioDataIndices_.empty()) {
-        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
-                              additionalScenarioDataIndices_);
+    // benchmark yield curves
+    for (Size i = 0; i < yieldCurveNames().size(); ++i) {
+        DLOG("Writing benchmark yield curves data");
+        XMLNode* benchmarkCurvesNode = XMLUtils::addChild(doc, marketNode, "BenchmarkCurves");
+        XMLNode* benchmarkCurveNode = XMLUtils::addChild(doc, benchmarkCurvesNode, "BenchmarkCurve");
+        XMLUtils::addChild(doc, benchmarkCurveNode, "Currency", yieldCurveCurrencies_[yieldCurveNames()[i]]);
+        XMLUtils::addChild(doc, benchmarkCurveNode, "Name", yieldCurveNames()[i]);
     }
 
     // securities
-    DLOG("Writing securities");
-    XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
     if (!securities().empty()) {
+        DLOG("Writing securities");
+        XMLNode* secNode = XMLUtils::addChild(doc, marketNode, "Securities");
         XMLUtils::addChild(doc, secNode, "Simulate", securitySpreadsSimulate());
         XMLUtils::addChildren(doc, secNode, "Securities", "Security", securities());
     }
 
     // cprs
-    DLOG("Writing cprs");
-    XMLNode* cprNode = XMLUtils::addChild(doc, marketNode, "CPRs");
     if (!cprs().empty()) {
+        DLOG("Writing cprs");
+        XMLNode* cprNode = XMLUtils::addChild(doc, marketNode, "CPRs");
         XMLUtils::addChild(doc, cprNode, "Simulate", simulateCprs());
         XMLUtils::addChildren(doc, cprNode, "Names", "Name", cprs());
     }
 
-    // base correlations
-    DLOG("Writing base correlations");
-    XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");
-    if (!baseCorrelationNames().empty()) {
-        XMLUtils::addChild(doc, bcNode, "Simulate", simulateBaseCorrelations());
-        XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames());
-        XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
-        XMLUtils::addGenericChildAsList(doc, bcNode, "DetachmentPoints", baseCorrelationDetachmentPoints_);
-        if (yoyInflationDayCounters_.size() > 0) {
-            XMLNode* node = XMLUtils::addChild(doc, bcNode, "DayCounters");
-            for (auto dc : baseCorrelationDayCounters_) {
-                XMLNode* c = doc.allocNode("DayCounter", dc.second);
-                XMLUtils::addAttribute(doc, c, "name", dc.first);
-                XMLUtils::appendNode(node, c);
-            }
-        }
-    }
-
     // inflation indices
-    DLOG("Writing inflation indices");
-    XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
     if (!cpiIndices().empty()) {
+        DLOG("Writing inflation indices");
+        XMLNode* cpiNode = XMLUtils::addChild(doc, marketNode, "CpiInflationIndices");
         XMLUtils::addChildren(doc, cpiNode, "CpiIndices", "Index", cpiIndices());
     }
 
     // zero inflation
-    DLOG("Writing zero inflation");
-    XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
     if (!zeroInflationIndices().empty()) {
+        DLOG("Writing zero inflation");
+        XMLNode* zeroNode = XMLUtils::addChild(doc, marketNode, "ZeroInflationIndexCurves");
         XMLUtils::addChildren(doc, zeroNode, "Names", "Name", zeroInflationIndices());
         XMLUtils::addGenericChildAsList(doc, zeroNode, "Tenors", returnTenors(zeroInflationTenors_, ""));
         if (zeroInflationDayCounters_.size() > 0) {
@@ -1323,9 +1297,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // yoy inflation
-    DLOG("Writing year-on-year inflation");
-    XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
     if (!yoyInflationIndices().empty()) {
+        DLOG("Writing year-on-year inflation");
+        XMLNode* yoyNode = XMLUtils::addChild(doc, marketNode, "YYInflationIndexCurves");
         XMLUtils::addChildren(doc, yoyNode, "Names", "Name", yoyInflationIndices());
         XMLUtils::addGenericChildAsList(doc, yoyNode, "Tenors", returnTenors(yoyInflationTenors_, ""));
 
@@ -1340,9 +1314,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // Commodity price curves
-    DLOG("Writing commodity price curves");
-    XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
     if (!commodityNames().empty()) {
+        DLOG("Writing commodity price curves");
+        XMLNode* commodityPriceNode = XMLUtils::addChild(doc, marketNode, "Commodities");
         XMLUtils::addChild(doc, commodityPriceNode, "Simulate", commodityCurveSimulate());
         XMLUtils::addChildren(doc, commodityPriceNode, "Names", "Name", commodityNames());
         XMLUtils::addGenericChildAsList(doc, commodityPriceNode, "Tenors", commodityCurveTenors_.at(""));
@@ -1350,9 +1324,9 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
     }
 
     // Commodity volatilities
-    DLOG("Writing commodity volatilities");
-    XMLNode* commodityVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CommodityVolatilities");
     if (!commodityVolNames().empty()) {
+        DLOG("Writing commodity volatilities");
+        XMLNode* commodityVolatilitiesNode = XMLUtils::addChild(doc, marketNode, "CommodityVolatilities");
         XMLUtils::addChild(doc, commodityVolatilitiesNode, "Simulate", commodityVolSimulate());
         XMLUtils::addChild(doc, commodityVolatilitiesNode, "ReactionToTimeDecay", commodityVolDecayMode_);
         XMLNode* namesNode = XMLUtils::addChild(doc, commodityVolatilitiesNode, "Names");
@@ -1366,10 +1340,42 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, commodityVolatilitiesNode, "DayCounter", commodityVolDayCounters_.at(""));
     }
 
+    // additional scenario data currencies
+    if (!additionalScenarioDataCcys_.empty()) {
+        DLOG("Writing aggregation scenario data currencies");
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataCurrencies", "Currency",
+            additionalScenarioDataCcys_);
+    }
+
+    // additional scenario data indices
+    if (!additionalScenarioDataIndices_.empty()) {
+        DLOG("Writing aggregation scenario data indices");
+        XMLUtils::addChildren(doc, marketNode, "AggregationScenarioDataIndices", "Index",
+            additionalScenarioDataIndices_);
+    }
+
+    // base correlations
+    if (!baseCorrelationNames().empty()) {
+        DLOG("Writing base correlations");
+        XMLNode* bcNode = XMLUtils::addChild(doc, marketNode, "BaseCorrelations");
+        XMLUtils::addChild(doc, bcNode, "Simulate", simulateBaseCorrelations());
+        XMLUtils::addChildren(doc, bcNode, "IndexNames", "IndexName", baseCorrelationNames());
+        XMLUtils::addGenericChildAsList(doc, bcNode, "Terms", baseCorrelationTerms_);
+        XMLUtils::addGenericChildAsList(doc, bcNode, "DetachmentPoints", baseCorrelationDetachmentPoints_);
+        if (yoyInflationDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, bcNode, "DayCounters");
+            for (auto dc : baseCorrelationDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
+    }
+
     // correlations
-    DLOG("Writing correlation");
-    XMLNode* correlationsNode = XMLUtils::addChild(doc, marketNode, "Correlations");
     if (!correlationPairs().empty()) {
+        DLOG("Writing correlation");
+        XMLNode* correlationsNode = XMLUtils::addChild(doc, marketNode, "Correlations");
         XMLUtils::addChild(doc, correlationsNode, "Simulate", simulateCorrelations());
         XMLUtils::addChildren(doc, correlationsNode, "Pairs", "Pair", correlationPairs());
 

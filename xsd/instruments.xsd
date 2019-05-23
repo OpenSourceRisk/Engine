@@ -658,11 +658,12 @@
     <xs:all>
       <xs:element type="xs:string" name="IssuerId"/>
       <xs:element type="xs:string" name="CreditCurveId"/>
-      <xs:element type="bool" name="SettlesAccrual"/>
-      <xs:element type="bool" name="PaysAtDefaultTime"/>
-      <xs:element type="date" name="ProtectionStart"/>
+      <xs:element type="bool" name="SettlesAccrual" minOccurs="0"/>
+      <xs:element type="bool" name="PaysAtDefaultTime" minOccurs="0"/>
+      <xs:element type="date" name="ProtectionStart" minOccurs="0"/>
       <xs:element type="date" name="UpfrontDate" minOccurs="0"/>
       <xs:element type="xs:float" name="UpfrontFee" minOccurs="0"/>
+      <xs:element type="xs:float" name="FixedRecoveryRate" minOccurs="0"/>
       <xs:element type="legData" name="LegData" maxOccurs="1" minOccurs="1"/>
     </xs:all>
   </xs:complexType>
