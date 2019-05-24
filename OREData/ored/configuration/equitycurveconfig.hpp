@@ -47,6 +47,8 @@ class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
     enum class Type { DividendYield, ForwardPrice, OptionVolatility, NoDividends };
+    //! Supported equity curve option volatility exercise style
+    enum class ExerciseStyle { European, American };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -95,6 +97,7 @@ private:
     string forecastingCurve_;
     string currency_;
     Type type_;
+    ExerciseStyle exerciseStyle_;
     string equitySpotQuoteID_;
     string dayCountID_;
     string divInterpVariable_;
@@ -103,8 +106,10 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
+std::ostream& operator<<(std::ostream& out, EquityCurveConfig::ExerciseStyle s);
 
-EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
+EquityCurveConfig::ExerciseStyle parseEquityCurveConfigExerciseStyle(const std::string& str);
 
 } // namespace data
 } // namespace ore

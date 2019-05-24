@@ -46,6 +46,8 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
+    if (type_ == EquityCurveConfig::Type::OptionVolatility)
+        exerciseStyle_ = parseEquityCurveConfigExerciseStyle(XMLUtils::getChildValue(node, "ExerciseStyle", true));
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
     fwdQuotes_ = XMLUtils::getChildrenValues(node, "Quotes", "Quote");
@@ -80,6 +82,8 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
+    if (type_ == EquityCurveConfig::Type::OptionVolatility)
+        XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
     XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
@@ -119,6 +123,25 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
     else if (str == "NoDividends")
         return EquityCurveConfig::Type::NoDividends;
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);
+}
+
+std::ostream& operator<<(std::ostream& out, EquityCurveConfig::ExerciseStyle s) {
+    switch (s) {
+    case EquityCurveConfig::ExerciseStyle::European:
+        return out << "European";
+    case EquityCurveConfig::ExerciseStyle::American:
+        return out << "American";
+    default:
+        QL_FAIL("unknown EquityCurveConfig::ExerciseStyle(" << int(s) << ")");
+    }
+}
+
+EquityCurveConfig::ExerciseStyle parseEquityCurveConfigExerciseStyle(const std::string& str) {
+    if (str == "European")
+        return EquityCurveConfig::ExerciseStyle::European;
+    else if (str == "American")
+        return EquityCurveConfig::ExerciseStyle::American;
+    QL_FAIL("Invalid EquityCurveConfig::ExerciseStyle " << str << " - only European and American currently supported");
 }
 
 } // namespace data
