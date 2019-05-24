@@ -639,6 +639,7 @@
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
+    <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="bonds.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />

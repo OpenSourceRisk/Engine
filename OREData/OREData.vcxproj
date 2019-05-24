@@ -110,6 +110,7 @@
     <ClInclude Include="ored\portfolio\builders\cachingenginebuilder.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloor.hpp" />
     <ClInclude Include="ored\portfolio\builders\capfloorediborleg.hpp" />
+    <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp" />
     <ClInclude Include="ored\portfolio\builders\cms.hpp" />
     <ClInclude Include="ored\portfolio\builders\cmsspread.hpp" />
     <ClInclude Include="ored\portfolio\builders\commodityforward.hpp" />

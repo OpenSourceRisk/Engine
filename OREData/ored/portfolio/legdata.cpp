@@ -17,6 +17,7 @@
 */ 
 
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/legdata.hpp>
@@ -27,6 +28,7 @@
 #include <ql/cashflow.hpp>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/capflooredcoupon.hpp>
+#include <ql/cashflows/capflooredinflationcoupon.hpp>
 #include <ql/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/digitalcoupon.hpp>
@@ -44,6 +46,9 @@
 #include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/floatingannuitycoupon.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
+#include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 
@@ -99,16 +104,15 @@ void FloatingLegData::fromXML(XMLNode* node) {
     spreads_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_, true);
     // These are all optional
-    XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears");
-    if (arrNode)
-        isInArrears_ = XMLUtils::getChildValueAsBool(node, "IsInArrears", true);
-    else
-        isInArrears_ = false; // default to fixing-in-advance
-    XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged");
-    if (avgNode)
-        isAveraged_ = XMLUtils::getChildValueAsBool(node, "IsAveraged", true);
-    else
-        isAveraged_ = false;
+    isInArrears_ = isAveraged_ = hasSubPeriods_ = includeSpread_ = false;
+    if(XMLNode* arrNode = XMLUtils::getChildNode(node, "IsInArrears"))
+        isInArrears_ = parseBool(XMLUtils::getNodeValue(arrNode));
+    if(XMLNode* avgNode = XMLUtils::getChildNode(node, "IsAveraged"))
+        isAveraged_ = parseBool(XMLUtils::getNodeValue(avgNode));
+    if(XMLNode* spNode = XMLUtils::getChildNode(node, "HasSubPeriods"))
+        hasSubPeriods_ = parseBool(XMLUtils::getNodeValue(spNode));
+    if(XMLNode* incSpNode = XMLUtils::getChildNode(node, "IncludeSpread"))
+        includeSpread_ = parseBool(XMLUtils::getNodeValue(incSpNode));
     fixingDays_ = XMLUtils::getChildValueAsInt(node, "FixingDays"); // defaults to 0
     caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
     floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
@@ -125,6 +129,8 @@ XMLNode* FloatingLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IsInArrears", isInArrears_);
     XMLUtils::addChild(doc, node, "IsAveraged", isAveraged_);
+    XMLUtils::addChild(doc, node, "HasSubPeriods", hasSubPeriods_);
+    XMLUtils::addChild(doc, node, "IncludeSpread", includeSpread_);
     XMLUtils::addChild(doc, node, "FixingDays", static_cast<int>(fixingDays_));
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
@@ -170,6 +176,12 @@ void YoYLegData::fromXML(XMLNode* node) {
     gearings_ =
         XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Gearings", "Gearing", "startDate", gearingDates_);
     spreads_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Spreads", "Spread", "startDate", spreadDates_);
+    caps_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Caps", "Cap", "startDate", capDates_);
+    floors_ = XMLUtils::getChildrenValuesAsDoublesWithAttributes(node, "Floors", "Floor", "startDate", floorDates_);
+    if (XMLUtils::getChildNode(node, "NakedOption"))
+        nakedOption_ = XMLUtils::getChildValueAsBool(node, "NakedOption", false);
+    else
+        nakedOption_ = false;
 }
 
 XMLNode* YoYLegData::toXML(XMLDocument& doc) {
@@ -180,6 +192,9 @@ XMLNode* YoYLegData::toXML(XMLDocument& doc) {
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Gearings", "Gearing", gearings_, "startDate",
                                                 gearingDates_);
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Spreads", "Spread", spreads_, "startDate", spreadDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Caps", "Cap", caps_, "startDate", capDates_);
+    XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Floors", "Floor", floors_, "startDate", floorDates_);
+    XMLUtils::addChild(doc, node, "NakedOption", nakedOption_);
     return node;
 }
 
@@ -625,8 +640,9 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
     BusinessDayConvention bdc = parseBusinessDayConvention(data.paymentConvention());
 
     bool hasCapsFloors = floatData->caps().size() > 0 || floatData->floors().size() > 0;
-    vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
-    vector<double> spreads = buildScheduledVector(floatData->spreads(), floatData->spreadDates(), schedule);
+    vector<double> notionals = buildScheduledVectorNormalised(data.notionals(), data.notionalDates(), schedule, 0.0);
+    vector<double> spreads = buildScheduledVectorNormalised(floatData->spreads(), floatData->spreadDates(), schedule, 0.0);
+    vector<double> gearings = buildScheduledVectorNormalised(floatData->gearings(), floatData->gearingDates(), schedule, 1.0);
 
     applyAmortization(notionals, data, schedule, true);
     // handle float annuity, which is not done in applyAmortization, for this we can only have one block
@@ -637,19 +653,27 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
             QL_REQUIRE(!hasCapsFloors, "Caps/Floors not supported in floating annuity coupons");
             QL_REQUIRE(floatData->gearings().size() == 0, "Gearings not supported in floating annuity coupons");
             DayCounter dc = index->dayCounter();
-            vector<double> spreads = floatData->spreads();
             Date startDate = parseDate(data.amortizationData().front().startDate());
             double annuity = data.amortizationData().front().value();
             bool underflow = data.amortizationData().front().underflow();
             vector<boost::shared_ptr<Coupon>> coupons;
             for (Size i = 0; i < schedule.size() - 1; i++) {
-                Real spread = (i < spreads.size() ? spreads[i] : spreads.back());
+                Date paymentDate = schedule.calendar().adjust(schedule[i+1], bdc);
                 if (schedule[i] < startDate || i == 0) {
-                    Real nom = (i < notionals.size() ? notionals[i] : notionals.back());
-                    boost::shared_ptr<IborCoupon> coupon =
-                        boost::make_shared<IborCoupon>(schedule[i + 1], nom, schedule[i], schedule[i + 1],
-                                                       floatData->fixingDays(), index, 1.0, spread);
-                    coupon->setPricer(boost::shared_ptr<IborCouponPricer>(new BlackIborCouponPricer));
+                    boost::shared_ptr<FloatingRateCoupon> coupon;
+                    if(!floatData->hasSubPeriods()) {
+                        coupon = boost::make_shared<IborCoupon>(paymentDate, notionals[i], schedule[i], schedule[i + 1],
+                                                       floatData->fixingDays(), index, gearings[i], spreads[i], Date(),
+                                                       Date(), dc, floatData->isInArrears());
+                        coupon->setPricer(boost::make_shared<BlackIborCouponPricer>());
+                    }
+                    else {
+                        coupon = boost::make_shared<SubPeriodsCoupon>(
+                            paymentDate, notionals[i], schedule[i], schedule[i + 1], index,
+                            floatData->isAveraged() ? SubPeriodsCoupon::Averaging : SubPeriodsCoupon::Compounding,
+                            index->businessDayConvention(), spreads[i], dc, floatData->includeSpread(), gearings[i]);
+                        coupon->setPricer(boost::make_shared<SubPeriodsCouponPricer>());
+                    }
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
                 } else {
@@ -659,8 +683,9 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
                                                                            << " " << coupons.back()->amount());
                     boost::shared_ptr<QuantExt::FloatingAnnuityCoupon> coupon =
                         boost::make_shared<QuantExt::FloatingAnnuityCoupon>(
-                            annuity, underflow, coupons.back(), schedule[i + 1], schedule[i], schedule[i + 1],
-                            floatData->fixingDays(), index, 1.0, spread);
+                            annuity, underflow, coupons.back(), paymentDate, schedule[i], schedule[i + 1],
+                            floatData->fixingDays(), index, gearings[i], spreads[i], Date(), Date(), dc,
+                            floatData->isInArrears());
                     coupons.push_back(coupon);
                     LOG("FloatingAnnuityCoupon: " << i << " " << coupon->nominal() << " " << coupon->amount());
                 }
@@ -673,16 +698,31 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         }
     }
 
+    if(floatData->hasSubPeriods()) {
+        QL_REQUIRE(floatData->caps().empty() && floatData->floors().empty(),
+                   "SubPeriodsLegs does not support caps or floors");
+        QL_REQUIRE(!floatData->isInArrears(), "SubPeriodLegs do not support in aarears fixings");
+        Leg leg = SubPeriodsLeg(schedule, index)
+            .withNotionals(notionals)
+            .withPaymentDayCounter(dc)
+            .withPaymentAdjustment(bdc)
+            .withGearings(gearings)
+            .withSpreads(spreads)
+            .withType(floatData->isAveraged() ? SubPeriodsCoupon::Averaging : SubPeriodsCoupon::Compounding)
+            .includeSpread(floatData->includeSpread());
+        QuantExt::setCouponPricer(leg, boost::make_shared<SubPeriodsCouponPricer>());
+        return leg;
+    }
+
     IborLeg iborLeg = IborLeg(schedule, index)
                           .withNotionals(notionals)
                           .withSpreads(spreads)
                           .withPaymentDayCounter(dc)
                           .withPaymentAdjustment(bdc)
                           .withFixingDays(floatData->fixingDays())
-                          .inArrears(floatData->isInArrears());
-
-    if (floatData->gearings().size() > 0)
-        iborLeg.withGearings(buildScheduledVector(floatData->gearings(), floatData->gearingDates(), schedule));
+                          .inArrears(floatData->isInArrears())
+                          .withGearings(gearings)
+                          .withPaymentLag(data.paymentLag());
 
     // If no caps or floors or in arrears fixing, return the leg
     if (!hasCapsFloors && !floatData->isInArrears())
@@ -885,7 +925,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     return leg;
 }
 
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index) {
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index, const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<YoYLegData> yoyLegData = boost::dynamic_pointer_cast<YoYLegData>(data.concreteLegData());
     QL_REQUIRE(yoyLegData, "Wrong LegType, expected YoY, got " << data.legType());
 
@@ -897,18 +937,58 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
     vector<double> spreads = buildScheduledVector(yoyLegData->spreads(), yoyLegData->spreadDates(), schedule);
     vector<double> notionals = buildScheduledVector(data.notionals(), data.notionalDates(), schedule);
 
+    bool couponCap = yoyLegData->caps().size() > 0;
+    bool couponFloor = yoyLegData->floors().size() > 0;
+    bool couponCapFloor = yoyLegData->caps().size() > 0 || yoyLegData->floors().size() > 0;
+
     applyAmortization(notionals, data, schedule, false);
 
-    // floors and caps not suported yet by QL yoy coupon pricer...
-    Leg leg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
+    yoyInflationLeg yoyLeg = yoyInflationLeg(schedule, schedule.calendar(), index, observationLag)
                   .withNotionals(notionals)
                   .withPaymentDayCounter(dc)
                   .withPaymentAdjustment(bdc)
                   .withFixingDays(yoyLegData->fixingDays())
                   .withGearings(gearings)
                   .withSpreads(spreads);
-    QL_REQUIRE(leg.size() > 0, "Empty YoY Leg");
-    return leg;
+
+    if (couponCap)
+        yoyLeg.withCaps(buildScheduledVector(yoyLegData->caps(), yoyLegData->capDates(), schedule));
+
+    if (couponFloor)
+        yoyLeg.withFloors(buildScheduledVector(yoyLegData->floors(), yoyLegData->floorDates(), schedule));
+
+    if (couponCapFloor) {
+        // get a coupon pricer for the leg
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredYYLeg");
+        QL_REQUIRE(builder, "No builder found for CapFlooredIborLeg");
+        boost::shared_ptr<CapFlooredYoYLegEngineBuilder> cappedFlooredYoYBuilder =
+            boost::dynamic_pointer_cast<CapFlooredYoYLegEngineBuilder>(builder);
+        string indexname = index->name();
+        boost::shared_ptr<InflationCouponPricer> couponPricer =
+            cappedFlooredYoYBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+
+        // set coupon pricer for the leg
+        Leg leg = yoyLeg.operator Leg();
+        for (int i = 0; i < leg.size(); i++) {
+            boost::dynamic_pointer_cast<CappedFlooredYoYInflationCoupon>(leg[i])
+                ->setPricer(boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
+        }
+
+        // build naked option leg if required
+        if (yoyLegData->nakedOption()) {
+            leg = StrippedCappedFlooredYoYInflationCouponLeg(leg);
+            for (auto const& t : leg) {
+                auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredYoYInflationCoupon>(t);
+                if (s != nullptr)
+                    s->registerWith(s->underlying());
+            }
+        }
+
+        return leg;
+    }
+    else {
+        return yoyLeg;
+    }
 }
 
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapIndex,

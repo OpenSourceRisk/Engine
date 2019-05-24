@@ -231,7 +231,7 @@
 	   surfaces, so we need to specify here how we propagate the
 	   vol structure and what its composition will be -->
     <SwaptionVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <Currencies>
@@ -254,7 +254,7 @@
     </CapFloorVolatilities>
 
     <FxVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <ReactionToTimeDecay>ForwardVariance</ReactionToTimeDecay>
       <!-- Alternative: ConstantVariance -->
       <CurrencyPairs>
@@ -285,7 +285,7 @@
     </YYInflationIndexCurves>
 
     <YYCapFloorVolatilities>
-      <Simulate>false</Simulate>
+      <Simulate>true</Simulate>
       <ReactionToTimeDecay>ConstantVariance</ReactionToTimeDecay>
       <Names>
         <Name>EUHICPXT</Name>
