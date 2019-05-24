@@ -57,7 +57,6 @@ void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) 
     // it in a composite to get the notional in.
     boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
 
-    // we buy foriegn with domestic(=sold ccy).
     boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
     QL_REQUIRE(builder, "No builder found for " << tradeType_);
     boost::shared_ptr<EquityOptionEngineBuilder> eqOptBuilder =
