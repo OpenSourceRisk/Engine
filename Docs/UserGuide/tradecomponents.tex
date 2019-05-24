@@ -1006,7 +1006,7 @@ Allowable values: Any positive real number
 
 Allowable values:  \emph{true} or  \emph{false}
 
-\item DividendFactor [Optional]: Factor of dividend to be included in return. 
+\item DividendFactor [Optional]: Factor of dividend to be included in return. Note that the DividendFactor is only relevant when the ReturnType is set to  \emph{Total}. It is not used if the ReturnType is set to \emph{Price}.
 
 Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
 
@@ -1167,9 +1167,9 @@ Allowable values: An integer followed by \emph{D},
 \item ObservationLag: The observation lag to be applied.
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
-\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
+%\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 
-Allowable values:  \emph{true, false} 
+%Allowable values:  \emph{true, false} 
 
 \item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any).
