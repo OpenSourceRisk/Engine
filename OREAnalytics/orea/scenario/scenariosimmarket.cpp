@@ -25,6 +25,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -640,8 +641,12 @@ ScenarioSimMarket::ScenarioSimMarket(
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
                                 if (iborIndex) {
-                                    optionDates[i] = spotDate +  optionTenors[i];
-                                    optionDates[i] = iborIndex->fixingDate(optionDates[i]);
+                                    // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to 
+                                    // place the optionlet pillars at the fixing date of the last optionlet in the cap
+                                    // with tenor t_i
+                                    QL_REQUIRE(optionTenors[i] > iborIndex->tenor(), "The cap floor tenor must be greater than the ibor index tenor");
+                                    boost::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                    optionDates[i] = capFloor->lastFloatingRateCoupon()->fixingDate();
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
                                 } else {
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
