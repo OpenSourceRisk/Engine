@@ -969,7 +969,7 @@ Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& 
 
         // set coupon pricer for the leg
         Leg leg = yoyLeg.operator Leg();
-        for (int i = 0; i < leg.size(); i++) {
+        for (Size i = 0; i < leg.size(); i++) {
             boost::dynamic_pointer_cast<CappedFlooredYoYInflationCoupon>(leg[i])
                 ->setPricer(boost::dynamic_pointer_cast<QuantLib::YoYInflationCouponPricer>(couponPricer));
         }
