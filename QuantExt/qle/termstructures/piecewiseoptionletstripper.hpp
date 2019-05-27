@@ -34,6 +34,9 @@ namespace QuantExt {
 template <class Interpolator, template <class> class Bootstrap = QuantLib::IterativeBootstrap>
 class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
+private:
+    typedef PiecewiseOptionletCurve<Interpolator, Bootstrap> optionlet_curve;
+
 public:
     PiecewiseOptionletStripper(
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
@@ -44,6 +47,8 @@ public:
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+        const Interpolator& i = Interpolator(),
+        const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
         bool dontThrow = false,
         Real dontThrowMinVol = 0.0);
 
@@ -92,7 +97,7 @@ private:
     QuantLib::Real dontThrowMinVol_;
 
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
-    std::vector<boost::shared_ptr<PiecewiseOptionletCurve<Interpolator, Bootstrap>>> strikeCurves_;
+    std::vector<boost::shared_ptr<optionlet_curve>> strikeCurves_;
 };
 
 template <class Interpolator, template <class> class Bootstrap>
@@ -105,6 +110,8 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
+    const Interpolator& i,
+    const Bootstrap<optionlet_curve>& bootstrap,
     bool dontThrow,
     Real dontThrowMinVol) 
     : OptionletStripper(capFloorSurface, index, discount,
@@ -137,7 +144,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
         strikeCurves_[j] = boost::make_shared<PiecewiseOptionletCurve<Interpolator, Bootstrap> >(
             termVolSurface_->referenceDate(), helpers, termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_, 
-            displacement_, accuracy);
+            displacement_, accuracy, i, bootstrap);
     }
 }
 
