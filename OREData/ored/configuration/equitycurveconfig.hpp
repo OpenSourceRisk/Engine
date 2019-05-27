@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/exercise.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -97,7 +98,7 @@ private:
     string forecastingCurve_;
     string currency_;
     Type type_;
-    ExerciseStyle exerciseStyle_;
+    QuantLib::Exercise::Type exerciseStyle_;
     string equitySpotQuoteID_;
     string dayCountID_;
     string divInterpVariable_;
@@ -106,10 +107,8 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
-std::ostream& operator<<(std::ostream& out, EquityCurveConfig::ExerciseStyle s);
 
 EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
-EquityCurveConfig::ExerciseStyle parseEquityCurveConfigExerciseStyle(const std::string& str);
 
 } // namespace data
 } // namespace ore
