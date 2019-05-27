@@ -36,7 +36,7 @@ class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
 public:
     PiecewiseOptionletStripper(
-        const boost::shared_ptr<QuantLib::CapFloorTermVolSurface>& capFloorSurface,
+        const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         QuantLib::Real accuracy = 1.0e-12,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount = QuantLib::Handle<QuantLib::YieldTermStructure>(),
@@ -97,7 +97,7 @@ private:
 
 template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
-    const boost::shared_ptr<QuantLib::CapFloorTermVolSurface>& capFloorSurface,
+    const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     QuantLib::Real accuracy,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
@@ -154,7 +154,7 @@ void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() 
 
     // Populate the optionlet volatilities and standard deviations
     vector<Rate> strikes = termVolSurface_->strikes();
-    for (Size j = 0; j < nStrikes_; j++) {
+    for (Size j = 0; j < strikes.size(); j++) {
         for (Size i = 0; i < nOptionletTenors_; ++i) {
             optionletVolatilities_[i][j] = strikeCurves_[j]->volatility(optionletDates_[i], strikes[j]);
             optionletStDevs_[i][j] = optionletVolatilities_[i][j] * std::sqrt(optionletTimes_[i]);
