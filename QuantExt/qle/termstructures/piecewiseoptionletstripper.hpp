@@ -149,7 +149,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
 }
 
 template <class Interpolator, template <class> class Bootstrap>
-void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() const {
+inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() const {
 
     // Some localised typedefs and using declarations to make the code more readable
     using QuantLib::Size;
