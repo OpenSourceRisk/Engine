@@ -356,6 +356,7 @@ termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
+termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp

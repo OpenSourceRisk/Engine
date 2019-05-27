@@ -684,6 +684,9 @@
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
