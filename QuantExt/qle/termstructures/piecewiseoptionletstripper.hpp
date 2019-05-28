@@ -42,6 +42,7 @@ public:
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         QuantLib::Real accuracy = 1.0e-12,
+        bool flatFirstPeriod = true,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount = QuantLib::Handle<QuantLib::YieldTermStructure>(),
         const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
         const QuantLib::Real capFloorVolDisplacement = 0.0,
@@ -105,6 +106,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     QuantLib::Real accuracy,
+    bool flatFirstPeriod,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     const QuantLib::VolatilityType capFloorVolType,
     const QuantLib::Real capFloorVolDisplacement,
@@ -144,7 +146,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
         strikeCurves_[j] = boost::make_shared<PiecewiseOptionletCurve<Interpolator, Bootstrap> >(
             termVolSurface_->referenceDate(), helpers, termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_, 
-            displacement_, accuracy, i, bootstrap);
+            displacement_, flatFirstPeriod, accuracy, i, bootstrap);
     }
 }
 

@@ -45,16 +45,21 @@ class InterpolatedOptionletCurve : public QuantLib::OptionletVolatilityStructure
 
 public:
     /*! Constructor
-        \param dates          The fixing dates of the underlying interest rate index
-        \param volatilities   The optionlet volatility at each of the \p dates
-        \param bdc            Business day convention used when getting an optionlet expiry date from an optionlet 
-                              expiry tenor
-        \param dayCounter     The day counter used to convert dates to times
-        \param calendar       The calendar used when getting an optionlet expiry date from an optionlet expiry tenor 
-                              and. Also used to advance from today to reference date if necessary. 
-        \param interpolator   The interpolation object used to interpolate between the provided \p dates
-        \param volatilityType The volatility type of the provided \p volatilities
-        \param displacement   The applicable shift size if the \p volatilityType is \c ShiftedLognormal
+        \param dates           The fixing dates of the underlying interest rate index
+        \param volatilities    The optionlet volatility at each of the \p dates
+        \param bdc             Business day convention used when getting an optionlet expiry date from an optionlet 
+                               expiry tenor
+        \param dayCounter      The day counter used to convert dates to times
+        \param calendar        The calendar used when getting an optionlet expiry date from an optionlet expiry tenor 
+                               and. Also used to advance from today to reference date if necessary. 
+        \param interpolator    The interpolation object used to interpolate between the provided \p dates
+        \param volatilityType  The volatility type of the provided \p volatilities
+        \param displacement    The applicable shift size if the \p volatilityType is \c ShiftedLognormal
+        \param flatFirstPeriod If the volatility between the first date and second date in \dates is assumed constant 
+                               and equal to the second element of \p volatilities. This means that the first element of
+                               \p volatilities is ignored.
+        \param interpolator    An instance of the interpolator to use
+
     */
     InterpolatedOptionletCurve(
         const std::vector<QuantLib::Date>& dates,
@@ -64,6 +69,7 @@ public:
         const QuantLib::Calendar& calendar = QuantLib::Calendar(),
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
     
     //! \name TermStructure interface
@@ -98,6 +104,7 @@ protected:
         const QuantLib::DayCounter& dayCounter,
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(
@@ -107,6 +114,7 @@ protected:
         const QuantLib::DayCounter& dayCounter,
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
 
     InterpolatedOptionletCurve(
@@ -116,6 +124,7 @@ protected:
         const QuantLib::DayCounter& dayCounter,
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
 
     //! \name OptionletVolatilityStructure interface
@@ -140,6 +149,9 @@ private:
     //! If the volatility type is ShiftedLognormal, this holds the shift value
     QuantLib::Real displacement_;
 
+    //! True if the volatility from the initial date to the first date is assumed flat
+    bool flatFirstPeriod_;
+
     //! Initialise the dates and the interpolation object.
     void initialise();
 };
@@ -158,10 +170,11 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::Calendar& calendar,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(dates.at(0), calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(std::vector<QuantLib::Time>(), volatilities, interpolator),
-      dates_(dates), volatilityType_(volatilityType), displacement_(displacement) {
+      dates_(dates), volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {
     initialise();
 }
 
@@ -171,10 +184,11 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(interpolator), 
-      volatilityType_(volatilityType), displacement_(displacement) {}
+      volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
 
 template <class Interpolator>
 InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
@@ -184,10 +198,11 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(referenceDate, calendar, bdc, dayCounter),
-    QuantLib::InterpolatedCurve<Interpolator>(interpolator),
-    volatilityType_(volatilityType), displacement_(displacement) {}
+      QuantLib::InterpolatedCurve<Interpolator>(interpolator),
+      volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
 
 template <class Interpolator>
 InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
@@ -197,10 +212,11 @@ InterpolatedOptionletCurve<Interpolator>::InterpolatedOptionletCurve(
     const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     const Interpolator& interpolator)
     : QuantLib::OptionletVolatilityStructure(settlementDays, calendar, bdc, dayCounter),
-    QuantLib::InterpolatedCurve<Interpolator>(interpolator),
-    volatilityType_(volatilityType), displacement_(displacement) {}
+      QuantLib::InterpolatedCurve<Interpolator>(interpolator),
+      volatilityType_(volatilityType), displacement_(displacement), flatFirstPeriod_(flatFirstPeriod) {}
 
 template <class T>
 inline QuantLib::Date InterpolatedOptionletCurve<T>::maxDate() const {
@@ -248,12 +264,16 @@ InterpolatedOptionletCurve<T>::dates() const {
 template <class T>
 inline const std::vector<QuantLib::Real>&
 InterpolatedOptionletCurve<T>::volatilities() const {
+    if (flatFirstPeriod_)
+        this->data_[0] = this->data_[1];
     return this->data_;
 }
 
 template <class T>
 inline const std::vector<QuantLib::Real>&
 InterpolatedOptionletCurve<T>::data() const {
+    if (flatFirstPeriod_)
+        this->data_[0] = this->data_[1];
     return this->data_;
 }
 
@@ -263,6 +283,8 @@ InterpolatedOptionletCurve<T>::nodes() const {
     std::vector<std::pair<QuantLib::Date, QuantLib::Real> > results(dates_.size());
     for (QuantLib::Size i = 0; i < dates_.size(); ++i)
         results[i] = std::make_pair(dates_[i], this->data_[i]);
+    if (flatFirstPeriod_)
+        results[0].second = this->data_[1];
     return results;
 }
 
@@ -276,7 +298,10 @@ InterpolatedOptionletCurve<T>::smileSectionImpl(QuantLib::Time optionTime) const
 
 template <class T>
 QuantLib::Real InterpolatedOptionletCurve<T>::volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const {
-    return this->interpolation_(optionTime, true);
+    if (flatFirstPeriod_ && optionTime < this->times_[1])
+        return this->data_[1];
+    else
+        return this->interpolation_(optionTime, allowsExtrapolation());
 }
 
 template <class T>
@@ -298,6 +323,9 @@ void InterpolatedOptionletCurve<T>::initialise() {
         QL_REQUIRE(this->data_[i] > 0.0, "The " << QuantLib::io::ordinal(i) << " volatility, " << 
             this->data_[i]  << ", is not positive");
     }
+
+    if (flatFirstPeriod_)
+        this->data_[0] = this->data_[1];
 
     this->interpolation_ = this->interpolator_.interpolate(
         this->times_.begin(), this->times_.end(), this->data_.begin());

@@ -126,6 +126,7 @@ public:
         const QuantLib::DayCounter& dayCounter,
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         QuantLib::Real accuracy = 1.0e-12,
         const Interpolator& i = Interpolator(),
         const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
@@ -138,6 +139,7 @@ public:
         const QuantLib::DayCounter& dayCounter,
         QuantLib::VolatilityType volatilityType = QuantLib::Normal,
         QuantLib::Real displacement = 0.0,
+        bool flatFirstPeriod = true,
         QuantLib::Real accuracy = 1.0e-12,
         const Interpolator& i = Interpolator(),
         const Bootstrap<this_curve>& bootstrap = Bootstrap<this_curve>());
@@ -195,10 +197,11 @@ PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
     const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     QuantLib::Real accuracy,
     const Interpolator& i,
     const Bootstrap<this_curve>& bootstrap)
-    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, i),
+    : base_curve(referenceDate, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
       instruments_(instruments), accuracy_(accuracy), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }
@@ -212,10 +215,11 @@ PiecewiseOptionletCurve<Interpolator, Bootstrap>::PiecewiseOptionletCurve(
     const QuantLib::DayCounter& dayCounter,
     QuantLib::VolatilityType volatilityType,
     QuantLib::Real displacement,
+    bool flatFirstPeriod,
     QuantLib::Real accuracy,
     const Interpolator& i,
     const Bootstrap<this_curve>& bootstrap)
-    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, i),
+    : base_curve(settlementDays, calendar, bdc, dayCounter, volatilityType, displacement, flatFirstPeriod, i),
       instruments_(instruments), accuracy_(accuracy), bootstrap_(bootstrap) {
     bootstrap_.setup(this);
 }
