@@ -20,7 +20,6 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/variant.hpp>
 #include <boost/assign.hpp>
-#include <boost/typeof/typeof.hpp>
 
 #include <test/capfloormarketdata.hpp>
 #include <test/yieldcurvemarketdata.hpp>
@@ -228,33 +227,27 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     switch (timeInterp.which()) {
     case 0:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<Linear>(timeInterp)), BOOST_TYPEOF(boost::get<Linear>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<Linear>(timeInterp)), BOOST_TYPEOF(boost::get<LinearFlat>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 1:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<BackwardFlat>(timeInterp)), BOOST_TYPEOF(boost::get<Linear>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<BackwardFlat>(timeInterp)), BOOST_TYPEOF(boost::get<LinearFlat>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 2:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<LinearFlat>(timeInterp)), BOOST_TYPEOF(boost::get<Linear>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<BOOST_TYPEOF(boost::get<LinearFlat>(timeInterp)), BOOST_TYPEOF(boost::get<LinearFlat>(smileInterp))>(
-                volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
