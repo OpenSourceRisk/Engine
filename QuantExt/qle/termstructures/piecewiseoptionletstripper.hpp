@@ -41,17 +41,15 @@ public:
     PiecewiseOptionletStripper(
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
+        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
         QuantLib::Real accuracy = 1.0e-12,
         bool flatFirstPeriod = true,
-        const QuantLib::Handle<QuantLib::YieldTermStructure>& discount = QuantLib::Handle<QuantLib::YieldTermStructure>(),
         const QuantLib::VolatilityType capFloorVolType = QuantLib::ShiftedLognormal,
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
         const Interpolator& i = Interpolator(),
-        const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>(),
-        bool dontThrow = false,
-        Real dontThrowMinVol = 0.0);
+        const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
     //! \name Inspectors
     //@{
@@ -60,17 +58,6 @@ public:
     
     //! The applicable shift if the underlying cap floor matrix has shifted lognormal volatility
     QuantLib::Real capFloorVolDisplacement() const { return capFloorVolDisplacement_; }
-
-    /*! Don't throw if there is a cap floor for which we cannot imply an optionlet curve section
-        \warning Currently, we ignore this and always throw
-    */
-    bool dontThrow() const { return dontThrow_; }
-
-    /*! The value to which the optionlet volatility is set when \c dontThrow() is \c true and there is a cap floor for
-        which we cannot imply an optionlet curve section
-    */
-    QuantLib::Real dontThrowMinVol() const { return dontThrowMinVol_; }
-    //@}
 
     //! \name LazyObject interface
     //@{
@@ -87,16 +74,6 @@ private:
     //! The applicable shift if the underlying cap floor matrix has shifted lognormal volatility
     QuantLib::Real capFloorVolDisplacement_;
 
-    /*! Don't throw if there is a cap floor for which we cannot imply an optionlet curve section
-        \warning setting this to true currently has no effect
-    */
-    bool dontThrow_;
-
-    /*! The value to which the optionlet volatility is set when \c dontThrow_ is set and there is a cap floor for 
-        which we cannot imply an optionlet curve section
-    */
-    QuantLib::Real dontThrowMinVol_;
-
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
     std::vector<boost::shared_ptr<optionlet_curve>> strikeCurves_;
 };
@@ -105,23 +82,20 @@ template <class Interpolator, template <class> class Bootstrap>
 PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     QuantLib::Real accuracy,
     bool flatFirstPeriod,
-    const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     const QuantLib::VolatilityType capFloorVolType,
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
     const Interpolator& i,
-    const Bootstrap<optionlet_curve>& bootstrap,
-    bool dontThrow,
-    Real dontThrowMinVol) 
+    const Bootstrap<optionlet_curve>& bootstrap) 
     : OptionletStripper(capFloorSurface, index, discount,
-        optionletVolType ? *optionletVolType : type,
-        optionletVolDisplacement ? *optionletVolDisplacement : displacement),
+        optionletVolType ? *optionletVolType : capFloorVolType,
+        optionletVolDisplacement ? *optionletVolDisplacement : capFloorVolDisplacement),
       accuracy_(accuracy), capFloorVolType_(capFloorVolType),
-      capFloorVolDisplacement_(capFloorVolDisplacement), dontThrow_(dontThrow),
-      dontThrowMinVol_(dontThrowMinVol), strikeCurves_(nStrikes_) {
+      capFloorVolDisplacement_(capFloorVolDisplacement), strikeCurves_(nStrikes_) {
 
     // Some localised typedefs and using declarations to make the code more readable
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
@@ -166,7 +140,6 @@ inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculat
     for (Size j = 0; j < strikes.size(); j++) {
         for (Size i = 0; i < nOptionletTenors_; ++i) {
             optionletVolatilities_[i][j] = strikeCurves_[j]->volatility(optionletDates_[i], strikes[j]);
-            optionletStDevs_[i][j] = optionletVolatilities_[i][j] * std::sqrt(optionletTimes_[i]);
         }
     }
 }
