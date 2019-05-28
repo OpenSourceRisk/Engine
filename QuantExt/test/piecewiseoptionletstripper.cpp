@@ -292,8 +292,8 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             Real diff = fabs(flatNpv - strippedNpv);
             BOOST_CHECK_SMALL(diff, tolerance);
             
-            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-                capFloor->type() << ", " << testVols.tenors[i] << ", " << flatVol <<
+            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
+                capFloor->type() << ", " << testVols.tenors[i] << ", " << testVols.strikes[j] << ", " << flatVol <<
                 ", " << flatNpv << ", " << strippedNpv << ", " << diff << ")");
         }
     }
