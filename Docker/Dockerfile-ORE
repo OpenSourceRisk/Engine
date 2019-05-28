@@ -20,26 +20,26 @@ RUN cd /ore \
   && find -regex ".*\.\(sh\|in\|ac\|am\)" -exec dos2unix {} ';' \
   && cd QuantExt \
   && ./autogen.sh \
-  && ./configure --disable-static CXXFLAGS=-O2 \
+  && ./configure --enable-static CXXFLAGS=-O2 \
   && cd qle \
   && make -j ${num_cores} \
   && make install \
   && cd ../../OREData \
   && ./autogen.sh \
-  && ./configure --disable-static CXXFLAGS="-O2 -std=c++11" \
+  && ./configure --enable-static CXXFLAGS="-O2 -std=c++11" \
   && cd ored \
   && make -j ${num_cores} \
   && make install \
   && cd ../../OREAnalytics \
   && ./autogen.sh \
-  && ./configure --disable-static CXXFLAGS="-O2 -std=c++11" \
+  && ./configure --enable-static CXXFLAGS="-O2 -std=c++11" \
   && cd orea \
   && make -j ${num_cores} \
   && make install \
   && ldconfig \
   && cd ../../App \
   && ./autogen.sh \
-  && ./configure --disable-static CXXFLAGS="-O2 -std=c++11" \
+  && ./configure --enable-static CXXFLAGS="-O2 -std=c++11" \
   && make -j ${num_cores} \
   && make install \
   && cd / \
