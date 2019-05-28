@@ -112,8 +112,10 @@ private:
     //! The interpolation object in the strike direction
     SmileInterpolator si_;
 
-    //! The optionlet volatility vs strike section at each optionlet fixing date
-    std::vector<QuantLib::Interpolation> strikeSections_;
+    /*! The optionlet volatility vs strike section at each optionlet fixing date
+        It is \c mutable so that we can call \c enableExtrapolation in \c performCalculations.
+    */
+    mutable std::vector<QuantLib::Interpolation> strikeSections_;
 };
 
 template <class TimeInterpolator, class SmileInterpolator>
@@ -149,7 +151,7 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
     // Return the minimum strike over all optionlet tenors
     QuantLib::Rate minStrike = optionletBase_->optionletStrikes(0).front();
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
-        minStrike = std::min(optionletStripper_->optionletStrikes(i).front(), minStrike);
+        minStrike = std::min(optionletBase_->optionletStrikes(i).front(), minStrike);
     }
     return minStrike;
 }
@@ -159,7 +161,7 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
     // Return the maximum strike over all optionlet tenors
     QuantLib::Rate maxStrike = optionletBase_->optionletStrikes(0).back();
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
-        maxStrike = std::max(optionletStripper_->optionletStrikes(i).back(), maxStrike);
+        maxStrike = std::max(optionletBase_->optionletStrikes(i).back(), maxStrike);
     }
     return maxStrike;
 }
@@ -229,7 +231,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     const vector<Rate>& strikes = optionletBase_->optionletStrikes(0);
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
         const vector<Rate>& compStrikes = optionletBase_->optionletStrikes(i);
-        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(), close(_1, _2)), "The strikes at the " <<
+        QL_REQUIRE(equal(strikes.begin(), strikes.end(), compStrikes.begin(), boost::bind(close, _1, _2)), "The strikes at the " <<
             ordinal(i) << " optionlet date do not equal those at the first optionlet date");
     }
 
@@ -264,7 +266,7 @@ inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInte
         vols[i] = strikeSections_[i](strike);
     }
 
-    vector<Time> fixingTimes = optionletStripper_->optionletFixingTimes();
+    vector<Time> fixingTimes = optionletBase_->optionletFixingTimes();
     Interpolation ti = ti_.interpolate(fixingTimes.begin(), fixingTimes.end(), vols.begin());
     ti.enableExtrapolation(allowsExtrapolation());
 
