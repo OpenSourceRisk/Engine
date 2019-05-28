@@ -93,7 +93,7 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const Bootstrap<optionlet_curve>& bootstrap) 
     : OptionletStripper(capFloorSurface, index, discount,
         optionletVolType ? *optionletVolType : capFloorVolType,
-        optionletVolDisplacement ? *optionletVolDisplacement : capFloorVolDisplacement),
+        optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
       accuracy_(accuracy), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement), strikeCurves_(nStrikes_) {
 
