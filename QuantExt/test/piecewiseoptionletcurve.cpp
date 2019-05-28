@@ -19,7 +19,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/variant.hpp>
-#include <boost/assign/list_of.hpp>
+#include <boost/assign.hpp>
 #include <boost/typeof/typeof.hpp>
 
 #include <test/capfloormarketdata.hpp>
@@ -42,7 +42,13 @@ typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper
 using std::ostream;
 using std::boolalpha;
 using std::string;
+using std::map;
+using std::vector;
+using std::pair;
+using std::fixed;
+using std::setprecision;
 using boost::assign::list_of;
+using boost::assign::map_list_of;
 
 namespace {
 
@@ -174,6 +180,9 @@ vector<InterpolationType> interpolationTypes = list_of
 // If the built optionlet structure in the test has a floating or fixed reference date
 vector<bool> isMovingValues = list_of(true)(false);
 
+// If the optionlet structure has a flat first period or not
+vector<bool> flatFirstPeriodValues = list_of(true)(false);
+
 // So that I can reuse below
 string to_string(const InterpolationType& interpolationType) {
     string result;
@@ -192,6 +201,45 @@ string to_string(const InterpolationType& interpolationType) {
     }
     return result;
 }
+
+// Cached values for comparison below. We compare against cached values for a given interpolation type and setting of
+// the bool flatFirstPeriod. The cached values are keyed on the Size: 2 * interpolationType + flatFirstPeriod.
+// clang-format off
+vector<Date> cachedDates = list_of(Date(5, Feb, 2016))(Date(7, Feb, 2017))(Date(6, Aug, 2020))(Date(5, Aug, 2022))(Date(7, Aug, 2025))(Date(7, Aug, 2035));
+map<Size, vector<Real>> cachedValues = map_list_of
+    // Linear, flat first = false
+    (0, list_of(0.000000000000)(0.009939243164)(0.008398540935)(0.008216105988)(0.006859464219)(0.006598726907).convert_to_container<vector<Real> >())
+    // Linear, flat first = true
+    (1, list_of(0.009938000000)(0.009938000000)(0.008399019469)(0.008215852284)(0.006859635836)(0.006598586367).convert_to_container<vector<Real> >())
+    // LinearFlat, flat first = false
+    (2, list_of(0.000000000000)(0.009939243164)(0.008398540935)(0.008216105988)(0.006859464219)(0.006598726907).convert_to_container<vector<Real> >())
+    // LinearFlat, flat first = true
+    (3, list_of(0.009938000000)(0.009938000000)(0.008399019469)(0.008215852284)(0.006859635836)(0.006598586367).convert_to_container<vector<Real> >())
+    // BackwardFlat, flat first = false
+    (4, list_of(0.000000000000)(0.009938000000)(0.008799306892)(0.008279139515)(0.007401656494)(0.006715983817).convert_to_container<vector<Real> >())
+    // BackwardFlat, flat first = true
+    (5, list_of(0.009938000000)(0.009938000000)(0.008799306892)(0.008279139515)(0.007401656494)(0.006715983817).convert_to_container<vector<Real> >());
+// clang-format on
+
+// Cached values, on dates that are not curve nodes, for comparison below.
+// We pick a value in the first curve period to check the flatFirstPeriod setting, in the middle of the curve to check the interpolation and after the 
+// last curve date to check the extrapolation.
+// clang-format off
+vector<Date> cachedNonNodeDates = list_of(Date(5, Aug, 2016))(Date(6, Aug, 2021))(Date(7, Aug, 2036));
+map<Size, vector<Real>> cachedNonNodeValues = map_list_of
+    // Linear, flat first = false
+    (0, list_of(0.004915603956)(0.008307198335)(0.006572596059).convert_to_container<vector<Real> >())
+    // Linear, flat first = true
+    (1, list_of(0.009938000000)(0.008307310247)(0.006572424235).convert_to_container<vector<Real> >())
+    // LinearFlat, flat first = false
+    (2, list_of(0.004915603956)(0.008307198335)(0.006598726907).convert_to_container<vector<Real> >())
+    // LinearFlat, flat first = true
+    (3, list_of(0.009938000000)(0.008307310247)(0.006598586367).convert_to_container<vector<Real> >())
+    // BackwardFlat, flat first = false
+    (4, list_of(0.009938000000)(0.008279139515)(0.006715983817).convert_to_container<vector<Real> >())
+    // BackwardFlat, flat first = true
+    (5, list_of(0.009938000000)(0.008279139515)(0.006715983817).convert_to_container<vector<Real> >());
+// clang-format on
 
 }
 
@@ -215,8 +263,8 @@ BOOST_AUTO_TEST_SUITE(PiecewiseOptionletCurveTests)
 
 BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping, 
     bdata::make(generateVolatilityColumns()) * bdata::make(helperTypes) * bdata::make(quoteTypes) * 
-    bdata::make(interpolationTypes) * bdata::make(isMovingValues),
-    volatilityColumn, helperType, quoteType, interpolationType, isMoving) {
+    bdata::make(interpolationTypes) * bdata::make(isMovingValues) * bdata::make(flatFirstPeriodValues),
+    volatilityColumn, helperType, quoteType, interpolationType, isMoving, flatFirstPeriod) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor quotes along a strike column");
 
@@ -230,6 +278,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
     }
     BOOST_TEST_MESSAGE("  Interpolation type: " << to_string(interpolationType));
     BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
+    BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
 
     if (quoteType == CapFloorHelper::Premium && helperType == CapFloorHelper::Automatic) {
 
@@ -296,33 +345,33 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             } else {
                 BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             }
             break;
         case 1:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             } else {
                 BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             }
             break;
         case 2:
             if (isMoving) {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
-                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             } else {
                 BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
                 BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
-                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, accuracy));
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             }
             break;
         default:
@@ -369,6 +418,134 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
 
             BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
         }
+    }
+}
+
+BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
+    bdata::make(interpolationTypes) * bdata::make(flatFirstPeriodValues), 
+    interpolationType, flatFirstPeriod) {
+
+    BOOST_TEST_MESSAGE("Testing stripping of single strike column against cached values");
+
+    CapFloorHelper::Type helperType = CapFloorHelper::Automatic;
+    CapFloorHelper::QuoteType quoteType = CapFloorHelper::Volatility;
+
+    // Use EUR cap floor test volatility data from file test/capfloormarketdata.hpp
+    // Take the highest strike column of the normal volatility matrix
+    CapFloorVolatilityEUR testVols;
+    vector<Period> tenors = testVols.tenors;
+    vector<Real> volatilities(tenors.size());
+    Size strikeIdx = testVols.strikes.size() - 1;
+    Rate strike = testVols.strikes[strikeIdx];
+    for (Size i = 0; i < tenors.size(); i++) {
+        volatilities[i] = testVols.nVols[i][strikeIdx];
+    }
+    VolatilityType volatilityType = Normal;
+    Real displacement = 0.0;
+
+    // Make first tenor 18M highlight differences introduced by flatFirstPeriod setting.
+    // With first tenor = 1Y and index tenor = 6M, we were not seeing a difference.
+    tenors[0] = 18 * Months;
+
+    BOOST_TEST_MESSAGE("Test inputs are:");
+    BOOST_TEST_MESSAGE("  Cap floor helper type: " << helperType);
+    BOOST_TEST_MESSAGE("  Cap floor strike: " << strike);
+    BOOST_TEST_MESSAGE("  Quote type: " << quoteType);
+    BOOST_TEST_MESSAGE("  Quote volatility type: " << volatilityType);
+    BOOST_TEST_MESSAGE("  Quote displacement: " << displacement);
+    BOOST_TEST_MESSAGE("  Interpolation type: " << to_string(interpolationType));
+    BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
+
+    // Form the cap floor helper instrument for each tenor in the strike column
+    vector<boost::shared_ptr<helper> > helpers(tenors.size());
+    for (Size i = 0; i < tenors.size(); i++) {
+        Handle<Quote> quote(boost::make_shared<SimpleQuote>(volatilities[i]));
+        helpers[i] = boost::make_shared<CapFloorHelper>(helperType, tenors[i], strike, quote, iborIndex,
+            testYieldCurves.discountEonia, quoteType, volatilityType, displacement);
+    }
+
+    // Create the piecewise optionlet curve, with the given interpolation type.
+    // Store the nodes of this optionlet curve to compare with cached values
+    VolatilityType curveVolatilityType = Normal;
+    Real curveDisplacement = 0.0;
+    boost::shared_ptr<OptionletVolatilityStructure> ovs;
+    vector<pair<Date, Real> > curveNodes;
+    switch (interpolationType.which()) {
+    case 0: {
+        BOOST_TEST_MESSAGE("Using Linear interpolation");
+        boost::shared_ptr<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> > ovCurve =
+            boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<Linear>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+        curveNodes = ovCurve->nodes();
+        ovs = ovCurve;
+        }
+        break;
+    case 1: {
+        BOOST_TEST_MESSAGE("Using LinearFlat interpolation");
+        boost::shared_ptr<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<LinearFlat>(interpolationType))> > ovCurve =
+            boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<QuantExt::LinearFlat>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+        curveNodes = ovCurve->nodes();
+        ovs = ovCurve;
+        }
+        break;
+    case 2: {
+        BOOST_TEST_MESSAGE("Using BackwardFlat interpolation");
+        boost::shared_ptr<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> > ovCurve =
+            boost::make_shared<PiecewiseOptionletCurve<BOOST_TYPEOF(boost::get<BackwardFlat>(interpolationType))> >(
+                referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy);
+        curveNodes = ovCurve->nodes();
+        ovs = ovCurve;
+        }
+        break;
+    default:
+        BOOST_FAIL("Unexpected interpolation type");
+    }
+
+    // Get the key for the cached results for the current test
+    Size key = 2 * interpolationType.which() + static_cast<Size>(flatFirstPeriod);
+
+    // Check stripped optionlet volatilities against cached values
+    BOOST_REQUIRE_EQUAL(curveNodes.size(), cachedDates.size());
+    BOOST_REQUIRE(cachedValues.count(key) == 1);
+    BOOST_REQUIRE_EQUAL(curveNodes.size(), cachedValues.at(key).size());
+    BOOST_TEST_MESSAGE("node_date,node_vol");
+    for (Size i = 0; i < curveNodes.size(); i++) {
+        // Check the date
+        BOOST_CHECK_EQUAL(curveNodes[i].first, cachedDates[i]);
+        // Check the value
+        BOOST_CHECK_SMALL(fabs(curveNodes[i].second - cachedValues.at(key)[i]), accuracy);
+        // Print out the curve
+        BOOST_TEST_MESSAGE(io::iso_date(curveNodes[i].first) << "," << fixed << setprecision(12) << curveNodes[i].second);
+    }
+
+    // Check stripped optionlet volatilities on non-node dates against cached values
+    BOOST_REQUIRE(cachedNonNodeValues.count(key) == 1);
+    BOOST_TEST_MESSAGE("date,vol,cached_vol,diff");
+    for (Size i = 0; i < cachedNonNodeDates.size(); i++) {
+        Date d = cachedNonNodeDates[i];
+        
+        // The last date has been picked past the maximum curve date to check extrapolation. Check that we get an 
+        // error and then turn on extrapolation.
+        if (i == cachedNonNodeDates.size() - 1) {
+            BOOST_CHECK_THROW(ovs->volatility(d, strike), Error);
+            ovs->enableExtrapolation();
+        }
+        
+        Volatility vol = ovs->volatility(d, strike);
+        Volatility cachedVol = cachedNonNodeValues.at(key)[i];
+        Volatility diff = fabs(vol - cachedVol);
+        // Check the value
+        BOOST_CHECK_SMALL(diff, accuracy);
+        // Print out the curve
+        BOOST_TEST_MESSAGE(io::iso_date(d) << "," << fixed << setprecision(12) << vol << "," << cachedVol << "," << diff);
+
+        // The strike should not matter so check that the same test passes above and below the strike
+        Real shift = 0.0010;
+        diff = fabs(ovs->volatility(d, strike - shift) - cachedVol);
+        BOOST_CHECK_SMALL(diff, accuracy);
+        diff = fabs(ovs->volatility(d, strike + shift) - cachedVol);
+        BOOST_CHECK_SMALL(diff, accuracy);
     }
 }
 
