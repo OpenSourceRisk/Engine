@@ -41,7 +41,8 @@ QLE_TESTS = \
 	correlationtermstructure.cpp \
 	cpicapfloor.cpp \
 	strippedoptionletadapter.cpp \
-	piecewiseoptionletcurve.cpp
+	piecewiseoptionletcurve.cpp \
+	piecewiseoptionletstripper.cpp
 
 dist-hook:
 	mkdir -p $(distdir)/build

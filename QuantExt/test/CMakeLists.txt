@@ -30,6 +30,7 @@ logquote.cpp
 optionletstripper.cpp
 payment.cpp
 piecewiseoptionletcurve.cpp
+piecewiseoptionletstripper.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
