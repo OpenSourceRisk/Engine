@@ -15,6 +15,7 @@
 #include <qle/calendars/thailand.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/averageonindexedcouponpricer.hpp>
+#include <qle/cashflows/brlcdicouponpricer.hpp>
 #include <qle/cashflows/couponpricer.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
 #include <qle/cashflows/equitycouponpricer.hpp>
@@ -24,6 +25,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/lognormalcmsspreadpricer.hpp>
 #include <qle/cashflows/quantocouponpricer.hpp>
+#include <qle/cashflows/strippedcapflooredyoyinflationcoupon.hpp>
 #include <qle/cashflows/subperiodscoupon.hpp>
 #include <qle/cashflows/subperiodscouponpricer.hpp>
 #include <qle/currencies/africa.hpp>
@@ -49,6 +51,7 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwkoribor.hpp>
 #include <qle/indexes/ibor/mxntiie.hpp>
@@ -57,8 +60,10 @@
 #include <qle/indexes/ibor/nowa.hpp>
 #include <qle/indexes/ibor/nzdbkbm.hpp>
 #include <qle/indexes/ibor/phpphiref.hpp>
+#include <qle/indexes/ibor/plnpolonia.hpp>
 #include <qle/indexes/ibor/plnwibor.hpp>
 #include <qle/indexes/ibor/rubmosprime.hpp>
+#include <qle/indexes/ibor/saibor.hpp>
 #include <qle/indexes/ibor/seksior.hpp>
 #include <qle/indexes/ibor/sekstibor.hpp>
 #include <qle/indexes/ibor/sgdsibor.hpp>
@@ -72,6 +77,7 @@
 #include <qle/indexes/region.hpp>
 #include <qle/indexes/secpi.hpp>
 #include <qle/instruments/averageois.hpp>
+#include <qle/instruments/brlcdiswap.hpp>
 #include <qle/instruments/cdsoption.hpp>
 #include <qle/instruments/commodityforward.hpp>
 #include <qle/instruments/creditdefaultswap.hpp>
@@ -160,7 +166,9 @@
 #include <qle/termstructures/blackinvertedvoltermstructure.hpp>
 #include <qle/termstructures/blackvariancecurve3.hpp>
 #include <qle/termstructures/blackvariancesurfacemoneyness.hpp>
+#include <qle/termstructures/blackvariancesurfacesparse.hpp>
 #include <qle/termstructures/blackvolsurfacewithatm.hpp>
+#include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/correlationtermstructure.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
@@ -175,6 +183,7 @@
 #include <qle/termstructures/dynamicoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/dynamicstype.hpp>
 #include <qle/termstructures/dynamicswaptionvolmatrix.hpp>
+#include <qle/termstructures/dynamicyoyoptionletvolatilitystructure.hpp>
 #include <qle/termstructures/equityvolconstantspread.hpp>
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/fxblackvolsurface.hpp>
@@ -202,6 +211,7 @@
 #include <qle/termstructures/staticallycorrectedyieldtermstructure.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/subperiodsswaphelper.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
@@ -215,4 +225,5 @@
 #include <qle/termstructures/yoyoptionletvolatilitysurface.hpp>
 #include <qle/termstructures/zeroinflationcurveobservermoving.hpp>
 #include <qle/termstructures/zeroinflationcurveobserverstatic.hpp>
+#include <qle/time/yearcounter.hpp>
 #include <qle/version.hpp>
