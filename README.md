@@ -41,7 +41,7 @@ available on the [OpenSourceRisk](http://opensourcerisk.org) project site.
 
 Open Source Risk Engine (ORE) is
 
-Copyright (C) 2016 Quaternion Risk Management Ltd.
+Copyright (C) 2016, 2017, 2018, 2019 Quaternion Risk Management Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
