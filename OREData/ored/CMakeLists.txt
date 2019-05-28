@@ -12,10 +12,10 @@ configuration/defaultcurveconfig.cpp
 configuration/equitycurveconfig.cpp
 configuration/equityvolcurveconfig.cpp
 configuration/fxvolcurveconfig.cpp
+configuration/genericyieldvolcurveconfig.cpp
 configuration/inflationcapfloorpricesurfaceconfig.cpp
 configuration/inflationcapfloorvolcurveconfig.cpp
 configuration/inflationcurveconfig.cpp
-configuration/swaptionvolcurveconfig.cpp
 configuration/yieldcurveconfig.cpp
 marketdata/basecorrelationcurve.cpp
 marketdata/capfloorvolcurve.cpp
@@ -34,6 +34,7 @@ marketdata/fixings.cpp
 marketdata/fxspot.cpp
 marketdata/fxtriangulation.cpp
 marketdata/fxvolcurve.cpp
+marketdata/genericyieldvolcurve.cpp
 marketdata/inflationcapfloorpricesurface.cpp
 marketdata/inflationcapfloorvolcurve.cpp
 marketdata/inflationcurve.cpp
@@ -47,6 +48,7 @@ marketdata/swaptionvolcurve.cpp
 marketdata/todaysmarket.cpp
 marketdata/todaysmarketparameters.cpp
 marketdata/yieldcurve.cpp
+marketdata/yieldvolcurve.cpp
 model/crossassetmodelbuilder.cpp
 model/crossassetmodeldata.cpp
 model/eqbsbuilder.cpp
@@ -78,6 +80,7 @@ portfolio/envelope.cpp
 portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
+portfolio/fixingdates.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -126,12 +129,14 @@ configuration/equitycurveconfig.hpp
 configuration/equityvolcurveconfig.hpp
 configuration/fxspotconfig.hpp
 configuration/fxvolcurveconfig.hpp
+configuration/genericyieldvolcurveconfig.hpp
 configuration/inflationcapfloorpricesurfaceconfig.hpp
 configuration/inflationcapfloorvolcurveconfig.hpp
 configuration/inflationcurveconfig.hpp
 configuration/securityconfig.hpp
 configuration/swaptionvolcurveconfig.hpp
 configuration/yieldcurveconfig.hpp
+configuration/yieldvolcurveconfig.hpp
 marketdata/basecorrelationcurve.hpp
 marketdata/capfloorvolcurve.hpp
 marketdata/cdsvolcurve.hpp
@@ -149,6 +154,7 @@ marketdata/fixings.hpp
 marketdata/fxspot.hpp
 marketdata/fxtriangulation.hpp
 marketdata/fxvolcurve.hpp
+marketdata/genericyieldvolcurve.hpp
 marketdata/inflationcapfloorpricesurface.hpp
 marketdata/inflationcapfloorvolcurve.hpp
 marketdata/inflationcurve.hpp
@@ -159,10 +165,12 @@ marketdata/marketdatum.hpp
 marketdata/marketdatumparser.hpp
 marketdata/marketimpl.hpp
 marketdata/security.hpp
+marketdata/structuredcurveerror.hpp
 marketdata/swaptionvolcurve.hpp
 marketdata/todaysmarket.hpp
 marketdata/todaysmarketparameters.hpp
 marketdata/yieldcurve.hpp
+marketdata/yieldvolcurve.hpp
 model/crossassetmodelbuilder.hpp
 model/crossassetmodeldata.hpp
 model/eqbsbuilder.hpp
@@ -181,6 +189,7 @@ portfolio/builders/bond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp
@@ -204,6 +213,7 @@ portfolio/envelope.hpp
 portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
+portfolio/fixingdates.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp
@@ -217,6 +227,7 @@ portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp
 portfolio/schedule.hpp
+portfolio/structuredtradeerror.hpp
 portfolio/swap.hpp
 portfolio/swaption.hpp
 portfolio/trade.hpp
@@ -247,3 +258,14 @@ add_library(${ORED_LIB_NAME} ${OREData_SRC})
 target_link_libraries(${ORED_LIB_NAME} ${QLE_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${QL_LIB_NAME})
 target_link_libraries(${ORED_LIB_NAME} ${Boost_LIBRARIES})
+
+
+install(DIRECTORY . DESTINATION include/ored
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${ORED_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )
+

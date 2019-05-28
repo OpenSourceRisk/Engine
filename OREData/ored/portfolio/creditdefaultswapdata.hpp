@@ -17,8 +17,8 @@
 */
 
 /*! \file portfolio/creditdefaultswapdata.hpp
- \brief A class to hold credit default swap data
- \ingroup tradedata
+    \brief A class to hold credit default swap data
+    \ingroup tradedata
  */
 
 #pragma once
@@ -29,11 +29,10 @@
 namespace ore {
 namespace data {
 
-//! Serializable credit default swap data
-/*!
-\ingroup tradedata
+/*! Serializable credit default swap data
+    \ingroup tradedata
 */
-class CreditDefaultSwapData {
+class CreditDefaultSwapData : public XMLSerializable {
 public:
     //! Default constructor
     CreditDefaultSwapData() {}
@@ -42,13 +41,14 @@ public:
     CreditDefaultSwapData(const string& issuerId, const string& creditCurveId, const LegData& leg,
                           const bool settlesAccrual = true, const bool paysAtDefaultTime = true,
                           const Date& protectionStart = Date(), const Date& upfrontDate = Date(),
-                          const Real upfrontFee = Null<Real>())
+                          const Real upfrontFee = Null<Real>(),
+                          QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>())
         : issuerId_(issuerId), creditCurveId_(creditCurveId), leg_(leg), settlesAccrual_(settlesAccrual),
           paysAtDefaultTime_(paysAtDefaultTime), protectionStart_(protectionStart), upfrontDate_(upfrontDate),
-          upfrontFee_(upfrontFee) {}
+          upfrontFee_(upfrontFee), recoveryRate_(recoveryRate) {}
 
-    void fromXML(XMLNode* node);
-    XMLNode* toXML(XMLDocument& doc);
+    void fromXML(XMLNode* node) override;
+    XMLNode* toXML(XMLDocument& doc) override;
 
     const string& issuerId() const { return issuerId_; }
     const string& creditCurveId() const { return creditCurveId_; }
@@ -58,6 +58,11 @@ public:
     const Date& protectionStart() const { return protectionStart_; }
     const Date& upfrontDate() const { return upfrontDate_; }
     Real upfrontFee() const { return upfrontFee_; }
+    
+    /*! If the CDS is a fixed recovery CDS, this returns the recovery rate. 
+        For a standard CDS, it returns Null<Real>().
+    */
+    QuantLib::Real recoveryRate() const { return recoveryRate_; }
 
 private:
     string issuerId_;
@@ -66,6 +71,9 @@ private:
     bool settlesAccrual_, paysAtDefaultTime_;
     Date protectionStart_, upfrontDate_;
     Real upfrontFee_;
+    
+    //! Populated if the CDS is a fixed recovery rate CDS, otherwise \c Null<Real>()
+    QuantLib::Real recoveryRate_;
 };
 
 } // namespace data

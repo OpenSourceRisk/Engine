@@ -106,7 +106,7 @@ static struct test_data index_data[] = {
     {"SEK-SIOR", "SEK-SIORTN Actual/360", 1 * Days},
     {"NOK-NOWA", "NowaON Actual/Actual (ISMA)", 1 * Days},
     {"NZD-OCR", "NzocrON Actual/365 (Fixed)", 1 * Days},
-    {"BRL-CDI", "BRL-CDITN Business/252(Brazil)", 1 * Days},
+    {"BRL-CDI", "BRL-CDION Business/252(Brazil)", 1 * Days},
 
     {"AUD-LIBOR-1W", "AUDLibor1W Actual/360", 1 * Weeks},
     {"AUD-LIBOR-1M", "AUDLibor1M Actual/360", 1 * Months},
@@ -215,6 +215,12 @@ static struct test_data index_data[] = {
     {"CHF-LIBOR-12M", "CHFLibor1Y Actual/360", 1 * Years},
     {"CHF-LIBOR-1Y", "CHFLibor1Y Actual/360", 1 * Years},
 
+    {"SAR-SAIBOR-1W", "SAR-SAIBOR1W Actual/360", 1 * Weeks},
+    {"SAR-SAIBOR-1M", "SAR-SAIBOR1M Actual/360", 1 * Months},
+    {"SAR-SAIBOR-2M", "SAR-SAIBOR2M Actual/360", 2 * Months},
+    {"SAR-SAIBOR-3M", "SAR-SAIBOR3M Actual/360", 3 * Months},
+    {"SAR-SAIBOR-6M", "SAR-SAIBOR6M Actual/360", 6 * Months},
+
     {"SEK-STIBOR-1W", "SEK-STIBOR1W Actual/360", 1 * Weeks},
     {"SEK-STIBOR-1M", "SEK-STIBOR1M Actual/360", 1 * Months},
     {"SEK-STIBOR-2M", "SEK-STIBOR2M Actual/360", 2 * Months},
@@ -303,6 +309,13 @@ static struct test_data index_data[] = {
     {"TWD-TAIBOR-5M", "TWD-TAIBOR5M Actual/365 (Fixed)", 5 * Months},
     {"TWD-TAIBOR-6M", "TWD-TAIBOR6M Actual/365 (Fixed)", 6 * Months},
 
+    {"TRY-TRLIBOR-1M", "TRLibor1M Actual/360", 1 * Months},
+    {"TRY-TRLIBOR-2M", "TRLibor2M Actual/360", 2 * Months},
+    {"TRY-TRLIBOR-3M", "TRLibor3M Actual/360", 3 * Months},
+    {"TRY-TRLIBOR-4M", "TRLibor4M Actual/360", 4 * Months},
+    {"TRY-TRLIBOR-5M", "TRLibor5M Actual/360", 5 * Months},
+    {"TRY-TRLIBOR-6M", "TRLibor6M Actual/360", 6 * Months},
+  
     {"MYR-KLIBOR-1M", "MYR-KLIBOR1M Actual/365 (Fixed)", 1 * Months},
     {"MYR-KLIBOR-2M", "MYR-KLIBOR2M Actual/365 (Fixed)", 2 * Months},
     {"MYR-KLIBOR-3M", "MYR-KLIBOR3M Actual/365 (Fixed)", 3 * Months},

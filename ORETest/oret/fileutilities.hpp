@@ -49,7 +49,7 @@ namespace {
 
 // Use to remove the output directory when the suite exits
 // Returns true if the operation completed without errors, otherwise false
-bool clearOutput(const path& outputPath) {
+inline bool clearOutput(const path& outputPath) {
     
     // If output path does not exist, nothing to do
     if (!exists(outputPath)) return true;
@@ -67,7 +67,7 @@ bool clearOutput(const path& outputPath) {
 
 // Basic comparison of two files based on the post:
 // https://stackoverflow.com/a/37575457/1771882
-bool compareFiles(const string& p1, const string& p2) {
+inline bool compareFiles(const string& p1, const string& p2) {
     
     ifstream f1(p1, ifstream::binary|ifstream::ate);
     ifstream f2(p2, ifstream::binary|ifstream::ate);

@@ -29,6 +29,7 @@
 #include <qle/indexes/inflationindexwrapper.hpp>
 #include <qle/termstructures/interpolatedyoycapfloortermpricesurface.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 #include <algorithm>
 
@@ -64,9 +65,9 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
                                                    << spec.name() << ", was not found.");
         }
 
-        const std::vector<Period>& terms = config->maturities();
-        std::vector<Real> capStrikes = config->capStrikes();
-        std::vector<Real> floorStrikes = config->floorStrikes();
+        std::vector<Period> terms = parseVectorOfValues<Period>(config->maturities(), &parsePeriod);
+        std::vector<Real> capStrikes = parseVectorOfValues<Real>(config->capStrikes(), &parseReal);
+        std::vector<Real> floorStrikes = parseVectorOfValues<Real>(config->floorStrikes(), &parseReal);
 
         Matrix cPrice(capStrikes.size(), capStrikes.size() == 0 ? 0 : terms.size(), Null<Real>()),
             fPrice(floorStrikes.size(), floorStrikes.size() == 0 ? 0 : terms.size(), Null<Real>());
@@ -307,8 +308,8 @@ InflationCapFloorPriceSurface::InflationCapFloorPriceSurface(
             boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
                 boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex, hovs);
 
-            boost::shared_ptr<KInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
-                boost::make_shared<KInterpolatedYoYOptionletVolatilitySurface<Linear>>(
+            boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>> interpVolSurface =
+	      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear>>(
                     yoySurface->settlementDays(), yoySurface->calendar(), yoySurface->businessDayConvention(),
                     yoySurface->dayCounter(), yoySurface->observationLag(), yoySurface, cfEngine, yoyStripper, 0);
 

@@ -61,8 +61,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     string startDate_;
@@ -99,8 +99,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     string calendar_;
@@ -126,6 +126,8 @@ public:
     void addDates(const ScheduleDates& dates) { dates_.emplace_back(dates); }
     //! Add rules
     void addRules(const ScheduleRules& rules) { rules_.emplace_back(rules); }
+    //! Check if has any dates/rules
+    bool hasData() { return dates_.size() > 0 || rules_.size() > 0; }
 
     //! \name Inspectors
     //@{
@@ -135,8 +137,8 @@ public:
 
     //! \name Serialisation
     //@{
-    virtual void fromXML(XMLNode* node);
-    virtual XMLNode* toXML(XMLDocument& doc);
+    virtual void fromXML(XMLNode* node) override;
+    virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 private:
     vector<ScheduleDates> dates_;

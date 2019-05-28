@@ -6,32 +6,20 @@
 #include <boost/config.hpp>
 
 // select toolset:
-#if (_MSC_VER < 1310)
-#error "unsupported Microsoft compiler"
-#elif(_MSC_VER == 1310)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc71"
-#elif(_MSC_VER == 1400)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc80"
-#elif(_MSC_VER == 1500)
-#ifdef x64
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc90-x64"
+#if (_MSC_VER >= 1920)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc142"
+#elif (_MSC_VER >= 1910)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc141"
+#elif (_MSC_VER >= 1900)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc140"
+#elif (_MSC_VER >= 1800)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc120"
+#elif (_MSC_VER >= 1700)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc110"
+#elif (_MSC_VER >= 1600)
+#  define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc100"
 #else
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc90"
-#endif
-#elif(_MSC_VER == 1600)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc100"
-#elif(_MSC_VER == 1700)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc110"
-#elif(_MSC_VER == 1800)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc120"
-#elif(_MSC_VER == 1900)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc140"
-#elif (_MSC_VER == 1910)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc141"
-#elif (_MSC_VER == 1920)
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc142"
-#else
-#define OPEN_SOURCE_RISKDATA_LIB_TOOLSET "vc142"
+#  error "unsupported Microsoft compiler"
 #endif
 
 #ifdef _M_X64

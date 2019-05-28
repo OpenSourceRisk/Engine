@@ -54,7 +54,7 @@ public:
 
         // build vectors with dates and discount factors for GBP
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Discount, "USD")] = forecastSP5;
-        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityForecast, "SP5")] = forecastSP5;
+        yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::Yield, "SP5")] = forecastSP5;
         yieldCurves_[make_tuple(Market::defaultConfiguration, YieldCurveType::EquityDividend, "SP5")] = dividendSP5;
 
         // build USD Libor index
@@ -63,7 +63,7 @@ public:
 
         // build SP5 Equity Curve
         hSP5 = Handle<EquityIndex>(
-            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), spotSP5, forecastSP5, dividendSP5)));
+            boost::shared_ptr<EquityIndex>(new EquityIndex("SP5", UnitedStates(), parseCurrency("USD"), spotSP5, forecastSP5, dividendSP5)));
         equityCurves_[make_pair(Market::defaultConfiguration, "SP5")] = hSP5;
 
         // add fixings
@@ -99,6 +99,7 @@ struct CommonVars {
     string index;
     string eqName;
     Real dividendFactor;
+    Real initialPrice;
     Integer settlementDays;
     bool isinarrears;
     vector<double> notionals;
@@ -112,7 +113,7 @@ struct CommonVars {
         // build EquitySwap
         LegData floatLegData(boost::make_shared<FloatingLegData>(index, days, isinarrears, spread), !isPayer, ccy,
                              floatSchedule, fixDC, notionals);
-        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, settlementDays),
+        LegData eqLegData(boost::make_shared<EquityLegData>(returnType, dividendFactor, eqName, initialPrice, false, settlementDays),
                           isPayer, ccy, eqSchedule, fixDC, notionals);
 
         Envelope env("CP1");
@@ -140,7 +141,9 @@ struct CommonVars {
                         .withNotionals(notionals)
                         .withPaymentDayCounter(parseDayCounter(fixDC))
                         .withPaymentAdjustment(parseBusinessDayConvention(conv))
-                        .withTotalReturn(returnType == "Total");
+                        .withTotalReturn(returnType == "Total")
+                        .withInitialPrice(initialPrice)
+                        .withNotionalReset(false);
 
         boost::shared_ptr<QuantLib::Swap> swap(new QuantLib::Swap(floatLeg, eqLeg));
         return swap;
@@ -160,6 +163,7 @@ struct CommonVars {
         index = "USD-LIBOR-3M";
         eqName = "SP5";
         dividendFactor = 1.0;
+        initialPrice = 2100.0;
         settlementDays = 0;
         days = 0;
         isinarrears = false;

@@ -111,6 +111,13 @@ const string MarketImpl::swapIndexBase(const string& key, const string& configur
     return lookup<pair<string, string>>(swaptionIndexBases_, key, configuration, "swap index base").second;
 }
 
+Handle<QuantLib::SwaptionVolatilityStructure> MarketImpl::yieldVol(
+    const string& key,
+    const string& configuration) const {
+    return lookup<Handle<QuantLib::SwaptionVolatilityStructure>>
+        (yieldVolCurves_, key, configuration, "yield volatility curve");
+}
+
 Handle<Quote> MarketImpl::fxSpot(const string& ccypair, const string& configuration) const {
     auto it = fxSpots_.find(configuration);
     if (it == fxSpots_.end())
@@ -168,7 +175,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
 Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
                                                                            const string& configuration) const {
     return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
-                                                                   "capfloor curve");
+                                                                   "yoy inflation capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {
@@ -215,8 +222,7 @@ Handle<BlackVolTermStructure> MarketImpl::equityVol(const string& key, const str
 }
 
 Handle<YieldTermStructure> MarketImpl::equityForecastCurve(const string& eqName, const string& configuration) const {
-    return lookup<Handle<YieldTermStructure>>(yieldCurves_, eqName, YieldCurveType::EquityForecast, configuration,
-                                              "equity forecast yield curve");
+    return equityCurve(eqName, configuration)->equityForecastCurve();
 }
 
 Handle<Quote> MarketImpl::securitySpread(const string& key, const string& configuration) const {

@@ -67,6 +67,12 @@ public:
         fixings_.emplace_back(Fixing(date, name, value));
     }
 
+    // add a dividend
+    virtual void addDividend(Date date, const string& name, Real value) {
+        // Don't check against today's date here
+        dividends_.emplace_back(Fixing(date, name, value));
+    }
+
 protected:
     std::map<QuantLib::Date, std::vector<boost::shared_ptr<MarketDatum>>> data_;
     std::vector<Fixing> fixings_;

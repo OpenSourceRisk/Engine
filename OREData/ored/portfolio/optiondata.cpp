@@ -28,16 +28,16 @@ void OptionData::fromXML(XMLNode* node) {
     longShort_ = XMLUtils::getChildValue(node, "LongShort", true);
     callPut_ = XMLUtils::getChildValue(node, "OptionType", true);
     style_ = XMLUtils::getChildValue(node, "Style");
-    payoffAtExpiry_ = XMLUtils::getChildValueAsBool(node, "PayOffAtExpiry", false);
-    exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
     noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
     settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
+    payoffAtExpiry_ = XMLUtils::getChildValueAsBool(node, "PayOffAtExpiry", false);
     premium_ = XMLUtils::getChildValueAsDouble(node, "PremiumAmount", false);
     premiumCcy_ = XMLUtils::getChildValue(node, "PremiumCurrency", false);
     premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
     exerciseFees_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExerciseFees", "ExerciseFee", false);
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
+    exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) {
@@ -45,16 +45,18 @@ XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
     XMLUtils::addChild(doc, node, "OptionType", callPut_);
     XMLUtils::addChild(doc, node, "Style", style_);
-    XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);
-    XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
     XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
-    XMLUtils::addChild(doc, node, "Settlement", settlement_);
-    XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
+    if (settlement_ != "")
+        XMLUtils::addChild(doc, node, "Settlement", settlement_);
+    if (settlementMethod_ != "")
+        XMLUtils::addChild(doc, node, "SettlementMethod", settlementMethod_);
+    XMLUtils::addChild(doc, node, "PayOffAtExpiry", payoffAtExpiry_);
     XMLUtils::addChild(doc, node, "PremiumAmount", premium_);
     XMLUtils::addChild(doc, node, "PremiumCurrency", premiumCcy_);
     XMLUtils::addChild(doc, node, "PremiumPayDate", premiumPayDate_);
     XMLUtils::addChildren(doc, node, "ExerciseFees", "ExerciseFee", exerciseFees_);
-    XMLUtils::addChildren(doc, node, "ExercisePrices", "ExerciseFee", exercisePrices_);
+    XMLUtils::addChildren(doc, node, "ExercisePrices", "ExercisePrice", exercisePrices_);
+    XMLUtils::addChildren(doc, node, "ExerciseDates", "ExerciseDate", exerciseDates_);
     return node;
 }
 } // namespace data
