@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <boost/timer.hpp>
 #include <orea/cube/inmemorycube.hpp>
 #include <orea/engine/filteredsensitivitystream.hpp>
@@ -199,7 +200,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
                                          "ACT/ACT", "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", 201.0, "2M", false,
                                          0.005));
     portfolio->add(buildYYInflationSwap("16_YoYInflationSwap_UKRPI", "GBP", true, 100000.0, 0, 10, 0.0, "1Y", "ACT/ACT",
-                                        "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", true, 2));
+                                        "GBP-LIBOR-6M", "1Y", "ACT/ACT", "UKRPI", "2M", 2));
     portfolio->add(buildCommodityForward("17_CommodityForward_GOLD", "Long", 1, "COMDTY_GOLD_USD", "USD", 1170.0, 100));
     portfolio->add(buildCommodityForward("18_CommodityForward_OIL", "Short", 4, "COMDTY_WTI_USD", "USD", 46.0, 100000));
     portfolio->add(
@@ -572,14 +573,10 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/3/5Y/10Y/ATM", 5116.77, -36.0078},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/4/10Y/5Y/ATM", 5116.77, -15.602},
         {"13_Swaption_EUR", "Down:SwaptionVolatility/EUR/5/10Y/10Y/ATM", 5116.77, -3.94141},
-        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, -42.9337},
-        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, -0.354975},
-        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, 42.9423},
-        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, 0.354976},
-        {"14_EquityOption_SP5", "Up:EquityForecastCurve/SP5/2/2Y", 216085, 165.988},
-        {"14_EquityOption_SP5", "Up:EquityForecastCurve/SP5/3/3Y", 216085, 1.37188},
-        {"14_EquityOption_SP5", "Down:EquityForecastCurve/SP5/2/2Y", 216085, -165.898},
-        {"14_EquityOption_SP5", "Down:EquityForecastCurve/SP5/3/3Y", 216085, -1.37187},
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/2/2Y", 216085, 123.022},
+        {"14_EquityOption_SP5", "Up:DiscountCurve/USD/3/3Y", 216085, 1.0169},
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/2/2Y", 216085, -122.988},
+        {"14_EquityOption_SP5", "Down:DiscountCurve/USD/3/3Y", 216085, -1.0169 },
         {"14_EquityOption_SP5", "Up:EquitySpot/SP5/0/spot", 216085, 8423.66},
         {"14_EquityOption_SP5", "Down:EquitySpot/SP5/0/spot", 216085, -8277.55},
         {"14_EquityOption_SP5", "Up:FXSpot/EURUSD/0/spot", 216085, -2139.45},
@@ -820,7 +817,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     IndexManager::instance().clearHistories();
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAnalysisTest)
 
@@ -1391,7 +1388,7 @@ BOOST_AUTO_TEST_CASE(testFxOptionDeltaGamma) {
     bool useOriginalFxForBaseCcyConv = true; // convert sensi to EUR using original FX rate (not the shifted rate)
     boost::shared_ptr<SensitivityAnalysis> sa = boost::make_shared<SensitivityAnalysis>(
         portfolio, initMarket, Market::defaultConfiguration, data, simMarketData, sensiData, conventions,
-        recalibrateModels, useOriginalFxForBaseCcyConv);
+        recalibrateModels, CurveConfigurations(), TodaysMarketParameters(), useOriginalFxForBaseCcyConv);
     sa->generateSensitivities();
 
     map<pair<string, string>, Real> deltaMap;

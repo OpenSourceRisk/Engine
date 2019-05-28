@@ -30,6 +30,7 @@
 #include <ql/instruments/makeois.hpp>
 #include <ql/instruments/makevanillaswap.hpp>
 #include <ql/math/solvers1d/newtonsafe.hpp>
+#include <ql/math/comparison.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
@@ -40,6 +41,7 @@
 #include <qle/pricingengines/crossccyswapengine.hpp>
 #include <qle/pricingengines/depositengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
+
 using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
@@ -48,18 +50,20 @@ using namespace ore::data;
 namespace ore {
 namespace analytics {
 
-SensitivityAnalysis::SensitivityAnalysis(const boost::shared_ptr<ore::data::Portfolio>& portfolio,
-                                         const boost::shared_ptr<ore::data::Market>& market,
-                                         const string& marketConfiguration,
-                                         const boost::shared_ptr<ore::data::EngineData>& engineData,
-                                         const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
-                                         const boost::shared_ptr<SensitivityScenarioData>& sensitivityData,
-                                         const Conventions& conventions, const bool recalibrateModels,
-                                         const bool nonShiftedBaseCurrencyConversion, const bool continueOnError)
+SensitivityAnalysis::SensitivityAnalysis(
+    const boost::shared_ptr<ore::data::Portfolio>& portfolio, const boost::shared_ptr<ore::data::Market>& market,
+    const string& marketConfiguration, const boost::shared_ptr<ore::data::EngineData>& engineData,
+    const boost::shared_ptr<ScenarioSimMarketParameters>& simMarketData,
+    const boost::shared_ptr<SensitivityScenarioData>& sensitivityData, const Conventions& conventions,
+    const bool recalibrateModels, const CurveConfigurations& curveConfigs,
+    const TodaysMarketParameters& todaysMarketParams, const bool nonShiftedBaseCurrencyConversion,
+    std::vector<boost::shared_ptr<ore::data::EngineBuilder>> extraEngineBuilders,
+    std::vector<boost::shared_ptr<ore::data::LegBuilder>> extraLegBuilders, const bool continueOnError)
     : market_(market), marketConfiguration_(marketConfiguration), asof_(market->asofDate()),
       simMarketData_(simMarketData), sensitivityData_(sensitivityData), conventions_(conventions),
-      recalibrateModels_(recalibrateModels), overrideTenors_(false),
-      nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion), continueOnError_(continueOnError),
+      recalibrateModels_(recalibrateModels), curveConfigs_(curveConfigs), todaysMarketParams_(todaysMarketParams),
+      overrideTenors_(false), nonShiftedBaseCurrencyConversion_(nonShiftedBaseCurrencyConversion),
+      extraEngineBuilders_(extraEngineBuilders), extraLegBuilders_(extraLegBuilders), continueOnError_(continueOnError),
       engineData_(engineData), portfolio_(portfolio), initialized_(false), computed_(false) {}
 
 std::vector<boost::shared_ptr<ValuationCalculator>> SensitivityAnalysis::buildValuationCalculators() const {
@@ -76,7 +80,7 @@ void SensitivityAnalysis::initialize(boost::shared_ptr<NPVSensiCube>& cube) {
     initializeSimMarket();
 
     LOG("Build Engine Factory and rebuild portfolio");
-    boost::shared_ptr<EngineFactory> factory = buildFactory();
+    boost::shared_ptr<EngineFactory> factory = buildFactory(extraEngineBuilders_, extraLegBuilders_);
     resetPortfolio(factory);
     if (recalibrateModels_)
         modelBuilders_ = factory->modelBuilders();
@@ -100,7 +104,7 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
     // initialize the helper member objects
     initialize(cube);
     QL_REQUIRE(initialized_, "SensitivitiesAnalysis member objects not correctly initialized");
-    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W");
+    boost::shared_ptr<DateGrid> dg = boost::make_shared<DateGrid>("1,0W", NullCalendar());
     vector<boost::shared_ptr<ValuationCalculator>> calculators = buildValuationCalculators();
     ValuationEngine engine(asof_, dg, simMarket_, modelBuilders_);
     for (auto const& i : this->progressIndicators())
@@ -115,9 +119,9 @@ void SensitivityAnalysis::generateSensitivities(boost::shared_ptr<NPVSensiCube> 
 void SensitivityAnalysis::initializeSimMarket(boost::shared_ptr<ScenarioFactory> scenFact) {
 
     LOG("Initialise sim market for sensitivity analysis (continueOnError=" << std::boolalpha << continueOnError_
-                                                                           << ")");
-    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_,
-                                                       continueOnError_);
+        << ")");
+    simMarket_ = boost::make_shared<ScenarioSimMarket>(market_, simMarketData_, conventions_, marketConfiguration_, curveConfigs_, todaysMarketParams_, continueOnError_);
+
     LOG("Sim market initialised for sensitivity analysis");
 
     LOG("Create scenario factory for sensitivity analysis");
@@ -222,21 +226,6 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = zeroRate;
         }
     } break;
-    case RiskFactorKey::KeyType::EquityForecastCurve: {
-        string ec = keylabel;
-        auto itr = sensiParams.equityForecastCurveShiftData().find(ec);
-        QL_REQUIRE(itr != sensiParams.equityForecastCurveShiftData().end(), "shiftData not found for " << ec);
-        shiftSize = itr->second->shiftSize;
-
-        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            Size keyIdx = key.index;
-            Period p = itr->second->shiftTenors[keyIdx];
-            Handle<YieldTermStructure> yts = simMarket->equityForecastCurve(ec, marketConfiguration);
-            Time t = yts->dayCounter().yearFraction(asof, asof + p);
-            Real zeroRate = yts->zeroRate(t, Continuous);
-            shiftMult = zeroRate;
-        }
-    } break;
     case RiskFactorKey::KeyType::DividendYield: {
         string eq = keylabel;
         auto itr = sensiParams.dividendYieldShiftData().find(eq);
@@ -302,6 +291,28 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             // Time t_exp = vts->dayCounter().yearFraction(asof, asof + p_exp);
             // Time t_ten = vts->dayCounter().yearFraction(asof, asof + p_ten);
             // Real atmVol = vts->volatility(t_exp, t_ten, Null<Real>());
+            Real vol = vts->volatility(p_exp, p_ten, strike);
+            shiftMult = vol;
+        }
+    } break;
+    case RiskFactorKey::KeyType::YieldVolatility: {
+        string securityId = keylabel;
+        auto itr = sensiParams.yieldVolShiftData().find(securityId);
+        QL_REQUIRE(itr != sensiParams.yieldVolShiftData().end(), "shiftData not found for " << securityId);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            QL_REQUIRE(strikes.size() == 1 && close_enough(strikes[0], 0.0),
+                       "shift strikes should be {0.0} for yield volatilities");
+            vector<Period> tenors = itr->second.shiftTerms;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / (tenors.size() * strikes.size());
+            Period p_exp = expiries[expIdx];
+            Size tenIdx = keyIdx % tenors.size();
+            Period p_ten = tenors[tenIdx];
+            Real strike = Null<Real>(); // for cubes this will be ATM
+            Handle<SwaptionVolatilityStructure> vts = simMarket->yieldVol(securityId, marketConfiguration);
             Real vol = vts->volatility(p_exp, p_ten, strike);
             shiftMult = vol;
         }
@@ -403,6 +414,25 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             Time t = yts->dayCounter().yearFraction(asof, asof + p);
             Real yoyRate = yts->yoyRate(t);
             shiftMult = yoyRate;
+        }
+    } break;
+    case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility: {
+        string name = keylabel;
+        auto itr = sensiParams.yoyInflationCapFloorVolShiftData().find(name);
+        QL_REQUIRE(itr != sensiParams.yoyInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            QL_REQUIRE(strikes.size() > 0, "Only strike yoy inflation capfloor vols supported");
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / strikes.size();
+            Period p_exp = expiries[expIdx];
+            Size strIdx = keyIdx % strikes.size();
+            Real strike = strikes[strIdx];
+            Handle<QuantExt::YoYOptionletVolatilitySurface> vts = simMarket->yoyCapFloorVol(name, marketConfiguration);
+            Real vol = vts->volatility(p_exp, strike, vts->observationLag());
+            shiftMult = vol;
         }
     } break;
     case RiskFactorKey::KeyType::CommodityCurve: {

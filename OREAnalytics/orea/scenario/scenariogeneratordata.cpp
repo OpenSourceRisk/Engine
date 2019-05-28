@@ -110,7 +110,7 @@ void ScenarioGeneratorData::fromXML(XMLNode* root) {
 }
 
 XMLNode* ScenarioGeneratorData::toXML(XMLDocument& doc) {
-    XMLNode* node = doc.allocNode("Simlation");
+    XMLNode* node = doc.allocNode("Simulation");
     return node;
 }
 } // namespace analytics

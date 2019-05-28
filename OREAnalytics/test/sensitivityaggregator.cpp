@@ -17,6 +17,7 @@
 */
 
 #include <boost/test/unit_test.hpp>
+#include <test/oreatoplevelfixture.hpp>
 #include <orea/engine/sensitivityaggregator.hpp>
 #include <orea/engine/sensitivityinmemorystream.hpp>
 #include <oret/toplevelfixture.hpp>
@@ -145,7 +146,7 @@ void check(const set<SensitivityRecord>& exp, const set<SensitivityRecord>& res,
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::TopLevelFixture)
+BOOST_FIXTURE_TEST_SUITE(OREAnalyticsTestSuite, ore::test::OreaTopLevelFixture)
 
 BOOST_AUTO_TEST_SUITE(SensitivityAggregatorTest)
 
@@ -157,11 +158,17 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationSetCategories) {
     SensitivityInMemoryStream ss(records);
 
     // Categories for aggregator
-    map<string, set<string>> categories;
+    map<string, set<std::pair<std::string, QuantLib::Size>>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = {"trade_001", "trade_003", "trade_004", "trade_005", "trade_006"};
+    set<pair<string, QuantLib::Size>> trades = {
+        make_pair("trade_001", 0), 
+        make_pair("trade_003", 1),
+        make_pair("trade_004", 2),
+        make_pair("trade_005", 3),
+        make_pair("trade_006", 4)};
+
     for (const auto& trade : trades) {
-        categories[trade] = {trade};
+        categories[trade.first] = {trade};
     }
     // Aggregate over all trades except trade_002
     categories["all_except_002"] = trades;
@@ -176,10 +183,10 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationSetCategories) {
 
     // Test results for single trade categories
     for (const auto& trade : trades) {
-        exp = filter(records, trade);
-        res = sAgg.sensitivities(trade);
-        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res, trade);
+        exp = filter(records, trade.first);
+        res = sAgg.sensitivities(trade.first);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade.first);
+        check(exp, res, trade.first);
     }
 
     // Test results for the aggregated "All" category
@@ -198,12 +205,22 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationFunctionCategories) {
     // Category functions for aggregator
     map<string, function<bool(string)>> categories;
     // No aggregation, just single trade categories
-    set<string> trades = {"trade_001", "trade_003", "trade_004", "trade_005", "trade_006"};
+    set<pair<string, QuantLib::Size>> trades = {
+        make_pair("trade_001", 0),
+        make_pair("trade_003", 1),
+        make_pair("trade_004", 2),
+        make_pair("trade_005", 3),
+        make_pair("trade_006", 4) };
+
     for (const auto& trade : trades) {
-        categories[trade] = [&trade](string tradeId) { return tradeId == trade; };
+        categories[trade.first] = [&trade](string tradeId) { return tradeId == trade.first; };
     }
     // Aggregate over all trades except trade_002
-    categories["all_except_002"] = [&trades](string tradeId) { return trades.count(tradeId) > 0; };
+    categories["all_except_002"] = [&trades](string tradeId) { 
+        for (auto it = trades.begin(); it != trades.end(); ++it) {
+            if (it->first == tradeId) return true;
+        }
+        return false; };
 
     // Create aggregator and call aggregate
     SensitivityAggregator sAgg(categories);
@@ -215,10 +232,10 @@ BOOST_AUTO_TEST_CASE(testGeneralAggregationFunctionCategories) {
 
     // Test results for single trade categories
     for (const auto& trade : trades) {
-        exp = filter(records, trade);
-        res = sAgg.sensitivities(trade);
-        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade);
-        check(exp, res, trade);
+        exp = filter(records, trade.first);
+        res = sAgg.sensitivities(trade.first);
+        BOOST_TEST_MESSAGE("Testing for category with single trade " << trade.first);
+        check(exp, res, trade.first);
     }
 
     // Test results for the aggregated "All" category
