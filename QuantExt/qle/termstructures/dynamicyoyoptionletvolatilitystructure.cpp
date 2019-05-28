@@ -58,7 +58,7 @@ namespace QuantExt {
             "ForwardVariance not yet supported for DynamicYoYOptionletVolatilityStructure");
         if (decayMode_ == ForwardForwardVariance) {
             Volatility varToRef = source_->totalVariance(referenceDate(), strike, source_->observationLag());
-            Volatility varToOptTime = source_->totalVariance(referenceDate() + timeFromReference(optionDate), strike, source_->observationLag());
+            Volatility varToOptTime = source_->totalVariance(optionDate, strike, source_->observationLag());
             return std::sqrt((varToOptTime - varToRef) / timeFromReference(optionDate));
         }
 
