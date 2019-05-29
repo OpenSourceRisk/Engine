@@ -1,7 +1,7 @@
 # ORE
 
 The [Open Source Risk](http://opensourcerisk.org) project aims at
-estblishing a transparent peer-reviewed framework for pricing and risk
+establishing a transparent peer-reviewed framework for pricing and risk
 analysis that can serve as
 * a benchmarking, validation, training, teaching reference 
 * an extensible foundation for tailored risk solutions
