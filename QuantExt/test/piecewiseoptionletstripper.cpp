@@ -299,6 +299,73 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
+    
+    // A shift of 1bp that will be used below
+    Real shift = 0.001;
+
+    // Pick one configuration and check that extrapolation works as expected
+    Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(Normal, true, false, TermVolSurface::BicubicSpline);
+
+    // Boundaries
+    Date maxDate = ovs->maxDate();
+    Rate minStrike = ovs->minStrike();
+    Rate maxStrike = ovs->maxStrike();
+    
+    // Trivial check
+    BOOST_REQUIRE(maxStrike > minStrike);
+
+    // Asking for vol before reference date throws
+    Date testDate = referenceDate - 1 * Days;
+    Rate testStrike = (maxStrike + minStrike) / 2;
+    BOOST_CHECK_THROW(ovs->volatility(testDate, testStrike, false), Error);
+    BOOST_CHECK_THROW(ovs->volatility(testDate, testStrike, true), Error);
+
+    // Check that asking for a volatility within the boundary does not throw
+    testDate = referenceDate + 1 * Days;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+
+    testDate = maxDate - 1 * Days;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+
+    // Check that asking for a volatility outside the boundary throws
+    testDate = maxDate + 1 * Days;
+    BOOST_CHECK_THROW(ovs->volatility(testDate, testStrike, false), Error);
+
+    testDate = referenceDate + 1 * Days;
+    testStrike = minStrike - shift;
+    BOOST_CHECK_THROW(ovs->volatility(testDate, testStrike, false), Error);
+
+    testStrike = maxStrike + shift;
+    BOOST_CHECK_THROW(ovs->volatility(testDate, testStrike, false), Error);
+
+    // Check that asking for a volatility outside the boundary, with explicit extrapolation on, does not throw
+    testDate = maxDate + 1 * Days;
+    testStrike = (maxStrike + minStrike) / 2;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, true));
+
+    testDate = referenceDate + 1 * Days;
+    testStrike = minStrike - shift;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, true));
+
+    testStrike = maxStrike + shift;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, true));
+    
+    // Check that asking for a volatility outside the boundary, after turning on extrapolation, does not throw
+    ovs->enableExtrapolation();
+
+    testDate = maxDate + 1 * Days;
+    testStrike = (maxStrike + minStrike) / 2;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+
+    testDate = referenceDate + 1 * Days;
+    testStrike = minStrike - shift;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+
+    testStrike = maxStrike + shift;
+    BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

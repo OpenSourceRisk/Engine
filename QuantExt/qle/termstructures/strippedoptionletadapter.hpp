@@ -194,7 +194,8 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::perfo
         const vector<Rate>& strikes = optionletBase_->optionletStrikes(i);
         const vector<Volatility>& vols = optionletBase_->optionletVolatilities(i);
         strikeSections_[i] = si_.interpolate(strikes.begin(), strikes.end(), vols.begin());
-        strikeSections_[i].enableExtrapolation(allowsExtrapolation());
+        // Extrapolation can be enabled here. Range checks are performed in the volatility methods.
+        strikeSections_[i].enableExtrapolation();
     }
 }
 
@@ -268,7 +269,10 @@ inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInte
 
     vector<Time> fixingTimes = optionletBase_->optionletFixingTimes();
     Interpolation ti = ti_.interpolate(fixingTimes.begin(), fixingTimes.end(), vols.begin());
-    ti.enableExtrapolation(allowsExtrapolation());
+
+    // Extrapolation can be enabled at this level. The range checks will have already been performed in 
+    // the public OptionletVolatilityStructure::volatility method that calls this `Impl`
+    ti.enableExtrapolation();
 
     return ti(optionTime);
 }
