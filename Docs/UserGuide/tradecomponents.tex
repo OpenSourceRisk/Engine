@@ -119,9 +119,16 @@ FX Option &  \emph{Call}: Bought and Sold currencies/amounts stay as determined 
 
   Allowable values: \emph{Cash} or \emph{Physical}
 
-\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions. It only applies for the pricing of standard European swaptions. For non-standard Europeans (i.e. amortising / accreting, changing rate or margin) the field is ignored.
+\item SettlementMethod [Optional]: Specifies the method to calculate the settlement amount for swaptions.
 
-  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+  Allowable values: \emph{PhysicalOTC}, \emph{PhysicalCleared}, \emph{CollateralizedCashPrice},\\ \emph{ParYieldCurve}. 
+  
+  Defaults to \emph{ParYieldCurve} if Settlement is \emph{Cash} and defaults to \emph{PhysicalOTC} if Settlement is \emph{Physical}.
+
+\emph{PhysicalOTC} = OTC traded swaptions with physical settlement\\
+\emph{PhysicalCleared} = Cleared swaptions with physical settlement\\
+\emph{CollateralizedCashPrice} = Cash settled swaptions with settlement price calculation using zero coupon curve discounting \\
+\emph{ParYieldCurve}  = Cash settled swaptions with settlement price calculation using par yield discounting \footnote{https://www.isda.org/book/2006-isda-definitions/} \footnote{https://www.isda.org/a/TlAEE/Supplement-No-58-to-ISDA-2006-Definitions.pdf} \\
 
 \item PayOffAtExpiry [Optional]: Relevant for options with early
   exercise, i.e. the exercise occurs before expiry; \emph{true}
@@ -197,7 +204,7 @@ The meanings and allowable values of the elements in the \lstinline!LegData! nod
 \item LegType:  Determines which of the available sub-nodes must be
   used. 
 
-Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, DigitalCMSSpread, Equity, YY, CPI}
+Allowable values:  \emph{Fixed, Floating, Cashflow, CMS, CMSSpread, DigitalCMSSpread, Equity, YY, CPI, ZeroCouponFixed}
 
 \item Payer:  The flows of the leg are paid to the counterparty if
   \emph{true}, and received if \emph{false}.  
@@ -999,7 +1006,7 @@ Allowable values: Any positive real number
 
 Allowable values:  \emph{true} or  \emph{false}
 
-\item DividendFactor [Optional]: Factor of dividend to be included in return. 
+\item DividendFactor [Optional]: Factor of dividend to be included in return. Note that the DividendFactor is only relevant when the ReturnType is set to  \emph{Total}. It is not used if the ReturnType is set to \emph{Price}.
 
 Allowable values: 0 $\leq$ DividendFactor $\leq$  1.   Defaults to \emph{1} if left blank or omitted.
 
@@ -1160,9 +1167,9 @@ Allowable values: An integer followed by \emph{D},
 \item ObservationLag: The observation lag to be applied.
 
 Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
-\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
+%\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings.
 
-Allowable values:  \emph{true, false} 
+%Allowable values:  \emph{true, false} 
 
 \item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any).
