@@ -90,7 +90,7 @@ public:
     }
 
     //! set the global config
-    CalendarAdjustmentConfig& setConfig(const CalendarAdjustmentConfig& c) {
+   void setConfig(const CalendarAdjustmentConfig& c) {
         config_ = c;
     }
 

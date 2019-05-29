@@ -86,7 +86,7 @@ void CalendarAdjustmentConfig::append(const CalendarAdjustmentConfig&  c) {
 void CalendarAdjustmentConfig::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "CalendarAdjustments");
     for (auto calnode : XMLUtils::getChildrenNodes(node, "Calendar")) {
-        string calname = XMLUtils::getChildValue(calnode, "name", true);
+        string calname = XMLUtils::getAttribute(calnode, "name");
         vector<string> holidayDates = XMLUtils::getChildrenValues(calnode, "AdditonalHolidays", "Date");
         for (auto holiday : holidayDates) {
             addHolidays(calname, parseDate(holiday));

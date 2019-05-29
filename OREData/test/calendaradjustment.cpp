@@ -21,11 +21,14 @@
 #include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <ql/time/date.hpp>
+#include <string>
+#include <ored/utilities/to_string.hpp>
 #include <ored/marketdata/csvloader.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <oret/toplevelfixture.hpp>
 #include <oret/datapaths.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <algorithm>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -48,7 +51,9 @@ public:
     Date endDate; 
 
     F() {
+
         calendarAdjustments.fromFile(TEST_INPUT_FILE("calendaradjustments.xml"));
+        CalendarAdjustments::instance().setConfig(calendarAdjustments);
         startDate = Date(1, Jan, 2019);
         endDate = Date(31, Dec, 2020);
     }
@@ -68,28 +73,32 @@ ostream& operator<<(ostream& os, const TestDatum& testDatum) {
 
 std::vector<TestDatum> loadExpectedHolidays() {
     // load from file
-    std::vector<TestDatum> data;
     string fileName = TEST_INPUT_FILE("holidays.csv");
+    std::vector<TestDatum> data;
     ifstream file;
-    file.open(fileName);
+    file.open("..\\" + fileName);
     QL_REQUIRE(file.is_open(), "error opening file " << fileName);
     std::string line;
     // skip empty lines
     while (!file.eof()) {
         getline(file, line);
         boost::trim(line);
-        vector<string> elements;
-        boost::split(elements, line, boost::is_any_of(","), boost::token_compress_on);
-        QL_REQUIRE(elements.size() > 1,"Not enough elements in the calendar");
-        TestDatum td; 
-        td.calendarName = elements.front();
-        for (Size i = 1; i < elements.size(); i++) {
-            td.holidays.push_back(parseDate(elements[i]));
+        if (line != "") {
+            vector<string> elements;
+            boost::split(elements, line, boost::is_any_of(","), boost::token_compress_on);
+            QL_REQUIRE(elements.size() > 1, "Not enough elements in the calendar");
+            TestDatum td;
+            td.calendarName = elements.front();
+            for (Size i = 1; i < elements.size(); i++) {
+                Date d = parseDate(elements[i]);
+                if  (d.weekday() != Saturday && d.weekday() != Sunday){
+                    td.holidays.push_back(parseDate(elements[i]));
+                }
+            }
+            data.push_back(td);
         }
-        data.push_back(td);
     }
-    file.close(); 
-    
+    file.close();
     return data;
 }
 }
@@ -102,7 +111,7 @@ BOOST_DATA_TEST_CASE(testCalendarAdjustmentRealCalendars, bdata::make(loadExpect
     //loop over expected holidays, for each calendar call parseCalendar() 
     //and check that the holidays match the expected ones
     vector<Date> qcalHols;
-    qcalHols = Calendar::holidayList(parseCalendar(expectedHolidays.calendarName), startDate, endDate, false);
+    qcalHols = Calendar::holidayList(parseCalendar(expectedHolidays.calendarName,true), startDate, endDate, false);
     BOOST_CHECK_EQUAL_COLLECTIONS(qcalHols.begin(), qcalHols.end(), expectedHolidays.holidays.begin(), expectedHolidays.holidays.end());
 }
 
