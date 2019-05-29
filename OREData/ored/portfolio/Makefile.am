@@ -10,7 +10,6 @@ libOREDataPortfolio_la_LDFLAGS = -release $(PACKAGE_VERSION)
 libOREDataPortfolio_la_LIBADD = builders/libOREDataPortfolioBuilders.la
 
 libOREDataPortfolio_la_SOURCES = \
-	bondtotalreturnswap.cpp \
 	enginefactory.cpp \
 	envelope.cpp \
 	equityforward.cpp \
@@ -46,7 +45,6 @@ libOREDataPortfolio_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
-	bondtotalreturnswap.hpp \
 	enginefactory.hpp \
 	envelope.hpp \
 	equityforward.hpp \
