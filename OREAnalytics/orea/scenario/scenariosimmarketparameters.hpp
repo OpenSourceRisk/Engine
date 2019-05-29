@@ -105,6 +105,14 @@ public:
     const vector<Real>& capFloorVolStrikes() const { return capFloorVolStrikes_; }
     const string& capFloorVolDecayMode() const { return capFloorVolDecayMode_; }
 
+    bool simulateYoYInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
+    vector<string> yoyInflationCapFloorVolNames() const { return paramsLookup(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility); }
+    const string& yoyInflationCapFloorVolDayCounter(const string& key) const;
+    const vector<Period>& yoyInflationCapFloorVolExpiries(const string& key) const;
+    bool hasYoYInflationCapFloorVolExpiries(const string& key) const { return yoyInflationCapFloorVolExpiries_.count(key) > 0; }
+    const vector<Real>& yoyInflationCapFloorVolStrikes() const { return yoyInflationCapFloorVolStrikes_; }
+    const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
+
     bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
     bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate); }
     vector<string> defaultNames() const { return paramsLookup(RiskFactorKey::KeyType::SurvivalProbability); }
@@ -235,6 +243,9 @@ public:
     string& capFloorVolDecayMode() { return capFloorVolDecayMode_; }
     void setCapFloorVolDayCounters(const string& key, const string& p);
 
+    void setSimulateYoYInflationCapFloorVols(bool simulate);
+    void setYoYInflationCapFloorNames(vector<string> names);
+
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);
     void setDefaultNames(vector<string> names);
@@ -319,7 +330,6 @@ public:
     bool& correlationIsSurface() { return correlationIsSurface_; }
     vector<Period>& correlationExpiries() { return correlationExpiries_; }
     void setCorrelationPairs(vector<string> names);
-    void setCorrelationDayCounters(const string& index1, const string& index2, const string& p);
     vector<Real>& correlationStrikes() { return correlationStrikes_; }
     //@}
 
@@ -367,6 +377,11 @@ private:
     map<string, vector<Period>> capFloorVolExpiries_;
     vector<Real> capFloorVolStrikes_;
     string capFloorVolDecayMode_;
+
+    map<string, string> yoyInflationCapFloorVolDayCounters_;
+    map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
+    vector<Real> yoyInflationCapFloorVolStrikes_;
+    string yoyInflationCapFloorVolDecayMode_;
 
     map<string, string> defaultCurveDayCounters_;
     map<string, string> defaultCurveCalendars_;

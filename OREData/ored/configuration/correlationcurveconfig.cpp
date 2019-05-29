@@ -63,7 +63,7 @@ std::ostream& operator<<(std::ostream& out, CorrelationCurveConfig::QuoteType t)
 CorrelationCurveConfig::CorrelationCurveConfig(const string& curveID, const string& curveDescription,
                                                const Dimension& dimension, const CorrelationType& corrType,
                                                const string& convention, const QuoteType& quoteType,
-                                               const bool extrapolate, const vector<Period>& optionTenors,
+                                               const bool extrapolate, const vector<string>& optionTenors,
                                                const DayCounter& dayCounter, const Calendar& calendar,
                                                const BusinessDayConvention& businessDayConvention, const string& index1,
                                                const string& index2, const string& currency, const string& swaptionVol,
@@ -91,7 +91,7 @@ const vector<string>& CorrelationCurveConfig::quotes() {
 
         for (auto o : optionTenors_) {
             std::stringstream ss;
-            ss << base << "/" << to_string(o) << "/ATM";
+            ss << base << "/" << o << "/ATM";
             quotes_.push_back(ss.str());
         }
     }
@@ -114,11 +114,13 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
     }
 
     string quoteType = XMLUtils::getChildValue(node, "QuoteType", true);
-    if (quoteType == "RATE") {
+    // For QuoteType, we use an insensitive compare because we previously used "Rate" here
+    // But now we want to be consistent with the market datum name
+    if (boost::iequals(quoteType, "RATE")) {
         quoteType_ = QuoteType::Rate;
-    } else if (quoteType == "PRICE") {
+    } else if (boost::iequals(quoteType, "PRICE")) {
         quoteType_ = QuoteType::Price;
-    } else if (quoteType == "NULL") {
+    } else if (boost::iequals(quoteType, "NULL")) {
         quoteType_ = QuoteType::Null;
     } else {
         QL_FAIL("Quote type " << quoteType << " not recognized");
@@ -132,15 +134,14 @@ void CorrelationCurveConfig::fromXML(XMLNode* node) {
 
         dc = XMLUtils::getChildValue(node, "DayCounter", false);
         dc == "" ? dayCounter_ = QuantLib::ActualActual() : dayCounter_ = parseDayCounter(dc);
-    } else // Compulsory information for Rate and Price QuoteTypes
-    {
+    } else { // Compulsory information for Rate and Price QuoteTypes
         cal = XMLUtils::getChildValue(node, "Calendar", true);
         calendar_ = parseCalendar(cal);
 
         dc = XMLUtils::getChildValue(node, "DayCounter", true);
         dayCounter_ = parseDayCounter(dc);
 
-        optionTenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "OptionTenors", true);
+        optionTenors_ = XMLUtils::getChildrenValuesAsStrings(node, "OptionTenors", true);
         QL_REQUIRE(optionTenors_.size() > 0, "no option tenors supplied");
 
         string dim = XMLUtils::getChildValue(node, "Dimension", true);

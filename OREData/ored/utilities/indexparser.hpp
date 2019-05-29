@@ -125,5 +125,11 @@ boost::shared_ptr<QuantExt::BondIndex> parseBondIndex(const string& s);
     \ingroup utilities
 */
 boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
+
+//! Return true if the \p indexName is that of an overnight index, otherwise false
+/*! \ingroup utilities
+*/
+bool isOvernightIndex(const std::string& indexName);
+
 } // namespace data
 } // namespace ore

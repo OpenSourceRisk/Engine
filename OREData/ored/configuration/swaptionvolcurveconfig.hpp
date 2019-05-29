@@ -44,14 +44,14 @@ public:
     //! Detailed constructor
     SwaptionVolatilityCurveConfig(const string& curveID, const string& curveDescription, const Dimension& dimension,
                                   const VolatilityType& volatilityType, const bool extrapolate,
-                                  const bool flatExtrapolation, const vector<Period>& optionTenors,
-                                  const vector<Period>& swapTenors, const DayCounter& dayCounter,
+                                  const bool flatExtrapolation, const vector<string>& optionTenors,
+                                  const vector<string>& swapTenors, const DayCounter& dayCounter,
                                   const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
                                   const string& shortSwapIndexBase, const string& swapIndexBase,
                                   // Only required for smile
-                                  const vector<Period>& smileOptionTenors = vector<Period>(),
-                                  const vector<Period>& smileSwapTenors = vector<Period>(),
-                                  const vector<Spread>& smileSpreads = vector<Spread>())
+                                  const vector<string>& smileOptionTenors = vector<string>(),
+                                  const vector<string>& smileSwapTenors = vector<string>(),
+                                  const vector<string>& smileSpreads = vector<string>())
         : GenericYieldVolatilityCurveConfig("Swap", "SwaptionVolatility", "SWAPTION", "", curveID,
                                             curveDescription, "", dimension, volatilityType, extrapolate,
                                             flatExtrapolation, optionTenors, swapTenors, dayCounter, calendar,

@@ -67,7 +67,7 @@ void SensitivityScenarioData::volShiftDataToXML(XMLDocument& doc, XMLNode* node,
     XMLUtils::addChild(doc, node, "ShiftStrikes", data.shiftStrikes);
 }
 
-const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const string& name) const {
+const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType& keyType, const string& name) const {
     // Not nice but not spending time refactoring the class now.
     switch (keyType) {
     case RFType::DiscountCurve:
@@ -96,6 +96,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RFType& keyType, const
         return *creditCurveShiftData().at(name);
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
+    case RFType::YoYInflationCapFloorVolatility:
+        return yoyInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
@@ -210,7 +212,7 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             volShiftDataFromXML(child, data, false);
             data.shiftTerms = XMLUtils::getChildrenValuesAsPeriods(child, "ShiftTerms", true);
             QL_REQUIRE(data.shiftStrikes.size() == 0 ||
-                           data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0),
+                           (data.shiftStrikes.size() == 1 && close_enough(data.shiftStrikes[0], 0.0)),
                        "no shift strikes (or exactly {0.0}) should be given for yield volatilities");
             data.shiftStrikes = { 0.0 };
             yieldVolShiftData_[securityId] = data;
@@ -331,6 +333,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         }
     }
 
+    LOG("Get yoy inflation cap/floor vol sensitivity parameters");
+    XMLNode* yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (yoyCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            VolShiftData data;
+            volShiftDataFromXML(child, data);
+            yoyInflationCapFloorVolShiftData_[index] = data;
+        }
+    }
+
     LOG("Get commodity spot sensitivity parameters");
     XMLNode* csNode = XMLUtils::getChildNode(node, "CommoditySpots");
     if (csNode) {
@@ -435,9 +449,9 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
-    XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
     if (!yieldCurveShiftData_.empty()) {
-        LOG("toXML for YieldCurves that are not of type Yield");
+        XMLNode* yieldCurvesNode = XMLUtils::addChild(doc, root, "YieldCurves");
+        LOG("toXML for YieldCurves");
         for (const auto& kv : yieldCurveShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, yieldCurvesNode, "YieldCurve");
             XMLUtils::addAttribute(doc, node, "name", kv.first);

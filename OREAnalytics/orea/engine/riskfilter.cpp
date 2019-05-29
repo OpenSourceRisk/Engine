@@ -52,6 +52,7 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
                                                          RiskFactorKey::KeyType::CPIIndex,
                                                          RiskFactorKey::KeyType::ZeroInflationCurve,
                                                          RiskFactorKey::KeyType::YoYInflationCurve,
+                                                         RiskFactorKey::KeyType::YoYInflationCapFloorVolatility,
                                                          RiskFactorKey::KeyType::SecuritySpread,
                                                          RiskFactorKey::KeyType::YieldVolatility};
 
@@ -72,7 +73,8 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
         case 2:
             allowed_type = {RiskFactorKey::KeyType::SwaptionVolatility, RiskFactorKey::KeyType::OptionletVolatility,
                             RiskFactorKey::KeyType::FXVolatility, RiskFactorKey::KeyType::EquityVolatility,
-                            RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::YieldVolatility};
+                            RiskFactorKey::KeyType::CDSVolatility, RiskFactorKey::KeyType::YieldVolatility,
+                            RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
         case 3:
             allowed_type = {RiskFactorKey::KeyType::BaseCorrelation};
@@ -91,7 +93,7 @@ RiskFilter::RiskFilter(const Size riskClassIndex, const Size riskTypeIndex)
             allowed_class = {RiskFactorKey::KeyType::DiscountCurve,       RiskFactorKey::KeyType::YieldCurve,
                              RiskFactorKey::KeyType::IndexCurve,          RiskFactorKey::KeyType::SwaptionVolatility,
                              RiskFactorKey::KeyType::OptionletVolatility, RiskFactorKey::KeyType::SecuritySpread, 
-                             RiskFactorKey::KeyType::YieldVolatility};
+                             RiskFactorKey::KeyType::YieldVolatility,     RiskFactorKey::KeyType::YoYInflationCapFloorVolatility};
             break;
         case 2:
             allowed_class = {RiskFactorKey::KeyType::CPIIndex, RiskFactorKey::KeyType::ZeroInflationCurve,

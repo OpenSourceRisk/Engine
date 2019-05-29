@@ -27,6 +27,9 @@
 #include <ql/termstructures/volatility/optionlet/optionletstripper.hpp>
 
 using namespace QuantLib;
+using std::min;
+using std::max;
+using std::vector;
 
 namespace QuantExt {
 
@@ -58,17 +61,22 @@ boost::shared_ptr<SmileSection> StrippedOptionletAdapter2::smileSectionImpl(Time
 }
 
 Volatility StrippedOptionletAdapter2::volatilityImpl(Time length, Rate strike) const {
+    
     calculate();
 
-    std::vector<Volatility> vol(nInterpolations_);
+    vector<Volatility> vol(nInterpolations_);
     for (Size i = 0; i < nInterpolations_; ++i)
         vol[i] = strikeInterpolations_[i]->operator()(strike, true);
 
-    const std::vector<Time>& optionletTimes = optionletStripper_->optionletFixingTimes();
-    boost::shared_ptr<LinearInterpolation> timeInterpolator(
-        new LinearInterpolation(optionletTimes.begin(), optionletTimes.end(), vol.begin()));
-    Real lengthEff = flatExtrapolation_ ? std::min(length, optionletStripper_->optionletFixingTimes().back()) : length;
-    return timeInterpolator->operator()(lengthEff, true);
+    vector<Time> optionletTimes = optionletStripper_->optionletFixingTimes();
+    LinearInterpolation timeInterpolator(optionletTimes.begin(), optionletTimes.end(), vol.begin());
+
+    // If flat extrapolation is turned on, extrapolate flat after last expiry _and_ before first expiry
+    if (flatExtrapolation_) {
+        length = max(min(length, optionletTimes.back()), optionletTimes.front());
+    }
+
+    return timeInterpolator(length, true);
 }
 
 void StrippedOptionletAdapter2::performCalculations() const {
