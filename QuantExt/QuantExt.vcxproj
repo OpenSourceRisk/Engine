@@ -489,6 +489,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
@@ -710,6 +711,7 @@
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />

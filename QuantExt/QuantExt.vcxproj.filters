@@ -672,6 +672,9 @@
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
+    <ClInclude Include="equityforwardcurvestripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1157,6 +1160,9 @@
       <Filter>math</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="equityforwardcurvestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
   </ItemGroup>

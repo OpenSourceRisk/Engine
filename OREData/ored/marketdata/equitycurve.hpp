@@ -52,7 +52,7 @@ public:
     //! \name Inspectors
     //@{
     const EquityCurveSpec& spec() const { return spec_; }
-    boost::shared_ptr<YieldTermStructure> divYieldTermStructure(const Date& asof) const;
+    Handle<YieldTermStructure> dividendYieldTermStructure() const { return dividendYieldTermStructure_; };
     Handle<YieldTermStructure> forecastingYieldTermStructure() const { return forecastYieldTermStructure_; };
     const Real equitySpot() const { return equitySpot_; }
     //@}
@@ -64,6 +64,7 @@ private:
     vector<Date> terms_;
     DayCounter dc_;
     Handle<YieldTermStructure> forecastYieldTermStructure_;
+    Handle<YieldTermStructure> dividendYieldTermStructure_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;
     YieldCurve::InterpolationMethod dividendInterpMethod_;
 };

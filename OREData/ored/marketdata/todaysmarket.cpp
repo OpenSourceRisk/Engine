@@ -641,8 +641,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                             Handle<YieldTermStructure> yts;
                             boost::shared_ptr<EquityCurveConfig> equityConfig =
                                 curveConfigs.equityCurveConfig(equityspec->curveConfigID());
-                            boost::shared_ptr<YieldTermStructure> divYield = itr->second->divYieldTermStructure(asof);
-                            Handle<YieldTermStructure> div_h(divYield);
+                            Handle<YieldTermStructure> div_h = itr->second->dividendYieldTermStructure();
                             Handle<Quote> eqSpot =
                                 Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
 

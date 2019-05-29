@@ -17,6 +17,7 @@
 */
 
 #include <ored/marketdata/equitycurve.hpp>
+#include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
@@ -51,11 +52,31 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dc_ = parseDayCounter(config->dayCountID());
         }
 
+        // Set the Curve type - EquityFwd / OptionVolatility / DividendYield
+        curveType_ = config->type();
+
+        // Set the Equity Forecast curve
+        YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
+        
+        // at this stage we should have built the curve already
+        //  (consider building curve on fly if not? Would need to work around fact that requiredYieldCurves is currently
+        //  const ref)
+        auto itr = requiredYieldCurves.find(ycspec.name());
+        QL_REQUIRE(itr != requiredYieldCurves.end(),
+            "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
+        boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
+        forecastYieldTermStructure_ = yieldCurve->handle();
+
+        // Set the interpolation variables
+        dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
+        dividendInterpMethod_ = parseYieldCurveInterpolationMethod(config->dividendInterpolationMethod());
+
         // We loop over all market data, looking for quotes that match the configuration
         // until we found the whole set of quotes or do not have more quotes in the
         // market data
 
         vector<boost::shared_ptr<EquityForwardQuote>> qt;   // for sorting quotes_/terms_ pairs
+        vector<boost::shared_ptr<EquityOptionQuote>> oqt;   // store any equity vol quotes
         equitySpot_ = Null<Real>();
         Size quotesRead = 0;
 
@@ -68,7 +89,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         for (Size i = 0; i < config->fwdQuotes().size(); i++) {
             foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
-        if (config->type() == EquityCurveConfig::Type::ForwardPrice && foundRegex) {
+        if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::OptionVolatility)
+            && foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
             wcFlag = true;
@@ -77,9 +99,13 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             reg1 = regex(regexstr);
         }
         else {
-            for (Size i=0; i < config->fwdQuotes().size(); i++) {
-                quotes_.push_back(Null<Real>());
-                terms_.push_back(Null<Date>());
+            if (config->type() == EquityCurveConfig::Type::OptionVolatility) {
+                oqt.resize(config->fwdQuotes().size());
+            } else {
+                for (Size i = 0; i < config->fwdQuotes().size(); i++) {
+                    quotes_.push_back(Null<Real>());
+                    terms_.push_back(Null<Date>());
+                }
             }
         }
 
@@ -127,6 +153,35 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
+            if (config->type() == EquityCurveConfig::Type::OptionVolatility && md->asofDate() == asof &&
+                md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
+                md->quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+
+                boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
+                Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof);
+
+                if (wcFlag) {
+                    // is the quote 'in' the config? (also check expiry not before asof)
+                    if (regex_match(q->name(), reg1) && asof <= expiryDate) {
+                        QL_REQUIRE(find(oqt.begin(), oqt.end(), q) == oqt.end(), "duplicate market datum found for " << q->name());
+                        DLOG("EquityCurve Volatility Price found for quote: " << q->name());
+                        oqt.push_back(q);
+                        quotesRead++;
+                    }
+                } else {
+                    vector<string>::const_iterator it1 =
+                        std::find(config->fwdQuotes().begin(), config->fwdQuotes().end(), q->name());
+
+                    // is the quote one of the list in the config ?
+                    if (it1 != config->fwdQuotes().end()) {
+                        Size pos = it1 - config->fwdQuotes().begin();
+                        QL_REQUIRE(!oqt[pos], "duplicate market datum found for " << config->fwdQuotes()[pos]);
+                        oqt[pos] = q; 
+                        quotesRead++;
+                    }
+                }
+            }
+
             if (config->type() == EquityCurveConfig::Type::DividendYield && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_DIVIDEND &&
                 md->quoteType() == MarketDatum::QuoteType::RATE) {
@@ -148,61 +203,43 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
         }
+
+        // some checks on the quotes read
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(equitySpot_ != Null<Real>(), "Equity spot quote not found for " << config->curveID());
 
-        // sort quotes and terms in case of wild-card
-        if (wcFlag){
-            QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
-
-            // sort
-            std::sort(qt.begin(), qt.end(),
-                [](const boost::shared_ptr<EquityForwardQuote>& a, const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
-                return a->expiryDate() < b->expiryDate();
-            });
-
-            // populate individual quote, term vectors
-            for (Size i = 0; i < qt.size(); i++) {
-                terms_.push_back(qt[i]->expiryDate());
-                quotes_.push_back(qt[i]->quote()->value());
-            }
-        }
-        else {
-            QL_REQUIRE(quotesRead == config->fwdQuotes().size(), 
+        if (!wcFlag)
+            QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
                 "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
-        }
-              
+
         for (Size i = 0; i < terms_.size(); i++) {
             QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
             if (i > 0) {
                 QL_REQUIRE(terms_[i] > terms_[i - 1], "terms must be increasing in curve config");
             }
         }
-        curveType_ = config->type();
-        YieldCurveSpec ycspec(config->currency(), config->forecastingCurve());
-        // at this stage we should have built the curve already
-        //  (consider building curve on fly if not? Would need to work around fact that requiredYieldCurves is currently
-        //  const ref)
-        auto itr = requiredYieldCurves.find(ycspec.name());
-        QL_REQUIRE(itr != requiredYieldCurves.end(),
-                   "Yield Curve Spec - " << ycspec.name() << " - not found during equity curve build");
-        boost::shared_ptr<YieldCurve> yieldCurve = itr->second;
-        forecastYieldTermStructure_ = yieldCurve->handle();
 
-        dividendInterpVariable_ = parseYieldCurveInterpolationVariable(config->dividendInterpolationVariable());
-        dividendInterpMethod_ = parseYieldCurveInterpolationMethod(config->dividendInterpolationMethod());
-    } catch (std::exception& e) {
-        QL_FAIL("equity curve building failed: " << e.what());
-    } catch (...) {
-        QL_FAIL("equity curve building failed: unknown error");
-    }
-}
-
-boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const Date& asof) const {
-
-    try {
+        // Build the Dividend Yield curve from the quotes loaded
         vector<Rate> dividendRates;
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
+
+            // sort quotes and terms in case of wild-card
+            if (wcFlag) {
+                QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
+
+                    // sort
+                    std::sort(qt.begin(), qt.end(),
+                        [](const boost::shared_ptr<EquityForwardQuote>& a, const boost::shared_ptr<EquityForwardQuote>& b) -> bool {
+                    return a->expiryDate() < b->expiryDate();
+                });
+
+                // populate individual quote, term vectors
+                for (Size i = 0; i < qt.size(); i++) {
+                    terms_.push_back(qt[i]->expiryDate());
+                    quotes_.push_back(qt[i]->quote()->value());
+                }
+            }
+
             // Convert Fwds into dividends.
             // Fwd = Spot e^{(r-q)T}
             // => q = 1/T Log(Spot/Fwd) + r
@@ -212,11 +249,27 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const D
                 Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_ / quotes_[i]) / t + ir_rate);
             }
+        } else if (curveType_ == EquityCurveConfig::Type::OptionVolatility) {
+
+            // Build a Black Variance Sparse matrix - if European options we only need one - either Calls
+            // or Puts, if American we need both
+            if (config->exerciseStyle() == QuantLib::Exercise::Type::European) {
+                QL_FAIL("Only European and American exercise types supported");
+            } else if (config->exerciseStyle() == QuantLib::Exercise::Type::American) {
+                QL_FAIL("Only European and American exercise types supported");
+            } else {
+                QL_FAIL("Only European and American exercise types supported");
+            }
+
+
+
+            dividendRates = quotes_;
+
         } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
             dividendRates = quotes_;
         } else if (curveType_ == EquityCurveConfig::Type::NoDividends) {
             // Return a flat curve @ 0%
-            return boost::make_shared<FlatForward>(asof, 0.0, dc_);
+            dividendYieldTermStructure_ = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
@@ -224,6 +277,7 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const D
         QL_REQUIRE(dividendRates.size() == terms_.size(), "vector size mismatch - dividend rates ("
                                                               << dividendRates.size() << ") vs terms (" << terms_.size()
                                                               << ")");
+        
         // store "dividend discount factors" - in case we wish to interpolate according to discounts
         vector<Real> dividendDiscountFactors;
         for (Size i = 0; i < quotes_.size(); i++) {
@@ -258,69 +312,23 @@ boost::shared_ptr<YieldTermStructure> EquityCurve::divYieldTermStructure(const D
                     std::exp(-rates.back() * maxTime)); // flat zero extrapolation used to imply dividend DF
             }
             if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Zero) {
-                switch (dividendInterpMethod_) {
-                case YieldCurve::InterpolationMethod::Linear:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, rates, dc_, QuantLib::Linear()));
-                    break;
-                case YieldCurve::InterpolationMethod::LogLinear:
-                    divCurve.reset(
-                        new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, rates, dc_, QuantLib::LogLinear()));
-                    break;
-                case YieldCurve::InterpolationMethod::NaturalCubic:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, rates, dc_,
-                                                                              Cubic(CubicInterpolation::Kruger, true)));
-                    break;
-                case YieldCurve::InterpolationMethod::FinancialCubic:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(
-                        dates, rates, dc_,
-                        Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                              CubicInterpolation::FirstDerivative)));
-                    break;
-                case YieldCurve::InterpolationMethod::ConvexMonotone:
-                    divCurve.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, rates, dc_,
-                                                                                       QuantLib::ConvexMonotone()));
-                    break;
-                default:
-                    QL_FAIL("Interpolation method not recognised.");
-                }
+                divCurve = zerocurve(dates, rates, dc_, dividendInterpMethod_)
             } else if (dividendInterpVariable_ == YieldCurve::InterpolationVariable::Discount) {
-                switch (dividendInterpMethod_) {
-                case YieldCurve::InterpolationMethod::Linear:
-                    divCurve.reset(
-                        new InterpolatedDiscountCurve<QuantLib::Linear>(dates, discounts, dc_, QuantLib::Linear()));
-                    break;
-                case YieldCurve::InterpolationMethod::LogLinear:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, discounts, dc_,
-                                                                                      QuantLib::LogLinear()));
-                    break;
-                case YieldCurve::InterpolationMethod::NaturalCubic:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-                        dates, discounts, dc_, Cubic(CubicInterpolation::Kruger, true)));
-                    break;
-                case YieldCurve::InterpolationMethod::FinancialCubic:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-                        dates, discounts, dc_,
-                        Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                              CubicInterpolation::FirstDerivative)));
-                    break;
-                case YieldCurve::InterpolationMethod::ConvexMonotone:
-                    divCurve.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, discounts, dc_,
-                                                                                           QuantLib::ConvexMonotone()));
-                    break;
-                default:
-                    QL_FAIL("Interpolation method not recognised.");
-                }
+                    divCurve = discountcurve(dates, discounts, dc_, dividendInterpMethod_);
             } else {
                 QL_FAIL("Unsupported interpolation variable for dividend yield curve");
             }
             divCurve->enableExtrapolation();
         }
-        return divCurve;
-    } catch (std::exception& e) {
+        dividendYieldTermStructure_ = Handle<YieldTermStructure>(divCurve);
+    }
+    catch (std::exception& e) {
         QL_FAIL("equity curve building failed: " << e.what());
-    } catch (...) {
+    }
+    catch (...) {
         QL_FAIL("equity curve building failed: unknown error");
     }
-}
+};
+
 } // namespace data
 } // namespace ore
