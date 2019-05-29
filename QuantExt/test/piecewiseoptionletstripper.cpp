@@ -187,6 +187,103 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     return Handle<OptionletVolatilityStructure>(ovs);
 }
 
+// Variables for cached value tests
+
+// Strikes: below min (-0.01), on pillar strikes (-0.005 & 0.03), between pillar strikes (0.015), above max strike (0.035)
+vector<Rate> cachedStrikes = list_of(-0.01)(-0.005)(0.015)(0.030)(0.035);
+
+// Cached optionlet fixing dates
+vector<Date> cachedOptionletFixingDates = list_of
+    (Date(5, Aug, 2016))
+    (Date(7, Feb, 2017))
+    (Date(7, Aug, 2017))
+    (Date(7, Feb, 2018))
+    (Date(7, Aug, 2018))
+    (Date(7, Feb, 2019))
+    (Date(7, Aug, 2019))
+    (Date(6, Feb, 2020))
+    (Date(6, Aug, 2020))
+    (Date(5, Feb, 2021))
+    (Date(5, Aug, 2021))
+    (Date(7, Feb, 2022))
+    (Date(5, Aug, 2022))
+    (Date(7, Feb, 2023))
+    (Date(7, Aug, 2023))
+    (Date(7, Feb, 2024))
+    (Date(7, Aug, 2024))
+    (Date(6, Feb, 2025))
+    (Date(7, Aug, 2025))
+    (Date(5, Feb, 2026))
+    (Date(6, Aug, 2026))
+    (Date(5, Feb, 2027))
+    (Date(5, Aug, 2027))
+    (Date(7, Feb, 2028))
+    (Date(7, Aug, 2028))
+    (Date(7, Feb, 2029))
+    (Date(7, Aug, 2029))
+    (Date(7, Feb, 2030))
+    (Date(7, Aug, 2030))
+    (Date(6, Feb, 2031))
+    (Date(7, Aug, 2031))
+    (Date(5, Feb, 2032))
+    (Date(5, Aug, 2032))
+    (Date(7, Feb, 2033))
+    (Date(5, Aug, 2033))
+    (Date(7, Feb, 2034))
+    (Date(7, Aug, 2034))
+    (Date(7, Feb, 2035))
+    (Date(7, Aug, 2035));
+
+// Cached optionlet values at optionlet fixing dates
+vector<Real> cachedValues = list_of
+    (0.002457000000)(0.002457000000)(0.006386500000)(0.009938000000)(0.009938000000)
+    (0.002880443155)(0.002880443155)(0.006459363495)(0.009751440414)(0.009751440414)
+    (0.003292503430)(0.003292503430)(0.006530268295)(0.009569895870)(0.009569895870)
+    (0.003711393433)(0.003711393433)(0.006602348312)(0.009385342300)(0.009385342300)
+    (0.004123453708)(0.004123453708)(0.006673253111)(0.009203797756)(0.009203797756)
+    (0.004542343711)(0.004542343711)(0.006745333128)(0.009019244187)(0.009019244187)
+    (0.004954403986)(0.004954403986)(0.006816237927)(0.008837699643)(0.008837699643)
+    (0.005371017413)(0.005371017413)(0.006887926205)(0.008654149082)(0.008654149082)
+    (0.005785354264)(0.005785354264)(0.006959222744)(0.008471601530)(0.008471601530)
+    (0.006092137648)(0.006092137648)(0.006976645818)(0.008397716202)(0.008397716202)
+    (0.006395568208)(0.006395568208)(0.006993878476)(0.008324638363)(0.008324638363)
+    (0.006707380827)(0.006707380827)(0.007011587175)(0.008249541800)(0.008249541800)
+    (0.007007458563)(0.007007458563)(0.007028629417)(0.008177271451)(0.008177271451)
+    (0.006955894311)(0.006955894311)(0.006917620059)(0.007958482968)(0.007958482968)
+    (0.006905716195)(0.006905716195)(0.006809594824)(0.007745575895)(0.007745575895)
+    (0.006854706398)(0.006854706398)(0.006699779115)(0.007529139976)(0.007529139976)
+    (0.006804251054)(0.006804251054)(0.006591157055)(0.007315056621)(0.007315056621)
+    (0.006753518484)(0.006753518484)(0.006481938171)(0.007099796984)(0.007099796984)
+    (0.006703063140)(0.006703063140)(0.006373316111)(0.006885713629)(0.006885713629)
+    (0.006623889360)(0.006623889360)(0.006363776326)(0.006870339773)(0.006870339773)
+    (0.006544715579)(0.006544715579)(0.006354236541)(0.006854965916)(0.006854965916)
+    (0.006465106778)(0.006465106778)(0.006344644340)(0.006839507588)(0.006839507588)
+    (0.006386368018)(0.006386368018)(0.006335156972)(0.006824218203)(0.006824218203)
+    (0.006305454154)(0.006305454154)(0.006325407521)(0.006808506460)(0.006808506460)
+    (0.006226280373)(0.006226280373)(0.006315867737)(0.006793132603)(0.006793132603)
+    (0.006146236551)(0.006146236551)(0.006306223119)(0.006777589803)(0.006777589803)
+    (0.006067497791)(0.006067497791)(0.006296735750)(0.006762300419)(0.006762300419)
+    (0.005987453969)(0.005987453969)(0.006287091133)(0.006746757619)(0.006746757619)
+    (0.005908715209)(0.005908715209)(0.006277603764)(0.006731468234)(0.006731468234)
+    (0.005829106407)(0.005829106407)(0.006268011563)(0.006716009906)(0.006716009906)
+    (0.005749932627)(0.005749932627)(0.006258471778)(0.006700636049)(0.006700636049)
+    (0.005670758846)(0.005670758846)(0.006248931994)(0.006685262193)(0.006685262193)
+    (0.005591585065)(0.005591585065)(0.006239392209)(0.006669888336)(0.006669888336)
+    (0.005510671202)(0.005510671202)(0.006229642758)(0.006654176593)(0.006654176593)
+    (0.005432802483)(0.005432802483)(0.006220260223)(0.006639056152)(0.006639056152)
+    (0.005351888619)(0.005351888619)(0.006210510772)(0.006623344408)(0.006623344408)
+    (0.005273149860)(0.005273149860)(0.006201023404)(0.006608055023)(0.006608055023)
+    (0.005193106037)(0.005193106037)(0.006191378786)(0.006592512223)(0.006592512223)
+    (0.005114367277)(0.005114367277)(0.006181891418)(0.006577222839)(0.006577222839);
+
+// Cached ad-hoc dates: before first fixing, between fixing dates, after max date
+vector<Date> cachedAdHocDates = list_of(Date(5, May, 2016))(Date(5, May, 2026))(Date(5, May, 2036));
+
+// Cached values at ad-hoc dates
+vector<Real> cachedAdHocValues = list_of
+    (0.002457000000)(0.002457000000)(0.006386500000)(0.009938000000)(0.009938000000)
+    (0.006585172511)(0.006585172511)(0.006359111267)(0.006862821788)(0.006862821788)
+    (0.005114367277)(0.005114367277)(0.006181891418)(0.006577222839)(0.006577222839);
 }
 
 // Needed for BOOST_DATA_TEST_CASE below
@@ -301,11 +398,13 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
 
 BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
     
+    BOOST_TEST_MESSAGE("Testing extrapolation settings");
+
     // A shift of 1bp that will be used below
     Real shift = 0.001;
 
     // Pick one configuration and check that extrapolation works as expected
-    Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(Normal, true, false, TermVolSurface::BicubicSpline);
+    Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(Normal, true, false, TermVolSurface::Bilinear);
 
     // Boundaries
     Date maxDate = ovs->maxDate();
@@ -364,6 +463,61 @@ BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
 
     testStrike = maxStrike + shift;
     BOOST_CHECK_NO_THROW(ovs->volatility(testDate, testStrike, false));
+}
+
+// Test cached values with LinearFlat time and smile interpolation
+BOOST_FIXTURE_TEST_CASE(testCachedLinearFlat, CommonVars) {
+
+    BOOST_TEST_MESSAGE("Testing against cached optionlet volatilities with LinearFlat time and smile interpolation");
+
+    // Create the cap floor term vol surface
+    boost::shared_ptr<TermVolSurface> cfts = boost::make_shared<TermVolSurface>(referenceDate, calendar, bdc,
+        testVols.tenors, testVols.strikes, testVols.nVols, dayCounter, TermVolSurface::Bilinear);
+
+    // Create the piecewise optionlet stripper
+    boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
+        cfts, iborIndex, testYieldCurves.discountEonia, accuracy, true, Normal, 0.0, Normal);
+
+    // Create the OptionletVolatilityStructure
+    Handle<OptionletVolatilityStructure> ovs = Handle<OptionletVolatilityStructure>(
+        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(referenceDate, pwos));
+    ovs->enableExtrapolation();
+
+    // Check optionlet fixing dates against cached fixing dates
+    BOOST_CHECK_EQUAL_COLLECTIONS(cachedOptionletFixingDates.begin(), cachedOptionletFixingDates.end(),
+        pwos->optionletFixingDates().begin(), pwos->optionletFixingDates().end());
+
+    // Check cached optionlet values at optionlet fixing dates
+    Matrix cached(cachedOptionletFixingDates.size(), cachedStrikes.size(), cachedValues.begin(), cachedValues.end());
+    BOOST_TEST_MESSAGE("Optionlet volatilities at the fixing dates");
+    BOOST_TEST_MESSAGE("date,strike,volatility,cached,diff");
+    for (Size i = 0; i < pwos->optionletFixingDates().size(); i++) {
+        for (Size j = 0; j < cachedStrikes.size(); j++) {
+            Date d = pwos->optionletFixingDates()[i];
+            Rate s = cachedStrikes[j];
+            Volatility v = ovs->volatility(d, s);
+            Volatility diff = fabs(v - cached[i][j]);
+            BOOST_CHECK_SMALL(diff, tolerance);
+            BOOST_TEST_MESSAGE(io::iso_date(d) << "," << s << "," << fixed << setprecision(12) <<
+                v << "," << cached[i][j] << "," << diff);
+        }
+    }
+
+    // Check cached optionlet values at ad-hoc dates
+    cached = Matrix(cachedAdHocDates.size(), cachedStrikes.size(), cachedAdHocValues.begin(), cachedAdHocValues.end());
+    BOOST_TEST_MESSAGE("Optionlet volatilities at the ad-hoc dates");
+    BOOST_TEST_MESSAGE("date,strike,volatility,cached,diff");
+    for (Size i = 0; i < cachedAdHocDates.size(); i++) {
+        for (Size j = 0; j < cachedStrikes.size(); j++) {
+            Date d = cachedAdHocDates[i];
+            Rate s = cachedStrikes[j];
+            Volatility v = ovs->volatility(d, s);
+            Volatility diff = fabs(v - cached[i][j]);
+            BOOST_CHECK_SMALL(diff, tolerance);
+            BOOST_TEST_MESSAGE(io::iso_date(d) << "," << s << "," << fixed << setprecision(12) <<
+                v << "," << cached[i][j] << "," << diff);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
