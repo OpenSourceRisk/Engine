@@ -34,8 +34,9 @@ class EquityForwardCurveStripperBase : public LazyObject {
 class EquityForwardCurveStripper : public EquityForwardCurveStripperBase {
 
 public:
-    EquityForwardCurveStripper(const boost::shared_ptr<BlackVarianceSurfaceSparse>& callSurface,
-        const boost::shared_ptr<BlackVarianceSurfaceSparse>& putSurface = nullptr,
+    EquityForwardCurveStripper(const boost::shared_ptr<BlackVarianceSurfaceSparse>& surface,
+        const boost::shared_ptr<YieldTermStructure>& forecastCurve;
+
         QuantLib::Exercise::Type = QuantLib::Exercise::Type::European);
 
 
