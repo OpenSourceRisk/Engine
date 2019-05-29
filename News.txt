@@ -1,3 +1,48 @@
+Changes for the 4th ORE release (1.8.4.1):
+============================================
+
+ORE 1.8.4.1 includes the following notable changes, details can be
+found in the commits between 11 December 2017 and 28 May 2019.
+
+INSTRMENTS
+- Commodity Forward and Option, see example 5.24
+- Equity Swap, see extended example 5.16
+- CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example 5.25
+
+MARKETS
+- New calendars: Chile, Colombia, Malaysia, Peru, Philippines, Thailand
+- New IBOR indexes: CHF SARON, CLP CAMARA, COP IBR, DEM LIBOR, DKK OIS,
+  NOWA, PHP PHIREF, RUB MOSPRIME, SEK SIOR, THB BIBOR
+- New inflation idexes and regions: DKCPI, SECPI
+- Equity index added
+
+TERM STRUCTURES
+- Cap/Floor smile volatility surface added
+- Cross currency basis swap helper (with MtM Reset) added
+- Cross currency fixed vs. float swap helper added, see example 5.29
+- Discount ratio curves added, see example 5.28
+- Correlation term structure added (to support CMS spread products)
+
+ANALYTICS
+- KVA added (thanks to Roland Kapl)
+
+UNIT TESTS
+- Unit tests suites extended to 429 cases in total
+- Data driven tests added in ORE Data
+- Now using boost’s automated test suite creation and registration
+
+EXAMPLES
+- ORE has 29 examples now vs 23 in the previous release
+
+USER GUIDE
+- Extended to 194 pages
+
+BUILDING ORE
+- CMake build system added, see end of section 4.2
+
+LANGUAGE BINDINGS
+- ORE SWIG projected added, to support ORE in Python,
+  see https://github.com/OpenSourceRisk/ORE-SWIG
 
 Changes for the third ORE release (1.8.3.0):
 ============================================
