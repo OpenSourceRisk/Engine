@@ -51,7 +51,6 @@ public:
     Date endDate; 
 
     F() {
-
         calendarAdjustments.fromFile(TEST_INPUT_FILE("calendaradjustments.xml"));
         CalendarAdjustments::instance().setConfig(calendarAdjustments);
         startDate = Date(1, Jan, 2019);
