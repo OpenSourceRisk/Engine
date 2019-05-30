@@ -23,15 +23,12 @@
 #pragma once
 
 #include <ql/errors.hpp>
+#include <ql/patterns/singleton.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/test/unit_test.hpp>
 #include <string>
-
-using boost::filesystem::path;
-using boost::filesystem::exists;
-using boost::filesystem::is_directory;
-using std::string;
 
 #ifdef BOOST_MSVC
 #define BOOST_LIB_NAME boost_system
@@ -43,56 +40,64 @@ using std::string;
 namespace ore {
 namespace test {
 
-// Default value for base data path used in function below
+//! Repository holding the base data path for the current test suite
+class BasePath : public QuantLib::Singleton<BasePath> {
+    friend class QuantLib::Singleton<BasePath>;
+
+private:
+    BasePath() {
+        
+        // Localised usings for readability
+        using boost::unit_test::framework::master_test_suite;
+        using boost::filesystem::path;
+        using boost::filesystem::exists;
+        using boost::filesystem::is_directory;
+        using boost::filesystem::system_complete;
+        using std::string;
+        using std::vector;
+
+        // Test suite command line parameters
+        int argc = master_test_suite().argc;
+        char** argv = master_test_suite().argv;
+
+        // Default initial value for the base data path
+        // Allows a standard run on Unix or Windows from the executable directory without having 
+        // to specify a base_data_path on the command line
 #ifdef BOOST_MSVC
-string initialPath = "..";
+        value_ = "..";
 #else
-string initialPath = ".";
+        value_ = ".";
 #endif
 
-
-/*! Gets passed the command line arguments from a unit test suite
-    and checks if a base data path has been provided
-
-    Specify the base data path as --base_data_path. The base data path
-    should have a child 'input' directory containing any input files for
-    the tests. Any output from the tests will be added to child 'output'
-    directory under this base data path.
-
-    A default base data path of ".." and "." on Windows and Unix respectively 
-    is returned.
-*/
-string getBaseDataPath(int argc, char** argv) {
-
-    // Default initial value for the base data path
-    // Allows a standard run on Unix or Windows from the executable directory without having 
-    // to specify a base_data_path on the command line
-#ifdef BOOST_MSVC
-    string strPath = "..";
-#else
-    string strPath = ".";
-#endif
-
-    // Check if a base data path has been provided in the command line arguments
-    for (int i = 1; i < argc; ++i) {
-        if (boost::starts_with(argv[i], "--base_data_path")) {
-            vector<string> strs;
-            boost::split(strs, argv[i], boost::is_any_of("="));
-            if (strs.size() > 1) {
-                strPath = strs[1];
+        // Check if a base data path has been provided in the command line arguments
+        for (int i = 1; i < argc; ++i) {
+            if (boost::starts_with(argv[i], "--base_data_path")) {
+                vector<string> strs;
+                boost::split(strs, argv[i], boost::is_any_of("="));
+                if (strs.size() > 1) {
+                    value_ = strs[1];
+                }
             }
         }
+
+        // Test that we have a valid path and it contains an 'input' folder
+        // Would like to do this but can't because of the bug at:
+        // https://svn.boost.org/trac10/ticket/12987
+        // path p(value_);
+        // QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
+        //     value_ << "' is not a directory");
+        // QL_REQUIRE(is_directory(p / path("input")), "Test set up failed: the path '" <<
+        //     value_ << "' does not contain an 'input' directory");
     }
 
-    // Test that we have a valid path and it contains an 'input' folder
-    path p(strPath);
-    QL_REQUIRE(is_directory(p), "Test set up failed: the path '" <<
-        strPath << "' is not a directory");
-    QL_REQUIRE(is_directory(p / path("input")), "Test set up failed: the path '" <<
-        strPath << "' does not contain an 'input' directory");
+public:
+    const std::string& value() const {
+        return value_;
+    }
 
-    return strPath;
-}
+private:
+    std::string value_;
+};
 
 }
 }
