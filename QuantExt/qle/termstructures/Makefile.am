@@ -40,14 +40,13 @@ libTermStructures_la_SOURCES = \
 	immfraratehelper.cpp \
 	pricetermstructure.cpp \
 	pricetermstructureadapter.cpp \
-    yoyinflationoptionletvolstripper.cpp \
+	yoyinflationoptionletvolstripper.cpp \
 	discountratiomodifiedcurve.cpp \
 	crossccyfixfloatswaphelper.cpp \
-    correlationtermstructure.cpp \
-    flatcorrelation.cpp \
+	correlationtermstructure.cpp \
+	flatcorrelation.cpp \
 	capfloortermvolsurface.cpp \
 	capfloorhelper.cpp \
-	piecewiseoptionletstripper.cpp \
 	blackvariancesurfacesparse.cpp
 
 this_includedir=${includedir}/${subdir}
@@ -90,12 +89,12 @@ this_include_HEADERS = \
 	swaptionvolcubewithatm.hpp \
 	swaptionvolconstantspread.hpp \
 	blackvariancesurfacemoneyness.hpp \
-    equityvolconstantspread.hpp \
+	equityvolconstantspread.hpp \
 	swaptionvolcube2.hpp \
 	yoyinflationcurveobserverstatic.hpp \
 	yoyinflationcurveobservermoving.hpp \
 	zeroinflationcurveobserverstatic.hpp \
-    zeroinflationcurveobservermoving.hpp \
+	zeroinflationcurveobservermoving.hpp \
 	fxvannavolgasmilesection.hpp \
 	fxblackvolsurface.hpp \
 	fxsmilesection.hpp \
@@ -103,14 +102,14 @@ this_include_HEADERS = \
 	pricetermstructure.hpp \
 	pricecurve.hpp \
 	pricetermstructureadapter.hpp \
-    yoyoptionletvolatilitysurface.hpp \
-    interpolatedyoycapfloortermpricesurface.hpp \
-    yoyinflationoptionletvolstripper.hpp \
+	yoyoptionletvolatilitysurface.hpp \
+	interpolatedyoycapfloortermpricesurface.hpp \
+	yoyinflationoptionletvolstripper.hpp \
 	discountratiomodifiedcurve.hpp \
 	crossccyfixfloatswaphelper.hpp \
-    correlationtermstructure.hpp \
-    flatcorrelation.hpp \
-    interpolatedcorrelationcurve.hpp \
+	correlationtermstructure.hpp \
+	flatcorrelation.hpp \
+	interpolatedcorrelationcurve.hpp \
 	strippedcpivolatilitystructure.hpp \
 	capfloortermvolsurface.hpp \
 	probabilitytraits.hpp \

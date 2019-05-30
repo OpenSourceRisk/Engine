@@ -51,7 +51,7 @@ CapFloorHelper::CapFloorHelper(
     QuantLib::Real quoteDisplacement,
     bool endOfMonth)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(Handle<Quote>(
-        boost::make_shared<DerivedQuote<boost::function<Real(Real)>>>(
+        boost::make_shared<DerivedQuote<boost::function<Real(Real)> > >(
             quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
       type_(type),
       tenor_(tenor),
