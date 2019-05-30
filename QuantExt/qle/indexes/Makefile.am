@@ -5,6 +5,7 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 noinst_LTLIBRARIES = libIndexes.la
 
 libIndexes_la_SOURCES = \
+	bondindex.cpp \
 	fxindex.cpp \
 	inflationindexwrapper.cpp \
 	equityindex.cpp \
@@ -13,6 +14,7 @@ libIndexes_la_SOURCES = \
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
 	all.hpp \
+	bondindex.hpp \
 	bmaindexwrapper.hpp \
 	genericiborindex.hpp \
 	fxindex.hpp \

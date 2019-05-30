@@ -15,6 +15,7 @@ libOREDataPortfolio_la_SOURCES = \
 	equityforward.cpp \
 	equityoption.cpp \
 	equityswap.cpp \
+	forwardbond.cpp \
 	fxforward.cpp \
 	fxoption.cpp \
 	fxswap.cpp \
@@ -49,6 +50,7 @@ this_include_HEADERS = \
 	equityforward.hpp \
 	equityoption.hpp \
 	equityswap.hpp \
+	forwardbond.hpp
 	fxforward.hpp \
 	fxoption.hpp \
 	fxswap.hpp \
