@@ -31,8 +31,11 @@ using namespace boost;
 using boost::unit_test::test_suite;
 using boost::unit_test::framework::master_test_suite;
 
+#include <oret/basedatapath.hpp>
+#include <oret/datapaths.hpp>
 #include <oret/oret.hpp>
 using ore::test::setupTestLogging;
+using ore::test::getBaseDataPath;
 
 #ifdef BOOST_MSVC
 #include <ored/auto_link.hpp>
@@ -46,6 +49,8 @@ using ore::test::setupTestLogging;
 #include <boost/config/auto_link.hpp>
 #endif
 
+// Global base path variable
+string basePath = "";
 
 class OredGlobalFixture {
 public:
@@ -55,6 +60,9 @@ public:
 
         // Set up test logging
         setupTestLogging(argc, argv);
+
+        // Set the base data path for the unit tests
+        basePath = getBaseDataPath(argc, argv);
     }
 
     ~OredGlobalFixture() { stopTimer(); }
