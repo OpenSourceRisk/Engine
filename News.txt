@@ -4,7 +4,7 @@ Changes for the 4th ORE release (1.8.4.1):
 ORE 1.8.4.1 includes the following notable changes, details can be
 found in the commits between 11 December 2017 and 28 May 2019.
 
-INSTRMENTS
+INSTRUMENTS
 - Commodity Forward and Option, see example 5.24
 - Equity Swap, see extended example 5.16
 - CMS Spread Option (Cap/Floor, Digital Cap/Floor), see example 5.25
