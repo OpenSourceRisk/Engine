@@ -34,9 +34,9 @@
 #include <ql/time/daycounter.hpp>
 #include <ql/types.hpp>
 
-using namespace QuantLib;
 
 namespace QuantExt {
+using namespace QuantLib;
 
 //! Forward Bond class
 class ForwardBond : public Instrument {
