@@ -21,6 +21,7 @@
 
 #include <ql/exercise.hpp>
 #include <ql/patterns/lazyobject.hpp>
+#include <ql/termstructures/yieldtermstructure.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 namespace QuantExt {
@@ -34,10 +35,23 @@ class EquityForwardCurveStripperBase : public LazyObject {
 class EquityForwardCurveStripper : public EquityForwardCurveStripperBase {
 
 public:
-    EquityForwardCurveStripper(const boost::shared_ptr<BlackVarianceSurfaceSparse>& surface,
-        const boost::shared_ptr<YieldTermStructure>& forecastCurve;
-
+    EquityForwardCurveStripper(const boost::shared_ptr<BlackVarianceSurfaceSparse>& callSurface,
+        const boost::shared_ptr<BlackVarianceSurfaceSparse>& putSurface,
+        Handle<YieldTermStructure>& forecastCurve, Handle<QuantLib::Quote>& equitySpot,
         QuantLib::Exercise::Type = QuantLib::Exercise::Type::European);
+
+
+
+    //! \name LazyObject interface
+    //@{
+    void performCalculations() const;
+    //@}
+
+private:
+    const boost::shared_ptr<BlackVarianceSurfaceSparse>& callSurface_;
+    const boost::shared_ptr<BlackVarianceSurfaceSparse>& putSurface_;
+    Handle<YieldTermStructure> forecastCurve_; 
+    Handle<QuantLib::Quote> equitySpot_;
 
 
 };

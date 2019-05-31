@@ -20,6 +20,7 @@
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
@@ -54,7 +55,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             dc_ = parseDayCounter(config->dayCountID());
         }
 
-        // Set the Curve type - EquityFwd / OptionVolatility / DividendYield
+        // Set the Curve type - EquityFwd / OptionPrice / DividendYield
         curveType_ = config->type();
 
         // Set the Equity Forecast curve
@@ -90,7 +91,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         for (Size i = 0; i < config->fwdQuotes().size(); i++) {
             foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
-        if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::OptionVolatility)
+        if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::OptionPrice)
             && foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
@@ -100,7 +101,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             reg1 = regex(regexstr);
         }
         else {
-            if (config->type() == EquityCurveConfig::Type::OptionVolatility) {
+            if (config->type() == EquityCurveConfig::Type::OptionPrice) {
                 oqt.resize(config->fwdQuotes().size());
             } else {
                 for (Size i = 0; i < config->fwdQuotes().size(); i++) {
@@ -154,7 +155,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
-            if (config->type() == EquityCurveConfig::Type::OptionVolatility && md->asofDate() == asof &&
+            if (config->type() == EquityCurveConfig::Type::OptionPrice && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
                 md->quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
 
@@ -224,6 +225,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         vector<Rate> dividendRates;
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
 
+            DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
+
             // sort quotes and terms in case of wild-card
             if (wcFlag) {
                 QL_REQUIRE(quotesRead > 0, "Wild card quote specified, but no quotes read.")
@@ -250,59 +253,64 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
                 dividendRates.push_back(::log(equitySpot_->value() / quotes_[i]) / t + ir_rate);
             }
-        } else if (curveType_ == EquityCurveConfig::Type::OptionVolatility) {            
+        } else if (curveType_ == EquityCurveConfig::Type::OptionPrice) {
             QL_REQUIRE(oqt.size() > 0, "No Equity Option quotes provided for " << config->curveID());
 
-            // loop through the quotes and get the expiries, strikes, vols and types
+            DLOG("Building Equity Dividend Yield curve from Option Volatilities");
+            vector<boost::shared_ptr<EquityOptionQuote>> calls, puts;
             vector<Date> callDates, putDates;
             vector<Real> callStrikes, putStrikes;
             vector<Volatility> callVolatilities, putVolatilities;
             Calendar cal = NullCalendar();
 
+            // Split the quotes into call and puts
             for (auto q : oqt) {
                 if (q->isCall()) {
-                    callDates.push_back(getDateFromDateOrPeriod(q->expiry(), asof));
-                    callStrikes.push_back(parseReal(q->strike()));
-                    callVolatilities.push_back(q->quote()->value());
+                    calls.push_back(q);
                 } else {
-                    putDates.push_back(getDateFromDateOrPeriod(q->expiry(), asof));
-                    putStrikes.push_back(parseReal(q->strike()));
-                    putVolatilities.push_back(q->quote()->value());
+                    puts.push_back(q);
                 }
             }
 
-            // Build a Black Variance Sparse matrix - if European options we only need one - either Calls
-            // or Puts, if American we need both
-            boost::shared_ptr<BlackVarianceSurfaceSparse> surface;
-            if (config->exerciseStyle() == QuantLib::Exercise::Type::European) {
-                // if we have calls and puts only take calls
-                if (callDates.size() > 0) {
-                    surface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, callDates, callDates, callStrikes, callVolatilities, dc_);
-                } else if (putDates.size() < 0) {
-                    surface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, putDates, putDates, putStrikes, putVolatilities, dc_);
-                } else {
-                    QL_FAIL("No valid call or put options provided");
+            // loop through the quotes and get the expiries, strikes, vols and types
+            // We only want overlapping expiry/strike pairs
+            for (Size i = 0; i < calls.size(); i++) {
+                for (Size j = 0; j < puts.size(); j++) {
+                    if (calls[i]->expiry() == puts[j]->expiry && calls[i]->strike() == puts[j]->strike()) {
+                        TLOG("Adding Call can Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
+                        callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
+                        putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
+                        callStrikes.push_back(parseReal(calls[i]->strike()));
+                        putStrikes.push_back(parseReal(puts[j]->strike()));
+                        callVolatilities.push_back(calls[i]->quote()->value());
+                        putVolatilities.push_back(puts[j]->quote()->value());
+                    }
                 }
-
-
-
-
-
-
-                QL_FAIL("Only European and American exercise types supported");
-            } else if (config->exerciseStyle() == QuantLib::Exercise::Type::American) {
-                QL_FAIL("Only European and American exercise types supported");
-            } else {
-                QL_FAIL("Only European and American exercise types supported");
             }
+            
+            QL_REQUIRE(callDates.size() > 0 && putDates.size() < 0, "Must provide valid call and put quotes");
+            DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
+
+            DLOG("Building a Sparce Volatility surface for calls and puts");
+            // Build a Black Variance Sparse matrix 
+            boost::shared_ptr<BlackVarianceSurfaceSparse> callSurface, putSurface;
+
+            callSurface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, callDates, callDates, callStrikes, callVolatilities, dc_);
+            putSurface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, putDates, putDates, putStrikes, putVolatilities, dc_);
+
+            DLOG("Stripping equity forwars from the volatility surfaces");
+            boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface, 
+                forecastYieldTermStructure_, equitySpot_, QuantLib::Exercise::Type::European);
 
 
 
             dividendRates = quotes_;
 
         } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
+            DLOG("Building Equity Dividend Yield curve from Dividend Yield rates");
             dividendRates = quotes_;
         } else if (curveType_ == EquityCurveConfig::Type::NoDividends) {
+            DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure_ = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
         } else

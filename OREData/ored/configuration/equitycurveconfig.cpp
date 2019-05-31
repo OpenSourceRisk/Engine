@@ -46,7 +46,7 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
     forecastingCurve_ = XMLUtils::getChildValue(node, "ForecastingCurve", true);
     currency_ = XMLUtils::getChildValue(node, "Currency", true);
     type_ = parseEquityCurveConfigType(XMLUtils::getChildValue(node, "Type", true));
-    if (type_ == EquityCurveConfig::Type::OptionVolatility)
+    if (type_ == EquityCurveConfig::Type::OptionPrice)
         exerciseStyle_ = parseExerciseType(XMLUtils::getChildValue(node, "ExerciseStyle", true));
     equitySpotQuoteID_ = XMLUtils::getChildValue(node, "SpotQuote", true);
     dayCountID_ = XMLUtils::getChildValue(node, "DayCounter", false);
@@ -82,7 +82,7 @@ XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Currency", currency_);
     XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
-    if (type_ == EquityCurveConfig::Type::OptionVolatility)
+    if (type_ == EquityCurveConfig::Type::OptionPrice)
         XMLUtils::addChild(doc, node, "ExerciseStyle", to_string(exerciseStyle_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
@@ -104,8 +104,8 @@ std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t) {
         return out << "DividendYield";
     case EquityCurveConfig::Type::ForwardPrice:
         return out << "ForwardPrice";
-    case EquityCurveConfig::Type::OptionVolatility:
-        return out << "OptionVolatility";
+    case EquityCurveConfig::Type::OptionPrice:
+        return out << "OptionPrice";
     case EquityCurveConfig::Type::NoDividends:
         return out << "NoDividends";
     default:
@@ -118,8 +118,8 @@ EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str) {
         return EquityCurveConfig::Type::DividendYield;
     else if (str == "ForwardPrice")
         return EquityCurveConfig::Type::ForwardPrice;
-    else if (str == "OptionVolatility")
-        return EquityCurveConfig::Type::OptionVolatility;
+    else if (str == "OptionPrice")
+        return EquityCurveConfig::Type::OptionPrice;
     else if (str == "NoDividends")
         return EquityCurveConfig::Type::NoDividends;
     QL_FAIL("Invalid EquityCurveConfig::Type " << str);
