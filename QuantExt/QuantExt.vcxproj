@@ -489,7 +489,6 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
@@ -582,6 +581,7 @@
     <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
+    <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
@@ -660,6 +660,7 @@
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
+    <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
@@ -711,7 +712,6 @@
     <ClInclude Include="qle\time\yearcounter.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\calendars\chile.cpp" />
     <ClCompile Include="qle\calendars\colombia.cpp" />
     <ClCompile Include="qle\calendars\france.cpp" />
@@ -764,6 +764,7 @@
     <ClCompile Include="qle\instruments\payment.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
+    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
@@ -832,6 +833,7 @@
     <ClCompile Include="qle\termstructures\discountratiomodifiedcurve.cpp" />
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
+    <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />

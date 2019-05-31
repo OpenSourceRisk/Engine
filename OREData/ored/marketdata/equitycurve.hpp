@@ -55,7 +55,6 @@ public:
     Handle<YieldTermStructure> dividendYieldTermStructure() const { return dividendYieldTermStructure_; };
     Handle<YieldTermStructure> forecastingYieldTermStructure() const { return forecastYieldTermStructure_; };
     Handle<Quote> equitySpot() const { return equitySpot_; }
-    Handle<EquityIndex> equityIndex() const { return equityIndex_; }
     //@}
 private:
     EquityCurveSpec spec_;
@@ -64,7 +63,6 @@ private:
     vector<Real> quotes_;
     vector<Date> terms_;
     DayCounter dc_;
-    Handle<EquityIndex> equityIndex_;
     Handle<YieldTermStructure> forecastYieldTermStructure_;
     Handle<YieldTermStructure> dividendYieldTermStructure_;
     YieldCurve::InterpolationVariable dividendInterpVariable_;

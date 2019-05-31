@@ -672,8 +672,11 @@
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
-    <ClInclude Include="equityforwardcurvestripper.hpp">
+    <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp">
       <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp">
+      <Filter>interpolators</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -721,6 +724,9 @@
     </Filter>
     <Filter Include="time\calendars">
       <UniqueIdentifier>{127ebe18-cbb6-4387-b8ac-95cae7669e94}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="interpolators">
+      <UniqueIdentifier>{5afe79b0-37bd-4c42-a9f7-5df8719d365c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1162,8 +1168,11 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="equityforwardcurvestripper.cpp">
+    <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp">
+      <Filter>interpolators</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

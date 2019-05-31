@@ -157,7 +157,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
             if (config->type() == EquityCurveConfig::Type::OptionPrice && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
-                md->quoteType() == MarketDatum::QuoteType::RATE_LNVOL) {
+                md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
                 boost::shared_ptr<EquityOptionQuote> q = boost::dynamic_pointer_cast<EquityOptionQuote>(md);
                 Date expiryDate = getDateFromDateOrPeriod(q->expiry(), asof);
@@ -276,7 +276,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             // We only want overlapping expiry/strike pairs
             for (Size i = 0; i < calls.size(); i++) {
                 for (Size j = 0; j < puts.size(); j++) {
-                    if (calls[i]->expiry() == puts[j]->expiry && calls[i]->strike() == puts[j]->strike()) {
+                    if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
                         TLOG("Adding Call can Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
                         callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
                         putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));

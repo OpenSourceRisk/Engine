@@ -49,7 +49,7 @@ public:
 
     //! \name Getters
     //@{
-    DayCounter dayCounter() const { return dayCounter_; }
+    QuantLib::DayCounter dayCounter() const { return dayCounter_; }
     std::vector<QuantLib::Time> times() { return times_; };
     std::vector<QuantLib::Date> expiries() { return expiries_; };
     std::vector<std::vector<QuantLib::Real> > strikes() { return strikes_; };
@@ -59,7 +59,6 @@ public:
     //@}
 
 protected:
-    QuantLib::DayCounter dayCounter_;
     std::vector<QuantLib::Date> expiries_;                            // expiries
     std::vector<QuantLib::Time> times_;                               // times
     std::vector<QuantLib::Interpolation> interpolations_;             // strike interpolations for each expiry
@@ -68,6 +67,7 @@ protected:
 
 private:
     QuantLib::Date referenceDate_;
+    QuantLib::DayCounter dayCounter_;
     QuantLib::Real getValueForStrike(QuantLib::Real strike, const std::vector<QuantLib::Real>& strks, 
         const std::vector<QuantLib::Real>& vars, const QuantLib::Interpolation& intrp) const;
 

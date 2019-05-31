@@ -47,7 +47,7 @@ using QuantLib::BusinessDayConvention;
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice, OptionVolatility, NoDividends };
+    enum class Type { DividendYield, ForwardPrice, OptionPrice, NoDividends };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor

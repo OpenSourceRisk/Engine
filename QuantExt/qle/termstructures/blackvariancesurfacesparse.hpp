@@ -30,26 +30,24 @@
 #include <ql/math/interpolation.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
-class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure,
-                                   public OptionInterpolator2d {
+class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
 
 public:
-    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal, const std::vector<Date>& dates,
-                               const std::vector<Real>& strikes, const std::vector<Volatility>& volatilities,
-                               const DayCounter& dayCounter);
+    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,
+                               const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Volatility>& volatilities,
+                               const QuantLib::DayCounter& dayCounter);
 
     //! \name TermStructure interface
     //@{
-    Date maxDate() const { return Date::maxDate(); }
+    QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; }
-    Real maxStrike() const { return QL_MAX_REAL; }
+    QuantLib::Real minStrike() const { return 0; }
+    QuantLib::Real maxStrike() const { return QL_MAX_REAL; }
     //@}
 
     //! \name Visitability
@@ -58,7 +56,10 @@ public:
     //@}
 
 protected:
-    virtual Real blackVarianceImpl(Time t, Real strike) const { return getValue(t, strike); };
+    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const { return optionInterpolator_->getValue(t, strike); };
+
+private:
+    boost::shared_ptr<OptionInterpolator2d> optionInterpolator_;
 
 };
 

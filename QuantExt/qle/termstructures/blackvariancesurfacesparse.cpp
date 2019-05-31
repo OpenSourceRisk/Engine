@@ -45,7 +45,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
         variances[i] = volatilities[i] * volatilities[i] * t;
     }
 
-    OptionInterpolator2d(referenceDate, dates, strikes, variances, dayCounter);
+    optionInterpolator_ = boost::make_shared<OptionInterpolator2d>(referenceDate, dates, strikes, variances, dayCounter);
 
 }
 
