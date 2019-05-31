@@ -50,7 +50,7 @@ this_include_HEADERS = \
 	equityforward.hpp \
 	equityoption.hpp \
 	equityswap.hpp \
-	forwardbond.hpp
+	forwardbond.hpp \
 	fxforward.hpp \
 	fxoption.hpp \
 	fxswap.hpp \
