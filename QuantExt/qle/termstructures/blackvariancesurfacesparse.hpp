@@ -23,6 +23,7 @@
 #ifndef quantext_black_variance_surface_sparse_hpp
 #define quantext_black_variance_surface_sparse_hpp
 
+#include <qle/interpolators/optioninterpolator2d.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
@@ -31,18 +32,10 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-namespace detail {
-struct CloseEnoughComparator {
-    explicit CloseEnoughComparator(const Real v) : v_(v) {}
-    bool operator()(const Real w) const { return close_enough(v_, w); }
-    Real v_;
-};
-} // namespace detail
-
-
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
-class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
+class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure,
+                                   public OptionInterpolator2d {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal, const std::vector<Date>& dates,
@@ -51,32 +44,22 @@ public:
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return dayCounter_; }
     Date maxDate() const { return Date::maxDate(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
     Real minStrike() const { return 0; }
     Real maxStrike() const { return QL_MAX_REAL; }
-
     //@}
+
     //! \name Visitability
     //@{
     virtual void accept(AcyclicVisitor&);
     //@}
+
 protected:
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
+    virtual Real blackVarianceImpl(Time t, Real strike) const { return getValue(t, strike); };
 
-private:
-    Real getVarForStrike(Real strike, const std::vector<Real>& strks, const std::vector<Real>& vars,
-                         const QuantLib::Interpolation& intrp) const;
-
-    DayCounter dayCounter_;
-    std::vector<Date> expiries_;                            // expiries
-    std::vector<Time> times_;                               // times
-    std::vector<Interpolation> interpolations_;             // strike interpolations for each expiry
-    std::vector<std::vector<Real> > strikes_;               // strikes for each expiry
-    std::vector<std::vector<Real> > variances_;
 };
 
 // inline definitions
