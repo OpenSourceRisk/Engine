@@ -49,7 +49,7 @@ public:
         \param type                The CapFloorHelper type as described above
         \param tenor               The underlying cap floor instrument's tenor
         \param strike              The underlying cap floor instrument's strike
-        \param premium             The quoted premium or implied volatility for the underlying cap floor instrument
+        \param quote               The quoted premium or implied volatility for the underlying cap floor instrument
         \param iborIndex           The IborIndex underlying the cap floor instrument
         \param discountingCurve    The curve used for discounting the cap floor instrument cashflows
         \param quoteType           The quote type

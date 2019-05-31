@@ -55,7 +55,7 @@ public:
         \param interpolator    The interpolation object used to interpolate between the provided \p dates
         \param volatilityType  The volatility type of the provided \p volatilities
         \param displacement    The applicable shift size if the \p volatilityType is \c ShiftedLognormal
-        \param flatFirstPeriod If the volatility between the first date and second date in \dates is assumed constant 
+        \param flatFirstPeriod If the volatility between the first date and second date in \p dates is assumed constant 
                                and equal to the second element of \p volatilities. This means that the first element of
                                \p volatilities is ignored.
         \param interpolator    An instance of the interpolator to use
