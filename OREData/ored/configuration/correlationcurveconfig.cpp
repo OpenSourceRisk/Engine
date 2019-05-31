@@ -279,6 +279,8 @@ bool indexNameLessThan(const std::string& index1, const std::string& index2) {
     if (s1 == 2) {
         return (tokens1[2] + "-" + tokens1[3]) < (tokens2[2] + "-" + tokens1[3]);
     }
+
+    QL_FAIL("indexNameLessThan(): internal error");
 }
 
 } // namespace data
