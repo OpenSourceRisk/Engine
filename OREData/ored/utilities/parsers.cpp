@@ -370,9 +370,13 @@ DayCounter parseDayCounter(const string& s) {
                                         {"ActActISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (ISMA)", ActualActual(ActualActual::ISMA)},
                                         {"ActualActual (ISMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
+                                        {"ActActICMA", ActualActual(ActualActual::ISMA)},
+                                        {"Actual/Actual (ICMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ActualActual (ICMA)", ActualActual(ActualActual::ISMA)},
+                                        {"ACT/ACT.ICMA", ActualActual(ActualActual::ISMA)},
                                         {"ActActAFB", ActualActual(ActualActual::AFB)},
                                         {"ACT/ACT.AFB", ActualActual(ActualActual::AFB)},
-                                        {"ACT/ACT.ISMA", ActualActual(ActualActual::ISMA)},
                                         {"Actual/Actual (AFB)", ActualActual(ActualActual::AFB)},
                                         {"1/1", OneDayCounter()},
                                         {"BUS/252", Business252()},
@@ -437,11 +441,6 @@ DateGeneration::Rule parseDateGenerationRule(const string& s) {
     if (it != m.end()) {
         return it->second;
     } else {
-        // fall back for CDS2015
-        if (s == "CDS2015") {
-            ALOG("Date Generation Rule CDS2015 replaced with CDS because QuantLib Version is < 1.10");
-            return DateGeneration::CDS;
-        }
         QL_FAIL("Date Generation Rule " << s << " not recognized");
     }
 }
@@ -551,6 +550,7 @@ Exercise::Type parseExerciseType(const std::string& s) {
 Option::Type parseOptionType(const std::string& s) {
     static map<string, Option::Type> m = {{"Put", Option::Put}, {"Call", Option::Call}};
 
+    QL_REQUIRE(!s.empty(), "Option type not given.");
     auto it = m.find(s);
     if (it != m.end()) {
         return it->second;

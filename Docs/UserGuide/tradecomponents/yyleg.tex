@@ -18,10 +18,16 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
 
 %Allowable values:  \emph{true, false} 
 
-\item Caps: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
+\item Spreads [Optional]: The spreads applied to index fixings. As usual, this can be a single value, a vector of values or a dated vector of
+  values.
+
+\item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
+  multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+
+\item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any).
 
-\item Floors: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
+\item Floors [Optional]: This node contains child elements of type \lstinline!Floor! indicating that the coupon rate is floored at
   the given rate (after applying gearing and spread, if any).
 
 \item NakedOption [Optional]: Optional node (defaults to N), if Y the leg represents only the embedded floor, cap or collar. By convention these embedded options are considered long if the leg is a receiver leg, otherwise short. 
@@ -58,6 +64,12 @@ Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y
           <FixingDays>2</FixingDays>
           <ObservationLag>2M</ObservationLag>
           <Interpolated>true</Interpolated>
+          <Spreads>
+            <Spread>0.0010</Spread>
+          </Spreads>
+          <Gearings>
+            <Gearing>2.0</Gearing>
+          </Gearings>
           <Caps>
             <Cap>0.05</Cap>
           </Caps>
