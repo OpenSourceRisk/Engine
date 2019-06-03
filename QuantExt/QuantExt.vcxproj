@@ -518,6 +518,7 @@
     <ClInclude Include="qle\currencies\asia.hpp" />
     <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
+    <ClInclude Include="qle\indexes\bondindex.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
@@ -573,6 +574,7 @@
     <ClInclude Include="qle\instruments\deposit.hpp" />
     <ClInclude Include="qle\instruments\equityforward.hpp" />
     <ClInclude Include="qle\instruments\fixedbmaswap.hpp" />
+    <ClInclude Include="qle\instruments\forwardbond.hpp" />
     <ClInclude Include="qle\instruments\fxforward.hpp" />
     <ClInclude Include="qle\instruments\impliedbondspread.hpp" />
     <ClInclude Include="qle\instruments\makeaverageois.hpp" />
@@ -635,6 +637,7 @@
     <ClInclude Include="qle\pricingengines\discountingcommodityforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingcurrencyswapengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingequityforwardengine.hpp" />
+    <ClInclude Include="qle\pricingengines\discountingforwardbondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingfxforwardengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingriskybondengine.hpp" />
     <ClInclude Include="qle\pricingengines\discountingswapenginemulticurve.hpp" />
@@ -739,6 +742,7 @@
     <ClCompile Include="qle\currencies\america.cpp" />
     <ClCompile Include="qle\currencies\asia.cpp" />
     <ClCompile Include="qle\currencies\metals.cpp" />
+    <ClCompile Include="qle\indexes\bondindex.cpp" />
     <ClCompile Include="qle\indexes\equityindex.cpp" />
     <ClCompile Include="qle\indexes\fxindex.cpp" />
     <ClCompile Include="qle\indexes\ibor\brlcdi.cpp" />
@@ -757,6 +761,7 @@
     <ClCompile Include="qle\instruments\deposit.cpp" />
     <ClCompile Include="qle\instruments\equityforward.cpp" />
     <ClCompile Include="qle\instruments\fixedbmaswap.cpp" />
+    <ClCompile Include="qle\instruments\forwardbond.cpp" />
     <ClCompile Include="qle\instruments\fxforward.cpp" />
     <ClCompile Include="qle\instruments\impliedbondspread.cpp" />
     <ClCompile Include="qle\instruments\makeaverageois.cpp" />
@@ -806,6 +811,7 @@
     <ClCompile Include="qle\pricingengines\discountingcommodityforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingcurrencyswapengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingequityforwardengine.cpp" />
+    <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingfxforwardengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingriskybondengine.cpp" />
     <ClCompile Include="qle\pricingengines\discountingswapenginemulticurve.cpp" />

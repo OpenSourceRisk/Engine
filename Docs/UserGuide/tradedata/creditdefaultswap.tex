@@ -6,11 +6,12 @@ are
 \begin{itemize}
 \item IssuerId: An identifier for the reference entity of the CDS. For informational purposes and not used for pricing.
 \item CreditCurveId: Typically the ISIN-code of the reference entity defining the default curve used for pricing. Other identifiers may be used as well, provided they are supported in the market data configuration.
-\item SettlesAccrual: Whether or not the accrued coupon is due in the event of a default.
-\item PaysAtDefaultTime: If set to true, any payments triggered by a default event are due at default time. If set to false, they are due at the end of the accrual period.
-\item ProtectionStart: The first date where a default event will trigger the contract.
-\item UpfrontDate [Optional]: Settlement date for the upfront payment.
+\item SettlesAccrual [Optional]: Whether or not the accrued coupon is due in the event of a default. This defaults to \lstinline!true! if not provided.
+\item PaysAtDefaultTime [Optional]: If set to \lstinline!true!, any payments triggered by a default event are due at default time. If set to \lstinline!false!, they are due at the end of the accrual period. This defaults to \lstinline!true! if not provided.
+\item ProtectionStart [Optional]: The first date where a default event will trigger the contract. This defaults to the first date in the schedule if it is not provided.
+\item UpfrontDate [Optional]: Settlement date for the UpfrontFee if an UpfrontFee is provided. If an UpfrontFee is provided and it is non-zero, UpfrontDate is required. The UpfrontDate, if provided, must be on or after the ProtectionStart date.
 \item UpfrontFee [Optional]: The upfront payment, expressed as a rate, to be multiplied by notional amount.
+\item FixedRecoveryRate [Optional]: This node holds the fixed recovery rate if the CDS is a fixed recovery CDS. For a standard CDS, this field should be omitted.
 \end{itemize}
 
 A LegData block then defines the cashflow structure of the credit default swap, this must be be of type \emph{Fixed}.
