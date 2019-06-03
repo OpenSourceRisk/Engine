@@ -145,7 +145,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<LGMGridBermudanSwaptionEngineBuilder>());
 
     registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
-    registerBuilder(boost::make_shared<FxOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
+    registerBuilder(boost::make_shared<FxAmericanOptionBAWApproxEngineBuilder>());
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());

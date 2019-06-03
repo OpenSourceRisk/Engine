@@ -44,12 +44,18 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
 
     // Only European Vanilla supported for now
-    QL_REQUIRE(option_.style() == "European", "Option Style unknown: " << option_.style());
+    QL_REQUIRE(option_.style() == "European" || option_.style() == "American",
+        "Option Style unknown: " << option_.style());
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date expiryDate = parseDate(option_.exerciseDates().front());
 
     // Exercise
-    boost::shared_ptr<Exercise> exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    boost::shared_ptr<Exercise> exercise;
+    if (option_.style() == "European") {
+        exercise = boost::make_shared<EuropeanExercise>(expiryDate);
+    } else { // American
+        exercise = boost::make_shared<AmericanExercise>(expiryDate, option_.payoffAtExpiry());
+    }
 
     // Vanilla European/American.
     // If price adjustment is necessary we build a simple EU Option
@@ -60,11 +66,18 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     boost::shared_ptr<Instrument> vanilla = boost::make_shared<VanillaOption>(payoff, exercise);
 
     // we buy foriegn with domestic(=sold ccy).
-    boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
-    QL_REQUIRE(builder, "No builder found for " << tradeType_);
-    boost::shared_ptr<FxOptionEngineBuilder> fxOptBuilder = boost::dynamic_pointer_cast<FxOptionEngineBuilder>(builder);
-
-    vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
+    boost::shared_ptr<FxOptionEngineBuilder> fxOptBuilder;
+    if (option_.style() == "European") {
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder(tradeType_);
+        QL_REQUIRE(builder, "No builder found for " << tradeType_);
+        fxOptBuilder = boost::dynamic_pointer_cast<FxEuropeanOptionEngineBuilder>(builder);
+        vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
+    } else { // American
+        boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("FxAmericanOption");
+        QL_REQUIRE(builder, "No builder found for " << "FxAmericanOption");
+        fxOptBuilder = boost::dynamic_pointer_cast<FxAmericanOptionEngineBuilder>(builder);
+        vanilla->setPricingEngine(fxOptBuilder->engine(boughtCcy, soldCcy));
+    }
 
     Position::Type positionType = parsePositionType(option_.longShort());
     Real bsInd = (positionType == QuantLib::Position::Long ? 1.0 : -1.0);
