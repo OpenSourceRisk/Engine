@@ -354,12 +354,13 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
         // Build and price
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
         engineData->model("FxAmericanOption") = "GarmanKohlhagen";
-        engineData->engine("FxAmericanOption") = "FDAmericanEngine";
+        engineData->engine("FxAmericanOption") = "FdBlackScholesVanillaEngine";
         engineData->engineParameters("FxAmericanOption") = {
-            {"Scheme", "CrankNicolson"},
+            {"Scheme", "Douglas"},
             {"TimeGrid", "100"},
             {"XGrid", "100"},
-            {"TimeDependent", "false"}
+            {"DampingSteps", "0"},
+            {"LocalVol", "false"}
         };
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);

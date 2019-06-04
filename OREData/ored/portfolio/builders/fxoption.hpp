@@ -26,10 +26,9 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/methods/finitedifferences/expliciteuler.hpp>
-#include <ql/methods/finitedifferences/impliciteuler.hpp>
+#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/pricingengines/vanilla/fdamericanengine.hpp>
+#include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 
@@ -79,7 +78,7 @@ protected:
     }
 };
 
-//! Engine Builder for FX American Options
+//! Abstract Engine Builder for FX American Options
 /*! Pricing engines are cached by currency pair
 
     \ingroup portfolio
@@ -90,11 +89,16 @@ protected:
         : FxOptionEngineBuilder(model, engine, {"FxAmericanOption"}) {}
 };
 
+//! Engine Builder for FX American Options using Finite Difference Method
+/*! Pricing engines are cached by currency pair
+
+    \ingroup portfolio
+ */
 class FxAmericanOptionFDEngineBuilder
     : public FxAmericanOptionEngineBuilder {
 public:
     FxAmericanOptionFDEngineBuilder()
-        : FxAmericanOptionEngineBuilder("GarmanKohlhagen", "FDAmericanEngine") {}
+        : FxAmericanOptionEngineBuilder("GarmanKohlhagen", "FdBlackScholesVanillaEngine") {}
 
 protected:
 
@@ -103,19 +107,39 @@ protected:
         std::string scheme = engineParameter("Scheme");
         Size tGrid = ore::data::parseInteger(engineParameter("TimeGrid"));
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        bool timeDependent = ore::data::parseBool(engineParameter("TimeDependent"));
+        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
+        bool localVol = ore::data::parseBool(engineParameter("LocalVol"));
 
-        if (scheme == "CrankNicolson")
-                return boost::make_shared<FDAmericanEngine<CrankNicolson>>(gbsp, tGrid, xGrid, timeDependent);
-        if (scheme == "ExplicitEuler")
-                return boost::make_shared<FDAmericanEngine<ExplicitEuler>>(gbsp, tGrid, xGrid, timeDependent);
-        if (scheme == "ImplicitEuler")
-                return boost::make_shared<FDAmericanEngine<ImplicitEuler>>(gbsp, tGrid, xGrid, timeDependent);
-        QL_FAIL("unknown scheme for finite difference method: " << scheme);
+        QL_REQUIRE(!localVol, "local vol is not supported yet");
+        // TODO: add local vol support
+
+        static std::map<std::string, FdmSchemeDesc> fdmSchemeMap = {
+            {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
+            {"Douglas", FdmSchemeDesc::Douglas()},
+            {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
+            {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+            {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
+            {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+            {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
+            {"TrBDF2", FdmSchemeDesc::TrBDF2()}
+        };
+
+        auto it = fdmSchemeMap.find(scheme);
+        QL_REQUIRE(it != fdmSchemeMap.end(), "unknown scheme for finite difference method: " << scheme);
+
+        return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid,
+                                                               dampingSteps,
+                                                               it->second,
+                                                               localVol);
     }
 
 };
 
+//! Engine Builder for FX American Options using Barone Adesi Whaley Approximation
+/*! Pricing engines are cached by currency pair
+
+    \ingroup portfolio
+ */
 class FxAmericanOptionBAWApproxEngineBuilder
     : public FxAmericanOptionEngineBuilder {
 public:
