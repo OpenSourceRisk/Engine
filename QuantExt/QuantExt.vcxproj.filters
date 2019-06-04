@@ -687,6 +687,9 @@
     <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

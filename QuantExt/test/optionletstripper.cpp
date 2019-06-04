@@ -515,7 +515,7 @@ BOOST_AUTO_TEST_CASE(testUsualShiftedLognormalStrippingWithAtm) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAt) {
+BOOST_AUTO_TEST_CASE(testNormalToShiftedLognormalStrippingWithAtm) {
     BOOST_TEST_MESSAGE("Testing stripping of normal capfloor vols with ATM to give shifted lognormal...");
 
     CommonVars vars;
