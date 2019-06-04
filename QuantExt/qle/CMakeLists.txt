@@ -26,6 +26,7 @@ currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
 currencies/metals.cpp
+indexes/bondindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -45,6 +46,7 @@ instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/fxforward.cpp
+instruments/forwardbond.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -90,6 +92,8 @@ pricingengines/cpiblackcapfloorengine.cpp
 pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
+pricingengines/discountingcommodityforwardengine.cpp
+pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingequityforwardengine.cpp
@@ -179,6 +183,7 @@ currencies/america.hpp
 currencies/asia.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
+indexes/bondindex.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
@@ -235,6 +240,7 @@ instruments/currencyswap.hpp
 instruments/deposit.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
+instruments/forwardbond.hpp
 instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
@@ -295,6 +301,7 @@ pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
+pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingfxforwardengine.hpp

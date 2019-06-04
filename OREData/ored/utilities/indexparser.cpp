@@ -363,6 +363,14 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 
+boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": BOND-SECURITY");
+    QL_REQUIRE(tokens[0] == "BOND", "expected first token to be BOND");
+    return boost::make_shared<BondIndex>(tokens[1]);
+}
+
 boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
@@ -394,6 +402,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseEquityIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseBondIndex(s);
         } catch (...) {
         }
     }

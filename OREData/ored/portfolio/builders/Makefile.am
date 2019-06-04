@@ -25,6 +25,7 @@ this_include_HEADERS = \
 	capflooredyoyleg.hpp \
 	equityforward.hpp \
 	equityoption.hpp \
+	forwardbond.hpp \
 	fxforward.hpp \
 	fxoption.hpp \
 	swap.hpp \
