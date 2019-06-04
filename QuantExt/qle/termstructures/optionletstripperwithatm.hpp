@@ -53,7 +53,7 @@ public:
         const QuantLib::VolatilityType atmVolatilityType = QuantLib::ShiftedLognormal,
         QuantLib::Real atmDisplacement = 0.0,
         QuantLib::Size maxEvaluations = 10000,
-        QuantLib::Real accuracy = 1e-6,
+        QuantLib::Real accuracy = 1.0e-12,
         const TimeInterpolator& ti = TimeInterpolator(),
         const SmileInterpolator& si = SmileInterpolator());
 
@@ -131,7 +131,7 @@ private:
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripperWithAtm(
     const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
-    const QuantLib::Handle<QuantExt::CapFloorTermVolCurve>& atmCurve,
+    const QuantLib::Handle<QuantLib::CapFloorTermVolCurve>& atmCurve,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     const QuantLib::VolatilityType atmVolatilityType,
     QuantLib::Real atmDisplacement,
@@ -243,7 +243,8 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
 
     // Create an optionlet volatility structure from the underlying stripped optionlet surface
     boost::shared_ptr<OptionletVolatilityStructure> ovs = 
-        boost::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>>(osBase_);
+        boost::make_shared<QuantExt::StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>>(
+            atmCurve_->referenceDate(), osBase_);
     ovs->enableExtrapolation();
 
     // Imply the volatility spreads that match the ATM prices
