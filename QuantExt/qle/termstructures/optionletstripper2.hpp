@@ -31,7 +31,7 @@ namespace QuantExt {
 using namespace QuantLib;
 using std::vector;
 
-/*! Helper class to extend an OptionletStripper1 object stripping
+/*! Helper class to extend a QuantExt::OptionletStripper object stripping
     additional optionlet (i.e. caplet/floorlet) volatilities (a.k.a.
     forward-forward volatilities) from the (cap/floor) At-The-Money
     term volatilities of a CapFloorTermVolCurve.
@@ -40,10 +40,11 @@ using std::vector;
 */
 class OptionletStripper2 : public QuantExt::OptionletStripper {
 public:
-    //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper1 by adding optionlet
+    //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper by adding optionlet
     //! volatilities stripped from an ATM volatility curve \p atmCapFloorTermVolCurve
-    OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper1>& optionletStripper1,
+    OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
                        const Handle<QuantExt::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                       const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
 
     vector<Rate> atmCapFloorStrikes() const;
@@ -60,25 +61,25 @@ private:
 
     class ObjectiveFunction {
     public:
-        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper1>&, const boost::shared_ptr<CapFloor>&,
+        ObjectiveFunction(const boost::shared_ptr<QuantExt::OptionletStripper>&, const boost::shared_ptr<QuantLib::CapFloor>&,
                           Real targetValue, const Handle<YieldTermStructure>& discount);
         Real operator()(Volatility spreadVol) const;
 
     private:
         boost::shared_ptr<SimpleQuote> spreadQuote_;
-        boost::shared_ptr<CapFloor> cap_;
+        boost::shared_ptr<QuantLib::CapFloor> cap_;
         Real targetValue_;
         const Handle<YieldTermStructure> discount_;
     };
 
-    const boost::shared_ptr<QuantExt::OptionletStripper1> stripper1_;
+    const boost::shared_ptr<QuantExt::OptionletStripper> stripper_;
     const Handle<QuantExt::CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
     DayCounter dc_;
     Size nOptionExpiries_;
     mutable vector<Rate> atmCapFloorStrikes_;
     mutable vector<Real> atmCapFloorPrices_;
     mutable vector<Volatility> spreadsVolImplied_;
-    mutable vector<boost::shared_ptr<CapFloor> > caps_;
+    mutable vector<boost::shared_ptr<QuantLib::CapFloor> > caps_;
     Size maxEvaluations_;
     Real accuracy_;
     const VolatilityType inputVolatilityType_;

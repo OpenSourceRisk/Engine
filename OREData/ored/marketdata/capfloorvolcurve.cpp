@@ -185,8 +185,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                     0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
             Handle<QuantExt::CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
             boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper =
-                boost::make_shared<QuantExt::OptionletStripper2>(optionletStripper, hAtmCapVol, quoteVolatilityType,
-                                                                 shift);
+                boost::make_shared<QuantExt::OptionletStripper2>(
+                    optionletStripper, hAtmCapVol, discountCurve, quoteVolatilityType, shift);
             datedOptionletStripper = boost::make_shared<DatedStrippedOptionlet>(asof, atmOptionletStripper);
             capletVol_ =
                 boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
