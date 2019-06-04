@@ -34,6 +34,7 @@
 #include <ql/cashflows/floatingratecoupon.hpp>
 #include <ql/time/calendars/all.hpp>
 #include <ql/time/daycounters/all.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 
 #include <orea/app/oreapp.hpp>
 
@@ -238,6 +239,14 @@ void OREApp::readSetup() {
         ObservationMode::instance().setMode(om);
         LOG("Observation Mode is " << om);
     }
+    /*if (params_->has("setup", "calendarAdjustment") && params_->get("setup", "calendarAdjustment") != "") {
+        CalendarAdjustmentConfig calendarAdjustments;
+        string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
+        LOG("Load calendarAdjustment from file");
+        calendarAdjustments.fromFile(calendarAdjustmentFile);
+        CalendarAdjustments::instance().setConfig(calendarAdjustments);
+    }*/
+   
 
     writeInitialReports_ = true;
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
@@ -967,7 +976,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
                                                    continueOnError_);
     }
     LOG("Today's market built");
-    MEM_LOG;
+    MEM_LOG;     
 }
 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
