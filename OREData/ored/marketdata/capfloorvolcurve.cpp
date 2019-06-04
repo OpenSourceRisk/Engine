@@ -20,11 +20,14 @@
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
 
+#include <qle/math/flatextrapolation.hpp>
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 #include <qle/termstructures/datedstrippedoptionlet.hpp>
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/piecewiseoptionletstripper.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
 
 #include <ql/math/comparison.hpp>
 #include <ql/math/matrix.hpp>
@@ -106,8 +109,8 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                     if (!q->atm()) {
                         Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
                         Size j = std::find_if(strikes.begin(), strikes.end(),
-                                              [&q](const double& s) { return close_enough(s, q->strike()); }) -
-                                 strikes.begin();
+                            [&q](const double& s) { return close_enough(s, q->strike()); }) -
+                            strikes.begin();
 
                         if (i < tenors.size() && j < strikes.size()) {
                             vols[i][j] = q->quote()->value();
@@ -122,7 +125,7 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
                         atmVolCurve.emplace(q->term(), q->quote()->value());
                     }
                 } else if (isSln && !haveShiftQuote && qs && qs->ccy() == spec.ccy() &&
-                           qs->indexTenor() == iborIndex->tenor() && qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
+                    qs->indexTenor() == iborIndex->tenor() && qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
                     // Shift quote for shifted lognormal capfloor volatility
                     shift = qs->quote()->value();
                     haveShiftQuote = true;
@@ -153,21 +156,31 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
         // Non-ATM cap/floor volatility surface
         boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol =
             boost::make_shared<QuantExt::CapFloorTermVolSurface>(0, config->calendar(), config->businessDayConvention(),
-                                                                 tenors, strikes, vols, config->dayCounter(),
-                                                                 interpolationMethod);
+                tenors, strikes, vols, config->dayCounter(),
+                interpolationMethod);
 
-        // Build the stripped caplet/floorlet surface
-        // Hardcoded target volatility type to Normal - decision made to always work with a Normal optionlet surface
-        // Hardcoded minVol to 1bps
-        Real minVol = 0.0001;
-        boost::shared_ptr<QuantExt::OptionletStripper1> optionletStripper =
-            boost::make_shared<QuantExt::OptionletStripper1>(capVol, iborIndex, Null<Rate>(), 1.0e-6, 100,
-                                                             discountCurve, quoteVolatilityType, shift, true, Normal,
-                                                             0.0, minVol);
-        boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper =
-            boost::make_shared<DatedStrippedOptionlet>(asof, optionletStripper);
-        capletVol_ =
-            boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
+        // Strip the optionlet volatilities
+        boost::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
+        if (config->interpolationMethod() == "BicubicSpline") {
+            if (config->flatExtrapolation()) {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(capVol, iborIndex, discountCurve);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(asof, optionletStripper);
+            } else {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(capVol, iborIndex, discountCurve);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(asof, optionletStripper);
+            }
+            
+        } else if (config->interpolationMethod() == "Bilinear") {
+            if (config->flatExtrapolation()) {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(capVol, iborIndex, discountCurve);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(asof, optionletStripper);
+            } else {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(capVol, iborIndex, discountCurve);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(asof, optionletStripper);
+            }
+        } else {
+            QL_FAIL("Invalid InterpolationMethod " << config->interpolationMethod());
+        }
         capletVol_->enableExtrapolation(config->extrapolate());
 
         // If given, add the ATM cap/floor volatility curve
@@ -181,17 +194,18 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             }
 
             boost::shared_ptr<QuantExt::CapFloorTermVolCurve> atmCapVol =
-                boost::make_shared<QuantExt::CapFloorTermVolCurve>(
+                boost::make_shared<QuantLib::CapFloorTermVolCurve>(
                     0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter());
             Handle<QuantExt::CapFloorTermVolCurve> hAtmCapVol(atmCapVol);
             boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper =
                 boost::make_shared<QuantExt::OptionletStripper2>(
                     optionletStripper, hAtmCapVol, discountCurve, quoteVolatilityType, shift);
-            datedOptionletStripper = boost::make_shared<DatedStrippedOptionlet>(asof, atmOptionletStripper);
+            boost::shared_ptr<DatedStrippedOptionlet> datedOptionletStripper = boost::make_shared<DatedStrippedOptionlet>(asof, atmOptionletStripper);
             capletVol_ =
                 boost::make_shared<DatedStrippedOptionletAdapter>(datedOptionletStripper, config->flatExtrapolation());
             capletVol_->enableExtrapolation(config->extrapolate());
         }
+
     } catch (std::exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());
     } catch (...) {

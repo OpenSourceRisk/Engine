@@ -31,6 +31,7 @@
 #include <ql/utilities/dataformatters.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/bind.hpp>
 #include <vector>
 #include <algorithm>
 
