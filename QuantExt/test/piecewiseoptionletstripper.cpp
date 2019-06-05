@@ -104,16 +104,23 @@ struct CommonVars : public qle::test::TopLevelFixture {
 vector<VolatilityType> volatilityTypes = list_of(Normal)(ShiftedLognormal);
 
 // Interpolation types for the data driven test case
-typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat> InterpolationType;
+typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat, Cubic, QuantExt::CubicFlat> InterpolationType;
 
 vector<InterpolationType> timeInterpolationTypes = list_of
     (InterpolationType(Linear()))
     (InterpolationType(BackwardFlat()))
     (InterpolationType(QuantExt::LinearFlat()));
 
+// If we comment these in, there are lots of errors introduced for the same reason as the tests in 
+// piecewiseoptionletcurve.cpp.
+//     (InterpolationType(Cubic()))
+//     (InterpolationType(QuantExt::CubicFlat()));
+
 vector<InterpolationType> smileInterpolationTypes = list_of
     (InterpolationType(Linear()))
-    (InterpolationType(QuantExt::LinearFlat()));
+    (InterpolationType(QuantExt::LinearFlat()))
+    (InterpolationType(Cubic()))
+    (InterpolationType(QuantExt::CubicFlat()));
 
 // If the optionlet structure has a flat first period or not
 vector<bool> flatFirstPeriodValues = list_of(true)(false);
@@ -140,6 +147,12 @@ string to_string(const InterpolationType& interpolationType) {
         break;
     case 2:
         result = "LinearFlat";
+        break;
+    case 3:
+        result = "Cubic";
+        break;
+    case 4:
+        result = "CubicFlat";
         break;
     default:
         BOOST_FAIL("Unexpected interpolation type");
@@ -363,6 +376,10 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
             ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 3) {
+            ovs = createOvs<Linear, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 4) {
+            ovs = createOvs<Linear, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
@@ -372,6 +389,10 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
             ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 3) {
+            ovs = createOvs<BackwardFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 4) {
+            ovs = createOvs<BackwardFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
@@ -381,6 +402,36 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
             ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
             ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 3) {
+            ovs = createOvs<LinearFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 4) {
+            ovs = createOvs<LinearFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else {
+            BOOST_FAIL("Unexpected smile interpolation type");
+        }
+        break;
+    case 3:
+        if (smileInterp.which() == 0) {
+            ovs = createOvs<Cubic, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 2) {
+            ovs = createOvs<Cubic, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 3) {
+            ovs = createOvs<Cubic, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 4) {
+            ovs = createOvs<Cubic, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else {
+            BOOST_FAIL("Unexpected smile interpolation type");
+        }
+        break;
+    case 4:
+        if (smileInterp.which() == 0) {
+            ovs = createOvs<CubicFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 2) {
+            ovs = createOvs<CubicFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 3) {
+            ovs = createOvs<CubicFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+        } else if (smileInterp.which() == 4) {
+            ovs = createOvs<CubicFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
