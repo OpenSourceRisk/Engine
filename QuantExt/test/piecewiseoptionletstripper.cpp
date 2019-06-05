@@ -27,11 +27,13 @@
 
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
+#include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -119,6 +121,9 @@ vector<bool> flatFirstPeriodValues = list_of(true)(false);
 // If the built optionlet structure in the test has a floating or fixed reference date
 vector<bool> isMovingValues = list_of(true)(false);
 
+// Whether or not to try to add ATM values to the surface stripping
+vector<bool> addAtmValues = list_of(true)(false);
+
 // The interpolation method on the cap floor term volatility surface
 vector<TermVolSurface::InterpolationMethod> vsInterpMethods = 
     list_of(TermVolSurface::BicubicSpline)(TermVolSurface::Bilinear);
@@ -145,7 +150,8 @@ string to_string(const InterpolationType& interpolationType) {
 // Create the OptionletVolatilityStructure using a PiecewiseOptionletStripper
 template <class TI, class SI>
 Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
-    bool flatFirstPeriod, bool isMoving, TermVolSurface::InterpolationMethod vsInterpMethod) {
+    bool flatFirstPeriod, bool isMoving, TermVolSurface::InterpolationMethod vsInterpMethod,
+    bool withAtm) {
 
     // Another instance of CommonVars - works but a bit inefficient
     CommonVars vars;
@@ -176,12 +182,40 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
         cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, vars.accuracy, flatFirstPeriod, 
         volatilityType, displacement, ovType);
 
+    // If true, we overlay ATM volatilities
+    if (withAtm) {
+        
+        boost::shared_ptr<CapFloorTermVolCurve> atmVolCurve;
+        
+        if (volatilityType == Normal) {
+            if (isMoving) {
+                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays, vars.calendar, 
+                    vars.bdc, vars.testVols.atmTenors, vars.testVols.nAtmVols, vars.dayCounter);
+            } else {
+                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.referenceDate, vars.calendar,
+                    vars.bdc, vars.testVols.atmTenors, vars.testVols.nAtmVols, vars.dayCounter);
+            }
+        } else {
+            if (isMoving) {
+                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays, vars.calendar,
+                    vars.bdc, vars.testVols.atmTenors, vars.testVols.slnAtmVols_1, vars.dayCounter);
+            } else {
+                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.referenceDate, vars.calendar,
+                    vars.bdc, vars.testVols.atmTenors, vars.testVols.slnAtmVols_1, vars.dayCounter);
+            }
+        }
+        
+        Handle<CapFloorTermVolCurve> atmVolCurveH(atmVolCurve);
+        pwos = boost::make_shared<OptionletStripperWithAtm<TI, SI>>(
+            pwos, atmVolCurveH, vars.testYieldCurves.discountEonia, volatilityType, displacement);
+    }
+
     // Create the OptionletVolatilityStructure
     boost::shared_ptr<OptionletVolatilityStructure> ovs;
     if (isMoving) {
-        ovs = boost::make_shared<StrippedOptionletAdapter<TI, SI> >(pwos);
+        ovs = boost::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(pwos);
     } else {
-        ovs = boost::make_shared<StrippedOptionletAdapter<TI, SI> >(vars.referenceDate, pwos);
+        ovs = boost::make_shared<QuantExt::StrippedOptionletAdapter<TI, SI> >(vars.referenceDate, pwos);
     }
 
     return Handle<OptionletVolatilityStructure>(ovs);
@@ -306,8 +340,9 @@ BOOST_AUTO_TEST_SUITE(PiecewiseOptionletStripperTests)
 
 BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping, 
     bdata::make(volatilityTypes) * bdata::make(timeInterpolationTypes) * bdata::make(smileInterpolationTypes) * 
-    bdata::make(flatFirstPeriodValues) * bdata::make(isMovingValues) * bdata::make(vsInterpMethods),
-    volatilityType, timeInterp, smileInterp, flatFirstPeriod, isMoving, vsInterpMethod) {
+    bdata::make(flatFirstPeriodValues) * bdata::make(isMovingValues) * bdata::make(vsInterpMethods) * 
+    bdata::make(addAtmValues), volatilityType, timeInterp, smileInterp, flatFirstPeriod,
+    isMoving, vsInterpMethod, addAtm) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor surface");
 
@@ -318,33 +353,34 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
     BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
     BOOST_TEST_MESSAGE("  Cap floor term interpolation: " << vsInterpMethod);
+    BOOST_TEST_MESSAGE("  Add in ATM curve: " << boolalpha << addAtm);
 
     // Create the piecewise optionlet stripper from the surface and wrap in an adapter
     Handle<OptionletVolatilityStructure> ovs;
     switch (timeInterp.which()) {
     case 0:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 1:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 2:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod);
+            ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
@@ -359,6 +395,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     boost::shared_ptr<CapFloor> capFloor;
 
     for (Size i = 0; i < testVols.tenors.size(); i++) {
+        
         for (Size j = 0; j < testVols.strikes.size(); j++) {
             
             // Create the OTM cap floor instrument that we will price
@@ -394,6 +431,43 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
                 ", " << flatNpv << ", " << strippedNpv << ", " << diff << ")");
         }
     }
+
+    // If we have added in ATM, test the ATM value also
+    if (addAtm) {
+
+        for (Size i = 0; i < testVols.atmTenors.size(); i++) {
+
+            // Create the ATM cap (with a dummy strike first)
+            capFloor = MakeCapFloor(CapFloor::Cap, testVols.atmTenors[i], iborIndex, 0.01);
+            Rate atm = capFloor->atmRate(**discount);
+            capFloor = MakeCapFloor(CapFloor::Cap, testVols.atmTenors[i], iborIndex, atm);
+
+            // Price the instrument using the flat term volatility
+            Volatility flatVol;
+            if (volatilityType == ShiftedLognormal) {
+                flatVol = testVols.slnAtmVols_1[i];
+                capFloor->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                    discount, flatVol, dayCounter, testVols.shift_1));
+            } else {
+                flatVol = testVols.nAtmVols[i];
+                capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                    discount, flatVol, dayCounter));
+            }
+            Real flatNpv = capFloor->NPV();
+
+            // Price the instrument using the stripped (Normal) optionlet surface
+            capFloor->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(discount, ovs));
+            Real strippedNpv = capFloor->NPV();
+
+            // Check that the difference is within the tolerance
+            Real diff = fabs(flatNpv - strippedNpv);
+            BOOST_CHECK_SMALL(diff, tolerance);
+
+            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
+                capFloor->type() << ", " << testVols.atmTenors[i] << ", ATM [" << atm << "], " << flatVol <<
+                ", " << flatNpv << ", " << strippedNpv << ", " << diff << ")");
+        }
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
@@ -404,7 +478,8 @@ BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
     Real shift = 0.001;
 
     // Pick one configuration and check that extrapolation works as expected
-    Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(Normal, true, false, TermVolSurface::Bilinear);
+    Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(
+        Normal, true, false, TermVolSurface::Bilinear, false);
 
     // Boundaries
     Date maxDate = ovs->maxDate();
@@ -480,7 +555,7 @@ BOOST_FIXTURE_TEST_CASE(testCachedLinearFlat, CommonVars) {
 
     // Create the OptionletVolatilityStructure
     Handle<OptionletVolatilityStructure> ovs = Handle<OptionletVolatilityStructure>(
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(referenceDate, pwos));
+        boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(referenceDate, pwos));
     ovs->enableExtrapolation();
 
     // Check optionlet fixing dates against cached fixing dates
