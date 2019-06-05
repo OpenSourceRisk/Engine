@@ -698,23 +698,6 @@
     </xs:all>
   </xs:complexType>
 
-  <xs:complexType name="nameData">
-    <xs:all>
-      <xs:element type="xs:string" name="IssuerId"/>
-      <xs:element type="xs:string" name="Qualifier"/>
-      <xs:element type="xs:string" name="CreditCurveId"/>
-      <xs:element type="xs:float" name="Notional"/>
-      <xs:element type="currencyCode" name="Currency"/>
-    </xs:all>
-  </xs:complexType>
-
-  <xs:complexType name="basketData">
-    <xs:sequence>
-      <xs:element type="nameData" name="Name" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-
->>>>>>> origin/master
   <xs:simpleType name="tradeActionType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="Break"/>
