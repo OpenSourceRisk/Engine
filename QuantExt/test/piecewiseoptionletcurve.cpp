@@ -31,6 +31,7 @@
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
+#include <ql/time/date.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -62,7 +63,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
           bdc(Following),
           dayCounter(Actual365Fixed()),
           accuracy(1.0e-12),
-          tolerance(1.0e-10) {
+          tolerance(1.0e-11) {
         
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
@@ -169,9 +170,19 @@ vector<CapFloorHelper::Type> helperTypes = list_of(CapFloorHelper::Cap)
 vector<CapFloorHelper::QuoteType> quoteTypes = list_of(CapFloorHelper::Volatility)(CapFloorHelper::Premium);
 
 // Interpolation types for the data driven test case
-typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat> InterpolationType;
+typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat, Cubic, QuantExt::CubicFlat> InterpolationType;
 
 vector<InterpolationType> interpolationTypes = list_of
+    (InterpolationType(Linear()))
+    (InterpolationType(BackwardFlat()))
+    (InterpolationType(QuantExt::LinearFlat()));
+
+// Lots of failures when we include Cubic and CubicFlat. We get good convergence but the global exit condition in 
+// IterativeBootstrap<Curve>::calculate() is not satisfied before max iterations are hit.
+//     (InterpolationType(Cubic()))
+//     (InterpolationType(QuantExt::CubicFlat()));
+
+vector<InterpolationType> interpolationTypesCached = list_of
     (InterpolationType(Linear()))
     (InterpolationType(BackwardFlat()))
     (InterpolationType(QuantExt::LinearFlat()));
@@ -194,6 +205,12 @@ string to_string(const InterpolationType& interpolationType) {
         break;
     case 2:
         result = "LinearFlat";
+        break;
+    case 3:
+        result = "Cubic";
+        break;
+    case 4:
+        result = "CubicFlat";
         break;
     default:
         BOOST_FAIL("Unexpected interpolation type");
@@ -320,7 +337,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             flatNpvs[i] = instruments[i]->NPV();
 
             BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Volatility, Flat NPV) = (" << capFloorType << ", " << 
-                volatilityColumn.tenors[i] << ", " << volatility << ", " << flatNpvs[i] << ")");
+                volatilityColumn.tenors[i] << ", " << fixed << setprecision(13) << volatility << ", " << flatNpvs[i] << ")");
 
             // Create a volatility or premium quote
             RelinkableHandle<Quote> quote;
@@ -373,6 +390,28 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
                     referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
             }
             break;
+        case 3:
+            if (isMoving) {
+                BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+            } else {
+                BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<Cubic> >(
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+            }
+            break;
+        case 4:
+            if (isMoving) {
+                BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    settlementDays, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+            } else {
+                BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
+                BOOST_REQUIRE_NO_THROW(ovCurve = boost::make_shared<PiecewiseOptionletCurve<CubicFlat> >(
+                    referenceDate, helpers, calendar, bdc, dayCounter, curveVolatilityType, curveDisplacement, flatFirstPeriod, accuracy));
+            }
+            break;
         default:
             BOOST_FAIL("Unexpected interpolation type");
         }
@@ -412,8 +451,9 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             strippedNpv = instruments[i]->NPV();
 
             BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-                instruments[i]->type() << ", " << volatilityColumn.tenors[i] << ", " << volatilityColumn.volatilities[i] <<
-                ", " << flatNpvs[i] << ", " << strippedNpv << ", " << (flatNpvs[i] - strippedNpv) << ")");
+                instruments[i]->type() << ", " << volatilityColumn.tenors[i] << ", " << fixed << setprecision(13) << 
+                volatilityColumn.volatilities[i] << ", " << flatNpvs[i] << ", " << strippedNpv << ", " << 
+                (flatNpvs[i] - strippedNpv) << ")");
 
             BOOST_CHECK_SMALL(fabs(flatNpvs[i] - strippedNpv), tolerance);
         }
@@ -421,7 +461,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
 }
 
 BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
-    bdata::make(interpolationTypes) * bdata::make(flatFirstPeriodValues), 
+    bdata::make(interpolationTypesCached) * bdata::make(flatFirstPeriodValues),
     interpolationType, flatFirstPeriod) {
 
     BOOST_TEST_MESSAGE("Testing stripping of single strike column against cached values");
