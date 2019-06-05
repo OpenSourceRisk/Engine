@@ -3,9 +3,7 @@
 
 The \lstinline!FloatingLegData! trade component node is used within the \lstinline!LegData! trade component when the
 \lstinline!LegType! element is set to \emph{Floating}. It is also used directly within the \lstinline!CapFloor! trade
-data container.  The \lstinline!FloatingLegData! node includes elements specific to a floating leg as well as the
-\lstinline!Spreads! sub-node which contains the spreads of the floating leg as child elements of type
-\lstinline!Spread!.
+data container.  The \lstinline!FloatingLegData! node includes elements specific to a floating leg.
 
 An example of a \lstinline!FloatingLegData! node is shown in Listing \ref{lst:floatingleg_data}.
 \begin{listing}[H]
@@ -72,7 +70,7 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 \item FixingDays [Optional]: This is the fixing gap, i.e. the number of days
   before the period end date an index fixing is taken.   
 
-Allowable values:  Positive integers.  Defaults to \emph{0} if left blank or omitted.
+Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
 
 \item Spreads: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the

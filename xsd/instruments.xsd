@@ -204,27 +204,13 @@
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element type="indexNameType" name="Index"/>
-        <xs:element type="xs:boolean" name="IsInArrears"/>
-        <xs:element type="xs:integer" name="FixingDays"/>
-        <xs:element type="xs:boolean" name="IsAveraged"/>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:boolean" name="IsAveraged" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="HasSubPeriods" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IncludeSpread" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="IsNotResettingXCCY" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Spreads">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element name="Spread" minOccurs="0" maxOccurs="unbounded">
-                <xs:complexType>
-                  <xs:simpleContent>
-                    <xs:extension base="xs:float">
-                      <xs:attribute name="startDate" type="xs:string" />
-                    </xs:extension>
-                  </xs:simpleContent>
-                </xs:complexType>
-              </xs:element>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
@@ -265,13 +251,7 @@
         <xs:element type="xs:integer" name="FixingDays" maxOccurs="1"/>
         <xs:element type="xs:string" name="ObservationLag" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
-        <xs:element name="Spreads" minOccurs="0" maxOccurs="1">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element type="xs:float" name="Spread" minOccurs="0" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="xs:boolean" name="NakedOption" minOccurs="0" maxOccurs="1"/>
@@ -282,15 +262,9 @@
     <xs:complexType>
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element type="indexNameType" name="Index"/>
-        <xs:element type="xs:boolean" name="IsInArrears"/>
-        <xs:element type="xs:integer" name="FixingDays"/>
-        <xs:element name="Spreads">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
@@ -303,15 +277,9 @@
       <xs:choice maxOccurs="unbounded" minOccurs="0">
         <xs:element type="indexNameType" name="Index1"/>
         <xs:element type="indexNameType" name="Index2"/>
-        <xs:element type="xs:boolean" name="IsInArrears"/>
-        <xs:element type="xs:integer" name="FixingDays"/>
-        <xs:element name="Spreads">
-          <xs:complexType>
-            <xs:sequence>
-              <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
-            </xs:sequence>
-          </xs:complexType>
-        </xs:element>
+        <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+        <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
         <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
         <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
         <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
@@ -327,15 +295,9 @@
             <xs:choice maxOccurs="unbounded" minOccurs="0">
               <xs:element type="indexNameType" name="Index1"/>
               <xs:element type="indexNameType" name="Index2"/>
-              <xs:element type="xs:boolean" name="IsInArrears"/>
-              <xs:element type="xs:integer" name="FixingDays"/>
-              <xs:element name="Spreads">
-                <xs:complexType>
-                  <xs:sequence>
-                    <xs:element type="xs:float" name="Spread" maxOccurs="unbounded"/>
-                  </xs:sequence>
-                </xs:complexType>
-              </xs:element>
+              <xs:element type="xs:boolean" name="IsInArrears" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="xs:integer" name="FixingDays" minOccurs="0" maxOccurs="1"/>
+              <xs:element type="spreads" name="Spreads" minOccurs="0" maxOccurs="1"/>
               <xs:element type="caps" name="Caps" minOccurs="0" maxOccurs="1"/>
               <xs:element type="floors" name="Floors" minOccurs="0" maxOccurs="1"/>
               <xs:element type="gearings" name="Gearings" minOccurs="0" maxOccurs="1"/>
@@ -716,25 +678,31 @@
 
   <xs:complexType name="caps">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Cap" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="floatWithAttribute" name="Cap" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="floors">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Floor" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="floatWithAttribute" name="Floor" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="spreads">
+    <xs:sequence>
+      <xs:element type="floatWithAttribute" name="Spread" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="gearings">
     <xs:sequence>
-      <xs:element type="withAttribute" name="Gearing" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element type="floatWithAttribute" name="Gearing" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="withAttribute">
+  <xs:complexType name="floatWithAttribute">
     <xs:simpleContent>
-      <xs:extension base="xs:string">
+      <xs:extension base="xs:float">
         <xs:attribute name="startDate" type="xs:string">
         </xs:attribute>
       </xs:extension>

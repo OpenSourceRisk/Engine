@@ -26,8 +26,8 @@ namespace data {
 void OptionData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, "OptionData");
     longShort_ = XMLUtils::getChildValue(node, "LongShort", true);
-    callPut_ = XMLUtils::getChildValue(node, "OptionType", true);
-    style_ = XMLUtils::getChildValue(node, "Style");
+    callPut_ = XMLUtils::getChildValue(node, "OptionType", false);
+    style_ = XMLUtils::getChildValue(node, "Style", false);
     noticePeriod_ = XMLUtils::getChildValue(node, "NoticePeriod", false);
     settlement_ = XMLUtils::getChildValue(node, "Settlement", false);
     settlementMethod_ = XMLUtils::getChildValue(node, "SettlementMethod", false);
@@ -37,14 +37,16 @@ void OptionData::fromXML(XMLNode* node) {
     premiumPayDate_ = XMLUtils::getChildValue(node, "PremiumPayDate", false);
     exerciseFees_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExerciseFees", "ExerciseFee", false);
     exercisePrices_ = XMLUtils::getChildrenValuesAsDoubles(node, "ExercisePrices", "ExercisePrice", false);
-    exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate");
+    exerciseDates_ = XMLUtils::getChildrenValues(node, "ExerciseDates", "ExerciseDate", false);
 }
 
 XMLNode* OptionData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("OptionData");
     XMLUtils::addChild(doc, node, "LongShort", longShort_);
-    XMLUtils::addChild(doc, node, "OptionType", callPut_);
-    XMLUtils::addChild(doc, node, "Style", style_);
+    if(callPut_ != "")
+        XMLUtils::addChild(doc, node, "OptionType", callPut_);
+    if(style_ != "")
+        XMLUtils::addChild(doc, node, "Style", style_);
     XMLUtils::addChild(doc, node, "NoticePeriod", noticePeriod_);
     if (settlement_ != "")
         XMLUtils::addChild(doc, node, "Settlement", settlement_);

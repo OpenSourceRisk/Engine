@@ -162,9 +162,9 @@ private:
 class FloatingLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
+    FloatingLegData() : LegAdditionalData("Floating"), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
-    FloatingLegData(const string& index, QuantLib::Natural fixingDays, bool isInArrears, const vector<double>& spreads,
+    FloatingLegData(const string& index, QuantLib::Size fixingDays, bool isInArrears, const vector<double>& spreads,
                     const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                     const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                     const vector<string>& floorDates = vector<string>(),
@@ -181,7 +181,7 @@ public:
     //! \name Inspectors
     //@{
     const string& index() const { return index_; }
-    QuantLib::Natural fixingDays() const { return fixingDays_; }
+    QuantLib::Size fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
     bool hasSubPeriods() const { return hasSubPeriods_; }
@@ -204,7 +204,7 @@ public:
     //@}
 private:
     string index_;
-    QuantLib::Natural fixingDays_;
+    QuantLib::Size fixingDays_;
     bool isInArrears_;
     bool isAveraged_;
     bool hasSubPeriods_;
@@ -334,9 +334,9 @@ private:
 class CMSLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMSLegData() : LegAdditionalData("CMS"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
+    CMSLegData() : LegAdditionalData("CMS"), fixingDays_(Null<Size>()), isInArrears_(true), nakedOption_(false) {}
     //! Constructor
-    CMSLegData(const string& swapIndex, int fixingDays, bool isInArrears, const vector<double>& spreads,
+    CMSLegData(const string& swapIndex, Size fixingDays, bool isInArrears, const vector<double>& spreads,
                const vector<string>& spreadDates = vector<string>(), const vector<double>& caps = vector<double>(),
                const vector<string>& capDates = vector<string>(), const vector<double>& floors = vector<double>(),
                const vector<string>& floorDates = vector<string>(), const vector<double>& gearings = vector<double>(),
@@ -350,7 +350,7 @@ public:
     //! \name Inspectors
     //@{
     const string& swapIndex() const { return swapIndex_; }
-    int fixingDays() const { return fixingDays_; }
+    Size fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
@@ -370,7 +370,7 @@ public:
     //@}
 private:
     string swapIndex_;
-    int fixingDays_;
+    Size fixingDays_;
     bool isInArrears_;
     vector<double> spreads_;
     vector<string> spreadDates_;
@@ -390,9 +390,9 @@ private:
 class CMSSpreadLegData : public LegAdditionalData {
 public:
     //! Default constructor
-    CMSSpreadLegData() : LegAdditionalData("CMSSpread"), fixingDays_(0), isInArrears_(true), nakedOption_(false) {}
+    CMSSpreadLegData() : LegAdditionalData("CMSSpread"), fixingDays_(Null<Size>()), isInArrears_(false), nakedOption_(false) {}
     //! Constructor
-    CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, int fixingDays, bool isInArrears,
+    CMSSpreadLegData(const string& swapIndex1, const string& swapIndex2, Size fixingDays, bool isInArrears,
                      const vector<double>& spreads, const vector<string>& spreadDates = vector<string>(),
                      const vector<double>& caps = vector<double>(), const vector<string>& capDates = vector<string>(),
                      const vector<double>& floors = vector<double>(),
@@ -411,7 +411,7 @@ public:
     //@{
     const string& swapIndex1() const { return swapIndex1_; }
     const string& swapIndex2() const { return swapIndex2_; }
-    int fixingDays() const { return fixingDays_; }
+    Size fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
@@ -432,7 +432,7 @@ public:
 private:
     string swapIndex1_;
     string swapIndex2_;
-    int fixingDays_;
+    Size fixingDays_;
     bool isInArrears_;
     vector<double> spreads_;
     vector<string> spreadDates_;
