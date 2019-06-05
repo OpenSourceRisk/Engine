@@ -110,7 +110,7 @@ public:
 
     //! YoY Inflation CapFloor volatilities
     Handle<QuantExt::YoYOptionletVolatilitySurface>
-    yoyCapFloorVol(const string& ccy, const string& configuration = Market::defaultConfiguration) const;
+    yoyCapFloorVol(const string& name, const string& configuration = Market::defaultConfiguration) const;
 
     //! Inflation Indexes
     virtual Handle<ZeroInflationIndex>

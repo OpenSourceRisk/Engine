@@ -175,7 +175,7 @@ Handle<OptionletVolatilityStructure> MarketImpl::capFloorVol(const string& key, 
 Handle<QuantExt::YoYOptionletVolatilitySurface> MarketImpl::yoyCapFloorVol(const string& key,
                                                                            const string& configuration) const {
     return lookup<Handle<QuantExt::YoYOptionletVolatilitySurface>>(yoyCapFloorVolSurfaces_, key, configuration,
-                                                                   "capfloor curve");
+                                                                   "yoy inflation capfloor curve");
 }
 
 Handle<ZeroInflationIndex> MarketImpl::zeroInflationIndex(const string& indexName, const string& configuration) const {

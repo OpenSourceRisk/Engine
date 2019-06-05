@@ -34,37 +34,109 @@
 namespace ore {
 namespace data {
 
-//! Engine Builder base class for Credit Default Swaps
-/*! Pricing engines are cached by creditCurveId
- \ingroup builders
-*/
+/*! This class provides a key with which we will cache the CDS engine builders
 
-class CreditDefaultSwapEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const string&> {
+    In general, the CDS engine builders will be cached by the credit curve Id of the reference entity. If we are 
+    caching by credit curve Id only, the recovery rate member should be \c Null<Real>().
+    
+    In some cases, for fixed recovery CDS trades for example, we need to cache the CDS engine builder not only by 
+    credit curve Id but also with an exogenous recovery rate that we wish to use instead of the market supplied 
+    recovery rate.
+*/
+class CDSEngineKey {
+public:
+    //! Constructor that takes a credit curve Id, \p creditCurveId, and optionally a recovery rate, \p recoveryRate.
+    CDSEngineKey(const std::string& creditCurveId, QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>())
+        : creditCurveId_(creditCurveId), recoveryRate_(recoveryRate) {}
+
+    //! Return the credit curve Id
+    const std::string& creditCurveId() const { return creditCurveId_; }
+
+    //! Return the recovery rate if it is set, otherwise \c Null<Real>()
+    QuantLib::Real recoveryRate() const { return recoveryRate_; }
+
+private:
+    std::string creditCurveId_;
+    QuantLib::Real recoveryRate_;
+};
+
+inline bool operator==(const CDSEngineKey& lhs, const CDSEngineKey& rhs) {
+    
+    // Check the credit curve IDs first
+    if (lhs.creditCurveId() != rhs.creditCurveId())
+        return false;
+
+    // Now check recovery rates.
+    if (lhs.recoveryRate() == QuantLib::Null<QuantLib::Real>() && rhs.recoveryRate() == QuantLib::Null<QuantLib::Real>()) {
+        // Most usual case is both are Null<Real> and using the recovery rate from the market.
+        return true;
+    } else if ((lhs.recoveryRate() != QuantLib::Null<QuantLib::Real>() && rhs.recoveryRate() == QuantLib::Null<QuantLib::Real>()) ||
+        (lhs.recoveryRate() == QuantLib::Null<QuantLib::Real>() && rhs.recoveryRate() != QuantLib::Null<QuantLib::Real>())) {
+        return false;
+    } else {
+        return QuantLib::close(lhs.recoveryRate(), rhs.recoveryRate());
+    }
+
+}
+
+inline bool operator<(const CDSEngineKey& lhs, const CDSEngineKey& rhs) {
+
+    // Check equality first
+    if (lhs == rhs)
+        return false;
+
+    // Now check credit curve Ids.
+    if (lhs.creditCurveId() != rhs.creditCurveId())
+        return lhs.creditCurveId() < rhs.creditCurveId();
+
+    // Now use the recovery rates
+    return lhs.recoveryRate() < rhs.recoveryRate();
+}
+
+inline bool operator!=(const CDSEngineKey& lhs, const CDSEngineKey& rhs) { return !(lhs == rhs); }
+inline bool operator>(const CDSEngineKey& lhs, const CDSEngineKey& rhs) { return  rhs < lhs; }
+inline bool operator<=(const CDSEngineKey& lhs, const CDSEngineKey& rhs) { return !(lhs > rhs); }
+inline bool operator>=(const CDSEngineKey& lhs, const CDSEngineKey& rhs) { return !(lhs < rhs); }
+
+//! Engine builder base class for credit default swaps
+/*! Pricing engines are cached by CDSEngineKey
+    \ingroup builders
+*/
+class CreditDefaultSwapEngineBuilder : 
+    public CachingPricingEngineBuilder<CDSEngineKey, QuantLib::Currency, std::string, QuantLib::Real> {
+
 protected:
     CreditDefaultSwapEngineBuilder(const std::string& model, const std::string& engine)
         : CachingEngineBuilder(model, engine, {"CreditDefaultSwap"}) {}
 
-    virtual string keyImpl(const Currency&, const string& creditCurveId) override { return creditCurveId; }
+    CDSEngineKey keyImpl(QuantLib::Currency, std::string creditCurveId,
+        QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override { 
+        return CDSEngineKey(creditCurveId, recoveryRate);
+    }
 };
 
-//! Midpoint Engine Builder class for CreditDefaultSwaps
+//! Midpoint engine builder class for credit default swaps
 /*! This class creates a MidPointCdsEngine
- \ingroup builders
+    \ingroup builders
 */
-
 class MidPointCdsEngineBuilder : public CreditDefaultSwapEngineBuilder {
 public:
     MidPointCdsEngineBuilder() : CreditDefaultSwapEngineBuilder("DiscountedCashflows", "MidPointCdsEngine") {}
 
 protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& ccy, const string& creditCurveId) override {
+    boost::shared_ptr<PricingEngine> engineImpl(QuantLib::Currency ccy, std::string creditCurveId,
+        QuantLib::Real recoveryRate = QuantLib::Null<QuantLib::Real>()) override {
 
-        Handle<YieldTermStructure> yts = market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
-        Handle<DefaultProbabilityTermStructure> dpts =
-            market_->defaultCurve(creditCurveId, configuration(MarketContext::pricing));
-        Handle<Quote> recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
+        auto cfg = configuration(MarketContext::pricing);
+        auto yts = market_->discountCurve(ccy.code(), cfg);
+        auto dpts = market_->defaultCurve(creditCurveId, cfg);
 
-        return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts, recovery->value(), yts);
+        if (recoveryRate == QuantLib::Null<QuantLib::Real>()) {
+            // If recovery rate is null, get it from the market for the given reference entity
+            recoveryRate = market_->recoveryRate(creditCurveId, cfg)->value();
+        }
+
+        return boost::make_shared<QuantExt::MidPointCdsEngine>(dpts, recoveryRate, yts);
     }
 };
 

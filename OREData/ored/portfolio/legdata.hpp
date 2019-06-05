@@ -170,11 +170,11 @@ public:
                     const vector<string>& floorDates = vector<string>(),
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
-                    bool nakedOption = false)
+                    bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false)
         : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears),
-          isAveraged_(isAveraged), spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
-          floors_(floors), floorDates_(floorDates), gearings_(gearings), gearingDates_(gearingDates),
-          nakedOption_(nakedOption) {
+          isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
+          spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
+          gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -184,6 +184,8 @@ public:
     QuantLib::Natural fixingDays() const { return fixingDays_; }
     bool isInArrears() const { return isInArrears_; }
     bool isAveraged() const { return isAveraged_; }
+    bool hasSubPeriods() const { return hasSubPeriods_; }
+    bool includeSpread() const { return includeSpread_; }
     const vector<double>& spreads() const { return spreads_; }
     const vector<string>& spreadDates() const { return spreadDates_; }
     const vector<double>& caps() const { return caps_; }
@@ -205,6 +207,8 @@ private:
     QuantLib::Natural fixingDays_;
     bool isInArrears_;
     bool isAveraged_;
+    bool hasSubPeriods_;
+    bool includeSpread_;
     vector<double> spreads_;
     vector<string> spreadDates_;
     vector<double> caps_;
@@ -273,10 +277,16 @@ public:
                const vector<double>& gearings = std::vector<double>(),
                const vector<string>& gearingDates = std::vector<string>(),
                const vector<double>& spreads = std::vector<double>(),
-               const vector<string>& spreadDates = std::vector<string>())
+               const vector<string>& spreadDates = std::vector<string>(),
+               const vector<double>& caps = vector<double>(),
+               const vector<string>& capDates = vector<string>(),
+               const vector<double>& floors = vector<double>(),
+               const vector<string>& floorDates = vector<string>(),
+               bool nakedOption = false)
         : LegAdditionalData("YY"), index_(index), observationLag_(observationLag),
-          fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates), spreads_(spreads),
-          spreadDates_(spreadDates) {
+          fixingDays_(fixingDays), gearings_(gearings), gearingDates_(gearingDates),
+          spreads_(spreads), spreadDates_(spreadDates), caps_(caps), capDates_(capDates),
+          floors_(floors), floorDates_(floorDates), nakedOption_(nakedOption) {
         indices_.insert(index_);
     }
 
@@ -289,6 +299,11 @@ public:
     const std::vector<string>& gearingDates() const { return gearingDates_; }
     const std::vector<double>& spreads() const { return spreads_; }
     const std::vector<string>& spreadDates() const { return spreadDates_; }
+    const vector<double>& caps() const { return caps_; }
+    const vector<string>& capDates() const { return capDates_; }
+    const vector<double>& floors() const { return floors_; }
+    const vector<string>& floorDates() const { return floorDates_; }
+    bool nakedOption() const { return nakedOption_; }
     //@}
 
     //! \name Serialisation
@@ -305,6 +320,11 @@ private:
     vector<string> gearingDates_;
     vector<double> spreads_;
     vector<string> spreadDates_;
+    vector<double> caps_;
+    vector<string> capDates_;
+    vector<double> floors_;
+    vector<string> floorDates_;
+    bool nakedOption_;
 };
 
 //! Serializable CMS Leg Data
@@ -671,7 +691,8 @@ Leg makeBMALeg(const LegData& data, const boost::shared_ptr<QuantExt::BMAIndexWr
 Leg makeSimpleLeg(const LegData& data);
 Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalNomFlow, const bool amortNomFlow = true);
 Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>& index);
-Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index);
+Leg makeYoYLeg(const LegData& data, const boost::shared_ptr<YoYInflationIndex>& index,
+               const boost::shared_ptr<EngineFactory>& engineFactory);
 Leg makeCMSLeg(const LegData& data, const boost::shared_ptr<QuantLib::SwapIndex>& swapindex,
                const boost::shared_ptr<EngineFactory>& engineFactory, const vector<double>& caps = vector<double>(),
                const vector<double>& floors = vector<double>(), const bool attachPricer = true);

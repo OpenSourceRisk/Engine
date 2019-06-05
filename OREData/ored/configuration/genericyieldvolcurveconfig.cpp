@@ -199,7 +199,8 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(rootNodeLabel_);
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    XMLUtils::addChild(doc, node, qualifierLabel_, qualifier_);
+    if(qualifierLabel_ != "")
+        XMLUtils::addChild(doc, node, qualifierLabel_, qualifier_);
 
     if (dimension_ == Dimension::ATM) {
         XMLUtils::addChild(doc, node, "Dimension", "ATM");
@@ -224,12 +225,11 @@ XMLNode* GenericYieldVolatilityCurveConfig::toXML(XMLDocument& doc) {
         extr_str = "None";
     XMLUtils::addChild(doc, node, "Extrapolation", extr_str);
 
-    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
-    XMLUtils::addGenericChildAsList(doc, node, underlyingLabel_ + "Tenors", underlyingTenors_);
-    XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));
+    XMLUtils::addGenericChildAsList(doc, node, "OptionTenors", optionTenors_);
+    XMLUtils::addGenericChildAsList(doc, node, underlyingLabel_ + "Tenors", underlyingTenors_);
 
     if (requireSwapIndexBases_ || dimension_ == Dimension::Smile) {
         XMLUtils::addChild(doc, node, "ShortSwapIndexBase", shortSwapIndexBase_);

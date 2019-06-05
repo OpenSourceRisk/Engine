@@ -359,7 +359,7 @@
           </xs:sequence>
         </xs:complexType>
       </xs:element>
-      <xs:element name="Indices">
+      <xs:element name="Indices" maxOccurs="1" minOccurs="0">
         <xs:complexType>
           <xs:sequence>
             <xs:element type="indexNameType" name="Index" maxOccurs="unbounded" minOccurs="0"/>

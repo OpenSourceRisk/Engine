@@ -50,6 +50,7 @@
 #include <qle/indexes/ibor/hkdhibor.hpp>
 #include <qle/indexes/ibor/hufbubor.hpp>
 #include <qle/indexes/ibor/idridrfix.hpp>
+#include <qle/indexes/ibor/idrjibor.hpp>
 #include <qle/indexes/ibor/ilstelbor.hpp>
 #include <qle/indexes/ibor/inrmifor.hpp>
 #include <qle/indexes/ibor/krwcd.hpp>
@@ -108,6 +109,21 @@ public:
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
         } else {
             return boost::make_shared<MXNTiie>(p, h);
+        }
+    }
+};
+
+// Specialise for KRW-CD. If tenor equates to 91 Days, ensure that the index is created
+// with a tenor of 3M under the hood.
+template <> class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
+        if (p.units() == Days && p.length() == 91) {
+            return boost::make_shared<KRWCd>(3 * Months, h);
+        }
+        else {
+            return boost::make_shared<KRWCd>(p, h);
         }
     }
 };
@@ -219,6 +235,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>()},
         {"HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>()},
         {"IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>()},
+        {"IDR-JIBOR", boost::make_shared<IborIndexParserWithPeriod<IDRJibor>>()},
         {"ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>()},
         {"INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>()},
         {"MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>()},
@@ -361,6 +378,14 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 
+boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": BOND-SECURITY");
+    QL_REQUIRE(tokens[0] == "BOND", "expected first token to be BOND");
+    return boost::make_shared<BondIndex>(tokens[1]);
+}
+
 boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
@@ -392,6 +417,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseEquityIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseBondIndex(s);
         } catch (...) {
         }
     }
