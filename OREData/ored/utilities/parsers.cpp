@@ -280,9 +280,6 @@ Calendar parseCalendar(const string& s, bool adjustCalendar) {
         isInitialised = true;
     }
 
-
-
-
     auto it = m.find(s);
     if (it != m.end()) {
         Calendar cal = it->second;

@@ -23,8 +23,6 @@
 
 #pragma once
 
-
-
 #include <ored/utilities/xmlutils.hpp>
 #include <map>
 #include <vector>
@@ -35,7 +33,6 @@
 #include <ql/utilities/dataparsers.hpp>
 #include <ql/patterns/singleton.hpp>
 
-
 namespace ore {
 namespace data {
 using std::string;
@@ -45,8 +42,6 @@ using std::set;
 using std::string;
 using QuantLib::Date;
 using QuantLib::Calendar; 
-
-
 
 class CalendarAdjustmentConfig : public XMLSerializable {
 public:

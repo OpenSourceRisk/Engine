@@ -247,7 +247,6 @@ void OREApp::readSetup() {
         CalendarAdjustments::instance().setConfig(calendarAdjustments);
     }
    
-
     writeInitialReports_ = true;
     simulate_ = (params_->hasGroup("simulation") && params_->get("simulation", "active") == "Y") ? true : false;
     buildSimMarket_ = true;
@@ -976,7 +975,7 @@ void OREApp::buildMarket(const std::string& todaysMarketXML, const std::string& 
                                                    continueOnError_);
     }
     LOG("Today's market built");
-    MEM_LOG;     
+    MEM_LOG;
 }
 
 boost::shared_ptr<MarketImpl> OREApp::getMarket() const {
