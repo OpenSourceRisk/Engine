@@ -239,13 +239,13 @@ void OREApp::readSetup() {
         ObservationMode::instance().setMode(om);
         LOG("Observation Mode is " << om);
     }
-    /*if (params_->has("setup", "calendarAdjustment") && params_->get("setup", "calendarAdjustment") != "") {
+    if (params_->has("setup", "calendarAdjustment") && params_->get("setup", "calendarAdjustment") != "") {
         CalendarAdjustmentConfig calendarAdjustments;
         string calendarAdjustmentFile = inputPath_ + "/" + params_->get("setup", "calendarAdjustment");
-        LOG("Load calendarAdjustment from file");
+        LOG("Load calendarAdjustment from file" << calendarAdjustmentFile);
         calendarAdjustments.fromFile(calendarAdjustmentFile);
         CalendarAdjustments::instance().setConfig(calendarAdjustments);
-    }*/
+    }
    
 
     writeInitialReports_ = true;
