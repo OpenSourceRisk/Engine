@@ -219,7 +219,6 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
     Real strike2 = strikes.front();     // lowest strike given
     Real strike3 = 1500.0;              // between strikes strike
     Real strike4 = strikes.back();      // highest strike
-    Real strike5 = strikes.back() * 2;  // larger than highest strike
 
     Real strikeNeg = -1000;
     // at reference date
@@ -236,8 +235,6 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
 
     // negative strike
     BOOST_CHECK_THROW(surface.blackVol(t, strikeNeg), QuantLib::Error);
-
-    
 }
 
 BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {

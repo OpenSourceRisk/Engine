@@ -62,6 +62,7 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
+portfolio/forwardbond.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
@@ -185,10 +186,13 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
+portfolio/forwardbond.hpp
 portfolio/builders/bond.hpp
+portfolio/builders/forwardbond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
+portfolio/builders/capflooredyoyleg.hpp
 portfolio/builders/cms.hpp
 portfolio/builders/cmsspread.hpp
 portfolio/builders/commodityforward.hpp

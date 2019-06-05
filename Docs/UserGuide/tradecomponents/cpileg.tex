@@ -1,0 +1,71 @@
+\subsubsection{CPI Leg Data}
+\label{ss:cpilegdata}
+
+Listing \ref{lst:cpilegdata} shows an example for a leg of type CPI. The CPILegData block contains the following
+elements:
+
+\begin{itemize}
+\item Index: The underlying zero inflation index.
+
+Allowable values:  Any string (provided it is the ID of an inflation index in the market configuration).
+\item Rates: The fixed real rate(s) of the leg. As usual, this can be a single value, a vector of values or a dated vector of
+  values.
+ 
+ Allowable values: Each rate element can take any  real number. The rate is
+  expressed in decimal form, e.g. 0.05 is a rate of 5\%.
+\item BaseCPI: The base CPI used to determine the lifting factor for the fixed coupons.
+
+Allowable values:  Any positive real number.
+\item ObservationLag: The observation lag to be applied.
+
+Allowable values: An integer followed by \emph{D}, \emph{W}, \emph{M} or \emph{Y}. Interpolation lags are typically expressed in \emph{M}, months.
+\item Interpolated: A flag indicating whether interpolation should be applied to inflation fixings. 
+
+Allowable values:  \emph{true, false} 
+\item SubtractInflationNotional [Optional]: A flag indicating whether the non-inflation adjusted notional amount should be subtracted from the the final inflation-adjusted notional exchange at maturity.  Note that the final coupon payment is not affected by this flag. \\ Final notional payment if \emph{true}: $N \frac{CPI_T}{CPI_Base}-N$. \\ If  \emph{false}: $N \frac{CPI_T}{CPI_Base}$ 
+
+Allowable values:  \emph{true, false} 
+\\Defaults to \emph{false}  if left blank or omitted.
+\end{itemize} 
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        <Currency>GBP</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-07-18</StartDate>
+            <EndDate>2021-07-18</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>UK</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <CPILegData>
+          <Index>UKRPI</Index>
+          <Rates>
+            <Rate>0.02</Rate>
+          </Rates>
+          <BaseCPI>210</BaseCPI>
+          <ObservationLag>2M</ObservationLag>
+          <Interpolated>false</Interpolated>
+        </CPILegData>
+      </LegData>
+\end{minted}
+\caption{CPI leg data}
+\label{lst:cpilegdata}
+\end{listing}
+

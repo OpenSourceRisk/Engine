@@ -113,6 +113,21 @@ public:
     }
 };
 
+// Specialise for KRW-CD. If tenor equates to 91 Days, ensure that the index is created
+// with a tenor of 3M under the hood.
+template <> class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
+        if (p.units() == Days && p.length() == 91) {
+            return boost::make_shared<KRWCd>(3 * Months, h);
+        }
+        else {
+            return boost::make_shared<KRWCd>(p, h);
+        }
+    }
+};
+
 template <class T> class IborIndexParserOIS : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
@@ -363,6 +378,14 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
     }
 }
 
+boost::shared_ptr<BondIndex> parseBondIndex(const string& s) {
+    std::vector<string> tokens;
+    split(tokens, s, boost::is_any_of("-"));
+    QL_REQUIRE(tokens.size() == 2, "two tokens required in " << s << ": BOND-SECURITY");
+    QL_REQUIRE(tokens[0] == "BOND", "expected first token to be BOND");
+    return boost::make_shared<BondIndex>(tokens[1]);
+}
+
 boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& conventions) {
     boost::shared_ptr<QuantLib::Index> ret_idx;
     try {
@@ -394,6 +417,12 @@ boost::shared_ptr<Index> parseIndex(const string& s, const data::Conventions& co
     if (!ret_idx) {
         try {
             ret_idx = parseEquityIndex(s);
+        } catch (...) {
+        }
+    }
+    if (!ret_idx) {
+        try {
+            ret_idx = parseBondIndex(s);
         } catch (...) {
         }
     }

@@ -72,7 +72,7 @@ Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFa
     QL_REQUIRE(yyData, "Wrong LegType, expected YY");
     string inflationIndexName = yyData->index();
     auto index = *engineFactory->market()->yoyInflationIndex(inflationIndexName, configuration);
-    return makeYoYLeg(data, index);
+    return makeYoYLeg(data, index, engineFactory);
 }
 
 Leg CMSLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,

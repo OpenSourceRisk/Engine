@@ -96,6 +96,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return *creditCurveShiftData().at(name);
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
+    case RFType::YoYInflationCapFloorVolatility:
+        return yoyInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
@@ -328,6 +330,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             CurveShiftData data;
             curveShiftDataFromXML(child, data);
             yoyInflationCurveShiftData_[index] = boost::make_shared<CurveShiftData>(data);
+        }
+    }
+
+    LOG("Get yoy inflation cap/floor vol sensitivity parameters");
+    XMLNode* yoyCapVols = XMLUtils::getChildNode(node, "YYCapFloorVolatilities");
+    if (yoyCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            VolShiftData data;
+            volShiftDataFromXML(child, data);
+            yoyInflationCapFloorVolShiftData_[index] = data;
         }
     }
 
