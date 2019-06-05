@@ -642,6 +642,11 @@ public:
     const std::set<std::string>& indices() const { return indices_; }
     //@}
 
+    //! \name modifiers
+    //@{
+    bool& isPayer() { return isPayer_; }
+    //@}
+
 protected:
     virtual boost::shared_ptr<LegAdditionalData> initialiseConcreteLegData(const string&);
 
