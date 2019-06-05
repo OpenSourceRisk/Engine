@@ -78,30 +78,69 @@ namespace {
             Real target_;
     };
 
-    std::vector<CalibrationDatum> makeCalibrationData(boost::shared_ptr<PricingEngine> engine,
-                                                      const std::vector<Time>& expiries) {
+    std::vector<CalibrationDatum> makeCalibrationData(boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp,
+                                                      const std::vector<Period>& expiries,
+                                                      const std::vector<Real>& deltas) {
         QL_REQUIRE(expiries.size() > 0, "expiry list for calibration cannot be empty");
 
+        boost::shared_ptr<PricingEngine> engine = boost::make_shared<AnalyticEuropeanEngine>(gbsp);
         std::vector<CalibrationDatum> calibrationSet;
-        static std::vector<Option::Type> callOrPuts = { Option::Type::Call, Option::Type::Put };
+
+        Bisection bisection;
+        bisection.setLowerBound(0.0);
 
         for (auto expiry : expiries) {
-            auto v = makeVanillaOption({0, expiry, Option::Type::Call});
-            Real atmStrike = v->NPV();
+            
+            Time maturity = 0;
+            switch (expiry.units()) {
+                case TimeUnit::Days:
+                    maturity = days(expiry) / 365.0;
+                    break;
+                case TimeUnit::Weeks:
+                    maturity = weeks(expiry) / 365.0 * 7;
+                    break;
+                case TimeUnit::Months:
+                    maturity = months(expiry) / 12.0;
+                    break;
+                case TimeUnit::Years:
+                    maturity = years(expiry);
+                    break;
+                default:
+                    QL_FAIL("unsupported time unit in " << expiry);
+            }
 
-            static std::vector<Real> deltas = {0.10, 0.25};
-            for (auto type : callOrPuts) {
-                std::vector<Real> strikes = { atmStrike };
-                for (auto delta : deltas) {
-                    OptionDelta deltaFunc(engine, expiry, type, delta * (type == Option::Type::Call ? 1 : -1));
-                    strikes.push_back(Bisection().solve(deltaFunc, 1e-4, atmStrike, 0));
+
+            Real spot = gbsp->x0();
+
+            // ATM Call
+            auto atmCall = makeVanillaOption({spot, maturity, Option::Type::Call});
+            atmCall->setPricingEngine(engine);
+            boost::shared_ptr<Quote> quote = boost::make_shared<SimpleQuote>(
+                atmCall->impliedVolatility(atmCall->NPV(), gbsp));
+            calibrationSet.push_back({atmCall, quote});
+
+            // ATM Put
+            auto atmPut = makeVanillaOption({spot, maturity, Option::Type::Put});
+            atmPut->setPricingEngine(engine);
+            quote = boost::make_shared<SimpleQuote>(
+                atmPut->impliedVolatility(atmPut->NPV(), gbsp));
+            calibrationSet.push_back({atmPut, quote});
+
+            Real strike = spot;
+            for (auto delta : deltas) {
+                Option::Type type = delta > 0 ? Option::Type::Call : Option::Type::Put;
+                OptionDelta deltaFunc(engine, maturity, type, delta);
+                
+                try {
+                    strike = bisection.solve(deltaFunc, 1e-4, strike, 0.001);
                 }
-                for (auto strike : strikes) {
-                    auto v = makeVanillaOption({strike, expiry, type});
-                    v->setPricingEngine(engine);
-                    boost::shared_ptr<Quote> quote = boost::make_shared<SimpleQuote>(v->NPV());
-                    calibrationSet.push_back({v, quote});
-                }
+                catch(QuantLib::Error e) { continue; };
+
+                auto v = makeVanillaOption({strike, maturity, type});
+                v->setPricingEngine(engine);
+                boost::shared_ptr<Quote> quote = boost::make_shared<SimpleQuote>(
+                    v->impliedVolatility(v->NPV(), gbsp));
+                calibrationSet.push_back({v, quote});
             }
         }
         return calibrationSet;
@@ -139,11 +178,14 @@ protected:
             return boost::make_shared<GeneralizedBlackScholesProcess>(spot, qTS, rTS, blackVolTS);
         if (localVolType == "AndreasenHuge") {
 
-            boost::shared_ptr<PricingEngine> europeanEngine =
-                boost::make_shared<AnalyticEuropeanEngine>(getBlackScholesProcess(forCcy, domCcy));
+            std::vector<Period> expiries = parseListOfValues<Period>(
+                engineParameter("AndreasenHugeExpiries"), &parsePeriod);
+            std::vector<Real> deltas = parseListOfValues<Real>(
+                engineParameter("AndreasenHugeDeltas"), &parseReal);
 
+            boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
             AndreasenHugeVolatilityInterpl::CalibrationSet calibrationSet = makeCalibrationData(
-                europeanEngine, { 1/12.0, 3/12.0, 6/12.0, 1, 2, 3, 5, 10, 20, 30 });
+                gbsp, expiries, deltas);
 
             auto volInterpl = boost::make_shared<AndreasenHugeVolatilityInterpl>(calibrationSet, spot, rTS, qTS);
             Handle<LocalVolTermStructure> adaptor(boost::make_shared<AndreasenHugeLocalVolAdapter>(volInterpl));
