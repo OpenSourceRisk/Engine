@@ -253,7 +253,7 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
     // This stripped optionlet surface is the underlying stripped optionlet surface modified by the implied spreads
     for (Size j = 0; j < nAtmExpiries_; ++j) {
         for (Size i = 0; i < optionletTimes_.size(); ++i) {
-            if (i <= caps_[j]->floatingLeg().size()) {
+            if (i < caps_[j]->floatingLeg().size()) {
                 
                 Volatility unadjustedVol = ovs->volatility(optionletTimes_[i], atmStrikes_[j]);
                 Volatility adjustedVol = unadjustedVol + volSpreads_[j];
