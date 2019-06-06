@@ -10,6 +10,7 @@ calendars/philippines.cpp
 calendars/thailand.cpp
 cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
+cashflows/brlcdicouponpricer.cpp
 cashflows/couponpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
@@ -18,6 +19,7 @@ cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/quantocouponpricer.cpp
+cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
@@ -26,9 +28,11 @@ currencies/asia.cpp
 currencies/metals.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
+indexes/ibor/brlcdi.cpp
 indexes/inflationindexwrapper.cpp
 indexes/region.cpp
 instruments/averageois.cpp
+instruments/brlcdiswap.cpp
 instruments/cdsoption.cpp
 instruments/commodityforward.cpp
 instruments/creditdefaultswap.cpp
@@ -102,7 +106,9 @@ termstructures/averageoisratehelper.cpp
 termstructures/basistwoswaphelper.cpp
 termstructures/blackvariancecurve3.cpp
 termstructures/blackvariancesurfacemoneyness.cpp
+termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvolsurfacewithatm.cpp
+termstructures/brlcdiratehelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
@@ -114,11 +120,13 @@ termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
+termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
+termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -131,11 +139,13 @@ termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/strippedoptionletadapter2.cpp
+termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
 termstructures/tenorbasisswaphelper.cpp
-termstructures/yoyinflationoptionletvolstripper.cpp)
+termstructures/yoyinflationoptionletvolstripper.cpp
+time/yearcounter.cpp)
 
 # hpp files, this list is maintained manually
 
@@ -150,6 +160,7 @@ calendars/philippines.hpp
 calendars/thailand.hpp
 cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
+cashflows/brlcdicouponpricer.hpp
 cashflows/couponpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
@@ -159,6 +170,7 @@ cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/quantocouponpricer.hpp
+cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
@@ -184,6 +196,7 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
+indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmifor.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
@@ -192,8 +205,10 @@ indexes/ibor/noknibor.hpp
 indexes/ibor/nowa.hpp
 indexes/ibor/nzdbkbm.hpp
 indexes/ibor/phpphiref.hpp
+indexes/ibor/plnpolonia.hpp
 indexes/ibor/plnwibor.hpp
 indexes/ibor/rubmosprime.hpp
+indexes/ibor/saibor.hpp
 indexes/ibor/seksior.hpp
 indexes/ibor/sekstibor.hpp
 indexes/ibor/sgdsibor.hpp
@@ -207,6 +222,7 @@ indexes/inflationindexwrapper.hpp
 indexes/region.hpp
 indexes/secpi.hpp
 instruments/averageois.hpp
+instruments/brlcdiswap.hpp
 instruments/cdsoption.hpp
 instruments/commodityforward.hpp
 instruments/creditdefaultswap.hpp
@@ -295,7 +311,9 @@ termstructures/basistwoswaphelper.hpp
 termstructures/blackinvertedvoltermstructure.hpp
 termstructures/blackvariancecurve3.hpp
 termstructures/blackvariancesurfacemoneyness.hpp
+termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
+termstructures/brlcdiratehelper.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
@@ -310,6 +328,7 @@ termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
+termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp
@@ -337,6 +356,7 @@ termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter2.hpp
+termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
 termstructures/swaptionvolatilityconverter.hpp
@@ -350,8 +370,19 @@ termstructures/yoyinflationoptionletvolstripper.hpp
 termstructures/yoyoptionletvolatilitysurface.hpp
 termstructures/zeroinflationcurveobservermoving.hpp
 termstructures/zeroinflationcurveobserverstatic.hpp
+time/yearcounter.hpp
 version.hpp)
 
 writeAll("qle" "quantext.hpp" "auto_link.hpp" "${QuantExt_HDR}")
 add_library(${QLE_LIB_NAME} ${QuantExt_SRC})
 target_link_libraries(${QLE_LIB_NAME} ${QL_LIB_NAME} ${Boost_LIBRARIES})
+
+
+install(DIRECTORY . DESTINATION include/qle
+        FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h")
+
+install(TARGETS ${QLE_LIB_NAME}
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+        )

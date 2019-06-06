@@ -82,16 +82,29 @@ void BlackCdsOptionEngineBase::calculate(const CreditDefaultSwap& swap, const Da
     Real riskyAnnuity = std::fabs(swap.couponLegNPV() / swapSpread);
     results.riskyAnnuity = riskyAnnuity;
 
-    // incorporate upfront amount
-    swapSpread -=
-        (swap.side() == Protection::Buyer ? -1.0 : 1.0) * (swap.upfrontNPV() - swap.accrualRebateNPV()) / riskyAnnuity;
+    // Take the accrual portion from the coupon leg NPV before dividing by the swapSpread
+    // to get the risky annuity without accrual. This is the basis on which the fair spread 
+    // is calculated.
+    Real couponLegNpvNoAccrual = std::fabs(swap.couponLegNPV()) - std::fabs(swap.accrualRebateNPV());
+    Real riskyAnnuityNoAccrual = couponLegNpvNoAccrual / swapSpread;
+
+    // Take into account the NPV from the upfront amount
+    // If buyer and upfront NPV > 0 => receiving upfront amount => should reduce the pay spread
+    // If buyer and upfront NPV < 0 => paying upfront amount => should increase the pay spread
+    // If seller and upfront NPV > 0 => receiving upfront amount => should increase the receive spread
+    // If seller and upfront NPV < 0 => paying upfront amount => should reduce the receive spread
+    if (swap.side() == Protection::Buyer) {
+        swapSpread -= swap.upfrontNPV() / riskyAnnuityNoAccrual;
+    } else {
+        swapSpread += swap.upfrontNPV() / riskyAnnuityNoAccrual;
+    }
 
     Time T = tSDc.yearFraction(settlement, exerciseDate);
 
     Real stdDev = volatility_->blackVol(exerciseDate, 1.0, true) * std::sqrt(T);
     Option::Type callPut = (swap.side() == Protection::Buyer) ? Option::Call : Option::Put;
 
-    results.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuity);
+    results.value = blackFormula(callPut, swapSpread, spotFwdSpread, stdDev, riskyAnnuityNoAccrual);
 
     // if a non knock-out payer option, add front end protection value
     if (swap.side() == Protection::Buyer && !knocksOut) {

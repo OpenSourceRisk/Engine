@@ -69,7 +69,7 @@ void load(InMemoryLoader& loader, const vector<string>& data, bool isMarket, boo
 void loadDataFromBuffers(InMemoryLoader& loader, const std::vector<std::string>& marketData,
                          const std::vector<std::string>& fixingData, bool implyTodaysFixings) {
     load(loader, marketData, true, implyTodaysFixings);
-    load(loader, marketData, false, implyTodaysFixings);
+    load(loader, fixingData, false, implyTodaysFixings);
 }
 
 } // namespace data

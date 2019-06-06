@@ -119,7 +119,7 @@ BlackVarianceSurfaceMoneynessForward::BlackVarianceSurfaceMoneynessForward(
 
     if (!stickyStrike) {
         QL_REQUIRE(!forTS_.empty(), "foreign discount curve required for atmf surface");
-        QL_REQUIRE(!domTS_.empty(), "foreign discount curve required for atmf surface");
+        QL_REQUIRE(!domTS_.empty(), "domestic discount curve required for atmf surface");
         registerWith(forTS_);
         registerWith(domTS_);
     } else {

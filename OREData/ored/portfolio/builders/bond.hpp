@@ -67,7 +67,7 @@ protected:
                                                         const string& securityId,
                                                         const string& referenceCurveId) override {
 
-        string tsperiodStr = engineParameters_.at("TimestepPeriod");
+        string tsperiodStr = engineParameter("TimestepPeriod");
         Period tsperiod = parsePeriod(tsperiodStr);
         Handle<YieldTermStructure> yts = market_->yieldCurve(referenceCurveId, configuration(MarketContext::pricing));
         Handle<DefaultProbabilityTermStructure> dpts;
@@ -85,7 +85,12 @@ protected:
             if (!creditCurveId.empty())
                 recovery = market_->recoveryRate(creditCurveId, configuration(MarketContext::pricing));
         }
-        Handle<Quote> spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        Handle<Quote> spread;
+        try {
+            // spread is optional, pass empty handle to engine if not given (will be treated as 0 spread there)
+            spread = market_->securitySpread(securityId, configuration(MarketContext::pricing));
+        } catch (...) {
+        }
 
         return boost::make_shared<QuantExt::DiscountingRiskyBondEngine>(yts, dpts, recovery, spread, tsperiod);
     }

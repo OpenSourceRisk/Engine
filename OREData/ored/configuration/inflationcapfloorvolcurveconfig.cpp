@@ -42,7 +42,7 @@ std::ostream& operator<<(std::ostream& out, InflationCapFloorVolatilityCurveConf
 
 InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType,
-    const bool extrapolate, const vector<Period>& tenors, const vector<double>& strikes, const DayCounter& dayCounter,
+    const bool extrapolate, const vector<string>& tenors, const vector<string>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
     const string& index, const string& indexCurve, const string& yieldTermStructure)
     : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
@@ -68,14 +68,14 @@ const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
         // TODO: how to tell if atmFlag or relative flag should be true
         for (auto t : tenors_) {
             for (auto s : strikes_) {
-                quotes_.push_back(base + to_string(t) + "/F/" + to_string(s));
+                quotes_.push_back(base + t + "/F/" + s);
             }
         }
 
         if (volatilityType_ == VolatilityType::ShiftedLognormal) {
             for (auto t : tenors_) {
                 std::stringstream ss;
-                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + to_string(t));
+                quotes_.push_back(type + "_INFLATIONCAPFLOOR/SHIFT/" + index_ + "/" + t);
             }
         }
     }
@@ -97,7 +97,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Type " << type << " not recognized");
 
     // We are requiring explicit strikes so there should be at least one strike
-    strikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(node, "Strikes", true);
+    strikes_ = XMLUtils::getChildrenValuesAsStrings(node, "Strikes", true);
     QL_REQUIRE(!strikes_.empty(), "Strikes node should not be empty");
 
     // Get the volatility type
@@ -112,7 +112,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
         QL_FAIL("Volatility type, " << volType << ", not recognized");
     }
     extrapolate_ = XMLUtils::getChildValueAsBool(node, "Extrapolation", true);
-    tenors_ = XMLUtils::getChildrenValuesAsPeriods(node, "Tenors", true);
+    tenors_ = XMLUtils::getChildrenValuesAsStrings(node, "Tenors", true);
     calendar_ = parseCalendar(XMLUtils::getChildValue(node, "Calendar", true));
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
@@ -147,7 +147,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
 
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolate_);
     XMLUtils::addGenericChildAsList(doc, node, "Tenors", tenors_);
-    XMLUtils::addChild(doc, node, "Strikes", strikes_);
+    XMLUtils::addGenericChildAsList(doc, node, "Strikes", strikes_);
     XMLUtils::addChild(doc, node, "Calendar", to_string(calendar_));
     XMLUtils::addChild(doc, node, "DayCounter", to_string(dayCounter_));
     XMLUtils::addChild(doc, node, "BusinessDayConvention", to_string(businessDayConvention_));

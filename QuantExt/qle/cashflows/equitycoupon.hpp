@@ -48,8 +48,10 @@ class EquityCoupon : public Coupon, public Observer {
 public:
     EquityCoupon(const Date& paymentDate, Real nominal, const Date& startDate, const Date& endDate, Natural fixingDays,
                  const boost::shared_ptr<EquityIndex>& equityCurve, const DayCounter& dayCounter,
-                 bool isTotalReturn = false, Real dividendFactor = 1.0, const Date& refPeriodStart = Date(),
-                 const Date& refPeriodEnd = Date(), const Date& exCouponDate = Date());
+                 bool isTotalReturn = false, Real dividendFactor = 1.0, bool notionalReset = false, 
+                 Real initialPrice = Real(), Real quantity = Real(),
+                 const Date& refPeriodStart = Date(), const Date& refPeriodEnd = Date(), 
+                 const Date& exCouponDate = Date());
 
     //! \name CashFlow interface
     //@{
@@ -63,6 +65,8 @@ public:
     Real accruedAmount(const Date&) const;
     // calculates the rate for the period, not yearly i.e. (S(t+1)-S(t))/S(t)
     Rate rate() const;
+    // nominal changes if notional is resettable
+    Real nominal() const;
     //@}
 
     //! \name Inspectors
@@ -79,6 +83,10 @@ public:
     Date fixingEndDate() const { return fixingEndDate_; }
     //! return both fixing dates
     std::vector<Date> fixingDates() const;
+    //! initial price
+    Real initialPrice() const;
+    //! Number of equity shares held
+    Real quantity() const { return quantity_; }
     //! This function is called for other coupon types
     Date fixingDate() const {
         QL_FAIL("Equity Coupons have 2 fixings, not 1.");
@@ -100,13 +108,16 @@ public:
 
 protected:
     boost::shared_ptr<EquityCouponPricer> pricer_;
+    Natural fixingDays_;
     boost::shared_ptr<EquityIndex> equityCurve_;
     DayCounter dayCounter_;
-    Natural fixingDays_;
-    Date fixingStartDate_;
-    Date fixingEndDate_;
     bool isTotalReturn_;
     Real dividendFactor_;
+    bool notionalReset_;
+    Real initialPrice_;
+    Real quantity_;
+    Date fixingStartDate_;
+    Date fixingEndDate_;
 };
 
 // inline definitions
@@ -134,7 +145,10 @@ public:
     EquityLeg& withPaymentCalendar(const Calendar& calendar);
     EquityLeg& withTotalReturn(bool);
     EquityLeg& withDividendFactor(Real);
+    EquityLeg& withInitialPrice(Real);
     EquityLeg& withFixingDays(Natural);
+    EquityLeg& withValuationSchedule(const Schedule& valuationSchedule);
+    EquityLeg& withNotionalReset(bool);
     operator Leg() const;
 
 private:
@@ -145,8 +159,11 @@ private:
     BusinessDayConvention paymentAdjustment_;
     Calendar paymentCalendar_;
     bool isTotalReturn_;
+    Real initialPrice_;
     Real dividendFactor_;
     Natural fixingDays_;
+    Schedule valuationSchedule_;
+    bool notionalReset_;
 };
 
 } // namespace QuantExt

@@ -75,20 +75,20 @@ void EquityCurveConfig::fromXML(XMLNode* node) {
 
 XMLNode* EquityCurveConfig::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode("EquityCurve");
-
     XMLUtils::addChild(doc, node, "CurveId", curveID_);
     XMLUtils::addChild(doc, node, "CurveDescription", curveDescription_);
-    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Currency", currency_);
+    XMLUtils::addChild(doc, node, "ForecastingCurve", forecastingCurve_);
     XMLUtils::addChild(doc, node, "Type", to_string(type_));
     XMLUtils::addChild(doc, node, "SpotQuote", equitySpotQuoteID_);
-    XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
     XMLUtils::addChildren(doc, node, "Quotes", "Quote", fwdQuotes_);
+    XMLUtils::addChild(doc, node, "DayCounter", dayCountID_);
 
-    XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
-    XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
-
+    if (type_ != Type::NoDividends) {
+        XMLNode* divInterpNode = XMLUtils::addChild(doc, node, "DividendInterpolation");
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationVariable", divInterpVariable_);
+        XMLUtils::addChild(doc, divInterpNode, "InterpolationMethod", divInterpMethod_);
+    }
     XMLUtils::addChild(doc, node, "Extrapolation", extrapolation_);
 
     return node;

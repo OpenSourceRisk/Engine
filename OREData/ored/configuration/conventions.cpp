@@ -481,8 +481,8 @@ XMLNode* TenorBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "ShortPayTenor", strShortPayTenor_);
     XMLUtils::addChild(doc, node, "SpreadOnShort", strSpreadOnShort_);
     XMLUtils::addChild(doc, node, "IncludeSpread", strIncludeSpread_);
-    XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
-
+    if (strSubPeriodsCouponType_ != "")
+        XMLUtils::addChild(doc, node, "SubPeriodsCouponType", strSubPeriodsCouponType_);
     return node;
 }
 
@@ -638,11 +638,13 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const
                                                          const string& strRollConvention, const string& flatIndex,
                                                          const string& spreadIndex, const string& strEom,
                                                          const string& strIsResettable,
-                                                         const string& strFlatIndexIsResettable)
+                                                         const string& strFlatIndexIsResettable,
+                                                         const string& strFlatTenor,
+                                                         const string& strSpreadTenor)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
       strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
       strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
-      strFlatIndexIsResettable_(strFlatIndexIsResettable) {
+      strFlatIndexIsResettable_(strFlatIndexIsResettable), strFlatTenor_(strFlatTenor), strSpreadTenor_(strSpreadTenor) {
     build();
 }
 
@@ -654,7 +656,9 @@ void CrossCcyBasisSwapConvention::build() {
     spreadIndex_ = parseIborIndex(strSpreadIndex_);
     eom_ = strEom_.empty() ? false : parseBool(strEom_);
     isResettable_ = strIsResettable_.empty() ? false : parseBool(strIsResettable_);
-    FlatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
+    flatIndexIsResettable_ = strFlatIndexIsResettable_.empty() ? true : parseBool(strFlatIndexIsResettable_);
+    flatTenor_ = strFlatTenor_.empty() ? flatIndex_->tenor() : parsePeriod(strFlatTenor_);
+    spreadTenor_ = strSpreadTenor_.empty() ? spreadIndex_->tenor() : parsePeriod(strSpreadTenor_);
 }
 
 void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
@@ -672,6 +676,8 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
+    strFlatTenor_ = XMLUtils::getChildValue(node, "FlatTenor", false);
+    strSpreadTenor_ = XMLUtils::getChildValue(node, "SpreadTenor", false);
 
     build();
 }
@@ -686,8 +692,10 @@ XMLNode* CrossCcyBasisSwapConvention::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "FlatIndex", strFlatIndex_);
     XMLUtils::addChild(doc, node, "SpreadIndex", strSpreadIndex_);
     XMLUtils::addChild(doc, node, "EOM", strEom_);
-    XMLUtils::addChild(doc, node, "IsResettable", false);
-    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", false);
+    XMLUtils::addChild(doc, node, "IsResettable", strIsResettable_);
+    XMLUtils::addChild(doc, node, "FlatIndexIsResettable", strFlatIndexIsResettable_);
+    XMLUtils::addChild(doc, node, "FlatTenor", strFlatTenor_);
+    XMLUtils::addChild(doc, node, "SpreadTenor", strSpreadTenor_);
 
     return node;
 }

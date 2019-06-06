@@ -20,8 +20,10 @@
 
 #include <orea/app/reportwriter.hpp>
 
+//FIXME: including all is slow and bad
 #include <orea/orea.hpp>
 #include <ored/ored.hpp>
+#include <ored/portfolio/structuredtradeerror.hpp>
 #include <ostream>
 #include <ql/cashflows/averagebmacoupon.hpp>
 #include <ql/cashflows/indexedcashflow.hpp>
@@ -79,7 +81,7 @@ void ReportWriter::writeNpv(ore::data::Report& report, const std::string& baseCu
                 .add(trade->envelope().nettingSetId())
                 .add(trade->envelope().counterparty());
         } catch (std::exception& e) {
-            ALOG("Exception during pricing trade " << trade->id() << ": " << e.what());
+            ALOG(StructuredTradeErrorMessage(trade->id(), trade->tradeType(), "Error during trade pricing", e.what()));
             Date maturity = trade->maturity();
             report.next()
                 .add(trade->id())
@@ -453,7 +455,10 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
         .addColumn("FCAexAllSP", double(), 2)
         .addColumn("COLVA", double(), 2)
         .addColumn("MVA", double(), 2)
-        .addColumn("KVACCR", double(), 2)
+        .addColumn("OurKVACCR", double(), 2)
+        .addColumn("TheirKVACCR", double(), 2)
+        .addColumn("OurKVACVA", double(), 2)
+        .addColumn("TheirKVACVA", double(), 2)
         .addColumn("CollateralFloor", double(), 2)
         .addColumn("AllocatedCVA", double(), 2)
         .addColumn("AllocatedDVA", double(), 2)
@@ -475,7 +480,10 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
             .add(postProcess->nettingSetFCA_exAllSP(n))
             .add(postProcess->nettingSetCOLVA(n))
             .add(postProcess->nettingSetMVA(n))
-            .add(postProcess->nettingSetKVACCR(n))
+            .add(postProcess->nettingSetOurKVACCR(n))
+            .add(postProcess->nettingSetTheirKVACCR(n))
+            .add(postProcess->nettingSetOurKVACVA(n))
+            .add(postProcess->nettingSetTheirKVACVA(n))
             .add(postProcess->nettingSetCollateralFloor(n))
             .add(postProcess->nettingSetCVA(n))
             .add(postProcess->nettingSetDVA(n))
@@ -499,6 +507,9 @@ void ReportWriter::writeXVA(ore::data::Report& report, const string& allocationM
                 .add(postProcess->tradeFCA_exOwnSP(tid))
                 .add(postProcess->tradeFBA_exAllSP(tid))
                 .add(postProcess->tradeFCA_exAllSP(tid))
+                .add(Null<Real>())
+                .add(Null<Real>())
+                .add(Null<Real>())
                 .add(Null<Real>())
                 .add(Null<Real>())
                 .add(Null<Real>())
@@ -579,7 +590,7 @@ void ReportWriter::writeAggregationScenarioData(ore::data::Report& report, const
     report.end();
 }
 
-void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
+void ReportWriter::writeScenarioReport(ore::data::Report& report, const boost::shared_ptr<SensitivityCube>& sensitivityCube,
                                        Real outputThreshold) {
 
     LOG("Writing Scenario report");
@@ -591,12 +602,18 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
     report.addColumn("Scenario NPV", double(), 2);
     report.addColumn("Difference", double(), 2);
 
-    for (const auto& tradeId : sensitivityCube->tradeIds()) {
-        Real baseNpv = sensitivityCube->npv(tradeId);
+    auto scenarioDescriptions = sensitivityCube->scenarioDescriptions();
+    auto tradeIds = sensitivityCube->tradeIds();
+    auto npvCube = sensitivityCube->npvCube();
 
-        for (const auto& scenarioDescription : sensitivityCube->scenarioDescriptions()) {
+    for (Size i = 0; i < tradeIds.size(); i++) {
+        Real baseNpv = npvCube->getT0(i);
+        auto tradeId = tradeIds[i];
 
-            Real scenarioNpv = sensitivityCube->npv(tradeId, scenarioDescription);
+        for (Size j = 0; j < scenarioDescriptions.size(); j++) {
+            auto scenarioDescription = scenarioDescriptions[j];
+
+            Real scenarioNpv = npvCube->get(i, j);
             Real difference = scenarioNpv - baseNpv;
 
             if (fabs(difference) > outputThreshold) {
@@ -607,10 +624,11 @@ void ReportWriter::writeScenarioReport(Report& report, const boost::shared_ptr<S
                 report.add(baseNpv);
                 report.add(scenarioNpv);
                 report.add(difference);
-            } else if (!std::isfinite(difference)) {
+            }
+            else if (!std::isfinite(difference)) {
                 // TODO: is this needed?
                 ALOG("sensitivity scenario for trade " << tradeId << ", factor " << scenarioDescription.factors()
-                                                       << " is not finite (" << difference << ")");
+                    << " is not finite (" << difference << ")");
             }
         }
     }

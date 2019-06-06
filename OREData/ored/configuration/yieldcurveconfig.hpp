@@ -111,7 +111,6 @@ protected:
     //! Utility method to read quotes from XML
     void loadQuotesFromXML(XMLNode* node);
     //! Utility method to write quotes to XML
-    XMLNode* writeQuotesToXML(XMLDocument& doc);
 
 private:
     // TODO: why type and typeID?

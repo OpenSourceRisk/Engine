@@ -21,9 +21,6 @@ DiscountCurve/USD/4/5Y	DiscountCurve/USD/4/5Y	2500
 DiscountCurve/USD/5/7Y	DiscountCurve/USD/5/7Y	2500
 DiscountCurve/USD/6/10Y	DiscountCurve/USD/6/10Y	2500
 DiscountCurve/USD/7/15Y	DiscountCurve/USD/7/15Y	2500
-EquityForecastCurve/Lufthansa/1/1Y	EquityForecastCurve/Lufthansa/1/1Y	2500
-EquityForecastCurve/Lufthansa/2/2Y	EquityForecastCurve/Lufthansa/2/2Y	2500
-EquityForecastCurve/SP5/2/2Y	EquityForecastCurve/SP5/2/2Y	2500
 EquitySpot/Lufthansa/0/spot	EquitySpot/Lufthansa/0/spot	100
 EquitySpot/SP5/0/spot	EquitySpot/SP5/0/spot	100
 EquityVolatility/Lufthansa/2/2Y/ATM	EquityVolatility/Lufthansa/2/2Y/ATM	100

@@ -28,8 +28,10 @@
 
 #include <ql/indexes/ibor/all.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
+#include <qle/indexes/ibor/brlcdi.hpp>
 #include <qle/termstructures/averageoisratehelper.hpp>
 #include <qle/termstructures/basistwoswaphelper.hpp>
+#include <qle/termstructures/brlcdiratehelper.hpp>
 #include <qle/termstructures/crossccybasismtmresetswaphelper.hpp>
 #include <qle/termstructures/crossccybasisswaphelper.hpp>
 #include <qle/termstructures/crossccyfixfloatswaphelper.hpp>
@@ -894,6 +896,9 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
         onIndex = boost::dynamic_pointer_cast<OvernightIndex>(onIndex->clone(projectionCurve->handle()));
     }
 
+    // BRL CDI overnight needs a specialised rate helper so we use this below to switch
+    boost::shared_ptr<BRLCdi> brlCdiIndex = boost::dynamic_pointer_cast<BRLCdi>(onIndex);
+
     auto oisQuoteIDs = oisSegment->quotes();
     for (Size i = 0; i < oisQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(oisQuoteIDs[i], asofDate_);
@@ -907,11 +912,17 @@ void YieldCurve::addOISs(const boost::shared_ptr<YieldCurveSegment>& segment,
 
             // Create a swap helper if we do.
             Period oisTenor = oisQuote->term();
-            boost::shared_ptr<RateHelper> oisHelper(new QuantExt::OISRateHelper(
-                oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
-                oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
-                oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
-                discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true));
+            boost::shared_ptr<RateHelper> oisHelper;
+            if (brlCdiIndex) {
+                oisHelper = boost::make_shared<BRLCdiRateHelper>(oisTenor, oisQuote->quote(), brlCdiIndex, 
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+            } else {
+                oisHelper = boost::make_shared<QuantExt::OISRateHelper>(
+                    oisConvention->spotLag(), oisTenor, oisQuote->quote(), onIndex, oisConvention->fixedDayCounter(),
+                    oisConvention->paymentLag(), oisConvention->eom(), oisConvention->fixedFrequency(),
+                    oisConvention->fixedConvention(), oisConvention->fixedPaymentConvention(), oisConvention->rule(),
+                    discountCurve_ ? discountCurve_->handle() : Handle<YieldTermStructure>(), true);
+            }
 
             instruments.push_back(oisHelper);
         }
@@ -1498,6 +1509,9 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
         spreadIndex = domesticIndex;
     }
 
+    Period flatTenor = basisSwapConvention->flatTenor();
+    Period spreadTenor = basisSwapConvention->spreadTenor();
+
     auto basisSwapQuoteIDs = basisSwapSegment->quotes();
     for (Size i = 0; i < basisSwapQuoteIDs.size(); i++) {
         boost::shared_ptr<MarketDatum> marketQuote = loader_.get(basisSwapQuoteIDs[i], asofDate_);
@@ -1518,10 +1532,10 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     flatIndex, spreadIndex, flatDiscountCurve, spreadDiscountCurve, basisSwapConvention->eom(),
-                    flatIndex->currency().code() != fxSpotQuote->unitCcy()));
+                    flatIndex->currency().code() != fxSpotQuote->unitCcy(), flatTenor, spreadTenor));
                 instruments.push_back(basisSwapHelper);
             } else { // the quote is for a cross currency basis swap with a resetting notional
-                bool resetsOnFlatLeg = basisSwapConvention->FlatIndexIsResettable();
+                bool resetsOnFlatLeg = basisSwapConvention->flatIndexIsResettable();
                 // the convention here is to call the resetting leg the "domestic leg",
                 // and the constant notional leg the "foreign leg"
                 bool spreadOnForeignCcy = resetsOnFlatLeg ? true : false;
@@ -1531,12 +1545,16 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
                 Handle<YieldTermStructure> domesticDiscount = resetsOnFlatLeg ? flatDiscountCurve : spreadDiscountCurve;
                 bool invertFxQuote = (foreignIndex->currency().code() !=
                                       fxSpotQuote->unitCcy()); // set to true if the spotFXQuote is DOM/FOR
+                Period foreignTenor = resetsOnFlatLeg ? spreadTenor : flatTenor;
+                Period domesticTenor = resetsOnFlatLeg ? flatTenor : spreadTenor;
+
                 // Use foreign and dom discount curves for projecting FX forward rates (for e.g. resetting cashflows)
                 boost::shared_ptr<RateHelper> basisSwapHelper(new CrossCcyBasisMtMResetSwapHelper(
                     basisSwapQuote->quote(), fxSpotQuote->quote(), basisSwapConvention->settlementDays(),
                     basisSwapConvention->settlementCalendar(), basisSwapTenor, basisSwapConvention->rollConvention(),
                     foreignIndex, domesticIndex, foreignDiscount, domesticDiscount, Handle<YieldTermStructure>(),
-                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote));
+                    Handle<YieldTermStructure>(), basisSwapConvention->eom(), spreadOnForeignCcy, invertFxQuote,
+                    foreignTenor, domesticTenor));
                 instruments.push_back(basisSwapHelper);
             }
         }
@@ -1627,6 +1645,50 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
             instruments.push_back(helper);
         }
     }
+}
+
+
+// Get Pillar Dates
+// we have to try to cast and then call dates() on the subclasses, a bit messy
+template<class T>
+inline void getPillarDates(const boost::shared_ptr<YieldTermStructure>& p, vector<Date>& d) {
+    if (d.size() == 0) {
+        boost::shared_ptr<T> ptr = boost::dynamic_pointer_cast<T>(p);
+        if (ptr)
+            d = ptr->dates();
+     }
+}
+
+vector<Date> pillarDates(const Handle<YieldTermStructure>& h) {
+    const boost::shared_ptr<YieldTermStructure>& p = h.currentLink();
+    vector<Date> d;
+
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedDiscountCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedForwardCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::Linear>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::LogLinear>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::Cubic>>(p, d);
+    getPillarDates<InterpolatedZeroCurve<QuantLib::ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<ZeroYield, ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::Discount, ConvexMonotone>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::Linear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, QuantLib::LogLinear>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, Cubic>>(p, d);
+    getPillarDates<PiecewiseYieldCurve<QuantLib::ForwardRate, ConvexMonotone>>(p, d);
+
+    return d;
 }
 
 } // namespace data

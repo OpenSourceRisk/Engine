@@ -1,0 +1,27 @@
+\subsubsection{Equity Swap}
+
+An Equity Swap is set up as a swap using the {\tt SwapData} node, with one leg of type  \emph{Equity} and one more leg that can be either \emph{Fixed} or  \emph{Floating}. Listing \ref{lst:equityswap} shows an example. The
+Equity leg contains an additional {\tt EquityLegData} block. See \ref{ss:equitylegdata} for details on the Equity leg specification.
+
+\begin{listing}[H]
+%\hrule\medskip
+\begin{minted}[fontsize=\footnotesize]{xml}
+    <SwapData>
+      <LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        ...
+      </LegData>
+      <LegData>
+        <LegType>Equity</LegType>
+        <Payer>false</Payer>
+        ...
+        <EquityLegData>
+        ...
+        </EquityLegData>
+      </LegData>
+    </SwapData>
+\end{minted}
+\caption{Equity Swap Data}
+\label{lst:equityswap}
+\end{listing}

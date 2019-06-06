@@ -23,8 +23,11 @@ if(MSVC)
 	# link against static boost libraries
 	set(Boost_USE_STATIC_LIBS ON)
 
-	# TODO: customize compiler warnings
-	
+	add_compiler_flag("-D_SCL_SECURE_NO_DEPRECATE" supports_D_SCL_SECURE_NO_DEPRECATE)
+	add_compiler_flag("-D_CRT_SECURE_NO_DEPRECATE" supports_D_CRT_SECURE_NO_DEPRECATE)
+	add_compiler_flag("/bigobj" supports_bigobj)
+	add_compiler_flag("/W3" supports_w3)
+
 else()
 	# build shared libs always
 	set(BUILD_SHARED_LIBS ON)
@@ -58,8 +61,8 @@ get_filename_component(RAPIDXML_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}/../ThirdPa
 
 # convenience function that adds a link directory dir, but only if it exists
 function(add_link_directory_if_exists dir)
-  if(EXISTS dir)
-    link_directory(dir)
+  if(EXISTS "${dir}")
+    link_directories("${dir}")
   endif()
 endfunction()
 

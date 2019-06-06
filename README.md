@@ -1,7 +1,7 @@
 # ORE
 
 The [Open Source Risk](http://opensourcerisk.org) project aims at
-estblishing a transparent peer-reviewed framework for pricing and risk
+establishing a transparent peer-reviewed framework for pricing and risk
 analysis that can serve as
 * a benchmarking, validation, training, teaching reference 
 * an extensible foundation for tailored risk solutions
@@ -41,7 +41,7 @@ available on the [OpenSourceRisk](http://opensourcerisk.org) project site.
 
 Open Source Risk Engine (ORE) is
 
-Copyright (C) 2016 Quaternion Risk Management Ltd.
+Copyright (C) 2016, 2017, 2018, 2019 Quaternion Risk Management Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

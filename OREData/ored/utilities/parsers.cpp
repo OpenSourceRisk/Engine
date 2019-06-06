@@ -44,6 +44,7 @@
 #include <qle/currencies/america.hpp>
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/metals.hpp>
+#include <qle/time/yearcounter.hpp>
 
 #include <boost/lexical_cast.hpp>
 
@@ -207,6 +208,7 @@ Calendar parseCalendar(const string& s) {
                                       {"Sweden", Sweden()},
                                       {"ARS", Argentina()},
                                       {"BRL", Brazil()},
+                                      {"BWP", Botswana()},
                                       {"CNH", China()},
                                       {"CNY", China()},
                                       {"CZK", CzechRepublic()},
@@ -216,6 +218,7 @@ Calendar parseCalendar(const string& s) {
                                       {"FIN", Finland()},
                                       {"HKD", HongKong()},
                                       {"ISK", Iceland()},
+                                      {"ILS", Israel()},
                                       {"INR", India()},
                                       {"IDR", Indonesia()},
                                       {"MXN", Mexico()},
@@ -223,6 +226,7 @@ Calendar parseCalendar(const string& s) {
                                       {"NOK", Norway()},
                                       {"Norway", Norway()},
                                       {"PLN", Poland()},
+                                      {"RON", Romania()},
                                       {"RUB", Russia()},
                                       {"SAR", SaudiArabia()},
                                       {"SGD", Singapore()},
@@ -242,8 +246,6 @@ Calendar parseCalendar(const string& s) {
                                       // city specific calendars
                                       {"FRA", Germany(Germany::Settlement)},
                                       // fallback to TARGET for these emerging ccys
-                                      {"RON", TARGET()},
-                                      {"ILS", TARGET()},
                                       {"KWD", TARGET()},
                                       {"TND", TARGET()},
                                       {"KZT", TARGET()},
@@ -257,6 +259,7 @@ Calendar parseCalendar(const string& s) {
                                       {"AED", TARGET()},
                                       {"NGN", TARGET()},
                                       {"MAD", TARGET()},
+                                      {"PKR", TARGET()},
                                       // ISDA http://www.fpml.org/coding-scheme/business-center-7-15.xml
                                       {"EUTA", TARGET()},
                                       {"BEBR", TARGET()}, // Belgium, Brussels not in QL
@@ -377,7 +380,10 @@ DayCounter parseDayCounter(const string& s) {
                                         {"Actual/365 (No Leap)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"Act/365 (NL)", Actual365Fixed(Actual365Fixed::NoLeap)},
                                         {"NL/365", Actual365Fixed(Actual365Fixed::NoLeap)},
-                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)}};
+                                        {"Actual/365 (JGB)", Actual365Fixed(Actual365Fixed::NoLeap)},
+                                        {"Simple", SimpleDayCounter()},
+                                        {"Year", YearCounter()}
+    };
 
     auto it = m.find(s);
     if (it != m.end()) {
@@ -400,12 +406,13 @@ Currency parseCurrency(const string& s) {
         {"SEK", SEKCurrency()}, {"SGD", SGDCurrency()}, {"THB", THBCurrency()}, {"TRY", TRYCurrency()},
         {"TWD", TWDCurrency()}, {"USD", USDCurrency()}, {"ZAR", ZARCurrency()}, {"ARS", ARSCurrency()},
         {"CLP", CLPCurrency()}, {"COP", COPCurrency()}, {"IDR", IDRCurrency()}, {"ILS", ILSCurrency()},
-        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"MXN", MXNCurrency()}, {"SAR", SARCurrency()},
-        {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()}, {"UAH", UAHCurrency()},
-        {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()}, {"CLF", CLFCurrency()},
-        {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()}, {"VND", VNDCurrency()},
-        {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()}, {"MAD", MADCurrency()},
-        {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()}, {"XPT", XPTCurrency()}};
+        {"KWD", KWDCurrency()}, {"PEN", PENCurrency()}, {"PKR", PKRCurrency()}, {"MXN", MXNCurrency()},
+        {"SAR", SARCurrency()}, {"RUB", RUBCurrency()}, {"TND", TNDCurrency()}, {"MYR", MYRCurrency()},
+        {"UAH", UAHCurrency()}, {"KZT", KZTCurrency()}, {"QAR", QARCurrency()}, {"MXV", MXVCurrency()},
+        {"CLF", CLFCurrency()}, {"EGP", EGPCurrency()}, {"BHD", BHDCurrency()}, {"OMR", OMRCurrency()},
+        {"VND", VNDCurrency()}, {"AED", AEDCurrency()}, {"PHP", PHPCurrency()}, {"NGN", NGNCurrency()},
+        {"MAD", MADCurrency()}, {"XAU", XAUCurrency()}, {"XAG", XAGCurrency()}, {"XPD", XPDCurrency()},
+        {"XPT", XPTCurrency()}};
 
     auto it = m.find(s);
     if (it != m.end()) {

@@ -57,11 +57,38 @@ boost::shared_ptr<QuantExt::FxIndex> parseFxIndex(const string& s);
 boost::shared_ptr<IborIndex> parseIborIndex(const string& s,
                                             const Handle<YieldTermStructure>& h = Handle<YieldTermStructure>());
 
+//! Convert std::string to QuantLib::IborIndex and return the tenor string component of the index
+/*! In some cases, after parsing the IborIndex, we would like to know the exact tenor string that was part of 
+    the \p strIndex that was parsed. If we ask the resulting index for its tenor via the method 
+    `Period InterestRateIndex::tenor()`, it can be difficult to deduce the original tenor string. A simple example of 
+    this is `MXN-TIIE-28D` where if you call `tenor()` and then `to_string()`, you get `4W` which is different than 
+    the original `28D` that is passed in.
+
+    \warning If the \p strIndex does not have a tenor component, as is the usual case for overnight indices, 
+             \p outTenor will be populated with the empty string.
+
+    \ingroup utilities
+*/
+boost::shared_ptr<IborIndex> parseIborIndex(const std::string& strIndex, std::string& outTenor,
+    const QuantLib::Handle<QuantLib::YieldTermStructure>& h = QuantLib::Handle<QuantLib::YieldTermStructure>());
+
 //! Try to convert std::string to QuantLib::IborIndex
 /*!
     \ingroup utilities
 */
 bool tryParseIborIndex(const string& s, boost::shared_ptr<IborIndex>& index);
+
+//! Return true if the \p indexName is that of a generic index, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isGenericIndex(const string& indexName);
+
+//! Return true if the \p indexName is that of an InflationIndex, otherwise false
+/*!
+    \ingroup utilities
+*/
+bool isInflationIndex(const std::string& indexName);
 
 //! Convert std::string (e.g SP5) to QuantExt::EquityIndex
 /*!
@@ -91,5 +118,11 @@ parseZeroInflationIndex(const string& s, bool isInterpolated = false,
     \ingroup utilities
 */
 boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventions = Conventions());
+
+//! Return true if the \p indexName is that of an overnight index, otherwise false
+/*! \ingroup utilities
+*/
+bool isOvernightIndex(const std::string& indexName);
+
 } // namespace data
 } // namespace ore

@@ -10,7 +10,8 @@ SUBDIRS = \
 	processes \
 	quotes \
 	calendars \
-	termstructures
+	termstructures \
+    time
 
 AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
@@ -30,6 +31,7 @@ libQuantExt_la_LIBADD = \
 	currencies/libCurrencies.la \
 	instruments/libInstruments.la \
 	indexes/libIndexes.la \
+	indexes/ibor/libIborIndexes.la \
 	math/libMath.la \
 	methods/libMethods.la \
 	models/libModels.la \
@@ -37,7 +39,8 @@ libQuantExt_la_LIBADD = \
 	processes/libProcesses.la \
 	quotes/libQuotes.la \
 	calendars/libCalendars.la \
-	termstructures/libTermStructures.la
+	termstructures/libTermStructures.la \
+    time/libTime.la
 
 EXTRA_DIST = \
 	auto_link.hpp

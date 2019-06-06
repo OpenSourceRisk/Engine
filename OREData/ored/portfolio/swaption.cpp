@@ -28,11 +28,16 @@
 #include <ored/portfolio/optionwrapper.hpp>
 #include <ored/portfolio/swaption.hpp>
 #include <ored/utilities/log.hpp>
+#include <ored/utilities/to_string.hpp>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/timer.hpp>
 
+#include <algorithm>
+
 using namespace QuantLib;
+using std::sort;
+using std::lower_bound;
 
 namespace ore {
 namespace data {
@@ -56,6 +61,7 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedFirst ? 0 : 1].concreteLegData());
     boost::shared_ptr<FloatingLegData> floatingLegData =
         boost::dynamic_pointer_cast<FloatingLegData>(swap_[fixedFirst ? 1 : 0].concreteLegData());
+    underlyingIndex_ = floatingLegData->index();
 
     bool isNonStandard =
         (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 || floatingLegData->spreads().size() > 1 ||
@@ -71,6 +77,43 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         buildEuropean(engineFactory);
     else
         QL_FAIL("Exercise type " << option_.style() << " not implemented for Swaptions");
+}
+
+map<string, set<Date>> Swaption::fixings(const Date& settlementDate) const {
+    
+    map<string, set<Date>> result;
+
+    if (!exercise_) {
+        WLOG("Need to build Swaption before asking for fixings");
+        return result;
+    }
+
+    Date today = settlementDate;
+    if (today == Date())
+        today = Settings::instance().evaluationDate();
+
+    // Get the exercise date(s) and find the next one relative to settlementDate
+    vector<Date> exerciseDates = exercise_->dates();
+    sort(exerciseDates.begin(), exerciseDates.end());
+    auto it = lower_bound(exerciseDates.begin(), exerciseDates.end(), today);
+
+    // If all exercise dates have not passed, check if we have a case where an exercise date falls between
+    // an interest period's fixing date and its start date
+    if (it != exerciseDates.end()) {
+        Date nextExerciseDate = *it;
+        for (const auto& cf : underlyingLeg_) {
+            auto floatingCoupon = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+            QL_REQUIRE(floatingCoupon, "Expect the floating leg of the underlying swap to be of type FloatingRateCoupon");
+            if (floatingCoupon->accrualStartDate() >= nextExerciseDate) {
+                Date fixingDate = floatingCoupon->fixingDate();
+                if (fixingDate < today || (fixingDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
+                    result[underlyingIndex_].insert(fixingDate);
+                }
+            }
+        }
+    }
+
+    return result;
 }
 
 namespace {
@@ -96,14 +139,15 @@ void Swaption::buildEuropean(const boost::shared_ptr<EngineFactory>& engineFacto
     QL_REQUIRE(exDate >= Settings::instance().evaluationDate(), "Exercise date expected in the future.");
 
     boost::shared_ptr<VanillaSwap> swap = buildVanillaSwap(engineFactory, exDate);
+    underlyingLeg_ = swap->floatingLeg();
 
     string ccy = swap_[0].currency();
     Currency currency = parseCurrency(ccy);
 
-    boost::shared_ptr<Exercise> exercise(new EuropeanExercise(exDate));
+    exercise_ = boost::make_shared<EuropeanExercise>(exDate);
 
     // Build Swaption
-    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise, settleType, settleMethod));
+    boost::shared_ptr<QuantLib::Swaption> swaption(new QuantLib::Swaption(swap, exercise_, settleType, settleMethod));
 
     // Add Engine
     string tt("EuropeanSwaption");
@@ -161,6 +205,7 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedFirst ? 0 : 1].concreteLegData());
     boost::shared_ptr<FloatingLegData> floatingLegData =
         boost::dynamic_pointer_cast<FloatingLegData>(swap_[fixedFirst ? 1 : 0].concreteLegData());
+    underlyingIndex_ = floatingLegData->index();
 
     bool isNonStandard =
         (swap_[0].notionals().size() > 1 || swap_[1].notionals().size() > 1 || floatingLegData->spreads().size() > 1 ||
@@ -171,9 +216,11 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<Swap> swap;
     if (!isNonStandard) {
         vanillaSwap = buildVanillaSwap(engineFactory);
+        underlyingLeg_ = vanillaSwap->floatingLeg();
         swap = vanillaSwap;
     } else {
         nonstandardSwap = buildNonStandardSwap(engineFactory);
+        underlyingLeg_ = nonstandardSwap->floatingLeg();
         swap = nonstandardSwap;
     }
 
@@ -185,17 +232,28 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
         WLOG("Could not price underlying: " << e.what());
     }
 
-    // build exercise
+    // build exercise: only keep a) future exercise dates and b) exercise dates that exercise into a whole
+    // accrual period of the underlying; TODO handle exercises into broken periods?
+    Date lastAccrualStartDate = Date::minDate();
+    for (Size i = 0; i < 2; ++i) {
+        for (auto const c : swap->leg(i)) {
+            if (auto cpn = boost::dynamic_pointer_cast<Coupon>(c))
+                lastAccrualStartDate = std::max(lastAccrualStartDate, cpn->accrualStartDate());
+        }
+    }
     std::vector<QuantLib::Date> exDates;
     for (Size i = 0; i < option_.exerciseDates().size(); i++) {
         Date exDate = ore::data::parseDate(option_.exerciseDates()[i]);
-        if (exDate > Settings::instance().evaluationDate())
+        if (exDate > Settings::instance().evaluationDate() && exDate <= lastAccrualStartDate)
             exDates.push_back(exDate);
+        if (exDate > lastAccrualStartDate)
+            WLOG("Remove exercise date " << ore::data::to_string(exDate) << " after last accrual start date "
+                                         << ore ::data::to_string(lastAccrualStartDate));
     }
     QL_REQUIRE(exDates.size() > 0, "Bermudan Swaption does not have any alive exercise dates");
     std::sort(exDates.begin(), exDates.end());
     maturity_ = exDates.back();
-    boost::shared_ptr<Exercise> exercise(new BermudanExercise(exDates));
+    exercise_ = boost::make_shared<BermudanExercise>(exDates);
 
     Settlement::Type delivery = parseSettlementType(option_.settlement());
     Settlement::Method deliveryMethod =
@@ -211,12 +269,12 @@ void Swaption::buildBermudan(const boost::shared_ptr<EngineFactory>& engineFacto
     boost::shared_ptr<QuantLib::Instrument> swaption;
     if (isNonStandard) {
         swaption = boost::shared_ptr<QuantLib::Instrument>(
-            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise, delivery, deliveryMethod));
+            new QuantLib::NonstandardSwaption(nonstandardSwap, exercise_, delivery, deliveryMethod));
         // workaround for missing registration in QL versions < 1.13
         swaption->registerWithObservables(nonstandardSwap);
     } else
         swaption = boost::shared_ptr<QuantLib::Instrument>(
-            new QuantLib::Swaption(vanillaSwap, exercise, delivery, deliveryMethod));
+            new QuantLib::Swaption(vanillaSwap, exercise_, delivery, deliveryMethod));
 
     QuantLib::Position::Type positionType = parsePositionType(option_.longShort());
     if (delivery == Settlement::Physical)

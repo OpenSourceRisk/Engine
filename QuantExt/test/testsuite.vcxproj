@@ -638,6 +638,7 @@
   <ItemGroup>
     <ClCompile Include="analyticlgmswaptionengine.cpp" />
     <ClCompile Include="blackvariancecurve.cpp" />
+    <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="bonds.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
@@ -670,6 +671,7 @@
     <ClCompile Include="ratehelpers.cpp" />
     <ClCompile Include="stabilisedglls.cpp" />
     <ClCompile Include="staticallycorrectedyieldtermstructure.cpp" />
+    <ClCompile Include="strippedoptionletadapter.cpp" />
     <ClCompile Include="survivalprobabilitycurve.cpp" />
     <ClCompile Include="swaptionvolatilityconverter.cpp" />
     <ClCompile Include="swaptionvolconstantspread.cpp" />

@@ -655,12 +655,14 @@
     <ClCompile Include="equitymarketdata.cpp" />
     <ClCompile Include="equityswap.cpp" />
     <ClCompile Include="equitytrades.cpp" />
+    <ClCompile Include="fixings.cpp" />
     <ClCompile Include="fxoption.cpp" />
     <ClCompile Include="fxswap.cpp" />
     <ClCompile Include="fxtriangulation.cpp" />
     <ClCompile Include="indices.cpp" />
     <ClCompile Include="inflationcapfloor.cpp" />
     <ClCompile Include="legdata.cpp" />
+    <ClCompile Include="mxnircurves.cpp" />
     <ClCompile Include="ored_commodityforward.cpp" />
     <ClCompile Include="parser.cpp" />
     <ClCompile Include="portfolio.cpp" />
