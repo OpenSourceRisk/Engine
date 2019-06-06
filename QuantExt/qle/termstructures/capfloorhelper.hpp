@@ -48,7 +48,8 @@ public:
     /*! Constructor
         \param type                The CapFloorHelper type as described above
         \param tenor               The underlying cap floor instrument's tenor
-        \param strike              The underlying cap floor instrument's strike
+        \param strike              The underlying cap floor instrument's strike. Setting this to \c Null<Real>() 
+                                   indicates that the ATM strike for the given \p tenor should be used.
         \param quote               The quoted premium or implied volatility for the underlying cap floor instrument
         \param iborIndex           The IborIndex underlying the cap floor instrument
         \param discountingCurve    The curve used for discounting the cap floor instrument cashflows

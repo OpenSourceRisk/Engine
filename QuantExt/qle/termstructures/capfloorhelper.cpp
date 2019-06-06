@@ -82,8 +82,10 @@ void CapFloorHelper::initializeDates() {
     }
     
     // Initialise the instrument and a copy
-    capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
-    capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+    // The strike can be Null<Real>() to indicate an ATM cap floor helper
+    Rate dummyStrike = strike_ == Null<Real>() ? 0.01 : strike_;
+    capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days).withEndOfMonth(endOfMonth_);
+    capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days).withEndOfMonth(endOfMonth_);
 
     // Maturity date is just the maturity date of the cap floor
     maturityDate_ = capFloor_->maturityDate();
@@ -106,8 +108,14 @@ void CapFloorHelper::initializeDates() {
 
 void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     
-    // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
-    if (type_ == CapFloorHelper::Automatic && quoteType_ != Premium) {
+    if (strike_ == Null<Real>()) {
+        // If the strike is Null<Real>(), we want an ATM helper
+        Rate atm = capFloor_->atmRate(**discountHandle_);
+        capFloor_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days).withEndOfMonth(endOfMonth_);
+        capFloorCopy_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days).withEndOfMonth(endOfMonth_);
+
+    } else if (type_ == CapFloorHelper::Automatic && quoteType_ != Premium) {
+        // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
         Rate atm = capFloor_->atmRate(**discountHandle_);
         CapFloor::Type capFloorType = atm > strike_ ? CapFloor::Floor : CapFloor::Cap;
         if (capFloor_->type() != capFloorType) {
