@@ -16,12 +16,6 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <boost/make_shared.hpp>
-#include <iostream>
-#include <ql/math/interpolations/bilinearinterpolation.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
-#include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/yield/forwardcurve.hpp>
 #include <qle/termstructures/blackvariancesurfacesparse.hpp>
 
 using namespace std;
@@ -33,7 +27,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter)
-    : BlackVarianceTermStructure(referenceDate, cal) {
+    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d(referenceDate, dayCounter) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
         "dates, strikes and volatilities vectors not of equal size.");
@@ -45,8 +39,16 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
         variances[i] = volatilities[i] * volatilities[i] * t;
     }
 
-    optionInterpolator_ = boost::make_shared<OptionInterpolator2d>(referenceDate, dates, strikes, variances, dayCounter);
-
+    // variance must be 0 at time 0, add a variance of zero, time 0, for 2 strikes to ensure interpolation
+    vector<Date> modDates(dates.begin(), dates.end());
+    vector<Real> modStrikes(strikes.begin(), strikes.end());
+    for (Real strike : vector<Real>(1, 100)) {
+        modDates.push_back(referenceDate);
+        modStrikes.push_back(strike);
+        variances.push_back(0.0);
+    }
+    OptionInterpolator2d::initialise(modDates, modStrikes, variances);
+    
 }
 
 } // namespace QuantExt

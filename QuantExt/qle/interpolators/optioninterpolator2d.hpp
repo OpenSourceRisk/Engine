@@ -24,7 +24,8 @@
 #define quantext_option_interpolator_2d_hpp
 
 #include <ql/math/interpolation.hpp>
-#include <ql/time/calendar.hpp>
+#include <ql/patterns/observable.hpp>
+#include <ql/time/date.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 
 namespace QuantExt {
@@ -43,19 +44,25 @@ struct CloseEnoughComparator {
 class OptionInterpolator2d {
 
 public:
-    OptionInterpolator2d(const QuantLib::Date& referenceDate,
-        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, 
-        const std::vector<QuantLib::Real>& values, const QuantLib::DayCounter& dayCounter);
+    //! OptionInterpolator2d Constructor
+    OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter) :
+        referenceDate_(referenceDate), dayCounter_(dayCounter), initialised_(false) {};
+
+    OptionInterpolator2d(const QuantLib::Date& referenceDate, const QuantLib::DayCounter& dayCounter, 
+        const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Real>& values);
+
+    //! Initialise
+    void initialise(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
+        const std::vector<QuantLib::Real>& values);
 
     //! \name Getters
     //@{
     QuantLib::DayCounter dayCounter() const { return dayCounter_; }
-    std::vector<QuantLib::Time> times() { return times_; };
-    std::vector<QuantLib::Date> expiries() { return expiries_; };
-    std::vector<std::vector<QuantLib::Real> > strikes() { return strikes_; };
+    std::vector<QuantLib::Time> times() const;
+    std::vector<QuantLib::Date> expiries() const;
+    std::vector<std::vector<QuantLib::Real> > strikes() const;
     QuantLib::Real getValue(QuantLib::Time t, QuantLib::Real strike) const;
     QuantLib::Real getValue(QuantLib::Date d, QuantLib::Real strike) const;
-
     //@}
 
 protected:
@@ -70,6 +77,7 @@ private:
     QuantLib::DayCounter dayCounter_;
     QuantLib::Real getValueForStrike(QuantLib::Real strike, const std::vector<QuantLib::Real>& strks, 
         const std::vector<QuantLib::Real>& vars, const QuantLib::Interpolation& intrp) const;
+    bool initialised_;
 
 };
 } //namespace QuantExt

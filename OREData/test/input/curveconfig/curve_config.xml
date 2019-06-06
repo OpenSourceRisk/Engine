@@ -515,7 +515,7 @@
       <Currency>EUR</Currency>
       <ForecastingCurve>EUR-EONIA</ForecastingCurve>
       <Type>ForwardPrice</Type>
-      <SpotQuote>EQUITY/PRICE/EQUITY_C/EUR</SpotQuote>	  
+      <SpotQuote>EQUITY/PRICE/EQUITY_C/EUR</SpotQuote>
 	  <Quotes>
         <Quote>EQUITY_FWD/PRICE/EQUITY_C/EUR/1Y</Quote>
 	  </Quotes>
@@ -526,11 +526,12 @@
       <CurveDescription/>
       <Currency>EUR</Currency>
       <ForecastingCurve>EUR-EONIA</ForecastingCurve>
-      <Type>OptionVolatility</Type>
+      <Type>OptionPremium</Type>
 	  <ExerciseStyle>European</ExerciseStyle>
       <SpotQuote>EQUITY/PRICE/EQUITY_D/EUR</SpotQuote>
 	  <Quotes>
-        <Quote>EQUITY_OPTION/RATE_LNVOL/EQUITY_D/EUR/1Y/1000</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_D/EUR/1Y/1000/P</Quote>
 	  </Quotes>
       <DayCounter>A365</DayCounter>
     </EquityCurve>
@@ -539,11 +540,12 @@
       <CurveDescription/>
       <Currency>EUR</Currency>
       <ForecastingCurve>EUR-EONIA</ForecastingCurve>
-      <Type>OptionVolatility</Type>
+      <Type>OptionPremium</Type>
 	  <ExerciseStyle>American</ExerciseStyle>
       <SpotQuote>EQUITY/PRICE/EQUITY_E/EUR</SpotQuote>
 	  <Quotes>
-        <Quote>EQUITY_OPTION/RATE_LNVOL/EQUITY_E/EUR/1Y/1000</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/C</Quote>
+        <Quote>EQUITY_OPTION/PRICE/EQUITY_E/EUR/1Y/1000/P</Quote>
 	  </Quotes>
       <DayCounter>A365</DayCounter>
     </EquityCurve>

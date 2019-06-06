@@ -18,22 +18,27 @@
 
 #include <qle/interpolators/optioninterpolator2d.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
+#include <set>
 
 using namespace std;
 using namespace QuantLib;
 
 namespace QuantExt {
 
-OptionInterpolator2d::OptionInterpolator2d(const Date& referenceDate, const std::vector<Date>& dates,
-    const std::vector<Real>& strikes, const std::vector<Real>& values, const DayCounter& dayCounter) :
-    referenceDate_(referenceDate), dayCounter_(dayCounter) {
+OptionInterpolator2d::OptionInterpolator2d(const Date& referenceDate, const DayCounter& dayCounter,
+    const vector<Date>& dates, const vector<Real>& strikes, const vector<Real>& values) :
+    referenceDate_(referenceDate), dayCounter_(dayCounter), initialised_(false) {
+        
+    initialise(dates, strikes, values);
+};
 
+void OptionInterpolator2d::initialise(const std::vector<Date>& dates, const std::vector<Real>& strikes,
+    const std::vector<Real>& values) {
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == values.size()),
         "dates, strikes and values vectors not of equal size.");
 
     // first get uniques dates and sort
     set<Date> datesSet(dates.begin(), dates.end());
-    datesSet.insert(referenceDate);
     expiries_ = vector<Date>(datesSet.begin(), datesSet.end());
     vector<bool> dateDone(expiries_.size(), false);
     times_ = vector<Time>(expiries_.size());
@@ -50,14 +55,13 @@ OptionInterpolator2d::OptionInterpolator2d(const Date& referenceDate, const std:
 
         if (!dateDone[ii]) {
             // add expiry data if not found
-            QL_REQUIRE(dates[i] > referenceDate,
-                "Expiry date:" << dates[i] << " not after asof date: " << referenceDate);
-            times_[ii] = dayCounter_.yearFraction(referenceDate, dates[i]);
+            QL_REQUIRE(dates[i] >= referenceDate_,
+                "Expiry date:" << dates[i] << " before asof date: " << referenceDate_);
+            times_[ii] = dayCounter_.yearFraction(referenceDate_, dates[i]);
             strikes_[ii].push_back(strikes[i]);
             values_[ii].push_back(values[i]);
             dateDone[ii] = true;
-        }
-        else {
+        } else {
             // expiry found => add if strike not found
             Real tmpStrike = strikes[i];
             vector<Real>::iterator fnd =
@@ -70,24 +74,8 @@ OptionInterpolator2d::OptionInterpolator2d(const Date& referenceDate, const std:
         }
     }
 
-    for (Size i = 1; i < expiries_.size(); i++) {
-        QL_REQUIRE(strikes_[i].size() == values_[i].size(),
-            "different number of variances and strikes for date: " << expiries_[i]);
-    }
-
-    // Short end
-    QL_REQUIRE(expiries_[0] == referenceDate, "First date should be reference date. Reference date: "
-        << referenceDate << "First date: " << expiries_[0]);
-
-    times_[0] = 0.0;
-    vector<Real> tmpStrkVect;
-    vector<Real> tmpVarVect;
-    tmpStrkVect.push_back(5.0);
-    tmpStrkVect.push_back(100.0);
-    tmpVarVect.push_back(0.0);
-    tmpVarVect.push_back(0.0);
-    strikes_[0] = tmpStrkVect;
-    values_[0] = tmpVarVect;
+    for (Size i = 0; i < expiries_.size(); i++)
+        QL_REQUIRE(strikes_[i].size() == values_[i].size(), "different number of variances and strikes for date: " << expiries_[i]);
 
     // set expiries' interpolations.
     for (Size i = 0; i < expiries_.size(); i++) {
@@ -116,18 +104,18 @@ OptionInterpolator2d::OptionInterpolator2d(const Date& referenceDate, const std:
         interpolations_[i] = tmpInterpolation;
     }
 
+    initialised_ = true;
 }
-
 
 Real OptionInterpolator2d::getValueForStrike(Real strike, const vector<Real>& strks, const vector<Real>& vars,
     const Interpolation& intrp) const {
 
     Real retVar;
     if (strike > strks.back()) {
-        retVar = vars.back(); // flat extrapolate far stirke
+        retVar = vars.back(); // flat extrapolate far strike
     }
     else if (strike < strks.front()) {
-        retVar = vars.front(); // flat extrapolate near stirke
+        retVar = vars.front(); // flat extrapolate near strike
     }
     else {
         retVar = intrp(strike); // interpolate between strikes
@@ -136,37 +124,46 @@ Real OptionInterpolator2d::getValueForStrike(Real strike, const vector<Real>& st
 }
 
 Real OptionInterpolator2d::getValue(Time t, Real strike) const {
-
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << referenceDate_);
     Real varReturn;
     if (t == 0.0) {
         //requested at reference date
         varReturn = values_[0][0];
-    } else if (t <= times_.back()) {
-        //requested between existing expiries (interpolate between expiries)
-        ptrdiff_t dt;       // index for point after requested
-        ptrdiff_t dtPrev;   // index for point before requested
-        dt = distance(times_.begin(), lower_bound(times_.begin(), times_.end(), t));
-        dtPrev = (dt != 0) ? dt - 1 : 0;
+    } else{
+        // index for strikes/times for interpolation
+        Size ind1, ind2;      
+        if (t <= times_.front()) {
+            // near end of expiries, use first 2 strikes
+            ind1 = 0;
+            ind2 = 1;
+        } else if (t > times_.back()) {
+            // far end of expiries, use last 2
+            ind1 = times_.size() - 2;
+            ind2 = times_.size() - 1;
+        } else {
+            //requested between existing expiries (interpolate between expiries)
+            ind2 = distance(times_.begin(), lower_bound(times_.begin(), times_.end(), t));
+            ind1 = (ind2 != 0) ? ind2 - 1 : 0;
+        }                
         // interpolate between expiries
         vector<Real> tmpVars(2);
         vector<Time> xAxis;
-        xAxis.push_back(times_[dtPrev]);
-        xAxis.push_back(times_[dt]);
-        tmpVars[1] = getValueForStrike(strike, strikes_[dt], values_[dt], interpolations_[dt]);
-        tmpVars[0] = getValueForStrike(strike, strikes_[dtPrev], values_[dtPrev], interpolations_[dtPrev]);
+        xAxis.push_back(times_[ind1]);
+        xAxis.push_back(times_[ind2]);
+
+        tmpVars[0] = getValueForStrike(strike, strikes_[ind1], values_[ind1], interpolations_[ind1]);
+        tmpVars[1] = getValueForStrike(strike, strikes_[ind2], values_[ind2], interpolations_[ind2]);
         LinearInterpolation tmpInterpolation(xAxis.begin(), xAxis.end(), tmpVars.begin());
+        // linear extrapolation of expiries
+        tmpInterpolation.enableExtrapolation(true);
         varReturn = tmpInterpolation(t);
-    } else {
-        // far end of expiries
-        varReturn = getValueForStrike(strike, strikes_.back(), values_.back(), interpolations_.back());
-        varReturn = varReturn * t / times_.back(); // scale
     }
     return varReturn;
 }
 
 Real OptionInterpolator2d::getValue(Date d, Real strike) const {
-
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
     QL_REQUIRE(d >= referenceDate_, "Variance requested for date before reference date: " << referenceDate_);
     Real valueReturn;
     
@@ -181,6 +178,21 @@ Real OptionInterpolator2d::getValue(Date d, Real strike) const {
     }
 
     return valueReturn;
+}
+
+vector<Time> OptionInterpolator2d::times() const {
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
+    return times_;
+}
+
+vector<Date> OptionInterpolator2d::expiries() const {
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
+    return expiries_;
+}
+
+vector<vector<Real> > OptionInterpolator2d::strikes() const {
+    QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
+    return strikes_;
 }
 
 }// namespace QuantExt

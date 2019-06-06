@@ -23,17 +23,17 @@
 #ifndef quantext_black_variance_surface_sparse_hpp
 #define quantext_black_variance_surface_sparse_hpp
 
-#include <qle/interpolators/optioninterpolator2d.hpp>
 #include <ql/math/interpolations/interpolation2d.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/math/interpolation.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
 
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
-class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
+class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
+                                   public OptionInterpolator2d {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,
@@ -49,28 +49,25 @@ public:
     QuantLib::Real minStrike() const { return 0; }
     QuantLib::Real maxStrike() const { return QL_MAX_REAL; }
     //@}
-
+    
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(QuantLib::AcyclicVisitor&);
     //@}
 
 protected:
-    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const { return optionInterpolator_->getValue(t, strike); };
-
-private:
-    boost::shared_ptr<OptionInterpolator2d> optionInterpolator_;
-
+    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const { return getValue(t, strike); };
+    
 };
 
 // inline definitions
 
-inline void BlackVarianceSurfaceSparse::accept(AcyclicVisitor& v) {
-    Visitor<BlackVarianceSurfaceSparse>* v1 = dynamic_cast<Visitor<BlackVarianceSurfaceSparse>*>(&v);
+inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) {
+    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 = dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else
-        BlackVarianceTermStructure::accept(v);
+        QuantLib::BlackVarianceTermStructure::accept(v);
 }
 } // namespace QuantExt
 

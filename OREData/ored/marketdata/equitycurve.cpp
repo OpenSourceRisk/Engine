@@ -19,7 +19,7 @@
 #include <ored/marketdata/equitycurve.hpp>
 #include <ored/marketdata/marketdatumparser.hpp>
 #include <ored/utilities/log.hpp>
-#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/optionpricesurface.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <ql/math/interpolations/backwardflatinterpolation.hpp>
 #include <ql/math/interpolations/convexmonotoneinterpolation.hpp>
@@ -91,7 +91,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         for (Size i = 0; i < config->fwdQuotes().size(); i++) {
             foundRegex |= config->fwdQuotes()[i].find("*") != string::npos;
         }
-        if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::OptionPrice)
+        if ((config->type() == EquityCurveConfig::Type::ForwardPrice || config->type() == EquityCurveConfig::Type::OptionPremium)
             && foundRegex) {
             QL_REQUIRE(config->fwdQuotes().size() == 1, "wild card specified in " << config->curveID() << " but more quotes also specified.");
             LOG("Wild card quote specified for " << config->curveID())
@@ -101,7 +101,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             reg1 = regex(regexstr);
         }
         else {
-            if (config->type() == EquityCurveConfig::Type::OptionPrice) {
+            if (config->type() == EquityCurveConfig::Type::OptionPremium) {
                 oqt.resize(config->fwdQuotes().size());
             } else {
                 for (Size i = 0; i < config->fwdQuotes().size(); i++) {
@@ -119,7 +119,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 boost::shared_ptr<EquitySpotQuote> q = boost::dynamic_pointer_cast<EquitySpotQuote>(md);
 
                 if (q->name() == config->equitySpotQuoteID()) {
-                    QL_REQUIRE(!equitySpot_.empty(), "duplicate equity spot quote " << q->name() << " found.");
+                    QL_REQUIRE(equitySpot_.empty(), "duplicate equity spot quote " << q->name() << " found.");
                     equitySpot_ = Handle<Quote>(boost::make_shared<SimpleQuote>(q->quote()->value()));
                 }
             }
@@ -155,7 +155,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                 }
             }
 
-            if (config->type() == EquityCurveConfig::Type::OptionPrice && md->asofDate() == asof &&
+            if (config->type() == EquityCurveConfig::Type::OptionPremium && md->asofDate() == asof &&
                 md->instrumentType() == MarketDatum::InstrumentType::EQUITY_OPTION &&
                 md->quoteType() == MarketDatum::QuoteType::PRICE) {
 
@@ -221,8 +221,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             }
         }
 
-        // Build the Dividend Yield curve from the quotes loaded
-        vector<Rate> dividendRates;
+        // for curveType ForwardPrice or OptionPremium poputuate the terms_ and quotes_ with forward prices
         if (curveType_ == EquityCurveConfig::Type::ForwardPrice) {
 
             DLOG("Building Equity Dividend Yield curve from Forward/Future prices");
@@ -243,17 +242,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     quotes_.push_back(qt[i]->quote()->value());
                 }
             }
+        } else if (curveType_ == EquityCurveConfig::Type::OptionPremium) {
 
-            // Convert Fwds into dividends.
-            // Fwd = Spot e^{(r-q)T}
-            // => q = 1/T Log(Spot/Fwd) + r
-            for (Size i = 0; i < quotes_.size(); i++) {
-                QL_REQUIRE(quotes_[i] > 0, "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
-                Time t = dc_.yearFraction(asof, terms_[i]);
-                Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
-                dividendRates.push_back(::log(equitySpot_->value() / quotes_[i]) / t + ir_rate);
-            }
-        } else if (curveType_ == EquityCurveConfig::Type::OptionPrice) {
             QL_REQUIRE(oqt.size() > 0, "No Equity Option quotes provided for " << config->curveID());
 
             DLOG("Building Equity Dividend Yield curve from Option Volatilities");
@@ -277,7 +267,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             for (Size i = 0; i < calls.size(); i++) {
                 for (Size j = 0; j < puts.size(); j++) {
                     if (calls[i]->expiry() == puts[j]->expiry() && calls[i]->strike() == puts[j]->strike()) {
-                        TLOG("Adding Call can Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
+                        TLOG("Adding Call and Put for strike/expiry pair : " << calls[i]->expiry() << "/" << calls[i]->strike());
                         callDates.push_back(getDateFromDateOrPeriod(calls[i]->expiry(), asof));
                         putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
                         callStrikes.push_back(parseReal(calls[i]->strike()));
@@ -287,25 +277,38 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                     }
                 }
             }
-            
-            QL_REQUIRE(callDates.size() > 0 && putDates.size() < 0, "Must provide valid call and put quotes");
+
+            QL_REQUIRE(callDates.size() > 0 && putDates.size() > 0, "Must provide valid overlapping call and put quotes");
             DLOG("Found " << callDates.size() << " Call and Put Option Volatilities");
 
             DLOG("Building a Sparce Volatility surface for calls and puts");
             // Build a Black Variance Sparse matrix 
-            boost::shared_ptr<BlackVarianceSurfaceSparse> callSurface, putSurface;
+            boost::shared_ptr<OptionPriceSurface> callSurface, putSurface;
 
-            callSurface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, callDates, callDates, callStrikes, callVolatilities, dc_);
-            putSurface = boost::make_shared<BlackVarianceSurfaceSparse>(asof, cal, putDates, putDates, putStrikes, putVolatilities, dc_);
+            callSurface = boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callVolatilities, dc_);
+            putSurface = boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putVolatilities, dc_);
 
-            DLOG("Stripping equity forwars from the volatility surfaces");
-            boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface, 
+            DLOG("Stripping equity forwards from the option premium surfaces");
+            boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
                 forecastYieldTermStructure_, equitySpot_, QuantLib::Exercise::Type::European);
 
+            // set terms and quotes from the stripper
+            terms_ = efcs->expiries();
+            quotes_ = efcs->forwards();
+        }
 
-
-            dividendRates = quotes_;
-
+        // Build the Dividend Yield curve from the quotes loaded
+        vector<Rate> dividendRates;
+        if (curveType_ == EquityCurveConfig::Type::ForwardPrice || curveType_ == EquityCurveConfig::Type::OptionPremium) {
+            // Convert Fwds into dividends.
+            // Fwd = Spot e^{(r-q)T}
+            // => q = 1/T Log(Spot/Fwd) + r
+            for (Size i = 0; i < quotes_.size(); i++) {
+                QL_REQUIRE(quotes_[i] > 0, "Invalid Fwd Price " << quotes_[i] << " for " << spec_.name());
+                Time t = dc_.yearFraction(asof, terms_[i]);
+                Rate ir_rate = forecastYieldTermStructure_->zeroRate(t, Continuous);
+                dividendRates.push_back(::log(equitySpot_->value() / quotes_[i]) / t + ir_rate);
+            }
         } else if (curveType_ == EquityCurveConfig::Type::DividendYield) {
             DLOG("Building Equity Dividend Yield curve from Dividend Yield rates");
             dividendRates = quotes_;

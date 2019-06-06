@@ -22,38 +22,40 @@
 #include <ql/exercise.hpp>
 #include <ql/patterns/lazyobject.hpp>
 #include <ql/termstructures/yieldtermstructure.hpp>
-#include <qle/termstructures/blackvariancesurfacesparse.hpp>
+#include <qle/termstructures/optionpricesurface.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
-class EquityForwardCurveStripperBase : public LazyObject {
-
-
-};
-
-class EquityForwardCurveStripper : public EquityForwardCurveStripperBase {
+class EquityForwardCurveStripper : public QuantLib::LazyObject {
 
 public:
-    EquityForwardCurveStripper(const boost::shared_ptr<BlackVarianceSurfaceSparse>& callSurface,
-        const boost::shared_ptr<BlackVarianceSurfaceSparse>& putSurface,
-        Handle<YieldTermStructure>& forecastCurve, Handle<QuantLib::Quote>& equitySpot,
+    EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
+        const boost::shared_ptr<OptionPriceSurface>& putSurface,
+        QuantLib::Handle<QuantLib::YieldTermStructure>& forecastCurve, QuantLib::Handle<QuantLib::Quote>& equitySpot,
         QuantLib::Exercise::Type = QuantLib::Exercise::Type::European);
 
-
+    //! return the expiries
+    const std::vector<QuantLib::Date>& expiries() const;
+    //! return the stripped forwards
+    const std::vector<QuantLib::Real>& forwards() const;
 
     //! \name LazyObject interface
     //@{
     void performCalculations() const;
     //@}
-
+    
 private:
-    const boost::shared_ptr<BlackVarianceSurfaceSparse>& callSurface_;
-    const boost::shared_ptr<BlackVarianceSurfaceSparse>& putSurface_;
-    Handle<YieldTermStructure> forecastCurve_; 
-    Handle<QuantLib::Quote> equitySpot_;
+    const boost::shared_ptr<OptionPriceSurface>& callSurface_;
+    const boost::shared_ptr<OptionPriceSurface>& putSurface_;
+    QuantLib::Handle<QuantLib::YieldTermStructure> forecastCurve_;
+    QuantLib::Handle<QuantLib::Quote> equitySpot_;
 
+    //! store the expiries
+    mutable std::vector<QuantLib::Date> expiries_;
+    //! store the stripped forward rates
+    mutable std::vector<QuantLib::Real> forwards_;
 
+    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real strike) const;
 };
 
 } // namespace QuantExt

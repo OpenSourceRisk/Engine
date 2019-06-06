@@ -678,6 +678,9 @@
     <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp">
       <Filter>interpolators</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionpricesurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
