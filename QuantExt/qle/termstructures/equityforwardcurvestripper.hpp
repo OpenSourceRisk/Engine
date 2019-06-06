@@ -32,7 +32,7 @@ public:
     EquityForwardCurveStripper(const boost::shared_ptr<OptionPriceSurface>& callSurface,
         const boost::shared_ptr<OptionPriceSurface>& putSurface,
         QuantLib::Handle<QuantLib::YieldTermStructure>& forecastCurve, QuantLib::Handle<QuantLib::Quote>& equitySpot,
-        QuantLib::Exercise::Type = QuantLib::Exercise::Type::European);
+        QuantLib::Exercise::Type = QuantLib::Exercise::European);
 
     //! return the expiries
     const std::vector<QuantLib::Date>& expiries() const;
