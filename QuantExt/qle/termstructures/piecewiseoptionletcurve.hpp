@@ -182,7 +182,7 @@ private:
 
     // Bootstrapper classes are declared as friend to manipulate the curve data
     friend class Bootstrap<this_curve>;
-    friend class BootstrapError<this_curve> ;
+    friend class BootstrapError<this_curve>;
     friend class PenaltyFunction<this_curve>;
     
     Bootstrap<this_curve> bootstrap_;
