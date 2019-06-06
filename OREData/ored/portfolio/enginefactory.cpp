@@ -21,6 +21,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
@@ -28,6 +29,7 @@
 #include <ored/portfolio/builders/creditdefaultswap.hpp>
 #include <ored/portfolio/builders/equityforward.hpp>
 #include <ored/portfolio/builders/equityoption.hpp>
+#include <ored/portfolio/builders/forwardbond.hpp>
 #include <ored/portfolio/builders/fxforward.hpp>
 #include <ored/portfolio/builders/fxoption.hpp>
 #include <ored/portfolio/builders/swap.hpp>
@@ -147,6 +149,7 @@ void EngineFactory::addDefaultBuilders() {
 
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
     registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<YoYCapFloorEngineBuilder>());
@@ -154,7 +157,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
 
-    registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>()); 
+    registerBuilder(boost::make_shared<BondDiscountingEngineBuilder>());
+    registerBuilder(boost::make_shared<DiscountingForwardBondEngineBuilder>());
 
     registerBuilder(boost::make_shared<AnalyticHaganCmsCouponPricerBuilder>());
     registerBuilder(boost::make_shared<NumericalHaganCmsCouponPricerBuilder>());

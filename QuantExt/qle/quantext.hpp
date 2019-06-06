@@ -32,6 +32,7 @@
 #include <qle/currencies/asia.hpp>
 #include <qle/currencies/metals.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/bondindex.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -88,6 +89,7 @@
 #include <qle/instruments/deposit.hpp>
 #include <qle/instruments/equityforward.hpp>
 #include <qle/instruments/fixedbmaswap.hpp>
+#include <qle/instruments/forwardbond.hpp>
 #include <qle/instruments/fxforward.hpp>
 #include <qle/instruments/impliedbondspread.hpp>
 #include <qle/instruments/makeaverageois.hpp>
@@ -150,6 +152,7 @@
 #include <qle/pricingengines/discountingcommodityforwardengine.hpp>
 #include <qle/pricingengines/discountingcurrencyswapengine.hpp>
 #include <qle/pricingengines/discountingequityforwardengine.hpp>
+#include <qle/pricingengines/discountingforwardbondengine.hpp>
 #include <qle/pricingengines/discountingfxforwardengine.hpp>
 #include <qle/pricingengines/discountingriskybondengine.hpp>
 #include <qle/pricingengines/discountingswapenginemulticurve.hpp>

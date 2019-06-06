@@ -28,6 +28,12 @@ using namespace std;
 
 namespace QuantExt {
 
+struct CloseEnoughComparator {
+    explicit CloseEnoughComparator(const Real v) : v_(v) {}
+    bool operator()(const Real w) const { return close_enough(v_, w); }
+    Real v_;
+};
+
 BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal,
                                                        const std::vector<Date>& dates, const std::vector<Real>& strikes,
                                                        const std::vector<Volatility>& volatilities,
@@ -66,7 +72,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const QuantLib::Date& ref
             // expiry found => add if strike not found
             Real tmpStrike = strikes[i];
             vector<Real>::iterator fnd =
-                find_if(strikes_[ii].begin(), strikes_[ii].end(), QuantExt::detail::CloseEnoughComparator(tmpStrike));
+                find_if(strikes_[ii].begin(), strikes_[ii].end(), CloseEnoughComparator(tmpStrike));
             if (fnd == strikes_[ii].end()) {
                 // add strike/var pairs if strike not found for this expiry
                 strikes_[ii].push_back(strikes[i]);

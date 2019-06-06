@@ -19,12 +19,14 @@ cashflows/floatingannuitynominal.cpp
 cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/quantocouponpricer.cpp
+cashflows/strippedcapflooredyoyinflationcoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
 currencies/america.cpp
 currencies/asia.cpp
 currencies/metals.cpp
+indexes/bondindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -44,6 +46,7 @@ instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
 instruments/fxforward.cpp
+instruments/forwardbond.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -90,6 +93,8 @@ pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
+pricingengines/discountingforwardbondengine.cpp
+pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingequityforwardengine.cpp
 pricingengines/discountingfxforwardengine.cpp
@@ -121,11 +126,13 @@ termstructures/defaultprobabilityhelpers.cpp
 termstructures/discountratiomodifiedcurve.cpp
 termstructures/dynamicoptionletvolatilitystructure.cpp
 termstructures/dynamicswaptionvolmatrix.cpp
+termstructures/dynamicyoyoptionletvolatilitystructure.cpp
 termstructures/flatcorrelation.cpp
 termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
+termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -138,6 +145,7 @@ termstructures/spreadedoptionletvolatility.cpp
 termstructures/spreadedsmilesection.cpp
 termstructures/spreadedswaptionvolatility.cpp
 termstructures/strippedoptionletadapter2.cpp
+termstructures/strippedyoyinflationoptionletvol.cpp
 termstructures/subperiodsswaphelper.cpp
 termstructures/swaptionvolatilityconverter.cpp
 termstructures/swaptionvolcube2.cpp
@@ -168,6 +176,7 @@ cashflows/floatingratefxlinkednotionalcoupon.hpp
 cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/quantocouponpricer.hpp
+cashflows/strippedcapflooredyoyinflationcoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
@@ -175,6 +184,7 @@ currencies/america.hpp
 currencies/asia.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
+indexes/bondindex.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
@@ -231,6 +241,7 @@ instruments/currencyswap.hpp
 instruments/deposit.hpp
 instruments/equityforward.hpp
 instruments/fixedbmaswap.hpp
+instruments/forwardbond.hpp
 instruments/fxforward.hpp
 instruments/impliedbondspread.hpp
 instruments/makeaverageois.hpp
@@ -291,6 +302,7 @@ pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
+pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingequityforwardengine.hpp
 pricingengines/discountingfxforwardengine.hpp
@@ -327,6 +339,7 @@ termstructures/dynamicblackvoltermstructure.hpp
 termstructures/dynamicoptionletvolatilitystructure.hpp
 termstructures/dynamicstype.hpp
 termstructures/dynamicswaptionvolmatrix.hpp
+termstructures/dynamicyoyoptionletvolatilitystructure.hpp
 termstructures/equityvolconstantspread.hpp
 termstructures/flatcorrelation.hpp
 termstructures/fxblackvolsurface.hpp
@@ -358,6 +371,7 @@ termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
 termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
+termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp
 termstructures/survivalprobabilitycurve.hpp
 termstructures/swaptionvolatilityconverter.hpp

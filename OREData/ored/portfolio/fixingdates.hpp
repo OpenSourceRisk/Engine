@@ -35,6 +35,7 @@
 #include <qle/cashflows/fxlinkedcashflow.hpp>
 #include <qle/cashflows/averageonindexedcoupon.hpp>
 #include <qle/cashflows/equitycoupon.hpp>
+#include <qle/cashflows/subperiodscoupon.hpp>
 #include <ored/marketdata/todaysmarketparameters.hpp>
 
 #include <set>
@@ -65,7 +66,8 @@ class FixingDateGetter : public QuantLib::AcyclicVisitor,
     public QuantLib::Visitor<QuantExt::AverageONIndexedCoupon>,
     public QuantLib::Visitor<QuantExt::EquityCoupon>,
     public QuantLib::Visitor<QuantExt::FloatingRateFXLinkedNotionalCoupon>,
-    public QuantLib::Visitor<QuantExt::FXLinkedCashFlow> {
+    public QuantLib::Visitor<QuantExt::FXLinkedCashFlow>,
+    public QuantLib::Visitor<QuantExt::SubPeriodsCoupon> {
 public:
     //! Constructor
     FixingDateGetter(const QuantLib::Date& settlementDate = QuantLib::Date());
@@ -87,6 +89,7 @@ public:
     void visit(QuantExt::EquityCoupon& c);
     void visit(QuantExt::FloatingRateFXLinkedNotionalCoupon& c);
     void visit(QuantExt::FXLinkedCashFlow& c);
+    void visit(QuantExt::SubPeriodsCoupon& c);
     //@}
 
     //! Return the retrieved fixing dates

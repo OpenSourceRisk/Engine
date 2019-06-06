@@ -30,6 +30,7 @@ QLE_TESTS = \
 	discountingcommodityforwardengine.cpp \
 	pricetermstructureadapter.cpp \
 	bonds.cpp \
+	forwardbond.cpp \
 	interpolatedyoycapfloortermpricesurface.cpp \
 	qle_calendars.cpp \
 	discountratiomodifiedcurve.cpp \

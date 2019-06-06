@@ -235,8 +235,6 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceEdgeCases) {
 
     // negative strike
     BOOST_CHECK_THROW(surface.blackVol(t, strikeNeg), QuantLib::Error);
-
-    
 }
 
 BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {
@@ -266,6 +264,50 @@ BOOST_AUTO_TEST_CASE(testBalckVarianceSinglePoint) {
         }
     }
 
+}
+
+BOOST_AUTO_TEST_CASE(testBlackVarianceSurfaceAxisInterp) {
+
+    BOOST_TEST_MESSAGE("Testing QuantExt::BlackVarianceSurfaceSparse axis interpolations");
+
+    SavedSettings backup;
+
+    Settings::instance().evaluationDate() = Date(1, Mar, 2010);
+    Date today = Settings::instance().evaluationDate();
+
+    // the 3 vectors we pass into the vol term structure
+    // We setup a 4 X 4 grid with different vols everywhere.
+    // We test interpolations on grid edges and in centre
+    vector<Date> dates = { Date(1, Mar, 2011), Date(1, Mar, 2011), Date(1, Mar, 2012), Date(1, Mar, 2012) };
+    vector<Real> strikes = { 2000, 3000, 2000, 3000 };
+    vector<Volatility> vols = { 0.105, 0.12, 0.17, 0.15 };
+
+    Calendar cal = TARGET();
+    DayCounter dc = ActualActual();
+
+    auto surface = boost::make_shared<QuantExt::BlackVarianceSurfaceSparse>(today, cal, dates, strikes, vols, dc);
+
+    // query points
+    auto t1 = surface->timeFromReference(Date(1, Mar, 2011)); // on first date
+    auto t2 = surface->timeFromReference(Date(1, Sep, 2011)); // between 2 dates
+    auto t3 = surface->timeFromReference(Date(1, Mar, 2012)); // on last date
+    Real s1 = 2000;                                           // on first strike
+    Real s2 = 2500;                                           // between 2 strikes
+    Real s3 = 3000;                                           // on last strike
+
+    // expected vals
+    Volatility e1 = 0.151634737915710;
+    Volatility e2 = 0.112749722837797;
+    Volatility e3 = 0.146315408895419;
+    Volatility e4 = 0.160312195418814;
+    Volatility e5 = 0.140795255664746;
+
+    // checks
+    BOOST_CHECK_CLOSE(e1, surface->blackVol(t2, s1), 1e-12);
+    BOOST_CHECK_CLOSE(e2, surface->blackVol(t1, s2), 1e-12);
+    BOOST_CHECK_CLOSE(e3, surface->blackVol(t2, s2), 1e-12);
+    BOOST_CHECK_CLOSE(e4, surface->blackVol(t3, s2), 1e-12);
+    BOOST_CHECK_CLOSE(e5, surface->blackVol(t2, s3), 1e-12);
 }
 
 

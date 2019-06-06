@@ -18,6 +18,7 @@ libPricingEngines_la_SOURCES = \
 	depositengine.cpp \
 	discountingcurrencyswapengine.cpp \
 	discountingequityforwardengine.cpp \
+	discountingforwardbondengine.cpp \
 	discountingfxforwardengine.cpp \
 	discountingswapenginemulticurve.cpp \
 	oiccbasisswapengine.cpp \
@@ -43,6 +44,7 @@ this_include_HEADERS = \
 	depositengine.hpp \
 	discountingcurrencyswapengine.hpp \
 	discountingequityforwardengine.hpp \
+	discountingforwardbondengine.hpp \
 	discountingfxforwardengine.hpp \
 	discountingswapenginemulticurve.hpp \
 	oiccbasisswapengine.hpp \

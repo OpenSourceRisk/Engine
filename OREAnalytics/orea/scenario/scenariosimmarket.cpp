@@ -52,6 +52,7 @@
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
 #include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
 #include <qle/termstructures/swaptionvolconstantspread.hpp>
@@ -1300,7 +1301,64 @@ ScenarioSimMarket::ScenarioSimMarket(
                 break;
 
             case RiskFactorKey::KeyType::YoYInflationCapFloorVolatility:
-                WLOG("YoYInflationCapFloorVolatility not yet implemented");
+                for (const auto& name : param.second.second) {
+                    try {
+                        LOG("building " << name << " yoy inflation cap/floor volatility curve...");
+                        Handle<QuantExt::YoYOptionletVolatilitySurface> wrapper = initMarket->yoyCapFloorVol(name, configuration);
+                        LOG("Initial market " << name << " yoy inflation cap/floor volatility type = " << wrapper->volatilityType());
+                        Handle<QuantExt::YoYOptionletVolatilitySurface> hYoYCapletVol;
+
+                        // Check if the risk factor is simulated before adding it
+                        if (param.second.first) {
+                            LOG("Simulating yoy inflation optionlet vols for index name " << name);
+                            vector<Period> optionTenors = parameters->yoyInflationCapFloorVolExpiries(name);
+                            vector<Date> optionDates(optionTenors.size());
+                            vector<Real> strikes = parameters->yoyInflationCapFloorVolStrikes();
+                            vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
+                                vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
+                            for (Size i = 0; i < optionTenors.size(); ++i) {
+                                optionDates[i] = wrapper->yoyVolSurface()->optionDateFromTenor(optionTenors[i]);
+                                for (Size j = 0; j < strikes.size(); ++j) {
+                                    Real vol =
+                                        wrapper->volatility(optionTenors[i], strikes[j], wrapper->observationLag(), wrapper->allowsExtrapolation());
+                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                    Size index = i * strikes.size() + j;
+                                    simDataTmp.emplace(std::piecewise_construct,
+                                        std::forward_as_tuple(param.first, name, index),
+                                        std::forward_as_tuple(q));
+                                    quotes[i][j] = Handle<Quote>(q);
+                                }
+                            }
+                            DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationCapFloorVolDayCounter(name));
+                            boost::shared_ptr<StrippedYoYInflationOptionletVol> yoyoptionlet =
+                                boost::make_shared<StrippedYoYInflationOptionletVol>(
+                                    0, wrapper->yoyVolSurface()->calendar(), wrapper->yoyVolSurface()->businessDayConvention(),
+                                    dc, wrapper->observationLag(), wrapper->yoyVolSurface()->frequency(),
+                                    wrapper->yoyVolSurface()->indexIsInterpolated(), optionDates, strikes,
+                                    quotes, wrapper->volatilityType(), wrapper->displacement());
+                            boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> yoyoptionletvolsurface =
+                                boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(
+                                    yoyoptionlet, wrapper->volatilityType(), wrapper->displacement());
+                            hYoYCapletVol = Handle<QuantExt::YoYOptionletVolatilitySurface>(yoyoptionletvolsurface);
+                        }
+                        else {
+                            string decayModeString = parameters->yoyInflationCapFloorVolDecayMode();
+                            ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
+                            boost::shared_ptr<QuantExt::DynamicYoYOptionletVolatilitySurface> yoyCapletVol =
+                                boost::make_shared<QuantExt::DynamicYoYOptionletVolatilitySurface>(*wrapper, decayMode);
+                            hYoYCapletVol = Handle<QuantExt::YoYOptionletVolatilitySurface>(yoyCapletVol);
+                        }
+                        if (wrapper->allowsExtrapolation())
+                            hYoYCapletVol->enableExtrapolation();
+                        yoyCapFloorVolSurfaces_.emplace(std::piecewise_construct,
+                            std::forward_as_tuple(Market::defaultConfiguration, name),
+                            std::forward_as_tuple(hYoYCapletVol));
+                        LOG("Simulaton market yoy inflation cap/floor volatility type = " << hYoYCapletVol->volatilityType());
+                    }
+                    catch (const std::exception& e) {
+                        processException(continueOnError, e);
+                    }
+                }
                 break;
 
             case RiskFactorKey::KeyType::CommoditySpot:

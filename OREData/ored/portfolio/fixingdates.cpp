@@ -36,6 +36,7 @@ using QuantExt::AverageONIndexedCoupon;
 using QuantExt::EquityCoupon;
 using QuantExt::FloatingRateFXLinkedNotionalCoupon;
 using QuantExt::FXLinkedCashFlow;
+using QuantExt::SubPeriodsCoupon;
 using QuantLib::Leg;
 using QuantLib::Settings;
 using QuantLib::ZeroInflationIndex;
@@ -255,6 +256,16 @@ void FixingDateGetter::visit(FloatingRateFXLinkedNotionalCoupon& c) {
 void FixingDateGetter::visit(FXLinkedCashFlow& c) {
     if (!c.hasOccurred(today_)) {
         addFxFixings(c, fixingDates_, today_, Settings::instance().enforcesTodaysHistoricFixings());
+    }
+}
+
+void FixingDateGetter::visit(SubPeriodsCoupon& c) {
+    if (!c.hasOccurred(today_)) {
+        for (auto const& fixingDate : c.fixingDates()) {
+            if (fixingDate < today_ || (fixingDate == today_ && Settings::instance().enforcesTodaysHistoricFixings())) {
+                fixingDates_.insert(fixingDate);
+            }
+        }
     }
 }
 
