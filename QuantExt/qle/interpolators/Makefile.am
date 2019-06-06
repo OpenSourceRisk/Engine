@@ -2,8 +2,7 @@ AM_CPPFLAGS = -I${top_srcdir} -I${top_builddir}
 
 SUBDIRS =
 
-libInterpolators_la_SOURCES = \
-	optioninterpolator2d.cpp
+libInterpolators_la_SOURCES = 
 
 this_includedir=${includedir}/${subdir}
 this_include_HEADERS = \
