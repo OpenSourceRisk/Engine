@@ -38,7 +38,6 @@ QLE_TESTS = \
 	crossccyfixfloatswaphelper.cpp \
 	crossccybasismtmresetswap.cpp \
 	crossccybasismtmresetswaphelper.cpp \
-	cpicapfloor.cpp 
 	correlationtermstructure.cpp \
 	cpicapfloor.cpp \
 	strippedoptionletadapter.cpp \
