@@ -103,8 +103,8 @@ OptionInterpolator2d<InterpolatorStrike, InterpolatorExpiry>::OptionInterpolator
 };
 
 template <class IS, class IE>
-void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes,
-    const std::vector<QuantLib::Real>& values) {
+void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>& dates, 
+    const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Real>& values) {
     using QuantLib::Date;
     using QuantLib::Size;
     using QuantLib::Real;

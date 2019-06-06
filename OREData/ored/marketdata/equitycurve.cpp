@@ -250,7 +250,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             vector<boost::shared_ptr<EquityOptionQuote>> calls, puts;
             vector<Date> callDates, putDates;
             vector<Real> callStrikes, putStrikes;
-            vector<Volatility> callVolatilities, putVolatilities;
+            vector<Real> callPremiums, putPremiums;
             Calendar cal = NullCalendar();
 
             // Split the quotes into call and puts
@@ -272,8 +272,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
                         putDates.push_back(getDateFromDateOrPeriod(puts[j]->expiry(), asof));
                         callStrikes.push_back(parseReal(calls[i]->strike()));
                         putStrikes.push_back(parseReal(puts[j]->strike()));
-                        callVolatilities.push_back(calls[i]->quote()->value());
-                        putVolatilities.push_back(puts[j]->quote()->value());
+                        callPremiums.push_back(calls[i]->quote()->value());
+                        putPremiums.push_back(puts[j]->quote()->value());
                     }
                 }
             }
@@ -285,12 +285,12 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             // Build a Black Variance Sparse matrix 
             boost::shared_ptr<OptionPriceSurface> callSurface, putSurface;
 
-            callSurface = boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callVolatilities, dc_);
-            putSurface = boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putVolatilities, dc_);
+            callSurface = boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
+            putSurface = boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
 
             DLOG("Stripping equity forwards from the option premium surfaces");
             boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
-                forecastYieldTermStructure_, equitySpot_, QuantLib::Exercise::Type::European);
+                forecastYieldTermStructure_, equitySpot_, Exercise::Type::European);
 
             // set terms and quotes from the stripper
             terms_ = efcs->expiries();
