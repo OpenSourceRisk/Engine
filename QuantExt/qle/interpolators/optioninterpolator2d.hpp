@@ -188,7 +188,7 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValueForStrike(QuantLib::Real st
     const std::vector<QuantLib::Real>& strks, const std::vector<QuantLib::Real>& vars,
     const QuantLib::Interpolation& intrp) const {
 
-    Real retVar;
+    QuantLib::Real retVar;
     if (strike > strks.back()) {
         retVar = vars.back(); // flat extrapolate far strike
     } else if (strike < strks.front()) {
