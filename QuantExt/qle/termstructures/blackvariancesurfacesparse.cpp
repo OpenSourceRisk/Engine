@@ -27,7 +27,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
                                                        const vector<Date>& dates, const vector<Real>& strikes,
                                                        const vector<Volatility>& volatilities,
                                                        const DayCounter& dayCounter)
-    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d(referenceDate, dayCounter) {
+    : BlackVarianceTermStructure(referenceDate, cal), OptionInterpolator2d<Linear, Linear>(referenceDate, dayCounter) {
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
         "dates, strikes and volatilities vectors not of equal size.");
@@ -47,8 +47,8 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
         modStrikes.push_back(strike);
         variances.push_back(0.0);
     }
-    OptionInterpolator2d::initialise(modDates, modStrikes, variances);
     
+    initialise(modDates, modStrikes, variances);    
 }
 
 } // namespace QuantExt

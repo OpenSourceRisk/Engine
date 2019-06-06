@@ -1174,8 +1174,5 @@
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp">
       <Filter>termstructures</Filter>
     </ClCompile>
-    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp">
-      <Filter>interpolators</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

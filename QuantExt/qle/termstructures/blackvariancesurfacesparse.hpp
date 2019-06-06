@@ -23,7 +23,7 @@
 #ifndef quantext_black_variance_surface_sparse_hpp
 #define quantext_black_variance_surface_sparse_hpp
 
-#include <ql/math/interpolations/interpolation2d.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <qle/interpolators/optioninterpolator2d.hpp>
@@ -33,7 +33,7 @@ namespace QuantExt {
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
 class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
-                                   public OptionInterpolator2d {
+                                   public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
     BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,

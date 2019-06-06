@@ -24,21 +24,23 @@
 #define quantext_option_price_surface_hpp
 
 #include <qle/interpolators/optioninterpolator2d.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructure.hpp>
 #include <ql/time/date.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 
 namespace QuantExt {
 
 //! Option Price Surface based on sparse matrix.
 //!  \ingroup termstructures
 class OptionPriceSurface : public QuantLib::TermStructure,
-                           public OptionInterpolator2d {
+                           public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
     OptionPriceSurface(const QuantLib::Date& referenceDate, 
         const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, 
         const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dayCounter) :
-        OptionInterpolator2d(referenceDate, dayCounter, dates, strikes, prices) {};
+        OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear>(referenceDate, dayCounter, dates, strikes, prices) {};
 
     //! \name TermStructure interface
     //@{

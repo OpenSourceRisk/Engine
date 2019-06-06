@@ -765,7 +765,6 @@
     <ClCompile Include="qle\instruments\payment.cpp" />
     <ClCompile Include="qle\instruments\subperiodsswap.cpp" />
     <ClCompile Include="qle\instruments\tenorbasisswap.cpp" />
-    <ClCompile Include="qle\interpolators\optioninterpolator2d.cpp" />
     <ClCompile Include="qle\math\deltagammavar.cpp" />
     <ClCompile Include="qle\math\fillemptymatrix.cpp" />
     <ClCompile Include="qle\methods\multipathgeneratorbase.cpp" />
