@@ -42,7 +42,9 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
     // variance must be 0 at time 0, add a variance of zero, time 0, for 2 strikes to ensure interpolation
     vector<Date> modDates(dates.begin(), dates.end());
     vector<Real> modStrikes(strikes.begin(), strikes.end());
-    vector<Real> tempStrikes({ 1, 100 });
+    vector<Real> tempStrikes;
+    tempStrikes.push_back(1.0);
+    tempStrikes.push_back(100.0);
     for (Size i = 0; i < tempStrikes.size(); i++) {
         modDates.push_back(referenceDate);
         modStrikes.push_back(tempStrikes[i]);

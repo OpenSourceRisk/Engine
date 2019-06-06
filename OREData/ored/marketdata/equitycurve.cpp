@@ -210,9 +210,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
         LOG("EquityCurve: read " << quotesRead << " quotes of type " << config->type());
         QL_REQUIRE(!equitySpot_.empty(), "Equity spot quote not found for " << config->curveID());
 
-        if (!wcFlag)
+        if (!wcFlag) {
             QL_REQUIRE(quotesRead == config->fwdQuotes().size(),
                 "read " << quotesRead << ", but " << config->fwdQuotes().size() << " required.");
+        }
 
         for (Size i = 0; i < terms_.size(); i++) {
             QL_REQUIRE(terms_[i] > asof, "Invalid Fwd Expiry " << terms_[i] << " vs. " << asof);
@@ -316,6 +317,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
             DLOG("Building flat Equity Dividend Yield curve as no quotes provided");
             // Return a flat curve @ 0%
             dividendYieldTermStructure_ = Handle<YieldTermStructure>(boost::make_shared<FlatForward>(asof, 0.0, dc_));
+            return;
         } else
             QL_FAIL("Invalid Equity curve configuration type for " << spec_.name());
 
