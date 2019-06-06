@@ -105,12 +105,9 @@ struct OptionletTraits {
 template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
 class PiecewiseOptionletCurve : public InterpolatedOptionletCurve<Interpolator>, public QuantLib::LazyObject {
 
-private:
-    typedef InterpolatedOptionletCurve<Interpolator> base_curve;
+public:
     typedef PiecewiseOptionletCurve<Interpolator, Bootstrap> this_curve;
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
-
-public:
 
     //! Bootstrap needs these typedefs
     typedef OptionletTraits traits_type;
@@ -164,6 +161,8 @@ public:
     //@}
 
 private:
+    typedef InterpolatedOptionletCurve<Interpolator> base_curve;
+
     //! \name LazyObject interface
     //@{
     void performCalculations() const;
