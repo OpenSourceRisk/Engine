@@ -34,10 +34,9 @@ namespace QuantExt {
 template <class Interpolator, template <class> class Bootstrap = QuantLib::IterativeBootstrap>
 class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
-private:
+public:
     typedef PiecewiseOptionletCurve<Interpolator, Bootstrap> optionlet_curve;
 
-public:
     PiecewiseOptionletStripper(
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
@@ -48,8 +47,7 @@ public:
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
-        const Interpolator& i = Interpolator(),
-        const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
+        const Interpolator& i = Interpolator());
 
     //! \name Inspectors
     //@{
@@ -68,14 +66,20 @@ private:
     //! The accuracy to be used in the bootstrap
     QuantLib::Real accuracy_;
 
+    //! Flat optionlet volatility before first optionlet fixing date
+    bool flatFirstPeriod_;
+
     //! Volatility type for the underlying cap floor matrix
     QuantLib::VolatilityType capFloorVolType_;
 
     //! The applicable shift if the underlying cap floor matrix has shifted lognormal volatility
     QuantLib::Real capFloorVolDisplacement_;
 
+    //! The interpolator
+    Interpolator interpolator_;
+
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
-    std::vector<boost::shared_ptr<optionlet_curve>> strikeCurves_;
+    mutable std::vector<boost::shared_ptr<optionlet_curve> > strikeCurves_;
 };
 
 template <class Interpolator, template <class> class Bootstrap>
@@ -89,13 +93,16 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
-    const Interpolator& i,
-    const Bootstrap<optionlet_curve>& bootstrap) 
+    const Interpolator& i)
     : OptionletStripper(capFloorSurface, index, discount,
         optionletVolType ? *optionletVolType : capFloorVolType,
         optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      accuracy_(accuracy), capFloorVolType_(capFloorVolType),
-      capFloorVolDisplacement_(capFloorVolDisplacement), strikeCurves_(nStrikes_) {
+      accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
+      capFloorVolDisplacement_(capFloorVolDisplacement), interpolator_(i),
+      strikeCurves_(nStrikes_) {}
+
+template <class Interpolator, template <class> class Bootstrap>
+inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() const {
 
     // Some localised typedefs and using declarations to make the code more readable
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
@@ -106,7 +113,10 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     using QuantLib::SimpleQuote;
     using QuantLib::Period;
     using std::vector;
-    
+
+    // Update dates
+    populateDates();
+
     // Initialise a strike curve for each strike column 
     vector<Rate> strikes = termVolSurface_->strikes();
     vector<Period> tenors = termVolSurface_->optionTenors();
@@ -117,26 +127,13 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
             helpers[i] = boost::make_shared<CapFloorHelper>(CapFloorHelper::Automatic, tenors[i], strikes[j],
                 quote, iborIndex_, discount_, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
         }
-        strikeCurves_[j] = boost::make_shared<PiecewiseOptionletCurve<Interpolator, Bootstrap> >(
+        strikeCurves_[j] = boost::make_shared<optionlet_curve>(
             termVolSurface_->referenceDate(), helpers, termVolSurface_->calendar(),
-            termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_, 
-            displacement_, flatFirstPeriod, accuracy, i, bootstrap);
+            termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_,
+            displacement_, flatFirstPeriod_, accuracy_, interpolator_);
     }
-}
-
-template <class Interpolator, template <class> class Bootstrap>
-inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() const {
-
-    // Some localised typedefs and using declarations to make the code more readable
-    using QuantLib::Size;
-    using QuantLib::Rate;
-    using std::vector;
-
-    // Update dates
-    populateDates();
 
     // Populate the optionlet volatilities and standard deviations
-    vector<Rate> strikes = termVolSurface_->strikes();
     for (Size j = 0; j < strikes.size(); j++) {
         for (Size i = 0; i < nOptionletTenors_; ++i) {
             optionletVolatilities_[i][j] = strikeCurves_[j]->volatility(optionletDates_[i], strikes[j]);
