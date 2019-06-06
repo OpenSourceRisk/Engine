@@ -257,7 +257,7 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Date d, QuantLib
         QuantLib::Size dis = distance(expiries_.begin(), it);
         valueReturn = getValueForStrike(strike, strikes_[dis], values_[dis], interpolations_[dis]);
     } else {
-        Time t = dayCounter_.yearFraction(referenceDate_, d);
+        QuantLib::Time t = dayCounter_.yearFraction(referenceDate_, d);
         valueReturn = getValue(t, strike);
     }
 

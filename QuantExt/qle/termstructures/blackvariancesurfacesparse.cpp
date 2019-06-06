@@ -31,7 +31,7 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
 
     QL_REQUIRE((strikes.size() == dates.size()) && (dates.size() == volatilities.size()),
         "dates, strikes and volatilities vectors not of equal size.");
-    
+
     // convert volatilities to variance
     vector<Real> variances(volatilities.size());
     for (Size i = 0; i < volatilities.size(); i++) {
@@ -42,9 +42,10 @@ BlackVarianceSurfaceSparse::BlackVarianceSurfaceSparse(const Date& referenceDate
     // variance must be 0 at time 0, add a variance of zero, time 0, for 2 strikes to ensure interpolation
     vector<Date> modDates(dates.begin(), dates.end());
     vector<Real> modStrikes(strikes.begin(), strikes.end());
-    for (Real strike : vector<Real>(1, 100)) {
+    vector<Real> tempStrikes = { 1, 100 };
+    for (Size i = 0; i < tempStrikes.size(); i++) {
         modDates.push_back(referenceDate);
-        modStrikes.push_back(strike);
+        modStrikes.push_back(tempStrikes[i]);
         variances.push_back(0.0);
     }
     
