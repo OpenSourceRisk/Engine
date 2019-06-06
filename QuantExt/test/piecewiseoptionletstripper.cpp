@@ -646,6 +646,86 @@ BOOST_FIXTURE_TEST_CASE(testCachedLinearFlat, CommonVars) {
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(testChangingCapFloorSurface, CommonVars) {
+
+    BOOST_TEST_MESSAGE("Testing changing the input cap floor surface");
+
+    // Take four normal volatilities from test data and create quotes
+    Size lastTenorIdx = testVols.tenors.size() - 1;
+    Size lastStrikeIdx = testVols.strikes.size() - 1;
+
+    vector<Period> tenors = list_of(testVols.tenors[0])(testVols.tenors[lastTenorIdx]);
+    vector<Rate> strikes = list_of(testVols.strikes[0])(testVols.strikes[lastStrikeIdx]);
+
+    vector<vector<boost::shared_ptr<SimpleQuote> > > quotes(2);
+    quotes[0].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[0][0]));
+    quotes[0].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[0][lastStrikeIdx]));
+    quotes[1].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][0]));
+    quotes[1].push_back(boost::make_shared<SimpleQuote>(testVols.nVols[lastTenorIdx][lastStrikeIdx]));
+
+    vector<vector<Handle<Quote> > > quoteHs(2);
+    quoteHs[0].push_back(Handle<Quote>(quotes[0][0]));
+    quoteHs[0].push_back(Handle<Quote>(quotes[0][1]));
+    quoteHs[1].push_back(Handle<Quote>(quotes[1][0]));
+    quoteHs[1].push_back(Handle<Quote>(quotes[1][1]));
+
+    // Create the cap floor term vol surface using the quotes
+    boost::shared_ptr<TermVolSurface> cfts = boost::make_shared<TermVolSurface>(
+        settlementDays, calendar, bdc, tenors, strikes, quoteHs, dayCounter, TermVolSurface::Bilinear);
+
+    // Create the piecewise optionlet stripper
+    boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<LinearFlat> >(
+        cfts, iborIndex, testYieldCurves.discountEonia, accuracy, true, Normal, 0.0, Normal);
+
+    // Create the OptionletVolatilityStructure
+    boost::shared_ptr<OptionletVolatilityStructure> ovs = 
+        boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat> >(pwos);
+    ovs->enableExtrapolation();
+
+    // Request optionlet volatility at test date
+    Date testDate = pwos->optionletFixingDates().back();
+    Volatility initialVol = ovs->volatility(testDate, strikes[0]);
+    BOOST_TEST_MESSAGE("Test vol before shift is: " << fixed << setprecision(12) << initialVol);
+    Volatility expInitialVol = 0.007941492816;
+    BOOST_CHECK_SMALL(fabs(expInitialVol - initialVol), tolerance);
+
+    // Shift the input quote and request the same optionlet volatility
+    Rate shift = 1.1;
+    quotes[1][0]->setValue(shift * quotes[1][0]->value());
+    Volatility shiftedVol = ovs->volatility(testDate, strikes[0]);
+    BOOST_TEST_MESSAGE("Test vol after shift is: " << fixed << setprecision(12) << shiftedVol);
+    Volatility expShiftedVol = 0.008926338986;
+    BOOST_CHECK_SMALL(fabs(expShiftedVol - shiftedVol), tolerance);
+
+    // Reset the input quote
+    quotes[1][0]->setValue(quotes[1][0]->value() / shift);
+    initialVol = ovs->volatility(testDate, strikes[0]);
+    BOOST_TEST_MESSAGE("Test vol after reset is: " << fixed << setprecision(12) << initialVol);
+    BOOST_CHECK_SMALL(fabs(expInitialVol - initialVol), tolerance);
+
+    // Change the evaluation date
+    Date newDate = referenceDate + 1 * Weeks;
+    Settings::instance().evaluationDate() = newDate;
+    
+    // Check that the optionlet volatility structure's reference date has moved
+    // Only the case because we used a "moving" adapter
+    BOOST_CHECK_EQUAL(ovs->referenceDate(), newDate);
+    
+    // Check that one of the optionlet fixing dates in the PiecewiseOptionletStripper has moved
+    // Only the case because we used a "moving" cap floor volatility term surface as input
+    Date newLastOptionletDate = pwos->optionletFixingDates().back();
+    BOOST_TEST_MESSAGE("Last fixing date moved from " << io::iso_date(testDate) <<
+        " to " << io::iso_date(newLastOptionletDate));
+    BOOST_CHECK(newLastOptionletDate > testDate);
+
+    // Check the newly calculated optionlet vol for the old test date
+    Volatility newVol = ovs->volatility(testDate, strikes[0]);
+    BOOST_TEST_MESSAGE("Test vol after moving evaluation date is: " << fixed << setprecision(12) << newVol);
+    Volatility expNewVol = 0.007932365669;
+    BOOST_CHECK_SMALL(fabs(expNewVol - newVol), tolerance);
+
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()
