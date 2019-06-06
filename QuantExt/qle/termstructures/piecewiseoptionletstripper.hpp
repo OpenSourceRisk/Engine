@@ -23,6 +23,7 @@
 #ifndef quantext_piecewiseoptionletstripper_hpp
 #define quantext_piecewiseoptionletstripper_hpp
 
+#include <qle/termstructures/iterativebootstrap.hpp>
 #include <qle/termstructures/piecewiseoptionletcurve.hpp>
 #include <qle/termstructures/optionletstripper.hpp>
 
@@ -31,7 +32,7 @@ namespace QuantExt {
 /*! Helper class to strip optionlet (i.e. caplet/floorlet) volatilities from the cap floor term volatilities of a 
     CapFloorTermVolSurface.
 */
-template <class Interpolator, template <class> class Bootstrap = QuantLib::IterativeBootstrap>
+template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
 class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
 public:

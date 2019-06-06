@@ -109,12 +109,9 @@ typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat, Cubic, QuantE
 vector<InterpolationType> timeInterpolationTypes = list_of
     (InterpolationType(Linear()))
     (InterpolationType(BackwardFlat()))
-    (InterpolationType(QuantExt::LinearFlat()));
-
-// If we comment these in, there are lots of errors introduced for the same reason as the tests in 
-// piecewiseoptionletcurve.cpp.
-//     (InterpolationType(Cubic()))
-//     (InterpolationType(QuantExt::CubicFlat()));
+    (InterpolationType(QuantExt::LinearFlat()))
+    (InterpolationType(Cubic()))
+    (InterpolationType(QuantExt::CubicFlat()));
 
 vector<InterpolationType> smileInterpolationTypes = list_of
     (InterpolationType(Linear()))

@@ -25,7 +25,7 @@
 
 #include <qle/termstructures/optionletcurve.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
-#include <ql/termstructures/iterativebootstrap.hpp>
+#include <qle/termstructures/iterativebootstrap.hpp>
 #include <ql/termstructures/localbootstrap.hpp>
 #include <ql/termstructures/yield/bootstraptraits.hpp>
 #include <ql/patterns/lazyobject.hpp>
@@ -102,7 +102,7 @@ struct OptionletTraits {
     static QuantLib::Size maxIterations() { return 100; }
 };
 
-template <class Interpolator, template <class> class Bootstrap = QuantLib::IterativeBootstrap>
+template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
 class PiecewiseOptionletCurve : public InterpolatedOptionletCurve<Interpolator>, public QuantLib::LazyObject {
 
 private:

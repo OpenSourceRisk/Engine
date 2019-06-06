@@ -668,6 +668,7 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
     <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />

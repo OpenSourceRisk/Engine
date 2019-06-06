@@ -708,6 +708,9 @@
     <ClInclude Include="qle\instruments\forwardbond.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

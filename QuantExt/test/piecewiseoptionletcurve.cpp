@@ -63,7 +63,7 @@ struct CommonVars : public qle::test::TopLevelFixture {
           bdc(Following),
           dayCounter(Actual365Fixed()),
           accuracy(1.0e-12),
-          tolerance(1.0e-11) {
+          tolerance(1.0e-10) {
         
         // Reference date
         Settings::instance().evaluationDate() = referenceDate;
@@ -175,12 +175,9 @@ typedef boost::variant<Linear, BackwardFlat, QuantExt::LinearFlat, Cubic, QuantE
 vector<InterpolationType> interpolationTypes = list_of
     (InterpolationType(Linear()))
     (InterpolationType(BackwardFlat()))
-    (InterpolationType(QuantExt::LinearFlat()));
-
-// Lots of failures when we include Cubic and CubicFlat. We get good convergence but the global exit condition in 
-// IterativeBootstrap<Curve>::calculate() is not satisfied before max iterations are hit.
-//     (InterpolationType(Cubic()))
-//     (InterpolationType(QuantExt::CubicFlat()));
+    (InterpolationType(QuantExt::LinearFlat()))
+    (InterpolationType(Cubic()))
+    (InterpolationType(QuantExt::CubicFlat()));
 
 vector<InterpolationType> interpolationTypesCached = list_of
     (InterpolationType(Linear()))
