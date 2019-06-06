@@ -109,6 +109,7 @@ void OptionInterpolator2d<IS, IE>::initialise(const std::vector<QuantLib::Date>&
     using QuantLib::Size;
     using QuantLib::Real;
     using QuantLib::Time;
+    using QuantLib::Interpolation;
     using std::vector;
     using std::set;
     using std::pair;
@@ -204,6 +205,7 @@ QuantLib::Real OptionInterpolator2d<IS, IE>::getValue(QuantLib::Time t, QuantLib
     using QuantLib::Size;
     using QuantLib::Real;
     using QuantLib::Time;
+    using QuantLib::Interpolation;
     using std::vector;
     QL_REQUIRE(initialised_, "No data provided to OptionInterpolator2d");
     QL_REQUIRE(t >= 0, "Variance requested for date before reference date: " << referenceDate_);
