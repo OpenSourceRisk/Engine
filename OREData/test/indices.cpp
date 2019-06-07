@@ -165,6 +165,8 @@ static struct test_data index_data[] = {
     {"CAD-BA-12M", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
+    {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
+  
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
     {"USD-LIBOR-1W", "USDLibor1W Actual/360", 1 * Weeks},
