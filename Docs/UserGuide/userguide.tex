@@ -2085,6 +2085,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2110,7 +2111,7 @@ pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt imp
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
 scenario analysis and stress testing.
 
-\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
