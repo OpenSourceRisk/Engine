@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(testFXAmericanOptionPrice) {
         engineData->engine("FxAmericanOption") = "BaroneAdesiWhaleyApproximationEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBAWApproxEngineBuilder>());
+        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBaroneAdesiWhaleyApproxEngineBuilder>());
         
         fxOption.build(engineFactory);
 
@@ -359,11 +359,7 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
             {"Scheme", "Douglas"},
             {"TimeGrid", "100"},
             {"XGrid", "100"},
-            {"DampingSteps", "0"},
-            {"LocalVol", "true"},
-            {"LocalVolType", "AndreasenHuge"},
-            {"AndreasenHugeExpiries", "1D,1W,2W,1M,2M,3M,4M,5M,6M,12M,18M,24M,3Y,4Y,5Y,6Y,8Y,10Y,12Y,15Y,20Y,25Y"},
-            {"AndreasenHugeDeltas", "-0.25,-0.1,0.1,0.25"}
+            {"DampingSteps", "0"}
         };
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
