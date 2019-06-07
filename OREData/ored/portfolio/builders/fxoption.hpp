@@ -26,14 +26,11 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/math/solvers1d/bisection.hpp>
 #include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <ql/termstructures/volatility/equityfx/andreasenhugelocalvoladapter.hpp>
-#include <ql/termstructures/volatility/equityfx/andreasenhugevolatilityinterpl.hpp>
 
 namespace ore {
 namespace data {
