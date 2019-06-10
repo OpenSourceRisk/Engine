@@ -105,6 +105,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // store all curve build errors
     map<string, string> buildErrors;
 
+    // fx triangulation
+    FXTriangulation fxT;
+
     for (const auto& configuration : params.configurations()) {
 
         LOG("Build objects in TodaysMarket configuration " << configuration.first);
@@ -193,6 +196,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         LOG("Building FXSpot for asof " << asof);
                         boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof, *fxspec, loader);
                         itr = requiredFxSpots.insert(make_pair(fxspec->name(), fxSpot)).first;
+                        fxT.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()); 
                     }
 
                     // add the handle to the Market Map (possible lots of times for proxies)
@@ -218,7 +222,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building FXVolatility for asof " << asof);
                         boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
-                            asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
+                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves);
                         itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                     }
 
