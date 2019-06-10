@@ -36,7 +36,7 @@ template <class Interpolator, template <class> class Bootstrap = QuantExt::Itera
 class PiecewiseOptionletStripper : public QuantExt::OptionletStripper {
 
 public:
-    typedef PiecewiseOptionletCurve<Interpolator, Bootstrap> optionlet_curve;
+    typedef typename PiecewiseOptionletCurve<Interpolator, Bootstrap>::this_curve optionlet_curve;
 
     PiecewiseOptionletStripper(
         const boost::shared_ptr<QuantExt::CapFloorTermVolSurface>& capFloorSurface,
