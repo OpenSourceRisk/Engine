@@ -113,6 +113,21 @@ public:
     }
 };
 
+// Specialise for KRW-CD. If tenor equates to 91 Days, ensure that the index is created
+// with a tenor of 3M under the hood.
+template <> class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        QL_REQUIRE(p != 1 * Days, "must have a period longer than 1D");
+        if (p.units() == Days && p.length() == 91) {
+            return boost::make_shared<KRWCd>(3 * Months, h);
+        }
+        else {
+            return boost::make_shared<KRWCd>(p, h);
+        }
+    }
+};
+
 template <class T> class IborIndexParserOIS : public IborIndexParser {
 public:
     boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
@@ -201,6 +216,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"EUR-EURIB", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
         {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
         {"CAD-BA", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
+        {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
         {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
         {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
