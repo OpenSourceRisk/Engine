@@ -216,6 +216,7 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
         {"EUR-EURIB", boost::make_shared<IborIndexParserWithPeriod<Euribor>>()},
         {"CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
         {"CAD-BA", boost::make_shared<IborIndexParserWithPeriod<Cdor>>()},
+        {"CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>()},
         {"CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>()},
         {"EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>()},
         {"USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>()},
