@@ -26,7 +26,6 @@
 #include <boost/make_shared.hpp>
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/enginefactory.hpp>
-#include <ql/methods/finitedifferences/solvers/fdmbackwardsolver.hpp>
 #include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
 #include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
 #include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
@@ -104,28 +103,14 @@ public:
 protected:
 
     virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        std::string scheme = engineParameter("Scheme");
+        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
         Size tGrid = ore::data::parseInteger(engineParameter("TimeGrid"));
         Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
         Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
 
-        static std::map<std::string, FdmSchemeDesc> fdmSchemeMap = {
-            {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
-            {"Douglas", FdmSchemeDesc::Douglas()},
-            {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
-            {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
-            {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
-            {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
-            {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
-            {"TrBDF2", FdmSchemeDesc::TrBDF2()}
-        };
-
-        auto it = fdmSchemeMap.find(scheme);
-        QL_REQUIRE(it != fdmSchemeMap.end(), "unknown scheme for finite difference method: " << scheme);
         boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
         return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid,
-                                                               dampingSteps,
-                                                               it->second);
+                                                               dampingSteps, scheme);
     }
 };
 

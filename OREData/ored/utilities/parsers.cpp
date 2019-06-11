@@ -664,5 +664,24 @@ SequenceType parseSequenceType(const std::string& s) {
         QL_FAIL("sequence type \"" << s << "\" not recognised");
 }
 
+FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
+    static std::map<std::string, FdmSchemeDesc> m = {
+            {"Hundsdorfer", FdmSchemeDesc::Hundsdorfer()},
+            {"Douglas", FdmSchemeDesc::Douglas()},
+            {"CraigSneyd", FdmSchemeDesc::CraigSneyd()},
+            {"ModifiedCraigSneyd", FdmSchemeDesc::ModifiedCraigSneyd()},
+            {"ImplicitEuler", FdmSchemeDesc::ImplicitEuler()},
+            {"ExplicitEuler", FdmSchemeDesc::ExplicitEuler()},
+            {"MethodOfLines", FdmSchemeDesc::MethodOfLines()},
+            {"TrBDF2", FdmSchemeDesc::TrBDF2()}
+    };
+
+    auto it = m.find(s);
+    if (it != m.end())
+        return it->second;
+    else
+        QL_FAIL("fdm scheme \"" << s << "\" not recognised");
+}
+
 } // namespace data
 } // namespace ore
