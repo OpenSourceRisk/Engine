@@ -43,18 +43,22 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     Option::Type type = parseOptionType(option_.callPut());
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike));
 
-    // Only European Vanilla supported for now
-    QL_REQUIRE(option_.style() == "European" || option_.style() == "American",
-        "Option Style unknown: " << option_.style());
+    QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
+    QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European ||
+               exerciseType == QuantLib::Exercise::Type::American,
+               "Option Style " << option_.style() << " is not supported");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date expiryDate = parseDate(option_.exerciseDates().front());
 
     // Exercise
     boost::shared_ptr<Exercise> exercise;
-    if (option_.style() == "European") {
+    switch(exerciseType) {
+        case QuantLib::Exercise::Type::European:
         exercise = boost::make_shared<EuropeanExercise>(expiryDate);
-    } else { // American
+        break;
+        case QuantLib::Exercise::Type::American:
         exercise = boost::make_shared<AmericanExercise>(expiryDate, option_.payoffAtExpiry());
+        break;
     }
 
     // Vanilla European/American.
