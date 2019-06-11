@@ -842,6 +842,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Size m = parameters->fxVolMoneyness().size();
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
                             Calendar cal = wrapper->calendar();
+                            if (cal.empty()) {
+                                cal = NullCalendar();
+                            }
                             // FIXME hardcoded in todaysmarket
                             DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(name));
                             vector<Time> times;

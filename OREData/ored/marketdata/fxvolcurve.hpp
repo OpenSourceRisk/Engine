@@ -38,7 +38,7 @@ using QuantLib::Date;
 using QuantLib::BlackVolTermStructure;
 using ore::data::CurveConfigurations;
 
-
+// to get FX quote from container (map or FXTriangulation)
 class FXLookup {
 public:
     virtual Handle<Quote> fxPairLookup(const string& fxPair) const = 0;
