@@ -24,7 +24,7 @@
     <Engine>AnalyticEuropeanEngine</Engine>
     <EngineParameters/>
   </Product>
-  <Product type="FxAmericanOption">
+  <Product type="FxOptionAmerican">
     <Model>GarmanKohlhagen</Model>
     <ModelParameters/>
     <Engine>FdBlackScholesVanillaEngine</Engine>
