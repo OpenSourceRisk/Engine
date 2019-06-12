@@ -451,7 +451,7 @@ private:
 //! Security description
 class SecuritySpec : public CurveSpec {
 public:
-    SecuritySpec(const string& securityID) : securityID_(securityID) {}
+    SecuritySpec(const string& securityID) : CurveSpec(securityID), securityID_(securityID) {}
     //! Default constructor
     SecuritySpec() {}
     CurveType baseType() const { return CurveType::Security; }
