@@ -75,7 +75,7 @@ std::vector<TestDatum> loadExpectedHolidays() {
     string fileName = TEST_INPUT_FILE("holidays.csv");
     std::vector<TestDatum> data;
     ifstream file;
-    file.open(fileName);
+    file.open("..\\" + fileName);
     QL_REQUIRE(file.is_open(), "error opening file " << fileName);
     std::string line;
     // skip empty lines
