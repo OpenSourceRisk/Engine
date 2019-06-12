@@ -23,46 +23,42 @@
 
 #pragma once
 
-#include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ored/utilities/log.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/processes/blackscholesprocess.hpp>
-#include <ql/version.hpp>
+#include <ored/portfolio/builders/oneassetoption.hpp>
 
 namespace ore {
 namespace data {
 
-//! Engine Builder for European Equity Options
-/*! Pricing engines are cached by equity/currency
+//! Engine Builder for European Equity Option Options
+/*! Pricing engines are cached by asset/currency
 
     \ingroup builders
  */
-class EquityOptionEngineBuilder : public CachingPricingEngineBuilder<string, const string&, const Currency&> {
+class EquityEuropeanOptionEngineBuilder : public OneAssetEuropeanOptionEngineBuilder {
 public:
-    EquityOptionEngineBuilder()
-        : CachingEngineBuilder("BlackScholesMerton", "AnalyticEuropeanEngine", {"EquityOption"}) {}
+    EquityEuropeanOptionEngineBuilder()
+        : OneAssetEuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
+};
 
-protected:
-    virtual string keyImpl(const string& equityName, const Currency& ccy) override {
-        return equityName + "/" + ccy.code();
-    }
+//! Engine Builder for American Equity Options using Finite Difference Method
+/*! Pricing engines are cached by asset/currency
 
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const string& equityName, const Currency& ccy) override {
-        string key = keyImpl(equityName, ccy);
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
-            market_->equitySpot(equityName, configuration(MarketContext::pricing)),
-            market_->equityDividendCurve(equityName,
-                                         configuration(MarketContext::pricing)), // dividend yield ~ foreign yield
-            market_->equityForecastCurve(equityName, configuration(MarketContext::pricing)),
-            market_->equityVol(equityName, configuration(MarketContext::pricing)));
-        // separate IR curves required for "discounting" and "forward price estimation"
-        Handle<YieldTermStructure> discountCurve =
-            market_->discountCurve(ccy.code(), configuration(MarketContext::pricing));
+    \ingroup builders
+ */
+class EquityAmericanOptionFDEngineBuilder : public OneAssetAmericanOptionFDEngineBuilder {
+public:
+    EquityAmericanOptionFDEngineBuilder()
+        : OneAssetAmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+};
 
-        return boost::make_shared<QuantLib::AnalyticEuropeanEngine>(gbsp, discountCurve);
-    }
+//! Engine Builder for American Equity Options using Barone Adesi Whaley Approximation
+/*! Pricing engines are cached by asset/currency
+
+    \ingroup builders
+ */
+class EquityAmericanOptionBaroneAdesiWhaleyEngineBuilder : public OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder {
+public:
+    EquityAmericanOptionBaroneAdesiWhaleyEngineBuilder()
+        : OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
 } // namespace data

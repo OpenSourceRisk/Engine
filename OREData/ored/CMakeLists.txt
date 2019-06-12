@@ -90,6 +90,7 @@ portfolio/legbuilders.cpp
 portfolio/legdata.cpp
 portfolio/nettingsetdefinition.cpp
 portfolio/nettingsetmanager.cpp
+portfolio/oneassetoption.cpp
 portfolio/optiondata.cpp
 portfolio/optionwrapper.cpp
 portfolio/portfolio.cpp
@@ -202,6 +203,7 @@ portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
+portfolio/builders/oneassetoption.hpp
 portfolio/builders/swap.hpp
 portfolio/builders/swaption.hpp
 portfolio/builders/yoycapfloor.hpp
@@ -226,6 +228,7 @@ portfolio/legbuilders.hpp
 portfolio/legdata.hpp
 portfolio/nettingsetdefinition.hpp
 portfolio/nettingsetmanager.hpp
+portfolio/oneassetoption.hpp
 portfolio/optiondata.hpp
 portfolio/optionwrapper.hpp
 portfolio/portfolio.hpp

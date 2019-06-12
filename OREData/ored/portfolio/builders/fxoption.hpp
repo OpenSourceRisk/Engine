@@ -23,115 +23,42 @@
 
 #pragma once
 
-#include <boost/make_shared.hpp>
-#include <ored/portfolio/builders/cachingenginebuilder.hpp>
-#include <ored/portfolio/enginefactory.hpp>
-#include <ql/pricingengines/vanilla/analyticeuropeanengine.hpp>
-#include <ql/pricingengines/vanilla/fdblackscholesvanillaengine.hpp>
-#include <ql/pricingengines/vanilla/baroneadesiwhaleyengine.hpp>
-#include <ql/processes/blackscholesprocess.hpp>
+#include <ored/portfolio/builders/oneassetoption.hpp>
 
 namespace ore {
 namespace data {
 
-//! Abstract Engine Builder for FX Options
+//! Engine Builder for European Fx Option Options
+/*! Pricing engines are cached by currency pair/currency
+
+    \ingroup builders
+ */
+class FxEuropeanOptionEngineBuilder : public OneAssetEuropeanOptionEngineBuilder {
+public:
+    FxEuropeanOptionEngineBuilder()
+        : OneAssetEuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+};
+
+//! Engine Builder for American Fx Options using Finite Difference Method
 /*! Pricing engines are cached by currency pair
 
     \ingroup builders
  */
-class FxOptionEngineBuilder : public CachingPricingEngineBuilder<string, const Currency&, const Currency&> {
-public:
-    FxOptionEngineBuilder(const string& model, const string& engine, const set<string>& tradeTypes)
-        : CachingEngineBuilder(model, engine, tradeTypes) {}
-
-protected:
-    virtual string keyImpl(const Currency& forCcy, const Currency& domCcy) override {
-        return forCcy.code() + domCcy.code();
-    }
-
-    boost::shared_ptr<GeneralizedBlackScholesProcess> getBlackScholesProcess(const Currency& forCcy, const Currency& domCcy) {
-        string pair = keyImpl(forCcy, domCcy);
-        const Handle<Quote>& spot = market_->fxSpot(pair, configuration(ore::data::MarketContext::pricing));
-        const Handle<YieldTermStructure>& rTS = market_->discountCurve(
-            domCcy.code(), configuration(ore::data::MarketContext::pricing));
-        const Handle<YieldTermStructure>& qTS = market_->discountCurve(
-            forCcy.code(), configuration(ore::data::MarketContext::pricing));
-        const Handle<BlackVolTermStructure>& blackVolTS = market_->fxVol(
-            pair, configuration(ore::data::MarketContext::pricing));
-        return boost::make_shared<GeneralizedBlackScholesProcess>(spot, qTS, rTS, blackVolTS);
-    }
-};
-
-//! Engine Builder for European FX Options
-/*! Pricing engines are cached by currency pair
-
-    \ingroup builders
- */
-class FxEuropeanOptionEngineBuilder : public FxOptionEngineBuilder {
-public:
-    FxEuropeanOptionEngineBuilder() : FxOptionEngineBuilder("GarmanKohlhagen", "AnalyticEuropeanEngine", {"FxOption"}) {}
-
-protected:
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<AnalyticEuropeanEngine>(gbsp);
-    }
-};
-
-//! Abstract Engine Builder for FX American Options
-/*! Pricing engines are cached by currency pair
-
-    \ingroup portfolio
- */
-class FxAmericanOptionEngineBuilder : public FxOptionEngineBuilder {
-protected:
-    FxAmericanOptionEngineBuilder(const string& model, const string& engine)
-        : FxOptionEngineBuilder(model, engine, {"FxAmericanOption"}) {}
-};
-
-//! Engine Builder for FX American Options using Finite Difference Method
-/*! Pricing engines are cached by currency pair
-
-    \ingroup portfolio
- */
-class FxAmericanOptionFDEngineBuilder
-    : public FxAmericanOptionEngineBuilder {
+class FxAmericanOptionFDEngineBuilder : public OneAssetAmericanOptionFDEngineBuilder {
 public:
     FxAmericanOptionFDEngineBuilder()
-        : FxAmericanOptionEngineBuilder("GarmanKohlhagen", "FdBlackScholesVanillaEngine") {}
-
-protected:
-
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        FdmSchemeDesc scheme = parseFdmSchemeDesc(engineParameter("Scheme"));
-        Size tGrid = ore::data::parseInteger(engineParameter("TimeGrid"));
-        Size xGrid = ore::data::parseInteger(engineParameter("XGrid"));
-        Size dampingSteps = ore::data::parseInteger(engineParameter("DampingSteps"));
-
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<FdBlackScholesVanillaEngine>(gbsp, tGrid, xGrid,
-                                                               dampingSteps, scheme);
-    }
+        : OneAssetAmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
-//! Engine Builder for FX American Options using Barone Adesi Whaley Approximation
+//! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation
 /*! Pricing engines are cached by currency pair
 
-    \ingroup portfolio
+    \ingroup builders
  */
-class FxAmericanOptionBaroneAdesiWhaleyApproxEngineBuilder
-    : public FxAmericanOptionEngineBuilder {
+class FxAmericanOptionBaroneAdesiWhaleyEngineBuilder : public OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder {
 public:
-    FxAmericanOptionBaroneAdesiWhaleyApproxEngineBuilder()
-        : FxAmericanOptionEngineBuilder("GarmanKohlhagen", "BaroneAdesiWhaleyApproximationEngine") {}
-
-protected:
-
-    virtual boost::shared_ptr<PricingEngine> engineImpl(const Currency& forCcy, const Currency& domCcy) override {
-        boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = getBlackScholesProcess(forCcy, domCcy);
-        return boost::make_shared<BaroneAdesiWhaleyApproximationEngine>(gbsp);
-    }
-
+    FxAmericanOptionBaroneAdesiWhaleyEngineBuilder()
+        : OneAssetAmericanOptionBaroneAdesiWhaleyEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 } // namespace data

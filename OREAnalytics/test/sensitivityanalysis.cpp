@@ -165,7 +165,7 @@ void testPortfolioSensitivity(ObservationMode::Mode om) {
     factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CommodityForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CommodityOptionEngineBuilder>());
@@ -1105,7 +1105,7 @@ BOOST_AUTO_TEST_CASE(testEquityOptionDeltaGamma) {
     data->model("EquityOption") = "BlackScholesMerton";
     data->engine("EquityOption") = "AnalyticEuropeanEngine";
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(data, simMarket);
-    factory->registerBuilder(boost::make_shared<EquityOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<EquityEuropeanOptionEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EquityForwardEngineBuilder>());
 
     boost::shared_ptr<Portfolio> portfolio(new Portfolio());

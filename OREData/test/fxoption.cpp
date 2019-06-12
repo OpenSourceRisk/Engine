@@ -234,11 +234,11 @@ BOOST_AUTO_TEST_CASE(testFXAmericanOptionPrice) {
 
         // Build and price
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-        engineData->model("FxAmericanOption") = "GarmanKohlhagen";
-        engineData->engine("FxAmericanOption") = "BaroneAdesiWhaleyApproximationEngine";
+        engineData->model("FxOptionAmerican") = "GarmanKohlhagen";
+        engineData->engine("FxOptionAmerican") = "BaroneAdesiWhaleyApproximationEngine";
 
         boost::shared_ptr<EngineFactory> engineFactory = boost::make_shared<EngineFactory>(engineData, market);
-        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBaroneAdesiWhaleyApproxEngineBuilder>());
+        engineFactory->registerBuilder(boost::make_shared<ore::data::FxAmericanOptionBaroneAdesiWhaleyEngineBuilder>());
         
         fxOption.build(engineFactory);
 
@@ -353,9 +353,9 @@ BOOST_AUTO_TEST_CASE(testFdValues) {
 
         // Build and price
         boost::shared_ptr<EngineData> engineData = boost::make_shared<EngineData>();
-        engineData->model("FxAmericanOption") = "GarmanKohlhagen";
-        engineData->engine("FxAmericanOption") = "FdBlackScholesVanillaEngine";
-        engineData->engineParameters("FxAmericanOption") = {
+        engineData->model("FxOptionAmerican") = "GarmanKohlhagen";
+        engineData->engine("FxOptionAmerican") = "FdBlackScholesVanillaEngine";
+        engineData->engineParameters("FxOptionAmerican") = {
             {"Scheme", "Douglas"},
             {"TimeGrid", "100"},
             {"XGrid", "100"},

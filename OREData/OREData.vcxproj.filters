@@ -186,6 +186,9 @@
     <ClInclude Include="ored\portfolio\nettingsetmanager.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
+    <ClInclude Include="ored\portfolio\oneassetoption.hpp">
+      <Filter>portfolio</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\optiondata.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
@@ -224,6 +227,9 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp">
       <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\oneassetoption.hpp">
+      <Filter>portfolio</Filter>
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\swap.hpp">
       <Filter>portfolio\builders</Filter>
@@ -771,6 +777,9 @@
       <Filter>marketdata</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\forwardbond.cpp">
+      <Filter>portfolio</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\portfolio\oneassetoption.cpp">
       <Filter>portfolio</Filter>
     </ClCompile>
   </ItemGroup>
