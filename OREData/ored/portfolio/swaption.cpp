@@ -106,7 +106,7 @@ map<string, set<Date>> Swaption::fixings(const Date& settlementDate) const {
             QL_REQUIRE(floatingCoupon, "Expect the floating leg of the underlying swap to be of type FloatingRateCoupon");
             if (floatingCoupon->accrualStartDate() >= nextExerciseDate) {
                 Date fixingDate = floatingCoupon->fixingDate();
-                if (fixingDate < today || (fixingDate == today && Settings::instance().enforcesTodaysHistoricFixings())) {
+                if (fixingDate <= today) {
                     result[underlyingIndex_].insert(fixingDate);
                 }
             }
