@@ -31,11 +31,11 @@ FXVolatilityCurveConfig::FXVolatilityCurveConfig(const string& curveID, const st
                                                  const Dimension& dimension, const vector<string>& expiries,
                                                  const string& fxSpotID, const string& fxForeignCurveID,
                                                  const string& fxDomesticCurveID, const DayCounter& dayCounter,
-                                                 const Calendar& calendar)
+                                                 const Calendar& calendar, const SmileInterpolation& interp)
 
     : CurveConfig(curveID, curveDescription), dimension_(dimension), expiries_(expiries), dayCounter_(dayCounter),
       calendar_(calendar), fxSpotID_(fxSpotID), fxForeignYieldCurveID_(fxForeignCurveID),
-      fxDomesticYieldCurveID_(fxDomesticCurveID) {}
+      fxDomesticYieldCurveID_(fxDomesticCurveID), smileInterpolation_(interp) {}
 
 const vector<string>& FXVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
@@ -60,6 +60,8 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
     curveDescription_ = XMLUtils::getChildValue(node, "CurveDescription", true);
     string dim = XMLUtils::getChildValue(node, "Dimension", true);
     string cal = XMLUtils::getChildValue(node, "Calendar");
+    string smileInterp = XMLUtils::getChildValue(node, "SmileInterpolation");
+
     if (cal == "")
         cal = "TARGET";
     calendar_ = parseCalendar(cal);
@@ -75,6 +77,15 @@ void FXVolatilityCurveConfig::fromXML(XMLNode* node) {
         dimension_ = Dimension::Smile;
     } else {
         QL_FAIL("Dimension " << dim << " not supported yet");
+    }
+    if (smileInterp == "") {
+        smileInterpolation_ = SmileInterpolation::VV2;  // default to VannaVolga 2nd approximation
+    }else if (smileInterp == "VannaVolga1") {
+        smileInterpolation_ = SmileInterpolation::VV1;
+    } else if (smileInterp == "VannaVolga2"){
+        smileInterpolation_ = SmileInterpolation::VV2;
+    } else {
+        QL_FAIL("Dimension " << smileInterp << " not supported");
     }
     expiries_ = XMLUtils::getChildrenValuesAsStrings(node, "Expiries", true);
     fxSpotID_ = XMLUtils::getChildValue(node, "FXSpotID", true);
@@ -96,6 +107,13 @@ XMLNode* FXVolatilityCurveConfig::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, node, "Dimension", "Smile");
     } else {
         QL_FAIL("Unkown Dimension in FXVolatilityCurveConfig::toXML()");
+    }
+    if (smileInterpolation_ == SmileInterpolation::VV1) {
+        XMLUtils::addChild(doc, node, "SmileInterpolation", "VannaVolga1");
+    } else if (smileInterpolation_ == SmileInterpolation::VV2) {
+        XMLUtils::addChild(doc, node, "SmileInterpolation", "VannaVolga");
+    } else {
+        QL_FAIL("Unknows SmileInterpolation in FXVOlatilityCurveConfig::toXML()");
     }
     XMLUtils::addGenericChildAsList(doc, node, "Expiries", expiries_);
     XMLUtils::addChild(doc, node, "FXSpotID", fxSpotID_);

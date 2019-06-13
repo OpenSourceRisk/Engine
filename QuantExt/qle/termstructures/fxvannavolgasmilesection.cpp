@@ -18,14 +18,15 @@
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
+#include <iostream>
 
 using namespace QuantLib;
 
 namespace QuantExt {
 
 VannaVolgaSmileSection::VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d,
-                                               Volatility bf25d)
-    : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d) {
+                                               Volatility bf25d, bool firstApprox)
+    : FxSmileSection(spot, rd, rf, t, atmVol, rr25d, bf25d), firstApprox_(firstApprox) {
 
     // Consistent Pricing of FX Options
     // Castagna & Mercurio (2006)
@@ -68,6 +69,9 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real r3 = log(k / k1) * log(k / k2) / (log(k3 / k1) * log(k3 / k2));
 
     Real sigma1_k = r1 * vol_25p_ + r2 * atmVol_ + r3 * vol_25c_;
+    if (firstApprox_) {
+        return sigma1_k;
+    }
 
     Real D1 = sigma1_k - atmVol_;
 

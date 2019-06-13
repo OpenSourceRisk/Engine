@@ -199,8 +199,13 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
                 auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
+                bool vvFirstApprox = false;  // default to VannaVolga second approximation
+                if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::VV1) {
+                    vvFirstApprox = true;
+                }
+
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false));
+                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox));
             }
         }
         vol_->enableExtrapolation();

@@ -31,12 +31,12 @@
 
 namespace ore {
 namespace data {
+using ore::data::XMLNode;
+using QuantLib::Calendar;
+using QuantLib::DayCounter;
+using QuantLib::Period;
 using std::string;
 using std::vector;
-using ore::data::XMLNode;
-using QuantLib::Period;
-using QuantLib::DayCounter;
-using QuantLib::Calendar;
 
 //! FX volatility structure configuration
 /*!
@@ -49,6 +49,7 @@ public:
      *  TODO: Add more options (e.g. Delta)
      */
     enum class Dimension { ATM, Smile };
+    enum class SmileInterpolation { VV1, VV2 };     // Vanna Volga first/second approximation respectively
 
     //! \name Constructors/Destructors
     //@{
@@ -59,7 +60,8 @@ public:
                             const vector<string>& expiries, const string& fxSpotID = "",
                             const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
-                            const Calendar& calendar = QuantLib::TARGET());
+                            const Calendar& calendar = QuantLib::TARGET(),
+                            const SmileInterpolation& interp = SmileInterpolation::VV2);
     //@}
 
     //! \name Serialisation
@@ -78,12 +80,14 @@ public:
     const string& fxSpotID() const { return fxSpotID_; }
     const string& fxForeignYieldCurveID() const { return fxForeignYieldCurveID_; }
     const string& fxDomesticYieldCurveID() const { return fxDomesticYieldCurveID_; }
+    const SmileInterpolation& smileInterpolation() const { return smileInterpolation_; }
     const vector<string>& quotes() override;
     //@}
 
     //! \name Setters
     //@{
     Dimension& dimension() { return dimension_; }
+    SmileInterpolation& smileInterpolation() { return smileInterpolation_; }
     vector<string>& expiries() { return expiries_; }
     DayCounter& dayCounter() { return dayCounter_; }
     Calendar& calendar() { return calendar_; }
@@ -93,6 +97,7 @@ public:
     //@}
 private:
     Dimension dimension_;
+    SmileInterpolation smileInterpolation_;
     vector<string> expiries_;
     DayCounter dayCounter_;
     Calendar calendar_;

@@ -371,6 +371,13 @@
       <xs:enumeration value="Constant"/>
     </xs:restriction>
   </xs:simpleType>
+  
+  <xs:simpleType name="vannaVolgaApproximation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="VannaVolga1"/>
+      <xs:enumeration value="VannaVolga2"/>
+    </xs:restriction>
+  </xs:simpleType>
 
   <xs:simpleType name="correlationType">
     <xs:restriction base="xs:string">
