@@ -156,6 +156,10 @@ void updateData(const std::string& s, T& t, bool& hasT, bool& hasConsistentT, co
         }
     }
 }
+//local wrapper function to get around optional parameter in parseCalendar
+Calendar parseCalendarTemp(const string& s){
+    return parseCalendar(s);
+}
 } // namespace
 
 Schedule makeSchedule(const ScheduleData& data) {
@@ -188,13 +192,13 @@ Schedule makeSchedule(const ScheduleData& data) {
              hasEndOfMonth = false, hasConsistentCalendar = true, hasConsistentConvention = true,
              hasConsistentTenor = true, hasConsistentRule = true, hasConsistentEndOfMonth = true;
         for (auto& d : data.dates()) {
-            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendarTemp);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
                                               parseBusinessDayConvention);
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
         }
         for (auto& d : data.rules()) {
-            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendar);
+            updateData<Calendar>(d.calendar(), calendar, hasCalendar, hasConsistentCalendar, parseCalendarTemp);
             updateData<BusinessDayConvention>(d.convention(), convention, hasConvention, hasConsistentConvention,
                                               parseBusinessDayConvention);
             updateData<Period>(d.tenor(), tenor, hasTenor, hasConsistentTenor, parsePeriod);
