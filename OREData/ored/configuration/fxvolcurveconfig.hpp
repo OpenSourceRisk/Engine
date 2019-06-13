@@ -97,13 +97,13 @@ public:
     //@}
 private:
     Dimension dimension_;
-    SmileInterpolation smileInterpolation_;
     vector<string> expiries_;
     DayCounter dayCounter_;
     Calendar calendar_;
     string fxSpotID_;
     string fxForeignYieldCurveID_;
     string fxDomesticYieldCurveID_;
+    SmileInterpolation smileInterpolation_;
 };
 } // namespace data
 } // namespace ore
