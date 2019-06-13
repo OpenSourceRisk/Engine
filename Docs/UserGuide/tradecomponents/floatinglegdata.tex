@@ -72,7 +72,7 @@ Allowable values:  \emph{true, false}. Defaults to \emph{false} if left blank or
 
 Allowable values:  Positive integers.  Defaults to the index's fixing days if blank or omitted.
 
-\item Spreads: This node contains child elements of type
+\item Spreads [Optional]: This node contains child elements of type
   \lstinline!Spread!. If the spread is constant over the life of the
   floating leg, only one spread value should be entered. If two or more
   coupons have different spreads, multiple spread values are required,
@@ -85,7 +85,7 @@ Allowable values:  Positive integers.  Defaults to the index's fixing days if bl
   coupons. 
 
   Allowable values: Each child element can take any real number. The spread is expressed in decimal form, e.g. 0.005 is
-  a spread of 0.5\% or 50 bp.
+  a spread of 0.5\% or 50 bp. 
 
 For the {\tt <Spreads>} section, the same applies as for notionals and
 rates - a list of changing spreads can be specified without or with individual starte dates as shown
@@ -103,8 +103,12 @@ in Listing \ref{lst:spreads_dates}.
 \label{lst:spreads_dates}
 \end{listing}
 
+If the entire {\tt <Spreads>} section is omitted, it defaults to a spread of \emph{0\%}.
+
 \item Gearings [Optional]: This node contains child elements of type \lstinline!Gearing! indicating that the coupon rate is
   multiplied by the given factors. The mode of specification is analogous to spreads, see above.
+  
+If the entire {\tt <Gearings>} section is omitted, it defaults to a gearing of \emph{1}.
 
 \item Caps [Optional]: This node contains child elements of type \lstinline!Cap! indicating that the coupon rate is capped at the
   given rate (after applying gearing and spread, if any). The mode of specification is analogous to spreads, see above.
