@@ -70,7 +70,7 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
 
     Real sigma1_k = r1 * vol_25p_ + r2 * atmVol_ + r3 * vol_25c_;
     if (firstApprox_) {
-        return sigma1_k;
+        return std::max(sigma1_k, Real(0.0001));    // for extreme ends: cannot return negative impl vols
     }
 
     Real D1 = sigma1_k - atmVol_;
