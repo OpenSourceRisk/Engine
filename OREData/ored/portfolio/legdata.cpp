@@ -152,7 +152,7 @@ void CPILegData::fromXML(XMLNode* node) {
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
     interpolated_ = XMLUtils::getChildValueAsBool(node, "Interpolated", true);
-    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotionnal");
+    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotional");
     if (subNomNode)
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
