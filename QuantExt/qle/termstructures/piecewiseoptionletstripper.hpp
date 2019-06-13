@@ -85,6 +85,13 @@ private:
 
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
     mutable std::vector<boost::shared_ptr<optionlet_curve> > strikeCurves_;
+
+    //! Store the vector of helpers for each strike column
+    typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
+    std::vector<std::vector<boost::shared_ptr<helper> > > helpers_;
+
+    //! Store the cap floor surface quotes
+    std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > > quotes_;
 };
 
 template <class Interpolator, template <class> class Bootstrap>
@@ -105,36 +112,59 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
         optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
       accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
       capFloorVolDisplacement_(capFloorVolDisplacement), interpolator_(i), bootstrap_(bootstrap),
-      strikeCurves_(nStrikes_) {}
+      strikeCurves_(nStrikes_), helpers_(nStrikes_), quotes_(termVolSurface_->optionTenors().size()) {
+
+    // Readability
+    // typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
+    using QuantLib::Size;
+    using QuantLib::SimpleQuote;
+    using QuantLib::Period;
+    using QuantLib::Handle;
+    using QuantLib::Quote;
+    using std::vector;
+
+    vector<Rate> strikes = termVolSurface_->strikes();
+    vector<Period> tenors = termVolSurface_->optionTenors();
+    
+    // Initialise a strike curve for each strike column 
+    for (Size j = 0; j < strikes.size(); j++) {
+        for (Size i = 0; i < tenors.size(); i++) {
+            quotes_[i].push_back(boost::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
+            helpers_[j].push_back(boost::make_shared<CapFloorHelper>(CapFloorHelper::Automatic, tenors[i], strikes[j],
+                Handle<Quote>(quotes_[i].back()), iborIndex_, discount_, CapFloorHelper::Volatility, 
+                capFloorVolType_, capFloorVolDisplacement_));
+        }
+    }
+
+}
 
 template <class Interpolator, template <class> class Bootstrap>
 inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculations() const {
 
     // Some localised typedefs and using declarations to make the code more readable
-    typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
     using QuantLib::Rate;
     using QuantLib::Size;
-    using QuantLib::Handle;
-    using QuantLib::Quote;
-    using QuantLib::SimpleQuote;
     using QuantLib::Period;
     using std::vector;
 
     // Update dates
     populateDates();
 
-    // Initialise a strike curve for each strike column 
+    // Readability
     vector<Rate> strikes = termVolSurface_->strikes();
     vector<Period> tenors = termVolSurface_->optionTenors();
-    for (Size j = 0; j < strikes.size(); j++) {
-        vector<boost::shared_ptr<helper> > helpers(tenors.size());
-        for (Size i = 0; i < tenors.size(); i++) {
-            Handle<Quote> quote(boost::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
-            helpers[i] = boost::make_shared<CapFloorHelper>(CapFloorHelper::Automatic, tenors[i], strikes[j],
-                quote, iborIndex_, discount_, CapFloorHelper::Volatility, capFloorVolType_, capFloorVolDisplacement_);
+
+    // Update the quotes from the cap floor term volatility surface
+    for (Size i = 0; i < tenors.size(); i++) {
+        for (Size j = 0; j < strikes.size(); j++) {
+            quotes_[i][j]->setValue(termVolSurface_->volatility(tenors[i], strikes[j]));
         }
+    }
+
+    // Populate the strike curves
+    for (Size j = 0; j < strikes.size(); j++) {
         strikeCurves_[j] = boost::make_shared<optionlet_curve>(
-            termVolSurface_->referenceDate(), helpers, termVolSurface_->calendar(),
+            termVolSurface_->referenceDate(), helpers_[j], termVolSurface_->calendar(),
             termVolSurface_->businessDayConvention(), termVolSurface_->dayCounter(), volatilityType_,
             displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
     }
