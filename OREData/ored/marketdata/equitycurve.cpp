@@ -40,8 +40,8 @@ using namespace std;
 namespace ore {
 namespace data {
 
-EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, const CurveConfigurations& curveConfigs,
-                         const Conventions& conventions,
+EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
+                         const CurveConfigurations& curveConfigs, const Conventions& conventions,
                          const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves) {
 
     try {
@@ -291,7 +291,7 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader, 
 
             DLOG("Stripping equity forwards from the option premium surfaces");
             boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
-                forecastYieldTermStructure_, equitySpot_, Exercise::Type::European);
+                forecastYieldTermStructure_, equitySpot_, config->exerciseStyle());
 
             // set terms and quotes from the stripper
             terms_ = efcs->expiries();

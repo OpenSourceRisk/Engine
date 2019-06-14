@@ -49,14 +49,15 @@ private:
     const boost::shared_ptr<OptionPriceSurface>& putSurface_;
     QuantLib::Handle<QuantLib::YieldTermStructure> forecastCurve_;
     QuantLib::Handle<QuantLib::Quote> equitySpot_;
-    QuantLib::Exercise::Type type_ types;
+    QuantLib::Exercise::Type type_;
 
     //! store the expiries
     mutable std::vector<QuantLib::Date> expiries_;
     //! store the stripped forward rates
     mutable std::vector<QuantLib::Real> forwards_;
 
-    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real strike) const;
+    QuantLib::Real forwardFromPutCallParity(QuantLib::Date d, QuantLib::Real call, 
+        OptionPriceSurface& callSurface, OptionPriceSurface& putSurface) const;
 };
 
 } // namespace QuantExt
