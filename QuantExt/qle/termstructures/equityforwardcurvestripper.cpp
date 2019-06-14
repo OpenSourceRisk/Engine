@@ -17,16 +17,15 @@
 */
 
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
+#include <ql/instruments/impliedvolatility.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/vanilla/fdamericanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/time/daycounters/actualactual.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/instruments/impliedvolatility.hpp>
-#include <ql/pricingengines/blackformula.hpp>
-
+#include <ql/time/calendars/nullcalendar.hpp>
+#include <ql/time/daycounter.hpp>
 
 using std::vector;
 using namespace QuantLib;
@@ -40,10 +39,11 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
     Exercise::Type type) :
     callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot), type_(type) {
 
-    // the calla nd put surfaces should have the same expiries/strikes, some checks to ensure this
+    // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to ensure this
     QL_REQUIRE(callSurface_->strikes() == putSurface_->strikes(), "Mismatch between Call and Put strikes in EquityForwardCurveStripper");
     QL_REQUIRE(callSurface_->expiries() == putSurface_->expiries(), "Mismatch between Call and Put expiries in EquityForwardCurveStripper");
-
+    QL_REQUIRE(callSurface_->referenceDate() == putSurface_->referenceDate(), "Mismatch between Call and Put reference dates in EquityForwardCurveStripper");
+    QL_REQUIRE(callSurface_->dayCounter() == putSurface_->dayCounter(), "Mismatch between Call and Put day counters in EquityForwardCurveStripper");
 
     // register with all market data
     registerWith(callSurface);
@@ -64,6 +64,7 @@ void EquityForwardCurveStripper::performCalculations() const {
 
         // get the relevant strikes at this expiry
         vector<Real> strikes = allStrikes[i];
+        QL_REQUIRE(strikes.size() > 0, "No strikes for expiry " << expiries_[i]);
 
         // if we only have one strike we just use that to get the forward
         if (strikes.size() == 1) {
@@ -96,29 +97,33 @@ void EquityForwardCurveStripper::performCalculations() const {
 
             if (type_ == Exercise::American) {
 
-                Time t = ActualActual().yearFraction(Settings::instance().evaluationDate(), expiries_[i]);
-                Rate r = forecastCurve_->zeroRate(t, Continuous);
-                Real q = r - log(forward / equitySpot_->value()) / t;
+                // for American ioptions we first get the implied vol from the American premiums
+                // we use these to construct the European prices in order to apply put call parity
 
+                // get date and daycounter from the prics surface
+                Date asof = callSurface_->referenceDate();
+                DayCounter dc = callSurface_->dayCounter();
+                Time t = dc.yearFraction(asof, expiries_[i]);
+
+                // dividend rate from S_t = S * exp((r - q) * t)
+                Real q = forecastCurve_->zeroRate(t, Continuous) - log(forward / equitySpot_->value()) / t;
+
+                // term structures needed to get implied vol
                 boost::shared_ptr<SimpleQuote> volQuote = boost::make_shared<SimpleQuote>(0.1);
-                Handle<BlackVolTermStructure> volTs(
-                    boost::make_shared<BlackConstantVol>(Settings::instance().evaluationDate(), NullCalendar(), Handle<Quote>(volQuote), ActualActual()));
+                Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(asof, NullCalendar(), Handle<Quote>(volQuote), dc));
+                Handle<YieldTermStructure> divTs(boost::make_shared<FlatForward>(asof, q, dc));
 
-                Handle<YieldTermStructure>
-                    divTs(boost::make_shared<FlatForward>(Settings::instance().evaluationDate(), q, ActualActual()));
-
+                // a black scholes process
                 boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
                     equitySpot_, divTs, forecastCurve_, volTs);
-
-                boost::shared_ptr<PricingEngine> engine(
-                    boost::make_shared<FDAmericanEngine<CrankNicolson>>(gbsp));
+                boost::shared_ptr<PricingEngine> engine(boost::make_shared<FDAmericanEngine<CrankNicolson>>(gbsp));
 
                 vector<vector<Volatility>> vols(2, vector<Volatility>(strikes.size()));
                 vector<Option::Type> types({ Option::Type::Call, Option::Type::Put });
 
                 for (Size l = 0; l < types.size(); l++) {
                     for (Size k = 0; k < strikes.size(); k++) {
-                        // make an american option for current strike/expiry and type
+                        // create an american option for current strike/expiry and type
                         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], strikes[k]));
                         boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiries_[i]);
                         VanillaOption option(payoff, exercise);
@@ -155,10 +160,13 @@ void EquityForwardCurveStripper::performCalculations() const {
                     }
                 }
                 // throw away any strikes where the vol is zero for either put or call
-                strikes = newStrikes;
-                // build call/put price surfaces with the new European prices
-                callSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, callPremiums, ActualActual());
-                putSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, putPremiums, ActualActual());
+                // must have at least one new strike otherwise continue with currenct price surfaces
+                if (newStrikes.size() > 0) {
+                    strikes = newStrikes;
+                    // build call/put price surfaces with the new European prices
+                    callSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, callPremiums, dc);
+                    putSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, putPremiums, dc);
+                }
             }
 
             Real newForward;
