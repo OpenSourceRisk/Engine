@@ -764,9 +764,7 @@ void SensitivityScenarioGenerator::generateFxVolScenarios(bool up) {
             shiftTimes[j] = dc.yearFraction(asof, asof + shiftTenors[j]);
 
         // Can we store a valid shift size?
-        // Will only work currently if simulation market has a single strike
         bool validShiftSize = vectorEqual(times, shiftTimes);
-        validShiftSize = validShiftSize && n_fxvol_strikes == 1;
 
         for (Size j = 0; j < shiftTenors.size(); ++j) {
             Size strikeBucket = 0; // FIXME
