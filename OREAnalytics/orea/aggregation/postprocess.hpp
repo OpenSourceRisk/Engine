@@ -30,7 +30,6 @@
 #include <ored/portfolio/nettingsetmanager.hpp>
 #include <ored/portfolio/portfolio.hpp>
 #include <ored/report/report.hpp>
-
 #include <ql/time/date.hpp>
 
 #include <boost/shared_ptr.hpp>
@@ -38,7 +37,6 @@
 namespace ore {
 namespace analytics {
 using namespace QuantLib;
-using namespace data;
 using namespace data;
 
 enum class AllocationMethod {
