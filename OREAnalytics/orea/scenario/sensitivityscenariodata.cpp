@@ -423,6 +423,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         QL_REQUIRE(tokens.size() == 2, "expected 2 tokens, found " << tokens.size() << " in " << filter[i]);
         crossGammaFilter_.push_back(pair<string, string>(tokens[0], tokens[1]));
     }
+
+    LOG("Get compute gamma flag");
+    computeGamma_ = XMLUtils::getChildValueAsBool(node, "ComputeGamma", false); // defaults to true
 }
 
 XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
@@ -658,6 +661,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addChild(doc, parent, "Pair", crossGamma.first + "," + crossGamma.second);
         }
     }
+
+    XMLUtils::addChild(doc, root, "ComputeGamma", computeGamma_);
 
     return root;
 }

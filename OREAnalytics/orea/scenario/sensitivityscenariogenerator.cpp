@@ -78,97 +78,122 @@ bool vectorEqual(const vector<Real>& v_1, const vector<Real>& v_2) {
 void SensitivityScenarioGenerator::generateScenarios() {
     Date asof = baseScenario_->asof();
 
+    QL_REQUIRE(sensitivityData_->crossGammaFilter().empty() || sensitivityData_->computeGamma(),
+               "SensitivityScenarioGenerator::generateScenarios(): if gamma computation is disabled, the cross gamma "
+               "filter must be empty");
+
     generateDiscountCurveScenarios(true);
-    generateDiscountCurveScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateDiscountCurveScenarios(false);
 
     generateIndexCurveScenarios(true);
-    generateIndexCurveScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateIndexCurveScenarios(false);
 
     generateYieldCurveScenarios(true);
-    generateYieldCurveScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateYieldCurveScenarios(false);
 
     if (simMarketData_->simulateFxSpots()) {
         generateFxScenarios(true);
-        generateFxScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateFxScenarios(false);
     }
 
     generateEquityScenarios(true);
-    generateEquityScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateEquityScenarios(false);
 
     if (simMarketData_->simulateDividendYield()) {
         generateDividendYieldScenarios(true);
-        generateDividendYieldScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateDividendYieldScenarios(false);
     }
 
     generateZeroInflationScenarios(true);
-    generateZeroInflationScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateZeroInflationScenarios(false);
 
     generateYoYInflationScenarios(true);
-    generateYoYInflationScenarios(false);
+    if (sensitivityData_->computeGamma())
+        generateYoYInflationScenarios(false);
 
     if (simMarketData_->simulateYoYInflationCapFloorVols()) {
         generateYoYInflationCapFloorVolScenarios(true);
-        generateYoYInflationCapFloorVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateYoYInflationCapFloorVolScenarios(false);
     }
 
     if (simMarketData_->simulateFXVols()) {
         generateFxVolScenarios(true);
-        generateFxVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateFxVolScenarios(false);
     }
 
     if (simMarketData_->simulateEquityVols()) {
         generateEquityVolScenarios(true);
-        generateEquityVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateEquityVolScenarios(false);
     }
 
     if (simMarketData_->simulateSwapVols()) {
         generateSwaptionVolScenarios(true);
-        generateSwaptionVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateSwaptionVolScenarios(false);
     }
 
     if (simMarketData_->simulateYieldVols()) {
         generateYieldVolScenarios(true);
-        generateYieldVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateYieldVolScenarios(false);
     }
 
     if (simMarketData_->simulateCapFloorVols()) {
         generateCapFloorVolScenarios(true);
-        generateCapFloorVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateCapFloorVolScenarios(false);
     }
 
     if (simMarketData_->simulateSurvivalProbabilities()) {
         generateSurvivalProbabilityScenarios(true);
-        generateSurvivalProbabilityScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateSurvivalProbabilityScenarios(false);
     }
 
     if (simMarketData_->simulateCdsVols()) {
         generateCdsVolScenarios(true);
-        generateCdsVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateCdsVolScenarios(false);
     }
 
     if (simMarketData_->simulateBaseCorrelations()) {
         generateBaseCorrelationScenarios(true);
-        generateBaseCorrelationScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateBaseCorrelationScenarios(false);
     }
 
     if (simMarketData_->commodityCurveSimulate()) {
         generateCommodityCurveScenarios(true);
-        generateCommodityCurveScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateCommodityCurveScenarios(false);
     }
 
     if (simMarketData_->commodityVolSimulate()) {
         generateCommodityVolScenarios(true);
-        generateCommodityVolScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateCommodityVolScenarios(false);
     }
 
     if (simMarketData_->securitySpreadsSimulate()) {
         generateSecuritySpreadScenarios(true);
-        generateSecuritySpreadScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateSecuritySpreadScenarios(false);
     }
 
     if (simMarketData_->simulateCorrelations()) {
         generateCorrelationScenarios(true);
-        generateCorrelationScenarios(false);
+        if (sensitivityData_->computeGamma())
+            generateCorrelationScenarios(false);
     }
 
     // add simultaneous up-moves in two risk factors for cross gamma calculation
