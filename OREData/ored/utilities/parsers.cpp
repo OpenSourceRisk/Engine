@@ -687,8 +687,10 @@ AssetClass parseAssetClass(const std::string& s) {
     static map<string, AssetClass> assetClasses = {
         {"EQ", AssetClass::EQ},
         {"FX", AssetClass::FX},
-    // {"COM", AssetClass::COM},
-    // {"IR", AssetClass::IR}
+        {"COM", AssetClass::COM},
+        {"IR", AssetClass::IR},
+        {"INF", AssetClass::INF},
+        {"CR", AssetClass::CR}
     };
     auto it = assetClasses.find(s);
     if (it != assetClasses.end()) {

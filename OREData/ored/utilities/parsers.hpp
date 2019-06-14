@@ -229,7 +229,7 @@ QuantExt::SequenceType parseSequenceType(const std::string& s);
 */
 QuantLib::FdmSchemeDesc parseFdmSchemeDesc(const std::string& s);
 
-enum class AssetClass { EQ, FX, COM, IR };
+enum class AssetClass { EQ, FX, COM, IR, INF, CR };
 
 //! Convert text to ore::data::AssetClass
 /*!
