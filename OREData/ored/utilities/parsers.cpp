@@ -683,21 +683,5 @@ FdmSchemeDesc parseFdmSchemeDesc(const std::string& s) {
         QL_FAIL("fdm scheme \"" << s << "\" not recognised");
 }
 
-AssetClass parseAssetClass(const std::string& s) {
-    static map<string, AssetClass> assetClasses = {
-        {"EQ", AssetClass::EQ},
-        {"FX", AssetClass::FX},
-    // {"COM", AssetClass::COM},
-    // {"IR", AssetClass::IR}
-    };
-    auto it = assetClasses.find(s);
-    if (it != assetClasses.end()) {
-        return it->second;
-    }
-    else {
-        QL_FAIL("AssetClass \"" << s << "\" not recognized");
-    }
-}
-
 } // namespace data
 } // namespace ore
