@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2018 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -16,23 +16,28 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+/*! \file qle/indexes/cacpi.hpp
+    \brief CAD CPI index
+*/
+
+#ifndef quantext_cacpi_hpp
+#define quantext_cacpi_hpp
+
+#include <ql/currencies/america.hpp>
+#include <ql/indexes/inflationindex.hpp>
 #include <qle/indexes/region.hpp>
 
 namespace QuantExt {
 
-SwedenRegion::SwedenRegion() {
-    static boost::shared_ptr<Data> SEdata(new Data("Sweden", "SE"));
-    data_ = SEdata;
+//! Canadian CPI index
+class CACPI : public QuantLib::ZeroInflationIndex {
+public:
+    CACPI(bool interpolated, const QuantLib::Handle<QuantLib::ZeroInflationTermStructure>& ts = 
+        QuantLib::Handle<QuantLib::ZeroInflationTermStructure>())
+        : QuantLib::ZeroInflationIndex("CPI", CanadaRegion(), false, interpolated, QuantLib::Monthly, 
+            QuantLib::Period(1, QuantLib::Months), QuantLib::CADCurrency(), ts) {}
+};
+
 }
 
-DenmarkRegion::DenmarkRegion() {
-    static boost::shared_ptr<Data> DKdata(new Data("Denmark", "DK"));
-    data_ = DKdata;
-}
-
-CanadaRegion::CanadaRegion() {
-    static boost::shared_ptr<Data> CAdata = boost::make_shared<Data>("Canada", "CA");
-    data_ = CAdata;
-}
-
-} // namespace QuantExt
+#endif
