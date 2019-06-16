@@ -228,9 +228,6 @@
     <ClInclude Include="ored\portfolio\builders\fxoption.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\builders\oneassetoption.hpp">
-      <Filter>portfolio</Filter>
-    </ClInclude>
     <ClInclude Include="ored\portfolio\builders\swap.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
@@ -440,6 +437,9 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\forwardbond.hpp">
       <Filter>portfolio</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\builders\oneassetoption.hpp">
+      <Filter>portfolio\builders</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
