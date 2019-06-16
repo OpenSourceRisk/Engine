@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/oneasset.hpp
+/*! \file portfolio/oneassetoption.hpp
     \brief One Asset Option data model and serialization
     \ingroup tradedata
 */
