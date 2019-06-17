@@ -118,7 +118,9 @@ void EquityForwardCurveStripper::performCalculations() const {
                 boost::shared_ptr<PricingEngine> engine(boost::make_shared<FDAmericanEngine<CrankNicolson> >(gbsp));
 
                 vector<vector<Volatility> > vols(2, vector<Volatility>(strikes.size()));
-                vector<Option::Type> types({ Option::Type::Call, Option::Type::Put });
+                vector<Option::Type> types;
+                types.push_back(Option::Call);
+                types.push_back(Option::Put);
 
                 for (Size l = 0; l < types.size(); l++) {
                     for (Size k = 0; k < strikes.size(); k++) {
@@ -128,7 +130,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                         VanillaOption option(payoff, exercise);
 
                         // option.setPricingEngine(engine);
-                        Real targetPrice = types[l] == Option::Type::Call ? callSurface_->price(expiries_[i], strikes[k]) :
+                        Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiries_[i], strikes[k]) :
                             putSurface_->price(expiries_[i], strikes[k]);
 
                         try {
@@ -147,8 +149,8 @@ void EquityForwardCurveStripper::performCalculations() const {
                 for (Size k = 0; k < strikes.size(); k++) {
                     if (vols[0][k] != 0.0 && vols[1][k] != 0.0) {
                         // get the european option prices for each strike
-                        Real call = blackFormula(Option::Type::Call, strikes[k], forward, vols[0][k] * sqrt(t), forecastCurve_->discount(t));
-                        Real put = blackFormula(Option::Type::Put, strikes[k], forward, vols[1][k] * sqrt(t), forecastCurve_->discount(t));
+                        Real call = blackFormula(Option::Call, strikes[k], forward, vols[0][k] * sqrt(t), forecastCurve_->discount(t));
+                        Real put = blackFormula(Option::Put, strikes[k], forward, vols[1][k] * sqrt(t), forecastCurve_->discount(t));
 
                         if (call && put) {
                             newStrikes.push_back(strikes[k]);
