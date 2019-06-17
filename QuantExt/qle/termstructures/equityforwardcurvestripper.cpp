@@ -115,9 +115,9 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // a black scholes process
                 boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
                     equitySpot_, divTs, forecastCurve_, volTs);
-                boost::shared_ptr<PricingEngine> engine(boost::make_shared<FDAmericanEngine<CrankNicolson>>(gbsp));
+                boost::shared_ptr<PricingEngine> engine(boost::make_shared<FDAmericanEngine<CrankNicolson> >(gbsp));
 
-                vector<vector<Volatility>> vols(2, vector<Volatility>(strikes.size()));
+                vector<vector<Volatility> > vols(2, vector<Volatility>(strikes.size()));
                 vector<Option::Type> types({ Option::Type::Call, Option::Type::Put });
 
                 for (Size l = 0; l < types.size(); l++) {
