@@ -85,6 +85,7 @@
     <ClInclude Include="ored\marketdata\marketimpl.hpp" />
     <ClInclude Include="ored\marketdata\inmemoryloader.hpp" />
     <ClInclude Include="ored\marketdata\security.hpp" />
+    <ClInclude Include="ored\marketdata\structuredcurveerror.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
+    <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\swap.hpp" />
     <ClInclude Include="ored\portfolio\swaption.hpp" />
     <ClInclude Include="ored\portfolio\trade.hpp" />

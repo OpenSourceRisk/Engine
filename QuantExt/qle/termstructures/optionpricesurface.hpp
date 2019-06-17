@@ -27,7 +27,7 @@
 #include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructure.hpp>
 #include <ql/time/date.hpp>
-#include <ql/math/interpolations/linearinterpolation.hpp>
+#include <ql/time/calendars/nullcalendar.hpp>
 
 namespace QuantExt {
 
@@ -39,7 +39,8 @@ class OptionPriceSurface : public QuantLib::TermStructure,
 public:
     OptionPriceSurface(const QuantLib::Date& referenceDate, 
         const std::vector<QuantLib::Date>& dates, const std::vector<QuantLib::Real>& strikes, 
-        const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dayCounter) :
+        const std::vector<QuantLib::Real>& prices, const QuantLib::DayCounter& dayCounter, 
+        const QuantLib::Calendar& calendar = QuantLib::NullCalendar()) : QuantLib::TermStructure(referenceDate, calendar, dayCounter),
         OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear>(referenceDate, dayCounter, dates, strikes, prices) {};
 
     //! \name TermStructure interface

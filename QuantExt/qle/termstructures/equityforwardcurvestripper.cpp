@@ -24,8 +24,6 @@
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/calendars/nullcalendar.hpp>
-#include <ql/time/daycounter.hpp>
 
 using std::vector;
 using namespace QuantLib;
@@ -103,6 +101,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                 // get date and daycounter from the prics surface
                 Date asof = callSurface_->referenceDate();
                 DayCounter dc = callSurface_->dayCounter();
+                Calendar cal = callSurface_->calendar();
                 Time t = dc.yearFraction(asof, expiries_[i]);
 
                 // dividend rate from S_t = S * exp((r - q) * t)
@@ -110,7 +109,7 @@ void EquityForwardCurveStripper::performCalculations() const {
 
                 // term structures needed to get implied vol
                 boost::shared_ptr<SimpleQuote> volQuote = boost::make_shared<SimpleQuote>(0.1);
-                Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(asof, NullCalendar(), Handle<Quote>(volQuote), dc));
+                Handle<BlackVolTermStructure> volTs(boost::make_shared<BlackConstantVol>(asof, cal, Handle<Quote>(volQuote), dc));
                 Handle<YieldTermStructure> divTs(boost::make_shared<FlatForward>(asof, q, dc));
 
                 // a black scholes process
@@ -164,8 +163,8 @@ void EquityForwardCurveStripper::performCalculations() const {
                 if (newStrikes.size() > 0) {
                     strikes = newStrikes;
                     // build call/put price surfaces with the new European prices
-                    callSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, callPremiums, dc);
-                    putSurface = OptionPriceSurface(Settings::instance().evaluationDate(), dates, strikes, putPremiums, dc);
+                    callSurface = OptionPriceSurface(asof, dates, strikes, callPremiums, dc);
+                    putSurface = OptionPriceSurface(asof, dates, strikes, putPremiums, dc);
                 }
             }
 

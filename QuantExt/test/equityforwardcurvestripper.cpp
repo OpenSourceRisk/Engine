@@ -364,8 +364,8 @@ BOOST_AUTO_TEST_CASE(testEquityForwardCurveStripperAmerican) {
     vector<Date> expectedExpiries({ Date(21, Jun, 2019), Date(19, Jul, 2019), Date(20, Sep, 2019), Date(20, Dec, 2019), 
         Date(20, Mar, 2020), Date(19, Jun, 2020), Date(18, Dec, 2020), Date(18, Jun, 2021), Date(17, Dec, 2021), 
         Date(16, Dec, 2022), Date(15, Dec, 2023)});
-    vector<Real> expectedQuotes({ 205.1736, 204.2811, 202.9202, 201.8749, 201.4824, 195.0402, 192.9548, 186.0524, 184.0872,
-        176.5444, 168.5139 });
+    vector<Real> expectedQuotes({ 205.1736, 204.2811, 202.9202, 201.8749, 201.4824, 195.0452, 192.9629, 186.0909, 184.1026,
+        176.0310, 167.2707 });
 
     Real tolerance = 1e-3;
     for (Size i = 0; i < expectedQuotes.size(); i++) {

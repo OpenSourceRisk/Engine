@@ -681,6 +681,36 @@
     <ClInclude Include="qle\termstructures\optionpricesurface.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedcpivolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\discountingforwardbondengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\bondindex.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\instruments\forwardbond.hpp">
+      <Filter>instruments</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\indexes\ibor\idrjibor.hpp">
+      <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1173,6 +1203,24 @@
     </ClCompile>
     <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp">
       <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\strippedyoyinflationoptionletvol.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\discountingforwardbondengine.cpp">
+      <Filter>pricingengines</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp">
+      <Filter>termstructures</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\indexes\bondindex.cpp">
+      <Filter>indexes</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\instruments\forwardbond.cpp">
+      <Filter>instruments</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
