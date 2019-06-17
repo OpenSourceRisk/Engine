@@ -690,6 +690,9 @@
     <ClInclude Include="qle\instruments\forwardbond.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\cacpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

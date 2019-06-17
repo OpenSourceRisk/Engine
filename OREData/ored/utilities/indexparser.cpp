@@ -32,6 +32,7 @@
 #include <ql/time/calendars/target.hpp>
 #include <ql/time/daycounters/all.hpp>
 #include <qle/indexes/bmaindexwrapper.hpp>
+#include <qle/indexes/cacpi.hpp>
 #include <qle/indexes/dkcpi.hpp>
 #include <qle/indexes/equityindex.hpp>
 #include <qle/indexes/fxindex.hpp>
@@ -369,7 +370,8 @@ boost::shared_ptr<ZeroInflationIndex> parseZeroInflationIndex(const string& s, b
         {"ZACPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
         {"ZA CPI", boost::make_shared<ZeroInflationIndexParser<ZACPI>>()},
         {"SECPI", boost::make_shared<ZeroInflationIndexParser<SECPI>>()},
-        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()}};
+        {"DKCPI", boost::make_shared<ZeroInflationIndexParser<DKCPI>>()},
+        {"CACPI", boost::make_shared<ZeroInflationIndexParser<CACPI>>()}};
 
     auto it = m.find(s);
     if (it != m.end()) {
