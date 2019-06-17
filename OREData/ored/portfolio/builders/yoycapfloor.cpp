@@ -27,28 +27,27 @@ namespace ore {
 namespace data {
 
 boost::shared_ptr<PricingEngine> YoYCapFloorEngineBuilder::engineImpl(const string& indexName) {
-    boost::shared_ptr<YoYInflationIndex> yoyTs =
-        market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing)).currentLink();
-    QL_REQUIRE(yoyTs, "engineFactory error: yield term structure not found for currency " << indexName);
-    boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> ovs =
-        market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing)).currentLink();
-    QL_REQUIRE(ovs, "engineFactory error: caplet volatility structure not found for currency " << indexName);
+    Handle<YoYInflationIndex> yoyTs = market_->yoyInflationIndex(indexName, configuration(MarketContext::pricing));
+    Handle<QuantExt::YoYOptionletVolatilitySurface> ovs =
+        market_->yoyCapFloorVol(indexName, configuration(MarketContext::pricing));
+    if (ovs.empty())
+        return boost::make_shared<YoYInflationBlackCapFloorEngine>(*yoyTs,
+                                                                   Handle<QuantLib::YoYOptionletVolatilitySurface>());
     Handle<QuantLib::YoYOptionletVolatilitySurface> hovs(ovs->yoyVolSurface());
-
     switch (ovs->volatilityType()) {
     case ShiftedLognormal:
         if (ovs->displacement() == 0.0) {
             LOG("Build YoYInflationBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<YoYInflationBlackCapFloorEngine>(yoyTs, hovs);
+            return boost::make_shared<YoYInflationBlackCapFloorEngine>(*yoyTs, hovs);
             break;
         } else {
             LOG("Build YoYInflationUnitDisplacedBlackCapFloorEngine for inflation index " << indexName);
-            return boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(yoyTs, hovs);
+            return boost::make_shared<YoYInflationUnitDisplacedBlackCapFloorEngine>(*yoyTs, hovs);
             break;
         }
     case Normal:
         LOG("Build YoYInflationBachelierCapFloorEngine for inflation index " << indexName);
-        return boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyTs, hovs);
+        return boost::make_shared<YoYInflationBachelierCapFloorEngine>(*yoyTs, hovs);
         break;
     default:
         QL_FAIL("Caplet volatility type, " << ovs->volatilityType() << ", not covered in EngineFactory");
