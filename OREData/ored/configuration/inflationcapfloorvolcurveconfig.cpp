@@ -52,7 +52,7 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<IborIndex> index = parseIborIndex(index_);
+        boost::shared_ptr<ZeroInflationIndex> index = parseZeroInflationIndex(index_);
         Currency ccy = index->currency();
 
         string type;
