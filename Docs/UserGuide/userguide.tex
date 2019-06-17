@@ -1698,11 +1698,13 @@ The terms of the three trades are as follows:
 
 \begin{itemize}
 \item CPI Swap 1: Exchanges on 2036-02-05 a fixed amount of 20m GBP for a 10m GBP notional inflated with UKRPI with base CPI 210
-\item CPI Swap 2: Notional 10m GBP, maturity 2021-07-18, exchanging GBP Libor for GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), with
+\item CPI Swap 2: Notional 10m GBP, maturity 2021-07-18, exchanging GBP Libor for GBP Libor 6M vs. $2\%$ x CPI-Factor (Act/Act), inflated with index UKRPI with base CPI 210
 \item YOY Swap: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons
+\item YOY Swap with capped/floored YOY leg: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons, YOY leg capped with 0.03 and floored with 0.005
+\item YOY Swap with scheduled capped/floored YOY leg: Notional 10m EUR, maturity 2021-02-05, exchanging fixed coupons for EUHICPXT year-on-year inflation coupons, YOY leg capped with cap schedule and floored with floor schedule
 \end{itemize}
 
-The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as two exposure graphs for CPI Swap 1 respectively the YOY Swap. Figure \ref{fig_cpi_swap} shows the CPI Swap exposure evolution.
+The example generates cash flows, NPVs, exposure evolutions, XVAs, as well as two exposure graphs for CPI Swap 1 respectively the YOY Swap. For the YOY Swap and the both YOY Swaps with capped/floored YOY leg, the example generates their cash flows, NPVs, exposure evolutions, XVAs and sensitivities. Figure \ref{fig_cpi_swap} shows the CPI Swap exposure evolution.
 
 \begin{figure}[h!]
 	\begin{center}
@@ -2083,6 +2085,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2108,7 +2111,7 @@ pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt imp
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
 scenario analysis and stress testing.
 
-\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
@@ -3960,6 +3963,33 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 \label{lst:stress_config}
 \end{longlisting}
 
+%--------------------------------------------------------
+\subsection{Calendar Adjustment: {\tt calendaradjustment.xml}}\label{sec:calenderdjustment}
+%--------------------------------------------------------
+
+\medskip
+ This file {\tt calendaradjustment.xml} list out all additional holidays and business days that are added to a specified calendar in ORE.
+ These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
+In this example, two additional dates had been added to the calendar "Japan", one addtional holiday and one additional business day. If the user is not certain
+wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
+A sample {\tt calendaradjustment.xml} file can be found in the Global example input directory. However, it is only used in Example\_1.
+
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan">
+    <AdditionalHolidays>
+      <Date>2020-01-01</Date>
+    </AdditionalHolidays>
+    <AdditionalBusinessDays>
+      <Date>2020-01-02</Date>
+    </AdditionalBusinessDays>
+</CalendarAdjustments>
+  \end{minted}
+\caption{Calendar Adjustment}\label{lst:calendar_adjustment}
+\end{longlisting}
+
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -4491,6 +4521,7 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \input{tradedata/tradespecifics}
 
 \input{tradedata/swap}
+\input{tradedata/zerocouponswap}
 \input{tradedata/capfloor}
 \input{tradedata/forwardrateagreement}
 \input{tradedata/swaption}
@@ -4507,7 +4538,23 @@ Listing \ref{lst:correlation_configuration} shows the configuration of the Corre
 \input{tradedata/commodityoption}
 \input{tradedata/commodityforward}
 
-\include{tradecomponents}
+%\include{tradecomponents}
+\input{../../Docs/UserGuide/tradecomponents/tradecomponentsintro}
+\input{../../Docs/UserGuide/tradecomponents/optiondata}
+\input{../../Docs/UserGuide/tradecomponents/legdatanotionals}
+\input{../../Docs/UserGuide/tradecomponents/scheduledata}
+\input{../../Docs/UserGuide/tradecomponents/fixedlegdatarates}
+\input{../../Docs/UserGuide/tradecomponents/floatinglegdata}
+\input{../../Docs/UserGuide/tradecomponents/legdataamortisation}
+\input{../../Docs/UserGuide/tradecomponents/cmsleg}
+\input{../../Docs/UserGuide/tradecomponents/cmsspreadleg}
+\input{../../Docs/UserGuide/tradecomponents/digitalcmsspreadleg}
+\input{../../Docs/UserGuide/tradecomponents/equityleg}
+\input{../../Docs/UserGuide/tradecomponents/cpileg}
+\input{../../Docs/UserGuide/tradecomponents/yyleg}
+\input{../../Docs/UserGuide/tradecomponents/zerocouponleg}
+
+
 \include{allowablevalues}
 
 %========================================================
