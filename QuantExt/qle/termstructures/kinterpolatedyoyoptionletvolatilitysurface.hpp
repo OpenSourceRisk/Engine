@@ -187,7 +187,12 @@ using namespace QuantLib;
         if (!lastDateisSet_ || d != lastDate_ ) {
             // patch 2 for QL class:
             // add observation lag, this is subtracted again in the stripper
-            slice_ = yoyOptionletStripper_->slice(d + capFloorPrices_->observationLag());
+            Date d_eff = d + capFloorPrices_->observationLag();
+            // patch 3 for QL class:
+            // flat extrapolation in date direction, if extrapolation is enabled
+            if(this->allowsExtrapolation())
+                d_eff = std::min(d_eff, maxDate());
+            slice_ = yoyOptionletStripper_->slice(d_eff);
 
             tempKinterpolation_ =
                 factory1D_.interpolate( slice_.first.begin(),
