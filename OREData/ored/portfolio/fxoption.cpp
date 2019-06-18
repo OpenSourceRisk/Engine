@@ -32,7 +32,7 @@ namespace ore {
 namespace data {
 
 void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    OneAssetOption::build(engineFactory);
+    VanillaOptionTrade::build(engineFactory);
     const string& ccyPairCode = assetName_ + currency_;
     Handle<BlackVolTermStructure> blackVol = engineFactory->market()->fxVol(ccyPairCode);
     LOG("Implied vol for " << tradeType_ << " on " << ccyPairCode << " with maturity " << maturity_ << " and strike " << strike_
@@ -40,7 +40,7 @@ void FxOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 }
 
 void FxOption::fromXML(XMLNode* node) {
-    OneAssetOption::fromXML(node);
+    VanillaOptionTrade::fromXML(node);
     XMLNode* fxNode = XMLUtils::getChildNode(node, "FxOptionData");
     QL_REQUIRE(fxNode, "No FxOptionData Node");
     option_.fromXML(XMLUtils::getChildNode(fxNode, "OptionData"));
@@ -53,6 +53,7 @@ void FxOption::fromXML(XMLNode* node) {
 }
 
 XMLNode* FxOption::toXML(XMLDocument& doc) {
+    //TODO: Should call parent class to xml?
     XMLNode* node = Trade::toXML(doc);
     XMLNode* fxNode = doc.allocNode("FxOptionData");
     XMLUtils::appendNode(node, fxNode);

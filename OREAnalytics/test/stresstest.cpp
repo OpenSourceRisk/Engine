@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(regression) {
     boost::shared_ptr<EngineFactory> factory = boost::make_shared<EngineFactory>(engineData, simMarket);
     factory->registerBuilder(boost::make_shared<SwapEngineBuilder>());
     factory->registerBuilder(boost::make_shared<EuropeanSwaptionEngineBuilder>());
-    factory->registerBuilder(boost::make_shared<FxEuropeanOptionEngineBuilder>());
+    factory->registerBuilder(boost::make_shared<FxEuropeanVanillaOptionAnalyticEngineBuilder>());
     factory->registerBuilder(boost::make_shared<FxForwardEngineBuilder>());
     factory->registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
 

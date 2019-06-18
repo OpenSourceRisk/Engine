@@ -32,14 +32,14 @@ namespace ore {
 namespace data {
 
 void EquityOption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
-    OneAssetOption::build(engineFactory);
+    VanillaOptionTrade::build(engineFactory);
     Handle<BlackVolTermStructure> blackVol = engineFactory->market()->equityVol(assetName_);
     LOG("Implied vol for " << tradeType_ << " on " << assetName_ << " with maturity " << maturity_ << " and strike " << strike_
                                         << " is " << blackVol->blackVol(maturity_, strike_));
 }
 
 void EquityOption::fromXML(XMLNode* node) {
-    OneAssetOption::fromXML(node);
+    VanillaOptionTrade::fromXML(node);
     XMLNode* eqNode = XMLUtils::getChildNode(node, "EquityOptionData");
     QL_REQUIRE(eqNode, "No EquityOptionData Node");
     option_.fromXML(XMLUtils::getChildNode(eqNode, "OptionData"));
@@ -50,7 +50,7 @@ void EquityOption::fromXML(XMLNode* node) {
 }
 
 XMLNode* EquityOption::toXML(XMLDocument& doc) {
-    XMLNode* node = OneAssetOption::toXML(doc);
+    XMLNode* node = VanillaOptionTrade::toXML(doc);
     XMLNode* eqNode = doc.allocNode("EquityOptionData");
     XMLUtils::appendNode(node, eqNode);
 

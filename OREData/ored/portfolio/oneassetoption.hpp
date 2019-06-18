@@ -31,16 +31,16 @@ namespace ore {
 namespace data {
 using std::string;
 
-//! Serializable One Asset Option
+//! Serializable Vanilla Option
 /*!
   \ingroup tradedata
 */
-class OneAssetOption : public Trade {
+class VanillaOptionTrade : public Trade {
 public:
     //! Build QuantLib/QuantExt instrument, link pricing engine
     void build(const boost::shared_ptr<EngineFactory>&) override;
 
-    //! Return no fixings for an OneAssetOption
+    //! Return no fixings for an VanillaOption
     std::map<std::string, std::set<QuantLib::Date>> fixings(
         const QuantLib::Date& settlementDate = QuantLib::Date()) const override {
         return {};
@@ -61,11 +61,11 @@ public:
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
 protected:
-    OneAssetOption(AssetClass assetClassUnderlying)
-        : Trade("OneAssetOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
-    OneAssetOption(Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
+    VanillaOptionTrade(AssetClass assetClassUnderlying)
+        : Trade("VanillaOption"), assetClassUnderlying_(assetClassUnderlying), strike_(0), quantity_(0) {}
+    VanillaOptionTrade(Envelope& env, AssetClass assetClassUnderlying, OptionData option, string assetName,
                    string currency, double strike, double quantity)
-        : Trade("OneAssetOption", env), assetClassUnderlying_(assetClassUnderlying),
+        : Trade("VanillaOption", env), assetClassUnderlying_(assetClassUnderlying),
           option_(option), assetName_(assetName), currency_(currency), strike_(strike),
           quantity_(quantity) {}
         
