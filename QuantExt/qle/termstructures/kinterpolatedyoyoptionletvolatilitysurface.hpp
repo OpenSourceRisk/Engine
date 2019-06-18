@@ -18,6 +18,7 @@
 
 /*! \file kinterpolatedyoyoptionletvolatilitysurface.hpp
     \brief Interpolated yoy optionlet volatility, derived from QuantLib's to control extrapolation
+           and fix bug in updateSlice() where the observation lag is subtracted twice
 */
 
 #ifndef quantext_strike_interpolated_yoy_optionlet_volatility_surface_hpp
@@ -26,6 +27,8 @@
 #include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 
 namespace QuantExt {
+
+using namespace QuantLib;
 
 //! Strike-interpolated YoY optionlet volatility
 /*! The stripper provides curves in the T direction along each K.
@@ -40,74 +43,161 @@ namespace QuantExt {
 
     \bug Tests currently fail.
 */
-template <class Interpolator1D>
-class StrikeInterpolatedYoYOptionletVolatilitySurface
-    : public QuantLib::KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D> {
-public:
-    //! \name Constructor
-    //! calculate the reference date based on the global evaluation date
-    StrikeInterpolatedYoYOptionletVolatilitySurface(const Natural settlementDays, const Calendar&,
-                                                    const BusinessDayConvention bdc, const DayCounter& dc,
-                                                    const Period& lag,
-                                                    const ext::shared_ptr<YoYCapFloorTermPriceSurface>& capFloorPrices,
-                                                    const ext::shared_ptr<YoYInflationCapFloorEngine>& pricer,
-                                                    const ext::shared_ptr<YoYOptionletStripper>& yoyOptionletStripper,
-                                                    const Real slope,
-                                                    const Interpolator1D& interpolator = Interpolator1D());
-    virtual Real minStrike() const;
-    virtual Real maxStrike() const;
 
-protected:
-    virtual Volatility volatilityImpl(const Date& d, Rate strike) const;
-};
+    template<class Interpolator1D>
+    class KInterpolatedYoYOptionletVolatilitySurface
+        : public QuantLib::YoYOptionletVolatilitySurface {
+      public:
+        //! \name Constructor
+        //! calculate the reference date based on the global evaluation date
+        KInterpolatedYoYOptionletVolatilitySurface(
+           const Natural settlementDays,
+           const Calendar&,
+           const BusinessDayConvention bdc,
+           const DayCounter& dc,
+           const Period &lag,
+           const ext::shared_ptr<YoYCapFloorTermPriceSurface> &capFloorPrices,
+           const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
+           const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
+           const Real slope,
+           const Interpolator1D &interpolator = Interpolator1D());
 
-// template definitions
+        virtual Real minStrike() const;
+        virtual Real maxStrike() const;
+        virtual Date maxDate() const;
+        std::pair<std::vector<Rate>, std::vector<Volatility> > Dslice(
+                                                         const Date &d) const;
 
-template <class Interpolator1D>
-StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::StrikeInterpolatedYoYOptionletVolatilitySurface(
-    const Natural settlementDays, const Calendar& cal, const BusinessDayConvention bdc, const DayCounter& dc,
-    const Period& lag, const ext::shared_ptr<YoYCapFloorTermPriceSurface>& capFloorPrices,
-    const ext::shared_ptr<YoYInflationCapFloorEngine>& pricer,
-    const ext::shared_ptr<YoYOptionletStripper>& yoyOptionletStripper, const Real slope,
-    const Interpolator1D& interpolator)
-    : QuantLib::KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>(
-          settlementDays, cal, bdc, dc, lag, capFloorPrices, pricer, yoyOptionletStripper, slope, interpolator) {}
+      protected:
+        virtual Volatility volatilityImpl(const Date &d,
+                                          Rate strike) const;
+        virtual Volatility volatilityImpl(Time length,
+                                          Rate strike) const;
+        virtual void performCalculations() const;
 
-template <class Interpolator1D>
-Real StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::minStrike() const {
-    if (this->allowsExtrapolation())
-        return QL_MIN_REAL;
-    else
-        return this->capFloorPrices_->strikes().front();
+        ext::shared_ptr<YoYCapFloorTermPriceSurface> capFloorPrices_;
+        ext::shared_ptr<YoYInflationCapFloorEngine> yoyInflationCouponPricer_;
+        ext::shared_ptr<YoYOptionletStripper> yoyOptionletStripper_;
+
+        mutable Interpolator1D factory1D_;
+        mutable Real slope_;
+        mutable bool lastDateisSet_;
+        mutable Date lastDate_;
+        mutable Interpolation tempKinterpolation_;
+        mutable std::pair<std::vector<Rate>, std::vector<Volatility> > slice_;
+      private:
+        void updateSlice(const Date &d) const;
+    };
+
+
+    // template definitions
+
+    template<class Interpolator1D>
+    KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    KInterpolatedYoYOptionletVolatilitySurface(
+         const Natural settlementDays,
+         const Calendar& cal,
+         const BusinessDayConvention bdc,
+         const DayCounter& dc,
+         const Period &lag,
+         const ext::shared_ptr<YoYCapFloorTermPriceSurface> &capFloorPrices,
+         const ext::shared_ptr<YoYInflationCapFloorEngine> &pricer,
+         const ext::shared_ptr<YoYOptionletStripper> &yoyOptionletStripper,
+         const Real slope,
+         const Interpolator1D &interpolator)
+     : QuantLib::YoYOptionletVolatilitySurface(settlementDays, cal, bdc, dc, lag,
+                                    capFloorPrices->yoyIndex()->frequency(),
+                                    capFloorPrices->yoyIndex()->interpolated()),
+      capFloorPrices_(capFloorPrices), yoyInflationCouponPricer_(pricer),
+      yoyOptionletStripper_(yoyOptionletStripper),
+      factory1D_(interpolator), slope_(slope), lastDateisSet_(false) {
+        performCalculations();
+    }
+
+
+    template<class Interpolator1D>
+    Date KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    maxDate() const {
+        Size n = capFloorPrices_->maturities().size();
+        return referenceDate()+capFloorPrices_->maturities()[n-1];
+    }
+
+
+    template<class Interpolator1D>
+    Real KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    minStrike() const {
+        return capFloorPrices_->strikes().front();
+    }
+
+
+    template<class Interpolator1D>
+    Real KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    maxStrike() const {
+        return capFloorPrices_->strikes().back();
+    }
+
+
+    template<class Interpolator1D>
+    void KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    performCalculations() const {
+
+        // slope is the assumption on the initial caplet volatility change
+        yoyOptionletStripper_->initialize(capFloorPrices_,
+                                          yoyInflationCouponPricer_,
+                                          slope_);
+    }
+
+
+    template<class Interpolator1D>
+    Volatility KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    volatilityImpl(const Date &d, Rate strike) const {
+        updateSlice(d);
+        // patch 1 for QL class:
+        // extrapolation on interpolator (if enabled in this class)
+        if (this->allowsExtrapolation()) {
+            this->tempKinterpolation_.enableExtrapolation();
+        }
+        return tempKinterpolation_(strike);
+    }
+
+
+    template<class Interpolator1D>
+    std::pair<std::vector<Rate>, std::vector<Volatility> >
+    KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    Dslice(const Date &d) const {
+        updateSlice(d);
+        return slice_;
+    }
+
+
+    template<class Interpolator1D>
+    Volatility KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    volatilityImpl(Time length,  Rate strike) const {
+        Natural years = (Natural)floor(length);
+        Natural days = (Natural)floor((length - years) * 365.0);
+        Date d = referenceDate() + Period(years, Years) + Period(days, Days);
+
+        return this->volatilityImpl(d, strike);
+    }
+
+    template<class Interpolator1D>
+    void KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::
+    updateSlice(const Date &d) const {
+
+        if (!lastDateisSet_ || d != lastDate_ ) {
+            // patch 2 for QL class:
+            // add observation lag, this is subtracted again in the stripper
+            slice_ = yoyOptionletStripper_->slice(d + capFloorPrices_->observationLag());
+
+            tempKinterpolation_ =
+                factory1D_.interpolate( slice_.first.begin(),
+                                        slice_.first.end(),
+                                        slice_.second.begin() );
+            lastDateisSet_ = true;
+            lastDate_ = d;
+        }
+    }
+
 }
-
-template <class Interpolator1D>
-Real StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::maxStrike() const {
-    if (this->allowsExtrapolation())
-        return QL_MAX_REAL;
-    else
-        return this->capFloorPrices_->strikes().back();
-}
-
-template <class Interpolator1D>
-Volatility StrikeInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::volatilityImpl(const Date& d,
-                                                                                           Rate strike) const {
-    Real kmax = this->capFloorPrices_->strikes().back();
-    Real kmin = this->capFloorPrices_->strikes().front();
-    Real tmpStrike = (kmax + kmin) / 2;
-
-    // call the base class' function such that it does not throw, i.e. with a valid strike, this resets
-    // tempKinterpolation_
-    KInterpolatedYoYOptionletVolatilitySurface<Interpolator1D>::volatilityImpl(d, tmpStrike);
-
-    // now enable extrapolation...
-    if (this->allowsExtrapolation())
-        this->tempKinterpolation_.enableExtrapolation();
-
-    // ...and return the vol for the strike we want
-    return this->tempKinterpolation_(strike);
-}
-
-} // namespace QuantExt
 
 #endif
