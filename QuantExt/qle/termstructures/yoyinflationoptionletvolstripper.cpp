@@ -17,7 +17,6 @@
 */
 
 #include <ql/experimental/inflation/interpolatedyoyoptionletstripper.hpp>
-#include <ql/experimental/inflation/kinterpolatedyoyoptionletvolatilitysurface.hpp>
 #include <ql/instruments/makeyoyinflationcapfloor.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
 #include <ql/math/interpolations/linearinterpolation.hpp>
@@ -108,6 +107,7 @@ void YoYInflationOptionletVolStripper::performCalculations() {
 
     boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
+    yoySurface->enableExtrapolation();
 
     boost::shared_ptr<InterpolatedYoYOptionletStripper<Linear> > yoyStripper =
         boost::make_shared<InterpolatedYoYOptionletStripper<Linear> >();
@@ -122,10 +122,10 @@ void YoYInflationOptionletVolStripper::performCalculations() {
     boost::shared_ptr<YoYInflationBachelierCapFloorEngine> cfEngine =
         boost::make_shared<YoYInflationBachelierCapFloorEngine>(yoyIndex_, hovs);
 
-    boost::shared_ptr<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
-      boost::make_shared<QuantExt::StrikeInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
+    boost::shared_ptr<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> > interpVolSurface =
+      boost::make_shared<QuantExt::KInterpolatedYoYOptionletVolatilitySurface<Linear> >(settDays, cal, bdc, dc, obsLag,
                                                                                 yoySurface, cfEngine, yoyStripper, 0);
-
+    interpVolSurface->enableExtrapolation();
     boost::shared_ptr<QuantExt::YoYOptionletVolatilitySurface> newSurface =
         boost::make_shared<QuantExt::YoYOptionletVolatilitySurface>(interpVolSurface, type_, displacement_);
     yoyOptionletVolSurface_ = newSurface;
