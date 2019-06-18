@@ -4197,7 +4197,9 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice -->
+    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- Optional node, only used when Type is OptionPremium
+    <ExerciseStyle>American</ExerciseStyle> -->
     <!-- Spot quote from the market data file -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
     <Quotes>

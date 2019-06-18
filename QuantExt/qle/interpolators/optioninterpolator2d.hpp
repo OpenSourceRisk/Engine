@@ -62,6 +62,7 @@ public:
 
     //! \name Getters
     //@{
+    const QuantLib::Date& referenceDate() const { return referenceDate_; }
     QuantLib::DayCounter dayCounter() const { return dayCounter_; }
     std::vector<QuantLib::Time> times() const;
     std::vector<QuantLib::Date> expiries() const;

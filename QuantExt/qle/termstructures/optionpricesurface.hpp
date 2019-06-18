@@ -46,8 +46,8 @@ public:
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
-    const QuantLib::Date& referenceDate() const { return QuantLib::TermStructure::referenceDate(); }
-    QuantLib::DayCounter dayCounter() const { return QuantLib::TermStructure::dayCounter(); }
+    const QuantLib::Date& referenceDate() const { return OptionInterpolator2d::referenceDate(); }
+    QuantLib::DayCounter dayCounter() const { return OptionInterpolator2d::dayCounter(); }
     //@}
 
     QuantLib::Real price(QuantLib::Time t, QuantLib::Real strike) const { return getValue(t, strike); };

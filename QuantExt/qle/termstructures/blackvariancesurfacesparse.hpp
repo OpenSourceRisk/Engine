@@ -43,6 +43,8 @@ public:
     //! \name TermStructure interface
     //@{
     QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
+    const QuantLib::Date& referenceDate() const { return OptionInterpolator2d::referenceDate(); }
+    QuantLib::DayCounter dayCounter() const { return OptionInterpolator2d::dayCounter(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
