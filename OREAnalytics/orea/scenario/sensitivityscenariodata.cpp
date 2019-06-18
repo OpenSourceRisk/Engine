@@ -596,6 +596,16 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         }
     }
 
+    if (!yoyInflationCapFloorVolShiftData_.empty()) {
+        LOG("toXML for YYInflationCapFloorVolatilities");
+        XMLNode* parent = XMLUtils::addChild(doc, root, "YYCapFloorVolatilities");
+        for (const auto& kv : yoyInflationCapFloorVolShiftData_) {
+            XMLNode* node = XMLUtils::addChild(doc, parent, "YYCapFloorVolatility");
+            XMLUtils::addAttribute(doc, node, "index", kv.first);
+            volShiftDataToXML(doc, node, kv.second);
+        }
+    }
+
     if (!commodityShiftData_.empty()) {
         LOG("toXML for CommoditySpots");
         XMLNode* parent = XMLUtils::addChild(doc, root, "CommoditySpots");
