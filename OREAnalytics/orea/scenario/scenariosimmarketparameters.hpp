@@ -244,7 +244,11 @@ public:
     void setCapFloorVolDayCounters(const string& key, const string& p);
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
-    void setYoYInflationCapFloorNames(vector<string> names);
+    void setYoYInflationCapFloorVolNames(vector<string> names);
+    void setYoYInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
+    vector<Real>& yoyCapFloorVolStrikes() { return yoyInflationCapFloorVolStrikes_; }
+    string& yoyInflationCapFloorVolDecayMode() { return yoyInflationCapFloorVolDecayMode_; }
+    void setYoYInflationCapFloorVolDayCounters(const string& key, const string& p);
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);

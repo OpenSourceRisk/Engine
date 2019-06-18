@@ -388,7 +388,7 @@ void ScenarioSimMarketParameters::setCapFloorVolCcys(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::OptionletVolatility, names);
 }
 
-void ScenarioSimMarketParameters::setYoYInflationCapFloorNames(vector<string> names) {
+void ScenarioSimMarketParameters::setYoYInflationCapFloorVolNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, names);
 }
 
@@ -476,6 +476,14 @@ void ScenarioSimMarketParameters::setSimulateCapFloorVols(bool simulate) {
 
 void ScenarioSimMarketParameters::setSimulateYoYInflationCapFloorVols(bool simulate) {
     setParamsSimulate(RiskFactorKey::KeyType::YoYInflationCapFloorVolatility, simulate);
+}
+
+void ScenarioSimMarketParameters::setYoYInflationCapFloorVolExpiries(const string& key, const vector<Period>& p) {
+    yoyInflationCapFloorVolExpiries_[key] = p;
+}
+
+void ScenarioSimMarketParameters::setYoYInflationCapFloorVolDayCounters(const string& key, const string& p) {
+    yoyInflationCapFloorVolDayCounters_[key] = p;
 }
 
 void ScenarioSimMarketParameters::setSimulateSurvivalProbabilities(bool simulate) {
@@ -808,8 +816,18 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             setSimulateYoYInflationCapFloorVols(ore::data::parseBool(XMLUtils::getNodeValue(yoyCapVolSimNode)));
         yoyInflationCapFloorVolExpiries_[""] = XMLUtils::getChildrenValuesAsPeriods(nodeChild, "Expiries", true);
         yoyInflationCapFloorVolStrikes_ = XMLUtils::getChildrenValuesAsDoublesCompact(nodeChild, "Strikes", true);
-        setYoYInflationCapFloorNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
+        setYoYInflationCapFloorVolNames(XMLUtils::getChildrenValues(nodeChild, "Names", "Name", true));
         yoyInflationCapFloorVolDecayMode_ = XMLUtils::getChildValue(nodeChild, "ReactionToTimeDecay");
+        XMLNode* dc = XMLUtils::getChildNode(nodeChild, "DayCounters");
+        if (dc) {
+            for (XMLNode* child = XMLUtils::getChildNode(dc, "DayCounter"); child;
+                 child = XMLUtils::getNextSibling(child)) {
+                string label = XMLUtils::getAttribute(child, "name");
+                yoyInflationCapFloorVolDayCounters_[label] = XMLUtils::getNodeValue(child);
+            }
+        }
+        QL_REQUIRE(yoyInflationCapFloorVolDayCounters_.find("") != yoyInflationCapFloorVolDayCounters_.end(),
+                   "default daycounter is not set for capFloorVolSurfaces");
     }
 
     DLOG("Loading DefaultCurves Rates");
@@ -1338,6 +1356,27 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         if (yoyInflationDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, yoyNode, "DayCounters");
             for (auto dc : yoyInflationDayCounters_) {
+                XMLNode* c = doc.allocNode("DayCounter", dc.second);
+                XMLUtils::addAttribute(doc, c, "name", dc.first);
+                XMLUtils::appendNode(node, c);
+            }
+        }
+    }
+
+    // yoy cap/floor volatilities
+    if (!yoyInflationCapFloorVolNames().empty()) {
+        DLOG("Writing inflation cap/floor volatilities");
+        XMLNode* n = XMLUtils::addChild(doc, marketNode, "YYCapFloorVolatilities");
+        XMLUtils::addChild(doc, n, "Simulate", simulateYoYInflationCapFloorVols());
+        XMLUtils::addChild(doc, n, "ReactionToTimeDecay", yoyInflationCapFloorVolDecayMode());
+        XMLUtils::addChildren(doc, n, "Names", "Name", yoyInflationCapFloorVolNames());
+        XMLUtils::addGenericChildAsList(doc, n, "Expiries",
+                                        returnTenors(yoyInflationCapFloorVolExpiries_, ""));
+        // TODO write other keys
+             XMLUtils::addGenericChildAsList(doc, n, "Strikes", yoyInflationCapFloorVolStrikes());
+        if (capFloorVolDayCounters_.size() > 0) {
+            XMLNode* node = XMLUtils::addChild(doc, n, "DayCounters");
+            for (auto dc : yoyInflationCapFloorVolDayCounters_) {
                 XMLNode* c = doc.allocNode("DayCounter", dc.second);
                 XMLUtils::addAttribute(doc, c, "name", dc.first);
                 XMLUtils::appendNode(node, c);
