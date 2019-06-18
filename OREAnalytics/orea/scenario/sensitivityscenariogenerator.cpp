@@ -1588,7 +1588,7 @@ void SensitivityScenarioGenerator::generateYoYInflationCapFloorVolScenarios(bool
             }
         }
     }
-    LOG("YoY infaltion optionlet vol scenarios done");
+    LOG("YoY inflation optionlet vol scenarios done");
 }
 
 void SensitivityScenarioGenerator::generateBaseCorrelationScenarios(bool up) {
