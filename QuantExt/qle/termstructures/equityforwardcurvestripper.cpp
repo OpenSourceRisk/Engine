@@ -59,7 +59,6 @@ void EquityForwardCurveStripper::performCalculations() const {
 
     // at each option expiry time we calulate a forward
     for (Size i = 0; i < expiries_.size(); i++) {
-
         // get the relevant strikes at this expiry
         vector<Real> strikes = allStrikes[i];
         QL_REQUIRE(strikes.size() > 0, "No strikes for expiry " << expiries_[i]);
@@ -94,8 +93,7 @@ void EquityForwardCurveStripper::performCalculations() const {
         while (!isForward && j < maxIter) {
 
             if (type_ == Exercise::American) {
-
-                // for American ioptions we first get the implied vol from the American premiums
+                // for American options we first get the implied vol from the American premiums
                 // we use these to construct the European prices in order to apply put call parity
 
                 // get date and daycounter from the prics surface
@@ -183,12 +181,9 @@ void EquityForwardCurveStripper::performCalculations() const {
             } else {
                 newForward = forwardFromPutCallParity(expiries_[i], forward, callSurface, putSurface);
 
-                // check - is the new forward in the same interval as the current, and has it moved by less that 0.1%
-                isForward = distance(strikes.begin(), lower_bound(strikes.begin(), strikes.end(), forward)) ==
-                    distance(strikes.begin(), lower_bound(strikes.begin(), strikes.end(), newForward)) &&
-                    abs((newForward - forward) / forward) < 0.001;
+                // check - has it moved by less that 0.1%
+                isForward = fabs((newForward - forward) / forward) < 0.001;
             }
-
             forward = newForward;
             j++;
         }
