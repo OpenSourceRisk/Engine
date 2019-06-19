@@ -84,15 +84,33 @@ using ore::data::Convention;
 namespace ore {
 namespace data {
 
-// Helper function to build an IborIndex with a specific period and term structure given an instance of the same IborIndex
-boost::shared_ptr<IborIndex> build(const boost::shared_ptr<IborIndex>& index, const Period& p, const Handle<YieldTermStructure>& h) {
+// Helper base class to build an IborIndex with a specific period and term structure given an instance of the same IborIndex
+class IborIndexParser {
+public:
+    virtual ~IborIndexParser() {}
+    virtual boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const = 0;
+    virtual string family() const = 0;
+};
 
-    // Deal with specific cases first
+// General case
+template <class T>
+class IborIndexParserWithPeriod : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
+        return boost::make_shared<T>(p, h);
+    }
+    string family() const override {
+        return T(3 * Months).familyName();
+    }
+};
 
-    // MXN TIIE
-    // If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
-    // with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
-    if (boost::shared_ptr<MXNTiie> idx = boost::dynamic_pointer_cast<MXNTiie>(index)) {
+// MXN TIIE
+// If tenor equates to 28 Days, i.e. tenor is 4W or 28D, ensure that the index is created
+// with a tenor of 4W under the hood. Things work better this way especially cap floor stripping.
+template <>
+class IborIndexParserWithPeriod<MXNTiie> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         if (p.units() == Days && p.length() == 28) {
             return boost::make_shared<MXNTiie>(4 * Weeks, h);
         } else {
@@ -100,9 +118,17 @@ boost::shared_ptr<IborIndex> build(const boost::shared_ptr<IborIndex>& index, co
         }
     }
 
-    // KRW CD
-    // If tenor equates to 91 Days, ensure that the index is created with a tenor of 3M under the hood.
-    if (boost::shared_ptr<KRWCd> idx = boost::dynamic_pointer_cast<KRWCd>(index)) {
+    string family() const override {
+        return MXNTiie(4 * Weeks).familyName();
+    }
+};
+
+// KRW CD
+// If tenor equates to 91 Days, ensure that the index is created with a tenor of 3M under the hood.
+template <>
+class IborIndexParserWithPeriod<KRWCd> : public IborIndexParser {
+public:
+    boost::shared_ptr<IborIndex> build(Period p, const Handle<YieldTermStructure>& h) const override {
         if (p.units() == Days && p.length() == 91) {
             return boost::make_shared<KRWCd>(3 * Months, h);
         } else {
@@ -110,24 +136,25 @@ boost::shared_ptr<IborIndex> build(const boost::shared_ptr<IborIndex>& index, co
         }
     }
 
-    // General case
-    return boost::make_shared<IborIndex>(index->familyName(), p, index->fixingDays(), index->currency(), 
-        index->fixingCalendar(), index->businessDayConvention(), index->endOfMonth(), index->dayCounter(), h);
-}
+    string family() const override {
+        return KRWCd(3 * Months).familyName();
+    }
+};
 
 // Helper function to check that index name to index object is a one-to-one mapping
-void checkOneToOne(const map<string, OvernightIndex>& onIndices, const map<string, boost::shared_ptr<IborIndex>>& iborIndices) {
+void checkOneToOne(const map<string, boost::shared_ptr<OvernightIndex>>& onIndices, 
+    const map<string, boost::shared_ptr<IborIndexParser>>& iborIndices) {
 
     // Should not attempt to add the same family name to the set if the provided mappings are one to one
     set<string> familyNames;
 
     for (const auto& kv : onIndices) {
-        auto p = familyNames.insert(kv.second.familyName());
+        auto p = familyNames.insert(kv.second->familyName());
         QL_REQUIRE(p.second, "Duplicate mapping for overnight index family " << *p.first << " not allowed");
     }
 
     for (const auto& kv : iborIndices) {
-        auto p = familyNames.insert(kv.second->familyName());
+        auto p = familyNames.insert(kv.second->family());
         QL_REQUIRE(p.second, "Duplicate mapping for ibor index family " << *p.first << " not allowed");
     }
 }
@@ -184,68 +211,68 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     }
 
     // Map from our _unique internal name_ to an overnight index
-    static map<string, OvernightIndex> onIndices = {
-        { "EUR-EONIA", Eonia() },
-        { "GBP-SONIA", Sonia() },
-        { "JPY-TONAR", Tonar() },
-        { "CHF-TOIS", CHFTois() },
-        { "CHF-SARON", CHFSaron() },
-        { "USD-FedFunds", FedFunds() },
-        { "AUD-AONIA", Aonia() },
-        { "CAD-CORRA", CORRA() },
-        { "DKK-DKKOIS", DKKOis() },
-        { "SEK-SIOR", SEKSior() },
-        { "COP-IBR", COPIbr() },
-        { "BRL-CDI", BRLCdi() },
-        { "NOK-NOWA", Nowa() },
-        { "CLP-CAMARA", CLPCamara() },
-        { "NZD-OCR", Nzocr() },
-        { "PLN-POLONIA", PLNPolonia() }
+    static map<string, boost::shared_ptr<OvernightIndex>> onIndices = {
+        { "EUR-EONIA", boost::make_shared<Eonia>() },
+        { "GBP-SONIA", boost::make_shared<Sonia>() },
+        { "JPY-TONAR", boost::make_shared<Tonar>() },
+        { "CHF-TOIS", boost::make_shared<CHFTois>() },
+        { "CHF-SARON", boost::make_shared<CHFSaron>() },
+        { "USD-FedFunds", boost::make_shared<FedFunds>() },
+        { "AUD-AONIA", boost::make_shared<Aonia>() },
+        { "CAD-CORRA", boost::make_shared<CORRA>() },
+        { "DKK-DKKOIS", boost::make_shared<DKKOis>() },
+        { "SEK-SIOR", boost::make_shared<SEKSior>() },
+        { "COP-IBR", boost::make_shared<COPIbr>() },
+        { "BRL-CDI", boost::make_shared<BRLCdi>() },
+        { "NOK-NOWA", boost::make_shared<Nowa>() },
+        { "CLP-CAMARA", boost::make_shared<CLPCamara>() },
+        { "NZD-OCR", boost::make_shared<Nzocr>() },
+        { "PLN-POLONIA", boost::make_shared<PLNPolonia>() }
     };
 
     // Map from our _unique internal name_ to an ibor index (the period does not matter here)
-    static map<string, boost::shared_ptr<IborIndex>> iborIndices = {
-        { "AUD-BBSW", boost::make_shared<AUDbbsw>(3 * Months) },
-        { "AUD-LIBOR", boost::make_shared<AUDLibor>(3 * Months) },
-        { "EUR-EURIBOR", boost::make_shared<Euribor>(3 * Months) },
-        { "CAD-CDOR", boost::make_shared<Cdor>(3 * Months) },
-        { "CNY-SHIBOR", boost::make_shared<Shibor>(3 * Months) },
-        { "CZK-PRIBOR", boost::make_shared<CZKPribor>(3 * Months) },
-        { "EUR-LIBOR", boost::make_shared<EURLibor>(3 * Months) },
-        { "USD-LIBOR", boost::make_shared<USDLibor>(3 * Months) },
-        { "GBP-LIBOR", boost::make_shared<GBPLibor>(3 * Months) },
-        { "JPY-LIBOR", boost::make_shared<JPYLibor>(3 * Months) },
-        { "JPY-TIBOR", boost::make_shared<Tibor>(3 * Months) },
-        { "CAD-LIBOR", boost::make_shared<CADLibor>(3 * Months) },
-        { "CHF-LIBOR", boost::make_shared<CHFLibor>(3 * Months) },
-        { "SEK-LIBOR", boost::make_shared<SEKLibor>(3 * Months) },
-        { "SEK-STIBOR", boost::make_shared<SEKStibor>(3 * Months) },
-        { "NOK-NIBOR", boost::make_shared<NOKNibor>(3 * Months) },
-        { "HKD-HIBOR", boost::make_shared<HKDHibor>(3 * Months) },
-        { "SAR-SAIBOR", boost::make_shared<SAibor>(3 * Months) },
-        { "SGD-SIBOR", boost::make_shared<SGDSibor>(3 * Months) },
-        { "SGD-SOR", boost::make_shared<SGDSor>(3 * Months) },
-        { "DKK-CIBOR", boost::make_shared<DKKCibor>(3 * Months) },
-        { "DKK-LIBOR", boost::make_shared<DKKLibor>(3 * Months) },
-        { "HUF-BUBOR", boost::make_shared<HUFBubor>(3 * Months) },
-        { "IDR-IDRFIX", boost::make_shared<IDRIdrfix>(3 * Months) },
-        { "IDR-JIBOR", boost::make_shared<IDRJibor>(3 * Months) },
-        { "ILS-TELBOR", boost::make_shared<ILSTelbor>(3 * Months) },
-        { "INR-MIFOR", boost::make_shared<INRMifor>(3 * Months) },
-        { "MXN-TIIE", boost::make_shared<MXNTiie>(3 * Months) },
-        { "PLN-WIBOR", boost::make_shared<PLNWibor>(3 * Months) },
-        { "SKK-BRIBOR", boost::make_shared<SKKBribor>(3 * Months) },
-        { "NZD-BKBM", boost::make_shared<NZDBKBM>(3 * Months) },
-        { "TRY-TRLIBOR", boost::make_shared<TRLibor>(3 * Months) },
-        { "TWD-TAIBOR", boost::make_shared<TWDTaibor>(3 * Months) },
-        { "MYR-KLIBOR", boost::make_shared<MYRKlibor>(3 * Months) },
-        { "KRW-CD", boost::make_shared<KRWCd>(3 * Months) },
-        { "KRW-KORIBOR", boost::make_shared<KRWKoribor>(3 * Months) },
-        { "ZAR-JIBAR", boost::make_shared<Jibar>(3 * Months) },
-        { "RUB-MOSPRIME", boost::make_shared<RUBMosprime>(3 * Months) },
-        { "THB-BIBOR", boost::make_shared<THBBibor>(3 * Months) },
-        { "PHP-PHIREF", boost::make_shared<PHPPhiref>(3 * Months) },
-        { "DEM-LIBOR", boost::make_shared<DEMLibor>(3 * Months) }
+    static map<string, boost::shared_ptr<IborIndexParser>> iborIndices = {
+        { "AUD-BBSW", boost::make_shared<IborIndexParserWithPeriod<AUDbbsw>>() },
+        { "AUD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<AUDLibor>>() },
+        { "EUR-EURIBOR", boost::make_shared<IborIndexParserWithPeriod<Euribor>>() },
+        { "CAD-CDOR", boost::make_shared<IborIndexParserWithPeriod<Cdor>>() },
+        { "CNY-SHIBOR", boost::make_shared<IborIndexParserWithPeriod<Shibor>>() },
+        { "CZK-PRIBOR", boost::make_shared<IborIndexParserWithPeriod<CZKPribor>>() },
+        { "EUR-LIBOR", boost::make_shared<IborIndexParserWithPeriod<EURLibor>>() },
+        { "USD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<USDLibor>>() },
+        { "GBP-LIBOR", boost::make_shared<IborIndexParserWithPeriod<GBPLibor>>() },
+        { "JPY-LIBOR", boost::make_shared<IborIndexParserWithPeriod<JPYLibor>>() },
+        { "JPY-TIBOR", boost::make_shared<IborIndexParserWithPeriod<Tibor>>() },
+        { "CAD-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CADLibor>>() },
+        { "CHF-LIBOR", boost::make_shared<IborIndexParserWithPeriod<CHFLibor>>() },
+        { "SEK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKLibor>>() },
+        { "SEK-STIBOR", boost::make_shared<IborIndexParserWithPeriod<SEKStibor>>() },
+        { "NOK-NIBOR", boost::make_shared<IborIndexParserWithPeriod<NOKNibor>>() },
+        { "HKD-HIBOR", boost::make_shared<IborIndexParserWithPeriod<HKDHibor>>() },
+        { "SAR-SAIBOR", boost::make_shared<IborIndexParserWithPeriod<SAibor>>() },
+        { "SGD-SIBOR", boost::make_shared<IborIndexParserWithPeriod<SGDSibor>>() },
+        { "SGD-SOR", boost::make_shared<IborIndexParserWithPeriod<SGDSor>>() },
+        { "DKK-CIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKCibor>>() },
+        { "DKK-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DKKLibor>>() },
+        { "HUF-BUBOR", boost::make_shared<IborIndexParserWithPeriod<HUFBubor>>() },
+        { "IDR-IDRFIX", boost::make_shared<IborIndexParserWithPeriod<IDRIdrfix>>() },
+        { "IDR-JIBOR", boost::make_shared<IborIndexParserWithPeriod<IDRJibor>>() },
+        { "ILS-TELBOR", boost::make_shared<IborIndexParserWithPeriod<ILSTelbor>>() },
+        { "INR-MIFOR", boost::make_shared<IborIndexParserWithPeriod<INRMifor>>() },
+        { "MXN-TIIE", boost::make_shared<IborIndexParserWithPeriod<MXNTiie>>() },
+        { "PLN-WIBOR", boost::make_shared<IborIndexParserWithPeriod<PLNWibor>>() },
+        { "SKK-BRIBOR", boost::make_shared<IborIndexParserWithPeriod<SKKBribor>>() },
+        { "NZD-BKBM", boost::make_shared<IborIndexParserWithPeriod<NZDBKBM>>() },
+        { "TRY-TRLIBOR", boost::make_shared<IborIndexParserWithPeriod<TRLibor>>() },
+        { "TWD-TAIBOR", boost::make_shared<IborIndexParserWithPeriod<TWDTaibor>>() },
+        { "MYR-KLIBOR", boost::make_shared<IborIndexParserWithPeriod<MYRKlibor>>() },
+        { "KRW-CD", boost::make_shared<IborIndexParserWithPeriod<KRWCd>>() },
+        { "KRW-KORIBOR", boost::make_shared<IborIndexParserWithPeriod<KRWKoribor>>() },
+        { "ZAR-JIBAR", boost::make_shared<IborIndexParserWithPeriod<Jibar>>() },
+        { "RUB-MOSPRIME", boost::make_shared<IborIndexParserWithPeriod<RUBMosprime>>() },
+        { "THB-BIBOR", boost::make_shared<IborIndexParserWithPeriod<THBBibor>>() },
+        { "PHP-PHIREF", boost::make_shared<IborIndexParserWithPeriod<PHPPhiref>>() },
+        { "DEM-LIBOR", boost::make_shared<IborIndexParserWithPeriod<DEMLibor>>() }
     };
 
     // Check (once) that we have a one-to-one mapping
@@ -265,14 +292,14 @@ boost::shared_ptr<IborIndex> parseIborIndex(const string& s, string& tenor, cons
     auto onIt = onIndices.find(indexStem);
     if (onIt != onIndices.end()) {
         QL_REQUIRE(tenor.empty(), "A tenor is not allowed with the overnight index " << indexStem << " as it is implied");
-        return onIt->second.clone(h);
+        return onIt->second->clone(h);
     }
 
     // Ibor indices with a tenor
     auto it = iborIndices.find(indexStem);
     if (it != iborIndices.end()) {
         Period p = parsePeriod(tenor);
-        return build(it->second, p, h);
+        return it->second->build(p, h);
     }
 
     // GENERIC indices
