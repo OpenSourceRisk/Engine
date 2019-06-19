@@ -350,7 +350,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsing) {
 
     Size len = sizeof(index_data) / sizeof(index_data[0]);
     for (Size i = 0; i < len; ++i) {
-        string str(index_data[i].str);
+        string str(ore::data::internalIndexName(index_data[i].str));
         string index_name(index_data[i].index_name);
         Period tenor(index_data[i].tenor);
 
