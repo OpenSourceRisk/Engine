@@ -288,7 +288,8 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
             callSurface = boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
             putSurface = boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
-
+            DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
+             
             DLOG("Stripping equity forwards from the option premium surfaces");
             boost::shared_ptr<EquityForwardCurveStripper> efcs = boost::make_shared<EquityForwardCurveStripper>(callSurface, putSurface,
                 forecastYieldTermStructure_, equitySpot_, config->exerciseStyle());
