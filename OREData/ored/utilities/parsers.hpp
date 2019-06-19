@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <ql/cashflows/cpicoupon.hpp>
 #include <ql/compounding.hpp>
 #include <ql/currency.hpp>
 #include <ql/exercise.hpp>
@@ -221,6 +222,12 @@ AmortizationType parseAmortizationType(const std::string& s);
 \ingroup utilities
 */
 QuantExt::SequenceType parseSequenceType(const std::string& s);
+
+//! Convert string to observation interpolation
+/*!
+\ingroup utilities
+*/
+QuantLib::CPI::InterpolationType parseObservationInterpolation(const std::string& s);
 
 } // namespace data
 } // namespace ore

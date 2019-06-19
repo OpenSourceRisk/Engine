@@ -40,7 +40,9 @@ CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>&
 
 void CPIBlackCapFloorEngine::calculate() const {
 
-    QL_REQUIRE(arguments_.observationInterpolation == QuantLib::CPI::AsIndex,
+    QL_REQUIRE(arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+	       (arguments_.observationInterpolation == QuantLib::CPI::Flat && !arguments_.infIndex->interpolated()) ||
+	       (arguments_.observationInterpolation == QuantLib::CPI::Linear && arguments_.infIndex->interpolated()),
                "observation interpolation as index required");
 
     // Maturity adjustment for lag difference as in the QuantLib engine

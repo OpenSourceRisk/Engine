@@ -70,6 +70,18 @@
     <Engine>CapFlooredYYCouponPricer</Engine>
     <EngineParameters/>
   </Product>
+  <Product type="CpiCapFloor">
+    <Model>CpiCapModel</Model>
+    <ModelParameters/>
+    <Engine>CpiCapEngine</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CapFlooredCpiLeg">
+    <Model>CapFlooredCpiModel</Model>
+    <ModelParameters/>
+    <Engine>CapFlooredCpiCouponPricer</Engine>
+    <EngineParameters/>
+  </Product>
   <Product type="CapFlooredIborLeg">
     <Model>BlackOrBachelier</Model>
     <ModelParameters/>

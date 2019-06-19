@@ -63,7 +63,7 @@ Leg CPILegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineF
     QL_REQUIRE(cpiData, "Wrong LegType, expected CPI");
     string inflationIndexName = cpiData->index();
     auto index = *engineFactory->market()->zeroInflationIndex(inflationIndexName, configuration);
-    return makeCPILeg(data, index);
+    return makeCPILeg(data, index, engineFactory);
 }
 
 Leg YYLegBuilder::buildLeg(const LegData& data, const boost::shared_ptr<EngineFactory>& engineFactory,

@@ -12,6 +12,8 @@ cashflows/averageonindexedcoupon.cpp
 cashflows/averageonindexedcouponpricer.cpp
 cashflows/brlcdicouponpricer.cpp
 cashflows/couponpricer.cpp
+cashflows/cpicoupon.cpp
+cashflows/cpicouponpricer.cpp
 cashflows/equitycoupon.cpp
 cashflows/equitycouponpricer.cpp
 cashflows/floatingannuitycoupon.cpp
@@ -20,6 +22,7 @@ cashflows/fxlinkedcashflow.cpp
 cashflows/lognormalcmsspreadpricer.cpp
 cashflows/quantocouponpricer.cpp
 cashflows/strippedcapflooredyoyinflationcoupon.cpp
+#cashflows/strippedcapflooredcpicoupon.cpp
 cashflows/subperiodscoupon.cpp
 cashflows/subperiodscouponpricer.cpp
 currencies/africa.cpp
@@ -167,6 +170,8 @@ cashflows/averageonindexedcoupon.hpp
 cashflows/averageonindexedcouponpricer.hpp
 cashflows/brlcdicouponpricer.hpp
 cashflows/couponpricer.hpp
+cashflows/cpicoupon.hpp
+cashflows/cpicouponpricer.hpp
 cashflows/equitycoupon.hpp
 cashflows/equitycouponpricer.hpp
 cashflows/floatingannuitycoupon.hpp
@@ -176,6 +181,7 @@ cashflows/fxlinkedcashflow.hpp
 cashflows/lognormalcmsspreadpricer.hpp
 cashflows/quantocouponpricer.hpp
 cashflows/strippedcapflooredyoyinflationcoupon.hpp
+#cashflows/strippedcapflooredcpicoupon.hpp
 cashflows/subperiodscoupon.hpp
 cashflows/subperiodscouponpricer.hpp
 currencies/africa.hpp
