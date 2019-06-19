@@ -51,7 +51,7 @@ CapFloorVolatilityCurveConfig::CapFloorVolatilityCurveConfig(
     : CurveConfig(curveID, curveDescription), volatilityType_(volatilityType), extrapolate_(extrapolate),
       flatExtrapolation_(flatExtrapolation), includeAtm_(inlcudeAtm), tenors_(tenors), strikes_(strikes),
       dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
-      businessDayConvention_(businessDayConvention), iborIndex_(iborIndex), discountCurve_(discountCurve),
+      businessDayConvention_(businessDayConvention), iborIndex_(internalIndexName(iborIndex)), discountCurve_(discountCurve),
       interpolationMethod_(interpolationMethod) {}
 
 const vector<string>& CapFloorVolatilityCurveConfig::quotes() {
@@ -122,7 +122,7 @@ void CapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
 
-    iborIndex_ = XMLUtils::getChildValue(node, "IborIndex", true);
+    iborIndex_ = internalIndexName(XMLUtils::getChildValue(node, "IborIndex", true));
     discountCurve_ = XMLUtils::getChildValue(node, "DiscountCurve", true);
     interpolationMethod_ = XMLUtils::getChildValue(node, "InterpolationMethod", false);
     if (interpolationMethod_ == "")

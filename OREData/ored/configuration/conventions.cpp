@@ -180,14 +180,14 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index)
-    : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(index)) {}
+    : Convention(id, Type::Future), strIndex_(internalIndexName(index)), index_(parseIborIndex(strIndex_)) {}
 
 void FutureConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "Future");
     type_ = Type::Future;
     id_ = XMLUtils::getChildValue(node, "Id", true);
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     index_ = parseIborIndex(strIndex_);
 }
 
@@ -201,14 +201,14 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) {
 }
 
 FraConvention::FraConvention(const string& id, const string& index)
-    : Convention(id, Type::FRA), strIndex_(index), index_(parseIborIndex(index)) {}
+    : Convention(id, Type::FRA), strIndex_(internalIndexName(index)), index_(parseIborIndex(strIndex_)) {}
 
 void FraConvention::fromXML(XMLNode* node) {
 
     XMLUtils::checkNode(node, "FRA");
     type_ = Type::FRA;
     id_ = XMLUtils::getChildValue(node, "Id", true);
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     index_ = parseIborIndex(strIndex_);
 }
 
@@ -225,7 +225,7 @@ OisConvention::OisConvention(const string& id, const string& spotLag, const stri
                              const string& fixedDayCounter, const string& paymentLag, const string& eom,
                              const string& fixedFrequency, const string& fixedConvention,
                              const string& fixedPaymentConvention, const string& rule, const string& paymentCal)
-    : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(index), strFixedDayCounter_(fixedDayCounter),
+    : Convention(id, Type::OIS), strSpotLag_(spotLag), strIndex_(internalIndexName(index)), strFixedDayCounter_(fixedDayCounter),
       strPaymentLag_(paymentLag), strEom_(eom), strFixedFrequency_(fixedFrequency),
       strFixedConvention_(fixedConvention), strFixedPaymentConvention_(fixedPaymentConvention), strRule_(rule),
       strPaymentCal_(paymentCal) {
@@ -257,7 +257,7 @@ void OisConvention::fromXML(XMLNode* node) {
 
     // Get string values from xml
     strSpotLag_ = XMLUtils::getChildValue(node, "SpotLag", true);
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
     strPaymentLag_ = XMLUtils::getChildValue(node, "PaymentLag", false);
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
@@ -315,7 +315,7 @@ IRSwapConvention::IRSwapConvention(const string& id, const string& fixedCalendar
 
     : Convention(id, Type::Swap), hasSubPeriod_(hasSubPeriod), strFixedCalendar_(fixedCalendar),
       strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention), strFixedDayCounter_(fixedDayCounter),
-      strIndex_(index), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
+      strIndex_(internalIndexName(index)), strFloatFrequency_(floatFrequency), strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
 }
 
@@ -346,7 +346,7 @@ void IRSwapConvention::fromXML(XMLNode* node) {
     strFixedFrequency_ = XMLUtils::getChildValue(node, "FixedFrequency", true);
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
 
     // optional
     strFloatFrequency_ = XMLUtils::getChildValue(node, "FloatFrequency", false);
@@ -379,7 +379,7 @@ AverageOisConvention::AverageOisConvention(const string& id, const string& spotL
                                            const string& index, const string& onTenor, const string& rateCutoff)
     : Convention(id, Type::AverageOIS), strSpotLag_(spotLag), strFixedTenor_(fixedTenor),
       strFixedDayCounter_(fixedDayCounter), strFixedCalendar_(fixedCalendar), strFixedConvention_(fixedConvention),
-      strFixedPaymentConvention_(fixedPaymentConvention), strIndex_(index), strOnTenor_(onTenor),
+      strFixedPaymentConvention_(fixedPaymentConvention), strIndex_(internalIndexName(index)), strOnTenor_(onTenor),
       strRateCutoff_(rateCutoff) {
     build();
 }
@@ -412,7 +412,7 @@ void AverageOisConvention::fromXML(XMLNode* node) {
     strFixedCalendar_ = XMLUtils::getChildValue(node, "FixedCalendar", true);
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedPaymentConvention_ = XMLUtils::getChildValue(node, "FixedPaymentConvention", true);
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     strOnTenor_ = XMLUtils::getChildValue(node, "OnTenor", true);
     strRateCutoff_ = XMLUtils::getChildValue(node, "RateCutoff", true);
 
@@ -439,7 +439,7 @@ XMLNode* AverageOisConvention::toXML(XMLDocument& doc) {
 TenorBasisSwapConvention::TenorBasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex,
                                                    const string& shortPayTenor, const string& spreadOnShort,
                                                    const string& includeSpread, const string& subPeriodsCouponType)
-    : Convention(id, Type::TenorBasisSwap), strLongIndex_(longIndex), strShortIndex_(shortIndex),
+    : Convention(id, Type::TenorBasisSwap), strLongIndex_(internalIndexName(longIndex)), strShortIndex_(internalIndexName(shortIndex)),
       strShortPayTenor_(shortPayTenor), strSpreadOnShort_(spreadOnShort), strIncludeSpread_(includeSpread),
       strSubPeriodsCouponType_(subPeriodsCouponType) {
     build();
@@ -462,8 +462,8 @@ void TenorBasisSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
-    strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
+    strLongIndex_ = internalIndexName(XMLUtils::getChildValue(node, "LongIndex", true));
+    strShortIndex_ = internalIndexName(XMLUtils::getChildValue(node, "ShortIndex", true));
     strShortPayTenor_ = XMLUtils::getChildValue(node, "ShortPayTenor", false);
     strSpreadOnShort_ = XMLUtils::getChildValue(node, "SpreadOnShort", false);
     strIncludeSpread_ = XMLUtils::getChildValue(node, "IncludeSpread", false);
@@ -493,9 +493,9 @@ TenorBasisTwoSwapConvention::TenorBasisTwoSwapConvention(
     const string& longMinusShort)
     : Convention(id, Type::TenorBasisTwoSwap), strCalendar_(calendar), strLongFixedFrequency_(longFixedFrequency),
       strLongFixedConvention_(longFixedConvention), strLongFixedDayCounter_(longFixedDayCounter),
-      strLongIndex_(longIndex), strShortFixedFrequency_(shortFixedFrequency),
+      strLongIndex_(internalIndexName(longIndex)), strShortFixedFrequency_(shortFixedFrequency),
       strShortFixedConvention_(shortFixedConvention), strShortFixedDayCounter_(shortFixedDayCounter),
-      strShortIndex_(shortIndex), strLongMinusShort_(longMinusShort) {
+      strShortIndex_(internalIndexName(shortIndex)), strLongMinusShort_(longMinusShort) {
     build();
 }
 
@@ -523,11 +523,11 @@ void TenorBasisTwoSwapConvention::fromXML(XMLNode* node) {
     strLongFixedFrequency_ = XMLUtils::getChildValue(node, "LongFixedFrequency", true);
     strLongFixedConvention_ = XMLUtils::getChildValue(node, "LongFixedConvention", true);
     strLongFixedDayCounter_ = XMLUtils::getChildValue(node, "LongFixedDayCounter", true);
-    strLongIndex_ = XMLUtils::getChildValue(node, "LongIndex", true);
+    strLongIndex_ = internalIndexName(XMLUtils::getChildValue(node, "LongIndex", true));
     strShortFixedFrequency_ = XMLUtils::getChildValue(node, "ShortFixedFrequency", true);
     strShortFixedConvention_ = XMLUtils::getChildValue(node, "ShortFixedConvention", true);
     strShortFixedDayCounter_ = XMLUtils::getChildValue(node, "ShortFixedDayCounter", true);
-    strShortIndex_ = XMLUtils::getChildValue(node, "ShortIndex", true);
+    strShortIndex_ = internalIndexName(XMLUtils::getChildValue(node, "ShortIndex", true));
     strLongMinusShort_ = XMLUtils::getChildValue(node, "LongMinusShort", false);
 
     build();
@@ -552,7 +552,7 @@ XMLNode* TenorBasisTwoSwapConvention::toXML(XMLDocument& doc) {
 }
 
 BMABasisSwapConvention::BMABasisSwapConvention(const string& id, const string& longIndex, const string& shortIndex)
-    : Convention(id, Type::BMABasisSwap), strLiborIndex_(longIndex), strBmaIndex_(shortIndex) {
+    : Convention(id, Type::BMABasisSwap), strLiborIndex_(internalIndexName(longIndex)), strBmaIndex_(internalIndexName(shortIndex)) {
     build();
 }
 
@@ -568,8 +568,8 @@ void BMABasisSwapConvention::fromXML(XMLNode* node) {
     id_ = XMLUtils::getChildValue(node, "Id", true);
 
     // Get string values from xml
-    strLiborIndex_ = XMLUtils::getChildValue(node, "LiborIndex", true);
-    strBmaIndex_ = XMLUtils::getChildValue(node, "BMAIndex", true);
+    strLiborIndex_ = internalIndexName(XMLUtils::getChildValue(node, "LiborIndex", true));
+    strBmaIndex_ = internalIndexName(XMLUtils::getChildValue(node, "BMAIndex", true));
 
     build();
 }
@@ -642,8 +642,8 @@ CrossCcyBasisSwapConvention::CrossCcyBasisSwapConvention(const string& id, const
                                                          const string& strFlatTenor,
                                                          const string& strSpreadTenor)
     : Convention(id, Type::CrossCcyBasis), strSettlementDays_(strSettlementDays),
-      strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(flatIndex),
-      strSpreadIndex_(spreadIndex), strEom_(strEom), strIsResettable_(strIsResettable),
+      strSettlementCalendar_(strSettlementCalendar), strRollConvention_(strRollConvention), strFlatIndex_(internalIndexName(flatIndex)),
+      strSpreadIndex_(internalIndexName(spreadIndex)), strEom_(strEom), strIsResettable_(strIsResettable),
       strFlatIndexIsResettable_(strFlatIndexIsResettable), strFlatTenor_(strFlatTenor), strSpreadTenor_(strSpreadTenor) {
     build();
 }
@@ -671,8 +671,8 @@ void CrossCcyBasisSwapConvention::fromXML(XMLNode* node) {
     strSettlementDays_ = XMLUtils::getChildValue(node, "SettlementDays", true);
     strSettlementCalendar_ = XMLUtils::getChildValue(node, "SettlementCalendar", true);
     strRollConvention_ = XMLUtils::getChildValue(node, "RollConvention", true);
-    strFlatIndex_ = XMLUtils::getChildValue(node, "FlatIndex", true);
-    strSpreadIndex_ = XMLUtils::getChildValue(node, "SpreadIndex", true);
+    strFlatIndex_ = internalIndexName(XMLUtils::getChildValue(node, "FlatIndex", true));
+    strSpreadIndex_ = internalIndexName(XMLUtils::getChildValue(node, "SpreadIndex", true));
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
     strIsResettable_ = XMLUtils::getChildValue(node, "IsResettable", false);
     strFlatIndexIsResettable_ = XMLUtils::getChildValue(node, "FlatIndexIsResettable", false);
@@ -707,7 +707,7 @@ CrossCcyFixFloatSwapConvention::CrossCcyFixFloatSwapConvention(
     : Convention(id, Type::CrossCcyFixFloat), strSettlementDays_(settlementDays),
       strSettlementCalendar_(settlementCalendar), strSettlementConvention_(settlementConvention),
       strFixedCurrency_(fixedCurrency), strFixedFrequency_(fixedFrequency), strFixedConvention_(fixedConvention),
-      strFixedDayCounter_(fixedDayCounter), strIndex_(index), strEom_(eom) {
+      strFixedDayCounter_(fixedDayCounter), strIndex_(internalIndexName(index)), strEom_(eom) {
 
     build();
 }
@@ -739,7 +739,7 @@ void CrossCcyFixFloatSwapConvention::fromXML(XMLNode* node) {
     strFixedConvention_ = XMLUtils::getChildValue(node, "FixedConvention", true);
     strFixedDayCounter_ = XMLUtils::getChildValue(node, "FixedDayCounter", true);
 
-    strIndex_ = XMLUtils::getChildValue(node, "Index", true);
+    strIndex_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     strEom_ = XMLUtils::getChildValue(node, "EOM", false);
 
     build();

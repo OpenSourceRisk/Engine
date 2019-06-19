@@ -47,7 +47,7 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const string& index, const string& indexCurve, const string& yieldTermStructure)
     : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
       tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
-      businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
+      businessDayConvention_(businessDayConvention), index_(internalIndexName(index)), indexCurve_(indexCurve),
       yieldTermStructure_(yieldTermStructure) {}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
@@ -117,7 +117,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     dayCounter_ = parseDayCounter(XMLUtils::getChildValue(node, "DayCounter", true));
     businessDayConvention_ = parseBusinessDayConvention(XMLUtils::getChildValue(node, "BusinessDayConvention", true));
 
-    index_ = XMLUtils::getChildValue(node, "Index", true);
+    index_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
 }
