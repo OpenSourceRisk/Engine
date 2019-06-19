@@ -67,7 +67,7 @@ public:
     virtual void fromXML(XMLNode* node) override;
     virtual XMLNode* toXML(XMLDocument& doc) override;
     //@}
-private:
+protected:
     string maturityDate_;
     string boughtCurrency_;
     double boughtAmount_;
