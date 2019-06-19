@@ -45,8 +45,8 @@ instruments/currencyswap.cpp
 instruments/deposit.cpp
 instruments/equityforward.cpp
 instruments/fixedbmaswap.cpp
-instruments/fxforward.cpp
 instruments/forwardbond.cpp
+instruments/fxforward.cpp
 instruments/impliedbondspread.cpp
 instruments/makeaverageois.cpp
 instruments/makecds.cpp
@@ -93,13 +93,13 @@ pricingengines/cpicapfloorengines.cpp
 pricingengines/crossccyswapengine.cpp
 pricingengines/depositengine.cpp
 pricingengines/discountingcommodityforwardengine.cpp
-pricingengines/discountingforwardbondengine.cpp
-pricingengines/discountingcommodityforwardengine.cpp
 pricingengines/discountingcurrencyswapengine.cpp
 pricingengines/discountingequityforwardengine.cpp
+pricingengines/discountingforwardbondengine.cpp
 pricingengines/discountingfxforwardengine.cpp
 pricingengines/discountingriskybondengine.cpp
 pricingengines/discountingswapenginemulticurve.cpp
+pricingengines/inflationcapfloorengines.cpp
 pricingengines/midpointcdsengine.cpp
 pricingengines/numericlgmswaptionengine.cpp
 pricingengines/oiccbasisswapengine.cpp
@@ -115,6 +115,7 @@ termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
 termstructures/capfloortermvolsurface.cpp
+termstructures/constantyoyinflationoptionletvolatility.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
 termstructures/crossccybasisswaphelper.cpp
@@ -131,7 +132,6 @@ termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
-termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -203,8 +203,10 @@ indexes/ibor/dkkois.hpp
 indexes/ibor/hkdhibor.hpp
 indexes/ibor/hufbubor.hpp
 indexes/ibor/idridrfix.hpp
+indexes/ibor/idrjibor.hpp
 indexes/ibor/ilstelbor.hpp
 indexes/ibor/inrmifor.hpp
+indexes/ibor/krwcd.hpp
 indexes/ibor/krwkoribor.hpp
 indexes/ibor/mxntiie.hpp
 indexes/ibor/myrklibor.hpp
@@ -302,12 +304,13 @@ pricingengines/cpicapfloorengines.hpp
 pricingengines/crossccyswapengine.hpp
 pricingengines/depositengine.hpp
 pricingengines/discountingcommodityforwardengine.hpp
-pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingcurrencyswapengine.hpp
 pricingengines/discountingequityforwardengine.hpp
+pricingengines/discountingforwardbondengine.hpp
 pricingengines/discountingfxforwardengine.hpp
 pricingengines/discountingriskybondengine.hpp
 pricingengines/discountingswapenginemulticurve.hpp
+pricingengines/inflationcapfloorengines.hpp
 pricingengines/midpointcdsengine.hpp
 pricingengines/numericlgmswaptionengine.hpp
 pricingengines/oiccbasisswapengine.hpp
@@ -325,6 +328,7 @@ termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloortermvolsurface.hpp
+termstructures/constantyoyinflationoptionletvolatility.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
 termstructures/crossccybasisswaphelper.hpp
@@ -350,6 +354,7 @@ termstructures/interpolatedcorrelationcurve.hpp
 termstructures/interpolateddiscountcurve.hpp
 termstructures/interpolateddiscountcurve2.hpp
 termstructures/interpolatedyoycapfloortermpricesurface.hpp
+termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp

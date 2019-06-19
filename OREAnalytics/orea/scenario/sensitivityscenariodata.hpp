@@ -95,7 +95,9 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& indexCurveShiftData() const { return indexCurveShiftData_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& yieldCurveShiftData() const { return yieldCurveShiftData_; }
     const map<string, SpotShiftData>& fxShiftData() const { return fxShiftData_; }
-    const map<string, CapFloorVolShiftData>& capFloorVolShiftData() const { return capFloorVolShiftData_; }
+    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() const {
+        return capFloorVolShiftData_;
+    }
     const map<string, GenericYieldVolShiftData>& swaptionVolShiftData() const { return swaptionVolShiftData_; }
     const map<string, GenericYieldVolShiftData>& yieldVolShiftData() const { return yieldVolShiftData_; }
     const map<string, VolShiftData>& fxVolShiftData() const { return fxVolShiftData_; }
@@ -107,7 +109,9 @@ public:
     const map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() const {
         return yoyInflationCurveShiftData_;
     }
-    const map<string, CapFloorVolShiftData>& yoyInflationCapFloorVolShiftData() const { return yoyInflationCapFloorVolShiftData_; }
+    const map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() const {
+        return yoyInflationCapFloorVolShiftData_;
+    }
     const map<string, string>& creditCcys() const { return creditCcys_; }
     const map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() const { return creditCurveShiftData_; }
     const map<string, SpotShiftData>& equityShiftData() const { return equityShiftData_; }
@@ -138,7 +142,7 @@ public:
     map<string, SpotShiftData>& fxShiftData() { return fxShiftData_; }
     map<string, GenericYieldVolShiftData>& swaptionVolShiftData() { return swaptionVolShiftData_; }
     map<string, GenericYieldVolShiftData>& yieldVolShiftData() { return yieldVolShiftData_; }
-    map<string, CapFloorVolShiftData>& capFloorVolShiftData() { return capFloorVolShiftData_; }
+    map<string, boost::shared_ptr<CapFloorVolShiftData>>& capFloorVolShiftData() { return capFloorVolShiftData_; }
     map<string, VolShiftData>& fxVolShiftData() { return fxVolShiftData_; }
     map<string, CdsVolShiftData>& cdsVolShiftData() { return cdsVolShiftData_; }
     map<string, BaseCorrelationShiftData>& baseCorrelationShiftData() { return baseCorrelationShiftData_; }
@@ -148,7 +152,9 @@ public:
     map<string, string>& creditCcys() { return creditCcys_; }
     map<string, boost::shared_ptr<CurveShiftData>>& creditCurveShiftData() { return creditCurveShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& yoyInflationCurveShiftData() { return yoyInflationCurveShiftData_; }
-    map<string, CapFloorVolShiftData>& yoyInflationCapFloorVolShiftData() { return yoyInflationCapFloorVolShiftData_; }
+    map<string, boost::shared_ptr<CapFloorVolShiftData>>& yoyInflationCapFloorVolShiftData() {
+        return yoyInflationCapFloorVolShiftData_;
+    }
     map<string, SpotShiftData>& equityShiftData() { return equityShiftData_; }
     map<string, boost::shared_ptr<CurveShiftData>>& dividendYieldShiftData() { return dividendYieldShiftData_; }
     map<string, VolShiftData>& equityVolShiftData() { return equityVolShiftData_; }
@@ -196,7 +202,7 @@ protected:
     map<string, boost::shared_ptr<CurveShiftData>> indexCurveShiftData_;    // key: indexName
     map<string, boost::shared_ptr<CurveShiftData>> yieldCurveShiftData_;    // key: yieldCurveName
     map<string, SpotShiftData> fxShiftData_;                                // key: ccy pair
-    map<string, CapFloorVolShiftData> capFloorVolShiftData_;                // key: ccy
+    map<string, boost::shared_ptr<CapFloorVolShiftData>> capFloorVolShiftData_; // key: ccy
     map<string, GenericYieldVolShiftData> swaptionVolShiftData_;            // key: ccy
     map<string, GenericYieldVolShiftData> yieldVolShiftData_;               // key: securityId
     map<string, VolShiftData> fxVolShiftData_;                              // key: ccy pair
@@ -204,7 +210,7 @@ protected:
     map<string, BaseCorrelationShiftData> baseCorrelationShiftData_;
     map<string, boost::shared_ptr<CurveShiftData>> zeroInflationCurveShiftData_; // key: inflation index name
     map<string, boost::shared_ptr<CurveShiftData>> yoyInflationCurveShiftData_;  // key: yoy inflation index name
-    map<string, CapFloorVolShiftData> yoyInflationCapFloorVolShiftData_;  // key: inflation index name
+    map<string, boost::shared_ptr<CapFloorVolShiftData>> yoyInflationCapFloorVolShiftData_;  // key: inflation index name
     map<string, string> creditCcys_;
     map<string, boost::shared_ptr<CurveShiftData>> creditCurveShiftData_;         // key: credit name
     map<string, SpotShiftData> equityShiftData_;                                  // key: equity name

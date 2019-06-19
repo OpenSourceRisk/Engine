@@ -83,7 +83,7 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YieldVolatility:
         return yieldVolShiftData().at(name);
     case RFType::OptionletVolatility:
-        return capFloorVolShiftData().at(name);
+        return *capFloorVolShiftData().at(name);
     case RFType::FXVolatility:
         return fxVolShiftData().at(name);
     case RFType::CDSVolatility:
@@ -97,7 +97,7 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
     case RFType::YoYInflationCurve:
         return *yoyInflationCurveShiftData().at(name);
     case RFType::YoYInflationCapFloorVolatility:
-        return yoyInflationCapFloorVolShiftData().at(name);
+        return *yoyInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
@@ -225,9 +225,9 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(capVols, "CapFloorVolatility"); child;
              child = XMLUtils::getNextSibling(child)) {
             string ccy = XMLUtils::getAttribute(child, "ccy");
-            CapFloorVolShiftData data;
-            volShiftDataFromXML(child, data);
-            data.indexName = XMLUtils::getChildValue(child, "Index", true);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
+            data->indexName = XMLUtils::getChildValue(child, "Index", true);
             capFloorVolShiftData_[ccy] = data;
         }
     }
@@ -339,8 +339,8 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
         for (XMLNode* child = XMLUtils::getChildNode(yoyCapVols, "YYCapFloorVolatility"); child;
             child = XMLUtils::getNextSibling(child)) {
             string index = XMLUtils::getAttribute(child, "index");
-            VolShiftData data;
-            volShiftDataFromXML(child, data);
+            auto data = boost::make_shared<CapFloorVolShiftData>();
+            volShiftDataFromXML(child, *data);
             yoyInflationCapFloorVolShiftData_[index] = data;
         }
     }
@@ -507,8 +507,8 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : capFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "CapFloorVolatility");
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
-            volShiftDataToXML(doc, node, kv.second);
-            XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
+            volShiftDataToXML(doc, node, *kv.second);
+            XMLUtils::addChild(doc, node, "Index", kv.second->indexName);
         }
     }
 
@@ -602,7 +602,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
         for (const auto& kv : yoyInflationCapFloorVolShiftData_) {
             XMLNode* node = XMLUtils::addChild(doc, parent, "YYCapFloorVolatility");
             XMLUtils::addAttribute(doc, node, "index", kv.first);
-            volShiftDataToXML(doc, node, kv.second);
+            volShiftDataToXML(doc, node, *kv.second);
         }
     }
 
