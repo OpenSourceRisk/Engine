@@ -87,8 +87,6 @@ namespace data {
 // Helper function to build an IborIndex with a specific period and term structure given an instance of the same IborIndex
 boost::shared_ptr<IborIndex> build(const boost::shared_ptr<IborIndex>& index, const Period& p, const Handle<YieldTermStructure>& h) {
 
-    QL_REQUIRE(p != 1 * Days, "The index family " << index->familyName() << " must have tenor greater than 1 day");
-
     // Deal with specific cases first
 
     // MXN TIIE

@@ -378,7 +378,6 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
 
     // Test invalid strings
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }
