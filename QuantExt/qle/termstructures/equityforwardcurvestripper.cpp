@@ -35,7 +35,8 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
     const boost::shared_ptr<OptionPriceSurface>& putSurface,
     Handle<YieldTermStructure>& forecastCurve, Handle<QuantLib::Quote>& equitySpot,
     Exercise::Type type) :
-    callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot), type_(type) {
+    callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot), type_(type), 
+    expiries_(callSurface_->expiries()), forwards_(callSurface_->expiries().size()) {
 
     // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to ensure this
     QL_REQUIRE(callSurface_->strikes() == putSurface_->strikes(), "Mismatch between Call and Put strikes in EquityForwardCurveStripper");
@@ -53,6 +54,7 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
 
 void EquityForwardCurveStripper::performCalculations() const {
 
+    expiries_.resize(callSurface_->expiries().size());
     expiries_ = callSurface_->expiries();
     vector<vector<Real> > allStrikes = callSurface_->strikes();
     forwards_.resize(expiries_.size());
