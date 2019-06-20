@@ -48,7 +48,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
@@ -115,7 +115,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
@@ -182,7 +182,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
@@ -249,7 +249,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
@@ -316,7 +316,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
@@ -383,7 +383,7 @@
         <DayCounter>ACT/ACT</DayCounter>
         <PaymentConvention>MF</PaymentConvention>
         <FloatingLegData>
-          <Index>USD-SIFMA-1W</Index>
+          <Index>USD-SIFMA</Index>
           <Spreads/>
           <IsInArrears>false</IsInArrears>
           <FixingDays>1</FixingDays>
