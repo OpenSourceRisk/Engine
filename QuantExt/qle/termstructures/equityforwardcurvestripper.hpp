@@ -35,9 +35,9 @@ public:
         QuantLib::Exercise::Type type = QuantLib::Exercise::European);
 
     //! return the expiries
-    const std::vector<QuantLib::Date>& expiries() const;
+    const std::vector<QuantLib::Date> expiries() const;
     //! return the stripped forwards
-    const std::vector<QuantLib::Real>& forwards() const;
+    const std::vector<QuantLib::Real> forwards() const;
 
     //! \name LazyObject interface
     //@{

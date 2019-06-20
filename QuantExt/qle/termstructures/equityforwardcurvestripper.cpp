@@ -201,12 +201,12 @@ Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, O
     return strike + (C - P) / D;
 }
 
-const vector<Date>& EquityForwardCurveStripper::expiries() const {
+const vector<Date> EquityForwardCurveStripper::expiries() const {
     calculate();
     return callSurface_->expiries();
 }
 
-const vector<Real>& EquityForwardCurveStripper::forwards() const {
+const vector<Real> EquityForwardCurveStripper::forwards() const {
     calculate();
     return forwards_;
 }
