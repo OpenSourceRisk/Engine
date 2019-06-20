@@ -51,8 +51,6 @@ private:
     QuantLib::Handle<QuantLib::Quote> equitySpot_;
     QuantLib::Exercise::Type type_;
 
-    //! store the expiries
-    mutable std::vector<QuantLib::Date> expiries_;
     //! store the stripped forward rates
     mutable std::vector<QuantLib::Real> forwards_;
 

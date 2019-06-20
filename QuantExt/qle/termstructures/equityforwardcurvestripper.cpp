@@ -36,7 +36,7 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
     Handle<YieldTermStructure>& forecastCurve, Handle<QuantLib::Quote>& equitySpot,
     Exercise::Type type) :
     callSurface_(callSurface), putSurface_(putSurface), forecastCurve_(forecastCurve), equitySpot_(equitySpot), type_(type), 
-    expiries_(callSurface_->expiries()), forwards_(callSurface_->expiries().size()) {
+    forwards_(callSurface_->expiries().size()) {
 
     // the call and put surfaces should have the same expiries/strikes/reference date/day counters, some checks to ensure this
     QL_REQUIRE(callSurface_->strikes() == putSurface_->strikes(), "Mismatch between Call and Put strikes in EquityForwardCurveStripper");
@@ -54,20 +54,19 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
 
 void EquityForwardCurveStripper::performCalculations() const {
 
-    expiries_.resize(callSurface_->expiries().size());
-    expiries_ = callSurface_->expiries();
     vector<vector<Real> > allStrikes = callSurface_->strikes();
-    forwards_.resize(expiries_.size());
+    forwards_.resize(callSurface_->expiries().size());
 
     // at each option expiry time we calulate a forward
-    for (Size i = 0; i < expiries_.size(); i++) {
+    for (Size i = 0; i < expiries().size(); i++) {
+        Date expiry = expiries()[i];
         // get the relevant strikes at this expiry
         vector<Real> strikes = allStrikes[i];
-        QL_REQUIRE(strikes.size() > 0, "No strikes for expiry " << expiries_[i]);
+        QL_REQUIRE(strikes.size() > 0, "No strikes for expiry " << expiry);
 
         // if we only have one strike we just use that to get the forward
         if (strikes.size() == 1) {
-            forwards_[i] = forwardFromPutCallParity(expiries_[i], strikes.front(), *callSurface_, *putSurface_);
+            forwards_[i] = forwardFromPutCallParity(expiry, strikes.front(), *callSurface_, *putSurface_);
             continue;
         }
 
@@ -76,7 +75,7 @@ void EquityForwardCurveStripper::performCalculations() const {
         // where (C-P) goes from positive to negative
         Real forward = strikes.back();
         for (Size k = 0; k < strikes.size(); k++) {
-            if (callSurface_->price(expiries_[i], strikes[k]) <= putSurface_->price(expiries_[i], strikes[k])) {
+            if (callSurface_->price(expiry, strikes[k]) <= putSurface_->price(expiry, strikes[k])) {
                 if (k == 0)
                     forward = strikes.front();
                 else
@@ -102,7 +101,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                 Date asof = callSurface_->referenceDate();
                 DayCounter dc = callSurface_->dayCounter();
                 Calendar cal = callSurface_->calendar();
-                Time t = dc.yearFraction(asof, expiries_[i]);
+                Time t = dc.yearFraction(asof, expiry);
 
                 // dividend rate from S_t = S * exp((r - q) * t)
                 Real q = forecastCurve_->zeroRate(t, Continuous) - log(forward / equitySpot_->value()) / t;
@@ -126,12 +125,12 @@ void EquityForwardCurveStripper::performCalculations() const {
                     for (Size k = 0; k < strikes.size(); k++) {
                         // create an american option for current strike/expiry and type
                         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], strikes[k]));
-                        boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiries_[i]);
+                        boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiry);
                         VanillaOption option(payoff, exercise);
 
                         // option.setPricingEngine(engine);
-                        Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiries_[i], strikes[k]) :
-                            putSurface_->price(expiries_[i], strikes[k]);
+                        Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiry, strikes[k]) :
+                            putSurface_->price(expiry, strikes[k]);
 
                         try {
                             vols[l][k] = QuantLib::detail::ImpliedVolatilityHelper::calculate(option,
@@ -154,7 +153,7 @@ void EquityForwardCurveStripper::performCalculations() const {
 
                         if (call && put) {
                             newStrikes.push_back(strikes[k]);
-                            dates.push_back(expiries_[i]);
+                            dates.push_back(expiry);
                             callPremiums.push_back(call);
                             putPremiums.push_back(put);
                         }
@@ -173,15 +172,15 @@ void EquityForwardCurveStripper::performCalculations() const {
             Real newForward = 0.0;
             // if our guess is below the first strike or after the last strike we just take the relevant strike
             if (forward <= strikes.front()) {
-                newForward = forwardFromPutCallParity(expiries_[i], strikes.front(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.front(), callSurface, putSurface);
                 // if forward is still less than first strike we accept this
                 isForward = newForward <= strikes.front();
             } else if (forward >= strikes.back()) {
-                newForward = forwardFromPutCallParity(expiries_[i], strikes.back(), callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, strikes.back(), callSurface, putSurface);
                 // if forward is still greater than last strike we accept this
                 isForward = newForward >= strikes.back();
             } else {
-                newForward = forwardFromPutCallParity(expiries_[i], forward, callSurface, putSurface);
+                newForward = forwardFromPutCallParity(expiry, forward, callSurface, putSurface);
 
                 // check - has it moved by less that 0.1%
                 isForward = fabs((newForward - forward) / forward) < 0.001;
@@ -204,7 +203,7 @@ Real EquityForwardCurveStripper::forwardFromPutCallParity(Date d, Real strike, O
 
 const vector<Date>& EquityForwardCurveStripper::expiries() const {
     calculate();
-    return expiries_;
+    return callSurface_->expiries();
 }
 
 const vector<Real>& EquityForwardCurveStripper::forwards() const {
