@@ -168,7 +168,7 @@ void EquityForwardCurveStripper::performCalculations() const {
                 }
             }
 
-            Real newForward;
+            Real newForward = 0.0;
             // if our guess is below the first strike or after the last strike we just take the relevant strike
             if (forward <= strikes.front()) {
                 newForward = forwardFromPutCallParity(expiries_[i], strikes.front(), callSurface, putSurface);

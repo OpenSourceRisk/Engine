@@ -284,10 +284,10 @@ EquityCurve::EquityCurve(Date asof, EquityCurveSpec spec, const Loader& loader,
 
             DLOG("Building a Sparce Volatility surface for calls and puts");
             // Build a Black Variance Sparse matrix 
-            boost::shared_ptr<OptionPriceSurface> callSurface, putSurface;
-
-            callSurface = boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
-            putSurface = boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
+            boost::shared_ptr<OptionPriceSurface> callSurface = 
+                boost::make_shared<OptionPriceSurface>(asof, callDates, callStrikes, callPremiums, dc_);
+            boost::shared_ptr<OptionPriceSurface> putSurface = 
+                boost::make_shared<OptionPriceSurface>(asof, putDates, putStrikes, putPremiums, dc_);
             DLOG("CallSurface contains " << callSurface->expiries().size() << " expiries.");
              
             DLOG("Stripping equity forwards from the option premium surfaces");
