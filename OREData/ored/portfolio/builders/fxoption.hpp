@@ -33,10 +33,10 @@ namespace data {
 
     \ingroup builders
  */
-class FxEuropeanVanillaOptionAnalyticEngineBuilder : public EuropeanVanillaOptionAnalyticEngineBuilder {
+class FxEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
-    FxEuropeanVanillaOptionAnalyticEngineBuilder()
-        : EuropeanVanillaOptionAnalyticEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
+    FxEuropeanOptionEngineBuilder()
+        : EuropeanOptionEngineBuilder("GarmanKohlhagen", {"FxOption"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Finite Difference Method
@@ -44,10 +44,10 @@ public:
 
     \ingroup builders
  */
-class FxAmericanVanillaOptionFDEngineBuilder : public AmericanVanillaOptionFDEngineBuilder {
+class FxAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
-    FxAmericanVanillaOptionFDEngineBuilder()
-        : AmericanVanillaOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
+    FxAmericanOptionFDEngineBuilder()
+        : AmericanOptionFDEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 //! Engine Builder for American Fx Options using Barone Adesi Whaley Approximation
@@ -55,10 +55,10 @@ public:
 
     \ingroup builders
  */
-class FxAmericanVanillaOptionBAWEngineBuilder : public AmericanVanillaOptionBAWEngineBuilder {
+class FxAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
-    FxAmericanVanillaOptionBAWEngineBuilder()
-        : AmericanVanillaOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
+    FxAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("GarmanKohlhagen", {"FxOptionAmerican"}, AssetClass::FX) {}
 };
 
 } // namespace data

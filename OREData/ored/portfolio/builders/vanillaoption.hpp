@@ -89,9 +89,9 @@ protected:
 
     \ingroup builders
  */
-class EuropeanVanillaOptionAnalyticEngineBuilder : public VanillaOptionEngineBuilder {
+class EuropeanOptionEngineBuilder : public VanillaOptionEngineBuilder {
 public:
-    EuropeanVanillaOptionAnalyticEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+    EuropeanOptionEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
         : VanillaOptionEngineBuilder(model, "AnalyticEuropeanEngine", tradeTypes, assetClass) {}
 
 protected:
@@ -120,9 +120,9 @@ public:
 
     \ingroup builders
  */
-class AmericanVanillaOptionFDEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
+class AmericanOptionFDEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
 public:
-    AmericanVanillaOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+    AmericanOptionFDEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
         : AmericanVanillaOptionAnalyticEngineBuilder(model, "FdBlackScholesVanillaEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,
@@ -143,9 +143,9 @@ protected:
 
     \ingroup builders
  */
-class AmericanVanillaOptionBAWEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
+class AmericanOptionBAWEngineBuilder : public AmericanVanillaOptionAnalyticEngineBuilder {
 public:
-    AmericanVanillaOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
+    AmericanOptionBAWEngineBuilder(const string& model, const set<string>& tradeTypes, const AssetClass& assetClass)
         : AmericanVanillaOptionAnalyticEngineBuilder(model, "BaroneAdesiWhaleyApproximationEngine", tradeTypes, assetClass) {}
 protected:
     virtual boost::shared_ptr<PricingEngine> engineImpl(const string& assetName, const Currency& ccy,

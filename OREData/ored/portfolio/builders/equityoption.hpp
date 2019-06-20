@@ -33,10 +33,10 @@ namespace data {
 
     \ingroup builders
  */
-class EquityEuropeanVanillaOptionAnalyticEngineBuilder : public EuropeanVanillaOptionAnalyticEngineBuilder {
+class EquityEuropeanOptionEngineBuilder : public EuropeanOptionEngineBuilder {
 public:
-    EquityEuropeanVanillaOptionAnalyticEngineBuilder()
-        : EuropeanVanillaOptionAnalyticEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
+    EquityEuropeanOptionEngineBuilder()
+        : EuropeanOptionEngineBuilder("BlackScholesMerton", {"EquityOption"}, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Finite Difference Method
@@ -44,10 +44,10 @@ public:
 
     \ingroup builders
  */
-class EquityAmericanVanillaOptionFDEngineBuilder : public AmericanVanillaOptionFDEngineBuilder {
+class EquityAmericanOptionFDEngineBuilder : public AmericanOptionFDEngineBuilder {
 public:
-    EquityAmericanVanillaOptionFDEngineBuilder()
-        : AmericanVanillaOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+    EquityAmericanOptionFDEngineBuilder()
+        : AmericanOptionFDEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
 //! Engine Builder for American Equity Options using Barone Adesi Whaley Approximation
@@ -55,10 +55,10 @@ public:
 
     \ingroup builders
  */
-class EquityAmericanVanillaOptionBAWEngineBuilder : public AmericanVanillaOptionBAWEngineBuilder {
+class EquityAmericanOptionBAWEngineBuilder : public AmericanOptionBAWEngineBuilder {
 public:
-    EquityAmericanVanillaOptionBAWEngineBuilder()
-        : AmericanVanillaOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
+    EquityAmericanOptionBAWEngineBuilder()
+        : AmericanOptionBAWEngineBuilder("BlackScholesMerton", {"EquityOptionAmerican"}, AssetClass::EQ) {}
 };
 
 } // namespace data
