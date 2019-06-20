@@ -3,13 +3,13 @@
  All rights reserved.
 */
 
-/*! \file ored/portfolio/oneassetoption.hpp
-\brief one asset option representation
+/*! \file ored/portfolio/vanillaoption.hpp
+\brief vanilla option representation
 \ingroup tradedata
 */
 
-#include <ored/portfolio/oneassetoption.hpp>
-#include <ored/portfolio/builders/oneassetoption.hpp>
+#include <ored/portfolio/vanillaoption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 #include <ored/utilities/log.hpp>
 #include <ql/instruments/oneassetoption.hpp>
 #include <ql/instruments/vanillaoption.hpp>

@@ -16,7 +16,7 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-/*! \file portfolio/builders/oneassetoption.hpp
+/*! \file portfolio/builders/vanillaoption.hpp
     \brief
     \ingroup builders
 */

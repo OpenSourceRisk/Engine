@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <ored/portfolio/builders/oneassetoption.hpp>
+#include <ored/portfolio/builders/vanillaoption.hpp>
 
 namespace ore {
 namespace data {
