@@ -55,7 +55,7 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
 void EquityForwardCurveStripper::performCalculations() const {
 
     vector<vector<Real> > allStrikes = callSurface_->strikes();
-    forwards_.resize(callSurface_->expiries().size());
+    //forwards_.resize(callSurface_->expiries().size());
 
     // at each option expiry time we calulate a forward
     for (Size i = 0; i < expiries().size(); i++) {
