@@ -517,6 +517,11 @@ string internalIndexName(const string& indexName) {
         return tmpName;
     }
 
+    // Allow USD-SIFMA-1W or USD-SIFMA-7D externally. USD-SIFMA is used internally.
+    if (tmpName == "USD-SIFMA" && (tokens[2] == "1W" || tokens[2] == "7D")) {
+        return tmpName;
+    }
+
     return tmpName + "-" + tokens[2];
 }
 
