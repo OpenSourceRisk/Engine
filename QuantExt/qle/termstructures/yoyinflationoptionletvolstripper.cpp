@@ -124,9 +124,6 @@ void YoYInflationOptionletVolStripper::performCalculations() {
         fStrikes.push_back(strikes[j]);
     }
 
-    std::clog << "fprices:\n" << fPrice << "\ncprices:\n" << cPrice << std::endl;
-    std::clog << "fpricesFinal:\n" << fPriceFinal << "\ncpricesFinal:\n" << cPriceFinal << std::endl;
-
     Rate baseRate = yoyIndex_->yoyInflationTermStructure()->baseRate();
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(settDays, obsLag, yoyIndex_, baseRate,
                                                                            nominalTs_, dc, cal, bdc, cStrikes, fStrikes,
