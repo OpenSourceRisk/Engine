@@ -710,8 +710,8 @@
     </ClInclude>
     <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp">
       <Filter>termstructures</Filter>
-    </CInclude>
-      <ClInclude Include="qle\indexes\cacpi.hpp">
+    </ClInclude>
+    <ClInclude Include="qle\indexes\cacpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
   </ItemGroup>
