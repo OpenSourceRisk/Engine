@@ -1322,6 +1322,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                                         std::forward_as_tuple(param.first, name, index),
                                         std::forward_as_tuple(q));
                                     quotes[i][j] = Handle<Quote>(q);
+                                    TLOG("ScenarioSimMarket yoy cf vol " << name << " tenor #" << i << " strike #" << j << " " << vol);
                                 }
                             }
                             DayCounter dc = ore::data::parseDayCounter(parameters->yoyInflationCapFloorVolDayCounter(name));
