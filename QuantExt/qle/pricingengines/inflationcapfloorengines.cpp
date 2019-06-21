@@ -47,7 +47,7 @@ namespace QuantExt {
 
         // copy black version then adapt to others
 
-        Real value = 0.0;
+        Real value = 0.0, vega = 0.0;
         Size optionlets = arguments_.startDates.size();
         std::vector<Real> values(optionlets, 0.0);
         std::vector<Real> stdDevs(optionlets, 0.0);
@@ -96,6 +96,7 @@ namespace QuantExt {
                     // sttDev=0 for already-fixed dates so everything on forward
                     values[i] = optionletImpl(Option::Call, strike,
                                               forward, stdDevs[i], d);
+                    vega += optionletVegaImpl(Option::Call, strike, forward, stdDevs[i], sqrtTime, d);
                 }
                 if (type == YoYInflationCapFloor::Floor || type == YoYInflationCapFloor::Collar) {
                     Rate strike = arguments_.floorRates[i];
@@ -105,19 +106,21 @@ namespace QuantExt {
                     }
                     Real floorlet = optionletImpl(Option::Put, strike,
                                                   forward, stdDevs[i], d);
+                    Real floorletVega = optionletVegaImpl(Option::Call, strike, forward, stdDevs[i], sqrtTime, d);
                     if (type == YoYInflationCapFloor::Floor) {
                         values[i] = floorlet;
+                        vega -= floorletVega;
                     } else {
                         // a collar is long a cap and short a floor
                         values[i] -= floorlet;
-                    }
-
-                }
+                        vega -= optionletVegaImpl(Option::Call, strike, forward, stdDevs[i], sqrtTime, d);
+                    }                }
                 value += values[i];
             }
         }
         results_.value = value;
 
+        results_.additionalResults["vega"] = vega;
         results_.additionalResults["optionletsPrice"] = values;
         results_.additionalResults["optionletsAtmForward"] = forwards;
         if (type != YoYInflationCapFloor::Collar)
@@ -142,7 +145,10 @@ namespace QuantExt {
                             forward, stdDev, d);
     }
 
-
+    Real YoYInflationBlackCapFloorEngine::optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev,
+                                                            Real sqrtTime, Real d) const {
+        return blackFormulaStdDevDerivative(type, strike, forward, stdDev, d) * sqrtTime;
+    }
 
     YoYInflationUnitDisplacedBlackCapFloorEngine
     ::YoYInflationUnitDisplacedBlackCapFloorEngine(
@@ -161,6 +167,10 @@ namespace QuantExt {
                             forward+1.0, stdDev, d);
     }
 
+    Real YoYInflationUnitDisplacedBlackCapFloorEngine::optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev,
+                                                            Real sqrtTime, Real d) const {
+        return blackFormulaStdDevDerivative(type, strike + 1.0, forward + 1.0, stdDev, d) * sqrtTime;
+    }
 
     YoYInflationBachelierCapFloorEngine::YoYInflationBachelierCapFloorEngine(
                     const ext::shared_ptr<QuantLib::YoYInflationIndex>& index,
@@ -176,12 +186,9 @@ namespace QuantExt {
                                      forward, stdDev, d);
     }
 
-
-
-
-
-
-
-
+    Real YoYInflationBachelierCapFloorEngine::optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev,
+                                                            Real sqrtTime, Real d) const {
+        return bachelierBlackFormulaStdDevDerivative(strike, forward, stdDev, d) * sqrtTime;
+    }
 
 }

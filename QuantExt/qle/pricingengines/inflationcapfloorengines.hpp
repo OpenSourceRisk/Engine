@@ -62,6 +62,8 @@ namespace QuantExt {
         virtual Real optionletImpl(Option::Type type, Rate strike,
                                    Rate forward, Real stdDev,
                                    Real d) const = 0;
+        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                       Real d) const = 0;
 
         ext::shared_ptr<QuantLib::YoYInflationIndex> index_;
         Handle<QuantLib::YoYOptionletVolatilitySurface> volatility_;
@@ -82,7 +84,8 @@ namespace QuantExt {
         virtual Real optionletImpl(Option::Type, Real strike,
                                    Real forward, Real stdDev,
                                    Real d) const;
-
+        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                       Real d) const;
     };
 
 
@@ -100,7 +103,8 @@ namespace QuantExt {
         virtual Real optionletImpl(Option::Type, Real strike,
                                    Real forward, Real stdDev,
                                    Real d) const;
-
+        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                       Real d) const;
     };
 
 
@@ -118,7 +122,8 @@ namespace QuantExt {
         virtual Real optionletImpl(Option::Type, Real strike,
                                    Real forward, Real stdDev,
                                    Real d) const;
-
+        virtual Real optionletVegaImpl(Option::Type type, Rate strike, Rate forward, Real stdDev, Real sqrtTime,
+                                       Real d) const;
     };
 
 }
