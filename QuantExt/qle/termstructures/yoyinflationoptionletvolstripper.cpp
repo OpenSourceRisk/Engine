@@ -100,10 +100,37 @@ void YoYInflationOptionletVolStripper::performCalculations() {
         }
     }
 
+    // switch between floors and caps using the last option maturity, but keep one floor and one cap strike at least
+    // this is the best we can do to use OTM instruments with the original QL yoy vol bootstrapper
+    int jCritical = 0;
+    while (jCritical < static_cast<int>(strikes.size()) &&
+           fPrice[jCritical][optionletTerms.size() - 1] < cPrice[jCritical][optionletTerms.size() - 1])
+        ++jCritical;
+    int numberOfFloors = std::max(1, jCritical - 1);
+    int numberOfCaps = std::max(1, static_cast<int>(strikes.size()) - jCritical + 1);
+    Matrix cPriceFinal(numberOfCaps, strikes.size() == 0 ? 0 : optionletTerms.size());
+    Matrix fPriceFinal(numberOfFloors, strikes.size() == 0 ? 0 : optionletTerms.size());
+    std::vector<Real> fStrikes, cStrikes;
+    for (int j = 0; j < numberOfCaps; ++j) {
+        for (int i = 0; i < static_cast<int>(optionletTerms.size()); ++i) {
+            cPriceFinal(j, i) = cPrice[strikes.size() - numberOfCaps + j][i];
+        }
+        cStrikes.push_back(strikes[strikes.size() - numberOfCaps + j]);
+    }
+    for (int j = 0; j < numberOfFloors; ++j) {
+        for (int i = 0; i < static_cast<int>(optionletTerms.size()); ++i) {
+            fPriceFinal(j, i) = fPrice[j][i];
+        }
+        fStrikes.push_back(strikes[j]);
+    }
+
+    std::clog << "fprices:\n" << fPrice << "\ncprices:\n" << cPrice << std::endl;
+    std::clog << "fpricesFinal:\n" << fPriceFinal << "\ncpricesFinal:\n" << cPriceFinal << std::endl;
+
     Rate baseRate = yoyIndex_->yoyInflationTermStructure()->baseRate();
     QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> ys(settDays, obsLag, yoyIndex_, baseRate,
-                                                                           nominalTs_, dc, cal, bdc, strikes, strikes,
-                                                                           optionletTerms, cPrice, fPrice);
+                                                                           nominalTs_, dc, cal, bdc, cStrikes, fStrikes,
+                                                                           optionletTerms, cPriceFinal, fPriceFinal);
 
     boost::shared_ptr<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> > yoySurface =
         boost::make_shared<QuantExt::InterpolatedYoYCapFloorTermPriceSurface<Bilinear, Linear> >(ys);
