@@ -174,11 +174,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     fxvsData.shiftSize = 1E-5;
     fxvsData.shiftExpiries = {5 * Years};
 
-    auto cfvsData = boost::make_shared<SensitivityScenarioData::CapFloorVolShiftData>();
-    cfvsData->shiftType = "Absolute";
-    cfvsData->shiftSize = 1E-5;
-    cfvsData->shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
-    cfvsData->shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
+    SensitivityScenarioData::CapFloorVolShiftData cfvsData;
+    cfvsData.shiftType = "Absolute";
+    cfvsData.shiftSize = 1E-5;
+    cfvsData.shiftExpiries = {1 * Years, 2 * Years, 3 * Years, 5 * Years, 10 * Years};
+    cfvsData.shiftStrikes = {0.01, 0.02, 0.03, 0.04, 0.05};
 
     SensitivityScenarioData::GenericYieldVolShiftData swvsData;
     swvsData.shiftType = "Absolute";
@@ -221,9 +221,11 @@ boost::shared_ptr<SensitivityScenarioData> setupSensitivityScenarioData5() {
     sensiData->swaptionVolShiftData()["JPY"] = swvsData;
     sensiData->swaptionVolShiftData()["CHF"] = swvsData;
 
-    sensiData->capFloorVolShiftData()["EUR"] = cfvsData;
+    sensiData->capFloorVolShiftData()["EUR"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["EUR"]->indexName = "EUR-EURIBOR-6M";
-    sensiData->capFloorVolShiftData()["USD"] = cfvsData;
+    sensiData->capFloorVolShiftData()["USD"] =
+        boost::make_shared<ore::analytics::SensitivityScenarioData::CapFloorVolShiftData>(cfvsData);
     sensiData->capFloorVolShiftData()["USD"]->indexName = "USD-LIBOR-3M";
 
     sensiData->crossGammaFilter() = {{"DiscountCurve/EUR", "DiscountCurve/EUR"},
