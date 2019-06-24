@@ -82,7 +82,8 @@ Volatility VannaVolgaSmileSection::volatility(Real k) const {
     Real d1d2k = d1(k) * d2(k);
 
     Real tmp = atmVol_ * atmVol_ + d1d2k * (2 * atmVol_ * D1 + D2);
-    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take square root of negative number");
+    QL_REQUIRE(tmp >= 0, "VannaVolga attempting to take square root of negative number in second approximation. "
+                         "Consider using first approximation in fxvol config.");
 
     return atmVol_ + (-atmVol_ + sqrt(tmp)) / d1d2k;
 }
