@@ -324,7 +324,7 @@ void MarketImpl::refresh(const string& configuration) {
         }
         for (auto& x : yoyCapFloorVolSurfaces_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
-                it->second.insert(x.second->yoyVolSurface());
+                it->second.insert(*x.second);
         }
         for (auto& x : fxVols_) {
             if (x.first.first == configuration || x.first.first == Market::defaultConfiguration)
