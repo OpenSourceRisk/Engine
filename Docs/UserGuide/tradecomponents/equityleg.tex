@@ -11,7 +11,7 @@ Allowable values:  \emph{Price} or  \emph{Total}
 
 \item Name: The identifier of the underlying equity or equity index.
  
- Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically an ISIN-code with the \emph{ISIN:} prefix.
+ Allowable values: Any string (provided it is an ID of an equity in the market configuration). Typically a RIC-code with the \emph{RIC:} prefix.
 
 \item InitialPrice [Optional]: Initial Price of the equity, if not present, the first valuation date is used to determine the initial price.
 
@@ -62,7 +62,7 @@ Allowable values: A node on the same form as \lstinline!ScheduleData!, (see \ref
         </ScheduleData>
         <EquityLegData>
           <ReturnType>Price</ReturnType>
-          <Name>ISIN:US78378X1072</Name>
+          <Name>RIC:.SPX</Name>
           <InitialPrice>100</InitialPrice>
           <NotionalReset>true</NotionalReset>
           <DividendFactor>1</DividendFactor>

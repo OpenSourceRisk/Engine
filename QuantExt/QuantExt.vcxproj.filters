@@ -711,6 +711,9 @@
     <ClInclude Include="qle\termstructures\iterativebootstrap.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\indexes\cacpi.hpp">
+      <Filter>indexes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

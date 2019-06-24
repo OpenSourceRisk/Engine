@@ -519,6 +519,7 @@
     <ClInclude Include="qle\currencies\metals.hpp" />
     <ClInclude Include="qle\indexes\bmaindexwrapper.hpp" />
     <ClInclude Include="qle\indexes\bondindex.hpp" />
+    <ClInclude Include="qle\indexes\cacpi.hpp" />
     <ClInclude Include="qle\indexes\dkcpi.hpp" />
     <ClInclude Include="qle\indexes\equityindex.hpp" />
     <ClInclude Include="qle\indexes\fxindex.hpp" />
