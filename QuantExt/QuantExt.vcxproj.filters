@@ -714,6 +714,10 @@
     <ClInclude Include="qle\indexes\cacpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="baroneadesiwhaleyengine.hpp">
+      <Filter>pricingengines</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1224,6 +1228,9 @@
     </ClCompile>
     <ClCompile Include="qle\instruments\forwardbond.cpp">
       <Filter>instruments</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp">
+      <Filter>pricingengines</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

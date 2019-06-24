@@ -108,7 +108,7 @@ template <> struct print_log_value<pair<string, string>> {
 
 BOOST_FIXTURE_TEST_SUITE(OREDataTestSuite, TopLevelFixture)
 
-BOOST_FIXTURE_TEST_SUITE(testFromToXml, F)
+BOOST_FIXTURE_TEST_SUITE(CurveConfigTest, F)
 
 BOOST_AUTO_TEST_CASE(testFromToXml) {
 

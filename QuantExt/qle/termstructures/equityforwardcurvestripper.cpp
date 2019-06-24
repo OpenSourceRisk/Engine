@@ -16,17 +16,50 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <qle/pricingengines/baroneadesiwhaleyengine.hpp>
 #include <qle/termstructures/equityforwardcurvestripper.hpp>
 #include <ql/instruments/impliedvolatility.hpp>
 #include <ql/instruments/vanillaoption.hpp>
+#include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/blackformula.hpp>
-#include <ql/pricingengines/vanilla/fdamericanengine.hpp>
 #include <ql/processes/blackscholesprocess.hpp>
 #include <ql/termstructures/volatility/equityfx/blackconstantvol.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
 
 using std::vector;
 using namespace QuantLib;
+
+namespace {
+
+class PriceError {
+public:
+    PriceError(const VanillaOption& option,
+        SimpleQuote& vol,
+        Real targetValue);
+    Real operator()(Volatility x) const;
+private:
+    const VanillaOption& option_;
+    SimpleQuote& vol_;
+    Real targetValue_;
+};
+
+PriceError::PriceError(const VanillaOption& option,
+    SimpleQuote& vol,
+    Real targetValue)
+    : option_(option), vol_(vol), targetValue_(targetValue) {};
+
+Real PriceError::operator()(Volatility x) const {
+    vol_.setValue(x);
+    Real npv;
+    try {
+        npv = option_.NPV();
+    } catch (...) {
+        npv = 0.0;
+    }
+    return npv - targetValue_;
+}
+
+}
 
 namespace QuantExt {
 
@@ -55,7 +88,7 @@ EquityForwardCurveStripper::EquityForwardCurveStripper(
 void EquityForwardCurveStripper::performCalculations() const {
 
     vector<vector<Real> > allStrikes = callSurface_->strikes();
-    //forwards_.resize(callSurface_->expiries().size());
+    forwards_.resize(callSurface_->expiries().size());
 
     // at each option expiry time we calulate a forward
     for (Size i = 0; i < expiries().size(); i++) {
@@ -112,9 +145,9 @@ void EquityForwardCurveStripper::performCalculations() const {
                 Handle<YieldTermStructure> divTs(boost::make_shared<FlatForward>(asof, q, dc));
 
                 // a black scholes process
-                boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<GeneralizedBlackScholesProcess>(
+                boost::shared_ptr<GeneralizedBlackScholesProcess> gbsp = boost::make_shared<BlackScholesMertonProcess>(
                     equitySpot_, divTs, forecastCurve_, volTs);
-                boost::shared_ptr<PricingEngine> engine(boost::make_shared<FDAmericanEngine<CrankNicolson> >(gbsp));
+                boost::shared_ptr<PricingEngine> engine = boost::make_shared<QuantExt::BaroneAdesiWhaleyApproximationEngine>(gbsp);
 
                 vector<vector<Volatility> > vols(2, vector<Volatility>(strikes.size()));
                 vector<Option::Type> types;
@@ -127,14 +160,22 @@ void EquityForwardCurveStripper::performCalculations() const {
                         boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(types[l], strikes[k]));
                         boost::shared_ptr<Exercise> exercise = boost::make_shared<AmericanExercise>(expiry);
                         VanillaOption option(payoff, exercise);
+                        option.setPricingEngine(engine);
 
                         // option.setPricingEngine(engine);
                         Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiry, strikes[k]) :
                             putSurface_->price(expiry, strikes[k]);
 
                         try {
-                            vols[l][k] = QuantLib::detail::ImpliedVolatilityHelper::calculate(option,
-                                *engine, *volQuote, targetPrice, 0.0001, 100, 0.01, 2.0);
+                            PriceError f(option, *volQuote, targetPrice);
+                            Brent solver;
+                            solver.setMaxEvaluations(100);
+                            solver.setLowerBound(0.0001);
+                            Volatility result = solver.solve(f, 0.0001, 0.2, 0.01);
+                            vols[l][k] = result;
+
+                            // vols[l][k] = QuantLib::detail::ImpliedVolatilityHelper::calculate(option,
+                            //     *engine, *volQuote, targetPrice, 0.0001, 100, 0.01, 2.0);
                         } catch (...) {
                             vols[l][k] = 0.0;
                         }
