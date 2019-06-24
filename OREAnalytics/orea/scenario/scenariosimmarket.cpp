@@ -900,9 +900,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
 
                                 bool stickyStrike = true;
+                                bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
                                     new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(),
-                                                                             quotes, dc, forTS, domTS, stickyStrike));
+                                                                             quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
                             } else {
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                                     0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
