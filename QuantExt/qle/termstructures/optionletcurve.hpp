@@ -327,9 +327,7 @@ void InterpolatedOptionletCurve<T>::initialise() {
     if (flatFirstPeriod_)
         this->data_[0] = this->data_[1];
 
-    this->interpolation_ = this->interpolator_.interpolate(
-        this->times_.begin(), this->times_.end(), this->data_.begin());
-    this->interpolation_.update();
+    setupInterpolation();
 }
 
 }
