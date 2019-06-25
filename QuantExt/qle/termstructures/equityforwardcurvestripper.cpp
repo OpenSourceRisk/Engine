@@ -51,6 +51,7 @@ PriceError::PriceError(const VanillaOption& option,
 Real PriceError::operator()(Volatility x) const {
     vol_.setValue(x);
     Real npv;
+    // Barone Adesi Whaley fails for very small variance, so wrap in a try/catch
     try {
         npv = option_.NPV();
     } catch (...) {
@@ -166,16 +167,13 @@ void EquityForwardCurveStripper::performCalculations() const {
                         Real targetPrice = types[l] == Option::Call ? callSurface_->price(expiry, strikes[k]) :
                             putSurface_->price(expiry, strikes[k]);
 
+                        // calculate the implied volatility using a solver
                         try {
                             PriceError f(option, *volQuote, targetPrice);
                             Brent solver;
                             solver.setMaxEvaluations(100);
                             solver.setLowerBound(0.0001);
-                            Volatility result = solver.solve(f, 0.0001, 0.2, 0.01);
-                            vols[l][k] = result;
-
-                            // vols[l][k] = QuantLib::detail::ImpliedVolatilityHelper::calculate(option,
-                            //     *engine, *volQuote, targetPrice, 0.0001, 100, 0.01, 2.0);
+                            vols[l][k] = solver.solve(f, 0.0001, 0.2, 0.01);
                         } catch (...) {
                             vols[l][k] = 0.0;
                         }
