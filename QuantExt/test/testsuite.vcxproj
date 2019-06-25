@@ -640,6 +640,7 @@
     <ClCompile Include="blackvariancecurve.cpp" />
     <ClCompile Include="blackvariancesurfacesparse.cpp" />
     <ClCompile Include="bonds.cpp" />
+    <ClCompile Include="capfloortermvolcurve.cpp" />
     <ClCompile Include="cashflow.cpp" />
     <ClCompile Include="commodityforward.cpp" />
     <ClCompile Include="correlationtermstructure.cpp" />

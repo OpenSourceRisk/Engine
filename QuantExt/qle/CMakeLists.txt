@@ -327,6 +327,7 @@ termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
 termstructures/capfloorhelper.hpp
+termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp

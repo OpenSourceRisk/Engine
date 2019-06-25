@@ -660,6 +660,7 @@
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
     <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />

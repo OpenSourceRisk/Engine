@@ -714,6 +714,9 @@
     <ClInclude Include="qle\indexes\cacpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
