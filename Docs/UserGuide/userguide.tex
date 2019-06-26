@@ -4170,6 +4170,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
     <Dimension>ATM</Dimension> <!-- ATM, Smile -->
+    <SmileInterpolation>VannaVolga1</SmileInterpolation> <!-- VannaVolga1,VannaVolga2 -->
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
@@ -4183,6 +4184,12 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \caption{FX option volatility configuration}
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
+
+The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile}, 
+Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use
+for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
+is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. 
+\lstinline!SmileInterpolation! defaults to second approximation.
 
 \subsubsection{Equity Curve Structures}
 
