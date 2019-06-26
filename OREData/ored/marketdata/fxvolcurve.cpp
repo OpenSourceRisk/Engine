@@ -200,7 +200,7 @@ void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loade
                 auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
                 bool vvFirstApprox = false;  // default to VannaVolga second approximation
-                if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::VV1) {
+                if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::VannaVolga1) {
                     vvFirstApprox = true;
                 }
 
