@@ -47,9 +47,12 @@ public:
     //! supported volatility structure types
     /*! For ATM we will only load ATM quotes, for Smile we load ATM, 25RR, 25BF
      *  TODO: Add more options (e.g. Delta)
+     *  SmileInterpolation - currently suports which of the 2 Vanna Volga approximations,
+     *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
+     *  but can ask for the square root of a negative number under unusual circumstances.
      */
     enum class Dimension { ATM, Smile };
-    enum class SmileInterpolation { VV1, VV2 };     // Vanna Volga first/second approximation respectively
+    enum class SmileInterpolation { VannaVolga1, VannaVolga2 };
 
     //! \name Constructors/Destructors
     //@{
@@ -61,7 +64,7 @@ public:
                             const string& fxForeignCurveID = "", const string& fxDomesticCurveID = "",
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
-                            const SmileInterpolation& interp = SmileInterpolation::VV2);
+                            const SmileInterpolation& interp = SmileInterpolation::VannaVolga2);
     //@}
 
     //! \name Serialisation

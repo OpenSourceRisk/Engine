@@ -18,7 +18,6 @@
 
 #include <ql/math/distributions/normaldistribution.hpp>
 #include <qle/termstructures/fxvannavolgasmilesection.hpp>
-#include <iostream>
 
 using namespace QuantLib;
 
