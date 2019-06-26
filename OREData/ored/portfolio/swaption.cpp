@@ -17,6 +17,7 @@
 */
 
 #include <ql/cashflows/coupon.hpp>
+#include <ql/cashflows/simplecashflow.hpp>
 #include <ql/exercise.hpp>
 #include <ql/instruments/compositeinstrument.hpp>
 #include <ql/instruments/nonstandardswaption.hpp>
@@ -56,6 +57,27 @@ void Swaption::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
     QL_REQUIRE(!isCrossCcy, "Cross Currency Swaptions not supported");
     QL_REQUIRE(isFixedFloating, "Basis Swaptions not supported");
 
+    // check at least one exercise date is given
+    QL_REQUIRE(!option_.exerciseDates().empty(), "No exercise dates given");
+
+    // check if all exercise dates are in the past and if so, build an expired instrument
+    std::vector<Date> exerciseDates(option_.exerciseDates().size());
+    std::transform(option_.exerciseDates().begin(), option_.exerciseDates().end(), exerciseDates.begin(), parseDate);
+    Date latestExerciseDate = *std::max_element(exerciseDates.begin(), exerciseDates.end());
+    if (QuantLib::detail::simple_event(latestExerciseDate).hasOccurred()) {
+        exercise_ = boost::make_shared<BermudanExercise>(exerciseDates); // needed in fixings()
+        legs_ = {{boost::make_shared<QuantLib::SimpleCashFlow>(0.0, latestExerciseDate)} };
+        instrument_ = boost::shared_ptr<InstrumentWrapper>(
+            new VanillaInstrument(boost::make_shared<QuantLib::Swap>(legs_, std::vector<bool>(1, false)), 1.0, {}, {}));
+        legCurrencies_ = { swap_[0].currency() };
+        legPayers_ = { false };
+        npvCurrency_ = swap_[0].currency();
+        notional_ = 0.0;
+        maturity_ = latestExerciseDate;
+        return;
+    }
+
+    // build swaption with at least one alive exercise date
     bool fixedFirst = swap_[0].legType() == "Fixed";
     boost::shared_ptr<FixedLegData> fixedLegData =
         boost::dynamic_pointer_cast<FixedLegData>(swap_[fixedFirst ? 0 : 1].concreteLegData());
