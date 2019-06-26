@@ -717,6 +717,9 @@
     <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">

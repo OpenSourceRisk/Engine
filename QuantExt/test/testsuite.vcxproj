@@ -667,6 +667,7 @@
     <ClCompile Include="logquote.cpp" />
     <ClCompile Include="optionletstripper.cpp" />
     <ClCompile Include="payment.cpp" />
+    <ClCompile Include="piecewiseatmoptionletcurve.cpp" />
     <ClCompile Include="piecewiseoptionletcurve.cpp" />
     <ClCompile Include="piecewiseoptionletstripper.cpp" />
     <ClCompile Include="pricecurve.cpp" />

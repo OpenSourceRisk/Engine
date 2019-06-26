@@ -362,6 +362,8 @@ termstructures/optionletstripper.hpp
 termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
 termstructures/optionletstripperwithatm.hpp
+termstructures/piecewiseatmoptionletcurve.hpp
+termstructures/piecewiseoptionletcurve.hpp
 termstructures/piecewiseoptionletstripper.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp

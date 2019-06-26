@@ -30,6 +30,7 @@ interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 optionletstripper.cpp
 payment.cpp
+piecewiseatmoptionletcurve.cpp
 piecewiseoptionletcurve.cpp
 piecewiseoptionletstripper.cpp
 pricecurve.cpp
