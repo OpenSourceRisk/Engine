@@ -301,7 +301,7 @@ QuantLib::Real InterpolatedOptionletCurve<T>::volatilityImpl(QuantLib::Time opti
     if (flatFirstPeriod_ && optionTime < this->times_[1])
         return this->data_[1];
     else
-        return this->interpolation_(optionTime, allowsExtrapolation());
+        return this->interpolation_(optionTime, true);
 }
 
 template <class T>
