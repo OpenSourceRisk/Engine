@@ -38,7 +38,7 @@ using namespace QuantLib;
  */
 class VannaVolgaSmileSection : public FxSmileSection {
 public:
-    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d);
+    VannaVolgaSmileSection(Real spot, Real rd, Real rf, Time t, Volatility atmVol, Volatility rr25d, Volatility bf25d, bool firstApprox = false);
 
     //! getters for unit test
     Real k_atm() const { return k_atm_; }
@@ -59,6 +59,7 @@ private:
 
     Real k_atm_, k_25c_, k_25p_;
     Volatility vol_25c_, vol_25p_;
+    bool firstApprox_;
 };
 
 } // namespace QuantExt
