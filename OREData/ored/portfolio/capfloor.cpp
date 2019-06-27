@@ -142,7 +142,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         maturity_ = capFloor->maturityDate();
 
     } else if (legData_.legType() == "CPI") {
-      DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
+        DLOG("CPI CapFloor Type " << capFloorType << " ID " << id());
 
         builder = engineFactory->builder("CpiCapFloor");
 
@@ -158,7 +158,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         Period observationLag = parsePeriod(cpiData->observationLag());
         CPI::InterpolationType interpolation = parseObservationInterpolation(cpiData->interpolation());
         Calendar cal = zeroIndex->fixingCalendar();
-        BusinessDayConvention conv = Following; // not used in the CPI CapFloor engine
+        BusinessDayConvention conv = Unadjusted; // not used in the CPI CapFloor engine
 
         QL_REQUIRE(!zeroIndex.empty(), "Zero Inflation Index is empty");
 
@@ -187,7 +187,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 
         // Create QL CPI CapFloor instruments and add to a composite
         boost::shared_ptr<CompositeInstrument> composite = boost::make_shared<CompositeInstrument>();
-        bool legIsPayer = legData_.isPayer();
+	bool legIsPayer = legData_.isPayer();
         maturity_ = Date::minDate();
         for (Size i = 0; i < legs_[0].size(); ++i) {
             DLOG("Create composite " << i);
@@ -197,7 +197,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
-                gearing = coupon->rate();
+                gearing = coupon->fixedRate();
                 gearingSign = gearing >= 0.0 ? 1.0 : -1.0;
                 paymentDate = coupon->date();
             } else if (cashflow) {
@@ -218,9 +218,20 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, caps_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
                 composite->add(capfloor, sign * gearing);
-                DLOG("CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+	        DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
+                // if (!coupon) {
+                //   std::cout << "CapFloor CPI CashFlow " << std::endl
+                // 	    << "  nominal = " << nominal << std::endl
+                // 	    << "  gearing = " << gearing << std::endl
+                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
+                // 	    << "  start date = " << startDate << std::endl
+                // 	    << "  baseCPI = " << baseCPI << std::endl
+                // 	    << "  index  = " << zeroIndex->name() << std::endl
+                // 	    << "  lag = " << observationLag << std::endl
+                // 	    << "  interpolation = " << interpolation << std::endl;
+                //   }
             }
 
             if (capFloorType == QuantLib::CapFloor::Floor || capFloorType == QuantLib::CapFloor::Collar) {
@@ -232,18 +243,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, floors_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
                 composite->add(capfloor, sign * gearing);
-                DLOG("CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+	        DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
 
-            DLOG("CPI CapFloor Composite NPV " << composite->NPV());
+            DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
         }
 
         // Wrap the QL instrument in a vanilla instrument
         Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
         instrument_ = boost::make_shared<VanillaInstrument>(composite, multiplier);
-        DLOG("CPI CapFloor Instrument NPV " << instrument_->NPV());
+        DLOG(id() << " CPI CapFloor Instrument NPV " << instrument_->NPV());
 
     } else if (legData_.legType() == "YY") {
         builder = engineFactory->builder("YYCapFloor");

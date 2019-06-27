@@ -76,10 +76,16 @@
     <Engine>CpiCapEngine</Engine>
     <EngineParameters/>
   </Product>
-  <Product type="CapFlooredCpiLeg">
-    <Model>CapFlooredCpiModel</Model>
+  <Product type="CappedFlooredCpiLegCoupons">
+    <Model>Black</Model>
     <ModelParameters/>
-    <Engine>CapFlooredCpiCouponPricer</Engine>
+    <Engine>BlackAnalytic</Engine>
+    <EngineParameters/>
+  </Product>
+  <Product type="CappedFlooredCpiLegCashFlows">
+    <Model>Black</Model>
+    <ModelParameters/>
+    <Engine>BlackAnalytic</Engine>
     <EngineParameters/>
   </Product>
   <Product type="CapFlooredIborLeg">
@@ -199,7 +205,6 @@
   <Product type="CPICapFloor">
     <Model>CPICapFloorModel</Model>
     <ModelParameters/>
-    <!--<Engine>CPICapFloorEngine</Engine>-->
     <Engine>CPIBlackCapFloorEngine</Engine>
     <EngineParameters/>
   </Product>

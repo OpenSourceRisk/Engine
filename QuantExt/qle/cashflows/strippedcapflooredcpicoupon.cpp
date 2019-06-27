@@ -16,13 +16,24 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
-#include <ql/cashflows/cpicouponpricer.hpp>
 #include <qle/cashflows/strippedcapflooredcpicoupon.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
+
+StrippedCappedFlooredCPICashFlow::StrippedCappedFlooredCPICashFlow(
+    const ext::shared_ptr<CappedFlooredCPICashFlow>& underlying)
+    : CPICashFlow(underlying->notional(), boost::dynamic_pointer_cast<ZeroInflationIndex>(underlying->index()), Date(),
+                  underlying->baseFixing(), underlying->fixingDate(), underlying->date(), underlying->growthOnly(),
+                  underlying->interpolation(), underlying->frequency()),
+      underlying_(underlying) {}
+
+Real StrippedCappedFlooredCPICashFlow::amount() const {
+    return underlying_->amount() - underlying_->underlying()->amount();
+}
 
 StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     const ext::shared_ptr<CappedFlooredCPICoupon>& underlying)
@@ -35,31 +46,27 @@ StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     registerWith(underlying);
 }
 
-Rate StrippedCappedFlooredCPICoupon::rate() const {
+Rate StrippedCappedFlooredCPICoupon::rate() const { return underlying_->rate() - underlying_->underlying()->rate(); }
 
-    QL_REQUIRE(underlying_->pricer() != NULL, "pricer not set");
-    underlying_->pricer()->initialize(*underlying_);
-    Rate floorletRate = 0.0;
-    if (underlying_->isFloored())
-        floorletRate = underlying_->pricer()->floorletRate(underlying_->effectiveFloor());
-    Rate capletRate = 0.0;
-    if (underlying_->isCapped())
-        capletRate = underlying_->pricer()->capletRate(underlying_->effectiveCap());
-
-    // if the underlying is collared we return the value of the embedded
-    // collar, otherwise the value of a long floor or a long cap respectively
-
-    return (underlying_->isFloored() && underlying_->isCapped()) ? floorletRate - capletRate
-                                                                 : floorletRate + capletRate;
+Rate StrippedCappedFlooredCPICoupon::cap() const {
+    QL_FAIL("not implemented");
+    return 0.0;
 }
 
-Rate StrippedCappedFlooredCPICoupon::cap() const { return underlying_->cap(); }
+Rate StrippedCappedFlooredCPICoupon::floor() const {
+    QL_FAIL("not implemented");
+    return 0.0;
+}
 
-Rate StrippedCappedFlooredCPICoupon::floor() const { return underlying_->floor(); }
+Rate StrippedCappedFlooredCPICoupon::effectiveCap() const {
+    QL_FAIL("not implemented");
+    return 0.0;
+}
 
-Rate StrippedCappedFlooredCPICoupon::effectiveCap() const { return underlying_->effectiveCap(); }
-
-Rate StrippedCappedFlooredCPICoupon::effectiveFloor() const { return underlying_->effectiveFloor(); }
+Rate StrippedCappedFlooredCPICoupon::effectiveFloor() const {
+    QL_FAIL("not implemented");
+    return 0.0;
+}
 
 void StrippedCappedFlooredCPICoupon::update() { notifyObservers(); }
 
@@ -78,10 +85,10 @@ bool StrippedCappedFlooredCPICoupon::isFloor() const { return underlying_->isFlo
 
 bool StrippedCappedFlooredCPICoupon::isCollar() const { return isCap() && isFloor(); }
 
-void StrippedCappedFlooredCPICoupon::setPricer(const ext::shared_ptr<CPICouponPricer>& pricer) {
-    CPICoupon::setPricer(pricer);
-    underlying_->setPricer(pricer);
-}
+// void StrippedCappedFlooredCPICoupon::setPricer(const ext::shared_ptr<CPICouponPricer>& pricer) {
+//     CPICoupon::setPricer(pricer);
+//     underlying_->setPricer(pricer);
+// }
 
 StrippedCappedFlooredCPICouponLeg::StrippedCappedFlooredCPICouponLeg(const Leg& underlyingLeg)
     : underlyingLeg_(underlyingLeg) {}
@@ -90,12 +97,15 @@ StrippedCappedFlooredCPICouponLeg::operator Leg() const {
     Leg resultLeg;
     resultLeg.reserve(underlyingLeg_.size());
     ext::shared_ptr<CappedFlooredCPICoupon> c;
+    ext::shared_ptr<CappedFlooredCPICashFlow> f;
     for (Leg::const_iterator i = underlyingLeg_.begin(); i != underlyingLeg_.end(); ++i) {
         if ((c = ext::dynamic_pointer_cast<CappedFlooredCPICoupon>(*i)) != NULL) {
             resultLeg.push_back(ext::make_shared<StrippedCappedFlooredCPICoupon>(c));
+        } else if ((f = ext::dynamic_pointer_cast<CappedFlooredCPICashFlow>(*i)) != NULL) {
+            resultLeg.push_back(ext::make_shared<StrippedCappedFlooredCPICashFlow>(f));
         }
-	// we don't want the following, just strip caps/floors and ignore the rest
-	// else {
+        // we don't want the following, just strip caps/floors and ignore the rest
+        // else {
         //     resultLeg.push_back(*i);
         // }
     }

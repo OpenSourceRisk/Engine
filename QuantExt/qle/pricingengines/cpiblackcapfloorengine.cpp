@@ -40,26 +40,25 @@ CPIBlackCapFloorEngine::CPIBlackCapFloorEngine(const Handle<YieldTermStructure>&
 
 void CPIBlackCapFloorEngine::calculate() const {
 
-    QL_REQUIRE(arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
-	       (arguments_.observationInterpolation == QuantLib::CPI::Flat && !arguments_.infIndex->interpolated()) ||
-	       (arguments_.observationInterpolation == QuantLib::CPI::Linear && arguments_.infIndex->interpolated()),
-               "observation interpolation as index required");
+    QL_REQUIRE(
+        arguments_.observationInterpolation == QuantLib::CPI::AsIndex ||
+            (arguments_.observationInterpolation == QuantLib::CPI::Flat && !arguments_.infIndex->interpolated()) ||
+            (arguments_.observationInterpolation == QuantLib::CPI::Linear && arguments_.infIndex->interpolated()),
+        "observation interpolation as index required");
 
     // Maturity adjustment for lag difference as in the QuantLib engine
     Period lagDiff = arguments_.observationLag - volatilitySurface_->observationLag();
     QL_REQUIRE(lagDiff >= Period(0, Months), "CPIBlackCapFloorEngine: "
                                              "lag difference must be non-negative: "
                                                  << lagDiff);
-    // Date effectiveMaturity = arguments_.payDate - lagDiff;
-
     Date maturity = arguments_.payDate;
-    Date effectiveMaturity = arguments_.payDate - arguments_.observationLag;
+    DiscountFactor d = arguments_.nominal * discountCurve_->discount(maturity);
+
+    Date effectiveMaturity = arguments_.payDate - arguments_.observationLag - lagDiff;
     if (!arguments_.infIndex->interpolated()) {
         std::pair<Date, Date> ipm = inflationPeriod(effectiveMaturity, arguments_.infIndex->frequency());
         effectiveMaturity = ipm.first;
     }
-
-    DiscountFactor d = arguments_.nominal * discountCurve_->discount(arguments_.payDate);
 
     Date baseDate = arguments_.infIndex->zeroInflationTermStructure()->baseDate();
     Real baseFixing = arguments_.infIndex->fixing(baseDate);
@@ -82,8 +81,7 @@ void CPIBlackCapFloorEngine::calculate() const {
     // for strikeRate(t):
     Real strikeZeroRate =
         pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) - 1.0;
-    Period obsLag = Period(0, Days); // Should be zero here if we use the lag difference to adjust maturity above
-    Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate, obsLag));
+    Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
     results_.value = blackFormula(arguments_.type, K, F, stdDev, d);
 }
 

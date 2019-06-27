@@ -23,8 +23,8 @@ FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 #ifndef quantext_stripped_capfloored_cpicoupon_hpp
 #define quantext_stripped_capfloored_cpicoupon_hpp
 
-#include <qle/cashflows/cpicoupon.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
+#include <qle/cashflows/cpicoupon.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
@@ -32,36 +32,43 @@ using namespace QuantLib;
 class StrippedCappedFlooredCPICoupon : public CPICoupon {
 
 public:
-    explicit StrippedCappedFlooredCPICoupon(
-        const ext::shared_ptr<CappedFlooredCPICoupon>& underlying);
-
+    explicit StrippedCappedFlooredCPICoupon(const ext::shared_ptr<CappedFlooredCPICoupon>& underlying);
     //! Coupon interface
     Rate rate() const;
-    //! cap
     Rate cap() const;
-    //! floor
     Rate floor() const;
-    //! effective cap
     Rate effectiveCap() const;
-    //! effective floor
     Rate effectiveFloor() const;
 
     //! Observer interface
     void update();
-
     //! Visitability
     virtual void accept(AcyclicVisitor&);
+
+    //! Underlying coupon
+    const ext::shared_ptr<CappedFlooredCPICoupon> underlying() { return underlying_; }
 
     bool isCap() const;
     bool isFloor() const;
     bool isCollar() const;
 
-    void setPricer(const ext::shared_ptr<CPICouponPricer>& pricer);
-
-    const ext::shared_ptr<CappedFlooredCPICoupon> underlying() { return underlying_; }
-
 protected:
     ext::shared_ptr<CappedFlooredCPICoupon> underlying_;
+};
+
+//! Stripped capped or floored CPI cashflow.
+/*! Extended QuantLib::CPICashFlow
+ */
+class StrippedCappedFlooredCPICashFlow : public CPICashFlow {
+public:
+    StrippedCappedFlooredCPICashFlow(const ext::shared_ptr<CappedFlooredCPICashFlow>& underlying);
+    //! Cashflow interface
+    Real amount() const;
+    //! Underlying cash flow
+    ext::shared_ptr<CappedFlooredCPICashFlow> underlying() const { return underlying_; }
+
+private:
+    ext::shared_ptr<CappedFlooredCPICashFlow> underlying_;
 };
 
 class StrippedCappedFlooredCPICouponLeg {

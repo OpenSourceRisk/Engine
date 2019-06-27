@@ -254,6 +254,8 @@ void Swap::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
         instrument_.reset(new VanillaInstrument(swap));
     }
 
+    DLOG(id() << " Swap NPV " << instrument_->NPV());
+    
     DLOG("Set instrument wrapper");
 
     // set Leg Currencies

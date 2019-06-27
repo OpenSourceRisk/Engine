@@ -23,40 +23,33 @@
 #include <ql/cashflows/cashflowvectors.hpp>
 #include <ql/time/daycounters/thirty360.hpp>
 #include <qle/cashflows/cpicouponpricer.hpp>
+#include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 
 namespace QuantExt {
 
-void BlackCPICashFlowPricer::initialize(const CappedFlooredCPICashFlow& cashflow) {
-    cashflow_ = dynamic_cast<const CappedFlooredCPICashFlow*>(&cashflow);
-    QL_REQUIRE(cashflow_, "CappedFlooredCPICashFlow needed");
+InflationCashFlowPricer::InflationCashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
+                                                 const Handle<YieldTermStructure>& yts)
+    : vol_(vol), yts_(yts) {
+    if (!vol_.empty())
+        registerWith(vol_);
+    if (yts_.empty())
+        yts_ = Handle<YieldTermStructure>(
+            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
 }
 
-Real BlackCPICashFlowPricer::amount() const {
-    Real a = cashflow_->underlying()->amount();
-    return a;
+BlackCPICashFlowPricer::BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol,
+                                               const Handle<YieldTermStructure>& yts)
+    : InflationCashFlowPricer(vol, yts) {
+    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility());
 }
 
-Real BlackCPICashFlowPricer::cap() const {
-    Real c = 0.0;
-    return c;
+BlackCPICouponPricer::BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol,
+                                           const Handle<YieldTermStructure>& yts)
+    : CPICouponPricer(vol), yts_(yts) {
+    if (yts_.empty())
+        yts_ = Handle<YieldTermStructure>(
+            boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
+    engine_ = boost::make_shared<CPIBlackCapFloorEngine>(yieldCurve(), volatility());
 }
-
-Real BlackCPICashFlowPricer::floor() const {
-    Real f = 0.0;
-    return f;
-}
-
-void BlackCPICouponPricer::initialize(const InflationCoupon& coupon) {
-    coupon_ = dynamic_cast<const CappedFlooredCPICoupon*>(&coupon);
-    QL_REQUIRE(coupon_, "CappedFlooredCPICoupon needed");
-}
-
-// TODO
-Real BlackCPICouponPricer::swapletPrice() const { return 0.0; }
-Real BlackCPICouponPricer::swapletRate() const { return 0.0; }
-Real BlackCPICouponPricer::capletPrice(Rate effectiveCap) const { return 0.0; }
-Real BlackCPICouponPricer::capletRate(Rate effectiveCap) const { return 0.0; }
-Real BlackCPICouponPricer::floorletPrice(Rate effectiveFloor) const { return 0.0; }
-Real BlackCPICouponPricer::floorletRate(Rate effectiveFloor) const { return 0.0; }
 
 } // namespace QuantExt

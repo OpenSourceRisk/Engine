@@ -134,6 +134,7 @@ private:
     void generateSurvivalProbabilityScenarios(bool up);
     void generateCdsVolScenarios(bool up);
     void generateZeroInflationScenarios(bool up);
+    void generateZeroInflationCapFloorVolScenarios(bool up);
     void generateYoYInflationScenarios(bool up);
     void generateYoYInflationCapFloorVolScenarios(bool up);
     void generateBaseCorrelationScenarios(bool up);
@@ -163,6 +164,7 @@ private:
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up);
     ScenarioDescription yoyInflationScenarioDescription(string index, Size bucket, bool up);
+    ScenarioDescription zeroInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription yoyInflationCapFloorVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription baseCorrelationScenarioDescription(string indexName, Size lossLevelBucket, Size termBucket,
                                                            bool up);

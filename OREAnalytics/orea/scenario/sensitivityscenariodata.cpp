@@ -98,6 +98,8 @@ const ShiftData& SensitivityScenarioData::shiftData(const RiskFactorKey::KeyType
         return *yoyInflationCurveShiftData().at(name);
     case RFType::YoYInflationCapFloorVolatility:
         return yoyInflationCapFloorVolShiftData().at(name);
+    case RFType::ZeroInflationCapFloorVolatility:
+        return zeroInflationCapFloorVolShiftData().at(name);
     case RFType::EquitySpot:
         return equityShiftData().at(name);
     case RFType::EquityVolatility:
@@ -342,6 +344,18 @@ void SensitivityScenarioData::fromXML(XMLNode* root) {
             VolShiftData data;
             volShiftDataFromXML(child, data);
             yoyInflationCapFloorVolShiftData_[index] = data;
+        }
+    }
+
+    LOG("Get zero inflation cap/floor vol sensitivity parameters");
+    XMLNode* zeroCapVols = XMLUtils::getChildNode(node, "CPICapFloorVolatilities");
+    if (zeroCapVols) {
+        for (XMLNode* child = XMLUtils::getChildNode(zeroCapVols, "CPICapFloorVolatility"); child;
+            child = XMLUtils::getNextSibling(child)) {
+            string index = XMLUtils::getAttribute(child, "index");
+            VolShiftData data;
+            volShiftDataFromXML(child, data);
+            zeroInflationCapFloorVolShiftData_[index] = data;
         }
     }
 

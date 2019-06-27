@@ -143,6 +143,7 @@ public:
     const vector<double>& rates() const { return rates_; }
     const vector<string>& rateDates() const { return rateDates_; }
     const string& compounding() const { return compounding_; }
+    const bool& subtractNotional() const { return subtractNotional_; }
     //@}
 
     //! \name Serialisation
@@ -154,6 +155,7 @@ private:
     vector<double> rates_;
     vector<string> rateDates_;
     string compounding_;
+    bool subtractNotional_;
 };
 
 //! Serializable Floating Leg Data

@@ -17,48 +17,35 @@
 */
 
 /*! \file cpicouponpricer.hpp
-    \brief CPI cash flow and coupon pricers that handle caps/floors
+    \brief CPI cash flow and coupon pricers that handle caps/floors using a CpiCapFloorEngine
 */
 
 #ifndef quantext_cpicouponpricer_hpp
 #define quantext_cpicouponpricer_hpp
 
-#include <ql/option.hpp>
+#include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
+#include <ql/option.hpp>
 #include <ql/termstructures/volatility/inflation/cpivolatilitystructure.hpp>
 #include <ql/termstructures/yield/flatforward.hpp>
-#include <ql/time/schedule.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
+#include <ql/time/schedule.hpp>
 #include <qle/cashflows/cpicoupon.hpp>
 
 namespace QuantExt {
 using namespace QuantLib;
 
 //! Base class for CPI CashFLow and Coupon pricers
-class CPIPricer : public virtual Observer, public virtual Observable {
+class InflationCashFlowPricer : public virtual Observer, public virtual Observable {
 public:
-    CPIPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
-              const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>() ) : vol_(vol), yts_(yts) {
-        if (!vol_.empty())
-            registerWith(vol_);
-        if (yts_.empty())
-            yts_ = Handle<YieldTermStructure>(boost::shared_ptr<YieldTermStructure>(new FlatForward(0, NullCalendar(), 0.05, Actual365Fixed())));
-    }
-    virtual ~CPIPricer() {}
-    virtual void setVolatility(const Handle<CPIVolatilitySurface>& vol) {
-        QL_REQUIRE(!vol.empty(), "empty vol handle")
-        vol_ = vol;
-        registerWith(vol_);
-    }
+    InflationCashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+                            const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+    virtual ~InflationCashFlowPricer() {}
 
+    //! Inspectors
+    //@{
     Handle<CPIVolatilitySurface> volatility() { return vol_; }
     Handle<YieldTermStructure> yieldCurve() { return yts_; }
-
-    //! \name InflationCouponPricer interface
-    //@{
-    virtual Real amount() const = 0;
-    virtual Real cap() const = 0;
-    virtual Real floor() const = 0;
     //@}
 
     //! \name Observer interface
@@ -71,34 +58,29 @@ protected:
 };
 
 //! Black CPI CashFlow Pricer.
-class BlackCPICashFlowPricer : public CPIPricer {
+class BlackCPICashFlowPricer : public InflationCashFlowPricer {
 public:
-    BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>()) : CPIPricer(vol) {}
-    Real amount() const;
-    Real cap() const;
-    Real floor() const;
-    void initialize(const CappedFlooredCPICashFlow&);
+    BlackCPICashFlowPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+                           const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
 private:
-    Real optionletPrice(Option::Type optionType, Real effStrike) const;
-    const CappedFlooredCPICashFlow* cashflow_;
+    // engine to price the underlying cap/floor
+    boost::shared_ptr<PricingEngine> engine_;
 };
 
-class BlackCPICouponPricer : public InflationCouponPricer {
+class BlackCPICouponPricer : public CPICouponPricer {
 public:
-    BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>()) : vol_(vol) {}
-    Real swapletPrice() const;
-    Rate swapletRate() const;
-    Real capletPrice(Rate effectiveCap) const;
-    Rate capletRate(Rate effectiveCap) const;
-    Real floorletPrice(Rate effectiveFloor) const;
-    Rate floorletRate(Rate effectiveFloor) const;
-    void initialize(const InflationCoupon&);
+    BlackCPICouponPricer(const Handle<CPIVolatilitySurface>& vol = Handle<CPIVolatilitySurface>(),
+                         const Handle<YieldTermStructure>& yts = Handle<YieldTermStructure>());
+    Handle<YieldTermStructure> yieldCurve() { return yts_; }
+    Handle<CPIVolatilitySurface> volatility() { return capletVolatility(); }
+    boost::shared_ptr<PricingEngine> engine() { return engine_; }
 
 private:
-    Real optionletPrice(Option::Type optionType, Real effStrike) const;
-    const CappedFlooredCPICoupon* coupon_;
-    Handle<CPIVolatilitySurface> vol_;
+    Handle<YieldTermStructure> yts_;
+    // engine to price the underlying cap/floor
+    boost::shared_ptr<PricingEngine> engine_;
 };
 
 } // namespace QuantExt

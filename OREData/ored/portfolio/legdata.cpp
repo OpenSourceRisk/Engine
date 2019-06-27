@@ -93,12 +93,18 @@ void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
         compounding_ = "Compounded";
     QL_REQUIRE(compounding_ == "Compounded" || compounding_ == "Simple",
                "Compounding method " << compounding_ << " not supported");
+    XMLNode* subtractNotionalNode = XMLUtils::getChildNode(node, "SubtractNotional");
+    if (subtractNotionalNode)
+        subtractNotional_ = XMLUtils::getChildValueAsBool(node, "SubtractNotional", true);
+    else
+        subtractNotional_ = true;
 }
 
 XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
     XMLNode* node = doc.allocNode(legNodeName());
     XMLUtils::addChildrenWithOptionalAttributes(doc, node, "Rates", "Rate", rates_, "startDate", rateDates_);
     XMLUtils::addChild(doc, node, "Compounding", compounding_);
+    XMLUtils::addChild(doc, node, "SubtractNotional", subtractNotional_);
     return node;
 }
 
@@ -157,7 +163,7 @@ void CPILegData::fromXML(XMLNode* node) {
     baseCPI_ = XMLUtils::getChildValueAsDouble(node, "BaseCPI", true);
     observationLag_ = XMLUtils::getChildValue(node, "ObservationLag", true);
     interpolation_ = XMLUtils::getChildValue(node, "Interpolation", true);
-    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotionnal");
+    XMLNode* subNomNode = XMLUtils::getChildNode(node, "SubtractInflationNotional");
     if (subNomNode)
         subtractInflationNominal_ = XMLUtils::getChildValueAsBool(node, "SubtractInflationNotional", true);
     else
@@ -646,7 +652,10 @@ Leg makeZCFixedLeg(const LegData& data) {
     }
     if (comp == QuantLib::Compounded)
         compoundFactor = pow(1.0 + fixedRate, totalDCF);
-    fixedAmount *= (compoundFactor - 1);
+    if (zcFixedLegData->subtractNotional())
+        fixedAmount *= (compoundFactor - 1);
+    else
+        fixedAmount *= compoundFactor;
     Date maturity = schedule.endDate();
     Date fixedPayDate = schedule.calendar().adjust(maturity, bdc);
 
@@ -900,10 +909,15 @@ Leg makeNotionalLeg(const Leg& refLeg, const bool initNomFlow, const bool finalN
 
     // Final Nominal Return at Maturity
     if (finalNomFlow) {
-        double finalNomFlow = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->nominal();
-        Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
-        if (finalNomFlow != 0)
-            leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
+        boost::shared_ptr<QuantLib::Coupon> coupon = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back());
+        if (coupon) {
+            double finalNomFlow = coupon->nominal();
+            Date finalDate = boost::dynamic_pointer_cast<QuantLib::Coupon>(refLeg.back())->date();
+            if (finalNomFlow != 0)
+                leg.push_back(boost::shared_ptr<CashFlow>(new SimpleCashFlow(finalNomFlow, finalDate)));
+        } else {
+            ALOG("The reference leg's last cash flow is not a coupon, we cannot create a final exchange flow");
+        }
     }
 
     return leg;
@@ -958,23 +972,23 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     if (couponCapFloor) {
         DLOG("Add coupon pricers");
 
-        // get a coupon pricer for the leg
-        // boost::shared_ptr<EngineBuilder> builder = engineFactory->builder("CapFlooredCpiLeg");
-        // QL_REQUIRE(builder, "No builder found for CapFlooredCpiLeg");
-        // boost::shared_ptr<CapFlooredCpiLegEngineBuilder> cappedFlooredCpiBuilder =
-        //     boost::dynamic_pointer_cast<CapFlooredCpiLegEngineBuilder>(builder);
-
         string indexName = index->name();
         // remove blanks (FIXME)
         indexName.replace(indexName.find(" ", 0), 1, "");
-        string ccy = index->currency().code();
-        Handle<QuantLib::CPIVolatilitySurface> ovs =
-            engineFactory->market()->cpiInflationCapFloorVolatilitySurface(indexName);
-        boost::shared_ptr<BlackCPICashFlowPricer> cashFlowPricer = boost::make_shared<BlackCPICashFlowPricer>(ovs);
-        boost::shared_ptr<BlackCPICouponPricer> couponPricer = boost::make_shared<BlackCPICouponPricer>(ovs);
 
-        // boost::shared_ptr<InflationCouponPricer> couponPricer =
-        //     cappedFlooredCpiBuilder->engine(indexname.replace(indexname.find(" ", 0), 1, ""));
+        // get a coupon pricer for the leg
+        boost::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
+        QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
+        boost::shared_ptr<CapFlooredCpiLegCouponEngineBuilder> cappedFlooredCpiCouponBuilder =
+            boost::dynamic_pointer_cast<CapFlooredCpiLegCouponEngineBuilder>(cpBuilder);
+        boost::shared_ptr<InflationCouponPricer> couponPricer = cappedFlooredCpiCouponBuilder->engine(indexName);
+
+        // get a cash flow pricer for the leg
+        boost::shared_ptr<EngineBuilder> cfBuilder = engineFactory->builder("CappedFlooredCpiLegCashFlows");
+        QL_REQUIRE(cfBuilder, "No builder found for CappedFlooredCpiLegCashFLows");
+        boost::shared_ptr<CapFlooredCpiLegCashFlowEngineBuilder> cappedFlooredCpiCashFlowBuilder =
+            boost::dynamic_pointer_cast<CapFlooredCpiLegCashFlowEngineBuilder>(cfBuilder);
+        boost::shared_ptr<InflationCashFlowPricer> cashFlowPricer = cappedFlooredCpiCashFlowBuilder->engine(indexName);
 
         // set coupon pricer for the leg
         for (Size i = 0; i < leg.size(); i++) {
@@ -984,8 +998,9 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             boost::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
                 boost::dynamic_pointer_cast<CappedFlooredCPICoupon>(leg[i]);
             if (cfCpiCoupon) {
-                DLOG("Capped/Floored CPI Coupon " << i);
+                DLOG("Capped/Floored CPI Coupon " << i << ", set pricer");
                 cfCpiCoupon->setPricer(couponPricer);
+                DLOG("Capped/Floored CPI Coupon " << i << ", set pricer done");
                 DLOG("Capped/Floored CPI Coupon " << i << " amount " << cfCpiCoupon->amount() << " "
                                                   << cfCpiCoupon->date());
             } else {
@@ -1000,10 +1015,6 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
                 }
             }
         }
-
-        // TODO: build naked option leg if required
-
-        return leg;
     }
 
     // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
@@ -1018,6 +1029,18 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         // if (cpicf && (cpicf->date() == coupon->date()))
         //   leg.pop_back();
         leg.pop_back();
+    }
+
+    // build naked option leg if required
+    if (couponCapFloor && cpiLegData->nakedOption()) {
+        Leg tmpLeg = StrippedCappedFlooredCouponLeg(leg);
+        // fix for missing registration in ql 1.13
+        // for (auto const& t : tmpLeg) {
+        //     auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
+        //     if (s != nullptr)
+        //         s->registerWith(s->underlying());
+        // }
+        leg = tmpLeg;
     }
 
     return leg;

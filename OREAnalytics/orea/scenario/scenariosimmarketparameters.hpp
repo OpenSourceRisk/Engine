@@ -113,6 +113,14 @@ public:
     const vector<Real>& yoyInflationCapFloorVolStrikes() const { return yoyInflationCapFloorVolStrikes_; }
     const string& yoyInflationCapFloorVolDecayMode() const { return yoyInflationCapFloorVolDecayMode_; }
 
+    bool simulateZeroInflationCapFloorVols() const { return paramsSimulate(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
+    vector<string> zeroInflationCapFloorVolNames() const { return paramsLookup(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility); }
+    const string& zeroInflationCapFloorVolDayCounter(const string& key) const;
+    const vector<Period>& zeroInflationCapFloorVolExpiries(const string& key) const;
+    bool hasZeroInflationCapFloorVolExpiries(const string& key) const { return zeroInflationCapFloorVolExpiries_.count(key) > 0; }
+    const vector<Real>& zeroInflationCapFloorVolStrikes() const { return zeroInflationCapFloorVolStrikes_; }
+    const string& zeroInflationCapFloorVolDecayMode() const { return zeroInflationCapFloorVolDecayMode_; }
+
     bool simulateSurvivalProbabilities() const { return paramsSimulate(RiskFactorKey::KeyType::SurvivalProbability); }
     bool simulateRecoveryRates() const { return paramsSimulate(RiskFactorKey::KeyType::RecoveryRate); }
     vector<string> defaultNames() const { return paramsLookup(RiskFactorKey::KeyType::SurvivalProbability); }
@@ -245,6 +253,9 @@ public:
 
     void setSimulateYoYInflationCapFloorVols(bool simulate);
     void setYoYInflationCapFloorNames(vector<string> names);
+
+    void setSimulateZeroInflationCapFloorVols(bool simulate);
+    void setZeroInflationCapFloorNames(vector<string> names);
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);
@@ -382,6 +393,11 @@ private:
     map<string, vector<Period>> yoyInflationCapFloorVolExpiries_;
     vector<Real> yoyInflationCapFloorVolStrikes_;
     string yoyInflationCapFloorVolDecayMode_;
+
+    map<string, string> zeroInflationCapFloorVolDayCounters_;
+    map<string, vector<Period>> zeroInflationCapFloorVolExpiries_;
+    vector<Real> zeroInflationCapFloorVolStrikes_;
+    string zeroInflationCapFloorVolDecayMode_;
 
     map<string, string> defaultCurveDayCounters_;
     map<string, string> defaultCurveCalendars_;

@@ -152,7 +152,8 @@ void EngineFactory::addDefaultBuilders() {
     registerBuilder(boost::make_shared<CapFloorEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredIborLegEngineBuilder>());
     registerBuilder(boost::make_shared<CapFlooredYoYLegEngineBuilder>());
-    registerBuilder(boost::make_shared<CapFlooredCpiLegEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredCpiLegCouponEngineBuilder>());
+    registerBuilder(boost::make_shared<CapFlooredCpiLegCashFlowEngineBuilder>());
     registerBuilder(boost::make_shared<CmsSpreadCouponPricerBuilder>());
 
     registerBuilder(boost::make_shared<CpiCapFloorEngineBuilder>());

@@ -435,6 +435,25 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
             shiftMult = vol;
         }
     } break;
+    case RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility: {
+        string name = keylabel;
+        auto itr = sensiParams.zeroInflationCapFloorVolShiftData().find(name);
+        QL_REQUIRE(itr != sensiParams.zeroInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
+        shiftSize = itr->second.shiftSize;
+        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second.shiftStrikes;
+            vector<Period> expiries = itr->second.shiftExpiries;
+            QL_REQUIRE(strikes.size() > 0, "Only strike zc inflation capfloor vols supported");
+            Size keyIdx = key.index;
+            Size expIdx = keyIdx / strikes.size();
+            Period p_exp = expiries[expIdx];
+            Size strIdx = keyIdx % strikes.size();
+            Real strike = strikes[strIdx];
+            Handle<CPIVolatilitySurface> vts = simMarket->cpiInflationCapFloorVolatilitySurface(name, marketConfiguration);
+            Real vol = vts->volatility(p_exp, strike, vts->observationLag());
+            shiftMult = vol;
+        }
+    } break;
     case RiskFactorKey::KeyType::CommodityCurve: {
         auto it = sensiParams.commodityCurveShiftData().find(keylabel);
         QL_REQUIRE(it != sensiParams.commodityCurveShiftData().end(), "shiftData not found for " << keylabel);

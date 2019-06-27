@@ -482,6 +482,52 @@ BOOST_AUTO_TEST_CASE(testPutCallParity) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
+    CommonVars common;
+
+    Handle<YieldTermStructure> nominalTS = common.ii->zeroInflationTermStructure()->nominalTermStructure();
+
+    // this engine is used to imply the volatility that reproduces a quoted price
+    boost::shared_ptr<QuantExt::CPIBlackCapFloorEngine> blackEngine =
+        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(nominalTS,
+                                                             QuantLib::Handle<QuantLib::CPIVolatilitySurface>());
+
+    // wrap the pointer into a handle
+    Handle<CPICapFloorTermPriceSurface> cpiPriceSurfaceHandle(common.cpiCFsurfUK);
+
+    // initialize the vol surface, taking the price surface as an input and running the vol imply calculations
+    QuantExt::PriceQuotePreference type = QuantExt::CapFloor;
+    boost::shared_ptr<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> > cpiVolSurface =
+        boost::make_shared<QuantExt::StrippedCPIVolatilitySurface<QuantLib::Bilinear> >(type, cpiPriceSurfaceHandle,
+                                                                                        common.ii, blackEngine);
+
+    std::vector<Period> optionTenors = cpiVolSurface->maturities();
+    std::vector<Real> strikes = cpiVolSurface->strikes();
+    vector<vector<Handle<Quote> > > quotes(optionTenors.size(),
+                                           vector<Handle<Quote> >(strikes.size(), Handle<Quote>()));
+    for (Size i = 0; i < optionTenors.size(); ++i) {
+        for (Size j = 0; j < strikes.size(); ++j) {
+            Real vol = cpiVolSurface->volatility(optionTenors[i], strikes[j]);
+            boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+            quotes[i][j] = Handle<Quote>(q);
+        }
+    }
+    boost::shared_ptr<InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
+        boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear> >(
+            optionTenors, strikes, quotes, hii.currentLink(), cpiVolSurface->settlementDays(),
+            cpiVolSurface->calendar(), cpiVolSurface->businessDayConvention(), cpiVolSurface->dayCounter(),
+            cpiVolSurface->observationLag());
+
+    for (Size i = 0; i < optionTenors.size(); ++i) {
+        Date d = cpiVolSurface->optionDateFromTenor(optionTenors[i]);
+        for (Size j = 0; j < strikes.size(); ++j) {
+            Real vol1 = cpiVolSurface->volatility(d, strikes[j]);
+            Real vol2 = interpolatedCpiVol->volatility(d, strikes[j]);
+            BOOST_CHECK_SMALL(fabs(vol1 - vol2), 1.0e-10);
+	}
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

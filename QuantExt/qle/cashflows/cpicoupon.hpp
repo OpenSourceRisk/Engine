@@ -30,7 +30,7 @@
 namespace QuantExt {
 using namespace QuantLib;
 
-class CPIPricer;
+class InflationCashFlowPricer;
 
 //! Capped or floored CPI cashflow.
 /*! Extended QuantLib::CPICashFlow
@@ -41,7 +41,7 @@ public:
                              Period observationLag = 0 * Days, Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
 
     Real amount() const;
-    void setPricer(const ext::shared_ptr<CPIPricer>& pricer) { pricer_ = pricer; }
+    void setPricer(const ext::shared_ptr<InflationCashFlowPricer>& pricer);
     bool isCapped() const { return isCapped_; }
     bool isFloored() const { return isFloored_; }
     ext::shared_ptr<CPICashFlow> underlying() const { return underlying_; }
@@ -54,7 +54,7 @@ private:
     Date startDate_;
     Period observationLag_;
     bool isFloored_, isCapped_;
-    ext::shared_ptr<CPIPricer> pricer_;
+    ext::shared_ptr<InflationCashFlowPricer> pricer_;
 };
 
 //! Capped or floored CPI coupon.
@@ -65,7 +65,6 @@ public:
     CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying, Date startDate = Date(),
                            Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
     Rate rate() const;
-    Real amount() const;
 
     ext::shared_ptr<CPICoupon> underlying() const { return underlying_; }
 
@@ -82,8 +81,6 @@ public:
     bool isCapped() const { return isCapped_; }
     bool isFloored() const { return isFloored_; }
 
-    void setPricer(const ext::shared_ptr<InflationCouponPricer>&);
-
 protected:
     virtual void setCommon(Rate cap, Rate floor);
 
@@ -92,7 +89,6 @@ protected:
     Date startDate_;
     bool isFloored_, isCapped_;
     Rate cap_, floor_;
-    // ext::shared_ptr<CPIPricer> pricer_;
 };
 
 //! Helper class building a sequence of capped/floored CPI coupons.
