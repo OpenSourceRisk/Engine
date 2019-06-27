@@ -191,6 +191,7 @@ currencies/asia.hpp
 currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
+indexes/cacpi.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp

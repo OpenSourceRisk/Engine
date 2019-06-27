@@ -424,7 +424,7 @@ CommodityVolCurve::populateMatrixFromMap(Matrix& mt, map<string, map<string, Rea
             rw = 0;
         } else {
             Real a = parseReal(outItr->first);
-            rfind = find_if(strksVect.begin(), strksVect.end(), [a](Real b) { return close(a, b, QL_EPSILON); });
+            rfind = find_if(strksVect.begin(), strksVect.end(), [a](Real b) { return close(a, b); });
             rw = distance(strksVect.begin(), rfind);
         }
 

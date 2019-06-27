@@ -101,6 +101,7 @@ portfolio/trade.cpp
 portfolio/tradeactions.cpp
 portfolio/tradefactory.cpp
 report/csvreport.cpp
+utilities/calendaradjustmentconfig.cpp
 utilities/correlationmatrix.cpp
 utilities/csvfilereader.cpp
 utilities/currencycheck.cpp
@@ -242,6 +243,7 @@ portfolio/tradefactory.hpp
 report/csvreport.hpp
 report/inmemoryreport.hpp
 report/report.hpp
+utilities/calendaradjustmentconfig.hpp
 utilities/correlationmatrix.hpp
 utilities/csvfilereader.hpp
 utilities/currencycheck.hpp

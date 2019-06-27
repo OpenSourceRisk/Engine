@@ -37,6 +37,34 @@ template <class T, class K> Handle<T> getHandle(const string& spec, const map<st
     return it->second->handle();
 }
 
+// loop-up fx from map
+class FXLookupMap : public ore::data::FXLookup {
+public:
+    FXLookupMap(const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots) : fxSpots_(fxSpots) {}
+
+    Handle<Quote> fxPairLookup(const string& fxPair) const override { return getHandle<Quote>(fxPair, fxSpots_); };
+
+    private:
+        // this is a reference
+    const map<string, boost::shared_ptr<ore::data::FXSpot>>& fxSpots_;
+};
+
+//look-u[ fx from triangulation object
+class FXLookupTriangulation : public ore::data::FXLookup {
+public:
+    FXLookupTriangulation(const ore::data::FXTriangulation& fxSpots) : fxSpots_(fxSpots) {}
+
+    Handle<Quote> fxPairLookup(const string& fxPair) const override {
+        // parse ID to get pair
+        QL_REQUIRE(fxPair.size() == 10, "FX Pair should be of the form: FX/CCY/CCY");
+        QL_REQUIRE(fxPair.substr(0, 3) == "FX/", "FX Pair should be of the form: FX/CCY/CCY");
+        return fxSpots_.getQuote(fxPair.substr(3, 3) + fxPair.substr(7, 3));  
+    };
+
+private:
+    // this is a reference
+    const ore::data::FXTriangulation& fxSpots_;
+};
 } // namespace
 
 namespace ore {
@@ -45,7 +73,21 @@ namespace data {
 FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
                        const CurveConfigurations& curveConfigs, const map<string, boost::shared_ptr<FXSpot>>& fxSpots,
                        const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+    init(asof, spec, loader, curveConfigs, FXLookupMap(fxSpots), yieldCurves);
+}
 
+// second ctor
+FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& loader, 
+                       const CurveConfigurations& curveConfigs, const FXTriangulation& fxSpots, 
+                       const std::map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
+    init(asof, spec, loader, curveConfigs, FXLookupTriangulation(fxSpots), yieldCurves);
+    
+}
+    
+
+void FXVolCurve::init(Date asof, FXVolatilityCurveSpec spec, const Loader& loader,
+                      const CurveConfigurations& curveConfigs, const FXLookup& fxSpots,
+                      const map<string, boost::shared_ptr<YieldCurve>>& yieldCurves) {
     try {
 
         const boost::shared_ptr<FXVolatilityCurveConfig>& config = curveConfigs.fxVolCurveConfig(spec.curveConfigID());
@@ -153,12 +195,17 @@ FXVolCurve::FXVolCurve(Date asof, FXVolatilityCurveSpec spec, const Loader& load
                     boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve(asof, dates, vols[0], dc, false));
             } else {
                 // Smile
-                auto fxSpot = getHandle<Quote>(config->fxSpotID(), fxSpots);
+                auto fxSpot = fxSpots.fxPairLookup(config->fxSpotID());
                 auto domYTS = getHandle<YieldTermStructure>(config->fxDomesticYieldCurveID(), yieldCurves);
                 auto forYTS = getHandle<YieldTermStructure>(config->fxForeignYieldCurveID(), yieldCurves);
 
+                bool vvFirstApprox = false;  // default to VannaVolga second approximation
+                if (config->smileInterpolation() == FXVolatilityCurveConfig::SmileInterpolation::VannaVolga1) {
+                    vvFirstApprox = true;
+                }
+
                 vol_ = boost::shared_ptr<BlackVolTermStructure>(new QuantExt::FxBlackVannaVolgaVolatilitySurface(
-                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false));
+                    asof, dates, vols[0], vols[1], vols[2], dc, cal, fxSpot, domYTS, forYTS, false, vvFirstApprox));
             }
         }
         vol_->enableExtrapolation();

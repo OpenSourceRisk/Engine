@@ -1020,7 +1020,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
     // If Notional Exchange set to false, remove the final cashflow.
     if (!data.notionalFinalExchange()) {
-        DLOG("Remove final exchange");
+        //QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
         boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
         // We do not need this check that the last coupon payment date matches the final CPI cash flow date, this is
         // identical by construction, see QuantLib::CPILeg or QuantExt::CPILeg.
