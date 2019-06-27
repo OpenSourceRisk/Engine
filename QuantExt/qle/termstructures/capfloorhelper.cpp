@@ -46,10 +46,13 @@ CapFloorHelper::CapFloorHelper(
     const Handle<Quote>& quote,
     const boost::shared_ptr<IborIndex>& iborIndex,
     const Handle<YieldTermStructure>& discountingCurve,
+    bool moving,
+    const QuantLib::Date& effectiveDate,
     QuoteType quoteType,
     QuantLib::VolatilityType quoteVolatilityType,
     QuantLib::Real quoteDisplacement,
-    bool endOfMonth)
+    bool endOfMonth,
+    bool firstCapletExcluded)
     : RelativeDateBootstrapHelper<OptionletVolatilityStructure>(Handle<Quote>(
         boost::make_shared<DerivedQuote<boost::function<Real(Real)> > >(
             quote, boost::bind(&CapFloorHelper::npv, this, _1)))),
@@ -58,52 +61,65 @@ CapFloorHelper::CapFloorHelper(
       strike_(strike),
       iborIndex_(iborIndex),
       discountHandle_(discountingCurve),
+      moving_(moving),
+      effectiveDate_(effectiveDate),
       quoteType_(quoteType),
       quoteVolatilityType_(quoteVolatilityType),
       quoteDisplacement_(quoteDisplacement),
       endOfMonth_(endOfMonth),
-      rawQuote_(quote) {
+      firstCapletExcluded_(firstCapletExcluded),
+      rawQuote_(quote),
+      initialised_(false) {
 
     if (quoteType_ == Premium) {
         QL_REQUIRE(type_ != Automatic, "Cannot have CapFloorHelper type 'Automatic' with quote type of Premium");
     }
 
+    QL_REQUIRE(!(moving_ && effectiveDate_ != Date()), 
+        "A fixed effective date does not make sense for a moving helper");
+
     registerWith(iborIndex_);
     registerWith(discountHandle_);
     
     initializeDates();
+    initialised_ = true;
 }
 
 void CapFloorHelper::initializeDates() {
 
-    CapFloor::Type capFloorType = CapFloor::Cap;
-    if (type_ == CapFloorHelper::Floor) {
-        capFloorType = CapFloor::Floor;
+    if (!initialised_ || moving_) {
+        CapFloor::Type capFloorType = CapFloor::Cap;
+        if (type_ == CapFloorHelper::Floor) {
+            capFloorType = CapFloor::Floor;
+        }
+
+        // Initialise the instrument and a copy
+        // The strike can be Null<Real>() to indicate an ATM cap floor helper
+        Rate dummyStrike = strike_ == Null<Real>() ? 0.01 : strike_;
+        capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days)
+            .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
+        capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days)
+            .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
+
+        // Maturity date is just the maturity date of the cap floor
+        maturityDate_ = capFloor_->maturityDate();
+
+        // We need the leg underlying the cap floor to determine the remaining date members
+        const Leg& leg = capFloor_->floatingLeg();
+
+        // Earliest date is the first optionlet fixing date
+        boost::shared_ptr<CashFlow> cf = leg.front();
+        boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        QL_REQUIRE(frc, "Expected the first cashflow on the cap floor instrument to be a FloatingRateCoupon");
+        earliestDate_ = frc->fixingDate();
+
+        // Remaining dates are each equal to the fixing date on the final optionlet
+        cf = leg.back();
+        frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
+        QL_REQUIRE(frc, "Expected the final cashflow on the cap floor instrument to be a FloatingRateCoupon");
+        pillarDate_ = latestDate_ = latestRelevantDate_ = frc->fixingDate();
     }
-    
-    // Initialise the instrument and a copy
-    // The strike can be Null<Real>() to indicate an ATM cap floor helper
-    Rate dummyStrike = strike_ == Null<Real>() ? 0.01 : strike_;
-    capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days).withEndOfMonth(endOfMonth_);
-    capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, dummyStrike, 0 * Days).withEndOfMonth(endOfMonth_);
 
-    // Maturity date is just the maturity date of the cap floor
-    maturityDate_ = capFloor_->maturityDate();
-
-    // We need the leg underlying the cap floor to determine the remaining date members
-    const Leg& leg = capFloor_->floatingLeg();
-
-    // Earliest date is the first optionlet fixing date
-    boost::shared_ptr<CashFlow> cf = leg.front();
-    boost::shared_ptr<FloatingRateCoupon> frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-    QL_REQUIRE(frc, "Expected the first cashflow on the cap floor instrument to be a FloatingRateCoupon");
-    earliestDate_ = frc->fixingDate();
-    
-    // Remaining dates are each equal to the fixing date on the final optionlet
-    cf = leg.back();
-    frc = boost::dynamic_pointer_cast<FloatingRateCoupon>(cf);
-    QL_REQUIRE(frc, "Expected the final cashflow on the cap floor instrument to be a FloatingRateCoupon");
-    pillarDate_ = latestDate_ = latestRelevantDate_ = frc->fixingDate();
 }
 
 void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
@@ -111,16 +127,20 @@ void CapFloorHelper::setTermStructure(OptionletVolatilityStructure* ovts) {
     if (strike_ == Null<Real>()) {
         // If the strike is Null<Real>(), we want an ATM helper
         Rate atm = capFloor_->atmRate(**discountHandle_);
-        capFloor_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days).withEndOfMonth(endOfMonth_);
-        capFloorCopy_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days).withEndOfMonth(endOfMonth_);
+        capFloor_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days)
+            .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
+        capFloorCopy_ = MakeCapFloor(capFloor_->type(), tenor_, iborIndex_, atm, 0 * Days)
+            .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
 
     } else if (type_ == CapFloorHelper::Automatic && quoteType_ != Premium) {
         // If the helper is set to automatically choose the underlying instrument type, do it now based on the ATM rate
         Rate atm = capFloor_->atmRate(**discountHandle_);
         CapFloor::Type capFloorType = atm > strike_ ? CapFloor::Floor : CapFloor::Cap;
         if (capFloor_->type() != capFloorType) {
-            capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
-            capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days).withEndOfMonth(endOfMonth_);
+            capFloor_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days)
+                .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
+            capFloorCopy_ = MakeCapFloor(capFloorType, tenor_, iborIndex_, strike_, 0 * Days)
+                .withEndOfMonth(endOfMonth_).withEffectiveDate(effectiveDate_, firstCapletExcluded_);
         }
     }
 

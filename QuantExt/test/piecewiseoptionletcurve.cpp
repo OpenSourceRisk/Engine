@@ -300,7 +300,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
         Handle<Quote> quote(boost::make_shared<SimpleQuote>(0.01));
         BOOST_REQUIRE_THROW(boost::make_shared<CapFloorHelper>(helperType, 
             volatilityColumn.tenors.front(), volatilityColumn.strike, quote, iborIndex, 
-            testYieldCurves.discountEonia, quoteType, volatilityColumn.type, 
+            testYieldCurves.discountEonia, isMoving, Date(), quoteType, volatilityColumn.type, 
             volatilityColumn.displacement), Error);
 
     } else {
@@ -345,8 +345,9 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletStripping,
             }
         
             // Create the helper instrument
-            helpers[i] = boost::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors[i], volatilityColumn.strike,
-                quote, iborIndex, testYieldCurves.discountEonia, quoteType, volatilityColumn.type, volatilityColumn.displacement);
+            helpers[i] = boost::make_shared<CapFloorHelper>(helperType, volatilityColumn.tenors[i], 
+                volatilityColumn.strike, quote, iborIndex, testYieldCurves.discountEonia, isMoving, 
+                Date(), quoteType, volatilityColumn.type, volatilityColumn.displacement);
         }
 
         // Create the piecewise optionlet curve, with the given interpolation type, and fail if it is not created
@@ -497,7 +498,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCachedValues,
     for (Size i = 0; i < tenors.size(); i++) {
         Handle<Quote> quote(boost::make_shared<SimpleQuote>(volatilities[i]));
         helpers[i] = boost::make_shared<CapFloorHelper>(helperType, tenors[i], strike, quote, iborIndex,
-            testYieldCurves.discountEonia, quoteType, volatilityType, displacement);
+            testYieldCurves.discountEonia, true, Date(), quoteType, volatilityType, displacement);
     }
 
     // Create the piecewise optionlet curve, with the given interpolation type.

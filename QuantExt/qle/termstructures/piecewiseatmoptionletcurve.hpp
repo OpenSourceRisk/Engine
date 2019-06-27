@@ -53,7 +53,7 @@ public:
         const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
     PiecewiseAtmOptionletCurve(
-        const QuantLib::Date& settlementDate,
+        const QuantLib::Date& referenceDate,
         const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
@@ -182,7 +182,7 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
 
 template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
 PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
-    const QuantLib::Date& settlementDate,
+    const QuantLib::Date& referenceDate,
     const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
@@ -194,7 +194,7 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
-    : QuantLib::OptionletVolatilityStructure(settlementDate, cftvc->calendar(), cftvc->businessDayConvention(),
+    : QuantLib::OptionletVolatilityStructure(referenceDate, cftvc->calendar(), cftvc->businessDayConvention(),
       cftvc->dayCounter()), cftvc_(cftvc), accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), 
       capFloorVolType_(capFloorVolType), capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
@@ -205,7 +205,7 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
     initialise(index, discount);
 
     curve_ = boost::make_shared<optionlet_curve>(
-        settlementDate, helpers_, cftvc_->calendar(), cftvc_->businessDayConvention(), cftvc_->dayCounter(), 
+        referenceDate, helpers_, cftvc_->calendar(), cftvc_->businessDayConvention(), cftvc_->dayCounter(),
         volatilityType_, displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
 }
 
@@ -288,12 +288,22 @@ void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::i
     // Observe the underlying cap floor term volatility curve
     registerWith(cftvc_);
 
+    // If the term structure is not moving, ensure that the cap floor helpers are not moving and are set up with the 
+    // correct effective date relative to the reference date. Mimic logic in MakeCapFloor here.
+    Date effectiveDate;
+    if (!this->moving_) {
+        Calendar cal = index->fixingCalendar();
+        Date ref = referenceDate();
+        ref = cal.adjust(ref);
+        effectiveDate = cal.advance(ref, index->fixingDays() * Days);
+    }
+
     // Initialise the quotes and helpers
     vector<Period> tenors = cftvc_->optionTenors();
     for (Size i = 0; i < tenors.size(); i++) {
         quotes_[i] = boost::make_shared<SimpleQuote>(cftvc_->volatility(tenors[i], 0.01));
         helpers_[i] = boost::make_shared<CapFloorHelper>(CapFloorHelper::Cap, tenors[i], Null<Real>(),
-            Handle<Quote>(quotes_[i]), index, discount, CapFloorHelper::Volatility,
+            Handle<Quote>(quotes_[i]), index, discount, this->moving_, effectiveDate, CapFloorHelper::Volatility,
             capFloorVolType_, capFloorVolDisplacement_);
     }
 }

@@ -410,46 +410,53 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
     ovCurve->enableExtrapolation();
     BOOST_CHECK_NO_THROW(ovCurve->volatility(oorDate, 0.01));
 
-    if (isMoving) {
+    BOOST_TEST_MESSAGE("Test term structure stripping still works after changing evaluation date");
+    Date newDate = calendar.advance(referenceDate, 1 * Months);
+    Settings::instance().evaluationDate() = newDate;
 
-        BOOST_TEST_MESSAGE("Test the moving term structure stripping still works after changing evaluation date");
-        Date newDate = calendar.advance(referenceDate, 1 * Months);
-        Settings::instance().evaluationDate() = newDate;
+    for (Size i = 0; i < atmVolData.tenors.size(); i++) {
 
-        // Rebuild new cap floor instruments
-        for (Size i = 0; i < atmVolData.tenors.size(); i++) {
+        Real volatility = volQuotes[i]->value();
 
-            // Create the ATM cap instrument and store its price using the quoted flat volatility
-            Real volatility = volQuotes[i]->value();
-            instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, 0.01);
-            Rate atm = instruments[i]->atmRate(**testYieldCurves.discountEonia);
-            instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, atm);
-            if (atmVolData.type == ShiftedLognormal) {
-                instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                    testYieldCurves.discountEonia, volatility, dayCounter, atmVolData.displacement));
-            } else {
-                instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                    testYieldCurves.discountEonia, volatility, dayCounter));
-            }
-            newFlatNpv = instruments[i]->NPV();
-
-            // Price the instrument using the stripped optionlet structure
-            if (ovCurve->volatilityType() == ShiftedLognormal) {
-                instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
-                    testYieldCurves.discountEonia, hovs));
-            } else {
-                instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
-                    testYieldCurves.discountEonia, hovs));
-            }
-            strippedNpv = instruments[i]->NPV();
-
-            BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
-                instruments[i]->type() << ", " << atmVolData.tenors[i] << ", " << instruments[i]->capRates()[0] << ", " <<
-                fixed << setprecision(13) << volQuotes[i]->value() << ", " << newFlatNpv << ", " << strippedNpv <<
-                ", " << (newFlatNpv - strippedNpv) << ")");
-
-            BOOST_CHECK_SMALL(fabs(newFlatNpv - strippedNpv), tolerance);
+        // Cap floor set up is different depending on whether we are testing the moving term structure or not.
+        // Empty startDate, i.e. moving, means that cap floor will be relative to the global evaluation date.
+        // If not moving, we keep the instrment's original start date.
+        Date startDate;
+        if (!isMoving) {
+            startDate = iborIndex->fixingCalendar().adjust(referenceDate);
+            startDate = iborIndex->fixingCalendar().advance(startDate, iborIndex->fixingDays() * Days);
         }
+        instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, 0.01)
+            .withEffectiveDate(startDate, true);
+        Rate atm = instruments[i]->atmRate(**testYieldCurves.discountEonia);
+        instruments[i] = MakeCapFloor(CapFloor::Cap, atmVolData.tenors[i], iborIndex, atm)
+            .withEffectiveDate(startDate, true);
+
+        if (atmVolData.type == ShiftedLognormal) {
+            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                testYieldCurves.discountEonia, volatility, dayCounter, atmVolData.displacement));
+        } else {
+            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                testYieldCurves.discountEonia, volatility, dayCounter));
+        }
+        newFlatNpv = instruments[i]->NPV();
+
+        // Price the instrument using the stripped optionlet structure
+        if (ovCurve->volatilityType() == ShiftedLognormal) {
+            instruments[i]->setPricingEngine(boost::make_shared<BlackCapFloorEngine>(
+                testYieldCurves.discountEonia, hovs));
+        } else {
+            instruments[i]->setPricingEngine(boost::make_shared<BachelierCapFloorEngine>(
+                testYieldCurves.discountEonia, hovs));
+        }
+        strippedNpv = instruments[i]->NPV();
+
+        BOOST_TEST_MESSAGE("  (Cap/Floor, Tenor, Strike, Volatility, Flat NPV, Stripped NPV, Flat - Stripped) = (" <<
+            instruments[i]->type() << ", " << atmVolData.tenors[i] << ", " << instruments[i]->capRates()[0] << ", " <<
+            fixed << setprecision(13) << volQuotes[i]->value() << ", " << newFlatNpv << ", " << strippedNpv <<
+            ", " << (newFlatNpv - strippedNpv) << ")");
+
+        BOOST_CHECK_SMALL(fabs(newFlatNpv - strippedNpv), tolerance);
     }
 }
 
