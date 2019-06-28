@@ -32,7 +32,7 @@ namespace QuantExt {
 /*! Helper class to strip caplet/floorlet volatilities from the cap floor term volatilities of a 
     CapFloorTermVolCurve.
 */
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
+template <class Interpolator, template <class> class Bootstrap = QuantExt::IterativeBootstrap>
 class PiecewiseAtmOptionletCurve : public QuantLib::OptionletVolatilityStructure, public QuantLib::LazyObject {
 
 public:
@@ -40,7 +40,7 @@ public:
 
     PiecewiseAtmOptionletCurve(
         QuantLib::Natural settlementDays,
-        const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
+        const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
         QuantLib::Real accuracy = 1.0e-12,
@@ -55,7 +55,7 @@ public:
 
     PiecewiseAtmOptionletCurve(
         const QuantLib::Date& referenceDate,
-        const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
+        const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
         const boost::shared_ptr<QuantLib::IborIndex>& index,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
         QuantLib::Real accuracy = 1.0e-12,
@@ -112,7 +112,7 @@ protected:
 
 private:
     //! The underlying ATM cap floor term volatility curve
-    boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> > cftvc_;
+    boost::shared_ptr<CapFloorTermVolCurve> cftvc_;
 
     //! The accuracy to be used in the bootstrap
     QuantLib::Real accuracy_;
@@ -159,10 +159,10 @@ private:
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount);
 };
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
+template <class Interpolator, template <class> class Bootstrap>
+PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     QuantLib::Natural settlementDays,
-    const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
+    const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     QuantLib::Real accuracy,
@@ -189,10 +189,10 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
         volatilityType_, displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
+template <class Interpolator, template <class> class Bootstrap>
+PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::PiecewiseAtmOptionletCurve(
     const QuantLib::Date& referenceDate,
-    const boost::shared_ptr<QuantExt::CapFloorTermVolCurve<TermVolInterpolator> >& cftvc,
+    const boost::shared_ptr<CapFloorTermVolCurve>& cftvc,
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     QuantLib::Real accuracy,
@@ -219,8 +219,8 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
         volatilityType_, displacement_, flatFirstPeriod_, accuracy_, interpolator_, bootstrap_);
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::update() {
+template <class Interpolator, template <class> class Bootstrap>
+void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::update() {
     
     LazyObject::update();
 
@@ -228,8 +228,8 @@ void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::u
         this->updated_ = false;
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::performCalculations() const {
+template <class Interpolator, template <class> class Bootstrap>
+void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::performCalculations() const {
 
     // Update the quotes from the cap floor term volatility surface
     for (QuantLib::Size i = 0; i < tenors_.size(); i++) {
@@ -237,50 +237,50 @@ void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::p
     }
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::Date PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::maxDate() const {
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::Date PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::maxDate() const {
     calculate();
     return curve_->maxDate();
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::Rate PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::minStrike() const {
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::Rate PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::minStrike() const {
     calculate();
     return curve_->minStrike();
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::Rate PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::maxStrike() const {
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::Rate PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::maxStrike() const {
     calculate();
     return curve_->maxStrike();
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::VolatilityType PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::volatilityType() const {
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::VolatilityType PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::volatilityType() const {
     return volatilityType_;
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::Real PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::displacement() const {
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::Real PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::displacement() const {
     return displacement_;
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-boost::shared_ptr<QuantLib::SmileSection> PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::
+template <class Interpolator, template <class> class Bootstrap>
+boost::shared_ptr<QuantLib::SmileSection> PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::
 smileSectionImpl(QuantLib::Time optionTime) const {
     calculate();
     return curve_->smileSection(optionTime, true);
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-QuantLib::Volatility PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::
+template <class Interpolator, template <class> class Bootstrap>
+QuantLib::Volatility PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::
 volatilityImpl(QuantLib::Time optionTime, QuantLib::Rate strike) const {
     calculate();
     return curve_->volatility(optionTime, 0.01, true);
 }
 
-template <class Interpolator, class TermVolInterpolator, template <class> class Bootstrap>
-void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::initialise(
+template <class Interpolator, template <class> class Bootstrap>
+void PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::initialise(
     const boost::shared_ptr<QuantLib::IborIndex>& index,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount) {
     

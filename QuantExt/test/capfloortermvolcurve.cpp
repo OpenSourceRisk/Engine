@@ -169,55 +169,55 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testCapFloorTermVolCurveInterpolation,
     case 0:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<Linear> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using Linear interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<Linear> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(
                 referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 1:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<BackwardFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using BackwardFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<BackwardFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<BackwardFlat> >(
                 referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 2:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<LinearFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using LinearFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<LinearFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
                 referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 3:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<Cubic> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using Cubic interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<Cubic> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(
                 referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;
     case 4:
         if (isMoving) {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a moving reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<CubicFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 settlementDays, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         } else {
             BOOST_TEST_MESSAGE("Using CubicFlat interpolation with a fixed reference date");
-            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<CapFloorTermVolCurve<CubicFlat> >(
+            BOOST_REQUIRE_NO_THROW(cftvs = boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(
                 referenceDate, calendar, bdc, tenors, volHandles, dayCounter, flatFirstPeriod));
         }
         break;

@@ -35,15 +35,39 @@
 
 namespace QuantExt {
 
-//! Cap floor at-the-money term volatility curve
-/*! Class that interpolates a vector of ATM cap floor volatilities.
+/*! Cap floor term volatility curve.
+    Abstract base class for one dimensional curve of cap floor volatilities.
+*/
+class CapFloorTermVolCurve : public QuantLib::CapFloorTermVolatilityStructure {
+public:
+    //! \name Constructors
+    //@{
+    CapFloorTermVolCurve(QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc = QuantLib::DayCounter())
+        : QuantLib::CapFloorTermVolatilityStructure(bdc, dc) {}
+
+    CapFloorTermVolCurve(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, 
+        QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc = QuantLib::DayCounter())
+        : QuantLib::CapFloorTermVolatilityStructure(referenceDate, cal, bdc, dc) {}
+
+    //! calculate the reference date based on the global evaluation date
+    CapFloorTermVolCurve(QuantLib::Natural settlementDays, const QuantLib::Calendar& cal, 
+        QuantLib::BusinessDayConvention bdc, const QuantLib::DayCounter& dc = QuantLib::DayCounter())
+        : QuantLib::CapFloorTermVolatilityStructure(settlementDays, cal, bdc, dc) {}
+    //@}
+
+    //! Return the tenors used in the CapFloorTermVolCurve
+    virtual std::vector<QuantLib::Period> optionTenors() const = 0;
+};
+
+//! Interpolated cap floor term volatility curve
+/*! Class that interpolates a vector of cap floor volatilities.
     
     Based on the class QuantLib::CapFloorTermVolCurve with changes:
     - allows for a user provided interpolation (main reason for copy)
     - does not derive from boost::noncopyable (is this needed?)
 */
 template <class Interpolator>
-class CapFloorTermVolCurve : public QuantLib::LazyObject, public QuantLib::CapFloorTermVolatilityStructure,
+class InterpolatedCapFloorTermVolCurve : public QuantLib::LazyObject, public CapFloorTermVolCurve,
     protected QuantLib::InterpolatedCurve<Interpolator> {
 
 public:
@@ -63,7 +87,7 @@ public:
         \param interpolator    An instance of the interpolator to use. Allows for specification of \p Interpolator 
                                instances that use a constructor that takes arguments.
     */
-    CapFloorTermVolCurve(
+    InterpolatedCapFloorTermVolCurve(
         QuantLib::Natural settlementDays,
         const QuantLib::Calendar& calendar,
         QuantLib::BusinessDayConvention bdc,
@@ -89,7 +113,7 @@ public:
         \param interpolator    An instance of the interpolator to use. Allows for specification of \p Interpolator
                                instances that use a constructor that takes arguments.
     */
-    CapFloorTermVolCurve(
+    InterpolatedCapFloorTermVolCurve(
         const QuantLib::Date& settlementDate,
         const QuantLib::Calendar& calendar,
         QuantLib::BusinessDayConvention bdc,
@@ -116,9 +140,13 @@ public:
     void performCalculations() const;
     //@}
 
+    //! \name CapFloorTermVolCurve interface
+    //@{
+    std::vector<QuantLib::Period> optionTenors() const;
+    //@}
+
     //! \name Inspectors
     //@{
-    const std::vector<QuantLib::Period>& optionTenors() const;
     const std::vector<QuantLib::Date>& optionDates() const;
     const std::vector<QuantLib::Time>& optionTimes() const;
     //@}
@@ -161,7 +189,7 @@ private:
 
 
 template <class Interpolator>
-CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
+InterpolatedCapFloorTermVolCurve<Interpolator>::InterpolatedCapFloorTermVolCurve(
     QuantLib::Natural settlementDays,
     const QuantLib::Calendar& calendar,
     QuantLib::BusinessDayConvention bdc,
@@ -170,7 +198,7 @@ CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
     const QuantLib::DayCounter& dc,
     bool flatFirstPeriod,
     const Interpolator& interpolator)
-    : QuantLib::CapFloorTermVolatilityStructure(settlementDays, calendar, bdc, dc),
+    : CapFloorTermVolCurve(settlementDays, calendar, bdc, dc),
       QuantLib::InterpolatedCurve<Interpolator>(optionTenors.size() + 1, interpolator),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -184,7 +212,7 @@ CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
 }
 
 template <class Interpolator>
-CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
+InterpolatedCapFloorTermVolCurve<Interpolator>::InterpolatedCapFloorTermVolCurve(
     const QuantLib::Date& settlementDate,
     const QuantLib::Calendar& calendar,
     QuantLib::BusinessDayConvention bdc,
@@ -193,7 +221,7 @@ CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
     const QuantLib::DayCounter& dc,
     bool flatFirstPeriod,
     const Interpolator& interpolator)
-    : QuantLib::CapFloorTermVolatilityStructure(settlementDate, calendar, bdc, dc),
+    : CapFloorTermVolCurve(settlementDate, calendar, bdc, dc),
       QuantLib::InterpolatedCurve<Interpolator>(optionTenors.size() + 1, interpolator),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -207,29 +235,29 @@ CapFloorTermVolCurve<Interpolator>::CapFloorTermVolCurve(
 }
 
 template <class Interpolator>
-QuantLib::Date CapFloorTermVolCurve<Interpolator>::maxDate() const {
+QuantLib::Date InterpolatedCapFloorTermVolCurve<Interpolator>::maxDate() const {
     calculate();
     return optionDates_.back();
 }
 
 template <class Interpolator>
-QuantLib::Rate CapFloorTermVolCurve<Interpolator>::minStrike() const {
+QuantLib::Rate InterpolatedCapFloorTermVolCurve<Interpolator>::minStrike() const {
     return QL_MIN_REAL;
 }
 
 template <class Interpolator>
-QuantLib::Rate CapFloorTermVolCurve<Interpolator>::maxStrike() const {
+QuantLib::Rate InterpolatedCapFloorTermVolCurve<Interpolator>::maxStrike() const {
     return QL_MAX_REAL;
 }
 
 template <class Interpolator>
-void CapFloorTermVolCurve<Interpolator>::update() {
+void InterpolatedCapFloorTermVolCurve<Interpolator>::update() {
     CapFloorTermVolatilityStructure::update();
     LazyObject::update();
 }
 
 template <class Interpolator>
-void CapFloorTermVolCurve<Interpolator>::performCalculations() const {
+void InterpolatedCapFloorTermVolCurve<Interpolator>::performCalculations() const {
     
     // Populate the InterpolatedCurve members
     // We make the time zero volatility equal to zero here. However, if flatFirstPeriod is set to true, there is no 
@@ -249,25 +277,25 @@ void CapFloorTermVolCurve<Interpolator>::performCalculations() const {
 }
 
 template <class Interpolator>
-const std::vector<QuantLib::Period>& CapFloorTermVolCurve<Interpolator>::optionTenors() const {
+std::vector<QuantLib::Period> InterpolatedCapFloorTermVolCurve<Interpolator>::optionTenors() const {
     calculate();
     return optionTenors_;
 }
 
 template <class Interpolator>
-const std::vector<QuantLib::Date>& CapFloorTermVolCurve<Interpolator>::optionDates() const {
+const std::vector<QuantLib::Date>& InterpolatedCapFloorTermVolCurve<Interpolator>::optionDates() const {
     calculate();
     return optionDates_;
 }
 
 template <class Interpolator>
-const std::vector<QuantLib::Time>& CapFloorTermVolCurve<Interpolator>::optionTimes() const {
+const std::vector<QuantLib::Time>& InterpolatedCapFloorTermVolCurve<Interpolator>::optionTimes() const {
     calculate();
     return optionTimes_;
 }
 
 template <class Interpolator>
-QuantLib::Volatility CapFloorTermVolCurve<Interpolator>::volatilityImpl(QuantLib::Time length, QuantLib::Rate) const {
+QuantLib::Volatility InterpolatedCapFloorTermVolCurve<Interpolator>::volatilityImpl(QuantLib::Time length, QuantLib::Rate) const {
     
     calculate();
 
@@ -278,7 +306,7 @@ QuantLib::Volatility CapFloorTermVolCurve<Interpolator>::volatilityImpl(QuantLib
 }
 
 template <class Interpolator>
-void CapFloorTermVolCurve<Interpolator>::checkInputs() const {
+void InterpolatedCapFloorTermVolCurve<Interpolator>::checkInputs() const {
     QL_REQUIRE(!optionTenors_.empty(), "The option tenor vector cannot be empty");
     QL_REQUIRE(nOptionTenors_ == volatilities_.size(), "Mismatch between number of option tenors (" << 
         nOptionTenors_ << ") and number of volatilities (" << volatilities_.size() << ")");
@@ -291,7 +319,7 @@ void CapFloorTermVolCurve<Interpolator>::checkInputs() const {
 }
 
 template <class Interpolator>
-void CapFloorTermVolCurve<Interpolator>::registerWithMarketData() {
+void InterpolatedCapFloorTermVolCurve<Interpolator>::registerWithMarketData() {
     for (QuantLib::Size i = 0; i < volatilities_.size(); ++i)
         registerWith(volatilities_[i]);
 }
