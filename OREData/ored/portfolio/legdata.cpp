@@ -1020,7 +1020,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // QuantLib CPILeg automatically adds a Notional Cashflow at maturity date on a CPI swap
     // If Notional Exchange set to false, remove the final cashflow.
     if (!data.notionalFinalExchange()) {
-        //QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
+        // QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
         boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
         // We do not need this check that the last coupon payment date matches the final CPI cash flow date, this is
         // identical by construction, see QuantLib::CPILeg or QuantExt::CPILeg.
@@ -1033,13 +1033,8 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
     // build naked option leg if required
     if (couponCapFloor && cpiLegData->nakedOption()) {
+        QL_FAIL("NakedOption not implemented yet for Capped/Floored CPI Legs");
         Leg tmpLeg = StrippedCappedFlooredCouponLeg(leg);
-        // fix for missing registration in ql 1.13
-        // for (auto const& t : tmpLeg) {
-        //     auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCoupon>(t);
-        //     if (s != nullptr)
-        //         s->registerWith(s->underlying());
-        // }
         leg = tmpLeg;
     }
 
