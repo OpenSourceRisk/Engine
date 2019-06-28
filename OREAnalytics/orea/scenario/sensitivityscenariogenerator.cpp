@@ -2160,7 +2160,7 @@ SensitivityScenarioGenerator::fxVolScenarioDescription(string ccypair, Size expi
     Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::FXVolatility, ccypair, index);
     std::ostringstream o;
-    if (data.shiftStrikes.size() == 0 ) {
+    if (data.shiftStrikes.size() == 0 || close_enough(data.shiftStrikes[strikeBucket], 1) ) { // moneyness
         o << data.shiftExpiries[expiryBucket] << "/ATM";
     } else {
         QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
