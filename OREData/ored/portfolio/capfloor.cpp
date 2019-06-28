@@ -218,8 +218,8 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, caps_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
                 composite->add(capfloor, sign * gearing);
-	        DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                                               << " sign*gearing=" << sign * gearing);
+	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
                 // if (!coupon) {
                 //   std::cout << "CapFloor CPI CashFlow " << std::endl
@@ -243,18 +243,18 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
                                                     conv, floors_[i], zeroIndex, observationLag, interpolation);
                 capfloor->setPricingEngine(capFloorBuilder->engine(underlyingIndex_));
                 composite->add(capfloor, sign * gearing);
-	        DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
-                                               << " sign*gearing=" << sign * gearing);
+	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
+                //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
             }
 
-            DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
+            // DLOG(id() << " CPI CapFloor Composite NPV " << composite->NPV());
         }
 
         // Wrap the QL instrument in a vanilla instrument
         Real multiplier = (parsePositionType(longShort_) == Position::Long ? 1.0 : -1.0);
         instrument_ = boost::make_shared<VanillaInstrument>(composite, multiplier);
-        DLOG(id() << " CPI CapFloor Instrument NPV " << instrument_->NPV());
+        // DLOG(id() << " CPI CapFloor Instrument NPV " << instrument_->NPV());
 
     } else if (legData_.legType() == "YY") {
         builder = engineFactory->builder("YYCapFloor");
