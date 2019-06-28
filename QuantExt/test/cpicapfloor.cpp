@@ -44,6 +44,7 @@
 #include <ql/types.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
 #include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -512,9 +513,9 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
             quotes[i][j] = Handle<Quote>(q);
         }
     }
-    boost::shared_ptr<InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
-        boost::make_shared<InterpolatedCPIVolatilitySurface<Bilinear> >(
-            optionTenors, strikes, quotes, hii.currentLink(), cpiVolSurface->settlementDays(),
+    boost::shared_ptr<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
+      boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
+            optionTenors, strikes, quotes, common.hii.currentLink(), cpiVolSurface->settlementDays(),
             cpiVolSurface->calendar(), cpiVolSurface->businessDayConvention(), cpiVolSurface->dayCounter(),
             cpiVolSurface->observationLag());
 
