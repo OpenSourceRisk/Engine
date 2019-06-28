@@ -29,11 +29,11 @@
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
 #include <qle/termstructures/capfloorhelper.hpp>
+#include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <qle/math/flatextrapolation.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -128,6 +128,10 @@ vector<bool> isMovingValues = list_of(true)(false);
 // Whether or not to try to add ATM values to the surface stripping
 vector<bool> addAtmValues = list_of(true)(false);
 
+// False to interpolate on cap floor term volatilities before bootstrapping
+// True to interpolate on optionlet volatilities.
+vector<bool> interpOnOptionletValues = list_of(true)(false);
+
 // The interpolation method on the cap floor term volatility surface
 vector<TermVolSurface::InterpolationMethod> vsInterpMethods = 
     list_of(TermVolSurface::BicubicSpline)(TermVolSurface::Bilinear);
@@ -161,7 +165,7 @@ string to_string(const InterpolationType& interpolationType) {
 template <class TI, class SI>
 Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     bool flatFirstPeriod, bool isMoving, TermVolSurface::InterpolationMethod vsInterpMethod,
-    bool withAtm) {
+    bool interpOnOptionlet, bool withAtm) {
 
     // Another instance of CommonVars - works but a bit inefficient
     CommonVars vars;
@@ -190,28 +194,67 @@ Handle<OptionletVolatilityStructure> createOvs(VolatilityType volatilityType,
     VolatilityType ovType = Normal;
     boost::shared_ptr<QuantExt::OptionletStripper> pwos = boost::make_shared<PiecewiseOptionletStripper<TI> >(
         cfts, vars.iborIndex, vars.testYieldCurves.discountEonia, vars.accuracy, flatFirstPeriod, 
-        volatilityType, displacement, ovType);
+        volatilityType, displacement, ovType, 0.0, interpOnOptionlet);
 
     // If true, we overlay ATM volatilities
+    vector<Handle<Quote> > atmVolquotes(vars.testVols.atmTenors.size());
     if (withAtm) {
         
         boost::shared_ptr<CapFloorTermVolCurve> atmVolCurve;
         
         if (volatilityType == Normal) {
+
+            for (Size i = 0; i < atmVolquotes.size(); ++i) {
+                atmVolquotes[i] = Handle<Quote>(boost::make_shared<SimpleQuote>(vars.testVols.nAtmVols[i]));
+            }
+
             if (isMoving) {
-                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays, vars.calendar, 
-                    vars.bdc, vars.testVols.atmTenors, vars.testVols.nAtmVols, vars.dayCounter);
+                if (vsInterpMethod == TermVolSurface::Bilinear) {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(vars.settlementDays,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                } else {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(vars.settlementDays,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                }
             } else {
-                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.referenceDate, vars.calendar,
-                    vars.bdc, vars.testVols.atmTenors, vars.testVols.nAtmVols, vars.dayCounter);
+                if (vsInterpMethod == TermVolSurface::Bilinear) {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(vars.referenceDate,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                } else {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(vars.referenceDate,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                }
             }
         } else {
+
+            for (Size i = 0; i < atmVolquotes.size(); ++i) {
+                atmVolquotes[i] = Handle<Quote>(boost::make_shared<SimpleQuote>(vars.testVols.slnAtmVols_1[i]));
+            }
+
             if (isMoving) {
-                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.settlementDays, vars.calendar,
-                    vars.bdc, vars.testVols.atmTenors, vars.testVols.slnAtmVols_1, vars.dayCounter);
+                if (vsInterpMethod == TermVolSurface::Bilinear) {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(vars.settlementDays,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                } else {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(vars.settlementDays,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                }
             } else {
-                atmVolCurve = boost::make_shared<CapFloorTermVolCurve>(vars.referenceDate, vars.calendar,
-                    vars.bdc, vars.testVols.atmTenors, vars.testVols.slnAtmVols_1, vars.dayCounter);
+                if (vsInterpMethod == TermVolSurface::Bilinear) {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(vars.referenceDate,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                } else {
+                    atmVolCurve = boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(vars.referenceDate,
+                        vars.calendar, vars.bdc, vars.testVols.atmTenors, atmVolquotes, vars.dayCounter,
+                        flatFirstPeriod);
+                }
             }
         }
         
@@ -351,8 +394,8 @@ BOOST_AUTO_TEST_SUITE(PiecewiseOptionletStripperTests)
 BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping, 
     bdata::make(volatilityTypes) * bdata::make(timeInterpolationTypes) * bdata::make(smileInterpolationTypes) * 
     bdata::make(flatFirstPeriodValues) * bdata::make(isMovingValues) * bdata::make(vsInterpMethods) * 
-    bdata::make(addAtmValues), volatilityType, timeInterp, smileInterp, flatFirstPeriod,
-    isMoving, vsInterpMethod, addAtm) {
+    bdata::make(interpOnOptionletValues) * bdata::make(addAtmValues), volatilityType, timeInterp, 
+    smileInterp, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm) {
 
     BOOST_TEST_MESSAGE("Testing piecewise optionlet stripping of cap floor surface");
 
@@ -363,6 +406,7 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     BOOST_TEST_MESSAGE("  Flat first period: " << boolalpha << flatFirstPeriod);
     BOOST_TEST_MESSAGE("  Floating reference date: " << boolalpha << isMoving);
     BOOST_TEST_MESSAGE("  Cap floor term interpolation: " << vsInterpMethod);
+    BOOST_TEST_MESSAGE("  Interpolate on optionlets: " << boolalpha << interpOnOptionlet);
     BOOST_TEST_MESSAGE("  Add in ATM curve: " << boolalpha << addAtm);
 
     // Create the piecewise optionlet stripper from the surface and wrap in an adapter
@@ -370,65 +414,65 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseOptionletSurfaceStripping,
     switch (timeInterp.which()) {
     case 0:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Linear, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Linear, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 3) {
-            ovs = createOvs<Linear, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Linear, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 4) {
-            ovs = createOvs<Linear, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Linear, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 1:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<BackwardFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<BackwardFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 3) {
-            ovs = createOvs<BackwardFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<BackwardFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 4) {
-            ovs = createOvs<BackwardFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<BackwardFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 2:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<LinearFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<LinearFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 3) {
-            ovs = createOvs<LinearFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<LinearFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 4) {
-            ovs = createOvs<LinearFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<LinearFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 3:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<Cubic, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Cubic, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<Cubic, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Cubic, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 3) {
-            ovs = createOvs<Cubic, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Cubic, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 4) {
-            ovs = createOvs<Cubic, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<Cubic, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
         break;
     case 4:
         if (smileInterp.which() == 0) {
-            ovs = createOvs<CubicFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<CubicFlat, Linear>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 2) {
-            ovs = createOvs<CubicFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<CubicFlat, LinearFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 3) {
-            ovs = createOvs<CubicFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<CubicFlat, Cubic>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else if (smileInterp.which() == 4) {
-            ovs = createOvs<CubicFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, addAtm);
+            ovs = createOvs<CubicFlat, CubicFlat>(volatilityType, flatFirstPeriod, isMoving, vsInterpMethod, interpOnOptionlet, addAtm);
         } else {
             BOOST_FAIL("Unexpected smile interpolation type");
         }
@@ -527,7 +571,7 @@ BOOST_FIXTURE_TEST_CASE(testExtrapolation, CommonVars) {
 
     // Pick one configuration and check that extrapolation works as expected
     Handle<OptionletVolatilityStructure> ovs = createOvs<LinearFlat, LinearFlat>(
-        Normal, true, false, TermVolSurface::Bilinear, false);
+        Normal, true, false, TermVolSurface::Bilinear, true, false);
 
     // Boundaries
     Date maxDate = ovs->maxDate();

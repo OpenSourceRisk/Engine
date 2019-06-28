@@ -27,13 +27,13 @@
 #include <qle/termstructures/optionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/spreadedoptionletvolatility.hpp>
+#include <qle/termstructures/capfloortermvolcurve.hpp>
 #include <ql/instruments/capfloor.hpp>
 #include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/solvers1d/brent.hpp>
 #include <ql/pricingengines/capfloor/bacheliercapfloorengine.hpp>
 #include <ql/pricingengines/capfloor/blackcapfloorengine.hpp>
 #include <ql/quotes/simplequote.hpp>
-#include <ql/termstructures/volatility/capfloor/capfloortermvolcurve.hpp>
 
 namespace QuantExt {
 
@@ -48,7 +48,7 @@ public:
     //! Constructor
     OptionletStripperWithAtm(
         const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
-        const QuantLib::Handle<QuantLib::CapFloorTermVolCurve>& atmCurve,
+        const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
         const QuantLib::Handle<QuantLib::YieldTermStructure>& discount = QuantLib::Handle<QuantLib::YieldTermStructure>(),
         const QuantLib::VolatilityType atmVolatilityType = QuantLib::ShiftedLognormal,
         QuantLib::Real atmDisplacement = 0.0,
@@ -95,7 +95,7 @@ private:
     boost::shared_ptr<QuantExt::OptionletStripper> osBase_;
 
     //! ATM volatility curve
-    QuantLib::Handle<QuantLib::CapFloorTermVolCurve> atmCurve_;
+    QuantLib::Handle<CapFloorTermVolCurve> atmCurve_;
 
     //! ATM volatility type
     QuantLib::VolatilityType atmVolatilityType_;
@@ -131,7 +131,7 @@ private:
 template <class TimeInterpolator, class SmileInterpolator>
 OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::OptionletStripperWithAtm(
     const boost::shared_ptr<QuantExt::OptionletStripper>& osBase,
-    const QuantLib::Handle<QuantLib::CapFloorTermVolCurve>& atmCurve,
+    const QuantLib::Handle<CapFloorTermVolCurve>& atmCurve,
     const QuantLib::Handle<QuantLib::YieldTermStructure>& discount,
     const QuantLib::VolatilityType atmVolatilityType,
     QuantLib::Real atmDisplacement,
@@ -208,7 +208,11 @@ void OptionletStripperWithAtm<TimeInterpolator, SmileInterpolator>::performCalcu
 
     // ATM curve tenors
     const vector<Period>& atmTenors = atmCurve_->optionTenors();
-    const vector<Time>& atmTimes = atmCurve_->optionTimes();
+    vector<Time> atmTimes(atmTenors.size());
+    for (Size i = 0; i < atmTenors.size(); ++i) {
+        Date d = atmCurve_->optionDateFromTenor(atmTenors[i]);
+        atmTimes[i] = atmCurve_->timeFromReference(d);
+    }
 
     // discount curve
     const Handle<YieldTermStructure>& discountCurve =

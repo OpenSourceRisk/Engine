@@ -48,6 +48,7 @@ public:
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+        bool interpOnOptionlets = true,
         const Interpolator& i = Interpolator(),
         const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
@@ -77,6 +78,9 @@ private:
     //! The applicable shift if the underlying cap floor matrix has shifted lognormal volatility
     QuantLib::Real capFloorVolDisplacement_;
 
+    //! True to interpolate on optionlet volatilities, false to interpolate on cap floor term volatilities
+    bool interpOnOptionlets_;
+
     //! The interpolator
     Interpolator interpolator_;
 
@@ -86,11 +90,11 @@ private:
     //! A one-dimensional optionlet curve for each strike in the underlying cap floor matrix
     mutable std::vector<boost::shared_ptr<optionlet_curve> > strikeCurves_;
 
-    //! Store the vector of helpers for each strike column
+    //! Store the vector of helpers for each strike column. The first dimension is strike and second is option tenor.
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
     std::vector<std::vector<boost::shared_ptr<helper> > > helpers_;
 
-    //! Store the cap floor surface quotes
+    //! Store the cap floor surface quotes. The first dimension is option tenor and second is strike.
     std::vector<std::vector<boost::shared_ptr<QuantLib::SimpleQuote> > > quotes_;
 };
 
@@ -105,14 +109,15 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
+    bool interpOnOptionlets,
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
     : OptionletStripper(capFloorSurface, index, discount,
         optionletVolType ? *optionletVolType : capFloorVolType,
         optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
       accuracy_(accuracy), flatFirstPeriod_(flatFirstPeriod), capFloorVolType_(capFloorVolType),
-      capFloorVolDisplacement_(capFloorVolDisplacement), interpolator_(i), bootstrap_(bootstrap),
-      strikeCurves_(nStrikes_), helpers_(nStrikes_), quotes_(termVolSurface_->optionTenors().size()) {
+      capFloorVolDisplacement_(capFloorVolDisplacement), interpOnOptionlets_(interpOnOptionlets), 
+      interpolator_(i), bootstrap_(bootstrap), strikeCurves_(nStrikes_), helpers_(nStrikes_) {
 
     // Readability
     // typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
@@ -124,9 +129,13 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
     using std::vector;
 
     vector<Rate> strikes = termVolSurface_->strikes();
-    vector<Period> tenors = termVolSurface_->optionTenors();
+
+    // If we interpolate on term volatility surface first and then bootstrap, we have a cap floor helper for every
+    // optionlet maturity.
+    vector<Period> tenors = interpOnOptionlets_ ? termVolSurface_->optionTenors() : capFloorLengths_;
+    quotes_.resize(tenors.size());
     
-    // Initialise a strike curve for each strike column 
+    // Initialise the quotes and helpers
     for (Size j = 0; j < strikes.size(); j++) {
         for (Size i = 0; i < tenors.size(); i++) {
             quotes_[i].push_back(boost::make_shared<SimpleQuote>(termVolSurface_->volatility(tenors[i], strikes[j])));
@@ -135,7 +144,6 @@ PiecewiseOptionletStripper<Interpolator, Bootstrap>::PiecewiseOptionletStripper(
                 capFloorVolType_, capFloorVolDisplacement_));
         }
     }
-
 }
 
 template <class Interpolator, template <class> class Bootstrap>
@@ -152,7 +160,7 @@ inline void PiecewiseOptionletStripper<Interpolator, Bootstrap>::performCalculat
 
     // Readability
     vector<Rate> strikes = termVolSurface_->strikes();
-    vector<Period> tenors = termVolSurface_->optionTenors();
+    vector<Period> tenors = interpOnOptionlets_ ? termVolSurface_->optionTenors() : capFloorLengths_;
 
     // Update the quotes from the cap floor term volatility surface
     for (Size i = 0; i < tenors.size(); i++) {

@@ -189,14 +189,15 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
             
             // Create the ATM cap floor term volatility curve
             vector<Period> atmTenors;
-            vector<Volatility> atmVols;
+            vector<Handle<Quote>> atmVols;
             for (const auto& kv : atmVolCurve) {
                 atmTenors.push_back(kv.first);
-                atmVols.push_back(kv.second);
+                atmVols.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(kv.second)));
             }
-            Handle<CapFloorTermVolCurve> atmCapVol = Handle<CapFloorTermVolCurve>(
-                boost::make_shared<CapFloorTermVolCurve>(
-                    0, config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter()));
+
+            Handle<QuantExt::CapFloorTermVolCurve> atmCapVol = Handle<QuantExt::CapFloorTermVolCurve>(
+                boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(0,
+                    config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter()));
 
             // Incorporate the ATM volatilities in the already stripped optionlet surface
             boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper;
