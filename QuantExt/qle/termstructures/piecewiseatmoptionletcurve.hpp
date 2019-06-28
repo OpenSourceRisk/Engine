@@ -49,6 +49,7 @@ public:
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+        bool interpOnOptionlets = true,
         const Interpolator& i = Interpolator(),
         const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
@@ -63,6 +64,7 @@ public:
         const QuantLib::Real capFloorVolDisplacement = 0.0,
         const boost::optional<QuantLib::VolatilityType> optionletVolType = boost::none,
         const boost::optional<QuantLib::Real> optionletVolDisplacement = boost::none,
+        bool interpOnOptionlets = true,
         const Interpolator& i = Interpolator(),
         const Bootstrap<optionlet_curve>& bootstrap = Bootstrap<optionlet_curve>());
 
@@ -130,6 +132,9 @@ private:
     //! This optionlet structure's shift if its volatility type is shifted lognormal
     QuantLib::Real displacement_;
 
+    //! True to interpolate on optionlet volatilities, false to interpolate on cap floor term volatilities
+    bool interpOnOptionlets_;
+
     //! The interpolator
     Interpolator interpolator_;
 
@@ -138,6 +143,9 @@ private:
 
     //! The stripped optionlet curve
     boost::shared_ptr<optionlet_curve> curve_;
+
+    //! Store the helper tenors
+    std::vector<QuantLib::Period> tenors_;
 
     //! Store the vector of ATM cap floor helpers that are used in the bootstrap
     typedef QuantLib::BootstrapHelper<QuantLib::OptionletVolatilityStructure> helper;
@@ -163,6 +171,7 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
+    bool interpOnOptionlets,
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
     : QuantLib::OptionletVolatilityStructure(settlementDays, cftvc->calendar(), cftvc->businessDayConvention(), 
@@ -170,8 +179,8 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
       capFloorVolType_(capFloorVolType), capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      interpolator_(i), bootstrap_(bootstrap), helpers_(cftvc_->optionTenors().size()), 
-      quotes_(cftvc_->optionTenors().size()) {
+      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap), 
+      tenors_(cftvc_->optionTenors()), helpers_(tenors_.size()), quotes_(tenors_.size()) {
 
     initialise(index, discount);
 
@@ -192,6 +201,7 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
     const QuantLib::Real capFloorVolDisplacement,
     const boost::optional<QuantLib::VolatilityType> optionletVolType,
     const boost::optional<QuantLib::Real> optionletVolDisplacement,
+    bool interpOnOptionlets,
     const Interpolator& i,
     const Bootstrap<optionlet_curve>& bootstrap)
     : QuantLib::OptionletVolatilityStructure(referenceDate, cftvc->calendar(), cftvc->businessDayConvention(),
@@ -199,8 +209,8 @@ PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::Piecew
       capFloorVolType_(capFloorVolType), capFloorVolDisplacement_(capFloorVolDisplacement),
       volatilityType_(optionletVolType ? *optionletVolType : capFloorVolType),
       displacement_(optionletVolDisplacement ? *optionletVolDisplacement : 0.0),
-      interpolator_(i), bootstrap_(bootstrap), helpers_(cftvc_->optionTenors().size()), 
-      quotes_(cftvc_->optionTenors().size()) {
+      interpOnOptionlets_(interpOnOptionlets), interpolator_(i), bootstrap_(bootstrap), 
+      tenors_(cftvc_->optionTenors()), helpers_(tenors_.size()), quotes_(tenors_.size()) {
 
     initialise(index, discount);
 
@@ -222,8 +232,8 @@ template <class Interpolator, class TermVolInterpolator, template <class> class 
 void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::performCalculations() const {
 
     // Update the quotes from the cap floor term volatility surface
-    for (QuantLib::Size i = 0; i < cftvc_->optionTenors().size(); i++) {
-        quotes_[i]->setValue(cftvc_->volatility(cftvc_->optionTenors()[i], 0.01));
+    for (QuantLib::Size i = 0; i < tenors_.size(); i++) {
+        quotes_[i]->setValue(cftvc_->volatility(tenors_[i], 0.01));
     }
 }
 
@@ -298,11 +308,36 @@ void PiecewiseAtmOptionletCurve<Interpolator, TermVolInterpolator, Bootstrap>::i
         effectiveDate = cal.advance(ref, index->fixingDays() * Days);
     }
 
+    // Number of tenors, helpers and quotes depends on whether we are interpolating on optionlet volatilities or 
+    // cap floor term volatilities
+    if (!interpOnOptionlets_) {
+        
+        // We are interpolating on the cap floor term volatilities
+        Period indexTenor = index->tenor();
+        Period maxCapFloorTenor = tenors_.back();
+
+        // Add tenor of first cap floor - 2 x index tenor since first optionlet is excluded
+        tenors_.clear();
+        tenors_.push_back(indexTenor + indexTenor);
+        QL_REQUIRE(maxCapFloorTenor >= tenors_.back(), "First cap floor tenor, " << tenors_.back() <<
+            ", is greater than cap floor term vol surface's max tenor, " << maxCapFloorTenor);
+
+        // Add all term cap floor instruments up to max tenor of term vol surface
+        Period nextTenor = tenors_.back() + indexTenor;
+        while (nextTenor <= maxCapFloorTenor) {
+            tenors_.push_back(nextTenor);
+            nextTenor += indexTenor;
+        }
+
+        // Resize the helpers and quotes vectors
+        quotes_.resize(tenors_.size());
+        helpers_.resize(tenors_.size());
+    }
+
     // Initialise the quotes and helpers
-    vector<Period> tenors = cftvc_->optionTenors();
-    for (Size i = 0; i < tenors.size(); i++) {
-        quotes_[i] = boost::make_shared<SimpleQuote>(cftvc_->volatility(tenors[i], 0.01));
-        helpers_[i] = boost::make_shared<CapFloorHelper>(CapFloorHelper::Cap, tenors[i], Null<Real>(),
+    for (Size i = 0; i < tenors_.size(); i++) {
+        quotes_[i] = boost::make_shared<SimpleQuote>(cftvc_->volatility(tenors_[i], 0.01));
+        helpers_[i] = boost::make_shared<CapFloorHelper>(CapFloorHelper::Cap, tenors_[i], Null<Real>(),
             Handle<Quote>(quotes_[i]), index, discount, this->moving_, effectiveDate, CapFloorHelper::Volatility,
             capFloorVolType_, capFloorVolDisplacement_);
     }
