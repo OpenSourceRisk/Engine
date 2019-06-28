@@ -43,7 +43,7 @@ public:
     //! Optionlet stripper that modifies the stripped optionlets from \p optionletStripper by adding optionlet
     //! volatilities stripped from an ATM volatility curve \p atmCapFloorTermVolCurve
     OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
-                       const Handle<QuantExt::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                       const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                        const Handle<YieldTermStructure>& discount = Handle<YieldTermStructure>(),
                        const VolatilityType type = ShiftedLognormal, const Real displacement = 0.0);
 
@@ -73,7 +73,7 @@ private:
     };
 
     const boost::shared_ptr<QuantExt::OptionletStripper> stripper_;
-    const Handle<QuantExt::CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
+    const Handle<QuantLib::CapFloorTermVolCurve> atmCapFloorTermVolCurve_;
     DayCounter dc_;
     Size nOptionExpiries_;
     mutable vector<Rate> atmCapFloorStrikes_;

@@ -30,7 +30,7 @@
 namespace QuantExt {
 
 OptionletStripper2::OptionletStripper2(const boost::shared_ptr<QuantExt::OptionletStripper>& optionletStripper,
-                                       const Handle<QuantExt::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
+                                       const Handle<QuantLib::CapFloorTermVolCurve>& atmCapFloorTermVolCurve,
                                        const Handle<YieldTermStructure>& discount,
                                        const VolatilityType type, const Real displacement)
     : OptionletStripper(optionletStripper->termVolSurface(), optionletStripper->iborIndex(),
