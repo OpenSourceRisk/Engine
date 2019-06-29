@@ -12,7 +12,13 @@ elements:
   expressed in decimal form, e.g. 0.05 is a rate of 5\%.
 \item Compounding: The method of compounding applied to the rate.
 
-Allowable values: 'Simple' i.e. (1 + r * t), or 'Compounded' i.e. (1 + r)\^t
+Allowable values: 'Simple' i.e. $(1 + r * t)$, or 'Compounded' i.e. $(1 + r)^t$
+
+\item SubtractNotional: Optional boolean to decide whether the notional is
+  subtracted from the compounding factor,  i.e. $(1 + r * t)  - 1$
+  respectively  $(1 + r)^t - 1$, or not, i.e. $(1 + r * t)$  respectively  $(1 + r)^t$
+
+Allowable values: true (Y) or false (N), default is false
 
 \end{itemize}
 
@@ -47,6 +53,7 @@ Allowable values: 'Simple' i.e. (1 + r * t), or 'Compounded' i.e. (1 + r)\^t
                 <Rate>0.02</Rate>
             </Rates>
             <Compounding>Simple</Compounding>
+            <SubtractNotional>false</SubtractNotional>
         </ZeroCouponFixedLegData>
       </LegData>
 \end{minted}
