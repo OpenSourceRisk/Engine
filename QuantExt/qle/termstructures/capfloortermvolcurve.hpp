@@ -79,7 +79,6 @@ public:
         \param optionTenors    The cap floor tenors. The first tenor must be positive.
         \param volatilities    The cap floor volatility quotes.
         \param dayCounter      The day counter used to convert from dates to times.
-        \param interpolator    The interpolation object used to interpolate between the provided \p optionTenors.
         \param flatFirstPeriod Set to \c true to use the first element of \p volatilities between time zero and the 
                                first element of \p optionTenors. If this is \c false, the volatility at time zero is 
                                set to zero and interpolation between time and the first element of \p optionTenors is 
@@ -105,7 +104,6 @@ public:
         \param optionTenors    The cap floor tenors. The first tenor must be positive.
         \param volatilities    The cap floor volatility quotes.
         \param dayCounter      The day counter used to convert from dates to times.
-        \param interpolator    The interpolation object used to interpolate between the provided \p optionTenors.
         \param flatFirstPeriod Set to \c true to use the first element of \p volatilities between time zero and the
                                first element of \p optionTenors. If this is \c false, the volatility at time zero is
                                set to zero and interpolation between time and the first element of \p optionTenors is
