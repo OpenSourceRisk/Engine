@@ -362,7 +362,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(optionletStripper);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionletStripper);
             } else {
                 optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(cftvs, iborIndex,
                     discountCurve, config.accuracy(), flatFirstPeriod, volType,
@@ -371,7 +371,7 @@ void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfi
                     optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
                         optionletStripper, cftvc, discountCurve, volType, shift);
                 }
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(optionletStripper);
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(optionletStripper);
             }
         } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
             if (config.flatExtrapolation()) {
