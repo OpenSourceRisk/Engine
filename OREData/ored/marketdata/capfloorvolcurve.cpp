@@ -26,6 +26,7 @@
 #include <qle/termstructures/datedstrippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripper1.hpp>
 #include <qle/termstructures/optionletstripper2.hpp>
+#include <qle/termstructures/piecewiseatmoptionletcurve.hpp>
 #include <qle/termstructures/piecewiseoptionletstripper.hpp>
 #include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/optionletstripperwithatm.hpp>
@@ -39,200 +40,55 @@ using namespace QuantLib;
 using namespace QuantExt;
 using namespace std;
 
+typedef ore::data::CapFloorVolatilityCurveConfig::VolatilityType CfgVolType;
+typedef ore::data::CapFloorVolatilityCurveConfig::Type CfgType;
+typedef QuantExt::CapFloorTermVolSurface::InterpolationMethod CftvsInterp;
+
 namespace ore {
 namespace data {
 
-CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, const Loader& loader,
-                                   const CurveConfigurations& curveConfigs, boost::shared_ptr<IborIndex> iborIndex,
-                                   Handle<YieldTermStructure> discountCurve) {
+// Currently, only two possibilities for variable InterpolateOn: TermVolatilities and OptionletVolatilities
+// Here, we convert the value to a bool for use in building the structures. May need to broaden if we add more.
+bool interpOnOpt(CapFloorVolatilityCurveConfig& config) {
+    QL_REQUIRE(config.interpolateOn() == "TermVolatilities" || config.interpolateOn() == "OptionletVolatilities",
+        "Expected InterpolateOn to be one of TermVolatilities or OptionletVolatilities");
+    return config.interpolateOn() == "OptionletVolatilities";
+}
+
+CapFloorVolCurve::CapFloorVolCurve(
+    const Date& asof,
+    const CapFloorVolatilityCurveSpec& spec,
+    const Loader& loader,
+    const CurveConfigurations& curveConfigs,
+    boost::shared_ptr<IborIndex> iborIndex,
+    Handle<YieldTermStructure> discountCurve) 
+    : spec_(spec) {
+    
     try {
-
+        // The configuration
         const boost::shared_ptr<CapFloorVolatilityCurveConfig>& config =
-            curveConfigs.capFloorVolCurveConfig(spec.curveConfigID());
+            curveConfigs.capFloorVolCurveConfig(spec_.curveConfigID());
 
-        // Volatility type
-        MarketDatum::QuoteType volatilityType;
-        VolatilityType quoteVolatilityType;
-
-        switch (config->volatilityType()) {
-        case CapFloorVolatilityCurveConfig::VolatilityType::Lognormal:
-            volatilityType = MarketDatum::QuoteType::RATE_LNVOL;
-            quoteVolatilityType = ShiftedLognormal;
-            break;
-        case CapFloorVolatilityCurveConfig::VolatilityType::Normal:
-            volatilityType = MarketDatum::QuoteType::RATE_NVOL;
-            quoteVolatilityType = Normal;
-            break;
-        case CapFloorVolatilityCurveConfig::VolatilityType::ShiftedLognormal:
-            volatilityType = MarketDatum::QuoteType::RATE_SLNVOL;
-            quoteVolatilityType = ShiftedLognormal;
-            break;
-        default:
-            QL_FAIL("unexpected volatility type");
-        }
-
-        QuantExt::CapFloorTermVolSurface::InterpolationMethod interpolationMethod;
-        if (config->interpolationMethod() == "BicubicSpline")
-            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::BicubicSpline;
-        else if (config->interpolationMethod() == "Bilinear")
-            interpolationMethod = QuantExt::CapFloorTermVolSurface::InterpolationMethod::Bilinear;
-        else {
-            QL_FAIL("invalid InterpolationMethod " << config->interpolationMethod());
-        }
-
-        // Read in quotes matrix. If we hit any ATM quotes that match one of the tenors, store those also.
-        vector<Period> tenors = parseVectorOfValues<Period>(config->tenors(), &parsePeriod);
-        vector<Real> strikes = parseVectorOfValues<Real>(config->strikes(), &parseReal);
-        QL_REQUIRE(!strikes.empty(), "Strikes should not be empty - expect a cap matrix");
-        Matrix vols(tenors.size(), strikes.size());
-        map<Period, Volatility> atmVolCurve;
-        vector<vector<bool>> found(tenors.size(), vector<bool>(strikes.size()));
-        Size remainingQuotes = tenors.size() * strikes.size();
-        Size quotesRead = 0;
-
-        // We take the first capfloor shift quote that we find in the file matching the
-        // currency and index tenor
-        bool isSln = volatilityType == MarketDatum::QuoteType::RATE_SLNVOL;
-        bool haveShiftQuote = false;
+        // Read the shift early if the configured volatility type is shifted lognormal
         Real shift = 0.0;
-
-        for (auto& md : loader.loadQuotes(asof)) {
-            if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::CAPFLOOR) {
-
-                boost::shared_ptr<CapFloorQuote> q = boost::dynamic_pointer_cast<CapFloorQuote>(md);
-                boost::shared_ptr<CapFloorShiftQuote> qs = boost::dynamic_pointer_cast<CapFloorShiftQuote>(md);
-
-                if (q != NULL && q->ccy() == spec.ccy() && q->underlying() == iborIndex->tenor() &&
-                    q->quoteType() == volatilityType) {
-
-                    quotesRead++;
-
-                    if (!q->atm()) {
-                        Size i = std::find(tenors.begin(), tenors.end(), q->term()) - tenors.begin();
-                        Size j = std::find_if(strikes.begin(), strikes.end(),
-                            [&q](const double& s) { return close_enough(s, q->strike()); }) -
-                            strikes.begin();
-
-                        if (i < tenors.size() && j < strikes.size()) {
-                            vols[i][j] = q->quote()->value();
-
-                            if (!found[i][j]) {
-                                found[i][j] = true;
-                                --remainingQuotes;
-                            }
-                        }
-                    } else if (config->includeAtm()) {
-                        // This forces us to read all cap/floor quotes
-                        atmVolCurve.emplace(q->term(), q->quote()->value());
-                    }
-                } else if (isSln && !haveShiftQuote && qs && qs->ccy() == spec.ccy() &&
-                    qs->indexTenor() == iborIndex->tenor() && qs->quoteType() == MarketDatum::QuoteType::SHIFT) {
-                    // Shift quote for shifted lognormal capfloor volatility
-                    shift = qs->quote()->value();
-                    haveShiftQuote = true;
-                }
-            }
+        if (config->volatilityType() == CfgVolType::ShiftedLognormal) {
+            shift = shiftQuote(asof, *config, loader);
         }
 
-        LOG("CapFloorVolCurve: read " << quotesRead << " vols");
-
-        // Check that we have all the data we need
-        if (remainingQuotes != 0) {
-            ostringstream m;
-            m << "Not all quotes found for spec " << spec << endl;
-            if (remainingQuotes != 0) {
-                m << "Found vol data (*) and missing data (.):" << std::endl;
-                for (Size i = 0; i < tenors.size(); ++i) {
-                    for (Size j = 0; j < strikes.size(); ++j) {
-                        m << (found[i][j] ? "*" : ".");
-                    }
-                    if (i < tenors.size() - 1)
-                        m << endl;
-                }
-            }
-            DLOGGERSTREAM << m.str() << endl;
-            QL_FAIL("could not build cap/floor vol curve");
-        }
-
-        // Non-ATM cap/floor volatility surface
-        boost::shared_ptr<QuantExt::CapFloorTermVolSurface> capVol =
-            boost::make_shared<QuantExt::CapFloorTermVolSurface>(0, config->calendar(), config->businessDayConvention(),
-                tenors, strikes, vols, config->dayCounter(),
-                interpolationMethod);
-
-        // Strip the optionlet volatilities
-        boost::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
-        if (config->interpolationMethod() == "BicubicSpline") {
-            if (config->flatExtrapolation()) {
-                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(capVol, iborIndex, discountCurve);
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(asof, optionletStripper);
-            } else {
-                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(capVol, iborIndex, discountCurve);
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(asof, optionletStripper);
-            }
-            
-        } else if (config->interpolationMethod() == "Bilinear") {
-            if (config->flatExtrapolation()) {
-                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(capVol, iborIndex, discountCurve);
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(asof, optionletStripper);
-            } else {
-                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(capVol, iborIndex, discountCurve);
-                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(asof, optionletStripper);
-            }
+        // There are three possible cap floor configurations
+        if (config->type() == CfgType::Atm) {
+            atmOptCurve(asof, *config, loader, iborIndex, discountCurve, shift);
+        } else if (config->type() == CfgType::Surface || config->type() == CfgType::SurfaceWithAtm) {
+            optSurface(asof, *config, loader, iborIndex, discountCurve, shift);
         } else {
-            QL_FAIL("Invalid InterpolationMethod " << config->interpolationMethod());
+            QL_FAIL("Unexpected type (" << static_cast<int>(config->type()) <<
+                ") for cap floor config " << config->curveID());
         }
+
+        // Turn on or off extrapolation
         capletVol_->enableExtrapolation(config->extrapolate());
 
-        // If given, add the ATM cap/floor volatility curve
-        if (!atmVolCurve.empty()) {
-            
-            // Create the ATM cap floor term volatility curve
-            vector<Period> atmTenors;
-            vector<Handle<Quote>> atmVols;
-            for (const auto& kv : atmVolCurve) {
-                atmTenors.push_back(kv.first);
-                atmVols.push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(kv.second)));
-            }
-
-            Handle<QuantExt::CapFloorTermVolCurve> atmCapVol = Handle<QuantExt::CapFloorTermVolCurve>(
-                boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(0,
-                    config->calendar(), config->businessDayConvention(), atmTenors, atmVols, config->dayCounter()));
-
-            // Incorporate the ATM volatilities in the already stripped optionlet surface
-            boost::shared_ptr<QuantExt::OptionletStripper> atmOptionletStripper;
-            if (config->interpolationMethod() == "BicubicSpline") {
-                if (config->flatExtrapolation()) {
-                    atmOptionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
-                        optionletStripper, atmCapVol, discountCurve, quoteVolatilityType, shift);
-                    capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(
-                        asof, atmOptionletStripper);
-                } else {
-                    atmOptionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
-                        optionletStripper, atmCapVol, discountCurve, quoteVolatilityType, shift);
-                    capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(
-                        asof, atmOptionletStripper);
-                }
-
-            } else if (config->interpolationMethod() == "Bilinear") {
-                if (config->flatExtrapolation()) {
-                    atmOptionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
-                        optionletStripper, atmCapVol, discountCurve, quoteVolatilityType, shift);
-                    capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(
-                        asof, atmOptionletStripper);
-                } else {
-                    atmOptionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
-                        optionletStripper, atmCapVol, discountCurve, quoteVolatilityType, shift);
-                    capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(
-                        asof, atmOptionletStripper);
-                }
-            } else {
-                QL_FAIL("Invalid InterpolationMethod " << config->interpolationMethod());
-            }
-            capletVol_->enableExtrapolation(config->extrapolate());
-        }
-
-    } catch (std::exception& e) {
+    } catch (exception& e) {
         QL_FAIL("cap/floor vol curve building failed :" << e.what());
     } catch (...) {
         QL_FAIL("cap/floor vol curve building failed: unknown error");
@@ -241,5 +97,430 @@ CapFloorVolCurve::CapFloorVolCurve(Date asof, CapFloorVolatilityCurveSpec spec, 
     // force bootstrap so that errors are thrown during the build, not later
     capletVol_->volatility(QL_EPSILON, capletVol_->minStrike());
 }
-} // namespace data
-} // namespace ore
+
+void CapFloorVolCurve::atmOptCurve(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+    boost::shared_ptr<IborIndex> iborIndex, Handle<YieldTermStructure> discountCurve, Real shift) {
+
+    // Get the ATM cap floor term vol curve
+    boost::shared_ptr<QuantExt::CapFloorTermVolCurve> cftvc = atmCurve(asof, config, loader);
+
+    // Hardcode some values. Can add them to the CapFloorVolatilityCurveConfig later if needed.
+    bool flatFirstPeriod = true;
+    VolatilityType optVolType = Normal;
+    Real optDisplacement = 0.0;
+
+    // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
+    bool onOpt = interpOnOpt(config);
+    if (onOpt) {
+        // This is not pretty but can't think of a better way (with template functions and or classes)
+        if (config.timeInterpolation() == "Linear") {
+            capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<Linear>>(
+                config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+        } else if (config.timeInterpolation() == "LinearFlat") {
+            capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat>>(
+                config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+        } else if (config.timeInterpolation() == "BackwardFlat") {
+            capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<BackwardFlat>>(
+                config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+        } else if (config.timeInterpolation() == "Cubic") {
+            capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic>>(
+                config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+        } else if (config.timeInterpolation() == "CubicFlat") {
+            capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat>>(
+                config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+        } else {
+            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected time interpolation " <<
+                config.timeInterpolation());
+        }
+    } else {
+        // Legacy method where we interpolate on the term volatilities.
+        // We don't need time interpolation in this instance - we just use the term volatility interpolation.
+        if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
+            if (config.flatExtrapolation()) {
+                capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<CubicFlat>>(
+                    config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+            } else {
+                capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<Cubic>>(
+                    config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+            }
+        } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
+            if (config.flatExtrapolation()) {
+                capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat>>(
+                    config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+            } else {
+                capletVol_ = boost::make_shared<PiecewiseAtmOptionletCurve<Linear>>(
+                    config.settleDays(), cftvc, iborIndex, discountCurve, config.accuracy(), flatFirstPeriod,
+                    volatilityType(config.volatilityType()), shift, optVolType, optDisplacement, onOpt);
+            }
+        } else {
+            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method " <<
+                static_cast<int>(config.interpolationMethod()));
+        }
+    }
+}
+
+void CapFloorVolCurve::optSurface(const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader,
+    boost::shared_ptr<IborIndex> iborIndex, Handle<YieldTermStructure> discountCurve, Real shift) {
+
+    // Get the cap floor term vol surface
+    boost::shared_ptr<QuantExt::CapFloorTermVolSurface> cftvs = capSurface(asof, config, loader);
+
+    // Get the ATM cap floor term vol curve if we are including an ATM curve
+    bool includeAtm = config.includeAtm();
+    Handle<QuantExt::CapFloorTermVolCurve> cftvc;
+    if (includeAtm) {
+        cftvc = Handle<QuantExt::CapFloorTermVolCurve>(atmCurve(asof, config, loader));
+    }
+
+    // Hardcode some values. Can add them to the CapFloorVolatilityCurveConfig later if needed.
+    bool flatFirstPeriod = true;
+    VolatilityType optVolType = Normal;
+    Real optDisplacement = 0.0;
+
+    // On optionlets is the newly added interpolation approach whereas on term volatilities is legacy
+    boost::shared_ptr<QuantExt::OptionletStripper> optionletStripper;
+    VolatilityType volType = volatilityType(config.volatilityType());
+    bool onOpt = interpOnOpt(config);
+    if (onOpt) {
+        // This is not pretty but can't think of a better way (with template functions and or classes)
+        if (config.timeInterpolation() == "Linear") {
+            optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(cftvs, iborIndex,
+                discountCurve, config.accuracy(), flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt);
+            if (config.strikeInterpolation() == "Linear") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "LinearFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, LinearFlat>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "Cubic") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Cubic>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "CubicFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, CubicFlat>>(optionletStripper);
+            } else {
+                QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation " <<
+                    config.strikeInterpolation());
+            }
+        } else if (config.timeInterpolation() == "LinearFlat") {
+            optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(cftvs, iborIndex,
+                discountCurve, config.accuracy(), flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt);
+            if (config.strikeInterpolation() == "Linear") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Linear>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "LinearFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "Cubic") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, Cubic>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "CubicFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, CubicFlat>>(optionletStripper);
+            } else {
+                QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation " <<
+                    config.strikeInterpolation());
+            }
+        } else if (config.timeInterpolation() == "BackwardFlat") {
+            optionletStripper = boost::make_shared<PiecewiseOptionletStripper<BackwardFlat>>(cftvs, iborIndex,
+                discountCurve, config.accuracy(), flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt);
+            if (config.strikeInterpolation() == "Linear") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Linear>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "LinearFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, LinearFlat>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "Cubic") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, Cubic>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "CubicFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<BackwardFlat, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<BackwardFlat, CubicFlat>>(optionletStripper);
+            } else {
+                QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation " <<
+                    config.strikeInterpolation());
+            }
+        } else if (config.timeInterpolation() == "Cubic") {
+            optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(cftvs, iborIndex,
+                discountCurve, config.accuracy(), flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt);
+            if (config.strikeInterpolation() == "Linear") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Linear>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "LinearFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, LinearFlat>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "Cubic") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "CubicFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, CubicFlat>>(optionletStripper);
+            } else {
+                QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation " <<
+                    config.strikeInterpolation());
+            }
+        } else if (config.timeInterpolation() == "CubicFlat") {
+            optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(cftvs, iborIndex,
+                discountCurve, config.accuracy(), flatFirstPeriod, volType, shift, optVolType, optDisplacement, onOpt);
+            if (config.strikeInterpolation() == "Linear") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Linear>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "LinearFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, LinearFlat>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "Cubic") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, Cubic>>(optionletStripper);
+            } else if (config.strikeInterpolation() == "CubicFlat") {
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(optionletStripper);
+            } else {
+                QL_FAIL("Cap floor config " << config.curveID() << " has unexpected strike interpolation " <<
+                    config.strikeInterpolation());
+            }
+        } else {
+            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected time interpolation " <<
+                config.timeInterpolation());
+        }
+    } else {
+        // Legacy method where we interpolate on the term volatilities.
+        // We don't need time interpolation in this instance - we just use the term volatility interpolation.
+        if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
+            if (config.flatExtrapolation()) {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<CubicFlat>>(cftvs, iborIndex,
+                    discountCurve, config.accuracy(), flatFirstPeriod, volType,
+                    shift, optVolType, optDisplacement, onOpt);
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<CubicFlat, CubicFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<CubicFlat, CubicFlat>>(optionletStripper);
+            } else {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Cubic>>(cftvs, iborIndex,
+                    discountCurve, config.accuracy(), flatFirstPeriod, volType,
+                    shift, optVolType, optDisplacement, onOpt);
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Cubic, Cubic>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Cubic, Cubic>>(optionletStripper);
+            }
+        } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
+            if (config.flatExtrapolation()) {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<LinearFlat>>(cftvs, iborIndex,
+                    discountCurve, config.accuracy(), flatFirstPeriod, volType,
+                    shift, optVolType, optDisplacement, onOpt);
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<LinearFlat, LinearFlat>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionletStripper);
+            } else {
+                optionletStripper = boost::make_shared<PiecewiseOptionletStripper<Linear>>(cftvs, iborIndex,
+                    discountCurve, config.accuracy(), flatFirstPeriod, volType,
+                    shift, optVolType, optDisplacement, onOpt);
+                if (includeAtm) {
+                    optionletStripper = boost::make_shared<OptionletStripperWithAtm<Linear, Linear>>(
+                        optionletStripper, cftvc, discountCurve, volType, shift);
+                }
+                capletVol_ = boost::make_shared<QuantExt::StrippedOptionletAdapter<Linear, Linear>>(optionletStripper);
+            }
+        } else {
+            QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method " <<
+                static_cast<int>(config.interpolationMethod()));
+        }
+    }
+}
+
+boost::shared_ptr<QuantExt::CapFloorTermVolSurface> CapFloorVolCurve::capSurface(
+    const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const {
+
+    // Map to store the quote values that we load with key (period, strike) where strike
+    // needs a custom comparator to avoid == with double
+    auto comp = [](const pair<Period, Rate>& a, const pair<Period, Rate>& b) {
+        return (a.first < b.first) || (!(b.first < a.first) && (a.second < b.second && !close(a.second, b.second)));
+    };
+    map<pair<Period, Rate>, Real, decltype(comp)> volQuotes(comp);
+
+    // Load the relevant quotes
+    for (const string& quoteId : config.quotes()) {
+        
+        boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+
+        // If it is a non-ATM cap floor quote, store it and fail if there are duplicates
+        if (boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md)) {
+            if (!cfq->atm()) {
+                auto key = make_pair(cfq->term(), cfq->strike());
+                auto r = volQuotes.insert(make_pair(key, cfq->quote()->value()));
+                QL_REQUIRE(r.second, "Duplicate cap floor quote in config " << config.curveID() << " for tenor " <<
+                    key.first << " and strike " << key.second);
+            }
+        }
+    }
+
+    // Organise the values in to a square matrix
+    vector<Period> tenors = parseVectorOfValues<Period>(config.tenors(), &parsePeriod);
+    vector<Rate> strikes = parseVectorOfValues<Real>(config.strikes(), &parseReal);
+    Matrix vols(tenors.size(), strikes.size());
+    for (Size i = 0; i < tenors.size(); i++) {
+        for (Size j = 0; j < strikes.size(); j++) {
+            auto key = make_pair(tenors[i], strikes[j]);
+            auto it =  volQuotes.find(key);
+            QL_REQUIRE(it != volQuotes.end(), "Quote with tenor " << key.first << " and strike " << key.second <<
+                " not loaded for cap floor config " << config.curveID());
+            vols[i][j] = it->second;
+        }
+    }
+
+    // Return for the cap floor term volatility surface
+    return boost::make_shared<QuantExt::CapFloorTermVolSurface>(config.settleDays(), config.calendar(), 
+        config.businessDayConvention(), tenors, strikes, vols, config.dayCounter(), config.interpolationMethod());
+}
+
+boost::shared_ptr<QuantExt::CapFloorTermVolCurve> CapFloorVolCurve::atmCurve(
+    const Date& asof, CapFloorVolatilityCurveConfig& config, const Loader& loader) const {
+
+    // Map to store the quote values
+    map<Period, Handle<Quote>> volQuotes;
+
+    // Load the relevant quotes
+    for (const string& quoteId : config.quotes()) {
+
+        boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+
+        // If it is an ATM cap floor quote, store it and fail if there are duplicates
+        if (boost::shared_ptr<CapFloorQuote> cfq = boost::dynamic_pointer_cast<CapFloorQuote>(md)) {
+            if (cfq->atm()) {
+                auto r = volQuotes.insert(make_pair(cfq->term(), cfq->quote()));
+                QL_REQUIRE(r.second, "Duplicate ATM cap floor quote in config " << config.curveID() <<
+                    " for tenor " << cfq->term());
+            }
+        }
+    }
+
+    // Check that the loaded quotes cover all of the configured ATM tenors
+    vector<Period> tenors = parseVectorOfValues<Period>(config.atmTenors(), &parsePeriod);
+    vector<Handle<Quote>> vols(tenors.size());
+    for (Size i = 0; i < tenors.size(); i++) {
+        auto it = volQuotes.find(tenors[i]);
+        QL_REQUIRE(it != volQuotes.end(), "ATM cap floor quote in config " << config.curveID() << 
+            " for tenor " << tenors[i] << " not found ");
+        vols[i] = it->second;
+    }
+
+    // Return for the cap floor ATM term volatility curve
+    // The interpolation here is also based on the interpolation method parameter in the configuration
+    // Flat first period is true by default (see ctor)
+    if (config.interpolationMethod() == CftvsInterp::BicubicSpline) {
+        if (config.flatExtrapolation()) {
+            return boost::make_shared<InterpolatedCapFloorTermVolCurve<CubicFlat> >(config.settleDays(),
+                config.calendar(), config.businessDayConvention(), tenors, vols, config.dayCounter());
+        } else {
+            return boost::make_shared<InterpolatedCapFloorTermVolCurve<Cubic> >(config.settleDays(),
+                config.calendar(), config.businessDayConvention(), tenors, vols, config.dayCounter());
+        }
+    } else if (config.interpolationMethod() == CftvsInterp::Bilinear) {
+        if (config.flatExtrapolation()) {
+            return boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(config.settleDays(),
+                config.calendar(), config.businessDayConvention(), tenors, vols, config.dayCounter());
+        } else {
+            return boost::make_shared<InterpolatedCapFloorTermVolCurve<Linear> >(config.settleDays(),
+                config.calendar(), config.businessDayConvention(), tenors, vols, config.dayCounter());
+        }
+    } else {
+        QL_FAIL("Cap floor config " << config.curveID() << " has unexpected interpolation method " <<
+            static_cast<int>(config.interpolationMethod()));
+    }
+}
+
+Real CapFloorVolCurve::shiftQuote(const QuantLib::Date& asof, 
+    CapFloorVolatilityCurveConfig& config, const Loader& loader) const {
+
+    QL_REQUIRE(config.volatilityType() == CfgVolType::ShiftedLognormal,
+        "Method shiftQuote should not be called with a config who's volatility type is not ShiftedLognormal");
+
+    // Search for the shift quote in the configured quotes
+    for (const string& quoteId : config.quotes()) {
+        
+        boost::shared_ptr<MarketDatum> md = loader.get(quoteId, asof);
+
+        // If it is a shift quote
+        if (boost::shared_ptr<CapFloorShiftQuote> sq = boost::dynamic_pointer_cast<CapFloorShiftQuote>(md)) {
+            return sq->quote()->value();
+        }
+    }
+
+    QL_FAIL("Could not find a shift quote for cap floor config " << config.curveID());
+}
+
+
+}
+}
