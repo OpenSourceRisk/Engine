@@ -489,6 +489,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
@@ -538,6 +539,8 @@
     <ClInclude Include="qle\indexes\ibor\hkdhibor.hpp" />
     <ClInclude Include="qle\indexes\ibor\hufbubor.hpp" />
     <ClInclude Include="qle\indexes\ibor\idridrfix.hpp" />
+    <ClInclude Include="qle\indexes\ibor\idrjibor.hpp" />
+    <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp" />
     <ClInclude Include="qle\indexes\ibor\inrmifor.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp" />
     <ClInclude Include="qle\indexes\ibor\krwkoribor.hpp" />
@@ -585,6 +588,7 @@
     <ClInclude Include="qle\instruments\payment.hpp" />
     <ClInclude Include="qle\instruments\subperiodsswap.hpp" />
     <ClInclude Include="qle\instruments\tenorbasisswap.hpp" />
+    <ClInclude Include="qle\interpolators\optioninterpolator2d.hpp" />
     <ClInclude Include="qle\math\deltagammavar.hpp" />
     <ClInclude Include="qle\math\fillemptymatrix.hpp" />
     <ClInclude Include="qle\math\flatextrapolation.hpp" />
@@ -629,6 +633,7 @@
     <ClInclude Include="qle\pricingengines\analyticlgmcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticlgmswaptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\analyticxassetlgmeqoptionengine.hpp" />
+    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\pricingengines\blackcdsoptionengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpibacheliercapfloorengine.hpp" />
     <ClInclude Include="qle\pricingengines\cpiblackcapfloorengine.hpp" />
@@ -665,10 +670,13 @@
     <ClInclude Include="qle\termstructures\crossccyfixfloatswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\discountratiomodifiedcurve.hpp" />
     <ClInclude Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.hpp" />
+    <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp" />
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
+    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
+    <ClInclude Include="qle\termstructures\optionpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
     <ClInclude Include="qle\termstructures\datedstrippedoptionlet.hpp" />
@@ -699,6 +707,7 @@
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\strippedcpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp" />
     <ClInclude Include="qle\termstructures\subperiodsswaphelper.hpp" />
@@ -803,6 +812,7 @@
     <ClCompile Include="qle\pricingengines\analyticlgmcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticlgmswaptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\analyticxassetlgmeqoptionengine.cpp" />
+    <ClCompile Include="qle\pricingengines\baroneadesiwhaleyengine.cpp" />
     <ClCompile Include="qle\pricingengines\blackcdsoptionengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpibacheliercapfloorengine.cpp" />
     <ClCompile Include="qle\pricingengines\cpiblackcapfloorengine.cpp" />
@@ -842,6 +852,7 @@
     <ClCompile Include="qle\termstructures\dynamicoptionletvolatilitystructure.cpp" />
     <ClCompile Include="qle\termstructures\dynamicswaptionvolmatrix.cpp" />
     <ClCompile Include="qle\termstructures\dynamicyoyoptionletvolatilitystructure.cpp" />
+    <ClCompile Include="qle\termstructures\equityforwardcurvestripper.cpp" />
     <ClCompile Include="qle\termstructures\flatcorrelation.cpp" />
     <ClCompile Include="qle\termstructures\immfraratehelper.cpp" />
     <ClCompile Include="qle\termstructures\fxblackvolsurface.cpp" />

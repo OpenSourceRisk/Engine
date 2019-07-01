@@ -62,6 +62,52 @@ string yieldCurveKey(const Currency& curveCcy, const string& curveID, const Date
 namespace ore {
 namespace data {
 
+template <template <class> class CurveType>
+boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    
+    boost::shared_ptr<YieldTermStructure> yieldts;
+    switch (interpolationMethod) {
+    case YieldCurve::InterpolationMethod::Linear:
+        yieldts.reset(new CurveType<QuantLib::Linear>(dates, rates, dayCounter, QuantLib::Linear()));
+        break;
+    case YieldCurve::InterpolationMethod::LogLinear:
+        yieldts.reset(new CurveType<QuantLib::LogLinear>(dates, rates, dayCounter, QuantLib::LogLinear()));
+        break;
+    case YieldCurve::InterpolationMethod::NaturalCubic:
+        yieldts.reset(new CurveType<QuantLib::Cubic>(dates, rates, dayCounter,
+            QuantLib::Cubic(CubicInterpolation::Kruger, true)));
+        break;
+    case YieldCurve::InterpolationMethod::FinancialCubic:
+        yieldts.reset(new CurveType<QuantLib::Cubic>(
+            dates, rates, dayCounter,
+            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
+                CubicInterpolation::FirstDerivative)));
+        break;
+    case YieldCurve::InterpolationMethod::ConvexMonotone:
+        yieldts.reset(new CurveType<QuantLib::ConvexMonotone>(dates, rates, dayCounter));
+        break;
+    default:
+        QL_FAIL("Interpolation method not recognised.");
+    }
+    return yieldts;
+}
+
+boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedZeroCurve>(dates, yields, dayCounter, interpolationMethod);
+}
+
+boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedDiscountCurve>(dates, dfs, dayCounter, interpolationMethod);
+}
+
+boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod) {
+    return buildYieldCurve<InterpolatedForwardCurve>(dates, forwards, dayCounter, interpolationMethod);
+}
+
 /* Helper functions
  */
 YieldCurve::InterpolationMethod parseYieldCurveInterpolationMethod(const string& s) {
@@ -279,107 +325,15 @@ YieldCurve::piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instrume
     zeros[0] = zeros[1];
     forwards[0] = forwards[1];
     if (interpolationVariable_ == InterpolationVariable::Zero)
-        p_ = zerocurve(dates, zeros, zeroDayCounter_);
+        p_ = zerocurve(dates, zeros, zeroDayCounter_, interpolationMethod_);
     else if (interpolationVariable_ == InterpolationVariable::Discount)
-        p_ = discountcurve(dates, discounts, zeroDayCounter_);
+        p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
     else if (interpolationVariable_ == InterpolationVariable::Forward)
-        p_ = forwardcurve(dates, forwards, zeroDayCounter_);
+        p_ = forwardcurve(dates, forwards, zeroDayCounter_, interpolationMethod_);
     else
         QL_FAIL("Interpolation variable not recognised.");
 
     return p_;
-}
-
-boost::shared_ptr<YieldTermStructure> YieldCurve::zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
-                                                            const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Linear>(dates, yields, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::LogLinear>(dates, yields, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(dates, yields, dayCounter,
-                                                                 QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::Cubic>(
-            dates, yields, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedZeroCurve<QuantLib::ConvexMonotone>(dates, yields, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
-}
-
-boost::shared_ptr<YieldTermStructure>
-YieldCurve::discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs, const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Linear>(dates, dfs, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(
-            new InterpolatedDiscountCurve<QuantLib::LogLinear>(dates, dfs, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-            dates, dfs, dayCounter, QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::Cubic>(
-            dates, dfs, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedDiscountCurve<QuantLib::ConvexMonotone>(dates, dfs, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
-}
-
-boost::shared_ptr<YieldTermStructure> YieldCurve::forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                               const DayCounter& dayCounter) {
-
-    boost::shared_ptr<YieldTermStructure> yieldts;
-    switch (interpolationMethod_) {
-    case InterpolationMethod::Linear:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Linear>(dates, forwards, dayCounter, QuantLib::Linear()));
-        break;
-    case InterpolationMethod::LogLinear:
-        yieldts.reset(
-            new InterpolatedForwardCurve<QuantLib::LogLinear>(dates, forwards, dayCounter, QuantLib::LogLinear()));
-        break;
-    case InterpolationMethod::NaturalCubic:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(dates, forwards, dayCounter,
-                                                                    QuantLib::Cubic(CubicInterpolation::Kruger, true)));
-        break;
-    case InterpolationMethod::FinancialCubic:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::Cubic>(
-            dates, forwards, dayCounter,
-            QuantLib::Cubic(CubicInterpolation::Kruger, true, CubicInterpolation::SecondDerivative, 0.0,
-                            CubicInterpolation::FirstDerivative)));
-        break;
-    case InterpolationMethod::ConvexMonotone:
-        yieldts.reset(new InterpolatedForwardCurve<QuantLib::ConvexMonotone>(dates, forwards, dayCounter));
-        break;
-    default:
-        QL_FAIL("Interpolation method not recognised.");
-    }
-    return yieldts;
 }
 
 void YieldCurve::buildZeroCurve() {
@@ -475,21 +429,21 @@ void YieldCurve::buildZeroCurve() {
 
     // Now build curve with requested conventions
     if (interpolationVariable_ == YieldCurve::InterpolationVariable::Zero) {
-        boost::shared_ptr<YieldTermStructure> tempCurve = zerocurve(dates, zeroes, quoteDayCounter);
+        boost::shared_ptr<YieldTermStructure> tempCurve = zerocurve(dates, zeroes, quoteDayCounter, interpolationMethod_);
         zeroes.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             Rate zero = tempCurve->zeroRate(dates[i], zeroDayCounter_, Continuous);
             zeroes.push_back(zero);
         }
-        p_ = zerocurve(dates, zeroes, zeroDayCounter_);
+        p_ = zerocurve(dates, zeroes, zeroDayCounter_, interpolationMethod_);
     } else if (interpolationVariable_ == YieldCurve::InterpolationVariable::Discount) {
-        boost::shared_ptr<YieldTermStructure> tempCurve = discountcurve(dates, discounts, quoteDayCounter);
+        boost::shared_ptr<YieldTermStructure> tempCurve = discountcurve(dates, discounts, quoteDayCounter, interpolationMethod_);
         discounts.clear();
         for (Size i = 0; i < dates.size(); ++i) {
             DiscountFactor discount = tempCurve->discount(dates[i]);
             discounts.push_back(discount);
         }
-        p_ = discountcurve(dates, discounts, zeroDayCounter_);
+        p_ = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }
@@ -600,7 +554,7 @@ void YieldCurve::buildDiscountCurve() {
 
     QL_REQUIRE(dates.size() == discounts.size(), "Date and discount vectors differ in size.");
 
-    boost::shared_ptr<YieldTermStructure> tempDiscCurve = discountcurve(dates, discounts, zeroDayCounter_);
+    boost::shared_ptr<YieldTermStructure> tempDiscCurve = discountcurve(dates, discounts, zeroDayCounter_, interpolationMethod_);
 
     // Now build curve with requested conventions
     if (interpolationVariable_ == YieldCurve::InterpolationVariable::Discount) {
@@ -611,7 +565,7 @@ void YieldCurve::buildDiscountCurve() {
             Rate zero = tempDiscCurve->zeroRate(dates[i], zeroDayCounter_, Continuous);
             zeroes.push_back(zero);
         }
-        p_ = zerocurve(dates, zeroes, zeroDayCounter_);
+        p_ = zerocurve(dates, zeroes, zeroDayCounter_, interpolationMethod_);
     } else {
         QL_FAIL("Unknown yield curve interpolation variable.");
     }

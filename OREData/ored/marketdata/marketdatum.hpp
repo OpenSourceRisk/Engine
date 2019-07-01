@@ -1117,7 +1117,7 @@ class EquityOptionQuote : public MarketDatum {
 public:
     //! Constructor
     EquityOptionQuote(Real value, Date asofDate, const string& name, QuoteType quoteType, string equityName, string ccy,
-                      string expiry, string strike);
+                      string expiry, string strike, bool isCall = true);
 
     //! \name Inspectors
     //@{
@@ -1125,12 +1125,14 @@ public:
     const string& ccy() const { return ccy_; }
     const string& expiry() const { return expiry_; }
     const string& strike() const { return strike_; }
+    bool isCall() { return isCall_; }
     //@}
 private:
     string eqName_;
     string ccy_;
     string expiry_;
     string strike_;
+    bool isCall_;
 };
 
 //! Bond spread data class

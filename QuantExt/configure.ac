@@ -167,6 +167,7 @@ AC_CONFIG_FILES([
     qle/indexes/Makefile
     qle/indexes/ibor/Makefile
     qle/instruments/Makefile
+	qle/interpolators/Makefile
     qle/math/Makefile
     qle/methods/Makefile
     qle/models/Makefile

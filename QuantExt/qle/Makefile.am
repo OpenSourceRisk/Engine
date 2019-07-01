@@ -3,6 +3,7 @@ SUBDIRS = \
 	currencies \
 	indexes \
 	instruments \
+	interpolators \
 	math \
 	methods \
 	models \
@@ -32,6 +33,7 @@ libQuantExt_la_LIBADD = \
 	instruments/libInstruments.la \
 	indexes/libIndexes.la \
 	indexes/ibor/libIborIndexes.la \
+	interpolators/libInterpolators.la \
 	math/libMath.la \
 	methods/libMethods.la \
 	models/libModels.la \
