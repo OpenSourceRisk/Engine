@@ -24,6 +24,7 @@
 #pragma once
 
 #include <ored/configuration/curveconfig.hpp>
+#include <ql/exercise.hpp>
 #include <ql/time/calendar.hpp>
 #include <ql/time/daycounter.hpp>
 #include <ql/time/period.hpp>
@@ -46,7 +47,7 @@ using QuantLib::BusinessDayConvention;
 class EquityCurveConfig : public CurveConfig {
 public:
     //! Supported equity curve types
-    enum class Type { DividendYield, ForwardPrice, NoDividends };
+    enum class Type { DividendYield, ForwardPrice, OptionPremium, NoDividends };
     //! \name Constructors/Destructors
     //@{
     //! Detailed constructor
@@ -70,6 +71,7 @@ public:
     const string& forecastingCurve() const { return forecastingCurve_; }
     const string& currency() const { return currency_; }
     const Type& type() const { return type_; }
+    const QuantLib::Exercise::Type exerciseStyle() const { return exerciseStyle_; }
     const string& equitySpotQuoteID() const { return equitySpotQuoteID_; }
     const string& dayCountID() const { return dayCountID_; }
     const string& dividendInterpolationVariable() const { return divInterpVariable_; }
@@ -83,6 +85,7 @@ public:
     string& forecastingCurve() { return forecastingCurve_; }
     string& currency() { return currency_; }
     Type& type() { return type_; }
+    QuantLib::Exercise::Type& exerciseStyle() { return exerciseStyle_; }
     string& equitySpotQuoteID() { return equitySpotQuoteID_; }
     string& dayCountID() { return dayCountID_; }
     string& dividendInterpolationVariable() { return divInterpVariable_; }
@@ -95,6 +98,7 @@ private:
     string forecastingCurve_;
     string currency_;
     Type type_;
+    QuantLib::Exercise::Type exerciseStyle_;
     string equitySpotQuoteID_;
     string dayCountID_;
     string divInterpVariable_;
@@ -104,7 +108,7 @@ private:
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
 
-EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str);
+EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
 
 } // namespace data
 } // namespace ore

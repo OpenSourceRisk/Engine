@@ -114,15 +114,6 @@ private:
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 
-    boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
-                                                    const DayCounter& dayCounter);
-
-    boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
-                                                        const DayCounter& dayCounter);
-
-    boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
-                                                       const DayCounter& dayCounter);
-
     /* Functions to build RateHelpers from yield curve segments */
     void addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment,
                      vector<boost::shared_ptr<RateHelper>>& instruments);
@@ -159,6 +150,24 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 // empty vector if it does not have pillar dates.
 // Implemented here as it checks the subclass that was built by the above class
 vector<Date> pillarDates(const Handle<YieldTermStructure>& h);
+
+//! Templated function to build a YieldTermStructure and apply interpolation methods to it
+template <template <class> class CurveType>
+boost::shared_ptr<YieldTermStructure> buildYieldCurve(const vector<Date>& dates, const vector<QuantLib::Real>& rates,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+
+//! Create a Interpolated Zero Curve and apply interpolators
+boost::shared_ptr<YieldTermStructure> zerocurve(const vector<Date>& dates, const vector<Rate>& yields,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+
+//! Create a Interpolated Discount Curve and apply interpolators
+boost::shared_ptr<YieldTermStructure> discountcurve(const vector<Date>& dates, const vector<DiscountFactor>& dfs,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+
+//! Create a Interpolated Forward Curve and apply interpolators
+boost::shared_ptr<YieldTermStructure> forwardcurve(const vector<Date>& dates, const vector<Rate>& forwards,
+    const DayCounter& dayCounter, YieldCurve::InterpolationMethod interpolationMethod);
+
 
 } // namespace data
 } // namespace ore
