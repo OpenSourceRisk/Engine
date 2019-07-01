@@ -22,6 +22,7 @@ libTermStructures_la_SOURCES = \
 	datedstrippedoptionlet.cpp \
 	datedstrippedoptionletadapter.cpp \
 	dynamicoptionletvolatilitystructure.cpp \
+	equityforwardcurvestripper.cpp \
 	dynamicyoyoptionletvolatilitystructure.cpp \
 	optionletstripper.cpp \
 	optionletstripper1.cpp \
@@ -61,6 +62,7 @@ this_include_HEADERS = \
 	crossccybasismtmresetswaphelper.hpp \
 	dynamicblackvoltermstructure.hpp \
 	dynamicswaptionvolmatrix.hpp \
+	equityforwardcurvestripper.hpp \
 	hazardspreadeddefaulttermstructure.hpp \
 	interpolateddiscountcurve.hpp \
 	interpolateddiscountcurve2.hpp \
@@ -79,6 +81,7 @@ this_include_HEADERS = \
 	optionletstripper.hpp \
 	optionletstripper1.hpp \
 	optionletstripper2.hpp \
+	optionpricesurface.hpp \
 	spreadedoptionletvolatility.hpp \
 	spreadedsmilesection.hpp \
 	spreadedswaptionvolatility.hpp \
