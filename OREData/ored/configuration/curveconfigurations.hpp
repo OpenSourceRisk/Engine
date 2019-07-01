@@ -70,7 +70,6 @@ public:
         return fxVolCurveConfigs_[curveID];
     }
     const boost::shared_ptr<FXVolatilityCurveConfig>& fxVolCurveConfig(const string& curveID) const;
-    const boost::shared_ptr<FXVolatilityCurveConfig>& firstFxVolCurveConfig() const;
 
     bool hasSwaptionVolCurveConfig(const std::string& curveID) const;
     boost::shared_ptr<SwaptionVolatilityCurveConfig>& swaptionVolCurveConfig(const string& curveID) {
