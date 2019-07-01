@@ -247,6 +247,14 @@ const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::fxVolCurv
     return get(curveID, fxVolCurveConfigs_);
 }
 
+const boost::shared_ptr<FXVolatilityCurveConfig>& CurveConfigurations::firstFxVolCurveConfig() const {
+    if (!fxVolCurveConfigs_.empty()) {
+        return fxVolCurveConfigs_.begin()->second;
+    } else {
+        QL_FAIL("Requested first fxVolCurveConfig but map is empty.");
+    }     
+}
+
 bool CurveConfigurations::hasSwaptionVolCurveConfig(const string& curveID) const {
     return has(curveID, swaptionVolCurveConfigs_);
 }
