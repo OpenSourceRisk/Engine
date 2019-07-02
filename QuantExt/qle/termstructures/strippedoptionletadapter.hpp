@@ -29,6 +29,7 @@
 #include <ql/termstructures/volatility/optionlet/optionletvolatilitystructure.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionletbase.hpp>
 #include <ql/utilities/dataformatters.hpp>
+#include <ql/termstructures/volatility/flatsmilesection.hpp>
 #include <ql/termstructures/volatility/interpolatedsmilesection.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/bind.hpp>
@@ -40,6 +41,11 @@ namespace QuantExt {
 /*! Adapter class for turning a StrippedOptionletBase into an OptionletVolatilityStructure.
 
     The class takes two template parameters indicating the interpolation in the time and strike direction respectively.
+
+    The class can take a QuantLib::StrippedOptionletBase that has only one strike column. In this case, the strike 
+    interpolation is ignored and the volatility at one of the pillar tenors, and any strike, is merely the passed 
+    in volatility. In this case, the smile sections are flat. All of this enables the StrippedOptionletAdapter to 
+    represent a stripped ATM optionlet curve. The single strike in the QuantLib::StrippedOptionletBase is ignored.
 
     \ingroup termstructures
 */
@@ -117,6 +123,12 @@ private:
         It is \c mutable so that we can call \c enableExtrapolation in \c performCalculations.
     */
     mutable std::vector<QuantLib::Interpolation> strikeSections_;
+
+    //! Flag that indicates if optionletBase_ has only one strike for all option tenors
+    bool oneStrike_;
+
+    //! Method to populate oneStrike_ on initialisation
+    void populateOneStrike();
 };
 
 template <class TimeInterpolator, class SmileInterpolator>
@@ -128,6 +140,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionlet
       sob->dayCounter()), optionletBase_(sob), ti_(ti), si_(si),
       strikeSections_(optionletBase_->optionletMaturities()) {
     registerWith(optionletBase_);
+    populateOneStrike();
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
@@ -140,6 +153,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::StrippedOptionlet
       sob->dayCounter()), optionletBase_(sob), ti_(ti), si_(si),
       strikeSections_(optionletBase_->optionletMaturities()) {
     registerWith(optionletBase_);
+    populateOneStrike();
 }
 
 template <class TimeInterpolator, class SmileInterpolator>
@@ -149,6 +163,16 @@ inline QuantLib::Date StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
 
 template <class TimeInterpolator, class SmileInterpolator>
 inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::minStrike() const {
+    
+    // If only one strike
+    if (oneStrike_) {
+        if (volatilityType() == QuantLib::ShiftedLognormal) {
+            return displacement() > 0.0 ? -displacement() : 0.0;
+        } else {
+            return QL_MIN_REAL;
+        }
+    }
+    
     // Return the minimum strike over all optionlet tenors
     QuantLib::Rate minStrike = optionletBase_->optionletStrikes(0).front();
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
@@ -159,6 +183,12 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
 
 template <class TimeInterpolator, class SmileInterpolator>
 inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::maxStrike() const {
+
+    // If only one strike, there is no max strike
+    if (oneStrike_) {
+        return QL_MAX_REAL;
+    }
+
     // Return the maximum strike over all optionlet tenors
     QuantLib::Rate maxStrike = optionletBase_->optionletStrikes(0).back();
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
@@ -190,6 +220,11 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::perfo
     using QuantLib::Rate;
     using QuantLib::Size;
     using std::vector;
+
+    // If only one strike, no strike section to update
+    if (oneStrike_) {
+        return;
+    }
 
     for (Size i = 0; i < optionletBase_->optionletMaturities(); ++i) {
         const vector<Rate>& strikes = optionletBase_->optionletStrikes(i);
@@ -229,6 +264,16 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     using std::equal;
     using std::sqrt;
 
+    // Leave ATM rate as Null<Real>() for now but could interpolate optionletBase_->atmOptionletRates()?
+    Real atmRate = Null<Real>();
+
+    // If one strike, return a flat smile section
+    if (oneStrike_) {
+        Volatility vol = volatility(optionTime, optionletBase_->optionletStrikes(0)[0], true);
+        return boost::make_shared<QuantLib::FlatSmileSection>(optionTime, vol, optionletBase_->dayCounter(),
+            atmRate, volatilityType(), displacement());
+    }
+
     // This method can only return a valid value if the strikes are the same for all optionlet dates
     const vector<Rate>& strikes = optionletBase_->optionletStrikes(0);
     for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
@@ -240,12 +285,10 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     // Store standard deviation at each strike
     vector<Real> stdDevs;
     for (Size i = 0; i < strikes.size(); i++) {
-        stdDevs.push_back(sqrt(blackVariance(optionTime, strikes[i])));
+        stdDevs.push_back(sqrt(blackVariance(optionTime, strikes[i], true)));
     }
     
     // Return the smile section.
-    // Leave ATM rate as Null<Real>() for now but could interpolate optionletBase_->atmOptionletRates()?
-    Real atmRate = Null<Real>();
     return boost::make_shared<QuantLib::InterpolatedSmileSection<SmileInterpolator> >(optionTime, strikes, stdDevs,
         atmRate, si_, optionletBase_->dayCounter(), volatilityType(), displacement());
 }
@@ -265,7 +308,7 @@ inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInte
 
     vector<Volatility> vols(optionletBase_->optionletMaturities());
     for (Size i = 0; i < optionletBase_->optionletMaturities(); ++i) {
-        vols[i] = strikeSections_[i](strike);
+        vols[i] = oneStrike_ ? optionletBase_->optionletVolatilities(i)[0] : strikeSections_[i](strike);
     }
 
     vector<Time> fixingTimes = optionletBase_->optionletFixingTimes();
@@ -276,6 +319,17 @@ inline QuantLib::Volatility StrippedOptionletAdapter<TimeInterpolator, SmileInte
     ti.enableExtrapolation();
 
     return ti(optionTime);
+}
+
+template <class TimeInterpolator, class SmileInterpolator>
+inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::populateOneStrike() {
+    oneStrike_ = true;
+    for (QuantLib::Size i = 0; i < optionletBase_->optionletMaturities(); ++i) {
+        if (optionletBase_->optionletStrikes(i).size() > 1) {
+            oneStrike_ = false;
+            return;
+        }
+    }
 }
 
 }

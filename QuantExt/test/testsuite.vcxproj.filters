@@ -137,6 +137,9 @@
     <ClCompile Include="equityforwardcurvestripper.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="strippedoptionletadapter2.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="source">

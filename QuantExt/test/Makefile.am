@@ -41,6 +41,7 @@ QLE_TESTS = \
 	correlationtermstructure.cpp \
 	cpicapfloor.cpp \
 	strippedoptionletadapter.cpp \
+	strippedoptionletadapter2.cpp \
 	piecewiseoptionletcurve.cpp \
 	piecewiseoptionletstripper.cpp \
 	capfloortermvolcurve.cpp \

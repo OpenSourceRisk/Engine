@@ -16,14 +16,12 @@
  FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
-#include <qle/termstructures/strippedoptionletadapter.hpp>
-#include <qle/math/flatextrapolation.hpp>
+#include <qle/termstructures/strippedoptionletadapter2.hpp>
 #include <ql/termstructures/volatility/optionlet/strippedoptionlet.hpp>
 #include <ql/quotes/simplequote.hpp>
 #include <ql/time/calendars/unitedstates.hpp>
 #include <test/toplevelfixture.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/assign.hpp>
 
 using namespace QuantExt;
 using namespace QuantLib;
@@ -31,7 +29,6 @@ using namespace boost::unit_test_framework;
 
 using qle::test::TopLevelFixture;
 using std::vector;
-using boost::assign::list_of;
 
 namespace {
 
@@ -82,13 +79,13 @@ public:
 }
 BOOST_FIXTURE_TEST_SUITE(QuantExtTestSuite, TopLevelFixture)
 
-BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTests)
+BOOST_AUTO_TEST_SUITE(StrippedOptionletAdapterTwoTests)
 
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter = 
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    boost::shared_ptr<StrippedOptionletAdapter2> adapter = 
+        boost::make_shared<StrippedOptionletAdapter2>(optionletSurface, true);
 
     // Pick a date 1Y after the max date
     Date testDate = expiries.back() + 1 * Years;
@@ -117,8 +114,8 @@ BOOST_FIXTURE_TEST_CASE(testFlatExtrapAfterLastExpiry, F) {
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapBetweenFirstLastExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    boost::shared_ptr<StrippedOptionletAdapter2> adapter =
+        boost::make_shared<StrippedOptionletAdapter2>(optionletSurface, true);
 
     // Check flat extrapolation on expiry pillars
     for (Size i = 0; i < expiries.size(); i++) {
@@ -148,8 +145,8 @@ BOOST_FIXTURE_TEST_CASE(testFlatExtrapBetweenFirstLastExpiry, F) {
 BOOST_FIXTURE_TEST_CASE(testFlatExtrapBeforeFirstExpiry, F) {
 
     // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
+    boost::shared_ptr<StrippedOptionletAdapter2> adapter =
+        boost::make_shared<StrippedOptionletAdapter2>(optionletSurface, true);
 
     // Pick a date between evaluation date and first expiry
     Size numDays = dc.dayCount(asof, expiries.front()) / 2;
@@ -173,59 +170,6 @@ BOOST_FIXTURE_TEST_CASE(testFlatExtrapBeforeFirstExpiry, F) {
     Rate avgStrike = (strikes[0] + strikes[1]) / 2.0;
     Volatility expectedVol = (vols.front()[0]->value() + vols.front()[1]->value()) / 2.0;
     testVol = adapter->volatility(testDate, avgStrike, true);
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-}
-
-BOOST_AUTO_TEST_CASE(testOneStrikeColumn) {
-
-    BOOST_TEST_MESSAGE("Testing StrippedOptionletAdapter when StrippedOptionlet has one strike column");
-
-    // As of date
-    Date asof(17, Apr, 2019);
-    Settings::instance().evaluationDate() = asof;
-    
-    // Set up the stripped optionlet surface with one strike column
-    Natural settlementDays = 2;
-    UnitedStates calendar;
-    BusinessDayConvention bdc = Following;
-    Actual365Fixed dc;
-    boost::shared_ptr<IborIndex> dummyIborIndex;
-    VolatilityType type = Normal;
-    vector<Date> expiries = list_of(Date(17, Jul, 2019))(Date(17, Oct, 2019));
-    vector<Rate> strikes = list_of(0.0);
-
-    vector<vector<Handle<Quote> > > vols(2);
-    vols[0].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0091)));
-    vols[1].push_back(Handle<Quote>(boost::make_shared<SimpleQuote>(0.0070)));
-
-    // Create the optionlet surface
-    boost::shared_ptr<StrippedOptionlet> optionletSurface = boost::make_shared<StrippedOptionlet>(settlementDays,
-        calendar, bdc, dummyIborIndex, expiries, strikes, vols, dc, type);
-
-    // Set up optionlet adapter with flat extrapolation
-    boost::shared_ptr<StrippedOptionletAdapter<LinearFlat, LinearFlat> > adapter =
-        boost::make_shared<StrippedOptionletAdapter<LinearFlat, LinearFlat> >(optionletSurface);
-
-    // Ask for vols on expiry dates at any strikes and should get back inputs
-    Volatility strikeShift = 0.10;
-    Volatility testVol = adapter->volatility(expiries[0], 0.0, true);
-    Volatility expectedVol = vols[0][0]->value();
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-
-    testVol = adapter->volatility(expiries[0], 0.0 + strikeShift, true);
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-
-    testVol = adapter->volatility(expiries[0], 0.0 - strikeShift, true);
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-
-    testVol = adapter->volatility(expiries[0] - 1 * Weeks, 0.0, true);
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-
-    testVol = adapter->volatility(expiries[1], 0.0, true);
-    expectedVol = vols[1][0]->value();
-    BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
-
-    testVol = adapter->volatility(expiries[1] + 1 * Weeks, 0.0, true);
     BOOST_CHECK_CLOSE(testVol, expectedVol, 1e-12);
 }
 
