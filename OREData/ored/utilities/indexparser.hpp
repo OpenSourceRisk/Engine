@@ -136,7 +136,7 @@ bool isOvernightIndex(const std::string& indexName);
 
     For example, we allow:
     - \c USD-FedFunds-1D and \c USD-FedFunds externally but we use \c USD-FedFunds internally
-    - \c CAD-BA-<tenor> and \c CAD-CDOR-<tenor> externally but we use \c CAD-CDOR-<tenor> internally
+    - \c CAD-BA-tenor and \c CAD-CDOR-tenor externally but we use \c CAD-CDOR-tenor internally
 
     \ingroup utilities
 */
