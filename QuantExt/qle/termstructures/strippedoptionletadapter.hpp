@@ -175,7 +175,7 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
     
     // Return the minimum strike over all optionlet tenors
     QuantLib::Rate minStrike = optionletBase_->optionletStrikes(0).front();
-    for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
+    for (QuantLib::Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
         minStrike = std::min(optionletBase_->optionletStrikes(i).front(), minStrike);
     }
     return minStrike;
@@ -219,6 +219,7 @@ inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::perfo
     // Some localised typedefs and using declarations to make the code more readable
     using QuantLib::Rate;
     using QuantLib::Size;
+    using QuantLib::Volatility;
     using std::vector;
 
     // If only one strike, no strike section to update

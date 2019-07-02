@@ -29,8 +29,8 @@ namespace QuantExt {
 BlackVarianceSurfaceMoneyness::BlackVarianceSurfaceMoneyness(
     const Calendar& cal, const Handle<Quote>& spot, const std::vector<Time>& times, const std::vector<Real>& moneyness,
     const std::vector<std::vector<Handle<Quote> > >& blackVolMatrix, const DayCounter& dayCounter, bool stickyStrike)
-    : BlackVarianceTermStructure(0, cal), stickyStrike_(stickyStrike), spot_(spot), dayCounter_(dayCounter),
-      moneyness_(moneyness), quotes_(blackVolMatrix) {
+    : BlackVarianceTermStructure(0, cal), stickyStrike_(stickyStrike), spot_(spot),
+      moneyness_(moneyness), dayCounter_(dayCounter), quotes_(blackVolMatrix) {
 
     QL_REQUIRE(times.size() == blackVolMatrix.front().size(), "mismatch between times vector and vol matrix colums");
     QL_REQUIRE(moneyness_.size() == blackVolMatrix.size(), "mismatch between moneyness vector and vol matrix rows");
