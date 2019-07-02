@@ -51,8 +51,8 @@ public:
      *  as per  Castagna& Mercurio(2006), to use. The second approximation is more accurate
      *  but can ask for the square root of a negative number under unusual circumstances.
      */
-    enum class Dimension { ATM, Smile };
-    enum class SmileInterpolation { VannaVolga1, VannaVolga2 };
+    enum class Dimension { ATM, Smile };   
+    enum class SmileInterpolation { VannaVolga1, VannaVolga2 }; // Vanna Volga first/second approximation respectively
 
     //! \name Constructors/Destructors
     //@{
@@ -65,6 +65,7 @@ public:
                             const DayCounter& dayCounter = QuantLib::Actual365Fixed(),
                             const Calendar& calendar = QuantLib::TARGET(),
                             const SmileInterpolation& interp = SmileInterpolation::VannaVolga2);
+
     //@}
 
     //! \name Serialisation

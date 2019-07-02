@@ -79,6 +79,7 @@
 #include <ored/portfolio/builders/cachingenginebuilder.hpp>
 #include <ored/portfolio/builders/capfloor.hpp>
 #include <ored/portfolio/builders/capfloorediborleg.hpp>
+#include <ored/portfolio/builders/capflooredyoyleg.hpp>
 #include <ored/portfolio/builders/cms.hpp>
 #include <ored/portfolio/builders/cmsspread.hpp>
 #include <ored/portfolio/builders/commodityforward.hpp>
@@ -127,6 +128,7 @@
 #include <ored/report/csvreport.hpp>
 #include <ored/report/inmemoryreport.hpp>
 #include <ored/report/report.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ored/utilities/correlationmatrix.hpp>
 #include <ored/utilities/csvfilereader.hpp>
 #include <ored/utilities/currencycheck.hpp>

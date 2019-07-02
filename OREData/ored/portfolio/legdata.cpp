@@ -99,7 +99,7 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    index_ = XMLUtils::getChildValue(node, "Index", true);
+    index_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     indices_.insert(index_);
     // These are all optional
     spreads_ =

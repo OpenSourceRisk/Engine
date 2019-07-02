@@ -180,7 +180,7 @@ XMLNode* DepositConvention::toXML(XMLDocument& doc) {
 }
 
 FutureConvention::FutureConvention(const string& id, const string& index)
-    : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(index)) {}
+    : Convention(id, Type::Future), strIndex_(index), index_(parseIborIndex(strIndex_)) {}
 
 void FutureConvention::fromXML(XMLNode* node) {
 
@@ -201,7 +201,7 @@ XMLNode* FutureConvention::toXML(XMLDocument& doc) {
 }
 
 FraConvention::FraConvention(const string& id, const string& index)
-    : Convention(id, Type::FRA), strIndex_(index), index_(parseIborIndex(index)) {}
+    : Convention(id, Type::FRA), strIndex_(index), index_(parseIborIndex(strIndex_)) {}
 
 void FraConvention::fromXML(XMLNode* node) {
 
