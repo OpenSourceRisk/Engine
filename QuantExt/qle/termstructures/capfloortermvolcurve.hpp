@@ -92,7 +92,7 @@ public:
         QuantLib::BusinessDayConvention bdc,
         const std::vector<QuantLib::Period>& optionTenors,
         const std::vector<QuantLib::Handle<QuantLib::Quote> >& volatilities,
-        const QuantLib::DayCounter& dc = QuantLib::Actual365Fixed(),
+        const QuantLib::DayCounter& dayCounter = QuantLib::Actual365Fixed(),
         bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
     
@@ -117,7 +117,7 @@ public:
         QuantLib::BusinessDayConvention bdc,
         const std::vector<QuantLib::Period>& optionTenors,
         const std::vector<QuantLib::Handle<QuantLib::Quote> >& volatilities,
-        const QuantLib::DayCounter& dc = QuantLib::Actual365Fixed(),
+        const QuantLib::DayCounter& dayCounter = QuantLib::Actual365Fixed(),
         bool flatFirstPeriod = true,
         const Interpolator& interpolator = Interpolator());
 
@@ -193,10 +193,10 @@ InterpolatedCapFloorTermVolCurve<Interpolator>::InterpolatedCapFloorTermVolCurve
     QuantLib::BusinessDayConvention bdc,
     const std::vector<QuantLib::Period>& optionTenors,
     const std::vector<QuantLib::Handle<QuantLib::Quote> >& volatilities,
-    const QuantLib::DayCounter& dc,
+    const QuantLib::DayCounter& dayCounter,
     bool flatFirstPeriod,
     const Interpolator& interpolator)
-    : CapFloorTermVolCurve(settlementDays, calendar, bdc, dc),
+    : CapFloorTermVolCurve(settlementDays, calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(optionTenors.size() + 1, interpolator),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),
@@ -216,10 +216,10 @@ InterpolatedCapFloorTermVolCurve<Interpolator>::InterpolatedCapFloorTermVolCurve
     QuantLib::BusinessDayConvention bdc,
     const std::vector<QuantLib::Period>& optionTenors,
     const std::vector<QuantLib::Handle<QuantLib::Quote> >& volatilities,
-    const QuantLib::DayCounter& dc,
+    const QuantLib::DayCounter& dayCounter,
     bool flatFirstPeriod,
     const Interpolator& interpolator)
-    : CapFloorTermVolCurve(settlementDate, calendar, bdc, dc),
+    : CapFloorTermVolCurve(settlementDate, calendar, bdc, dayCounter),
       QuantLib::InterpolatedCurve<Interpolator>(optionTenors.size() + 1, interpolator),
       nOptionTenors_(optionTenors.size()),
       optionTenors_(optionTenors),

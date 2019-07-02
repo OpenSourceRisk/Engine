@@ -1081,7 +1081,7 @@ void SensitivityScenarioGenerator::generateYieldVolScenarios(bool up) {
 
 void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
     Date asof = baseScenario_->asof();
-    // We can choose to shift fewer discount curves than listed in the market
+    
     // Log an ALERT if some cap currencies in simmarket are excluded from the list
     for (auto sim_cap : simMarketData_->capFloorVolCcys()) {
         if (sensitivityData_->capFloorVolShiftData().find(sim_cap) == sensitivityData_->capFloorVolShiftData().end()) {
@@ -1089,11 +1089,18 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
         }
     }
 
-    Size n_cfvol_strikes = simMarketData_->capFloorVolStrikes().size();
-    vector<Real> volStrikes = simMarketData_->capFloorVolStrikes();
-
     for (auto c : sensitivityData_->capFloorVolShiftData()) {
         std::string ccy = c.first;
+
+        vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
+        // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
+        bool simIsAtm = false;
+        if (volStrikes.empty()) {
+            volStrikes = { 0.0 };
+            simIsAtm = true;
+        }
+        Size n_cfvol_strikes = volStrikes.size();
+
         Size n_cfvol_exp = simMarketData_->capFloorVolExpiries(ccy).size();
         SensitivityScenarioData::CapFloorVolShiftData data = c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
@@ -1110,6 +1117,11 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
                                                                      << data.shiftExpiries.size());
         vector<Real> shiftExpiryTimes(expiries.size(), 0.0);
         vector<Real> shiftStrikes = data.shiftStrikes;
+        // Has an ATM shift been configured?
+        bool sensiIsAtm = false;
+        if (shiftStrikes.size() == 1 && shiftStrikes[0] == 0.0 && data.isRelative) {
+            sensiIsAtm = true;
+        }
 
         DayCounter dc = parseDayCounter(simMarketData_->capFloorVolDayCounter(ccy));
 
@@ -1142,7 +1154,7 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
             for (Size k = 0; k < shiftStrikes.size(); ++k) {
                 boost::shared_ptr<Scenario> scenario = sensiScenarioFactory_->buildScenario(asof);
 
-                scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up));
+                scenarioDescriptions_.push_back(capFloorVolScenarioDescription(ccy, j, k, up, sensiIsAtm));
 
                 applyShift(j, k, shiftSize, up, shiftType, shiftExpiryTimes, shiftStrikes, volExpiryTimes, volStrikes,
                            volData, shiftedVolData, true);
@@ -2257,21 +2269,23 @@ SensitivityScenarioGenerator::yieldVolScenarioDescription(string securityId, Siz
 
 SensitivityScenarioGenerator::ScenarioDescription
 SensitivityScenarioGenerator::capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket,
-                                                             bool up) {
+                                                             bool up, bool isAtm) {
     QL_REQUIRE(sensitivityData_->capFloorVolShiftData().find(ccy) != sensitivityData_->capFloorVolShiftData().end(),
                "currency " << ccy << " not found in cap/floor vol shift data");
     SensitivityScenarioData::CapFloorVolShiftData data = sensitivityData_->capFloorVolShiftData()[ccy];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
-    // Size index = strikeBucket * data.shiftExpiries.size() + expiryBucket;
     Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;
     RiskFactorKey key(RiskFactorKey::KeyType::OptionletVolatility, ccy, index);
     std::ostringstream o;
-    // Currently CapFloorVolShiftData must have a collection of absolute strikes
-    o << data.shiftExpiries[expiryBucket] << "/" << std::setprecision(4) << data.shiftStrikes[strikeBucket];
-    string text = o.str();
+    o << data.shiftExpiries[expiryBucket] << "/";
+    if (isAtm) {
+        o << "ATM";
+    } else {
+        o << std::setprecision(4) << data.shiftStrikes[strikeBucket];
+    }
     ScenarioDescription::Type type = up ? ScenarioDescription::Type::Up : ScenarioDescription::Type::Down;
-    ScenarioDescription desc(type, key, text);
+    ScenarioDescription desc(type, key, o.str());
 
     if (up)
         shiftSizes_[key] = 0.0;
