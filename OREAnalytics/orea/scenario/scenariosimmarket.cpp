@@ -842,6 +842,9 @@ ScenarioSimMarket::ScenarioSimMarket(
                             Size m = parameters->fxVolMoneyness().size();
                             vector<vector<Handle<Quote>>> quotes(m, vector<Handle<Quote>>(n, Handle<Quote>()));
                             Calendar cal = wrapper->calendar();
+                            if (cal.empty()) {
+                                cal = NullCalendar();
+                            }
                             // FIXME hardcoded in todaysmarket
                             DayCounter dc = ore::data::parseDayCounter(parameters->fxVolDayCounter(name));
                             vector<Time> times;
@@ -897,9 +900,10 @@ ScenarioSimMarket::ScenarioSimMarket(
                                 }
 
                                 bool stickyStrike = true;
+                                bool flatExtrapolation = true; // flat extrapolation of strikes at far ends.
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(
                                     new BlackVarianceSurfaceMoneynessForward(cal, spot, times, parameters->fxVolMoneyness(),
-                                                                             quotes, dc, forTS, domTS, stickyStrike));
+                                                                             quotes, dc, forTS, domTS, stickyStrike, flatExtrapolation));
                             } else {
                                 fxVolCurve = boost::shared_ptr<BlackVolTermStructure>(new BlackVarianceCurve3(
                                     0, NullCalendar(), wrapper->businessDayConvention(), dc, times, quotes[0], false));
