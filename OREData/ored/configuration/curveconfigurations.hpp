@@ -181,7 +181,7 @@ public:
 
 
     /*! Return the Yields curves available */
-    std::set<string> yieldCurves();
+    std::set<string> yieldCurveConfigIds();
 
     //@}
 

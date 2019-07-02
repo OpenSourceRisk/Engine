@@ -235,7 +235,7 @@ std::set<string> CurveConfigurations::conventions() const {
     return conventions;
 }
 
-set<string> CurveConfigurations::yieldCurves() {
+set<string> CurveConfigurations::yieldCurveConfigIds() {
 
     set<string> curves;
     for (auto yc : yieldVolCurveConfigs_)
