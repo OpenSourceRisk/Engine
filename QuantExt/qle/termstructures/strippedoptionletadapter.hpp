@@ -191,7 +191,7 @@ inline QuantLib::Rate StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
 
     // Return the maximum strike over all optionlet tenors
     QuantLib::Rate maxStrike = optionletBase_->optionletStrikes(0).back();
-    for (Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
+    for (QuantLib::Size i = 1; i < optionletBase_->optionletMaturities(); ++i) {
         maxStrike = std::max(optionletBase_->optionletStrikes(i).back(), maxStrike);
     }
     return maxStrike;
@@ -259,6 +259,7 @@ StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::smileSectionImpl(
     using QuantLib::Null;
     using QuantLib::close;
     using QuantLib::io::ordinal;
+    using QuantLib::Volatility;
     using boost::lambda::_1;
     using boost::lambda::_2;
     using std::vector;
