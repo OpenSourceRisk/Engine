@@ -695,30 +695,27 @@ void YieldCurve::addDeposits(const boost::shared_ptr<YieldCurveSegment>& segment
             Period fwdStart = depositQuote->fwdStart();
             Natural fwdStartDays = static_cast<Natural>(fwdStart.length());
             Handle<Quote> hQuote(depositQuote->quote());
+            
             if (depositConvention->indexBased()) {
-                string indexName;
+                // indexName will have the form ccy-name so examples would be:
+                // EUR-EONIA, USD-FedFunds, EUR-EURIBOR, USD-LIBOR, etc.
+                string indexName = depositConvention->index();
                 boost::shared_ptr<IborIndex> index;
-                if (depositTerm.units() == Days) {
-                    // TODO: what is this about?
-                    /* To avoid problems constructing daily tenor indices. This works fine for overnight
-                       indices also since the last token, i.e. 1W, is ignored in the IborParser */
-                    indexName = depositConvention->index() + "-1D";
-                    try {
-                        index = parseIborIndex(indexName);
-                    } catch (...) {
-                        indexName = depositConvention->index() + "-1W";
-                        index = parseIborIndex(indexName);
-                    }
-                    depositHelper.reset(new DepositRateHelper(hQuote, depositTerm, fwdStartDays,
-                                                              index->fixingCalendar(), index->businessDayConvention(),
-                                                              index->endOfMonth(), index->dayCounter()));
+                if (isOvernightIndex(indexName)) {
+                    // No need for the term here
+                    index = parseIborIndex(indexName);
                 } else {
+                    // Note that a depositTerm with units Days here could end up as a string with another unit
+                    // For example:
+                    // 7 * Days will go to ccy-tenor-1W - CNY IR index is a case
+                    // 28 * Days will go to ccy-tenor-4W - MXN TIIE is a case
+                    // parseIborIndex should be able to handle this for appropriate depositTerm values
                     stringstream ss;
-                    ss << depositConvention->index() << "-" << io::short_period(depositTerm);
+                    ss << indexName << "-" << io::short_period(depositTerm);
                     indexName = ss.str();
                     index = parseIborIndex(indexName);
-                    depositHelper.reset(new DepositRateHelper(hQuote, index));
                 }
+                depositHelper = boost::make_shared<DepositRateHelper>(hQuote, index);
             } else {
                 QL_REQUIRE(fwdStart.units() == Days, "The forward start time unit for deposits "
                                                      "must be expressed in days.");
