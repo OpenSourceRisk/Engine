@@ -209,6 +209,11 @@ inline QuantLib::Real StrippedOptionletAdapter<TimeInterpolator, SmileInterpolat
 
 template <class TimeInterpolator, class SmileInterpolator>
 inline void StrippedOptionletAdapter<TimeInterpolator, SmileInterpolator>::update() {
+
+    // Need this or some tests with ObservationMode::Mode::Disable fail
+    // e.g. */SensitivityAnalysisTest/testPortfolioSensitivityDisableObs
+    optionletBase_->update();
+
     TermStructure::update();
     LazyObject::update();
 }
