@@ -1093,10 +1093,8 @@ void SensitivityScenarioGenerator::generateCapFloorVolScenarios(bool up) {
 
         vector<Real> volStrikes = simMarketData_->capFloorVolStrikes(ccy);
         // Strikes may be empty which indicates that the optionlet structure in the simulation market is an ATM curve
-        bool simIsAtm = false;
         if (volStrikes.empty()) {
             volStrikes = { 0.0 };
-            simIsAtm = true;
         }
         Size n_cfvol_strikes = volStrikes.size();
 
