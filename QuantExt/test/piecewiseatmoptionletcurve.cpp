@@ -487,6 +487,106 @@ BOOST_DATA_TEST_CASE_F(CommonVars, testPiecewiseAtmOptionletStripping,
     }
 }
 
+BOOST_FIXTURE_TEST_CASE(testAtmStrippingExceptions, CommonVars) {
+
+    BOOST_TEST_MESSAGE("Testing ATM stripping exception behaviour");
+
+    // Use the normal ATM volatility test data
+    CapFloorVolatilityEUR testVols;
+    vector<Period> tenors = testVols.atmTenors;
+    vector<Real> volatilities = testVols.nAtmVols;
+    VolatilityType type = Normal;
+    Real displacement = 0.0;
+
+    // Store the ATM volatility quotes and handles
+    vector<boost::shared_ptr<SimpleQuote> > volQuotes(tenors.size());
+    vector<Handle<Quote> > volHandles(tenors.size());
+    for (Size i = 0; i < tenors.size(); i++) {
+        Real volatility = volatilities[i];
+        volQuotes[i] = boost::make_shared<SimpleQuote>(volatility);
+        volHandles[i] = Handle<Quote>(volQuotes[i]);
+    }
+
+    // Get configuration values for bootstrap
+    Real globalAccuracy = 1e-10;
+    bool dontThrow = false;
+    bool dontThrowUsePrevious = false;
+
+    // Cap floor term curve
+    boost::shared_ptr<CapFloorTermVolCurve> cftvc = boost::make_shared<InterpolatedCapFloorTermVolCurve<LinearFlat> >(
+        settlementDays, calendar, bdc, tenors, volHandles, dayCounter, true);
+
+    // Piecewise curve
+    VolatilityType curveVolatilityType = Normal;
+    Real curveDisplacement = 0.0;
+    bool interpOnOptionlets = true;
+    boost::shared_ptr<OptionletVolatilityStructure> ovCurve = 
+        boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex, 
+            testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
+            interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
+            QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
+
+    // Checks
+    Period oneYear = 1 * Years;
+    Period fiveYears = 5 * Years;
+    Period eightYears = 8 * Years;
+    Volatility oneYearVol;
+    Volatility fiveYearVol;
+    Volatility eightYearVol;
+    BOOST_CHECK_NO_THROW(oneYearVol = ovCurve->volatility(oneYear, 0.01, true));
+    BOOST_TEST_MESSAGE("1Y vol: " << oneYearVol);
+    BOOST_CHECK_NO_THROW(fiveYearVol = ovCurve->volatility(fiveYears, 0.01, true));
+    BOOST_TEST_MESSAGE("5Y vol: " << fiveYearVol);
+    BOOST_CHECK_NO_THROW(eightYearVol = ovCurve->volatility(eightYears, 0.01, true));
+    BOOST_TEST_MESSAGE("8Y vol: " << eightYearVol);
+
+    // Increase the 5Y volatility to introduce an exception. Can't bootstrap the 7Y and 10Y caps as a result 
+    volQuotes[2]->setValue(2 * volQuotes[2]->value());
+    BOOST_CHECK_THROW(ovCurve->volatility(fiveYears, 0.01, true), Error);
+
+    // Rebuild ovCurve with dontThrow set to true and using min value
+    dontThrow = true;
+    dontThrowUsePrevious = false;
+    ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex,
+        testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
+        interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
+        QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
+
+    // Check bootstrap passes and check the values.
+    // - the 1Y optionlet volatility should not have been affected
+    // - the 5Y optionlet volatility should have increased
+    // - the 8Y optionlet volatility is between time 6.5 (7Y cap) and 9.5 (10Y cap) and both of them are set to the 
+    //   min value from the traits of 1e-8 => the 8Y optionlet volatility should be 1e-8
+    Volatility testVol = 0.0;
+    BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(oneYear, 0.01, true));
+    BOOST_CHECK_SMALL(fabs(testVol - oneYearVol), tolerance);
+    BOOST_TEST_MESSAGE("1Y vol after bump using min: " << testVol);
+    BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(fiveYears, 0.01, true));
+    BOOST_CHECK_GT(testVol, fiveYearVol);
+    BOOST_TEST_MESSAGE("5Y vol after bump using min: " << testVol);
+    BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(eightYears, 0.01, true));
+    BOOST_CHECK_CLOSE(testVol, 1e-8, tolerance);
+    BOOST_TEST_MESSAGE("8Y vol after bump using min: " << testVol);
+
+    // Rebuild ovCurve with dontThrow set to true and using previous value
+    dontThrow = true;
+    dontThrowUsePrevious = true;
+    ovCurve = boost::make_shared<PiecewiseAtmOptionletCurve<LinearFlat> >(settlementDays, cftvc, iborIndex,
+        testYieldCurves.discountEonia, accuracy, true, type, displacement, curveVolatilityType, curveDisplacement,
+        interpOnOptionlets, LinearFlat(), QuantExt::IterativeBootstrap<PiecewiseAtmOptionletCurve<LinearFlat,
+        QuantExt::IterativeBootstrap>::optionlet_curve>(globalAccuracy, dontThrow, dontThrowUsePrevious));
+
+    // Check bootstrap passes and check the values.
+    BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(oneYear, 0.01, true));
+    BOOST_CHECK_SMALL(fabs(testVol - oneYearVol), tolerance);
+    BOOST_TEST_MESSAGE("1Y vol after bump using previous: " << testVol);
+    BOOST_CHECK_NO_THROW(testVol = ovCurve->volatility(fiveYears, 0.01, true));
+    BOOST_CHECK_GT(testVol, fiveYearVol);
+    BOOST_TEST_MESSAGE("5Y vol after bump using previous: " << testVol);
+    BOOST_CHECK_SMALL(fabs(testVol - ovCurve->volatility(eightYears, 0.01, true)), tolerance);
+    BOOST_TEST_MESSAGE("8Y vol after bump using previous: " << ovCurve->volatility(eightYears, 0.01, true));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE_END()

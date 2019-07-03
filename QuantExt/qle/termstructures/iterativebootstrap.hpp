@@ -43,8 +43,21 @@ template <class Curve>
 class IterativeBootstrap {
     typedef typename Curve::traits_type Traits;
     typedef typename Curve::interpolator_type Interpolator;
+
 public:
-    IterativeBootstrap(QuantLib::Real globalAccuracy = 1e-10);
+    /*! Constructor
+        \param globalAccuracy       Accuracy for the global bootstrap stopping criterion 
+        \param dontThrow            If set to \c true, the bootstrap doesn't throw and returns a <em>fall back</em> 
+                                    result
+        \param dontThrowUsePrevious If \p dontThrow is set to \c true, this determines what value to use if the 
+                                    bootstrap fails on a pillar. If \p dontThrowUsePrevious is set to \c true, use 
+                                    the previous pillar's value else use the min value as defined in the Traits. 
+    */
+    IterativeBootstrap(
+        QuantLib::Real globalAccuracy = 1e-10,
+        bool dontThrow = false,
+        bool dontThrowUsePrevious = true);
+    
     void setup(Curve* ts);
     void calculate() const;
 private:
@@ -58,13 +71,15 @@ private:
     mutable std::vector<QuantLib::Real> previousData_;
     mutable std::vector<boost::shared_ptr<QuantLib::BootstrapError<Curve> > > errors_;
     QuantLib::Real globalAccuracy_;
+    bool dontThrow_;
+    bool dontThrowUsePrevious_;
 };
 
 
 template <class Curve>
-IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy)
-    : ts_(0), initialized_(false), validCurve_(false),
-      loopRequired_(Interpolator::global), globalAccuracy_(globalAccuracy) {}
+IterativeBootstrap<Curve>::IterativeBootstrap(QuantLib::Real globalAccuracy, bool dontThrow, bool dontThrowUsePrevious)
+    : ts_(0), initialized_(false), validCurve_(false), loopRequired_(Interpolator::global), 
+      globalAccuracy_(globalAccuracy), dontThrow_(dontThrow), dontThrowUsePrevious_(dontThrowUsePrevious){}
 
 template <class Curve>
 void IterativeBootstrap<Curve>::setup(Curve* ts) {
@@ -231,12 +246,21 @@ void IterativeBootstrap<Curve>::calculate() const {
                     calculate();
                     return;
                 }
-                QL_FAIL(QuantLib::io::ordinal(iteration+1) << " iteration: failed "
+
+                if (dontThrow_) {
+                    if (dontThrowUsePrevious_) {
+                        ts_->data_[i] = ts_->data_[i - 1];
+                    } else {
+                        ts_->data_[i] = min;
+                    }
+                } else {
+                    QL_FAIL(QuantLib::io::ordinal(iteration + 1) << " iteration: failed "
                         "at " << QuantLib::io::ordinal(i) << " alive instrument, "
                         "pillar " << errors_[i]->helper()->pillarDate() <<
                         ", maturity " << errors_[i]->helper()->maturityDate() <<
                         ", reference date " << ts_->dates_[0] <<
                         ": " << e.what());
+                }
             }
         }
 
@@ -251,10 +275,16 @@ void IterativeBootstrap<Curve>::calculate() const {
         if (change <= globalAccuracy_ || change <= accuracy)
             break;
 
-        QL_REQUIRE(iteration < maxIterations,
-                    "convergence not reached after " << iteration <<
+        // If we hit the max number of iterations and dontThrow is true, just use what we have
+        if (iteration == maxIterations) {
+            if (dontThrow_) {
+                break;
+            } else {
+                QL_FAIL("convergence not reached after " << iteration <<
                     " iterations; last improvement " << change <<
-                    ", required accuracy " << accuracy);
+                    ", required accuracy " << std::max(globalAccuracy_, accuracy));
+            }
+        }
 
         validData = true;
     }
