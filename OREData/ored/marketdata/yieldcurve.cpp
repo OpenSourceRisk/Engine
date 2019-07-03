@@ -1650,10 +1650,10 @@ boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
     string unitCcy;
     string ccy;
     Handle<Quote> spot;
-    if (tokens.size() == 4 && tokens[0] == "FX") {
+    if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
         unitCcy = tokens[2];
         ccy = tokens[3];   
-    } else if (spotId.size == 6){
+    } else if (tokens.size() == 1 && spotId.size() == 6){
         unitCcy = spotId.substr(0, 3);
         ccy = spotId.substr(3);
     } else {
