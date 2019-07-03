@@ -29,7 +29,7 @@
 #include <ored/marketdata/curvespec.hpp>
 #include <ored/marketdata/loader.hpp>
 #include <ored/marketdata/market.hpp>
-//#include <ql/termstructures/yield/zeroyieldstructure.hpp>
+#include <ored/marketdata/fxtriangulation.hpp>
 #include <ql/termstructures/yield/ratehelpers.hpp>
 
 namespace ore {
@@ -72,7 +72,9 @@ public:
         const Conventions& conventions,
         //! Map of underlying yield curves if required
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
-            map<string, boost::shared_ptr<YieldCurve>>());
+            map<string, boost::shared_ptr<YieldCurve>>(),
+        //! FxTriangultion to get FX rate from cross if needed
+        const FXTriangulation fxTriangulation = FXTriangulation());
 
     //! \name Inspectors
     //@{
@@ -90,10 +92,11 @@ private:
     bool extrapolation_;
     boost::shared_ptr<YieldCurve> discountCurve_;
 
+
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;
     const Conventions& conventions_;
-
+    const FXTriangulation fxTriangulation_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
 
@@ -148,6 +151,10 @@ private:
                                vector<boost::shared_ptr<RateHelper>>& instruments);
     void addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegment>& segment,
                                   vector<boost::shared_ptr<RateHelper>>& instruments);
+
+    // get the fx spot from the string provided
+    boost::shared_ptr<FXSpotQuote> getFxSpotQuote(string spotId);
+
 };
 
 //! Helper function for parsing interpolation method
