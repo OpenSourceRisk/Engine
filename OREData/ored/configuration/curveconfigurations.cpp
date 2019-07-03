@@ -238,7 +238,7 @@ std::set<string> CurveConfigurations::conventions() const {
 set<string> CurveConfigurations::yieldCurveConfigIds() {
 
     set<string> curves;
-    for (auto yc : yieldVolCurveConfigs_)
+    for (auto yc : yieldCurveConfigs_)
         curves.insert(yc.first);
 
     return curves;
