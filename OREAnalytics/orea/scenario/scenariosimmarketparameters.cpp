@@ -1256,6 +1256,10 @@ XMLNode* ScenarioSimMarketParameters::toXML(XMLDocument& doc) {
         XMLUtils::addChild(doc, fxVolatilitiesNode, "ReactionToTimeDecay", fxVolDecayMode_);
         XMLUtils::addChildren(doc, fxVolatilitiesNode, "CurrencyPairs", "CurrencyPair", fxVolCcyPairs());
         XMLUtils::addGenericChildAsList(doc, fxVolatilitiesNode, "Expiries", fxVolExpiries_);
+        if (fxVolIsSurface_) {
+            XMLNode* surfaceNode = XMLUtils::addChild(doc, fxVolatilitiesNode, "Surface");
+            XMLUtils::addGenericChildAsList(doc, surfaceNode, "Moneyness", fxMoneyness_);
+        }
         if (fxVolDayCounters_.size() > 0) {
             XMLNode* node = XMLUtils::addChild(doc, fxVolatilitiesNode, "DayCounters");
             for (auto dc : fxVolDayCounters_) {
