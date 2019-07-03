@@ -974,8 +974,8 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
         string indexName = index->name();
         // remove blanks (FIXME)
-        indexName.replace(indexName.find(" ", 0), 1, "");
-
+	indexName.replace(indexName.find(" ", 0), 1, "");
+ 
         // get a coupon pricer for the leg
         boost::shared_ptr<EngineBuilder> cpBuilder = engineFactory->builder("CappedFlooredCpiLegCoupons");
         QL_REQUIRE(cpBuilder, "No builder found for CappedFlooredCpiLegCoupons");
@@ -989,6 +989,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
         boost::shared_ptr<CapFlooredCpiLegCashFlowEngineBuilder> cappedFlooredCpiCashFlowBuilder =
             boost::dynamic_pointer_cast<CapFlooredCpiLegCashFlowEngineBuilder>(cfBuilder);
         boost::shared_ptr<InflationCashFlowPricer> cashFlowPricer = cappedFlooredCpiCashFlowBuilder->engine(indexName);
+	DLOG("Stop 6");
 
         // set coupon pricer for the leg
         for (Size i = 0; i < leg.size(); i++) {
@@ -998,20 +999,12 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
             boost::shared_ptr<CappedFlooredCPICoupon> cfCpiCoupon =
                 boost::dynamic_pointer_cast<CappedFlooredCPICoupon>(leg[i]);
             if (cfCpiCoupon) {
-                DLOG("Capped/Floored CPI Coupon " << i << ", set pricer");
                 cfCpiCoupon->setPricer(couponPricer);
-                DLOG("Capped/Floored CPI Coupon " << i << ", set pricer done");
-                DLOG("Capped/Floored CPI Coupon " << i << " amount " << cfCpiCoupon->amount() << " "
-                                                  << cfCpiCoupon->date());
             } else {
                 boost::shared_ptr<CappedFlooredCPICashFlow> cfCpiCashFlow =
                     boost::dynamic_pointer_cast<CappedFlooredCPICashFlow>(leg[i]);
                 if (cfCpiCashFlow) {
-                    DLOG("Capped/Floored CPI CashFlow " << i);
                     cfCpiCashFlow->setPricer(cashFlowPricer);
-                    DLOG("Pricer set");
-                    DLOG("Capped/Floored CPI Coupon " << i << " amount " << cfCpiCashFlow->amount() << " "
-                                                      << cfCpiCashFlow->date());
                 }
             }
         }
