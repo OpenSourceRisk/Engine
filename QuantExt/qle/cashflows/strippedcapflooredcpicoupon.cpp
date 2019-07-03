@@ -16,6 +16,7 @@ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 FITNESS FOR A PARTICULAR PURPOSE. See the license for more details.
 */
 
+#include <iostream>
 #include <ql/cashflows/cpicouponpricer.hpp>
 #include <ql/cashflows/inflationcoupon.hpp>
 #include <ql/cashflows/inflationcouponpricer.hpp>
@@ -46,7 +47,9 @@ StrippedCappedFlooredCPICoupon::StrippedCappedFlooredCPICoupon(
     registerWith(underlying);
 }
 
-Rate StrippedCappedFlooredCPICoupon::rate() const { return underlying_->rate() - underlying_->underlying()->rate(); }
+Rate StrippedCappedFlooredCPICoupon::rate() const {
+    return underlying_->rate() - underlying_->underlying()->rate();
+}
 
 Rate StrippedCappedFlooredCPICoupon::cap() const {
     QL_FAIL("not implemented");
@@ -84,11 +87,6 @@ bool StrippedCappedFlooredCPICoupon::isCap() const { return underlying_->isCappe
 bool StrippedCappedFlooredCPICoupon::isFloor() const { return underlying_->isFloored(); }
 
 bool StrippedCappedFlooredCPICoupon::isCollar() const { return isCap() && isFloor(); }
-
-// void StrippedCappedFlooredCPICoupon::setPricer(const ext::shared_ptr<CPICouponPricer>& pricer) {
-//     CPICoupon::setPricer(pricer);
-//     underlying_->setPricer(pricer);
-// }
 
 StrippedCappedFlooredCPICouponLeg::StrippedCappedFlooredCPICouponLeg(const Leg& underlyingLeg)
     : underlyingLeg_(underlyingLeg) {}

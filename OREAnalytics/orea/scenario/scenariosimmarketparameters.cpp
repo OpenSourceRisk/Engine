@@ -407,6 +407,10 @@ void ScenarioSimMarketParameters::setZeroInflationCapFloorNames(vector<string> n
     addParamsName(RiskFactorKey::KeyType::ZeroInflationCapFloorVolatility, names);
 }
 
+void ScenarioSimMarketParameters::setZeroInflationCapFloorVolExpiries(const string& key, const std::vector<Period>& p) {
+    zeroInflationCapFloorVolExpiries_[key] = p;
+}
+
 void ScenarioSimMarketParameters::setDefaultNames(vector<string> names) {
     addParamsName(RiskFactorKey::KeyType::SurvivalProbability, names);
     setRecoveryRates(names);

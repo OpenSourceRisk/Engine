@@ -1610,7 +1610,7 @@ void SensitivityScenarioGenerator::generateZeroInflationCapFloorVolScenarios(boo
     for (auto c : sensitivityData_->zeroInflationCapFloorVolShiftData()) {
         std::string name = c.first;
         Size n_exp = simMarketData_->zeroInflationCapFloorVolExpiries(name).size();
-        SensitivityScenarioData::VolShiftData data = c.second;
+        SensitivityScenarioData::VolShiftData data = *c.second;
         ShiftType shiftType = parseShiftType(data.shiftType);
         Real shiftSize = data.shiftSize;
         vector<vector<Real>> volData(n_exp, vector<Real>(n_strikes, 0.0));
@@ -2488,7 +2488,7 @@ SensitivityScenarioGenerator::zeroInflationCapFloorVolScenarioDescription(string
     bool up) {
     QL_REQUIRE(sensitivityData_->zeroInflationCapFloorVolShiftData().find(name) != sensitivityData_->zeroInflationCapFloorVolShiftData().end(),
         "currency " << name << " not found in zero inflation cap/floor vol shift data");
-    SensitivityScenarioData::VolShiftData data = sensitivityData_->zeroInflationCapFloorVolShiftData()[name];
+    SensitivityScenarioData::VolShiftData data = *sensitivityData_->zeroInflationCapFloorVolShiftData()[name];
     QL_REQUIRE(expiryBucket < data.shiftExpiries.size(), "expiry bucket " << expiryBucket << " out of range");
     QL_REQUIRE(strikeBucket < data.shiftStrikes.size(), "strike bucket " << strikeBucket << " out of range");
     Size index = expiryBucket * data.shiftStrikes.size() + strikeBucket;

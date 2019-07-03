@@ -439,10 +439,10 @@ Real getShiftSize(const RiskFactorKey& key, const SensitivityScenarioData& sensi
         string name = keylabel;
         auto itr = sensiParams.zeroInflationCapFloorVolShiftData().find(name);
         QL_REQUIRE(itr != sensiParams.zeroInflationCapFloorVolShiftData().end(), "shiftData not found for " << name);
-        shiftSize = itr->second.shiftSize;
-        if (parseShiftType(itr->second.shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
-            vector<Real> strikes = itr->second.shiftStrikes;
-            vector<Period> expiries = itr->second.shiftExpiries;
+        shiftSize = itr->second->shiftSize;
+        if (parseShiftType(itr->second->shiftType) == SensitivityScenarioGenerator::ShiftType::Relative) {
+            vector<Real> strikes = itr->second->shiftStrikes;
+            vector<Period> expiries = itr->second->shiftExpiries;
             QL_REQUIRE(strikes.size() > 0, "Only strike zc inflation capfloor vols supported");
             Size keyIdx = key.index;
             Size expIdx = keyIdx / strikes.size();

@@ -256,6 +256,9 @@ public:
 
     void setSimulateZeroInflationCapFloorVols(bool simulate);
     void setZeroInflationCapFloorNames(vector<string> names);
+    string& zeroInflationCapFloorVolDecayMode() { return zeroInflationCapFloorVolDecayMode_; }
+    void setZeroInflationCapFloorVolExpiries(const string& key, const vector<Period>& p);
+    vector<Real>& zeroInflationCapFloorVolStrikes() { return zeroInflationCapFloorVolStrikes_; }
 
     void setSimulateSurvivalProbabilities(bool simulate);
     void setSimulateRecoveryRates(bool simulate);

@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <Portfolio>
-  <!--
   <Trade id="YoY_Swap">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -307,7 +306,6 @@
       </LegData>
     </SwapData>
   </Trade>
-  -->
   
   <Trade id="CPI_Swap_1">
     <TradeType>Swap</TradeType>
@@ -383,7 +381,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <!--
+
   <Trade id="CPI_Swap_2">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -460,7 +458,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  -->
+
   <Trade id="CappedFloored_CPI_Swap_1">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -542,7 +540,7 @@
       </LegData>
     </SwapData>
   </Trade>
-  <!--
+
   <Trade id="CappedFloored_CPI_Swap_2">
     <TradeType>Swap</TradeType>
     <Envelope>
@@ -622,7 +620,166 @@
       </LegData>
     </SwapData>
   </Trade>
-  -->
+
+  <Trade id="CappedFloored_CPI_Swap_1_Naked">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <!--<LegData>
+        <LegType>ZeroCouponFixed</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <DayCounter>Year</DayCounter>
+        <PaymentConvention>Unadjusted</PaymentConvention>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2036-02-05</EndDate>
+            <Tenor>20Y</Tenor>
+            <Calendar>TARGET</Calendar>
+            <Convention>MF</Convention>
+            <TermConvention>MF</TermConvention>
+            <Rule>Zero</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <ZeroCouponFixedLegData>
+	  <Rates>
+            <Rate>0.056467309</Rate>
+          </Rates>
+          <Compounding>Compounded</Compounding>
+	  <SubtractNotional>true</SubtractNotional>
+        </ZeroCouponFixedLegData>
+	</LegData>-->
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+	  <Exchanges>
+	    <NotionalFinalExchange>true</NotionalFinalExchange>
+	  </Exchanges>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Dates>
+	    <Calendar>EUR</Calendar>
+	    <Dates>
+	      <Date>2036-02-05</Date>
+	    </Dates>
+          </Dates>
+        </ScheduleData>
+        <CPILegData>
+          <Index>EUHICPXT</Index>
+          <Rates>
+            <Rate>1</Rate>
+          </Rates>
+          <BaseCPI>100</BaseCPI>
+	  <StartDate>2016-02-05</StartDate>
+          <ObservationLag>3M</ObservationLag>
+          <Interpolation>AsIndex</Interpolation>
+	  <SubtractInflationNotional>true</SubtractInflationNotional>
+	  <Caps>
+	    <Cap>0.03</Cap>
+	  </Caps>
+	  <NakedOption>Y</NakedOption>
+        </CPILegData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
+  <Trade id="CappedFloored_CPI_Swap_2_Naked">
+    <TradeType>Swap</TradeType>
+    <Envelope>
+      <CounterParty>CPTY_A</CounterParty>
+      <NettingSetId>CPTY_A</NettingSetId>
+      <AdditionalFields/>
+    </Envelope>
+    <SwapData>
+      <!--<LegData>
+        <LegType>Floating</LegType>
+        <Payer>true</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>ModifiedFollowing</PaymentConvention>
+        <FloatingLegData>
+          <Index>EUR-EURIBOR-6M</Index>
+          <Spreads>
+            <Spread>0.0</Spread>
+          </Spreads>
+          <IsInArrears>false</IsInArrears>
+        </FloatingLegData>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2021-02-05</EndDate>
+            <Tenor>6M</Tenor>
+            <Calendar>EUR</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+      </LegData>-->
+      <LegData>
+        <LegType>CPI</LegType>
+        <Payer>false</Payer>
+        <Currency>EUR</Currency>
+        <Notionals>
+          <Notional>10000000</Notional>
+        </Notionals>
+        <DayCounter>ACT/ACT</DayCounter>
+        <PaymentConvention>Following</PaymentConvention>
+        <ScheduleData>
+          <Rules>
+            <StartDate>2016-02-05</StartDate>
+            <EndDate>2021-02-05</EndDate>
+            <Tenor>1Y</Tenor>
+            <Calendar>EUR</Calendar>
+            <Convention>ModifiedFollowing</Convention>
+            <TermConvention>ModifiedFollowing</TermConvention>
+            <Rule>Forward</Rule>
+            <EndOfMonth/>
+            <FirstDate/>
+            <LastDate/>
+          </Rules>
+        </ScheduleData>
+        <CPILegData>
+          <Index>EUHICPXT</Index>
+          <Rates>
+            <Rate>0.02</Rate>
+          </Rates>
+          <BaseCPI>100</BaseCPI>
+          <StartDate>2016-02-05</StartDate>
+          <ObservationLag>3M</ObservationLag>
+          <Interpolation>AsIndex</Interpolation>
+	  <SubtractInflationNotional>true</SubtractInflationNotional>
+	  <Caps>
+	    <Cap>0.03</Cap>
+	  </Caps>
+	  <NakedOption>Y</NakedOption>
+	</CPILegData>
+      </LegData>
+    </SwapData>
+  </Trade>
+
   <Trade id="CPI_CapFloor_1">
     <TradeType>CapFloor</TradeType>
     <Envelope>
@@ -669,7 +826,7 @@
       </Caps>
     </CapFloorData>
   </Trade>
-<!--
+
   <Trade id="CPI_CapFloor_2">
     <TradeType>CapFloor</TradeType>
     <Envelope>
@@ -718,5 +875,5 @@
       </Caps>
     </CapFloorData>
   </Trade>
--->
+
 </Portfolio>

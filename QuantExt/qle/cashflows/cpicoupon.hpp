@@ -40,7 +40,7 @@ public:
     CappedFlooredCPICashFlow(const ext::shared_ptr<CPICashFlow>& underlying, Date startDate = Date(),
                              Period observationLag = 0 * Days, Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
 
-    Real amount() const;
+    virtual Real amount() const;
     void setPricer(const ext::shared_ptr<InflationCashFlowPricer>& pricer);
     bool isCapped() const { return isCapped_; }
     bool isFloored() const { return isFloored_; }
@@ -64,7 +64,7 @@ class CappedFlooredCPICoupon : public CPICoupon {
 public:
     CappedFlooredCPICoupon(const ext::shared_ptr<CPICoupon>& underlying, Date startDate = Date(),
                            Rate cap = Null<Rate>(), Rate floor = Null<Rate>());
-    Rate rate() const;
+    virtual Rate rate() const;
 
     ext::shared_ptr<CPICoupon> underlying() const { return underlying_; }
 

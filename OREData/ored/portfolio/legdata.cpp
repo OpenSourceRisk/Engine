@@ -97,7 +97,7 @@ void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     if (subtractNotionalNode)
         subtractNotional_ = XMLUtils::getChildValueAsBool(node, "SubtractNotional", true);
     else
-        subtractNotional_ = true;
+        subtractNotional_ = false;
 }
 
 XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
@@ -796,7 +796,7 @@ Leg makeIborLeg(const LegData& data, const boost::shared_ptr<IborIndex>& index,
         }
     }
     return tmpLeg;
-} // namespace data
+}
 
 Leg makeOISLeg(const LegData& data, const boost::shared_ptr<OvernightIndex>& index) {
     boost::shared_ptr<FloatingLegData> floatData = boost::dynamic_pointer_cast<FloatingLegData>(data.concreteLegData());
@@ -1033,9 +1033,14 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
 
     // build naked option leg if required
     if (couponCapFloor && cpiLegData->nakedOption()) {
-        QL_FAIL("NakedOption not implemented yet for Capped/Floored CPI Legs");
-        Leg tmpLeg = StrippedCappedFlooredCouponLeg(leg);
-        leg = tmpLeg;
+        DLOG("Build StrippedCappedFlooredCouponLeg");
+        leg = StrippedCappedFlooredCPICouponLeg(leg);
+        // fix for missing registration in ql 1.13
+        for (auto const& t : leg) {
+            auto s = boost::dynamic_pointer_cast<StrippedCappedFlooredCPICoupon>(t);
+            if (s != nullptr)
+                s->registerWith(s->underlying());
+        }
     }
 
     return leg;

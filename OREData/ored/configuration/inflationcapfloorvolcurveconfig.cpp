@@ -44,16 +44,16 @@ InflationCapFloorVolatilityCurveConfig::InflationCapFloorVolatilityCurveConfig(
     const string& curveID, const string& curveDescription, const Type type, const VolatilityType& volatilityType,
     const bool extrapolate, const vector<string>& tenors, const vector<string>& strikes, const DayCounter& dayCounter,
     Natural settleDays, const Calendar& calendar, const BusinessDayConvention& businessDayConvention,
-    const string& index, const string& indexCurve, const string& yieldTermStructure)
+    const string& index, const string& indexCurve, const string& yieldTermStructure, const Period& observationLag)
     : CurveConfig(curveID, curveDescription), type_(type), volatilityType_(volatilityType), extrapolate_(extrapolate),
       tenors_(tenors), strikes_(strikes), dayCounter_(dayCounter), settleDays_(settleDays), calendar_(calendar),
       businessDayConvention_(businessDayConvention), index_(index), indexCurve_(indexCurve),
-      yieldTermStructure_(yieldTermStructure) {}
+      yieldTermStructure_(yieldTermStructure), observationLag_(observationLag) {}
 
 const vector<string>& InflationCapFloorVolatilityCurveConfig::quotes() {
     if (quotes_.size() == 0) {
-        boost::shared_ptr<IborIndex> index = parseIborIndex(index_);
-        Currency ccy = index->currency();
+        boost::shared_ptr<ZeroInflationIndex> index = parseZeroInflationIndex(index_);
+	Currency ccy = index->currency();
 
         string type;
         if (type_ == Type::ZC)
@@ -120,6 +120,7 @@ void InflationCapFloorVolatilityCurveConfig::fromXML(XMLNode* node) {
     index_ = XMLUtils::getChildValue(node, "Index", true);
     indexCurve_ = XMLUtils::getChildValue(node, "IndexCurve", true);
     yieldTermStructure_ = XMLUtils::getChildValue(node, "YieldTermStructure", true);
+    observationLag_ = parsePeriod(XMLUtils::getChildValue(node, "ObservationLag", true));
 }
 
 XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
@@ -154,6 +155,7 @@ XMLNode* InflationCapFloorVolatilityCurveConfig::toXML(XMLDocument& doc) {
     XMLUtils::addChild(doc, node, "Index", index_);
     XMLUtils::addChild(doc, node, "IndexCurve", indexCurve_);
     XMLUtils::addChild(doc, node, "YieldTermStructure", yieldTermStructure_);
+    XMLUtils::addChild(doc, node, "ObservationLag", to_string(observationLag_));
 
     return node;
 }
