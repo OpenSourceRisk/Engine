@@ -154,11 +154,10 @@ private:
     ScenarioDescription equityScenarioDescription(string equity, bool up);
     ScenarioDescription dividendYieldScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription equityVolScenarioDescription(string equity, Size expiryBucket, Size strikeBucket, bool up);
-    ScenarioDescription equityForecastCurveScenarioDescription(string equity, Size bucket, bool up);
     ScenarioDescription swaptionVolScenarioDescription(string ccy, Size expiryBucket, Size termBucket,
                                                        Size strikeBucket, bool up);
     ScenarioDescription yieldVolScenarioDescription(string securityId, Size expiryBucket, Size termBucket, bool up);
-    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up);
+    ScenarioDescription capFloorVolScenarioDescription(string ccy, Size expiryBucket, Size strikeBucket, bool up, bool isAtm);
     ScenarioDescription survivalProbabilityScenarioDescription(string name, Size bucket, bool up);
     ScenarioDescription CdsVolScenarioDescription(string name, Size expiryBucket, Size strikeBucket, bool up);
     ScenarioDescription zeroInflationScenarioDescription(string index, Size bucket, bool up);

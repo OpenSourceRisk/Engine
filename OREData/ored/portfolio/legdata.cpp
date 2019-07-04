@@ -99,7 +99,7 @@ XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
 
 void FloatingLegData::fromXML(XMLNode* node) {
     XMLUtils::checkNode(node, legNodeName());
-    index_ = XMLUtils::getChildValue(node, "Index", true);
+    index_ = internalIndexName(XMLUtils::getChildValue(node, "Index", true));
     indices_.insert(index_);
     // These are all optional
     spreads_ =
@@ -924,6 +924,7 @@ Leg makeCPILeg(const LegData& data, const boost::shared_ptr<ZeroInflationIndex>&
     // If Notional Exchange set to false, remove the final cashflow.
 
     if (!data.notionalFinalExchange()) {
+        QL_REQUIRE(n > 1, "Cannot have Notional Final Exchange with just a single cashflow");
         boost::shared_ptr<CPICashFlow> cpicf = boost::dynamic_pointer_cast<CPICashFlow>(leg[n - 1]);
         boost::shared_ptr<Coupon> coupon = boost::dynamic_pointer_cast<Coupon>(leg[n - 2]);
         if (cpicf && (cpicf->date() == coupon->date()))

@@ -3,6 +3,7 @@ SUBDIRS = \
 	currencies \
 	indexes \
 	instruments \
+	interpolators \
 	math \
 	methods \
 	models \

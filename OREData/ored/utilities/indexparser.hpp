@@ -131,5 +131,16 @@ boost::shared_ptr<Index> parseIndex(const string& s, const Conventions& conventi
 */
 bool isOvernightIndex(const std::string& indexName);
 
+/*! In some cases, we allow multiple external index names to represent the same QuantLib index. This function returns 
+    the unique index name that we use internally to represent the QuantLib index.
+
+    For example, we allow:
+    - \c USD-FedFunds-1D and \c USD-FedFunds externally but we use \c USD-FedFunds internally
+    - \c CAD-BA-tenor and \c CAD-CDOR-tenor externally but we use \c CAD-CDOR-tenor internally
+
+    \ingroup utilities
+*/
+std::string internalIndexName(const std::string& indexName);
+
 } // namespace data
 } // namespace ore

@@ -62,7 +62,6 @@ model/lgmbuilder.cpp
 model/lgmdata.cpp
 model/utilities.cpp
 portfolio/bond.cpp
-portfolio/forwardbond.cpp
 portfolio/builders/capfloor.cpp
 portfolio/builders/capfloorediborleg.cpp
 portfolio/builders/cms.cpp
@@ -82,6 +81,7 @@ portfolio/equityforward.cpp
 portfolio/equityoption.cpp
 portfolio/equityswap.cpp
 portfolio/fixingdates.cpp
+portfolio/forwardbond.cpp
 portfolio/forwardrateagreement.cpp
 portfolio/fxforward.cpp
 portfolio/fxoption.cpp
@@ -187,9 +187,7 @@ model/lgmdata.hpp
 model/modelbuilder.hpp
 model/utilities.hpp
 portfolio/bond.hpp
-portfolio/forwardbond.hpp
 portfolio/builders/bond.hpp
-portfolio/builders/forwardbond.hpp
 portfolio/builders/cachingenginebuilder.hpp
 portfolio/builders/capfloor.hpp
 portfolio/builders/capfloorediborleg.hpp
@@ -201,6 +199,7 @@ portfolio/builders/commodityoption.hpp
 portfolio/builders/creditdefaultswap.hpp
 portfolio/builders/equityforward.hpp
 portfolio/builders/equityoption.hpp
+portfolio/builders/forwardbond.hpp
 portfolio/builders/fxforward.hpp
 portfolio/builders/fxoption.hpp
 portfolio/builders/swap.hpp
@@ -218,6 +217,7 @@ portfolio/equityforward.hpp
 portfolio/equityoption.hpp
 portfolio/equityswap.hpp
 portfolio/fixingdates.hpp
+portfolio/forwardbond.hpp
 portfolio/forwardrateagreement.hpp
 portfolio/fxforward.hpp
 portfolio/fxoption.hpp

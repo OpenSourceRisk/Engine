@@ -105,6 +105,17 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
     // store all curve build errors
     map<string, string> buildErrors;
 
+    // fx triangulation
+    FXTriangulation fxT;
+    // Add all FX quotes from the loader to Triangulation
+    for (auto& md : loader.loadQuotes(asof)) {
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT) {
+            boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
+            fxT.addQuote(q->unitCcy() + q->ccy(), q->quote());
+        }
+    }
+
     for (const auto& configuration : params.configurations()) {
 
         LOG("Build objects in TodaysMarket configuration " << configuration.first);
@@ -191,8 +202,9 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (itr == requiredFxSpots.end()) {
                         // build the curve
                         LOG("Building FXSpot for asof " << asof);
-                        boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof, *fxspec, loader);
+                        boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof, *fxspec, fxT);
                         itr = requiredFxSpots.insert(make_pair(fxspec->name(), fxSpot)).first;
+                        fxT.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()); 
                     }
 
                     // add the handle to the Market Map (possible lots of times for proxies)
@@ -218,7 +230,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build the curve
                         LOG("Building FXVolatility for asof " << asof);
                         boost::shared_ptr<FXVolCurve> fxVolCurve = boost::make_shared<FXVolCurve>(
-                            asof, *fxvolspec, loader, curveConfigs, requiredFxSpots, requiredYieldCurves);
+                            asof, *fxvolspec, loader, curveConfigs, fxT, requiredYieldCurves);
                         itr = requiredFxVolCurves.insert(make_pair(fxvolspec->name(), fxVolCurve)).first;
                     }
 
@@ -638,22 +650,18 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         if (it.second == spec->name()) {
                             LOG("Adding EquityCurve (" << it.first << ") with spec " << *equityspec
                                                        << " to configuration " << configuration.first);
-                            Handle<YieldTermStructure> yts;
+                            yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] =
+                                itr->second->dividendYieldTermStructure();
+                            equitySpots_[make_pair(configuration.first, it.first)] = itr->second->equitySpot();
+
+                            // set the equity index
                             boost::shared_ptr<EquityCurveConfig> equityConfig =
                                 curveConfigs.equityCurveConfig(equityspec->curveConfigID());
-                            boost::shared_ptr<YieldTermStructure> divYield = itr->second->divYieldTermStructure(asof);
-                            Handle<YieldTermStructure> div_h(divYield);
-                            Handle<Quote> eqSpot =
-                                Handle<Quote>(boost::make_shared<SimpleQuote>(itr->second->equitySpot()));
 
                             boost::shared_ptr<EquityIndex> eqCurve = boost::make_shared<EquityIndex>(
                                 it.first, parseCalendar(equityConfig->currency()), parseCurrency(equityConfig->currency()),
-                                eqSpot, itr->second->forecastingYieldTermStructure(), div_h);
-                            Handle<EquityIndex> eq_h(eqCurve);
-                            yieldCurves_[make_tuple(configuration.first, YieldCurveType::EquityDividend, it.first)] =
-                                div_h;
-                            equitySpots_[make_pair(configuration.first, it.first)] = eqSpot;
-                            equityCurves_[make_pair(configuration.first, it.first)] = eq_h;
+                                itr->second->equitySpot(), itr->second->forecastingYieldTermStructure(), itr->second->dividendYieldTermStructure());
+                            equityCurves_[make_pair(configuration.first, it.first)] = Handle<EquityIndex>(eqCurve);
                         }
                     }
                     break;

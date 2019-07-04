@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2017 Quaternion Risk Management Ltd
+ Copyright (C) 2019 Quaternion Risk Management Ltd
  All rights reserved.
 
  This file is part of ORE, a free-software/open-source library
@@ -23,61 +23,53 @@
 #ifndef quantext_black_variance_surface_sparse_hpp
 #define quantext_black_variance_surface_sparse_hpp
 
-#include <ql/math/interpolations/interpolation2d.hpp>
+#include <ql/math/interpolations/linearinterpolation.hpp>
 #include <ql/termstructures/volatility/equityfx/blackvoltermstructure.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
-#include <ql/math/interpolation.hpp>
+#include <qle/interpolators/optioninterpolator2d.hpp>
 
 namespace QuantExt {
-using namespace QuantLib;
 
 //! Black volatility surface based on sparse matrix.
 //!  \ingroup termstructures
-class BlackVarianceSurfaceSparse : public BlackVarianceTermStructure {
+class BlackVarianceSurfaceSparse : public QuantLib::BlackVarianceTermStructure,
+                                   public OptionInterpolator2d<QuantLib::Linear, QuantLib::Linear> {
 
 public:
-    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const Calendar& cal, const std::vector<Date>& dates,
-                               const std::vector<Real>& strikes, const std::vector<Volatility>& volatilities,
-                               const DayCounter& dayCounter);
+    BlackVarianceSurfaceSparse(const QuantLib::Date& referenceDate, const QuantLib::Calendar& cal, const std::vector<QuantLib::Date>& dates,
+                               const std::vector<QuantLib::Real>& strikes, const std::vector<QuantLib::Volatility>& volatilities,
+                               const QuantLib::DayCounter& dayCounter);
 
     //! \name TermStructure interface
     //@{
-    DayCounter dayCounter() const { return dayCounter_; }
-    Date maxDate() const { return Date::maxDate(); }
+    QuantLib::Date maxDate() const { return QuantLib::Date::maxDate(); }
+    const QuantLib::Date& referenceDate() const { return OptionInterpolator2d::referenceDate(); }
+    QuantLib::DayCounter dayCounter() const { return OptionInterpolator2d::dayCounter(); }
     //@}
     //! \name VolatilityTermStructure interface
     //@{
-    Real minStrike() const { return 0; }
-    Real maxStrike() const { return QL_MAX_REAL; }
-
+    QuantLib::Real minStrike() const { return 0; }
+    QuantLib::Real maxStrike() const { return QL_MAX_REAL; }
     //@}
+    
     //! \name Visitability
     //@{
-    virtual void accept(AcyclicVisitor&);
+    virtual void accept(QuantLib::AcyclicVisitor&);
     //@}
+
 protected:
-    virtual Real blackVarianceImpl(Time t, Real strike) const;
-
-private:
-    Real getVarForStrike(Real strike, const std::vector<Real>& strks, const std::vector<Real>& vars,
-                         const QuantLib::Interpolation& intrp) const;
-
-    DayCounter dayCounter_;
-    std::vector<Date> expiries_;                            // expiries
-    std::vector<Time> times_;                               // times
-    std::vector<Interpolation> interpolations_;             // strike interpolations for each expiry
-    std::vector<std::vector<Real> > strikes_;               // strikes for each expiry
-    std::vector<std::vector<Real> > variances_;
+    virtual QuantLib::Real blackVarianceImpl(QuantLib::Time t, QuantLib::Real strike) const { return getValue(t, strike); };
+    
 };
 
 // inline definitions
 
-inline void BlackVarianceSurfaceSparse::accept(AcyclicVisitor& v) {
-    Visitor<BlackVarianceSurfaceSparse>* v1 = dynamic_cast<Visitor<BlackVarianceSurfaceSparse>*>(&v);
+inline void BlackVarianceSurfaceSparse::accept(QuantLib::AcyclicVisitor& v) {
+    QuantLib::Visitor<BlackVarianceSurfaceSparse>* v1 = dynamic_cast<QuantLib::Visitor<BlackVarianceSurfaceSparse>*>(&v);
     if (v1 != 0)
         v1->visit(*this);
     else
-        BlackVarianceTermStructure::accept(v);
+        QuantLib::BlackVarianceTermStructure::accept(v);
 }
 } // namespace QuantExt
 

@@ -23,6 +23,7 @@
 #include <qle/termstructures/capfloortermvolsurface.hpp>
 
 using namespace QuantLib;
+using std::ostream;
 
 namespace QuantExt {
 
@@ -178,6 +179,17 @@ void CapFloorTermVolSurface::performCalculations() const {
             vols_[i][j] = volHandles_[i][j]->value();
 
     interpolation_.update();
+}
+
+ostream& operator<<(ostream& out, CapFloorTermVolSurface::InterpolationMethod method) {
+    switch (method) {
+    case CapFloorTermVolSurface::BicubicSpline:
+        return out << "BicubicSpline";
+    case CapFloorTermVolSurface::Bilinear:
+        return out << "Bilinear";
+    default:
+        QL_FAIL("Unknown CapFloorTermVolSurface::InterpolationMethod (" << Integer(method) << ")");
+    }
 }
 
 } // namespace QuantExt

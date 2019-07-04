@@ -86,6 +86,7 @@ public:
     const std::vector<Date>& optionDates() const;
     const std::vector<Time>& optionTimes() const;
     const std::vector<Rate>& strikes() const;
+    InterpolationMethod interpolationMethod() const;
     //@}
 protected:
     Volatility volatilityImpl(Time t, Rate strike) const;
@@ -112,6 +113,9 @@ private:
     InterpolationMethod interpolationMethod_;
     mutable Interpolation2D interpolation_;
 };
+
+//! In order to convert CapFloorTermVolSurface::InterpolationMethod to string
+std::ostream& operator<<(std::ostream& out, CapFloorTermVolSurface::InterpolationMethod method);
 
 // inline definitions
 
@@ -144,6 +148,11 @@ inline const std::vector<Time>& CapFloorTermVolSurface::optionTimes() const {
 }
 
 inline const std::vector<Rate>& CapFloorTermVolSurface::strikes() const { return strikes_; }
+
+inline CapFloorTermVolSurface::InterpolationMethod CapFloorTermVolSurface::interpolationMethod() const {
+    return interpolationMethod_;
+}
+
 } // namespace QuantExt
 
 #endif

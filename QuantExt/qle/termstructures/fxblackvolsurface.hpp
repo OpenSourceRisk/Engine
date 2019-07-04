@@ -104,17 +104,18 @@ public:
                                        const std::vector<Volatility>& atmVols, const std::vector<Volatility>& rr25d,
                                        const std::vector<Volatility>& bf25d, const DayCounter& dc, const Calendar& cal,
                                        const Handle<Quote>& fx, const Handle<YieldTermStructure>& dom,
-                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true)
+                                       const Handle<YieldTermStructure>& fore, bool requireMonotoneVariance = true, const bool firstApprox = false)
         : FxBlackVolatilitySurface(refDate, dates, atmVols, rr25d, bf25d, dc, cal, fx, dom, fore,
-                                   requireMonotoneVariance) {}
+                                   requireMonotoneVariance), firstApprox_(firstApprox)  {}
 
 protected:
+    bool firstApprox_;
+
     virtual boost::shared_ptr<FxSmileSection> blackVolSmileImpl(Real spot, Real rd, Real rf, Time t, Volatility atm,
                                                                 Volatility rr, Volatility bf) const {
-        return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf));
+        return boost::shared_ptr<FxSmileSection>(new VannaVolgaSmileSection(spot, rd, rf, t, atm, rr, bf, firstApprox_));
     }
 };
-
 } // namespace QuantExt
 
 #endif

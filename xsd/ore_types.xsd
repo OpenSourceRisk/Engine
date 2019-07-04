@@ -359,6 +359,7 @@
   <xs:simpleType name="equityType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="ForwardPrice"/>
+      <xs:enumeration value="OptionPremium"/>
       <xs:enumeration value="DividendYield"/>
       <xs:enumeration value="NoDividends"/>
     </xs:restriction>
@@ -369,6 +370,13 @@
       <xs:enumeration value="ATM"/>
       <xs:enumeration value="Smile"/>
       <xs:enumeration value="Constant"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="vannaVolgaApproximation">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="VannaVolga1"/>
+      <xs:enumeration value="VannaVolga2"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -463,6 +471,13 @@
       <xs:enumeration value="Floor"/>
     </xs:restriction>
   </xs:simpleType>
-
+  
+  <xs:simpleType name="exerciseStyle">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="European"/>
+      <xs:enumeration value="American"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
 </xs:schema>
 
