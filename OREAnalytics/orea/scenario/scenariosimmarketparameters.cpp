@@ -124,7 +124,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSimulateCorrelations(false);
 
     // Set default tenors (don't know why but keep it as is)
-    capFloorVolExpiries_[""] = vector<Period>();
     yoyInflationCapFloorVolExpiries_[""] = vector<Period>();
     defaultTenors_[""] = vector<Period>();
     equityDividendTenors_[""] = vector<Period>();
