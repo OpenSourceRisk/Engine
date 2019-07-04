@@ -138,9 +138,10 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
-                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves)
+                       const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, 
+                       const FXTriangulation& fxTriangulation)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
-      requiredYieldCurves_(requiredYieldCurves) {
+      requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation) {
 
     try {
 
@@ -1287,15 +1288,7 @@ void YieldCurve::addFXForwards(const boost::shared_ptr<YieldCurveSegment>& segme
     /* Need to retrieve the market FX spot rate */
     // LOG("YieldCurve::addFXForwards(), retrieve FX rate");
     string spotRateID = fxForwardSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotRateID, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
-    if (fxSpotMarketQuote) {
-        QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
-                   "Market quote not of type FX spot.");
-        fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
-    } else {
-        QL_FAIL("Could not find quote for ID " << spotRateID << " with as of date " << io::iso_date(asofDate_) << ".");
-    }
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote = getFxSpotQuote(spotRateID);
 
     /* Create an FX spot quote from the retrieved FX spot rate */
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
@@ -1367,15 +1360,7 @@ void YieldCurve::addCrossCcyBasisSwaps(const boost::shared_ptr<YieldCurveSegment
 
     /* Need to retrieve the market FX spot rate */
     string spotRateID = basisSwapSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotRateID, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
-    if (fxSpotMarketQuote) {
-        QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
-                   "Market quote not of type FX spot.");
-        fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
-    } else {
-        QL_FAIL("Could not find quote for ID " << spotRateID << " with as of date " << io::iso_date(asofDate_) << ".");
-    }
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote = getFxSpotQuote(spotRateID);
 
     /* Create an FX spot quote from the retrieved FX spot rate */
     Currency fxSpotSourceCcy = parseCurrency(fxSpotQuote->unitCcy());
@@ -1558,9 +1543,7 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     // Create the FX spot quote for the helper. The quote needs to be number of units of fixed leg
     // currency for 1 unit of float leg currency. We convert the market quote here if needed.
     string fxSpotId = swapSegment->spotRateID();
-    boost::shared_ptr<MarketDatum> md = loader_.get(fxSpotId, asofDate_);
-    boost::shared_ptr<FXSpotQuote> fxSpotMd = boost::dynamic_pointer_cast<FXSpotQuote>(md);
-    QL_REQUIRE(fxSpotMd, "Market quote " << fxSpotId << " should be of type 'FXSpotQuote'");
+    boost::shared_ptr<FXSpotQuote> fxSpotMd = getFxSpotQuote(fxSpotId);
     Currency mdUnitCcy = parseCurrency(fxSpotMd->unitCcy());
     Currency mdCcy = parseCurrency(fxSpotMd->ccy());
     Handle<Quote> fxSpotQuote;
@@ -1598,6 +1581,39 @@ void YieldCurve::addCrossCcyFixFloatSwaps(const boost::shared_ptr<YieldCurveSegm
     }
 }
 
+boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
+    // check the spot id, if like FX/RATE/CCY/CCY we go straight to the loader first
+    std::vector<string> tokens;
+    split(tokens, spotId, boost::is_any_of("/"));
+    
+    boost::shared_ptr<FXSpotQuote> fxSpotQuote;
+    if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
+        boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotId, asofDate_);
+        if (fxSpotMarketQuote) {
+            QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
+                "Market quote not of type FX spot.");
+            fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
+            return fxSpotQuote;
+        }
+    }
+
+    // Try to use triangulation otherwise
+    string unitCcy;
+    string ccy;
+    Handle<Quote> spot;
+    if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
+        unitCcy = tokens[2];
+        ccy = tokens[3];   
+    } else if (tokens.size() == 1 && spotId.size() == 6){
+        unitCcy = spotId.substr(0, 3);
+        ccy = spotId.substr(3);
+    } else {
+        QL_FAIL("Could not find quote for ID " << spotId << " with as of date " << io::iso_date(asofDate_) << ".");
+    }
+    spot = fxTriangulation_.getQuote(unitCcy + ccy);
+    fxSpotQuote = boost::make_shared<FXSpotQuote>(spot->value(), asofDate_, spotId, MarketDatum::QuoteType::RATE, unitCcy, ccy);
+    return fxSpotQuote;
+}
 
 // Get Pillar Dates
 // we have to try to cast and then call dates() on the subclasses, a bit messy

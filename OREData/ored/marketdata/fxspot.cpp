@@ -27,21 +27,8 @@
 namespace ore {
 namespace data {
 
-FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const Loader& loader) {
-
-    for (auto& md : loader.loadQuotes(asof)) {
-
-        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT) {
-
-            boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
-            QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
-            if (q->unitCcy() == spec.unitCcy() && q->ccy() == spec.ccy()) {
-                spot_ = q->quote();
-                return;
-            }
-        }
-    }
-    QL_FAIL("Failed to find a quote for " << spec);
+FXSpot::FXSpot(const Date& asof, FXSpotSpec spec, const FXTriangulation& fxTriangulation) {
+    spot_ = fxTriangulation.getQuote(spec.unitCcy() + spec.ccy());
 }
 } // namespace data
 } // namespace ore

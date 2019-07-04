@@ -107,6 +107,14 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
 
     // fx triangulation
     FXTriangulation fxT;
+    // Add all FX quotes from the loader to Triangulation
+    for (auto& md : loader.loadQuotes(asof)) {
+        if (md->asofDate() == asof && md->instrumentType() == MarketDatum::InstrumentType::FX_SPOT) {
+            boost::shared_ptr<FXSpotQuote> q = boost::dynamic_pointer_cast<FXSpotQuote>(md);
+            QL_REQUIRE(q, "Failed to cast " << md->name() << " to FXSpotQuote");
+            fxT.addQuote(q->unitCcy() + q->ccy(), q->quote());
+        }
+    }
 
     for (const auto& configuration : params.configurations()) {
 
@@ -194,7 +202,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                     if (itr == requiredFxSpots.end()) {
                         // build the curve
                         LOG("Building FXSpot for asof " << asof);
-                        boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof, *fxspec, loader);
+                        boost::shared_ptr<FXSpot> fxSpot = boost::make_shared<FXSpot>(asof, *fxspec, fxT);
                         itr = requiredFxSpots.insert(make_pair(fxspec->name(), fxSpot)).first;
                         fxT.addQuote(fxspec->subName().substr(0, 3) + fxspec->subName().substr(4, 3), itr->second->handle()); 
                     }

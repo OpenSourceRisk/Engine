@@ -40,11 +40,11 @@ class CurveSpec {
 public:
     //! Supported curve types
     enum class CurveType {
+        FX,
         Yield,
         CapFloorVolatility,
         SwaptionVolatility,
         YieldVolatility,
-        FX,
         FXVolatility,
         Default,
         CDSVolatility,
