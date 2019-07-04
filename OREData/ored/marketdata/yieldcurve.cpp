@@ -1588,12 +1588,15 @@ boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
     
     boost::shared_ptr<FXSpotQuote> fxSpotQuote;
     if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
-        boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotId, asofDate_);
-        if (fxSpotMarketQuote) {
-            QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
-                "Market quote not of type FX spot.");
-            fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
-            return fxSpotQuote;
+        if (loader_.has(spotId, asofDate_)) {
+            boost::shared_ptr<MarketDatum> fxSpotMarketQuote = loader_.get(spotId, asofDate_);
+
+            if (fxSpotMarketQuote) {
+                QL_REQUIRE(fxSpotMarketQuote->instrumentType() == MarketDatum::InstrumentType::FX_SPOT,
+                    "Market quote not of type FX spot.");
+                fxSpotQuote = boost::dynamic_pointer_cast<FXSpotQuote>(fxSpotMarketQuote);
+                return fxSpotQuote;
+            }
         }
     }
 
@@ -1601,9 +1604,16 @@ boost::shared_ptr<FXSpotQuote> YieldCurve::getFxSpotQuote(string spotId) {
     string unitCcy;
     string ccy;
     Handle<Quote> spot;
-    if (tokens.size() == 4 && tokens[0] == "FX" && tokens[1] == "RATE") {
-        unitCcy = tokens[2];
-        ccy = tokens[3];   
+    if (tokens.size() >1 && tokens[0] == "FX") {
+        if (tokens.size() == 3) {
+            unitCcy = tokens[1];
+            ccy = tokens[2];
+        } else if (tokens.size() == 4 && tokens[1] == "RATE") {
+            unitCcy = tokens[2];
+            ccy = tokens[3];
+        } else {
+            QL_FAIL("Invalid FX spot ID " << spotId);
+        }
     } else if (tokens.size() == 1 && spotId.size() == 6){
         unitCcy = spotId.substr(0, 3);
         ccy = spotId.substr(3);

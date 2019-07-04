@@ -154,7 +154,7 @@ TodaysMarket::TodaysMarket(const Date& asof, const TodaysMarketParameters& param
                         // build
                         LOG("Building YieldCurve for asof " << asof);
                         boost::shared_ptr<YieldCurve> yieldCurve = boost::make_shared<YieldCurve>(
-                            asof, *ycspec, curveConfigs, loader, conventions, requiredYieldCurves);
+                            asof, *ycspec, curveConfigs, loader, conventions, requiredYieldCurves, fxT);
                         itr = requiredYieldCurves.insert(make_pair(ycspec->name(), yieldCurve)).first;
                     }
 
