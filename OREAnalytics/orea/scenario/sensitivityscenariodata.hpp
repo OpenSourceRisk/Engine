@@ -71,9 +71,10 @@ public:
     };
 
     struct VolShiftData : ShiftData {
-        VolShiftData() : shiftStrikes({0.0}) {}
+        VolShiftData() : shiftStrikes({0.0}), isRelative(false) {}
         vector<Period> shiftExpiries;
-        vector<Real> shiftStrikes; // FIXME: absolute or relative to ATM ?
+        vector<Real> shiftStrikes;
+        bool isRelative;
     };
 
     struct CapFloorVolShiftData : VolShiftData {

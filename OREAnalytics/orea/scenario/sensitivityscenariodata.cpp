@@ -20,9 +20,11 @@
 #include <orea/scenario/sensitivityscenariodata.hpp>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/xmlutils.hpp>
+#include <ored/utilities/parsers.hpp>
 
 using ore::analytics::RiskFactorKey;
 using ore::data::XMLDocument;
+using ore::data::parseBool;
 using std::string;
 
 using namespace QuantLib;
@@ -49,6 +51,11 @@ void SensitivityScenarioData::volShiftDataFromXML(XMLNode* child, VolShiftData& 
     data.shiftStrikes = XMLUtils::getChildrenValuesAsDoublesCompact(child, "ShiftStrikes", requireShiftStrikes);
     if (data.shiftStrikes.size() == 0)
         data.shiftStrikes = {0.0};
+
+    // Set data.isRelative if it is provided explicitly
+    if (XMLNode* n = XMLUtils::getChildNode(child, "IsRelative")) {
+        data.isRelative = parseBool(XMLUtils::getNodeValue(n));
+    }
 }
 
 void SensitivityScenarioData::shiftDataToXML(XMLDocument& doc, XMLNode* node, const ShiftData& data) const {
@@ -523,6 +530,7 @@ XMLNode* SensitivityScenarioData::toXML(XMLDocument& doc) {
             XMLUtils::addAttribute(doc, node, "ccy", kv.first);
             volShiftDataToXML(doc, node, kv.second);
             XMLUtils::addChild(doc, node, "Index", kv.second.indexName);
+            XMLUtils::addChild(doc, node, "IsRelative", kv.second.isRelative);
         }
     }
 

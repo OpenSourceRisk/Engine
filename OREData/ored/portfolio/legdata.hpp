@@ -27,6 +27,7 @@
 #include <ored/portfolio/enginefactory.hpp>
 #include <ored/portfolio/schedule.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/indexparser.hpp>
 
 #include <ql/cashflow.hpp>
 #include <ql/experimental/coupons/swapspreadindex.hpp>
@@ -175,7 +176,7 @@ public:
                     const vector<double>& gearings = vector<double>(),
                     const vector<string>& gearingDates = vector<string>(), bool isAveraged = false,
                     bool nakedOption = false, bool hasSubPeriods = false, bool includeSpread = false)
-        : LegAdditionalData("Floating"), index_(index), fixingDays_(fixingDays), isInArrears_(isInArrears),
+        : LegAdditionalData("Floating"), index_(ore::data::internalIndexName(index)), fixingDays_(fixingDays), isInArrears_(isInArrears),
           isAveraged_(isAveraged), hasSubPeriods_(hasSubPeriods), includeSpread_(includeSpread), spreads_(spreads),
           spreadDates_(spreadDates), caps_(caps), capDates_(capDates), floors_(floors), floorDates_(floorDates),
           gearings_(gearings), gearingDates_(gearingDates), nakedOption_(nakedOption) {
