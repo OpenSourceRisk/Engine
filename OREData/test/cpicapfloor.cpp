@@ -87,13 +87,18 @@ public:
     ~F() {}
 };
 
-// Portfolios, designed such that trade NPVs should add up to zero:
+// Portfolios, designed such that trade NPVs should add up to zero
+// The first two cases consist of three trades:
 // 1) CPI Swap receiving a single zero coupon fixed flow and paying a single indexed redemption flow (resp. CPI cpupons
 //    plus indexed redemption)
 // 2) CPI Swap as above with capped indexed flow and flipped legs: pay zero coupon fixed, receive
 //    capped indexed redemption (resp. capped CPI coupons plus capped indexed redemption), i.e. short embedded cap(s)
 // 3) standalone long CPI cap with indexed flow(s) above as underlying
-vector<string> testCases = {"portfolio_singleflow.xml", "portfolio_multiflow.xml"};
+// The third portfolio has two trades
+// 1) A CPI Cap as CapFloor instrument
+// 2) A CPI Cap as Swap with a single CPI leg and "naked" option set to "Y"
+
+vector<string> testCases = {"portfolio_singleflow.xml", "portfolio_multiflow.xml", "portfolio_multiflow_naked.xml"};
 
 } // namespace
 
@@ -107,11 +112,11 @@ BOOST_DATA_TEST_CASE_F(F, testCapConsistency, bdata::make(testCases), testCase) 
 
     Portfolio p;
     p.load(TEST_INPUT_FILE(testCase));
-    BOOST_CHECK_MESSAGE(p.size() == 3, "three trades expected, found " << p.size());
+    Size n = p.size();
 
-    // Build the portfolio and retrieve the fixings
+    // Build the portfolio
     p.build(engineFactory);
-    BOOST_CHECK_MESSAGE(p.size() == 3, "three trades expected after build, found " << p.size());
+    BOOST_CHECK_MESSAGE(p.size() == n, n << " trades expected after build, found " << p.size());
     for (Size i = 0; i < p.size(); ++i) {
         BOOST_TEST_MESSAGE("trade " << p.trades()[i]->id());
     }
