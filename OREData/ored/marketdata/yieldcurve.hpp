@@ -74,7 +74,7 @@ public:
         const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves =
             map<string, boost::shared_ptr<YieldCurve>>(),
         //! FxTriangultion to get FX rate from cross if needed
-        const FXTriangulation fxTriangulation = FXTriangulation());
+        const FXTriangulation& fxTriangulation = FXTriangulation());
 
     //! \name Inspectors
     //@{
@@ -96,7 +96,7 @@ private:
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;
     const Conventions& conventions_;
-    const FXTriangulation fxTriangulation_;
+    const FXTriangulation& fxTriangulation_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
 

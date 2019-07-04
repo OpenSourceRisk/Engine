@@ -93,7 +93,7 @@ YieldCurve::InterpolationVariable parseYieldCurveInterpolationVariable(const str
 YieldCurve::YieldCurve(Date asof, YieldCurveSpec curveSpec, const CurveConfigurations& curveConfigs,
                        const Loader& loader, const Conventions& conventions,
                        const map<string, boost::shared_ptr<YieldCurve>>& requiredYieldCurves, 
-                       const FXTriangulation fxTriangulation)
+                       const FXTriangulation& fxTriangulation)
     : asofDate_(asof), curveSpec_(curveSpec), loader_(loader), conventions_(conventions),
       requiredYieldCurves_(requiredYieldCurves), fxTriangulation_(fxTriangulation) {
 
