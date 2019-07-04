@@ -197,7 +197,7 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
             boost::shared_ptr<CPICashFlow> cashflow = boost::dynamic_pointer_cast<CPICashFlow>(legs_[0][i]);
             if (coupon) {
                 nominal = coupon->nominal();
-                gearing = coupon->fixedRate();
+                gearing = coupon->fixedRate() * coupon->accrualPeriod();
                 gearingSign = gearing >= 0.0 ? 1.0 : -1.0;
                 paymentDate = coupon->date();
             } else if (cashflow) {
@@ -221,11 +221,11 @@ void CapFloor::build(const boost::shared_ptr<EngineFactory>& engineFactory) {
 	        // DLOG(id() << " CPI CapFloor Component " << i << " NPV " << capfloor->NPV() << " " << type
                 //                                << " sign*gearing=" << sign * gearing);
                 maturity_ = std::max(maturity_, capfloor->payDate());
-                // if (!coupon) {
-                //   std::cout << "CapFloor CPI CashFlow " << std::endl
+                // if (coupon) {
+                //   std::cout << "CapFloor CPI Coupon " << std::endl
+                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
                 // 	    << "  nominal = " << nominal << std::endl
                 // 	    << "  gearing = " << gearing << std::endl
-                // 	    << "  payment date = " << QuantLib::io::iso_date(paymentDate) << std::endl
                 // 	    << "  start date = " << startDate << std::endl
                 // 	    << "  baseCPI = " << baseCPI << std::endl
                 // 	    << "  index  = " << zeroIndex->name() << std::endl

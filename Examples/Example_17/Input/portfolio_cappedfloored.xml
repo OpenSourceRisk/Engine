@@ -531,11 +531,6 @@
 	  <Caps>
 	    <Cap>0.03</Cap>
 	  </Caps>
-	  <!--
-	  <Floors>
-	    <Floor>0.01</Floor>
-	  </Floors>
-	  -->
         </CPILegData>
       </LegData>
     </SwapData>
@@ -629,37 +624,6 @@
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <!--<LegData>
-        <LegType>ZeroCouponFixed</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <DayCounter>Year</DayCounter>
-        <PaymentConvention>Unadjusted</PaymentConvention>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2036-02-05</EndDate>
-            <Tenor>20Y</Tenor>
-            <Calendar>TARGET</Calendar>
-            <Convention>MF</Convention>
-            <TermConvention>MF</TermConvention>
-            <Rule>Zero</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-        <ZeroCouponFixedLegData>
-	  <Rates>
-            <Rate>0.056467309</Rate>
-          </Rates>
-          <Compounding>Compounded</Compounding>
-	  <SubtractNotional>true</SubtractNotional>
-        </ZeroCouponFixedLegData>
-	</LegData>-->
       <LegData>
         <LegType>CPI</LegType>
         <Payer>false</Payer>
@@ -707,37 +671,6 @@
       <AdditionalFields/>
     </Envelope>
     <SwapData>
-      <!--<LegData>
-        <LegType>Floating</LegType>
-        <Payer>true</Payer>
-        <Currency>EUR</Currency>
-        <Notionals>
-          <Notional>10000000</Notional>
-        </Notionals>
-        <DayCounter>ACT/ACT</DayCounter>
-        <PaymentConvention>ModifiedFollowing</PaymentConvention>
-        <FloatingLegData>
-          <Index>EUR-EURIBOR-6M</Index>
-          <Spreads>
-            <Spread>0.0</Spread>
-          </Spreads>
-          <IsInArrears>false</IsInArrears>
-        </FloatingLegData>
-        <ScheduleData>
-          <Rules>
-            <StartDate>2016-02-05</StartDate>
-            <EndDate>2021-02-05</EndDate>
-            <Tenor>6M</Tenor>
-            <Calendar>EUR</Calendar>
-            <Convention>ModifiedFollowing</Convention>
-            <TermConvention>ModifiedFollowing</TermConvention>
-            <Rule>Forward</Rule>
-            <EndOfMonth/>
-            <FirstDate/>
-            <LastDate/>
-          </Rules>
-        </ScheduleData>
-      </LegData>-->
       <LegData>
         <LegType>CPI</LegType>
         <Payer>false</Payer>
