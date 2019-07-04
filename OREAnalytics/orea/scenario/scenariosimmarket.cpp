@@ -25,6 +25,7 @@
 #include <orea/scenario/scenariosimmarket.hpp>
 #include <orea/scenario/simplescenario.hpp>
 #include <ql/experimental/credit/basecorrelationstructure.hpp>
+#include <ql/instruments/makecapfloor.hpp>
 #include <ql/math/interpolations/loginterpolation.hpp>
 #include <ql/termstructures/credit/interpolatedsurvivalprobabilitycurve.hpp>
 #include <ql/termstructures/defaulttermstructure.hpp>
@@ -50,7 +51,7 @@
 #include <qle/termstructures/flatcorrelation.hpp>
 #include <qle/termstructures/interpolatedcorrelationcurve.hpp>
 #include <qle/termstructures/pricecurve.hpp>
-#include <qle/termstructures/strippedoptionletadapter2.hpp>
+#include <qle/termstructures/strippedoptionletadapter.hpp>
 #include <qle/termstructures/strippedyoyinflationoptionletvol.hpp>
 #include <qle/termstructures/survivalprobabilitycurve.hpp>
 #include <qle/termstructures/swaptionvolatilityconverter.hpp>
@@ -620,10 +621,13 @@ ScenarioSimMarket::ScenarioSimMarket(
                             boost::shared_ptr<IborIndex> iborIndex;
                             Date spotDate;
                             Calendar capCalendar;
+                            string strIborIndex;
+                            Natural settleDays = 0;
                             if (curveConfigs.hasCapFloorVolCurveConfig(name)) {
                                 // From the cap floor config, get the ibor index name
                                 auto config = curveConfigs.capFloorVolCurveConfig(name);
-                                auto strIborIndex = config->iborIndex();
+                                settleDays = config->settleDays();
+                                strIborIndex = config->iborIndex();
                                 if (tryParseIborIndex(strIborIndex, iborIndex)) {
                                     capCalendar = iborIndex->fixingCalendar();
                                     Natural settlementDays = iborIndex->fixingDays();
@@ -634,26 +638,52 @@ ScenarioSimMarket::ScenarioSimMarket(
 
                             vector<Period> optionTenors = parameters->capFloorVolExpiries(name);
                             vector<Date> optionDates(optionTenors.size());
-                            vector<Real> strikes = parameters->capFloorVolStrikes();
+
+                            vector<Real> strikes = parameters->capFloorVolStrikes(name);
+                            bool isAtm = false;
+                            // Strikes may be empty here which means that an ATM curve has been configured
+                            if (strikes.empty()) {
+                                QL_REQUIRE(parameters->capFloorVolIsAtm(name), "Strikes for " << name <<
+                                    " is empty in simulation parameters so expected its ATM flag to be true");
+                                strikes = { 0.0 };
+                                isAtm = true;
+                            }
+
                             vector<vector<Handle<Quote>>> quotes(optionTenors.size(),
                                                                  vector<Handle<Quote>>(strikes.size(), Handle<Quote>()));
                             
                             for (Size i = 0; i < optionTenors.size(); ++i) {
 
                                 if (iborIndex) {
-                                    optionDates[i] = spotDate +  optionTenors[i];
-                                    optionDates[i] = iborIndex->fixingDate(optionDates[i]);
+                                    // If we ask for cap pillars at tenors t_i for i = 1,...,N, we should attempt to 
+                                    // place the optionlet pillars at the fixing date of the last optionlet in the cap
+                                    // with tenor t_i
+                                    QL_REQUIRE(optionTenors[i] > iborIndex->tenor(), "The cap floor tenor must be greater than the ibor index tenor");
+                                    boost::shared_ptr<CapFloor> capFloor = MakeCapFloor(CapFloor::Cap, optionTenors[i], iborIndex, 0.0, 0 * Days);
+                                    optionDates[i] = capFloor->lastFloatingRateCoupon()->fixingDate();
                                     DLOG("Option [tenor, date] pair is [" << optionTenors[i] << ", " << io::iso_date(optionDates[i]) << "]");
                                 } else {
                                     optionDates[i] = wrapper->optionDateFromTenor(optionTenors[i]);
                                 }
 
+                                // If ATM, use initial market's discount curve and ibor index to calculate ATM rate
+                                Rate strike = Null<Rate>();
+                                if (isAtm) {
+                                    QL_REQUIRE(!strIborIndex.empty(), "Expected cap floor vol curve config for "
+                                        << name << " to have an ibor index name");
+                                    initMarket->iborIndex(strIborIndex, configuration);
+                                    boost::shared_ptr<CapFloor> cap = MakeCapFloor(CapFloor::Cap, optionTenors[i], 
+                                        *initMarket->iborIndex(strIborIndex, configuration), 0.0, 0 * Days);
+                                    strike = cap->atmRate(**initMarket->discountCurve(name, configuration));
+                                }
+
                                 for (Size j = 0; j < strikes.size(); ++j) {
-                                    Real vol = wrapper->volatility(optionDates[i], strikes[j], wrapper->allowsExtrapolation());
+                                    strike = isAtm ? strike : strikes[j];
+                                    Real vol = wrapper->volatility(optionDates[i], strike, wrapper->allowsExtrapolation());
                                     DLOG("Vol at [date, strike] pair [" << optionDates[i] << ", " << 
-                                        std::fixed << std::setprecision(4) << strikes[j] << "] is " << 
+                                        std::fixed << std::setprecision(4) << strike << "] is " << 
                                         std::setprecision(12) << vol);
-                                    boost::shared_ptr<SimpleQuote> q(new SimpleQuote(vol));
+                                    boost::shared_ptr<SimpleQuote> q = boost::make_shared<SimpleQuote>(vol);
                                     Size index = i * strikes.size() + j;
                                     simDataTmp.emplace(std::piecewise_construct,
                                                        std::forward_as_tuple(param.first, name, index),
@@ -663,17 +693,15 @@ ScenarioSimMarket::ScenarioSimMarket(
                             }
 
                             DayCounter dc = ore::data::parseDayCounter(parameters->capFloorVolDayCounter(name));
+                            
                             // FIXME: Works as of today only, i.e. for sensitivity/scenario analysis.
                             // TODO: Build floating reference date StrippedOptionlet class for MC path generators
                             boost::shared_ptr<StrippedOptionlet> optionlet = boost::make_shared<StrippedOptionlet>(
-                                0, // FIXME: settlement days
-                                wrapper->calendar(), wrapper->businessDayConvention(),
-                                boost::shared_ptr<IborIndex>(), // FIXME: required for ATM vol calculation
+                                settleDays, wrapper->calendar(), wrapper->businessDayConvention(), iborIndex,
                                 optionDates, strikes, quotes, dc, wrapper->volatilityType(), wrapper->displacement());
-                            boost::shared_ptr<StrippedOptionletAdapter2> adapter =
-                                boost::make_shared<StrippedOptionletAdapter2>(optionlet,
-                                                                              true); // FIXME always flat extrapolation
-                            hCapletVol = Handle<OptionletVolatilityStructure>(adapter);
+                            
+                            hCapletVol = Handle<OptionletVolatilityStructure>(
+                                boost::make_shared<QuantExt::StrippedOptionletAdapter<LinearFlat, LinearFlat>>(optionlet));
                         } else {
                             string decayModeString = parameters->capFloorVolDecayMode();
                             ReactionToTimeDecay decayMode = parseDecayMode(decayModeString);
@@ -683,7 +711,7 @@ ScenarioSimMarket::ScenarioSimMarket(
                             hCapletVol = Handle<OptionletVolatilityStructure>(capletVol);
                         }
 
-                        hCapletVol->enableExtrapolation(); // FIXME
+                        hCapletVol->enableExtrapolation();
                         capFloorCurves_.emplace(std::piecewise_construct,
                                                 std::forward_as_tuple(Market::defaultConfiguration, name),
                                                 std::forward_as_tuple(hCapletVol));

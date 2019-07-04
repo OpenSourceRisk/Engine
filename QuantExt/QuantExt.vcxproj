@@ -489,7 +489,6 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="baroneadesiwhaleyengine.hpp" />
     <ClInclude Include="qle\auto_link.hpp" />
     <ClInclude Include="qle\calendars\chile.hpp" />
     <ClInclude Include="qle\calendars\colombia.hpp" />
@@ -664,6 +663,8 @@
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp" />
     <ClInclude Include="qle\termstructures\blackvolsurfacewithatm.hpp" />
     <ClInclude Include="qle\termstructures\brlcdiratehelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp" />
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp" />
     <ClInclude Include="qle\termstructures\capfloortermvolsurface.hpp" />
     <ClInclude Include="qle\termstructures\correlationtermstructure.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasismtmresetswaphelper.hpp" />
@@ -674,8 +675,14 @@
     <ClInclude Include="qle\termstructures\flatcorrelation.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedcorrelationcurve.hpp" />
     <ClInclude Include="qle\termstructures\interpolatedyoycapfloortermpricesurface.hpp" />
-    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp" />
+    <ClInclude Include="qle\termstructures\optionletcurve.hpp" />
     <ClInclude Include="qle\termstructures\optionletstripper.hpp" />
+    <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp" />
+    <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp" />
+    <ClInclude Include="qle\termstructures\kinterpolatedyoyoptionletvolatilitysurface.hpp" />
     <ClInclude Include="qle\termstructures\optionpricesurface.hpp" />
     <ClInclude Include="qle\termstructures\pricecurve.hpp" />
     <ClInclude Include="qle\termstructures\crossccybasisswaphelper.hpp" />
@@ -707,6 +714,7 @@
     <ClInclude Include="qle\termstructures\spreadedsmilesection.hpp" />
     <ClInclude Include="qle\termstructures\spreadedswaptionvolatility.hpp" />
     <ClInclude Include="qle\termstructures\staticallycorrectedyieldtermstructure.hpp" />
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp" />
     <ClInclude Include="qle\termstructures\strippedcpivolatilitystructure.hpp" />
     <ClInclude Include="qle\termstructures\strippedoptionletadapter2.hpp" />
     <ClInclude Include="qle\termstructures\strippedyoyinflationoptionletvol.hpp" />
@@ -840,6 +848,7 @@
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp" />
     <ClCompile Include="qle\termstructures\blackvolsurfacewithatm.cpp" />
     <ClCompile Include="qle\termstructures\brlcdiratehelper.cpp" />
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp" />
     <ClCompile Include="qle\termstructures\capfloortermvolsurface.cpp" />
     <ClCompile Include="qle\termstructures\correlationtermstructure.cpp" />
     <ClCompile Include="qle\termstructures\crossccybasismtmresetswaphelper.cpp" />

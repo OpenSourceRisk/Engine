@@ -666,11 +666,32 @@
     <ClInclude Include="qle\math\fillemptymatrix.hpp">
       <Filter>math</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\capfloorhelper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseoptionletstripper.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\termstructures\blackvariancesurfacesparse.hpp">
       <Filter>termstructures</Filter>
     </ClInclude>
     <ClInclude Include="qle\indexes\ibor\krwcd.hpp">
       <Filter>indexes\ibor</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\strippedoptionletadapter.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\optionletstripperwithatm.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\cashflows\strippedcapflooredyoyinflationcoupon.hpp">
+      <Filter>cashflows</Filter>
     </ClInclude>
     <ClInclude Include="qle\termstructures\equityforwardcurvestripper.hpp">
       <Filter>termstructures</Filter>
@@ -702,6 +723,9 @@
     <ClInclude Include="qle\instruments\forwardbond.hpp">
       <Filter>instruments</Filter>
     </ClInclude>
+    <ClInclude Include="qle\termstructures\iterativebootstrap.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
     <ClInclude Include="qle\indexes\ibor\ilstelbor.hpp">
       <Filter>indexes\ibor</Filter>
     </ClInclude>
@@ -714,10 +738,15 @@
     <ClInclude Include="qle\indexes\cacpi.hpp">
       <Filter>indexes</Filter>
     </ClInclude>
-    <ClInclude Include="baroneadesiwhaleyengine.hpp">
+    <ClInclude Include="qle\termstructures\capfloortermvolcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\termstructures\piecewiseatmoptionletcurve.hpp">
+      <Filter>termstructures</Filter>
+    </ClInclude>
+    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp">
       <Filter>pricingengines</Filter>
     </ClInclude>
-    <ClInclude Include="qle\pricingengines\baroneadesiwhaleyengine.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="cashflows">
@@ -1204,6 +1233,9 @@
     </ClCompile>
     <ClCompile Include="qle\math\fillemptymatrix.cpp">
       <Filter>math</Filter>
+    </ClCompile>
+    <ClCompile Include="qle\termstructures\capfloorhelper.cpp">
+      <Filter>termstructures</Filter>
     </ClCompile>
     <ClCompile Include="qle\termstructures\blackvariancesurfacesparse.cpp">
       <Filter>termstructures</Filter>

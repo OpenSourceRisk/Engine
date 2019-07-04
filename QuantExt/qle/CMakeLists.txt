@@ -114,6 +114,7 @@ termstructures/blackvariancesurfacemoneyness.cpp
 termstructures/blackvariancesurfacesparse.cpp
 termstructures/blackvolsurfacewithatm.cpp
 termstructures/brlcdiratehelper.cpp
+termstructures/capfloorhelper.cpp
 termstructures/capfloortermvolsurface.cpp
 termstructures/correlationtermstructure.cpp
 termstructures/crossccybasismtmresetswaphelper.cpp
@@ -132,6 +133,8 @@ termstructures/fxblackvolsurface.cpp
 termstructures/fxvannavolgasmilesection.cpp
 termstructures/hazardspreadeddefaulttermstructure.cpp
 termstructures/immfraratehelper.cpp
+termstructures/iterativebootstrap.hpp
+termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.cpp
 termstructures/oiccbasisswaphelper.cpp
 termstructures/oisratehelper.cpp
@@ -328,6 +331,8 @@ termstructures/blackvariancesurfacemoneyness.hpp
 termstructures/blackvariancesurfacesparse.hpp
 termstructures/blackvolsurfacewithatm.hpp
 termstructures/brlcdiratehelper.hpp
+termstructures/capfloorhelper.hpp
+termstructures/capfloortermvolcurve.hpp
 termstructures/capfloortermvolsurface.hpp
 termstructures/correlationtermstructure.hpp
 termstructures/crossccybasismtmresetswaphelper.hpp
@@ -359,10 +364,15 @@ termstructures/kinterpolatedyoyoptionletvolatilitysurface.hpp
 termstructures/oibasisswaphelper.hpp
 termstructures/oiccbasisswaphelper.hpp
 termstructures/oisratehelper.hpp
+termstructures/optionletcurve.hpp
 termstructures/optionletstripper.hpp
 termstructures/optionletstripper1.hpp
 termstructures/optionletstripper2.hpp
+termstructures/optionletstripperwithatm.hpp
 termstructures/optionpricesurface.hpp
+termstructures/piecewiseatmoptionletcurve.hpp
+termstructures/piecewiseoptionletcurve.hpp
+termstructures/piecewiseoptionletstripper.hpp
 termstructures/pricecurve.hpp
 termstructures/pricetermstructure.hpp
 termstructures/pricetermstructureadapter.hpp
@@ -372,6 +382,7 @@ termstructures/spreadedsmilesection.hpp
 termstructures/spreadedswaptionvolatility.hpp
 termstructures/staticallycorrectedyieldtermstructure.hpp
 termstructures/strippedcpivolatilitystructure.hpp
+termstructures/strippedoptionletadapter.hpp
 termstructures/strippedoptionletadapter2.hpp
 termstructures/strippedyoyinflationoptionletvol.hpp
 termstructures/subperiodsswaphelper.hpp

@@ -438,8 +438,12 @@
     <ClInclude Include="ored\portfolio\forwardbond.hpp">
       <Filter>portfolio</Filter>
     </ClInclude>
-    <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
-    <ClInclude Include="ored\marketdata\structuredcurveerror.hpp" />
+    <ClInclude Include="ored\marketdata\structuredcurveerror.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\structuredtradeerror.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ored\configuration\capfloorvolcurveconfig.cpp">

@@ -5,6 +5,7 @@ blackvariancecurve.cpp
 blackvariancesurfacesparse.cpp
 bonds.cpp
 cashflow.cpp
+capfloortermvolcurve.cpp
 commodityforward.cpp
 correlationtermstructure.cpp
 cpicapfloor.cpp
@@ -32,6 +33,9 @@ interpolatedyoycapfloortermpricesurface.cpp
 logquote.cpp
 optionletstripper.cpp
 payment.cpp
+piecewiseatmoptionletcurve.cpp
+piecewiseoptionletcurve.cpp
+piecewiseoptionletstripper.cpp
 pricecurve.cpp
 pricetermstructureadapter.cpp
 qle_calendars.cpp
@@ -39,6 +43,7 @@ ratehelpers.cpp
 stabilisedglls.cpp
 staticallycorrectedyieldtermstructure.cpp
 strippedoptionletadapter.cpp
+strippedoptionletadapter2.cpp
 survivalprobabilitycurve.cpp
 swaptionvolatilityconverter.cpp
 swaptionvolconstantspread.cpp
