@@ -96,7 +96,6 @@ private:
     // TODO: const refs for now, only used during ctor
     const Loader& loader_;
     const Conventions& conventions_;
-    const FXTriangulation& fxTriangulation_;
     RelinkableHandle<YieldTermStructure> h_;
     boost::shared_ptr<YieldTermStructure> p_;
 
@@ -114,6 +113,7 @@ private:
     InterpolationVariable interpolationVariable_;
     InterpolationMethod interpolationMethod_;
     map<string, boost::shared_ptr<YieldCurve>> requiredYieldCurves_;
+    const FXTriangulation& fxTriangulation_;
 
     boost::shared_ptr<YieldTermStructure> piecewisecurve(const vector<boost::shared_ptr<RateHelper>>& instruments);
 
