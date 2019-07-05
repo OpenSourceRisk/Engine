@@ -107,6 +107,7 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, EquityCurveConfig::Type t);
+std::ostream& operator<<(std::ostream& out, Exercise::Type t);
 
 EquityCurveConfig::Type parseEquityCurveConfigType(const std::string& str); 
 
