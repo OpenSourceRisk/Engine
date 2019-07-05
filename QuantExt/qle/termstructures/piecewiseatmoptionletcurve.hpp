@@ -271,6 +271,7 @@ QuantLib::Real PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::displacement
 template <class Interpolator, template <class> class Bootstrap>
 boost::shared_ptr<typename PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::optionlet_curve> 
 PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::curve() const {
+    calculate();
     return curve_;
 }
 
