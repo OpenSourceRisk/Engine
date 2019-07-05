@@ -26,25 +26,30 @@
 #include <ql/experimental/inflation/cpicapfloorengines.hpp>
 #include <ql/experimental/inflation/cpicapfloortermpricesurface.hpp>
 #include <ql/indexes/ibor/gbplibor.hpp>
+#include <ql/indexes/inflation/euhicp.hpp>
 #include <ql/indexes/inflation/ukrpi.hpp>
 #include <ql/instruments/bonds/cpibond.hpp>
 #include <ql/instruments/cpicapfloor.hpp>
 #include <ql/instruments/cpiswap.hpp>
 #include <ql/instruments/zerocouponinflationswap.hpp>
 #include <ql/math/interpolations/bilinearinterpolation.hpp>
+#include <ql/pricingengines/blackformula.hpp>
 #include <ql/pricingengines/bond/discountingbondengine.hpp>
 #include <ql/pricingengines/swap/discountingswapengine.hpp>
 #include <ql/termstructures/bootstraphelper.hpp>
 #include <ql/termstructures/inflation/inflationhelpers.hpp>
 #include <ql/termstructures/inflation/piecewisezeroinflationcurve.hpp>
+#include <ql/termstructures/volatility/inflation/constantcpivolatility.hpp>
+#include <ql/termstructures/yield/flatforward.hpp>
 #include <ql/termstructures/yield/zerocurve.hpp>
 #include <ql/time/calendars/unitedkingdom.hpp>
 #include <ql/time/daycounters/actual365fixed.hpp>
 #include <ql/time/daycounters/actualactual.hpp>
 #include <ql/types.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
-#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
 #include <qle/termstructures/interpolatedcpivolatilitysurface.hpp>
+#include <qle/termstructures/strippedcpivolatilitystructure.hpp>
+#include <qle/time/yearcounter.hpp>
 
 using namespace QuantLib;
 using namespace boost::unit_test_framework;
@@ -293,6 +298,31 @@ struct CommonVars {
     }
 };
 
+class FlatZeroInflationTermStructure : public ZeroInflationTermStructure {
+public:
+    FlatZeroInflationTermStructure(const Date& referenceDate, const Calendar& calendar, const DayCounter& dayCounter,
+                                   Rate zeroRate, const Period& observationLag, Frequency frequency, bool indexIsInterp,
+                                   const Handle<YieldTermStructure>& ts)
+        : ZeroInflationTermStructure(referenceDate, calendar, dayCounter, zeroRate, observationLag, frequency,
+                                     indexIsInterp, ts),
+          zeroRate_(zeroRate) {}
+
+    Date maxDate() const { return Date::maxDate(); }
+    // Base date consistent with observation lag, interpolation and frequency
+    Date baseDate() const {
+        Date base = referenceDate() - observationLag();
+        if (!indexIsInterpolated()) {
+            std::pair<Date, Date> ips = inflationPeriod(base, frequency());
+            base = ips.first;
+        }
+        return base;
+    }
+
+private:
+    Rate zeroRateImpl(Time t) const { return zeroRate_; }
+    Real zeroRate_;
+};
+
 } // namespace
 
 // additional test cases from here
@@ -514,7 +544,7 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
         }
     }
     boost::shared_ptr<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> > interpolatedCpiVol =
-      boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
+        boost::make_shared<QuantExt::InterpolatedCPIVolatilitySurface<Bilinear> >(
             optionTenors, strikes, quotes, common.hii.currentLink(), cpiVolSurface->settlementDays(),
             cpiVolSurface->calendar(), cpiVolSurface->businessDayConvention(), cpiVolSurface->dayCounter(),
             cpiVolSurface->observationLag());
@@ -525,8 +555,86 @@ BOOST_AUTO_TEST_CASE(testInterpolatedVolatilitySurface) {
             Real vol1 = cpiVolSurface->volatility(d, strikes[j]);
             Real vol2 = interpolatedCpiVol->volatility(d, strikes[j]);
             BOOST_CHECK_SMALL(fabs(vol1 - vol2), 1.0e-10);
-	}
+        }
     }
+}
+
+BOOST_AUTO_TEST_CASE(testSimpleCapFloor) {
+    CommonVars common;
+
+    Real rate = 0.03;
+    Real inflationRate = 0.02;
+    Real inflationBlackVol = 0.05;
+    BusinessDayConvention bdc = Unadjusted;
+    DayCounter dc = ActualActual();
+    Period observationLag = 3 * Months; // EUHICPXT Caps/Swaps
+    Handle<YieldTermStructure> discountCurve(boost::make_shared<FlatForward>(common.evaluationDate, rate, dc));
+    RelinkableHandle<ZeroInflationTermStructure> inflationCurve;
+    Handle<ZeroInflationIndex> index(boost::make_shared<EUHICPXT>(false, inflationCurve));
+    // Make sure we use the correct index publication frequency and interpolation, consistent with the index we want to
+    // project. We therefore create the index first, then the term structure, then relink the curve. Otherwise time
+    // calculations will be inconsistent, and ATM strikes do not generate equal put/call or cap/floor prices.
+    boost::shared_ptr<ZeroInflationTermStructure> inflationCurvePtr =
+        boost::make_shared<FlatZeroInflationTermStructure>(common.evaluationDate, index->fixingCalendar(), dc,
+                                                           inflationRate, observationLag, index->frequency(),
+                                                           index->interpolated(), discountCurve);
+    inflationCurve.linkTo(inflationCurvePtr);
+    // Make sure we use the same observation lag as in the inflation curve, and same index publication frequency and
+    // interpolation. The vol surface observation lag is used in the engine for lag difference calculations compared to
+    // the instrument's lag.
+    Handle<CPIVolatilitySurface> inflationVol(boost::make_shared<ConstantCPIVolatility>(
+        inflationBlackVol, 0, inflationCurve->calendar(), bdc, dc, inflationCurve->observationLag(),
+        inflationCurve->frequency(), inflationCurve->indexIsInterpolated()));
+
+    boost::shared_ptr<PricingEngine> engine =
+        boost::make_shared<QuantExt::CPIBlackCapFloorEngine>(discountCurve, inflationVol);
+
+    Real nominal = 10000.0;
+    Date start = common.evaluationDate;
+    Date end = start + 10 * Years;
+    Real baseCPI = 100.0;
+    Calendar fixCalendar = index->fixingCalendar();
+    Calendar payCalendar = index->fixingCalendar();
+
+    Rate capStrike = 0.03;
+    CPICapFloor atmCap(Option::Call, nominal, start, baseCPI, end, fixCalendar, bdc, payCalendar, bdc, inflationRate,
+                       index, observationLag);
+    atmCap.setPricingEngine(engine);
+    CPICapFloor cap(Option::Call, nominal, start, baseCPI, end, fixCalendar, bdc, payCalendar, bdc, capStrike, index,
+                    observationLag);
+    cap.setPricingEngine(engine);
+
+    Rate floorStrike = 0.01;
+    CPICapFloor atmFloor(Option::Put, nominal, start, baseCPI, end, fixCalendar, bdc, fixCalendar, bdc, inflationRate,
+                         index, observationLag);
+    atmFloor.setPricingEngine(engine);
+    CPICapFloor floor(Option::Put, nominal, start, baseCPI, end, fixCalendar, bdc, fixCalendar, bdc, floorStrike, index,
+                      observationLag);
+    floor.setPricingEngine(engine);
+
+    DayCounter cpiDayCounter = QuantExt::YearCounter();
+
+    // use base CPI as base fixing
+    index->addFixing(inflationCurve->baseDate(), baseCPI);
+
+    // Do cap and floor match at the money?
+    BOOST_CHECK_CLOSE(atmCap.NPV(), atmFloor.NPV(), 1e-8);
+
+    // Pedestrian CPI Cap/Floor valuation assuming baseCPI = base fixing
+    Real t = 10.0; // time to maturity is 10 (base to effective maturity)
+    Real stdDev = inflationBlackVol * sqrt(t);
+    Real forward = pow(1.0 + inflationRate, t);
+    Real floorStrikePrice = pow(1.0 + floorStrike, t);
+    Real capStrikePrice = pow(1.0 + capStrike, t);
+    Real discount = exp(-rate * t);
+    Real expectedCapNPV = nominal * blackFormula(Option::Call, capStrikePrice, forward, stdDev, discount);
+    Real expectedFloorNPV = nominal * blackFormula(Option::Put, floorStrikePrice, forward, stdDev, discount);
+
+    BOOST_TEST_MESSAGE("CPI Cap NPV " << cap.NPV() << " " << expectedCapNPV);
+    BOOST_TEST_MESSAGE("CPI Floor NPV " << floor.NPV() << " " << expectedFloorNPV);
+
+    BOOST_CHECK_CLOSE(cap.NPV(), expectedCapNPV, 0.01);     // relative difference of 0.01%
+    BOOST_CHECK_CLOSE(floor.NPV(), expectedFloorNPV, 0.01); // relative difference of 0.01%
 }
 
 BOOST_AUTO_TEST_SUITE_END()

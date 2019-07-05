@@ -26,6 +26,7 @@
 
 #include <ql/pricingengines/blackformula.hpp>
 #include <qle/pricingengines/cpiblackcapfloorengine.hpp>
+//#include <iostream>
 
 using namespace QuantLib;
 
@@ -83,6 +84,21 @@ void CPIBlackCapFloorEngine::calculate() const {
         pow(arguments_.baseCPI / baseFixing * pow(1.0 + arguments_.strike, timeFromStart), 1.0 / timeFromBase) - 1.0;
     Real stdDev = std::sqrt(volatilitySurface_->totalVariance(maturity, strikeZeroRate));
     results_.value = blackFormula(arguments_.type, K, F, stdDev, d);
+
+    // std::cout << "CPIBlackCapFloorEngine ==========" << std::endl
+    // 	      << "startDate     = " << QuantLib::io::iso_date(arguments_.startDate) << std::endl
+    // 	      << "maturityDate  = " << QuantLib::io::iso_date(maturity) << std::endl
+    // 	      << "effStartDate  = " << QuantLib::io::iso_date(effectiveStart) << std::endl
+    // 	      << "effEndDate    = " << QuantLib::io::iso_date(effectiveMaturity) << std::endl
+    // 	      << "lagDiff       = " << lagDiff << std::endl
+    // 	      << "timeFromStart = " << timeFromStart << std::endl
+    // 	      << "timeFromBase  = " << timeFromBase << std::endl
+    // 	      << "baseFixing    = " << baseFixing << std::endl
+    // 	      << "baseCPI       = " << arguments_.baseCPI << std::endl
+    // 	      << "K             = " << K << std::endl
+    // 	      << "F             = " << F << std::endl
+    // 	      << "stdDev        = " << stdDev << std::endl
+    // 	      << "value         = " <<  results_.value << std::endl;
 }
 
 } // namespace QuantExt
