@@ -858,7 +858,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             } else {
                 QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, false)).second,
                     "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
-                vector<Rate> strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+                strikes = parseListOfValues<Rate>(strStrike, &parseReal);
             }
             QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second, 
                 "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
