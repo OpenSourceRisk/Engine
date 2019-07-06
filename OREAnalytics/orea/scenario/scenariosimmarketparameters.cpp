@@ -124,7 +124,6 @@ void ScenarioSimMarketParameters::setDefaults() {
     setSimulateCorrelations(false);
 
     // Set default tenors (don't know why but keep it as is)
-    capFloorVolExpiries_[""] = vector<Period>();
     yoyInflationCapFloorVolExpiries_[""] = vector<Period>();
     defaultTenors_[""] = vector<Period>();
     equityDividendTenors_[""] = vector<Period>();
@@ -859,7 +858,7 @@ void ScenarioSimMarketParameters::fromXML(XMLNode* root) {
             } else {
                 QL_REQUIRE(capFloorVolIsAtm_.insert(make_pair(ccy, false)).second,
                     "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
-                vector<Rate> strikes = parseListOfValues<Rate>(strStrike, &parseReal);
+                strikes = parseListOfValues<Rate>(strStrike, &parseReal);
             }
             QL_REQUIRE(capFloorVolStrikes_.insert(make_pair(ccy, strikes)).second, 
                 "CapFloorVolatilities has duplicate strikes for key '" << ccy << "'");
