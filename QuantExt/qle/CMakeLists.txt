@@ -27,6 +27,7 @@ currencies/america.cpp
 currencies/asia.cpp
 currencies/metals.cpp
 indexes/bondindex.cpp
+indexes/commodityindex.cpp
 indexes/equityindex.cpp
 indexes/fxindex.cpp
 indexes/ibor/brlcdi.cpp
@@ -188,6 +189,7 @@ currencies/metals.hpp
 indexes/bmaindexwrapper.hpp
 indexes/bondindex.hpp
 indexes/cacpi.hpp
+indexes/commodityindex.hpp
 indexes/dkcpi.hpp
 indexes/equityindex.hpp
 indexes/fxindex.hpp
