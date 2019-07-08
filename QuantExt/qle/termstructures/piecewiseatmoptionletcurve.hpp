@@ -103,6 +103,9 @@ public:
     QuantLib::Real displacement() const;
     //@}
 
+    //! The underlying optionlet curve
+    boost::shared_ptr<optionlet_curve> curve() const;
+
 protected:
     //! \name OptionletVolatilityStructure interface
     //@{
@@ -263,6 +266,13 @@ QuantLib::VolatilityType PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::vo
 template <class Interpolator, template <class> class Bootstrap>
 QuantLib::Real PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::displacement() const {
     return displacement_;
+}
+
+template <class Interpolator, template <class> class Bootstrap>
+boost::shared_ptr<typename PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::optionlet_curve> 
+PiecewiseAtmOptionletCurve<Interpolator, Bootstrap>::curve() const {
+    calculate();
+    return curve_;
 }
 
 template <class Interpolator, template <class> class Bootstrap>
