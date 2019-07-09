@@ -97,7 +97,7 @@ void ZeroCouponFixedLegData::fromXML(XMLNode* node) {
     if (subtractNotionalNode)
         subtractNotional_ = XMLUtils::getChildValueAsBool(node, "SubtractNotional", true);
     else
-        subtractNotional_ = false;
+        subtractNotional_ = true;
 }
 
 XMLNode* ZeroCouponFixedLegData::toXML(XMLDocument& doc) {
