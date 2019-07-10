@@ -58,22 +58,7 @@ OptionletStripper1::OptionletStripper1(const shared_ptr<QuantExt::CapFloorTermVo
 void OptionletStripper1::performCalculations() const {
 
     // update dates
-    const Date& referenceDate = termVolSurface_->referenceDate();
-    const DayCounter& dc = termVolSurface_->dayCounter();
-    shared_ptr<BlackCapFloorEngine> dummy(new BlackCapFloorEngine( // discounting does not matter here
-        iborIndex_->forwardingTermStructure(), 0.20, dc));
-    for (Size i = 0; i < nOptionletTenors_; ++i) {
-        CapFloor temp = MakeCapFloor(CapFloor::Cap, capFloorLengths_[i], iborIndex_,
-                                     0.04, // dummy strike
-                                     0 * Days)
-                            .withPricingEngine(dummy);
-        shared_ptr<FloatingRateCoupon> lFRC = temp.lastFloatingRateCoupon();
-        optionletDates_[i] = lFRC->fixingDate();
-        optionletPaymentDates_[i] = lFRC->date();
-        optionletAccrualPeriods_[i] = lFRC->accrualPeriod();
-        optionletTimes_[i] = dc.yearFraction(referenceDate, optionletDates_[i]);
-        atmOptionletRate_[i] = lFRC->indexFixing();
-    }
+    populateDates();
 
     if (floatingSwitchStrike_) {
         Rate averageAtmOptionletRate = 0.0;
@@ -87,6 +72,7 @@ void OptionletStripper1::performCalculations() const {
         discount_.empty() ? iborIndex_->forwardingTermStructure() : discount_;
 
     const std::vector<Rate>& strikes = termVolSurface_->strikes();
+    DayCounter dc = termVolSurface_->dayCounter();
     // initialize CapFloorMatrix
     if (capFlooMatrixNotInitialized_) {
         for (Size i = 0; i < nOptionletTenors_; ++i) {

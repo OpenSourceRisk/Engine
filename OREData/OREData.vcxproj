@@ -85,6 +85,7 @@
     <ClInclude Include="ored\marketdata\marketimpl.hpp" />
     <ClInclude Include="ored\marketdata\inmemoryloader.hpp" />
     <ClInclude Include="ored\marketdata\security.hpp" />
+    <ClInclude Include="ored\marketdata\structuredcurveerror.hpp" />
     <ClInclude Include="ored\marketdata\swaptionvolcurve.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarket.hpp" />
     <ClInclude Include="ored\marketdata\todaysmarketparameters.hpp" />
@@ -152,6 +153,7 @@
     <ClInclude Include="ored\portfolio\optionwrapper.hpp" />
     <ClInclude Include="ored\portfolio\portfolio.hpp" />
     <ClInclude Include="ored\portfolio\schedule.hpp" />
+    <ClInclude Include="ored\portfolio\structuredtradeerror.hpp" />
     <ClInclude Include="ored\portfolio\swap.hpp" />
     <ClInclude Include="ored\portfolio\swaption.hpp" />
     <ClInclude Include="ored\portfolio\trade.hpp" />
@@ -160,6 +162,7 @@
     <ClInclude Include="ored\report\csvreport.hpp" />
     <ClInclude Include="ored\report\inmemoryreport.hpp" />
     <ClInclude Include="ored\report\report.hpp" />
+    <ClInclude Include="ored\utilities\calendaradjustmentconfig.hpp" />
     <ClInclude Include="ored\utilities\correlationmatrix.hpp" />
     <ClInclude Include="ored\utilities\csvfilereader.hpp" />
     <ClInclude Include="ored\utilities\currencycheck.hpp" />
@@ -279,6 +282,7 @@
     <ClCompile Include="ored\portfolio\tradeactions.cpp" />
     <ClCompile Include="ored\portfolio\tradefactory.cpp" />
     <ClCompile Include="ored\report\csvreport.cpp" />
+    <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp" />
     <ClCompile Include="ored\utilities\correlationmatrix.cpp" />
     <ClCompile Include="ored\utilities\csvfilereader.cpp" />
     <ClCompile Include="ored\utilities\currencycheck.cpp" />

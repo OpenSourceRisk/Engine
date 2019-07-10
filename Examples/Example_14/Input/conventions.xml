@@ -152,7 +152,7 @@
   <OIS>
     <Id>EUR-OIS-CONVENTIONS</Id>
     <SpotLag>0</SpotLag>
-    <Index>EUR-EONIA-1D</Index>
+    <Index>EUR-EONIA</Index>
     <FixedDayCounter>A365</FixedDayCounter>
     <PaymentLag>0</PaymentLag>
     <EOM>false</EOM>
@@ -164,7 +164,7 @@
   <OIS>
     <Id>GBP-OIS-CONVENTIONS</Id>
     <SpotLag>0</SpotLag>
-    <Index>GBP-SONIA-1D</Index>
+    <Index>GBP-SONIA</Index>
     <FixedDayCounter>A365</FixedDayCounter>
     <PaymentLag>0</PaymentLag>
     <EOM>false</EOM>

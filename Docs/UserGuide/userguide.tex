@@ -2085,6 +2085,7 @@ This subset of data is easiest explained using an example, see listing \ref{lst:
   <Parameter name="marketConfigFile">../../Input/todaysmarket.xml</Parameter>
   <Parameter name="pricingEnginesFile">../../Input/pricingengine.xml</Parameter>
   <Parameter name="portfolioFile">portfolio.xml</Parameter>
+  <Parameter name="calendarAdjustment">../../Input/calendaradjustment.xml</Parameter>
   <!-- None, Unregister, Defer or Disable -->
   <Parameter name="observationModel">Disable</Parameter>
 </Setup>
@@ -2110,7 +2111,7 @@ pricing engines as specified in {\tt pricingengine.xml}. When parameter {\tt imp
 fixings would not be loaded but implied, relevant when pricing/bootstrapping off hypothetical market data as e.g. in
 scenario analysis and stress testing.
 
-\medskip The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
+\medskip Parameter {\tt calendarAdjustment} includes the {\tt calendarAdjustment.xml} which lists out additional holidays and business days to be added to specified calendars. The last parameter {\tt observationModel} can be used to control ORE performance during simulation. The choices
 {\em Disable } and {\em Unregister } yield similarly improved performance relative to choice {\em None}. For users
 familiar with the QuantLib design - the parameter controls to which extent {\em QuantLib observer notifications} are
 used when market and fixing data is updated and the evaluation date is shifted:
@@ -3962,6 +3963,33 @@ and {\tt term}) represents a default value that is used whenever no explicit val
 \label{lst:stress_config}
 \end{longlisting}
 
+%--------------------------------------------------------
+\subsection{Calendar Adjustment: {\tt calendaradjustment.xml}}\label{sec:calenderdjustment}
+%--------------------------------------------------------
+
+\medskip
+ This file {\tt calendaradjustment.xml} list out all additional holidays and business days that are added to a specified calendar in ORE.
+ These dates would originally be missing from the calendar and has to be added.The general structure is shown in listing \ref{lst:calendar_adjustment}.
+In this example, two additional dates had been added to the calendar "Japan", one addtional holiday and one additional business day. If the user is not certain
+wether the date is already included or not, adding it to the {\tt calendaradjustment.xml} to be safe won't raise any errors.
+A sample {\tt calendaradjustment.xml} file can be found in the Global example input directory. However, it is only used in Example\_1.
+
+\begin{longlisting}
+%\hrule\medskip
+  \begin{minted}[fontsize=\scriptsize]{xml}
+<CalendarAdjustments>
+  <Calendar name="Japan">
+    <AdditionalHolidays>
+      <Date>2020-01-01</Date>
+    </AdditionalHolidays>
+    <AdditionalBusinessDays>
+      <Date>2020-01-02</Date>
+    </AdditionalBusinessDays>
+</CalendarAdjustments>
+  \end{minted}
+\caption{Calendar Adjustment}\label{lst:calendar_adjustment}
+\end{longlisting}
+
 
 %--------------------------------------------------------
 \subsection{Curves: {\tt curveconfig.xml}}\label{sec:curveconfig}
@@ -4142,6 +4170,7 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
     <CurveId>EURUSD</CurveId>
     <CurveDescription />
     <Dimension>ATM</Dimension> <!-- ATM, Smile -->
+    <SmileInterpolation>VannaVolga1</SmileInterpolation> <!-- VannaVolga1,VannaVolga2 -->
     <Expiries>1M,3M,6M,1Y,2Y,3Y,10Y</Expiries>
     <FXSpotID>FX/EUR/USD</FXSpotID>
     <FXForeignCurveID>Yield/USD/USD1D</FXForeignCurveID>
@@ -4156,6 +4185,12 @@ Listing \ref{lst:fxoptionvol_configuration} shows the configuration of FX volati
 \label{lst:fxoptionvol_configuration}
 \end{longlisting}
 
+The \lstinline!SmileInterpolation! is optional and only used when the \lstinline!Dimension! is set to \emph{Smile}. If  \lstinline!Dimension! is set to \emph{Smile}, 
+Vanna Volga is used as per (Castagna \& Mercurio - 2006). \lstinline!SmileInterpolation! specifies which approximation to use
+for implied volatilities; \emph{VannaVolga1} or \emph{VannaVolga2} for (eq. 13) or (eq. 14)  respectively. The first approximation
+is less accurate for far OTM but is always defined. The second approximation is defined in most practical applications. 
+\lstinline!SmileInterpolation! defaults to second approximation.
+
 \subsubsection{Equity Curve Structures}
 
 Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forward price curves.
@@ -4169,7 +4204,9 @@ Listing \ref{lst:eqcurve_configuration} shows the configuration of equity forwar
     <CurveDescription>SP 500 equity price projection curve</CurveDescription>
     <Currency>USD</Currency>
     <ForecastingCurve>EUR1D</ForecastingCurve>
-    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice -->
+    <Type>DividendYield</Type> <!-- DividendYield, ForwardPrice, OptionPremium -->
+    <!-- Optional node, only used when Type is OptionPremium
+    <ExerciseStyle>American</ExerciseStyle> -->
     <!-- Spot quote from the market data file -->
     <SpotQuote>EQUITY/PRICE/SP5/USD</SpotQuote> 
     <Quotes>

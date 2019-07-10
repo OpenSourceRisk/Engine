@@ -165,6 +165,8 @@ static struct test_data index_data[] = {
     {"CAD-BA-12M", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
     {"CAD-BA-1Y", "CDOR1Y Actual/365 (Fixed)", 1 * Years},
 
+    {"CNY-SHIBOR-3M", "Shibor3M Actual/360", 3 * Months},
+  
     {"CZK-PRIBOR-6M", "CZK-PRIBOR6M Actual/360", 6 * Months},
 
     {"USD-LIBOR-1W", "USDLibor1W Actual/360", 1 * Weeks},
@@ -348,7 +350,7 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsing) {
 
     Size len = sizeof(index_data) / sizeof(index_data[0]);
     for (Size i = 0; i < len; ++i) {
-        string str(index_data[i].str);
+        string str(ore::data::internalIndexName(index_data[i].str));
         string index_name(index_data[i].index_name);
         Period tenor(index_data[i].tenor);
 
@@ -376,7 +378,6 @@ BOOST_AUTO_TEST_CASE(testIborIndexParsingFails) {
 
     // Test invalid strings
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EONIA-1M"), QuantLib::Error);
-    BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-EURIBOR-1D"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("EUR-FALSE-6M"), QuantLib::Error);
     BOOST_CHECK_THROW(ore::data::parseIborIndex("It's a trap!"), QuantLib::Error);
 }

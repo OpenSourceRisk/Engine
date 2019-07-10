@@ -98,7 +98,7 @@
   <xs:complexType name="optionData">
     <xs:all>
       <xs:element type="xs:string" name="LongShort"/>
-      <xs:element type="xs:string" name="OptionType"/>
+      <xs:element type="xs:string" name="OptionType" minOccurs="0"/>
       <xs:element type="xs:string" name="Style" minOccurs="0"/>
       <xs:element type="xs:string" name="NoticePeriod" minOccurs="0"/>
       <xs:element type="settlementType" name="Settlement" minOccurs="0"/>

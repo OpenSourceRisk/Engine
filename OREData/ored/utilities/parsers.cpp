@@ -25,6 +25,7 @@
 #include <map>
 #include <ored/utilities/log.hpp>
 #include <ored/utilities/parsers.hpp>
+#include <ored/utilities/calendaradjustmentconfig.hpp>
 #include <ql/currencies/all.hpp>
 #include <ql/errors.hpp>
 #include <ql/indexes/all.hpp>
@@ -154,7 +155,7 @@ bool parseBool(const string& s) {
     }
 }
 
-Calendar parseCalendar(const string& s) {
+Calendar parseCalendar(const string& s, bool adjustCalendar) {
     static map<string, Calendar> m = {{"TGT", TARGET()},
                                       {"TARGET", TARGET()},
                                       {"EUR", TARGET()},
@@ -267,10 +268,34 @@ Calendar parseCalendar(const string& s) {
                                       {"UNMAPPED", WeekendsOnly()},
                                       {"NullCalendar", NullCalendar()},
                                       {"", NullCalendar()}};
+    static bool isInitialised = false;
+    if (!isInitialised) {
+        //extend the static map to include quantlib map names 
+        //allCals should be set, but it doesn't know how to order calendar
+        vector<Calendar> allCals;
+        for (auto it : m) 
+            allCals.push_back(it.second);
+        for (auto cal : allCals)
+            m[cal.name()] = cal;
+        isInitialised = true;
+    }
 
     auto it = m.find(s);
     if (it != m.end()) {
-        return it->second;
+        Calendar cal = it->second;
+        if (adjustCalendar) {
+            //add custom holidays from populated calendar adjustments
+            const CalendarAdjustmentConfig& config = CalendarAdjustments::instance().config();
+            for (auto h : config.getHolidays(s)) {
+                cal.addHoliday(h);
+            }
+            for (auto b : config.getBusinessDays(s)) {
+                cal.removeHoliday(b);
+            }
+
+        }
+         return cal;
+
     } else {
         // Try to split them up
         vector<string> calendarNames;
@@ -287,7 +312,7 @@ Calendar parseCalendar(const string& s) {
         for (Size i = 0; i < calendarNames.size(); i++) {
             boost::trim(calendarNames[i]);
             try {
-                calendars.push_back(parseCalendar(calendarNames[i]));
+                calendars.push_back(parseCalendar(calendarNames[i], adjustCalendar));
             } catch (std::exception& e) {
                 QL_FAIL("Cannot convert " << s << " to Calendar [exception:" << e.what() << "]");
             } catch (...) {

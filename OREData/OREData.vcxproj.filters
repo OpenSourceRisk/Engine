@@ -429,6 +429,9 @@
     <ClInclude Include="ored\marketdata\genericyieldvolcurve.hpp">
       <Filter>marketdata</Filter>
     </ClInclude>
+    <ClInclude Include="ored\utilities\calendaradjustmentconfig.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
     <ClInclude Include="ored\portfolio\builders\capflooredyoyleg.hpp">
       <Filter>portfolio\builders</Filter>
     </ClInclude>
@@ -440,6 +443,12 @@
     </ClInclude>
     <ClInclude Include="ored\portfolio\builders\oneassetoption.hpp">
       <Filter>portfolio\builders</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\marketdata\structuredcurveerror.hpp">
+      <Filter>utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ored\portfolio\structuredtradeerror.hpp">
+      <Filter>utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -775,6 +784,9 @@
     </ClCompile>
     <ClCompile Include="ored\marketdata\genericyieldvolcurve.cpp">
       <Filter>marketdata</Filter>
+    </ClCompile>
+    <ClCompile Include="ored\utilities\calendaradjustmentconfig.cpp">
+      <Filter>utilities</Filter>
     </ClCompile>
     <ClCompile Include="ored\portfolio\forwardbond.cpp">
       <Filter>portfolio</Filter>
