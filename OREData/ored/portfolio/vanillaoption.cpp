@@ -31,9 +31,6 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
     boost::shared_ptr<StrikedTypePayoff> payoff(new PlainVanillaPayoff(type, strike_));
 
     QuantLib::Exercise::Type exerciseType = parseExerciseType(option_.style());
-    QL_REQUIRE(exerciseType == QuantLib::Exercise::Type::European ||
-               exerciseType == QuantLib::Exercise::Type::American,
-               "Option Style " << option_.style() << " is not supported");
     QL_REQUIRE(option_.exerciseDates().size() == 1, "Invalid number of excercise dates");
     Date expiryDate = parseDate(option_.exerciseDates().front());
 
@@ -48,6 +45,8 @@ void VanillaOptionTrade::build(const boost::shared_ptr<ore::data::EngineFactory>
             exercise = boost::make_shared<AmericanExercise>(expiryDate, option_.payoffAtExpiry());
             break;
         }
+        default:
+            QL_FAIL("Option Style " << option_.style() << " is not supported");
     }
 
     // Vanilla European/American.
